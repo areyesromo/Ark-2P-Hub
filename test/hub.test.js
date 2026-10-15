@@ -143,3 +143,45 @@ test('/version reports the package version and build stamp', async () => {
   assert.match(body.version, /^\d+\.\d+\.\d+$/);
   assert.ok(body.commit);
 });
+
+test('controller players: seated by the TV, present with the TV, driven only by the TV', async () => {
+  const host = client();
+  const { code, hostToken } = await call(host, 'host:create', {});
+
+  // Only the TV can add a controller player.
+  const phone = client();
+  await call(phone, 'player:join', { code, name: 'Ana' });
+  assert.match((await call(phone, 'pad:join', { name: 'Sneaky' })).error, /Only the TV/);
+
+  const ready = next(host, 'room:state', (s) => s.readyToPlay);
+  const pad = await call(host, 'pad:join', { name: 'Controller 1' });
+  assert.equal(pad.slot, 1);
+  const state = await ready;
+  assert.deepEqual(state.players[1], { slot: 1, name: 'Controller 1', connected: true, local: true });
+  assert.equal(state.players[0].local, false);
+
+  // The controller plays through the TV; a phone can't send input for it.
+  await call(host, 'lobby:start', { gameId: 'rock-paper-scissors' });
+  const locked = next(host, 'game:view', (m) => m.view.locked && m.view.locked[1]);
+  phone.emit('pad:input', { slot: 1, input: { type: 'pick', choice: 'rock' } });
+  host.emit('pad:input', { slot: 0, input: { type: 'pick', choice: 'rock' } }); // slot 0 is a phone: ignored
+  host.emit('pad:input', { slot: 1, input: { type: 'pick', choice: 'paper' } });
+  const view = (await locked).view;
+  assert.deepEqual(view.locked, [false, true]);
+
+  // TV goes away -> controller player is away too; TV resumes -> back, same seat.
+  const away = next(phone, 'room:state', (s) => s.players[1] && !s.players[1].connected);
+  host.close();
+  await away;
+  const host2 = client();
+  const back = next(phone, 'room:state', (s) => s.players[1] && s.players[1].connected);
+  await call(host2, 'host:resume', { code, hostToken });
+  await back;
+  const again = await call(host2, 'pad:join', { name: 'Controller 1', token: pad.token });
+  assert.equal(again.slot, 1);
+
+  // Leaving frees the seat (and ends the game).
+  const freed = next(phone, 'room:state', (s) => s.players[1] === null && s.phase === 'lobby');
+  await call(host2, 'pad:leave', { slot: 1 });
+  await freed;
+});

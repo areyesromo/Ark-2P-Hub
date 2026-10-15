@@ -13,6 +13,11 @@ const reply = (ack, payload) => {
  *   lobby:return
  *   game:input    { type, ... }              (players only, game-specific)
  *
+ * Controllers plugged into the TV (host only):
+ *   pad:join      { name, token? }           -> ack { ok, slot, token, name }
+ *   pad:leave     { slot }
+ *   pad:input     { slot, input }            (only for seats taken with pad:join)
+ *
  * Server -> client:
  *   room:state    Room#publicState()
  *   host:qr       { qr }                     (TV only: join address changed in Settings)
@@ -31,6 +36,7 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
       if (role === 'host') {
         socket.leave(room.hostChannel);
         room.hostSockets.delete(socket.id);
+        room.syncLocalPlayers();
       } else if (role === 'player') {
         socket.leave(room.playerChannel(slot));
         const p = room.players[slot];
@@ -53,6 +59,7 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
       socket.join(room.allChannel);
       socket.join(room.hostChannel);
       room.hostSockets.add(socket.id);
+      room.syncLocalPlayers();
       room.touch();
       room.broadcastState();
       room.sendSnapshot(socket, 'host');
@@ -129,6 +136,27 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
 
     socket.on('game:input', (data) => {
       if (role === 'player' && room) room.handleInput(slot, data);
+    });
+
+    socket.on('pad:join', (data, ack) => {
+      if (role !== 'host') return reply(ack, { error: 'Only the TV can add controller players.' });
+      const { name, token } = asObject(data);
+      const seat = room.seatPlayer(name, token, { local: true });
+      if (seat.error) return reply(ack, { error: seat.error });
+      room.touch();
+      room.broadcastState();
+      reply(ack, { ok: true, slot: seat.slot, token: seat.player.token, name: seat.player.name });
+    });
+
+    socket.on('pad:leave', (data, ack) => {
+      const seat = asObject(data).slot;
+      if (role === 'host' && room.players[seat] && room.players[seat].local) room.removePlayer(seat);
+      reply(ack, { ok: true });
+    });
+
+    socket.on('pad:input', (data) => {
+      const { slot: seat, input } = asObject(data);
+      if (role === 'host' && room.players[seat] && room.players[seat].local) room.handleInput(seat, input);
     });
 
     socket.on('disconnect', detach);

@@ -8,6 +8,8 @@
   let state = null;
   let current = null; // { gameId, renderer } mounted on the stage
   let pendingView = null;
+  let lastView = null; // newest view of the current game (controllers map buttons against it)
+  let roomCode = null;
 
   // ---- room lifecycle --------------------------------------------------
 
@@ -20,6 +22,8 @@
 
   function onRoom(res) {
     save({ code: res.code, hostToken: res.hostToken });
+    roomCode = res.code;
+    restorePads(res.code);
     $('room-code').textContent = res.code;
     $('join-code').textContent = res.code;
     if (res.qr) $('qr').src = res.qr;
@@ -65,7 +69,7 @@
     el.innerHTML =
       label +
       '<span class="who">' + Ark.escapeHtml(p.name) + '</span>' +
-      '<span class="status">' + (p.connected ? 'Ready' : 'Reconnecting…') + '</span>';
+      '<span class="status">' + (p.local ? '🎮 Controller · ' : '') + (p.connected ? 'Ready' : 'Reconnecting…') + '</span>';
   }
 
   function renderLobby() {
@@ -74,12 +78,15 @@
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
     $('games-hint').textContent = state.readyToPlay
-      ? 'Choose here or from either phone.'
+      ? 'Choose here, from either phone, or with a controller (D-pad + A).'
       : 'Games unlock once both players are in.';
+    renderPadHint();
 
-    $('game-list').innerHTML = state.games.map(function (g) {
+    const padFocus = Object.keys(padSeats).length > 0;
+    if (focus >= state.games.length) focus = 0;
+    $('game-list').innerHTML = state.games.map(function (g, i) {
       return (
-        '<button class="game-card" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
+        '<button class="game-card' + (padFocus && i === focus ? ' pad-focus' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
         '<strong>' + Ark.escapeHtml(g.name) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
@@ -106,6 +113,7 @@
     if (current && current.renderer.unmount) current.renderer.unmount();
     current = null;
     pendingView = null;
+    lastView = null;
     $('stage').innerHTML = '';
   }
 
@@ -122,6 +130,7 @@
       renderer.mount(stage, { players: state.players });
       if (pendingView) renderer.update(pendingView);
       pendingView = null;
+      renderPadFooter();
     }).catch(function (err) {
       stage.innerHTML = '<div class="loading">' + Ark.escapeHtml(err.message) + '</div>';
     });
@@ -129,6 +138,7 @@
 
   socket.on('room:state', function (s) {
     state = s;
+    reconcilePads();
     const playing = s.phase === 'playing';
     $('lobby').classList.toggle('hidden', playing);
     $('stage').classList.toggle('hidden', !playing);
@@ -140,11 +150,145 @@
       unmountGame();
       renderLobby();
     }
+    renderPadFooter();
   });
 
   socket.on('game:view', function (msg) {
     if (!current || current.gameId !== msg.gameId) return;
+    lastView = msg.view;
     if (current.renderer) current.renderer.update(msg.view);
     else pendingView = msg.view;
+  });
+  // ---- controllers -----------------------------------------------------
+  // Controllers are read on this page (see gamepads.js). Their players are
+  // "local" seats on the server; this page sends their input with pad:input.
+
+  const PAD_KEY = 'ark.pads';
+  let padSeats = {}; // pad index -> { slot, token }
+  let connectedPads = [];
+  let focus = 0; // the game card controllers have selected in the lobby
+  let padMessage = '';
+  let padMessageTimer = null;
+
+  const padName = function (idx) { return 'Controller ' + (idx + 1); };
+
+  function savePads() {
+    // Until the room is known (a refresh is still resuming), there's nothing to save yet;
+    // saving now would wipe the seats restorePads() is about to take back.
+    if (!roomCode) return;
+    try { localStorage.setItem(PAD_KEY, JSON.stringify({ code: roomCode, pads: padSeats })); } catch (e) { /* private mode */ }
+  }
+
+  // After a TV refresh, take the same seats back (only within the same room).
+  function restorePads(code) {
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem(PAD_KEY)); } catch (e) { /* ignore */ }
+    padSeats = {};
+    if (!stored || stored.code !== code) return savePads();
+    Object.keys(stored.pads || {}).forEach(function (idx) {
+      socket.emit('pad:join', { name: padName(Number(idx)), token: stored.pads[idx].token }, function (res) {
+        if (!res || !res.ok) return;
+        padSeats[idx] = { slot: res.slot, token: res.token };
+        savePads();
+      });
+    });
+  }
+
+  // Drop seats the server no longer has (player left, or a phone took the seat over).
+  function reconcilePads() {
+    Object.keys(padSeats).forEach(function (idx) {
+      const p = state.players[padSeats[idx].slot];
+      if (!p || !p.local) delete padSeats[idx];
+    });
+    savePads();
+  }
+
+  function flashPad(msg) {
+    padMessage = msg;
+    clearTimeout(padMessageTimer);
+    padMessageTimer = setTimeout(function () { padMessage = ''; renderPadHint(); }, 3000);
+    renderPadHint();
+  }
+
+  function renderPadHint() {
+    const n = connectedPads.length;
+    let text;
+    if (padMessage) text = padMessage;
+    else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · D-pad + A pick a game';
+    $('pad-hint').textContent = text;
+  }
+
+  function renderPadFooter() {
+    const el = $('pad-footer');
+    const r = current && current.renderer;
+    const anyPad = state && state.players.some(function (p) { return p && p.local; });
+    const show = Boolean(state && state.phase === 'playing' && anyPad && r && r.padHint);
+    el.classList.toggle('hidden', !show);
+    if (show) el.textContent = '🎮 ' + r.padHint + ' · Back: lobby';
+  }
+
+  function joinPad(idx) {
+    socket.emit('pad:join', { name: padName(idx) }, function (res) {
+      if (!res || !res.ok) return flashPad('🎮 ' + ((res && res.error) || "Couldn't join."));
+      padSeats[idx] = { slot: res.slot, token: res.token };
+      savePads();
+      ArkPads.rumble(idx, 150);
+    });
+  }
+
+  ArkPads.onChange(function (list) {
+    connectedPads = list;
+    // A controller unplugged in the lobby gives up its seat; mid-game it keeps it.
+    if (state && state.phase !== 'playing') {
+      Object.keys(padSeats).forEach(function (idx) {
+        if (list.indexOf(Number(idx)) === -1) {
+          socket.emit('pad:leave', { slot: padSeats[idx].slot });
+          delete padSeats[idx];
+        }
+      });
+      savePads();
+    }
+    if (state && state.phase !== 'playing') renderLobby();
+  });
+
+  ArkPads.onPress(function (idx, btn) {
+    if (!state) return;
+    const seat = padSeats[idx];
+
+    if (state.phase === 'playing') {
+      if (btn === 'BACK') return socket.emit('lobby:return');
+      const r = current && current.renderer;
+      if (!seat || !r || !r.pad || !lastView) return;
+      const input = r.pad(btn, lastView, seat.slot);
+      if (input) {
+        socket.emit('pad:input', { slot: seat.slot, input: input });
+        ArkPads.rumble(idx, 60);
+      }
+      return;
+    }
+
+    // Lobby
+    if (!seat) {
+      if (btn === 'A' || btn === 'START') joinPad(idx);
+      return;
+    }
+    const n = state.games.length;
+    if (btn === 'B') {
+      socket.emit('pad:leave', { slot: seat.slot });
+      delete padSeats[idx];
+      savePads();
+    } else if (btn === 'LEFT' || btn === 'UP') {
+      focus = (focus + n - 1) % n;
+    } else if (btn === 'RIGHT' || btn === 'DOWN') {
+      focus = (focus + 1) % n;
+    } else if (btn === 'A' || btn === 'START') {
+      if (state.readyToPlay) socket.emit('lobby:start', { gameId: state.games[focus].id });
+      else flashPad('🎮 Waiting for a second player.');
+      return;
+    } else {
+      return;
+    }
+    renderLobby();
   });
 })();

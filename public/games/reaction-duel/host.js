@@ -18,7 +18,7 @@
   function light(view) {
     switch (view.phase) {
       case 'ready':
-        return { cls: 'ready', big: 'Get ready…', sub: 'Round ' + view.round + '. Fingers on your phones' };
+        return { cls: 'ready', big: 'Get ready…', sub: 'Round ' + view.round + '. Fingers ready!' };
       case 'wait':
         return { cls: 'wait', big: 'WAIT…', sub: 'Tap too early and you lose the point' };
       case 'go':
@@ -40,7 +40,15 @@
     return ms === null ? '-' : ms + ' ms';
   }
 
+  const TAP_BUTTONS = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT'];
+
   Ark.register('host', 'reaction-duel', {
+    // Controller players: any face button, bumper or trigger taps.
+    padHint: 'Any button or trigger to tap · A: rematch at the end',
+    pad: function (btn, view) {
+      if (view.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
+      return TAP_BUTTONS.indexOf(btn) !== -1 ? { type: 'tap' } : null;
+    },
     mount: function (el) {
       root = document.createElement('div');
       root.className = 'rd-host';
