@@ -18,6 +18,7 @@ container on your home network.
 | **Reaction Duel** | The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. |
 | **Rock Paper Scissors** | Pick in secret on your phone; the TV reveals both. First to 3. |
 | **Pong** | The classic, in real time. Drag on your phone's touch strip (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
+| **Light Cycles** | Tron-style. Your cycle leaves a wall behind it: make your rival crash into it. Tap a side of the phone pad or swipe to turn. Cycles speed up as the round goes on. First to 3. |
 
 ## Controllers
 
@@ -35,6 +36,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Reaction Duel | any face button, bumper or trigger | Tap |
 | Rock Paper Scissors | **X** ✊ · **Y** ✋ · **B** ✌️ (or D-pad ← ↑ →) | Pick (stays secret, the TV only shows 🔒) |
 | Pong | **Left stick** or **D-pad ↑↓** | Move your paddle |
+| Light Cycles | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |
 | Game over | **A** / **Start** | Rematch |
 
 Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
@@ -190,6 +192,6 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 ## Roadmap ideas
 
-- More real-time games: Tron light-cycles, air hockey
+- More real-time games: air hockey, snake battle
 - Quiz / trivia battle, drawing duels
 - Sounds, match history and a persistent leaderboard
