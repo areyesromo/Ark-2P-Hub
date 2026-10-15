@@ -1,0 +1,9 @@
+[Unit]
+Description=Check for Ark 2P Hub updates every 10 minutes
+
+[Timer]
+OnBootSec=2min
+OnUnitActiveSec=10min
+
+[Install]
+WantedBy=timers.target

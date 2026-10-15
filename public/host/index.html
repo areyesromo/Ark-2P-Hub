@@ -1,0 +1,52 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ark 2P Hub · TV</title>
+  <link rel="stylesheet" href="/shared/common.css">
+  <link rel="stylesheet" href="/host/host.css">
+</head>
+<body>
+  <div id="app">
+    <header class="topbar">
+      <h1 class="brand"><span class="p1">ARK</span> <span class="p2">2P</span> HUB</h1>
+      <div class="topbar-right">
+        <span id="conn" class="conn">Connecting…</span>
+        <span class="room-chip">Room <strong id="room-code">····</strong></span>
+        <button id="to-lobby" class="ghost hidden">Lobby</button>
+        <button id="fullscreen" class="ghost" title="Fullscreen">⛶</button>
+      </div>
+    </header>
+
+    <section id="lobby" class="lobby">
+      <div class="join panel">
+        <h2>Scan to join</h2>
+        <div class="qr-wrap"><img id="qr" alt="QR code to join"></div>
+        <p class="muted">or open <strong id="join-url" class="join-url"></strong></p>
+        <p class="muted">and enter code <strong id="join-code" class="join-code"></strong></p>
+      </div>
+
+      <div class="side-col">
+        <div class="seats">
+          <div class="seat" id="seat-0"></div>
+          <div class="vs">VS</div>
+          <div class="seat" id="seat-1"></div>
+        </div>
+
+        <div class="panel games">
+          <h2>Pick a game</h2>
+          <p id="games-hint" class="muted"></p>
+          <div id="game-list" class="game-list"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="stage" class="stage hidden"></section>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="/shared/common.js"></script>
+  <script src="/host/host.js"></script>
+</body>
+</html>

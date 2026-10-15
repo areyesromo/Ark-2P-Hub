@@ -1,0 +1,11 @@
+[Unit]
+Description=Pull the latest Ark 2P Hub image and restart if it changed
+Wants=network-online.target
+After=network-online.target docker.service
+
+[Service]
+Type=oneshot
+WorkingDirectory=/opt/ark
+ExecStart=/usr/bin/docker compose pull --quiet
+ExecStart=/usr/bin/docker compose up -d --remove-orphans
+ExecStart=/usr/bin/docker image prune -f

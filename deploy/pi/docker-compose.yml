@@ -1,0 +1,15 @@
+# Raspberry Pi: run the prebuilt multi-arch image from GitHub Container Registry.
+# CI publishes ghcr.io/areyesromo/ark-2p-hub:latest on every push to main;
+# ark-update.timer pulls it, so merging to main updates the Pi.
+services:
+  ark:
+    image: ghcr.io/areyesromo/ark-2p-hub:latest
+    container_name: ark-2p-hub
+    restart: unless-stopped
+    # Host networking lets the server see the Pi's real LAN IP, so the QR code
+    # is right even though the kiosk browser opens http://localhost:3000.
+    network_mode: host
+    environment:
+      PORT: "3000"
+      # Optional: pin the address phones use (e.g. a hostname or static IP).
+      # PUBLIC_URL: "http://192.168.1.50:3000"
