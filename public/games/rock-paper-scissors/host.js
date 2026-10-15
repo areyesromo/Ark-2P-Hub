@@ -26,13 +26,22 @@
     const nameOf = function (slot) {
       return '<span class="p' + (slot + 1) + '-text">' + esc(view.players[slot].name) + '</span>';
     };
-    if (view.phase === 'choose') return 'Make your pick on your phone';
+    if (view.phase === 'choose') return 'Make your picks!';
     if (view.phase === 'over') return '🏆 ' + nameOf(view.winner) + ' wins the match!';
     if (view.roundWinner === null) return 'Draw!';
     return nameOf(view.roundWinner) + ' takes the round';
   }
 
+  // Controller players: left / top / right face button (or D-pad) = rock / paper / scissors.
+  const PAD_PICKS = { X: 'rock', LEFT: 'rock', Y: 'paper', UP: 'paper', B: 'scissors', RIGHT: 'scissors' };
+
   Ark.register('host', 'rock-paper-scissors', {
+    padHint: 'X ✊ Rock · Y ✋ Paper · B ✌️ Scissors (or D-pad ← ↑ →) · A: rematch at the end',
+    pad: function (btn, view) {
+      if (view.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
+      if (view.phase === 'choose' && PAD_PICKS[btn]) return { type: 'pick', choice: PAD_PICKS[btn] };
+      return null;
+    },
     mount: function (el) {
       root = document.createElement('div');
       root.className = 'rps-host';

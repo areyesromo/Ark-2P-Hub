@@ -121,6 +121,10 @@ body { overflow: hidden; }
 .game-card strong { font-size: 1.3rem; }
 .game-card span { font-weight: 400; color: var(--muted); font-size: 0.95rem; }
 .game-card:not(:disabled):hover { border-color: var(--p1); }
+.game-card.pad-focus { border-color: var(--p1); box-shadow: 0 0 0 3px var(--p1); }
+
+.pad-hint { margin: -1rem 0 0; text-align: center; color: var(--muted); font-size: 1rem; }
+.pad-footer { text-align: center; color: var(--muted); font-size: 1rem; margin-top: -0.5rem; }
 
 /* ---- game stage ---- */
 

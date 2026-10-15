@@ -21,7 +21,7 @@ export function normalizeCode(code) {
 }
 
 /**
- * One TV + up to two phones. The room owns the running game instance and is
+ * One TV + two players, each on a phone or on a controller plugged into the TV. The room owns the running game instance and is
  * the only thing that talks to Socket.IO on the game's behalf: games produce
  * views, the room pushes them out.
  */
@@ -60,11 +60,14 @@ export class Room {
    * Seat a player. A matching token re-seats the same player (phone woke up,
    * page refreshed). Otherwise take a free slot, or a slot whose player has
    * gone away, so a lost phone never locks the room.
+   *
+   * `local` players use a controller on the TV: they have no socket of their
+   * own, the TV sends their input, and they're present while the TV is.
    */
-  seatPlayer(rawName, token) {
+  seatPlayer(rawName, token, { local = false } = {}) {
     if (token) {
       const slot = this.players.findIndex((p) => p && p.token === token);
-      if (slot !== -1) {
+      if (slot !== -1 && Boolean(this.players[slot].local) === local) {
         const name = sanitizeName(rawName);
         if (name) this.players[slot].name = name;
         return { slot, player: this.players[slot], rejoined: true };
@@ -77,9 +80,15 @@ export class Room {
     if (slot === -1) slot = this.players.findIndex((p) => p && !p.connected);
     if (slot === -1) return { error: 'This room already has two players.' };
 
-    const player = { name, token: newToken(), socketId: null, connected: false };
+    const player = { name, token: newToken(), socketId: null, connected: local && this.hostSockets.size > 0, local };
     this.players[slot] = player;
     return { slot, player, rejoined: false };
+  }
+
+  /** Controller players come and go with the TV. Call after the host sockets change. */
+  syncLocalPlayers() {
+    const tvHere = this.hostSockets.size > 0;
+    for (const p of this.players) if (p && p.local) p.connected = tvHere;
   }
 
   removePlayer(slot) {
@@ -165,7 +174,7 @@ export class Room {
       hostConnected: this.hostSockets.size > 0,
       readyToPlay: this.readyToPlay,
       players: this.players.map((p, slot) =>
-        p ? { slot, name: p.name, connected: p.connected } : null,
+        p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local) } : null,
       ),
       games: listGames(),
     };

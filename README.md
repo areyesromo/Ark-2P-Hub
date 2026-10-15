@@ -18,6 +18,28 @@ container on your home network.
 | **Reaction Duel** | The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. |
 | **Rock Paper Scissors** | Pick in secret on your phone; the TV reveals both. First to 3. |
 
+## Controllers
+
+Each player can use a phone **or** a game controller. Mix and match: two
+controllers, two phones, or one of each. Connect Xbox, PlayStation or most
+other controllers (Bluetooth or USB) to the device showing the TV screen: the
+PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
+
+| Where | Button | Does |
+| --- | --- | --- |
+| Lobby | **A** / **Start** | Join (takes a free seat as "Controller 1/2") |
+| Lobby | **D-pad**, then **A** | Pick a game and start it |
+| Lobby | **B** | Leave your seat |
+| Any game | **Back / Select** | Back to the lobby |
+| Reaction Duel | any face button, bumper or trigger | Tap |
+| Rock Paper Scissors | **X** ✊ · **Y** ✋ · **B** ✌️ (or D-pad ← ↑ →) | Pick (stays secret, the TV only shows 🔒) |
+| Game over | **A** / **Start** | Rematch |
+
+Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
+Browsers only notice a controller after one of its buttons is pressed, so
+press A once if the TV says no controller is connected. Controllers rumble on
+input where the browser supports it.
+
 ## Quick start
 
 ### Docker (any machine on your network)
@@ -141,6 +163,10 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
    `server/games/index.js`.
 2. **TV:** `public/games/<id>/host.js` calls
    `Ark.register('host', '<id>', { mount(el), update(view) })`.
+   For controller players, also give it a `padHint` string and a
+   `pad(button, view, slot)` function that turns a button name (`A`, `B`, `X`,
+   `Y`, `LB`, `RB`, `LT`, `RT`, `START`, `UP`/`DOWN`/`LEFT`/`RIGHT`) into the same
+   input a phone would send, or `null`.
 3. **Phone:** `public/games/<id>/player.js` calls
    `Ark.register('player', '<id>', { mount(el, api), update(view) })`
    and sends inputs with `api.send({...})`.
@@ -159,7 +185,6 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
 
 ## Roadmap ideas
 
-- Bluetooth/USB gamepad support on the TV (Gamepad API) as an alternative to phones
 - Real-time games: Pong, Tron light-cycles, air hockey (touch joystick)
 - Quiz / trivia battle, drawing duels
 - Sounds, match history and a persistent leaderboard

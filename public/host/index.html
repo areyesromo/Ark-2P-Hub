@@ -38,6 +38,7 @@
           <div class="vs">VS</div>
           <div class="seat" id="seat-1"></div>
         </div>
+        <p id="pad-hint" class="pad-hint"></p>
 
         <div class="panel games">
           <h2>Pick a game</h2>
@@ -48,10 +49,12 @@
     </section>
 
     <section id="stage" class="stage hidden"></section>
+    <div id="pad-footer" class="pad-footer hidden"></div>
   </div>
 
   <script src="/socket.io/socket.io.js"></script>
   <script src="/shared/common.js"></script>
+  <script src="/host/gamepads.js"></script>
   <script src="/host/host.js"></script>
 </body>
 </html>
