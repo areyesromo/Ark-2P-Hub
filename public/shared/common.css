@@ -1,0 +1,95 @@
+:root {
+  --bg: #0b0d17;
+  --bg-2: #141829;
+  --panel: #1b2036;
+  --line: #2c3354;
+  --text: #eef0ff;
+  --muted: #9aa1c7;
+  --p1: #22d3ee;
+  --p2: #f472b6;
+  --good: #4ade80;
+  --bad: #f87171;
+  --warn: #facc15;
+  --radius: 18px;
+  color-scheme: dark;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  background: radial-gradient(ellipse at top, #1a1f3d 0%, var(--bg) 60%) fixed;
+}
+
+h1, h2, h3 { margin: 0; line-height: 1.1; }
+
+.brand {
+  font-weight: 900;
+  letter-spacing: 0.04em;
+}
+.brand .p1 { color: var(--p1); }
+.brand .p2 { color: var(--p2); }
+
+.p1-text { color: var(--p1); }
+.p2-text { color: var(--p2); }
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 20px;
+}
+
+button, .btn {
+  font: inherit;
+  font-weight: 700;
+  border: 0;
+  border-radius: 14px;
+  padding: 14px 22px;
+  background: #3b4370;
+  color: var(--text);
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+  touch-action: manipulation;
+}
+button:disabled { opacity: 0.4; cursor: default; }
+button.primary, .btn.primary { background: linear-gradient(135deg, var(--p1), #6366f1); color: #06121c; }
+button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+
+input {
+  font: inherit;
+  width: 100%;
+  padding: 14px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--line);
+  background: var(--bg-2);
+  color: var(--text);
+}
+
+.muted { color: var(--muted); }
+.hidden { display: none !important; }
+
+/* Shared scoreboard: name + pips for each player */
+.scoreboard {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 24px;
+}
+.scoreboard .side { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.scoreboard .side.right { align-items: flex-end; text-align: right; }
+.scoreboard .name { font-weight: 800; font-size: 1.4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.scoreboard .pips { display: flex; gap: 8px; }
+.scoreboard .pip { width: 0.9em; height: 0.9em; border-radius: 50%; border: 2px solid currentColor; opacity: 0.5; }
+.scoreboard .pip.on { background: currentColor; opacity: 1; }
+.scoreboard .round { color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }

@@ -1,0 +1,74 @@
+/* ---- TV ---- */
+
+.rps-host {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  font-size: 1.2rem;
+}
+
+.rps-arena {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 2rem;
+}
+
+.rps-hand {
+  height: 100%;
+  min-height: 12rem;
+  border-radius: 2rem;
+  background: var(--panel);
+  border: 3px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+.rps-hand .emoji { font-size: 10rem; line-height: 1; }
+.rps-hand .caption { font-size: 1.6rem; font-weight: 800; color: var(--muted); }
+.rps-hand.p1.locked { border-color: var(--p1); }
+.rps-hand.p2.locked { border-color: var(--p2); }
+.rps-hand.win { box-shadow: 0 0 4rem -0.5rem var(--good); border-color: var(--good); }
+.rps-hand.lose { opacity: 0.5; }
+
+.rps-vs { font-size: 3rem; font-weight: 900; color: var(--muted); }
+
+.rps-banner { text-align: center; font-size: 2.4rem; font-weight: 800; min-height: 1.3em; }
+
+/* ---- phone ---- */
+
+.rps-phone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 16px;
+  text-align: center;
+}
+.rps-phone .msg { font-size: 1.2rem; color: var(--muted); margin: 4px 0; }
+.rps-phone .msg strong { color: var(--text); }
+.rps-phone .score { color: var(--muted); }
+
+.rps-choices { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.rps-choices button {
+  flex: 1;
+  font-size: 3.4rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  background: var(--panel);
+  border: 3px solid var(--line);
+}
+.rps-choices button span { font-size: 1.2rem; }
+.rps-choices button.picked { border-color: var(--me); background: var(--bg-2); }
+
+.rps-big { font-size: 6rem; margin: auto 0 0; }
+.rps-outcome { font-size: 2.2rem; font-weight: 900; margin-bottom: auto; }
+.rps-outcome.won { color: var(--good); }
+.rps-outcome.lost { color: var(--bad); }
+.rps-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }

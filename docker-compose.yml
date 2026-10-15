@@ -1,0 +1,15 @@
+services:
+  ark:
+    build: .
+    # To run a prebuilt image instead of building locally (e.g. on the Pi), use:
+    # image: ghcr.io/areyesromo/ark-2p-hub:latest
+    container_name: ark-2p-hub
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      # The address phones should open, used for the QR code on the TV.
+      # Leave unset if you open the TV page via the server's LAN IP or hostname;
+      # set it if the TV uses http://localhost (Pi kiosk) or you run behind a proxy.
+      # PUBLIC_URL: "http://192.168.1.50:3000"
+      PORT: "3000"
