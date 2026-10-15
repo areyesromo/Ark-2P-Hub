@@ -2,7 +2,8 @@
 FROM node:22-alpine
 
 ENV NODE_ENV=production \
-    PORT=3000
+    PORT=3000 \
+    DATA_DIR=/app/data
 WORKDIR /app
 
 COPY package.json package-lock.json ./
@@ -16,6 +17,9 @@ ARG GIT_SHA=unknown
 ARG BUILD_TIME=unknown
 ENV ARK_COMMIT=$GIT_SHA \
     ARK_BUILT=$BUILD_TIME
+
+# Settings (admin password hash, join address) live here; compose mounts a volume on it.
+RUN mkdir -p /app/data && chown node:node /app/data
 
 USER node
 EXPOSE 3000

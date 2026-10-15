@@ -1,5 +1,3 @@
-import QRCode from 'qrcode';
-
 const asObject = (data) => (data && typeof data === 'object' ? data : {});
 const reply = (ack, payload) => {
   if (typeof ack === 'function') ack(payload);
@@ -17,9 +15,10 @@ const reply = (ack, payload) => {
  *
  * Server -> client:
  *   room:state    Room#publicState()
+ *   host:qr       { qr }                     (TV only: join address changed in Settings)
  *   game:view     { gameId, view }           (host and each player get their own view)
  */
-export function registerSocketHandlers(io, rooms, { joinBaseFor }) {
+export function registerSocketHandlers(io, rooms, { refreshJoin }) {
   io.on('connection', (socket) => {
     // What this socket is bound to. A socket is in at most one room at a time.
     let room = null;
@@ -85,12 +84,8 @@ export function registerSocketHandlers(io, rooms, { joinBaseFor }) {
     socket.on('host:create', async (data, ack) => {
       const { origin } = asObject(data);
       const target = rooms.create();
-      target.joinUrl = `${joinBaseFor(origin)}/play/?room=${target.code}`;
-      try {
-        target.qr = await QRCode.toDataURL(target.joinUrl, { margin: 1, width: 480 });
-      } catch (err) {
-        console.error('QR generation failed:', err);
-      }
+      target.hostOrigin = typeof origin === 'string' ? origin : null;
+      await refreshJoin(target);
       bindHost(target);
       reply(ack, { ok: true, code: target.code, hostToken: target.hostToken, qr: target.qr });
     });

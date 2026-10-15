@@ -41,6 +41,11 @@
     });
   });
 
+  // The join address was changed in Settings: show the new QR code.
+  socket.on('host:qr', function (msg) {
+    if (msg && msg.qr) $('qr').src = msg.qr;
+  });
+
   socket.on('disconnect', function () {
     $('conn').textContent = 'Reconnecting…';
     $('conn').className = 'conn';
@@ -65,6 +70,7 @@
 
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
+    $('join-warn').classList.toggle('hidden', !state.joinGuess);
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
     $('games-hint').textContent = state.readyToPlay

@@ -3,10 +3,13 @@ import http from 'node:http';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
+import QRCode from 'qrcode';
 import { Server } from 'socket.io';
 import { RoomManager } from './rooms.js';
 import { registerSocketHandlers } from './sockets.js';
-import { resolveJoinBase } from './network.js';
+import { resolveJoin } from './network.js';
+import { Settings } from './settings.js';
+import { adminRouter } from './admin.js';
 
 const ROOT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
@@ -16,7 +19,12 @@ const VERSION = {
   built: process.env.ARK_BUILT || 'dev',
 };
 
-export function createApp({ port = 3000, publicUrl = process.env.PUBLIC_URL } = {}) {
+export function createApp({
+  port = 3000,
+  publicUrl = process.env.PUBLIC_URL,
+  dataDir = process.env.DATA_DIR || path.join(ROOT_DIR, 'data'),
+  adminPassword = process.env.ADMIN_PASSWORD,
+} = {}) {
   const app = express();
   const httpServer = http.createServer(app);
   const io = new Server(httpServer, {
@@ -25,14 +33,43 @@ export function createApp({ port = 3000, publicUrl = process.env.PUBLIC_URL } = 
     pingTimeout: 8000,
   });
   const rooms = new RoomManager(io);
+  const settings = new Settings(dataDir, { envPassword: adminPassword });
+
+  /** (Re)compute a room's join link + QR from the current settings. */
+  async function refreshJoin(room) {
+    const join = resolveJoin({ publicUrl, savedUrl: settings.joinUrl, hostOrigin: room.hostOrigin, port });
+    room.joinGuess = join.guess;
+    const joinUrl = `${join.base}/play/?room=${room.code}`;
+    if (joinUrl === room.joinUrl) return;
+    room.joinUrl = joinUrl;
+    try {
+      room.qr = await QRCode.toDataURL(joinUrl, { margin: 1, width: 480 });
+    } catch (err) {
+      console.error('QR generation failed:', err);
+    }
+  }
 
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size }));
   app.get('/version', (_req, res) => res.json(VERSION));
+  app.use(
+    '/api/admin',
+    adminRouter({
+      settings,
+      publicUrl,
+      detectedJoin: () => resolveJoin({ port }),
+      // New join address: refresh every open room so TVs show the new QR right away.
+      onJoinUrlChange: async () => {
+        for (const room of rooms.rooms.values()) {
+          await refreshJoin(room);
+          room.broadcastState();
+          io.to(room.hostChannel).emit('host:qr', { qr: room.qr });
+        }
+      },
+    }),
+  );
   app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 
-  registerSocketHandlers(io, rooms, {
-    joinBaseFor: (hostOrigin) => resolveJoinBase({ publicUrl, hostOrigin, port }),
-  });
+  registerSocketHandlers(io, rooms, { refreshJoin });
 
   const sweeper = setInterval(() => rooms.sweep(), 60 * 1000);
   sweeper.unref();

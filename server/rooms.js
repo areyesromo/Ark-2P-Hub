@@ -32,7 +32,9 @@ export class Room {
     this.hostToken = newToken();
     this.hostSockets = new Set();
     this.players = Array(MAX_PLAYERS).fill(null);
+    this.hostOrigin = null; // the address the TV opened, used to build the join link
     this.joinUrl = null;
+    this.joinGuess = false; // true when the join address is probably unreachable (see network.js)
     this.qr = null;
     this.gameId = null;
     this.game = null;
@@ -157,6 +159,7 @@ export class Room {
     return {
       code: this.code,
       joinUrl: this.joinUrl,
+      joinGuess: this.joinGuess,
       phase: this.game ? 'playing' : 'lobby',
       gameId: this.gameId,
       hostConnected: this.hostSockets.size > 0,
