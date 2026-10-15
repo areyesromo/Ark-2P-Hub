@@ -135,3 +135,11 @@ test('join URL prefers PUBLIC_URL, then a non-loopback origin', () => {
   assert.equal(resolveJoinBase({ hostOrigin: 'http://localhost:3000', port: 3000 }), expected);
   assert.equal(resolveJoinBase({ hostOrigin: 'javascript:alert(1)', port: 3000 }), expected);
 });
+
+test('/version reports the package version and build stamp', async () => {
+  const res = await fetch(`${url}/version`);
+  const body = await res.json();
+  assert.equal(res.status, 200);
+  assert.match(body.version, /^\d+\.\d+\.\d+$/);
+  assert.ok(body.commit);
+});

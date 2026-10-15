@@ -11,6 +11,12 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY server ./server
 COPY public ./public
 
+# Stamped by update.sh / update.ps1 (and CI) so /version shows what is running.
+ARG GIT_SHA=unknown
+ARG BUILD_TIME=unknown
+ENV ARK_COMMIT=$GIT_SHA \
+    ARK_BUILT=$BUILD_TIME
+
 USER node
 EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \

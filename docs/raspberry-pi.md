@@ -65,7 +65,7 @@ image changed. Force an update right away with
 `sudo systemctl start ark-update.service`.
 
 > **Prefer building from source on the Pi?** Skip the GHCR image and the
-> timer: clone the repo and use `./scripts/deploy.sh` instead (see the
+> timer: clone the repo and use `./update.sh` instead (see the
 > README's *Update and redeploy from GitHub*). Building on a Pi 4 takes a
 > minute or two.
 
