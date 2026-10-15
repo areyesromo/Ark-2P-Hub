@@ -33,6 +33,36 @@ If the TV page is opened as `http://localhost:…` (for example on the server
 itself), set `PUBLIC_URL` in `docker-compose.yml` to the address phones should
 use, so the QR code points somewhere reachable.
 
+### Update and redeploy from GitHub
+
+Clone the repo once on the Docker machine, then run the deploy script whenever
+you want the latest version. It pulls from GitHub (fast-forward only), rebuilds
+and restarts the container only if something changed, then waits until the hub
+is healthy.
+
+```bash
+git clone https://github.com/areyesromo/Ark-2P-Hub.git && cd Ark-2P-Hub
+
+./scripts/deploy.sh                 # Linux / macOS / Pi
+./scripts/deploy.sh --branch main   # switch to / follow a specific branch
+./scripts/deploy.sh --force         # rebuild + restart even if nothing changed
+```
+
+```powershell
+.\scripts\deploy.ps1                # Windows (Docker Desktop) or PowerShell 7 anywhere
+.\scripts\deploy.ps1 -Branch main
+.\scripts\deploy.ps1 -Force
+```
+
+The scripts refuse to run if there are uncommitted local changes or the local
+branch has diverged, so they never throw away your work. If Windows blocks the
+script, run `Set-ExecutionPolicy -Scope Process Bypass` first.
+
+To update automatically, schedule it:
+
+- **Linux (cron):** `*/10 * * * * /path/to/Ark-2P-Hub/scripts/deploy.sh >> /var/log/ark-deploy.log 2>&1`
+- **Windows (Task Scheduler):** run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\path\to\Ark-2P-Hub\scripts\deploy.ps1` on a timer.
+
 ### Raspberry Pi 4 as an all-in-one console
 
 The Pi runs the server *and* shows the TV screen in kiosk mode, and updates
@@ -80,6 +110,7 @@ public/
   games/<id>/host.js      how a game looks on the TV
   games/<id>/player.js    how a game looks/behaves on the phone
 deploy/pi/                Raspberry Pi compose, kiosk and auto-update files
+scripts/                  deploy.sh / deploy.ps1: pull from GitHub and redeploy
 ```
 
 ## Adding a game
