@@ -1,0 +1,88 @@
+/* ---- TV ---- */
+
+.pong-host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 1.2rem;
+}
+
+.pong-arena {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pong-arena canvas {
+  display: block;
+  border-radius: 1.2rem;
+  border: 1px solid var(--line);
+  background: #070914;
+}
+
+.pong-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  pointer-events: none;
+  text-align: center;
+}
+.pong-overlay .big { font-size: 7rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.8); }
+.pong-overlay .sub { font-size: 1.6rem; color: var(--muted); text-shadow: 0 0 1rem rgba(0, 0, 0, 0.9); }
+.pong-overlay .sub strong { color: var(--text); }
+
+/* ---- phone ---- */
+
+.pong-phone {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  text-align: center;
+}
+.pong-phone .score { color: var(--muted); font-weight: 700; }
+.pong-phone .status { font-size: 1.15rem; min-height: 1.4em; }
+.pong-phone .status.won { color: var(--good); font-weight: 900; font-size: 1.8rem; }
+.pong-phone .status.lost { color: var(--bad); font-weight: 900; font-size: 1.8rem; }
+
+.pong-strip {
+  flex: 1;
+  position: relative;
+  border-radius: 24px;
+  border: 3px solid var(--me);
+  background:
+    repeating-linear-gradient(to bottom, transparent 0 38px, rgba(255, 255, 255, 0.04) 38px 40px),
+    var(--panel);
+  touch-action: none;
+  overflow: hidden;
+}
+.pong-strip .knob {
+  position: absolute;
+  left: 18%;
+  right: 18%;
+  height: 22%;
+  border-radius: 14px;
+  background: var(--me);
+  box-shadow: 0 0 24px var(--me);
+  transform: translateY(-50%);
+  top: 50%;
+  opacity: 0.85;
+}
+.pong-strip .hint {
+  position: absolute;
+  inset: auto 0 12px;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+.pong-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }

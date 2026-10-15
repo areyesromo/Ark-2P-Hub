@@ -10,6 +10,7 @@
   let pendingView = null;
   let lastView = null; // newest view of the current game (controllers map buttons against it)
   let roomCode = null;
+  const lastPolled = {}; // pad index -> last analog input sent (see padPoll below)
 
   // ---- room lifecycle --------------------------------------------------
 
@@ -114,6 +115,7 @@
     current = null;
     pendingView = null;
     lastView = null;
+    Object.keys(lastPolled).forEach(function (k) { delete lastPolled[k]; });
     $('stage').innerHTML = '';
   }
 
@@ -250,6 +252,20 @@
       savePads();
     }
     if (state && state.phase !== 'playing') renderLobby();
+  });
+
+  // Real-time games read held buttons / sticks every frame via the renderer's
+  // padPoll(); we only send when the resulting input changes.
+  ArkPads.onFrame(function () {
+    const r = current && current.renderer;
+    if (!state || state.phase !== 'playing' || !r || !r.padPoll || !lastView) return;
+    Object.keys(padSeats).forEach(function (idx) {
+      const input = r.padPoll({ held: ArkPads.held(Number(idx)), stick: ArkPads.stick(Number(idx)) }, lastView, padSeats[idx].slot);
+      const key = input ? JSON.stringify(input) : '';
+      if (!input || key === lastPolled[idx]) return;
+      lastPolled[idx] = key;
+      socket.emit('pad:input', { slot: padSeats[idx].slot, input: input });
+    });
   });
 
   ArkPads.onPress(function (idx, btn) {

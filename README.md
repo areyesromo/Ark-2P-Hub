@@ -17,6 +17,7 @@ container on your home network.
 | --- | --- |
 | **Reaction Duel** | The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. |
 | **Rock Paper Scissors** | Pick in secret on your phone; the TV reveals both. First to 3. |
+| **Pong** | The classic, in real time. Drag on your phone's touch strip (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
 
 ## Controllers
 
@@ -33,6 +34,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Any game | **Back / Select** | Back to the lobby |
 | Reaction Duel | any face button, bumper or trigger | Tap |
 | Rock Paper Scissors | **X** ✊ · **Y** ✋ · **B** ✌️ (or D-pad ← ↑ →) | Pick (stays secret, the TV only shows 🔒) |
+| Pong | **Left stick** or **D-pad ↑↓** | Move your paddle |
 | Game over | **A** / **Start** | Rematch |
 
 Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
@@ -166,13 +168,16 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
    For controller players, also give it a `padHint` string and a
    `pad(button, view, slot)` function that turns a button name (`A`, `B`, `X`,
    `Y`, `LB`, `RB`, `LT`, `RT`, `START`, `UP`/`DOWN`/`LEFT`/`RIGHT`) into the same
-   input a phone would send, or `null`.
+   input a phone would send, or `null`. Real-time games can add
+   `padPoll({ held, stick }, view, slot)`, called every frame, for analog
+   input (see `pong`).
 3. **Phone:** `public/games/<id>/player.js` calls
    `Ark.register('player', '<id>', { mount(el, api), update(view) })`
    and sends inputs with `api.send({...})`.
 4. Add a test in `test/` using the `fakeCtx()` helper (manual clock, no waiting).
 
-`reaction-duel` is the best template for real-time games and
+`pong` is the template for real-time games (server physics loop, canvas on the
+TV, touch strip on the phone), `reaction-duel` for timing games and
 `rock-paper-scissors` for turn-based / hidden-information games.
 
 ## Notes
@@ -185,6 +190,6 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
 
 ## Roadmap ideas
 
-- Real-time games: Pong, Tron light-cycles, air hockey (touch joystick)
+- More real-time games: Tron light-cycles, air hockey
 - Quiz / trivia battle, drawing duels
 - Sounds, match history and a persistent leaderboard
