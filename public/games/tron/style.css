@@ -1,0 +1,80 @@
+/* ---- TV ---- */
+
+.tron-host {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  font-size: 1.2rem;
+}
+.tron-arena {
+  flex: 1;
+  min-height: 0;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.tron-arena canvas {
+  display: block;
+  border-radius: 0.8rem;
+  border: 1px solid var(--line);
+  background: #05070f;
+}
+.tron-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  pointer-events: none;
+  text-align: center;
+}
+.tron-overlay .big { font-size: 7rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.9); }
+.tron-overlay .sub { font-size: 1.7rem; color: var(--muted); text-shadow: 0 0 1rem #000, 0 0 1rem #000; }
+.tron-overlay .sub strong { color: var(--text); }
+
+/* ---- phone ---- */
+
+.tron-phone {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  text-align: center;
+}
+.tron-phone .score { color: var(--muted); font-weight: 700; }
+.tron-phone .status { font-size: 1.15rem; min-height: 1.4em; }
+.tron-phone .status.won { color: var(--good); font-weight: 900; font-size: 1.8rem; }
+.tron-phone .status.lost { color: var(--bad); font-weight: 900; font-size: 1.8rem; }
+
+.tron-pad {
+  flex: 1;
+  position: relative;
+  border-radius: 24px;
+  border: 3px solid var(--me);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0 18%, transparent 19%), var(--panel);
+  touch-action: none;
+  overflow: hidden;
+}
+.tron-pad .arrow {
+  position: absolute;
+  font-size: 3.2rem;
+  line-height: 1;
+  color: var(--muted);
+  opacity: 0.45;
+  transform: translate(-50%, -50%);
+  transition: opacity 80ms, color 80ms, transform 80ms;
+}
+.tron-pad .arrow.up { left: 50%; top: 16%; }
+.tron-pad .arrow.down { left: 50%; top: 84%; }
+.tron-pad .arrow.left { left: 16%; top: 50%; }
+.tron-pad .arrow.right { left: 84%; top: 50%; }
+.tron-pad .arrow.on { color: var(--me); opacity: 1; transform: translate(-50%, -50%) scale(1.25); text-shadow: 0 0 18px var(--me); }
+.tron-pad .hint { position: absolute; inset: auto 0 12px; color: var(--muted); font-size: 0.9rem; }
+.tron-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
