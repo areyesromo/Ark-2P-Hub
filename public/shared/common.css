@@ -64,7 +64,7 @@ button, .btn {
 }
 button:disabled { opacity: 0.4; cursor: default; }
 button.primary, .btn.primary { background: linear-gradient(135deg, var(--p1), #6366f1); color: #06121c; }
-button.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
+button.ghost, .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
 
 input {
   font: inherit;

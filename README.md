@@ -29,9 +29,20 @@ docker compose up -d --build
 Then open `http://<server-ip>:3000/host/` in the TV's browser (a PC on HDMI,
 a Google TV browser, or a Raspberry Pi; see below). Phones scan the QR code.
 
-If the TV page is opened as `http://localhost:…` (for example on the server
-itself), set `PUBLIC_URL` in `docker-compose.yml` to the address phones should
-use, so the QR code points somewhere reachable.
+#### Fixing the QR code address
+
+Inside Docker, the server only knows its own internal IP. If the TV page is
+opened as `http://localhost:…` (for example on the server itself), the QR code
+can point somewhere phones can't reach, and the TV shows a ⚠ warning. To fix it:
+
+1. On a phone or PC, open `http://<server-ip>:3000/admin/` (or press ⚙ on the TV screen).
+2. The first visit asks you to create an admin password.
+3. Press **Use this page's address**, or type the address, then **Save**. The QR
+   code on the TV updates right away.
+
+The setting is stored in the `ark-data` Docker volume, so it survives updates.
+You can also set `ADMIN_PASSWORD` and/or `PUBLIC_URL` in `docker-compose.yml`;
+`PUBLIC_URL` overrides the saved address.
 
 ### Update and redeploy from GitHub
 

@@ -15,6 +15,7 @@
         <span id="conn" class="conn">Connecting…</span>
         <span class="room-chip">Room <strong id="room-code">····</strong></span>
         <button id="to-lobby" class="ghost hidden">Lobby</button>
+        <a class="btn ghost icon-btn" href="/admin/" title="Settings">⚙</a>
         <button id="fullscreen" class="ghost" title="Fullscreen">⛶</button>
       </div>
     </header>
@@ -25,6 +26,10 @@
         <div class="qr-wrap"><img id="qr" alt="QR code to join"></div>
         <p class="muted">or open <strong id="join-url" class="join-url"></strong></p>
         <p class="muted">and enter code <strong id="join-code" class="join-code"></strong></p>
+        <p id="join-warn" class="join-warn hidden">
+          ⚠ This address is a guess (the server is in Docker). If phones can't connect, open
+          <strong>/admin/</strong> on this server from a phone or PC and set the join address.
+        </p>
       </div>
 
       <div class="side-col">

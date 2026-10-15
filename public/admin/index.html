@@ -1,0 +1,78 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ark 2P Hub · Settings</title>
+  <link rel="stylesheet" href="/shared/common.css">
+  <style>
+    main {
+      max-width: 520px;
+      margin: 0 auto;
+      padding: 32px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    h1 { font-size: 2rem; }
+    h2 { font-size: 1.3rem; }
+    form, .card { display: flex; flex-direction: column; gap: 14px; }
+    label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; color: var(--muted); }
+    .row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .row button { flex: 1; }
+    p { margin: 0; line-height: 1.45; }
+    code { background: var(--bg-2); padding: 2px 6px; border-radius: 6px; word-break: break-all; }
+    .msg { min-height: 1.2em; }
+    .msg.ok { color: var(--good); }
+    .msg.err { color: var(--bad); }
+    .note { font-size: 0.9rem; }
+    .warn { color: var(--warn); }
+  </style>
+</head>
+<body>
+  <main>
+    <h1 class="brand"><span class="p1">ARK</span> <span class="p2">2P</span> HUB <span class="muted">· Settings</span></h1>
+
+    <!-- First run: create the admin password -->
+    <form id="setup" class="panel hidden">
+      <h2>Create an admin password</h2>
+      <p class="muted">First-time setup. You'll need this password to change settings later.</p>
+      <label>Password <input type="password" id="setup-pw" autocomplete="new-password" required></label>
+      <label>Again <input type="password" id="setup-pw2" autocomplete="new-password" required></label>
+      <button class="primary" type="submit">Create password</button>
+      <p class="msg err" id="setup-msg"></p>
+    </form>
+
+    <!-- Login -->
+    <form id="login" class="panel hidden">
+      <h2>Admin login</h2>
+      <p class="muted note" id="login-note"></p>
+      <label>Password <input type="password" id="login-pw" autocomplete="current-password" required></label>
+      <button class="primary" type="submit">Log in</button>
+      <p class="msg err" id="login-msg"></p>
+    </form>
+
+    <!-- Settings -->
+    <form id="settings" class="panel hidden">
+      <h2>Join address</h2>
+      <p class="muted">The address phones open when they scan the QR code on the TV. Use this machine's
+        LAN IP and port, e.g. <code>http://192.168.1.50:3000</code>.</p>
+      <p class="warn note hidden" id="env-note"></p>
+      <label>Address
+        <input id="join-url" placeholder="http://192.168.1.50:3000" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </label>
+      <div class="row">
+        <button type="button" class="ghost" id="use-here">Use this page's address</button>
+        <button type="button" class="ghost" id="clear">Automatic</button>
+      </div>
+      <p class="muted note" id="here-note"></p>
+      <button class="primary" type="submit">Save</button>
+      <p class="msg" id="settings-msg"></p>
+      <p class="muted note">Leave it empty ("Automatic") to use the address the TV opened, or a detected one.
+        Detected right now: <code id="detected"></code></p>
+      <div class="row"><a class="btn ghost" href="/host/">Back to TV screen</a><button type="button" class="ghost" id="logout">Log out</button></div>
+    </form>
+  </main>
+  <script src="/admin/admin.js"></script>
+</body>
+</html>

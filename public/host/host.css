@@ -62,6 +62,16 @@ body { overflow: hidden; }
 .join p { margin: 0; font-size: 1.1rem; }
 .join-url { color: var(--text); word-break: break-all; }
 .join-code { color: var(--text); font-size: 1.6rem; letter-spacing: 0.25em; }
+.join .join-warn {
+  color: var(--warn);
+  font-size: 0.95rem;
+  line-height: 1.4;
+  border: 1px solid var(--warn);
+  border-radius: 12px;
+  padding: 0.7rem 0.9rem;
+}
+.join-warn strong { color: var(--text); }
+.icon-btn { padding: 0.5rem 1rem; }
 
 .side-col { display: flex; flex-direction: column; gap: 2rem; min-height: 0; }
 
