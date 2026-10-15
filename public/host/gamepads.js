@@ -12,8 +12,10 @@
   const STICK = 0.6;
 
   const held = {}; // pad index -> names held on the last frame
+  const sticks = {}; // pad index -> left stick { x, y }, -1..1
   let onPress = function () {};
   let onChange = function () {};
+  let onFrame = function () {};
 
   function pressedNames(gp) {
     const out = [];
@@ -44,6 +46,7 @@
       if (!before) changed = true;
       const now = pressedNames(gp);
       held[gp.index] = now;
+      sticks[gp.index] = { x: gp.axes[0] || 0, y: gp.axes[1] || 0 };
       now.forEach(function (name) {
         // Fire once per press, not every frame it's held.
         if (!before || before.indexOf(name) === -1) onPress(gp.index, name);
@@ -52,10 +55,12 @@
     Object.keys(held).forEach(function (i) {
       if (!seen[i]) {
         delete held[i];
+        delete sticks[i];
         changed = true;
       }
     });
     if (changed) onChange(Object.keys(held).map(Number));
+    onFrame();
     requestAnimationFrame(poll);
   }
 
@@ -64,6 +69,12 @@
     onPress: function (fn) { onPress = fn; },
     /** fn([padIndex, ...]) whenever a controller appears or disappears. */
     onChange: function (fn) { onChange = fn; },
+    /** fn() once per frame, after presses; read held()/stick() inside for analog games. */
+    onFrame: function (fn) { onFrame = fn; },
+    /** Button names held right now on a pad. */
+    held: function (index) { return held[index] || []; },
+    /** Left stick position { x, y } (-1..1, down is +y). */
+    stick: function (index) { return sticks[index] || { x: 0, y: 0 }; },
     /** Short buzz, on controllers and browsers that support it. */
     rumble: function (index, ms) {
       const gp = pads().filter(function (p) { return p.index === index; })[0];
