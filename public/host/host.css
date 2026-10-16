@@ -109,6 +109,8 @@ body { overflow: hidden; }
 .games h2 { font-size: 1.6rem; }
 .games p { margin: 0; }
 .game-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(14rem, 1fr)); gap: 1rem; }
+.game-group { grid-column: 1 / -1; margin: 0.6rem 0 -0.2rem; font-size: 1.15rem; }
+.game-group span { font-weight: 400; color: var(--muted); font-size: 0.9rem; margin-left: 0.5rem; }
 .game-card {
   text-align: left;
   background: var(--bg-2);

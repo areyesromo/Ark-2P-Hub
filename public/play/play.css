@@ -70,6 +70,8 @@ body.slot-1 { --me: var(--p2); }
 }
 .lobby-status { text-align: center; font-size: 1.15rem; color: var(--muted); margin: 8px 0; }
 .phone-games { display: flex; flex-direction: column; gap: 12px; }
+.phone-games .game-group { margin: 8px 0 -4px; font-size: 1.05rem; }
+.phone-games .game-group span { display: block; font-weight: 400; color: var(--muted); font-size: 0.85rem; }
 .phone-games button { text-align: left; padding: 18px; display: flex; flex-direction: column; gap: 4px; background: var(--panel); border: 1px solid var(--line); }
 .phone-games button strong { font-size: 1.15rem; }
 .phone-games button span { font-weight: 400; color: var(--muted); font-size: 0.9rem; }

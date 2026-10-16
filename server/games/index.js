@@ -8,11 +8,15 @@ import tanks from './tanks.js';
 import quiz from './quiz.js';
 import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
+import sketchGuess from './sketch-guess.js';
 
 /**
  * Every game is a module exporting:
  *
- *   { id, name, tagline, create(ctx) }
+ *   { id, name, tagline, category?, create(ctx) }
+ *
+ * category is 'competitive' (the default: you play against each other) or
+ * 'casual' (you play together, nobody really loses). The lobby groups them.
  *
  * create(ctx) returns an instance with:
  *   start()                  begin (or restart) the match
@@ -26,10 +30,16 @@ import battleship from './battleship.js';
  * To add a game: write the module, list it below, and add the two renderers
  * under public/games/<id>/.
  */
-const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey, snake, tanks, quiz, drawDuel, battleship];
+const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey, snake, tanks, quiz, drawDuel, battleship, sketchGuess];
 
+export const CATEGORIES = ['competitive', 'casual'];
+
+/** Games for the lobby, grouped by category (in CATEGORIES order) so lists and controller focus agree. */
 export function listGames() {
-  return GAMES.map(({ id, name, tagline }) => ({ id, name, tagline }));
+  const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
+  return GAMES.slice()
+    .sort((a, b) => byCategory(a) - byCategory(b))
+    .map(({ id, name, tagline, category }) => ({ id, name, tagline, category: category || 'competitive' }));
 }
 
 export function getGame(id) {
