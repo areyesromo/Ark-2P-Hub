@@ -123,6 +123,9 @@
     else if (!opponent.connected) status = Ark.escapeHtml(opponent.name) + ' is reconnecting…';
     else status = 'You vs <strong>' + Ark.escapeHtml(opponent.name) + '</strong>. Pick a game!';
     $('lobby-status').innerHTML = status;
+    const h2h = Ark.h2hHtml(state.players, state.h2h);
+    $('h2h').innerHTML = h2h;
+    $('h2h').classList.toggle('hidden', !h2h);
 
     $('phone-games').innerHTML = state.games.map(function (g, i) {
       const heading = i === 0 || state.games[i - 1].category !== g.category

@@ -34,8 +34,15 @@
     return /^(localhost|127\.|\[::1\])/.test(host);
   }
 
+  function loadMatchCount() {
+    fetch('/api/stats').then(function (r) { return r.json(); }).then(function (d) {
+      $('match-count').textContent = d.total + ' match' + (d.total === 1 ? '' : 'es') + ' recorded';
+    }).catch(function () { $('match-count').textContent = 'Unknown'; });
+  }
+
   function showSettings() {
     show('settings');
+    loadMatchCount();
     $('join-url').value = status.joinUrl;
     $('detected').textContent = status.detected.base + (status.detected.guess ? ' (Docker-internal, phones probably can\'t reach it)' : '');
     if (status.envOverride) {
@@ -101,7 +108,17 @@
   });
   $('use-here').addEventListener('click', function () { $('join-url').value = location.origin; });
   $('clear').addEventListener('click', function () { $('join-url').value = ''; save(''); });
-  $('logout').addEventListener('click', function () {
+  $('clear-stats').addEventListener('click', function () {
+    if (!window.confirm('Clear every recorded match and the leaderboard? This can\'t be undone.')) return;
+    api('POST', '/api/admin/stats/reset').then(function (r) {
+      if (r.status === 401) { setToken(''); return show('login'); }
+      $('stats-msg').className = r.ok ? 'msg ok' : 'msg err';
+      $('stats-msg').textContent = r.ok ? 'Match history cleared.' : r.error || 'Something went wrong.';
+      loadMatchCount();
+    });
+  });
+
+    $('logout').addEventListener('click', function () {
     api('POST', '/api/admin/logout').then(function () { setToken(''); show('login'); });
   });
 

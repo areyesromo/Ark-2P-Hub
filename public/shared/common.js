@@ -97,7 +97,32 @@
     );
   }
 
+  /**
+   * One-line head-to-head record between the two seated players, from the
+   * room state (state.h2h, oriented player 1 vs player 2). Empty when not
+   * both seats are taken.
+   */
+  function h2hHtml(players, h) {
+    if (!h || !players[0] || !players[1]) return '';
+    const a = '<span class="p1-text">' + escapeHtml(players[0].name) + '</span>';
+    const b = '<span class="p2-text">' + escapeHtml(players[1].name) + '</span>';
+    if (!h.played && !h.team.played) return '🏆 First time ' + a + ' and ' + b + ' have played here. Good luck!';
+    const parts = [];
+    if (h.played) {
+      parts.push('🏆 ' + a + ' <strong>' + h.wins[0] + ' – ' + h.wins[1] + '</strong> ' + b +
+        (h.draws ? ' <span class="muted">(' + h.draws + ' draw' + (h.draws === 1 ? '' : 's') + ')</span>' : ''));
+      const last = h.recent[0];
+      if (last) {
+        const who = last.winner === null ? 'draw' : (last.winner === 0 ? a : b) + ' won';
+        parts.push('<span class="muted">last: ' + escapeHtml(last.name) + ', ' + who + (last.scores ? ' ' + last.scores.join('–') : '') + '</span>');
+      }
+    }
+    if (h.team.played) parts.push('🎨 ' + h.team.stars + '⭐ together');
+    return parts.join(' · ');
+  }
+
   window.Ark = {
+    h2hHtml: h2hHtml,
     escapeHtml: escapeHtml,
     register: register,
     loadRenderer: loadRenderer,

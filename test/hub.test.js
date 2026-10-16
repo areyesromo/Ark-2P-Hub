@@ -1,15 +1,20 @@
 import { test, before, after } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 import { io as connect } from 'socket.io-client';
 import { createApp } from '../server/app.js';
 import { detectLanAddress, resolveJoinBase } from '../server/network.js';
 
 let server;
 let url;
+let dataDir;
 const sockets = [];
 
 before(async () => {
-  server = createApp({ port: 0, publicUrl: 'http://tv.local:3000' });
+  dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-hub-'));
+  server = createApp({ port: 0, publicUrl: 'http://tv.local:3000', dataDir });
   const addr = await server.listen();
   url = `http://127.0.0.1:${addr.port}`;
 });
@@ -17,6 +22,7 @@ before(async () => {
 after(async () => {
   for (const s of sockets) s.close();
   await server.close();
+  fs.rmSync(dataDir, { recursive: true, force: true });
 });
 
 function client() {

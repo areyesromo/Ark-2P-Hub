@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ark 2P Hub · Leaderboard</title>
+  <link rel="stylesheet" href="/shared/common.css">
+  <style>
+    body { overflow-y: auto; }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    h1 { font-size: 2rem; margin: 0; }
+    h2 { font-size: 1.25rem; margin: 0 0 12px; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 400px), 1fr)); gap: 20px; }
+    .wide { grid-column: 1 / -1; }
+    .panel { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 8px 10px; text-align: left; vertical-align: top; }
+    th { color: var(--muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.06em; font-weight: 700; }
+    tbody tr + tr td { border-top: 1px solid var(--line); }
+    td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+    th .short { display: none; }
+    @media (max-width: 520px) { .panel .bar { display: none; } th, td { padding: 7px 5px; } th .long { display: none; } th .short { display: inline; } }
+    .rank { color: var(--muted); width: 2em; }
+    .gold { color: #facc15; }
+    .bar { display: inline-block; height: 8px; border-radius: 4px; background: var(--good); vertical-align: middle; margin-left: 8px; }
+    .win { color: var(--good); font-weight: 800; }
+    .vs { color: var(--muted); }
+    .when { color: var(--muted); font-size: 0.85rem; }
+    .empty { color: var(--muted); text-align: center; padding: 48px 16px; font-size: 1.1rem; }
+    .tag { display: inline-block; font-size: 0.75rem; padding: 1px 8px; border-radius: 999px; background: var(--bg-2); color: var(--muted); margin-left: 6px; }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1 class="brand"><span class="p1">ARK</span> <span class="p2">2P</span> HUB <span class="muted">· Leaderboard</span></h1>
+      <a class="btn ghost" id="back" href="/host/">← Back</a>
+    </header>
+    <div id="content"><p class="empty">Loading…</p></div>
+  </main>
+  <script src="/shared/common.js"></script>
+  <script src="/stats/stats.js"></script>
+</body>
+</html>

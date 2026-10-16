@@ -26,9 +26,10 @@ export function normalizeCode(code) {
  * views, the room pushes them out.
  */
 export class Room {
-  constructor(code, io) {
+  constructor(code, io, { stats = null } = {}) {
     this.code = code;
     this.io = io;
+    this.stats = stats; // match history (see stats.js), optional
     this.hostToken = newToken();
     this.hostSockets = new Set();
     this.players = Array(MAX_PLAYERS).fill(null);
@@ -110,6 +111,7 @@ export class Room {
     if (!this.readyToPlay) return { error: 'Waiting for two players.' };
 
     this.stopGame({ silent: true });
+    this.lastPhase = null;
     const generation = ++this.generation;
     const room = this;
     const live = () => room.generation === generation;
@@ -177,6 +179,7 @@ export class Room {
         p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local) } : null,
       ),
       games: listGames(),
+      h2h: this.headToHead(),
     };
   }
 
@@ -187,10 +190,45 @@ export class Room {
   pushGameViews() {
     if (!this.game) return;
     const { gameId } = this;
-    this.io.to(this.hostChannel).emit('game:view', { gameId, view: this.game.hostView() });
+    const view = this.game.hostView();
+    if (view.phase === 'over' && this.lastPhase !== 'over') this.recordResult(view);
+    this.lastPhase = view.phase;
+    this.io.to(this.hostChannel).emit('game:view', { gameId, view });
     this.players.forEach((p, slot) => {
       if (p) this.io.to(this.playerChannel(slot)).emit('game:view', { gameId, view: this.game.playerView(slot) });
     });
+  }
+
+  /**
+   * A match just ended: add it to the history. Competitive games report
+   * winner (a slot, or null for a draw) and scores in their TV view; casual
+   * games report the team's stars.
+   */
+  recordResult(view) {
+    if (!this.stats) return;
+    const def = getGame(this.gameId);
+    const category = def.category || 'competitive';
+    const match = {
+      game: def.id,
+      gameName: def.name,
+      category,
+      players: this.players.map((p, slot) => (p ? p.name : `Player ${slot + 1}`)),
+    };
+    if (category === 'casual') {
+      match.stars = Number(view.stars) || 0;
+      match.maxStars = Number(view.maxStars) || 0;
+    } else {
+      match.winner = view.winner === 0 || view.winner === 1 ? view.winner : null;
+      match.draw = match.winner === null;
+      match.scores = Array.isArray(view.scores) && view.scores.length === 2 ? view.scores.slice() : null;
+    }
+    this.stats.record(match);
+  }
+
+  /** The record between the two seated players, for the lobby. */
+  headToHead() {
+    const [a, b] = this.players;
+    return this.stats && a && b ? this.stats.headToHead(a.name, b.name) : null;
   }
 
   /** Bring a (re)connecting socket fully up to date. */
@@ -207,8 +245,9 @@ export class Room {
 }
 
 export class RoomManager {
-  constructor(io) {
+  constructor(io, { stats = null } = {}) {
     this.io = io;
+    this.stats = stats;
     this.rooms = new Map();
   }
 
@@ -217,7 +256,7 @@ export class RoomManager {
     do {
       code = Array.from({ length: CODE_LENGTH }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
     } while (this.rooms.has(code));
-    const room = new Room(code, this.io);
+    const room = new Room(code, this.io, { stats: this.stats });
     this.rooms.set(code, room);
     return room;
   }
