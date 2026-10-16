@@ -116,7 +116,7 @@ export class Room {
 
     const ctx = {
       get players() {
-        return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}` }));
+        return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}`, local: Boolean(p && p.local) }));
       },
       now: () => Date.now(),
       setTimeout(fn, ms) {

@@ -23,6 +23,7 @@ container on your home network.
 | **Tank Duel** | Top-down tank battle with cover. Drive with the joystick, fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
 | **Quiz Battle** | 10 trivia questions (science, geography, movies, music, sports, games and more). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
 | **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
+| **Battleship** | Hide your 5 ships on your phone (tap a ship, tap where it goes, tap it again to turn it, or shuffle), then take turns firing at the enemy grid. The TV shows both oceans with every hit and miss; ships stay hidden until sunk. 30 s per shot. Sink the whole fleet to win. |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
 ## Controllers
@@ -47,6 +48,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Tank Duel | **Left stick** or **D-pad** to drive, **A** / **RT** / **RB** / **X** to fire | Point where you want to go; the gun faces where you drive |
 | Quiz Battle | **A** / **B** / **X** / **Y** to answer, or the **D-pad** as a diamond (↓ A, → B, ← X, ↑ Y) | Answer tiles on the TV are coloured like the buttons |
 | Draw Duel | **Left stick** or **D-pad** moves a cursor, hold **A** / **RT** / **RB** to draw, **B** undo, **X** clear, **Y** / **START** done | Phones draw with a finger, which is easier; the controller is for brave players |
+| Battleship | **D-pad** aims at the enemy grid on the TV, **A** fires | A controller player's fleet is placed at random, since the TV can't keep it secret |
 | Game over | **A** / **Start** | Rematch |
 
 Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
@@ -173,8 +175,9 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
    `{ id, name, tagline, create(ctx) }`. The instance implements
    `start()`, `onInput(slot, input)`, `hostView()`, `playerView(slot)`.
    Use `ctx.setTimeout` (cleared automatically when the game ends) and call
-   `ctx.update()` whenever state changes. Register it in
-   `server/games/index.js`.
+   `ctx.update()` whenever state changes. `ctx.players[slot].local` is true
+   for controller players, who have no private screen (see `battleship`).
+   Register it in `server/games/index.js`.
 2. **TV:** `public/games/<id>/host.js` calls
    `Ark.register('host', '<id>', { mount(el), update(view) })`.
    For controller players, also give it a `padHint` string and a
