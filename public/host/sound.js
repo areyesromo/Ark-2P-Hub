@@ -126,6 +126,7 @@
     boom: function () { noise('lowpass', 1200, 100, 0.45, 0.6); tone('sine', 120, 40, 0.4, 0.35); },
     bigBoom: function () { noise('lowpass', 1600, 60, 1.0, 0.75); tone('sine', 90, 30, 0.9, 0.45); tone('sawtooth', 200, 50, 0.6, 0.12); },
     splash: function () { noise('bandpass', 1800, 500, 0.45, 0.45); },
+    drop: function () { tone('sine', 300, 120, 0.12, 0.4); noise('lowpass', 900, 200, 0.08, 0.3, 0.02); },
     lock: function () { tone('square', 1200, 1200, 0.03, 0.12); tone('sine', 600, 600, 0.06, 0.2, 0.02); },
     correct: function () { arpeggio('triangle', [784, 1047, 1319], 0.08, 0.16, 0.32); },
     wrong: function () { tone('sawtooth', 180, 140, 0.35, 0.16); },

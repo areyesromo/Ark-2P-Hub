@@ -124,3 +124,13 @@ test('rock paper scissors: clicks as players lock in, a chime at the reveal', ()
   game.onInput(1, { type: 'pick', choice: 'paper' });
   assert.ok(heard().includes('reveal'));
 });
+
+test('connect four: a clunk for each disc', async () => {
+  const { ConnectFour } = await import('../server/games/connect-four.js');
+  const game = new ConnectFour(fakeCtx());
+  game.start();
+  const heard = listen('connect-four', game);
+  game.onInput(0, { type: 'drop', col: 3 });
+  assert.deepEqual(heard(), ['drop']);
+  assert.deepEqual(heard(), [], 'clock updates are silent');
+});
