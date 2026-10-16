@@ -1,6 +1,6 @@
 # Raspberry Pi: run the prebuilt multi-arch image from GitHub Container Registry.
 # CI publishes ghcr.io/areyesromo/ark-2p-hub:latest on every push to main;
-# ark-update.timer pulls it, so merging to main updates the Pi.
+# ark-update.timer pulls it, so merging to main updates the Pi (see install.sh).
 services:
   ark:
     image: ghcr.io/areyesromo/ark-2p-hub:latest
@@ -11,13 +11,13 @@ services:
     network_mode: host
     environment:
       PORT: "3000"
-      # Optional: set the admin password here instead of creating one at /admin/.
-      # ADMIN_PASSWORD: "change-me"
+      # Optional, set in /opt/ark/.env: an admin password (instead of creating
+      # one at /admin/) and a fixed address for phones (e.g. a static IP).
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      PUBLIC_URL: ${PUBLIC_URL:-}
     volumes:
-      # Settings made at /admin/ (join address, password) survive updates.
+      # Settings and match history survive updates.
       - ark-data:/app/data
-      # Optional: pin the address phones use (e.g. a hostname or static IP).
-      # PUBLIC_URL: "http://192.168.1.50:3000"
 
 volumes:
   ark-data:

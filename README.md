@@ -148,6 +148,9 @@ are running. Details:
 - **Local changes:** they're kept, and the build is tagged `+dirty`.
 - **Common git errors:** it explains them, including folders owned by another
   user ("dubious ownership") and ZIP downloads that aren't a git clone.
+- **Screens:** after an update the TV and phones reload by themselves, and the
+  TV keeps its room code, so phones reconnect without scanning again. (A game in
+  progress does end, so update between games.)
 
 If Windows blocks the script, run `Set-ExecutionPolicy -Scope Process Bypass` first.
 
@@ -156,10 +159,20 @@ To update automatically, schedule it:
 - **Linux (cron):** `*/10 * * * * /path/to/Ark-2P-Hub/update.sh >> /var/log/ark-update.log 2>&1`
 - **Windows (Task Scheduler):** run `powershell.exe -NoProfile -ExecutionPolicy Bypass -File C:\path\to\Ark-2P-Hub\update.ps1` on a timer.
 
-### Raspberry Pi 4 as an all-in-one console
+### Raspberry Pi 4/5 as a plug-in console
 
-The Pi runs the server *and* shows the TV screen in kiosk mode, and updates
-itself from GitHub. Full guide: [docs/raspberry-pi.md](docs/raspberry-pi.md).
+The Pi runs the server *and* shows the TV screen full-screen from boot, pairs
+Bluetooth controllers and updates itself from GitHub (never mid-game; the TV
+keeps its room code and phones reconnect by themselves). On Raspberry Pi OS
+(64-bit, with desktop), as your normal user:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/areyesromo/Ark-2P-Hub/main/deploy/pi/install.sh | bash
+sudo reboot
+/opt/ark/pair-controller.sh   # once per Bluetooth controller
+```
+
+Full guide: [docs/raspberry-pi.md](docs/raspberry-pi.md).
 
 ### Local development
 
@@ -202,7 +215,7 @@ public/
   play/                   phone controller page
   games/<id>/host.js      how a game looks on the TV
   games/<id>/player.js    how a game looks/behaves on the phone
-deploy/pi/                Raspberry Pi compose, kiosk and auto-update files
+deploy/pi/                Raspberry Pi installer, compose, kiosk, updater, controller pairing
 update.sh / update.ps1     pull from GitHub, rebuild and redeploy
 ```
 
@@ -247,7 +260,6 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 **The hub**
 
 - Background music for the lobby and games
-- Raspberry Pi kiosk mode: boot straight into the TV screen, auto-update, Bluetooth controllers
 
 **More games**
 

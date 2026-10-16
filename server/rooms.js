@@ -20,17 +20,20 @@ export function normalizeCode(code) {
   return String(code ?? '').trim().toUpperCase();
 }
 
+const isValidCode = (code) => code.length === CODE_LENGTH && [...code].every((c) => CODE_ALPHABET.includes(c));
+const isValidToken = (t) => typeof t === 'string' && /^[0-9a-f]{32}$/.test(t);
+
 /**
  * One TV + two players, each on a phone or on a controller plugged into the TV. The room owns the running game instance and is
  * the only thing that talks to Socket.IO on the game's behalf: games produce
  * views, the room pushes them out.
  */
 export class Room {
-  constructor(code, io, { stats = null } = {}) {
+  constructor(code, io, { stats = null, hostToken = null } = {}) {
     this.code = code;
     this.io = io;
     this.stats = stats; // match history (see stats.js), optional
-    this.hostToken = newToken();
+    this.hostToken = hostToken || newToken();
     this.hostSockets = new Set();
     this.players = Array(MAX_PLAYERS).fill(null);
     this.hostOrigin = null; // the address the TV opened, used to build the join link
@@ -288,18 +291,32 @@ export class RoomManager {
     this.rooms = new Map();
   }
 
-  create() {
-    let code;
-    do {
-      code = Array.from({ length: CODE_LENGTH }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
-    } while (this.rooms.has(code));
-    const room = new Room(code, this.io, { stats: this.stats });
+  /**
+   * A new room with a random code, or (after a server restart) the code and
+   * host token a TV asks for, so phones that knew the old room find it again.
+   */
+  create({ code: wanted = null, hostToken = null } = {}) {
+    let code = normalizeCode(wanted);
+    if (!isValidCode(code) || this.rooms.has(code)) {
+      do {
+        code = Array.from({ length: CODE_LENGTH }, () => CODE_ALPHABET[randomInt(CODE_ALPHABET.length)]).join('');
+      } while (this.rooms.has(code));
+      hostToken = null;
+    }
+    const room = new Room(code, this.io, { stats: this.stats, hostToken: isValidToken(hostToken) ? hostToken : null });
     this.rooms.set(code, room);
     return room;
   }
 
   get(code) {
     return this.rooms.get(normalizeCode(code)) || null;
+  }
+
+  /** How many rooms are in the middle of a game (the Pi updater waits for 0). */
+  get playing() {
+    let n = 0;
+    for (const room of this.rooms.values()) if (room.game) n++;
+    return n;
   }
 
   /** Drop rooms nobody has touched in a while. Returns how many were removed. */

@@ -121,7 +121,27 @@
     return parts.join(' · ');
   }
 
+  /**
+   * Reload the page when the server comes back as a newer version (after an
+   * update, e.g. the Pi's auto-update), so screens never run stale code.
+   * onVersion(v) is called with /version's answer.
+   */
+  function watchVersion(socket, onVersion) {
+    let loaded = null;
+    const stamp = function (v) { return v.version + '|' + v.commit + '|' + v.built; };
+    function check() {
+      fetch('/version', { cache: 'no-store' }).then(function (r) { return r.json(); }).then(function (v) {
+        if (onVersion) onVersion(v);
+        if (loaded === null) loaded = stamp(v);
+        else if (stamp(v) !== loaded) location.reload();
+      }).catch(function () { /* server still starting; the next connect checks again */ });
+    }
+    check();
+    socket.on('connect', check);
+  }
+
   window.Ark = {
+    watchVersion: watchVersion,
     h2hHtml: h2hHtml,
     escapeHtml: escapeHtml,
     register: register,

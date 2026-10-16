@@ -6,7 +6,7 @@ const reply = (ack, payload) => {
 /**
  * Socket protocol (client -> server):
  *   host:create   { origin }                -> ack { ok, code, hostToken }
- *   host:resume   { code, hostToken }       -> ack { ok, code, hostToken }
+ *   host:resume   { code, hostToken, origin } -> ack { ok, code, hostToken }  (reopens the room after a restart)
  *   player:join   { code, name, token? }    -> ack { ok, code, slot, token, name }
  *   player:leave
  *   lobby:start   { gameId | 'random' }     -> ack { ok, gameId } | { error }
@@ -98,10 +98,22 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
       reply(ack, { ok: true, code: target.code, hostToken: target.hostToken, qr: target.qr });
     });
 
-    socket.on('host:resume', (data, ack) => {
-      const { code, hostToken } = asObject(data);
-      const target = rooms.get(code);
-      if (!target || target.hostToken !== hostToken) return reply(ack, { error: 'Room not found.' });
+    socket.on('host:resume', async (data, ack) => {
+      const { code, hostToken, origin } = asObject(data);
+      let target = rooms.get(code);
+      if (target && target.hostToken !== hostToken) return reply(ack, { error: 'Room not found.' });
+      if (!target) {
+        // The server restarted (an update, a power cut): open the same room again,
+        // so phones and controllers that knew it rejoin by themselves.
+        target = rooms.create({ code, hostToken });
+        if (target.hostToken !== hostToken) {
+          rooms.rooms.delete(target.code);
+          target.dispose();
+          return reply(ack, { error: 'Room not found.' });
+        }
+        target.hostOrigin = typeof origin === 'string' ? origin : null;
+        await refreshJoin(target);
+      }
       bindHost(target);
       reply(ack, { ok: true, code: target.code, hostToken: target.hostToken, qr: target.qr });
     });
