@@ -22,6 +22,7 @@ container on your home network.
 | **Snake Battle** | Two snakes, one arena. Eat the glowing food to grow; hit a wall, yourself or your rival and you lose the round. After 60 seconds the longer snake wins. Same controls as Light Cycles. First to 3. |
 | **Tank Duel** | Top-down tank battle with cover. Drive with the joystick, fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
 | **Quiz Battle** | 10 trivia questions (science, geography, movies, music, sports, games and more). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
+| **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
 ## Controllers
@@ -45,6 +46,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Snake Battle | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |
 | Tank Duel | **Left stick** or **D-pad** to drive, **A** / **RT** / **RB** / **X** to fire | Point where you want to go; the gun faces where you drive |
 | Quiz Battle | **A** / **B** / **X** / **Y** to answer, or the **D-pad** as a diamond (↓ A, → B, ← X, ↑ Y) | Answer tiles on the TV are coloured like the buttons |
+| Draw Duel | **Left stick** or **D-pad** moves a cursor, hold **A** / **RT** / **RB** to draw, **B** undo, **X** clear, **Y** / **START** done | Phones draw with a finger, which is easier; the controller is for brave players |
 | Game over | **A** / **Start** | Rematch |
 
 Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
@@ -200,5 +202,5 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 ## Roadmap ideas
 
-- Drawing duels, more quiz question packs
+- More quiz question packs and drawing shapes
 - Sounds, match history and a persistent leaderboard

@@ -1,0 +1,112 @@
+/* ---- TV ---- */
+
+.dd-host {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  min-height: 0;
+  font-size: 1.2rem;
+}
+
+.dd-round { text-align: center; color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; }
+
+.dd-main {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr minmax(16rem, 0.75fr) 1fr;
+  gap: 2rem;
+  min-height: 0;
+}
+
+.dd-side { display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.dd-head { display: flex; justify-content: space-between; align-items: baseline; gap: 1rem; font-weight: 800; }
+.dd-head .name { font-size: 1.4em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dd-head .score { font-size: 2em; font-weight: 900; font-variant-numeric: tabular-nums; }
+
+.dd-board {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.dd-board canvas, .dd-target canvas {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+}
+.dd-side.p1 .dd-board.done canvas { border-color: var(--p1); }
+.dd-side.p2 .dd-board.done canvas { border-color: var(--p2); }
+
+/* The cursor is positioned in canvas fractions, so it lives in a wrapper the size of the canvas. */
+.dd-paper { position: relative; line-height: 0; }
+.dd-cursor {
+  position: absolute;
+  width: 1.6rem;
+  height: 1.6rem;
+  margin: -0.8rem 0 0 -0.8rem;
+  border: 3px solid #fff;
+  border-radius: 50%;
+  pointer-events: none;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
+}
+.dd-cursor.down { background: #fff; transform: scale(0.6); }
+
+.dd-status { text-align: center; font-size: 1.4rem; font-weight: 800; color: var(--muted); min-height: 2.6rem; }
+.dd-status .pct { font-size: 2.2rem; color: var(--text); }
+.dd-status .pct.best { color: var(--good); }
+
+.dd-middle { display: flex; flex-direction: column; gap: 1rem; justify-content: center; min-height: 0; text-align: center; }
+.dd-target { flex: 0 1 auto; height: 45%; display: flex; align-items: center; justify-content: center; min-height: 0; }
+.dd-host.phase-countdown .dd-target, .dd-host.phase-draw .dd-target, .dd-host.phase-over .dd-target { display: none; }
+.dd-center .big { font-size: 8rem; font-weight: 900; line-height: 1; }
+.dd-center .label { color: var(--muted); font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; }
+.dd-center .name { font-size: 3rem; font-weight: 900; margin-top: 0.3rem; }
+.dd-host.phase-draw .dd-center .name::before { content: '❓'; display: block; font-size: 6rem; margin-bottom: 1rem; }
+.dd-center .sub { font-size: 1.5rem; color: var(--muted); margin-top: 0.5rem; line-height: 1.5; }
+.dd-center .result { font-size: 2.6rem; font-weight: 900; margin-bottom: 1rem; }
+
+.dd-history { margin: 0 auto 1rem; border-collapse: collapse; font-size: 1.3rem; }
+.dd-history td { padding: 0.3rem 1rem; font-weight: 800; }
+.dd-history td:first-child { color: var(--muted); text-align: left; }
+
+.dd-bar { height: 12px; border-radius: 6px; background: var(--bg-2); overflow: hidden; }
+.dd-host.phase-countdown .dd-bar, .dd-host.phase-reveal .dd-bar, .dd-host.phase-over .dd-bar { visibility: hidden; }
+.dd-bar .fill { height: 100%; width: 0; background: var(--good); border-radius: 6px; }
+.dd-bar .fill.low { background: var(--bad); }
+
+/* ---- phone ---- */
+
+.dd-phone {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 16px 16px;
+  text-align: center;
+  min-height: 0;
+}
+.dd-phone .score { color: var(--muted); }
+.dd-phone .prompt { font-size: 1.15rem; min-height: 1.5em; }
+.dd-phone .prompt .big { font-size: 6rem; font-weight: 900; margin-top: 20vh; }
+.dd-phone .pct { font-size: 1.8rem; font-weight: 900; }
+.dd-phone .won { color: var(--good); }
+.dd-phone .lost { color: var(--bad); }
+.dd-phone .outcome { font-size: 2.2rem; font-weight: 900; margin-top: 25vh; }
+
+.dd-pad { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.dd-pad canvas {
+  background: var(--panel);
+  border: 3px solid var(--line);
+  border-radius: var(--radius);
+  box-sizing: border-box;
+  touch-action: none;
+}
+.dd-pad.live canvas { border-color: var(--me); }
+
+.dd-tools { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 10px; }
+.dd-tools button { padding: 14px 8px; font-size: 1.05rem; }
+.dd-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
