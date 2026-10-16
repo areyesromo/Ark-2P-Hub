@@ -78,6 +78,17 @@ shows **🔈 Tap for sound** in the top bar: click it, or press OK on a TV remot
 or any key. The 🔊 button mutes and unmutes (remembered on that TV). The
 Raspberry Pi kiosk is allowed to play sound straight away.
 
+## Leaderboard and match history
+
+Every finished match is saved (in `stats.json` in the data folder, so it
+survives updates). The lobby on the TV and phones shows the record between the
+two players seated, e.g. **🏆 Abe 14 – 9 Sam · last: Pong, Abe won 5–3**, plus
+stars earned together in casual games. The 🏆 button on the TV (and the link in
+the phone lobby) opens `/stats/`: players ranked by wins, rivalries, the best
+player per game, and recent matches. Players are matched by name (ignoring
+capitals), so use the same name each time. Settings (`/admin/`) can clear the
+history.
+
 ## Quick start
 
 ### Docker (any machine on your network)
@@ -232,7 +243,6 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 **The hub**
 
 - Background music for the lobby and games
-- Persistent leaderboard: head-to-head record, wins per game, recent matches
 - Lobby polish: last-played first, a "random game" button
 - Raspberry Pi kiosk mode: boot straight into the TV screen, auto-update, Bluetooth controllers
 

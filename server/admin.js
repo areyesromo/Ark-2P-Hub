@@ -14,8 +14,9 @@ const FAILURE_WINDOW_MS = 15 * 60 * 1000;
  *   POST /api/admin/login      { password } -> { token }
  *   POST /api/admin/logout
  *   PUT  /api/admin/settings   { joinUrl }  -> { joinUrl } (Bearer token)
+ *   POST /api/admin/stats/reset              -> { ok }     (Bearer token) wipe match history
  */
-export function adminRouter({ settings, publicUrl, detectedJoin, onJoinUrlChange }) {
+export function adminRouter({ settings, stats, publicUrl, detectedJoin, onJoinUrlChange }) {
   const router = express.Router();
   router.use(express.json({ limit: '4kb' }));
 
@@ -101,6 +102,12 @@ export function adminRouter({ settings, publicUrl, detectedJoin, onJoinUrlChange
     settings.setJoinUrl(joinUrl);
     await onJoinUrlChange();
     res.json({ joinUrl });
+  });
+
+  router.post('/stats/reset', (req, res) => {
+    if (!authed(req)) return res.status(401).json({ error: 'Please log in again.' });
+    if (stats) stats.reset();
+    res.json({ ok: true });
   });
 
   return router;

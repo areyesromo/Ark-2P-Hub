@@ -10,6 +10,7 @@ import { registerSocketHandlers } from './sockets.js';
 import { resolveJoin } from './network.js';
 import { Settings } from './settings.js';
 import { adminRouter } from './admin.js';
+import { Stats } from './stats.js';
 
 const ROOT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
@@ -32,8 +33,9 @@ export function createApp({
     pingInterval: 10000,
     pingTimeout: 8000,
   });
-  const rooms = new RoomManager(io);
   const settings = new Settings(dataDir, { envPassword: adminPassword });
+  const stats = new Stats(dataDir);
+  const rooms = new RoomManager(io, { stats });
 
   /** (Re)compute a room's join link + QR from the current settings. */
   async function refreshJoin(room) {
@@ -51,10 +53,12 @@ export function createApp({
 
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size }));
   app.get('/version', (_req, res) => res.json(VERSION));
+  app.get('/api/stats', (_req, res) => res.json(stats.leaderboard()));
   app.use(
     '/api/admin',
     adminRouter({
       settings,
+      stats,
       publicUrl,
       detectedJoin: () => resolveJoin({ port }),
       // New join address: refresh every open room so TVs show the new QR right away.

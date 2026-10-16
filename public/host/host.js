@@ -87,6 +87,9 @@
       ? 'Choose here, from either phone, or with a controller (D-pad + A).'
       : 'Games unlock once both players are in.';
     renderPadHint();
+    const h2h = Ark.h2hHtml(state.players, state.h2h);
+    $('h2h').innerHTML = h2h;
+    $('h2h').classList.toggle('hidden', !h2h);
 
     const padFocus = Object.keys(padSeats).length > 0;
     if (focus >= state.games.length) focus = 0;
