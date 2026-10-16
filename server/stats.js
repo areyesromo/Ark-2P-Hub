@@ -89,6 +89,24 @@ export class Stats {
     return out;
   }
 
+  /** gameId -> when it was last finished. */
+  lastPlayed() {
+    const out = {};
+    for (const m of this.matches) out[m.game] = Math.max(out[m.game] || 0, m.at || 0);
+    return out;
+  }
+
+  /** Names seen in the history, most recent first (for controller players to pick from). */
+  knownNames(limit = 12) {
+    const seen = new Map();
+    for (let i = this.matches.length - 1; i >= 0 && seen.size < limit; i--) {
+      for (const name of this.matches[i].players) {
+        if (!seen.has(nameKey(name)) && seen.size < limit) seen.set(nameKey(name), name);
+      }
+    }
+    return [...seen.values()];
+  }
+
   /** Everything the leaderboard page shows. */
   leaderboard() {
     const players = new Map();

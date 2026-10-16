@@ -127,14 +127,17 @@
     $('h2h').innerHTML = h2h;
     $('h2h').classList.toggle('hidden', !h2h);
 
-    $('phone-games').innerHTML = state.games.map(function (g, i) {
+    const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
+    $('phone-games').innerHTML =
+      '<button data-game="random" class="random"' + (state.readyToPlay ? '' : ' disabled') + '><strong>🎲 Random game</strong><span>Can\'t decide? Let the hub pick.</span></button>' +
+      state.games.map(function (g, i) {
       const heading = i === 0 || state.games[i - 1].category !== g.category
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
         : '';
       return (
         heading +
         '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + '</strong>' +
+        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );

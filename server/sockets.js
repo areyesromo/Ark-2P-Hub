@@ -9,7 +9,7 @@ const reply = (ack, payload) => {
  *   host:resume   { code, hostToken }       -> ack { ok, code, hostToken }
  *   player:join   { code, name, token? }    -> ack { ok, code, slot, token, name }
  *   player:leave
- *   lobby:start   { gameId }                -> ack { ok } | { error }
+ *   lobby:start   { gameId | 'random' }     -> ack { ok, gameId } | { error }
  *   lobby:return
  *   game:input    { type, ... }              (players only, game-specific)
  *
@@ -17,6 +17,7 @@ const reply = (ack, payload) => {
  *   pad:join      { name, token? }           -> ack { ok, slot, token, name }
  *   pad:leave     { slot }
  *   pad:input     { slot, input }            (only for seats taken with pad:join)
+ *   pad:rename    { slot, name }             -> ack { ok, name } | { error }
  *
  * Server -> client:
  *   room:state    Room#publicState()
@@ -157,6 +158,12 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
     socket.on('pad:input', (data) => {
       const { slot: seat, input } = asObject(data);
       if (role === 'host' && room.players[seat] && room.players[seat].local) room.handleInput(seat, input);
+    });
+
+    socket.on('pad:rename', (data, ack) => {
+      if (role !== 'host') return reply(ack, { error: 'Only the TV can rename controller players.' });
+      const { slot: seat, name } = asObject(data);
+      reply(ack, room.renameLocal(seat, name));
     });
 
     socket.on('disconnect', detach);
