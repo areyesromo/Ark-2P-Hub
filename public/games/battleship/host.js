@@ -81,6 +81,17 @@
   const MOVES = { UP: [0, -1], DOWN: [0, 1], LEFT: [-1, 0], RIGHT: [1, 0] };
 
   Ark.register('host', 'battleship', {
+    // Sound: splash for a miss, a bang for a hit, a bigger one for a sinking.
+    sounds: function (prev, v) {
+      const out = [];
+      if (v.ready.filter(Boolean).length > prev.ready.filter(Boolean).length) out.push('lock');
+      const s = v.lastShot;
+      const p = prev.lastShot;
+      if (s && (!p || s.by !== p.by || s.x !== p.x || s.y !== p.y || v.fired.join() !== prev.fired.join())) {
+        out.push(s.result === 'miss' ? 'splash' : s.result === 'hit' ? 'boom' : 'bigBoom');
+      }
+      return out;
+    },
     padHint: 'D-pad aims · A fires · your fleet is placed at random (it stays hidden)',
     pad: function (btn, v, slot) {
       if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;

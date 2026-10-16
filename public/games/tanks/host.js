@@ -194,6 +194,18 @@
   }
 
   Ark.register('host', 'tanks', {
+    // Sound: shots fired, hits, and a big bang when a tank is destroyed.
+    sounds: function (prev, v) {
+      const out = [];
+      if (v.shells.length > prev.shells.length) out.push('shoot');
+      v.tanks.forEach(function (t, i) {
+        const p = prev.tanks[i];
+        if (!p) return;
+        if (p.alive && !t.alive) out.push('bigBoom');
+        else if (t.hp < p.hp) out.push('boom');
+      });
+      return out;
+    },
     padHint: 'Left stick or D-pad to drive · A / RT to fire · A: rematch at the end',
     pad: function (btn, v) {
       if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;

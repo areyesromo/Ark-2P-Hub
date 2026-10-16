@@ -110,6 +110,14 @@
   }
 
   Ark.register('host', 'pong', {
+    // Sound: the ball turning around means it hit a paddle (x) or a wall (y).
+    sounds: function (prev, v) {
+      if (prev.phase !== 'play' || v.phase !== 'play') return [];
+      const out = [];
+      if (Math.sign(v.ball.vx) !== Math.sign(prev.ball.vx)) out.push('paddle');
+      if (Math.sign(v.ball.vy) !== Math.sign(prev.ball.vy)) out.push('wall');
+      return out;
+    },
     padHint: 'Left stick or D-pad ↑↓ to move · A: rematch at the end',
     pad: function (btn, v) {
       return v.phase === 'over' && (btn === 'A' || btn === 'START') ? { type: 'rematch' } : null;

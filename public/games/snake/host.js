@@ -153,6 +153,16 @@
   }
 
   Ark.register('host', 'snake', {
+    // Sound: a blip when a snake eats, a crash when one dies.
+    sounds: function (prev, v) {
+      const out = [];
+      v.snakes.forEach(function (s, i) {
+        const p = prev.snakes[i];
+        if (v.phase === 'play' && p && s.body.length > p.body.length) out.push('eat');
+        if (p && s.crashed && !p.crashed) out.push('crash');
+      });
+      return out;
+    },
     padHint: 'D-pad or stick to steer (Y↑ A↓ X← B→ work too) · A: rematch at the end',
     pad: function (btn, v) {
       if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;

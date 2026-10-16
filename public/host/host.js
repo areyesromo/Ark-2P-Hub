@@ -120,6 +120,48 @@
     else if (root.requestFullscreen) root.requestFullscreen();
   });
 
+  // ---- sound -------------------------------------------------------------
+  // Effects come from two places: a few rules every game shares (countdowns,
+  // points on the pip scoreboard, the end of a match) and the renderer's own
+  // optional sounds(prev, view) hook, which returns effect names.
+
+  function renderSoundButton() {
+    const btn = $('sound');
+    const off = ArkSound.isMuted();
+    const locked = !off && !ArkSound.unlocked();
+    btn.textContent = off ? '🔇' : locked ? '🔈 Tap for sound' : '🔊';
+    btn.classList.toggle('attention', locked);
+    btn.title = off ? 'Sound is off' : 'Sound is on';
+  }
+  $('sound').addEventListener('click', function () {
+    // The click that switches audio on (see sound.js) isn't also a mute toggle.
+    if (performance.now() - ArkSound.unlockAttemptAt() < 1000) return;
+    ArkSound.setMuted(!ArkSound.isMuted());
+  });
+  ArkSound.onChange(renderSoundButton);
+  renderSoundButton();
+
+  function sum(a) {
+    return a ? a.reduce(function (x, y) { return x + y; }, 0) : 0;
+  }
+
+  function playGameSounds(prev, v) {
+    const names = [];
+    if (prev) {
+      if (v.countdown > 0 && v.countdown !== prev.countdown) names.push('tick');
+      if (prev.countdown > 0 && !(v.countdown > 0) && v.phase !== 'over') names.push('go');
+      if (v.winScore && sum(v.scores) > sum(prev.scores)) names.push('point');
+      if (v.phase === 'over' && prev.phase !== 'over') names.push('fanfare');
+    } else if (v.countdown > 0) {
+      names.push('tick');
+    }
+    const r = current && current.renderer;
+    if (prev && r && r.sounds) {
+      try { (r.sounds(prev, v) || []).forEach(function (n) { names.push(n); }); } catch (e) { /* a sound bug never breaks the game */ }
+    }
+    names.forEach(ArkSound.play);
+  }
+
   // ---- game stage ------------------------------------------------------
 
   function unmountGame() {
@@ -150,7 +192,16 @@
     });
   }
 
+  function seated(st) {
+    return st ? st.players.filter(Boolean).length : 0;
+  }
+
   socket.on('room:state', function (s) {
+    if (state) {
+      if (seated(s) > seated(state)) ArkSound.play('join');
+      else if (seated(s) < seated(state)) ArkSound.play('leave');
+      if (s.phase === 'playing' && state.phase !== 'playing') ArkSound.play('start');
+    }
     state = s;
     reconcilePads();
     const playing = s.phase === 'playing';
@@ -169,6 +220,7 @@
 
   socket.on('game:view', function (msg) {
     if (!current || current.gameId !== msg.gameId) return;
+    playGameSounds(lastView, msg.view);
     lastView = msg.view;
     if (current.renderer) current.renderer.update(msg.view);
     else pendingView = msg.view;

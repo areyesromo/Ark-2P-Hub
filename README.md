@@ -68,6 +68,16 @@ Browsers only notice a controller after one of its buttons is pressed, so
 press A once if the TV says no controller is connected. Controllers rumble on
 input where the browser supports it.
 
+## Sound
+
+The TV plays sound effects for every game: countdown beeps, GO, points,
+bounces, crashes, explosions, splashes, right and wrong answers, and a fanfare
+at the end. They're generated in the browser (no audio files). Browsers only
+allow sound after someone interacts with the page, so the first time the TV
+shows **🔈 Tap for sound** in the top bar: click it, or press OK on a TV remote
+or any key. The 🔊 button mutes and unmutes (remembered on that TV). The
+Raspberry Pi kiosk is allowed to play sound straight away.
+
 ## Quick start
 
 ### Docker (any machine on your network)
@@ -198,7 +208,8 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
    `Y`, `LB`, `RB`, `LT`, `RT`, `START`, `UP`/`DOWN`/`LEFT`/`RIGHT`) into the same
    input a phone would send, or `null`. Real-time games can add
    `padPoll({ held, stick }, view, slot)`, called every frame, for analog
-   input (see `pong`).
+   input (see `pong`). An optional `sounds(prev, view)` returns sound effect
+   names to play when the view changes (see `public/host/sound.js` for the list).
 3. **Phone:** `public/games/<id>/player.js` calls
    `Ark.register('player', '<id>', { mount(el, api), update(view) })`
    and sends inputs with `api.send({...})`.
@@ -220,7 +231,7 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 **The hub**
 
-- Sound effects and music (generated in code, with a mute switch in settings)
+- Background music for the lobby and games
 - Persistent leaderboard: head-to-head record, wins per game, recent matches
 - Lobby polish: last-played first, a "random game" button
 - Raspberry Pi kiosk mode: boot straight into the TV screen, auto-update, Bluetooth controllers

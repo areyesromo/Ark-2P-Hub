@@ -43,6 +43,13 @@
   const TAP_BUTTONS = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT'];
 
   Ark.register('host', 'reaction-duel', {
+    // Sound: GO!, and a buzz for jumping the gun (points and the end come from the TV shell).
+    sounds: function (prev, v) {
+      const out = [];
+      if (v.phase === 'go' && prev.phase !== 'go') out.push('go');
+      if (v.phase !== prev.phase && v.result && v.result.kind === 'false-start') out.push('wrong');
+      return out;
+    },
     // Controller players: any face button, bumper or trigger taps.
     padHint: 'Any button or trigger to tap · A: rematch at the end',
     pad: function (btn, view) {

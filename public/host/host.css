@@ -132,3 +132,6 @@ body { overflow: hidden; }
 
 .stage { flex: 1; min-height: 0; display: flex; flex-direction: column; }
 .stage .loading { margin: auto; color: var(--muted); font-size: 1.5rem; }
+
+#sound.attention { border-color: var(--warn); color: var(--warn); animation: sound-pulse 1.6s ease-in-out infinite; }
+@keyframes sound-pulse { 50% { box-shadow: 0 0 0 4px rgba(250, 204, 21, 0.25); } }

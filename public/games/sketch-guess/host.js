@@ -143,6 +143,16 @@
   }
 
   Ark.register('host', 'sketch-guess', {
+    // Sound: a whoosh when drawing starts, a buzz (or "so close") for each wrong guess, and the verdict.
+    sounds: function (prev, v) {
+      const out = [];
+      if (v.phase === 'draw' && prev.phase !== 'draw') out.push('whoosh');
+      if (v.phase === 'draw' && v.guesses.length && JSON.stringify(v.guesses) !== JSON.stringify(prev.guesses)) {
+        out.push(v.guesses[v.guesses.length - 1].close ? 'close' : 'wrong');
+      }
+      if (v.phase === 'reveal' && prev.phase !== 'reveal') out.push(v.result && v.result.guessed ? 'correct' : 'wrong');
+      return out;
+    },
     padHint: 'Guessing on a controller: A B X Y picks the word you think it is · wrong picks pause you briefly',
     pad: function (btn, v, slot) {
       if (v.phase === 'over' || v.phase === 'needPhone') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;

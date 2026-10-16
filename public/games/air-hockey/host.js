@@ -74,6 +74,13 @@
   }
 
   Ark.register('host', 'air-hockey', {
+    // Sound: a clack whenever the puck's velocity changes sharply (mallet or wall).
+    sounds: function (prev, v) {
+      if (prev.phase !== 'play' || v.phase !== 'play') return [];
+      const dv = Math.hypot(v.puck.vx - prev.puck.vx, v.puck.vy - prev.puck.vy);
+      const speed = Math.max(Math.hypot(prev.puck.vx, prev.puck.vy), Math.hypot(v.puck.vx, v.puck.vy));
+      return dv > 1 && dv > 0.3 * speed ? ['puck'] : [];
+    },
     padHint: 'Left stick or D-pad to move your mallet · A: rematch at the end',
     pad: function (btn, v) {
       return v.phase === 'over' && (btn === 'A' || btn === 'START') ? { type: 'rematch' } : null;
