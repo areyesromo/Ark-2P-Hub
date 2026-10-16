@@ -211,6 +211,14 @@
   }
 
   Ark.register('host', 'draw-duel', {
+    // Sound: a whoosh as each shape appears, a click when someone's done, a chime at the reveal.
+    sounds: function (prev, v) {
+      const out = [];
+      if (v.phase === 'show' && prev.phase !== 'show') out.push('whoosh');
+      if (v.done.filter(Boolean).length > prev.done.filter(Boolean).length) out.push('lock');
+      if (v.phase === 'reveal' && prev.phase !== 'reveal') out.push('reveal');
+      return out;
+    },
     padHint: 'Stick or D-pad moves · hold A to draw · B undo · X clear · Y done',
     padPoll: padPoll,
     pad: function (btn, v) {

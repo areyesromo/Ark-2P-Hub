@@ -116,6 +116,10 @@
   }
 
   Ark.register('host', 'tron', {
+    // Sound: a crash when a cycle hits a wall.
+    sounds: function (prev, v) {
+      return v.cycles.some(function (c, i) { return c.crashed && !prev.cycles[i].crashed; }) ? ['crash'] : [];
+    },
     padHint: 'D-pad or stick to steer (Y↑ A↓ X← B→ work too) · A: rematch at the end',
     pad: function (btn, v) {
       if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;

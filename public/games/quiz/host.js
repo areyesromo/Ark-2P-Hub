@@ -88,6 +88,13 @@
   const PAD_ANSWERS = { A: 0, B: 1, X: 2, Y: 3, DOWN: 0, RIGHT: 1, LEFT: 2, UP: 3 };
 
   Ark.register('host', 'quiz', {
+    // Sound: a click as each answer locks in; right or wrong at the reveal.
+    sounds: function (prev, v) {
+      const out = [];
+      if (v.answered.filter(Boolean).length > prev.answered.filter(Boolean).length) out.push('lock');
+      if (v.phase === 'reveal' && prev.phase !== 'reveal') out.push(v.picks.indexOf(v.correct) !== -1 ? 'correct' : 'wrong');
+      return out;
+    },
     padHint: 'A B X Y (or D-pad ↓ → ← ↑) to answer · A: rematch at the end',
     pad: function (btn, v, slot) {
       if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
