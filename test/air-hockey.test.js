@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { AirHockey, FIELD, PHYSICS, TIMING, WIN_SCORE, padToTable } from '../server/games/air-hockey.js';
+import { AirHockey, FIELD, PHYSICS, TIMING, WIN_SCORE } from '../server/games/air-hockey.js';
 import { fakeCtx } from './helpers.js';
 
 const near = (actual, expected, msg) => assert.ok(Math.abs(actual - expected) < 1e-9, `${msg || ''} ${actual} != ${expected}`);
@@ -97,25 +97,34 @@ test('mallets stay in their own half and inside the rails', () => {
   assert.equal(game.mallets[1].y, FIELD.h - FIELD.malletR);
 });
 
-test('the phone pad is your half turned to face you', () => {
-  // Bottom of the pad is your own goal, top is the centre line.
-  near(padToTable(0, 0.5, 1).x, FIELD.malletR);
-  near(padToTable(0, 0.5, 0).x, FIELD.w / 2 - FIELD.malletR);
-  near(padToTable(1, 0.5, 1).x, FIELD.w - FIELD.malletR);
-  near(padToTable(1, 0.5, 0).x, FIELD.w / 2 + FIELD.malletR);
-  // Right on the pad is your right-hand side of the table.
-  near(padToTable(0, 1, 0.5).y, FIELD.h - FIELD.malletR); // facing right -> right hand is down the TV
-  near(padToTable(1, 1, 0.5).y, FIELD.malletR); // facing left -> right hand is up the TV
+test("phone input is a table position; the mallet stops at its own half and rails", () => {
+  const { ctx, game } = setup();
+  game.onInput(0, { type: 'move', x: 12, y: -3 }); // deep in the rival's half, off the table
+  game.onInput(1, { type: 'move', x: 15, y: 8.9 });
+  ctx.advance(2000);
+  near(game.mallets[0].x, FIELD.w / 2 - FIELD.malletR, 'P1 stops at the centre line');
+  near(game.mallets[0].y, FIELD.malletR, 'P1 stops at the rail');
+  near(game.mallets[1].x, 15, 'P2 reaches its target');
+  near(game.mallets[1].y, FIELD.h - FIELD.malletR, 'P2 stops at the rail');
+});
+
+test('phones get the whole table in their view', () => {
+  const { game } = setup();
+  const v = game.playerView(1);
+  assert.equal(v.you, 1);
+  assert.deepEqual(v.puck, game.hostView().puck);
+  assert.equal(v.mallets.length, 2);
+  assert.equal(v.field.w, FIELD.w);
 });
 
 test('phone input moves the mallet towards the finger at the capped speed; bad input ignored', () => {
   const { ctx, game } = setup();
-  game.onInput(0, { type: 'move', u: 0.5, v: 0 }); // to the centre line
+  game.onInput(0, { type: 'move', x: FIELD.w / 2, y: FIELD.h / 2 }); // to the centre line
   ctx.advance(100);
   const moved = game.mallets[0].x - 2.5;
   assert.ok(moved > 0 && moved <= PHYSICS.malletSpeed * 0.1 + 0.4, `moved ${moved}`);
   const at = { ...game.mallets[0] };
-  game.onInput(0, { type: 'move', u: NaN, v: 0 });
+  game.onInput(0, { type: 'move', x: NaN, y: 0 });
   game.onInput(0, { type: 'axis', x: 'left', y: 0 });
   assert.equal(game.controls[0].mode, 'target');
   ctx.advance(1000);

@@ -1,9 +1,8 @@
 (function () {
   Ark.loadCss('/games/air-hockey/style.css');
+  const tableReady = Ark.loadScript('/games/air-hockey/table.js');
   const esc = Ark.escapeHtml;
-  const MAX_EXTRAPOLATE_MS = 100;
   const DEADZONE = 0.2;
-  const RINK = 0.35; // rink border around the playing surface, in table units
 
   let root = null;
   let board = null;
@@ -42,109 +41,36 @@
     overlay.innerHTML = big || sub ? '<div class="big">' + big + '</div><div class="sub">' + sub + '</div>' : '';
   }
 
-  function resize() {
+  // The TV shows the table sideways: P1's goal on the left, P2's on the right.
+  function draw() {
+    raf = requestAnimationFrame(draw);
+    const T = window.ArkAirHockeyTable;
+    if (!view || !T || !colors) return;
     const f = view.field;
+    const totalW = f.w + 2 * T.RINK;
+    const totalH = f.h + 2 * T.RINK;
     const box = arena.getBoundingClientRect();
-    const scale = Math.min(box.width / (f.w + 2 * RINK), box.height / (f.h + 2 * RINK));
+    const scale = Math.min(box.width / totalW, box.height / totalH);
     const dpr = window.devicePixelRatio || 1;
-    const w = Math.floor((f.w + 2 * RINK) * scale);
-    const h = Math.floor((f.h + 2 * RINK) * scale);
+    const w = Math.floor(totalW * scale);
+    const h = Math.floor(totalH * scale);
     if (canvas.width !== Math.floor(w * dpr)) {
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       canvas.style.width = w + 'px';
       canvas.style.height = h + 'px';
     }
-  }
-
-  function roundRect(g, x, y, w, h, r) {
-    g.beginPath();
-    g.moveTo(x + r, y);
-    g.arcTo(x + w, y, x + w, y + h, r);
-    g.arcTo(x + w, y + h, x, y + h, r);
-    g.arcTo(x, y + h, x, y, r);
-    g.arcTo(x, y, x + w, y, r);
-    g.closePath();
-  }
-
-  function draw() {
-    raf = requestAnimationFrame(draw);
-    if (!view) return;
-    resize();
-    const f = view.field;
     const g = canvas.getContext('2d');
-    const k = canvas.width / (f.w + 2 * RINK);
-    g.setTransform(k, 0, 0, k, RINK * k, RINK * k); // table units, origin at the playing surface
-    g.clearRect(-RINK, -RINK, f.w + 2 * RINK, f.h + 2 * RINK);
+    const k = canvas.width / totalW;
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.clearRect(0, 0, canvas.width, canvas.height);
+    g.setTransform(k, 0, 0, k, T.RINK * k, T.RINK * k);
 
-    // Rink + surface
-    roundRect(g, -RINK, -RINK, f.w + 2 * RINK, f.h + 2 * RINK, 1.6);
-    g.fillStyle = '#1b2036';
-    g.fill();
-    roundRect(g, 0, 0, f.w, f.h, 1.3);
-    g.fillStyle = '#081022';
-    g.fill();
-
-    // Markings
-    g.strokeStyle = 'rgba(160,190,255,0.18)';
-    g.lineWidth = 0.06;
-    g.beginPath();
-    g.moveTo(f.w / 2, 0);
-    g.lineTo(f.w / 2, f.h);
-    g.stroke();
-    g.beginPath();
-    g.arc(f.w / 2, f.h / 2, 1.4, 0, Math.PI * 2);
-    g.stroke();
-    [0, 1].forEach(function (slot) {
-      const x = slot === 0 ? 0 : f.w;
-      g.strokeStyle = colors[slot];
-      g.globalAlpha = 0.35;
-      g.beginPath();
-      g.arc(x, f.h / 2, f.goalH / 2 + 0.6, slot === 0 ? -Math.PI / 2 : Math.PI / 2, slot === 0 ? Math.PI / 2 : Math.PI * 1.5);
-      g.stroke();
-      g.globalAlpha = 1;
-      // Goal mouth glow
-      g.fillStyle = g.shadowColor = colors[slot];
-      g.shadowBlur = 16;
-      g.fillRect(slot === 0 ? -RINK : f.w, f.h / 2 - f.goalH / 2, RINK, f.goalH);
-      g.shadowBlur = 0;
-    });
-
-    // Mallets: ease towards the latest server positions.
-    if (!shown) shown = view.mallets.map(function (m) { return { x: m.x, y: m.y }; });
-    view.mallets.forEach(function (m, slot) {
-      shown[slot].x += (m.x - shown[slot].x) * 0.5;
-      shown[slot].y += (m.y - shown[slot].y) * 0.5;
-      const s = shown[slot];
-      g.shadowColor = colors[slot];
-      g.shadowBlur = 18;
-      g.fillStyle = colors[slot];
-      g.beginPath();
-      g.arc(s.x, s.y, f.malletR, 0, Math.PI * 2);
-      g.fill();
-      g.shadowBlur = 0;
-      g.fillStyle = 'rgba(0,0,0,0.35)';
-      g.beginPath();
-      g.arc(s.x, s.y, f.malletR * 0.62, 0, Math.PI * 2);
-      g.fill();
-      g.fillStyle = colors[slot];
-      g.beginPath();
-      g.arc(s.x, s.y, f.malletR * 0.32, 0, Math.PI * 2);
-      g.fill();
-    });
-
-    // Puck: extrapolate between snapshots, kept on the table.
-    const p = view.puck;
-    const dt = view.phase === 'play' ? Math.min(performance.now() - viewAt, MAX_EXTRAPOLATE_MS) / 1000 : 0;
-    const px = Math.min(f.w + f.puckR, Math.max(-f.puckR, p.x + p.vx * dt));
-    const py = Math.min(f.h - f.puckR, Math.max(f.puckR, p.y + p.vy * dt));
-    g.shadowColor = '#ffffff';
-    g.shadowBlur = 14;
-    g.fillStyle = '#f5f7ff';
-    g.beginPath();
-    g.arc(px, py, f.puckR, 0, Math.PI * 2);
-    g.fill();
-    g.shadowBlur = 0;
+    T.drawTable(g, f, colors);
+    shown = T.easeMallets(shown, view);
+    shown.forEach(function (m, slot) { T.drawMallet(g, f, m.x, m.y, colors[slot]); });
+    const p = T.puckNow(view, performance.now() - viewAt);
+    T.drawPuck(g, f, p.x, p.y);
   }
 
   Ark.register('host', 'air-hockey', {
@@ -166,8 +92,6 @@
       return { type: 'axis', x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
     },
     mount: function (el) {
-      const css = getComputedStyle(document.documentElement);
-      colors = [css.getPropertyValue('--p1').trim() || '#22d3ee', css.getPropertyValue('--p2').trim() || '#f472b6'];
       root = document.createElement('div');
       root.className = 'ah-host';
       root.innerHTML = '<div class="ah-board"></div><div class="ah-arena"><canvas></canvas><div class="ah-overlay"></div></div>';
@@ -176,6 +100,7 @@
       arena = root.querySelector('.ah-arena');
       canvas = root.querySelector('canvas');
       overlay = root.querySelector('.ah-overlay');
+      tableReady.then(function () { colors = window.ArkAirHockeyTable.playerColors(); });
       raf = requestAnimationFrame(draw);
     },
     update: function (v) {

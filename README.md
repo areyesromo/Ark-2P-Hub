@@ -19,7 +19,7 @@ container on your home network.
 | **Rock Paper Scissors** | Pick in secret on your phone; the TV reveals both. First to 3. |
 | **Pong** | The classic, in real time. Drag on your phone's touch strip (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
 | **Light Cycles** | Tron-style. Your cycle leaves a wall behind it: make your rival crash into it. Tap a side of the phone pad or swipe to turn. Cycles speed up as the round goes on. First to 3. |
-| **Air Hockey** | Your phone is your half of the table, turned to face you (your goal at the bottom, the centre line at the top). Slide your mallet and smash the puck into their goal. First to 7. |
+| **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
 ## Controllers
 
