@@ -13,6 +13,11 @@ container on your home network.
 
 ## Games
 
+The lobby groups games into **⚔️ Competitive** (head to head, one of you wins)
+and **🎨 Casual** (you play together, nobody really loses).
+
+### ⚔️ Competitive
+
 | Game | How it plays |
 | --- | --- |
 | **Reaction Duel** | The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. |
@@ -22,8 +27,14 @@ container on your home network.
 | **Snake Battle** | Two snakes, one arena. Eat the glowing food to grow; hit a wall, yourself or your rival and you lose the round. After 60 seconds the longer snake wins. Same controls as Light Cycles. First to 3. |
 | **Tank Duel** | Top-down tank battle with cover. Drive with the joystick, fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
 | **Quiz Battle** | 10 trivia questions (science, geography, movies, music, sports, games and more). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
-| **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
+| **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. 125 shapes (basic shapes, pictures like a rocket or a cat, letters and numbers), never repeated until you've seen them all. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
 | **Battleship** | Hide your 5 ships on your phone (tap a ship, tap where it goes, tap it again to turn it, or shuffle), then take turns firing at the enemy grid. The TV shows both oceans with every hit and miss; ships stay hidden until sunk. 30 s per shot. Sink the whole fleet to win. |
+
+### 🎨 Casual
+
+| Game | How it plays |
+| --- | --- |
+| **Sketch & Guess** | One of you picks a secret word (easy, medium or hard, from 260) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a "so close!"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw. |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
 ## Controllers
@@ -49,6 +60,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Quiz Battle | **A** / **B** / **X** / **Y** to answer, or the **D-pad** as a diamond (↓ A, → B, ← X, ↑ Y) | Answer tiles on the TV are coloured like the buttons |
 | Draw Duel | **Left stick** or **D-pad** moves a cursor, hold **A** / **RT** / **RB** to draw, **B** undo, **X** clear, **Y** / **START** done | Phones draw with a finger, which is easier; the controller is for brave players |
 | Battleship | **D-pad** aims at the enemy grid on the TV, **A** fires | A controller player's fleet is placed at random, since the TV can't keep it secret |
+| Sketch & Guess | **A** / **B** / **X** / **Y** picks one of four words shown on the TV | Controller players always guess (the word has to stay secret from the guesser); wrong picks pause you for a moment |
 | Game over | **A** / **Start** | Rematch |
 
 Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
@@ -172,7 +184,8 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
 ## Adding a game
 
 1. **Logic:** create `server/games/<id>.js` exporting
-   `{ id, name, tagline, create(ctx) }`. The instance implements
+   `{ id, name, tagline, category, create(ctx) }` (`category` is
+   `'competitive'`, the default, or `'casual'`). The instance implements
    `start()`, `onInput(slot, input)`, `hostView()`, `playerView(slot)`.
    Use `ctx.setTimeout` (cleared automatically when the game ends) and call
    `ctx.update()` whenever state changes. `ctx.players[slot].local` is true
@@ -205,5 +218,18 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 ## Roadmap ideas
 
-- More quiz question packs and drawing shapes
-- Sounds, match history and a persistent leaderboard
+**The hub**
+
+- Sound effects and music (generated in code, with a mute switch in settings)
+- Persistent leaderboard: head-to-head record, wins per game, recent matches
+- Lobby polish: last-played first, a "random game" button
+- Raspberry Pi kiosk mode: boot straight into the TV screen, auto-update, Bluetooth controllers
+
+**More games**
+
+- Connect Four: quick turn-based classic
+- Sumo / Bumper Arena: shove each other off a shrinking platform
+- Typing or Word Race: race to type, or find words in a shared letter grid
+- Mini Golf: aim and drag on your phone, watch the ball roll on the TV
+- Bomberman-style duel: maze, bombs and power-ups
+- More quiz packs, drawing shapes and Sketch & Guess words

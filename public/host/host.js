@@ -73,6 +73,11 @@
       '<span class="status">' + (p.local ? '🎮 Controller · ' : '') + (p.connected ? 'Ready' : 'Reconnecting…') + '</span>';
   }
 
+  const GROUPS = {
+    competitive: '⚔️ Competitive <span>Head to head: one of you wins</span>',
+    casual: '🎨 Casual <span>Play together, just for fun</span>',
+  };
+
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
     $('join-warn').classList.toggle('hidden', !state.joinGuess);
@@ -86,13 +91,20 @@
     const padFocus = Object.keys(padSeats).length > 0;
     if (focus >= state.games.length) focus = 0;
     $('game-list').innerHTML = state.games.map(function (g, i) {
+      const heading = i === 0 || state.games[i - 1].category !== g.category
+        ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
+        : '';
       return (
+        heading +
         '<button class="game-card' + (padFocus && i === focus ? ' pad-focus' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
         '<strong>' + Ark.escapeHtml(g.name) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
     }).join('');
+    // Keep the controller's pick in view now that the list scrolls.
+    const focused = padFocus && $('game-list').querySelector('.pad-focus');
+    if (focused && focused.scrollIntoView) focused.scrollIntoView({ block: 'nearest' });
   }
 
   $('game-list').addEventListener('click', function (e) {

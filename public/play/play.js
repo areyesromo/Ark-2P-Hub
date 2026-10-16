@@ -111,6 +111,11 @@
 
   // ---- lobby -----------------------------------------------------------
 
+  const GROUPS = {
+    competitive: '⚔️ Competitive <span>Head to head: one of you wins</span>',
+    casual: '🎨 Casual <span>Play together, just for fun</span>',
+  };
+
   function renderLobby() {
     const opponent = state.players[1 - me.slot];
     let status;
@@ -119,8 +124,12 @@
     else status = 'You vs <strong>' + Ark.escapeHtml(opponent.name) + '</strong>. Pick a game!';
     $('lobby-status').innerHTML = status;
 
-    $('phone-games').innerHTML = state.games.map(function (g) {
+    $('phone-games').innerHTML = state.games.map(function (g, i) {
+      const heading = i === 0 || state.games[i - 1].category !== g.category
+        ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
+        : '';
       return (
+        heading +
         '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
         '<strong>' + Ark.escapeHtml(g.name) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +

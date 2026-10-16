@@ -1,70 +1,13 @@
-// Shapes for Draw Duel, plus the scoring that compares a drawing with one.
+// Scoring for Draw Duel: how closely a drawing matches a shape from
+// shape-library.js.
 //
 // A shape is one or more polylines ("paths") of [x, y, x, y, ...] in a 0..1
 // box. Scoring ignores where and how big you drew: both drawings are centred
 // and scaled to the same size first, so it's only about the shape itself.
 
-const TAU = Math.PI * 2;
+import { SHAPES } from './shape-library.js';
 
-function curve(fn, n, from = 0, to = TAU) {
-  const pts = [];
-  for (let i = 0; i <= n; i++) {
-    const [x, y] = fn(from + ((to - from) * i) / n);
-    pts.push(x, y);
-  }
-  return pts;
-}
-
-const circleAt = (cx, cy, r, n = 48) => curve((t) => [cx + r * Math.cos(t), cy + r * Math.sin(t)], n);
-
-function polygon(sides, startDeg = -90) {
-  return curve((t) => [0.5 + 0.5 * Math.cos(t), 0.5 + 0.5 * Math.sin(t)], sides, (startDeg * Math.PI) / 180, (startDeg * Math.PI) / 180 + TAU);
-}
-
-function star() {
-  const pts = [];
-  for (let i = 0; i <= 10; i++) {
-    const a = -Math.PI / 2 + (i * Math.PI) / 5;
-    const r = i % 2 ? 0.2 : 0.5;
-    pts.push(0.5 + r * Math.cos(a), 0.5 + r * Math.sin(a));
-  }
-  return pts;
-}
-
-// Crescent: the part of a unit circle outside a second circle (centre 0.45
-// to the right, radius 0.8); the two meet at (0.625, ±0.78).
-function crescent() {
-  const deg = Math.PI / 180;
-  const outer = curve((t) => [Math.cos(t), Math.sin(t)], 32, 51.3 * deg, 308.7 * deg);
-  const inner = curve((t) => [0.45 + 0.8 * Math.cos(t), 0.8 * Math.sin(t)], 24, 282.6 * deg, 77.4 * deg);
-  return [outer.concat(inner)];
-}
-
-export const SHAPES = [
-  { name: 'Circle', paths: [circleAt(0.5, 0.5, 0.5)] },
-  { name: 'Square', paths: [[0, 0, 1, 0, 1, 1, 0, 1, 0, 0]] },
-  { name: 'Triangle', paths: [[0.5, 0, 1, 0.87, 0, 0.87, 0.5, 0]] },
-  { name: 'Star', paths: [star()] },
-  {
-    name: 'Heart',
-    paths: [curve((t) => [16 * Math.sin(t) ** 3, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))], 64)],
-  },
-  { name: 'House', paths: [[0.15, 0.45, 0.15, 1, 0.85, 1, 0.85, 0.45], [0, 0.5, 0.5, 0, 1, 0.5], [0.42, 1, 0.42, 0.7, 0.58, 0.7, 0.58, 1]] },
-  { name: 'Spiral', paths: [curve((t) => [0.5 + (0.03 + t * 0.025) * Math.cos(t), 0.5 + (0.03 + t * 0.025) * Math.sin(t)], 96, 0, 3 * TAU)] },
-  { name: 'Lightning bolt', paths: [[0.6, 0, 0.15, 0.55, 0.45, 0.55, 0.3, 1, 0.85, 0.4, 0.55, 0.4, 0.75, 0, 0.6, 0]] },
-  { name: 'Arrow', paths: [[0, 0.5, 0.95, 0.5], [0.65, 0.2, 0.95, 0.5, 0.65, 0.8]] },
-  { name: 'Moon', paths: crescent() },
-  { name: 'Diamond', paths: [[0.5, 0, 0.8, 0.5, 0.5, 1, 0.2, 0.5, 0.5, 0]] },
-  { name: 'Infinity', paths: [curve((t) => [Math.cos(t) / (1 + Math.sin(t) ** 2), (Math.sin(t) * Math.cos(t)) / (1 + Math.sin(t) ** 2)], 64)] },
-  { name: 'Plus', paths: [[0.35, 0, 0.65, 0, 0.65, 0.35, 1, 0.35, 1, 0.65, 0.65, 0.65, 0.65, 1, 0.35, 1, 0.35, 0.65, 0, 0.65, 0, 0.35, 0.35, 0.35, 0.35, 0]] },
-  { name: 'Hexagon', paths: [polygon(6, 0)] },
-  { name: 'Envelope', paths: [[0, 0.15, 1, 0.15, 1, 0.85, 0, 0.85, 0, 0.15], [0, 0.15, 0.5, 0.55, 1, 0.15]] },
-  { name: 'Smiley face', paths: [circleAt(0.5, 0.5, 0.5), circleAt(0.33, 0.37, 0.06, 12), circleAt(0.67, 0.37, 0.06, 12), curve((t) => [0.5 + 0.28 * Math.cos(t), 0.55 + 0.22 * Math.sin(t)], 16, 0.15 * Math.PI, 0.85 * Math.PI)] },
-  { name: 'Fish', paths: [curve((t) => [0.6 + 0.4 * Math.cos(t), 0.5 + 0.25 * Math.sin(t)], 40), [0.22, 0.5, 0, 0.25, 0, 0.75, 0.22, 0.5]] },
-  { name: 'Wave', paths: [curve((t) => [t / (4 * Math.PI), 0.5 + 0.2 * Math.sin(t)], 64, 0, 4 * Math.PI)] },
-  { name: 'Tree', paths: [[0.5, 0, 0.9, 0.7, 0.1, 0.7, 0.5, 0], [0.42, 0.7, 0.42, 1, 0.58, 1, 0.58, 0.7]] },
-  { name: 'Mountain', paths: [[0, 1, 0.35, 0.2, 0.55, 0.6, 0.75, 0.35, 1, 1]] },
-];
+export { SHAPES };
 
 // ---- scoring ----------------------------------------------------------------
 
