@@ -14,7 +14,10 @@ container on your home network.
 ## Games
 
 The lobby groups games into **⚔️ Competitive** (head to head, one of you wins)
-and **🎨 Casual** (you play together, nobody really loses).
+and **🎨 Casual** (you play together, nobody really loses). Within each group
+the games you played most recently come first (the last one is tagged
+⏱ Last played), and **🎲 Random game** at the top picks one for you (never the
+one you just played).
 
 ### ⚔️ Competitive
 
@@ -47,7 +50,8 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Where | Button | Does |
 | --- | --- | --- |
 | Lobby | **A** / **Start** | Join (takes a free seat as "Controller 1/2") |
-| Lobby | **D-pad**, then **A** | Pick a game and start it |
+| Lobby | **D-pad**, then **A** | Pick a game and start it (the first card, 🎲 Random, lets the hub choose) |
+| Lobby | **Y** | Change your name: cycles through names on the leaderboard, so your wins count for you |
 | Lobby | **B** | Leave your seat |
 | Any game | **Back / Select** | Back to the lobby |
 | Reaction Duel | any face button, bumper or trigger | Tap |
@@ -243,7 +247,6 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 **The hub**
 
 - Background music for the lobby and games
-- Lobby polish: last-played first, a "random game" button
 - Raspberry Pi kiosk mode: boot straight into the TV screen, auto-update, Bluetooth controllers
 
 **More games**

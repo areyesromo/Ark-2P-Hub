@@ -80,3 +80,5 @@ body.slot-1 { --me: var(--p2); }
 .phone-lobby .h2h { text-align: center; margin: -4px 0 4px; font-size: 0.95rem; line-height: 1.5; }
 .phone-lobby .h2h .muted { color: var(--muted); }
 .phone-lobby .board-link { display: block; text-align: center; margin-top: 16px; }
+.phone-games button.random { border-style: dashed; }
+.phone-games .tag { font-style: normal; font-size: 0.75rem; color: var(--warn); }

@@ -79,7 +79,7 @@ test('full flow: two phones join, play, reconnect, and return to lobby', async (
   // A phone picks Rock Paper Scissors; everyone gets their own view.
   const hostView = next(host, 'game:view', (m) => m.gameId === 'rock-paper-scissors');
   const p2View = next(p2, 'game:view', (m) => m.gameId === 'rock-paper-scissors');
-  assert.deepEqual(await call(p1, 'lobby:start', { gameId: 'rock-paper-scissors' }), { ok: true });
+  assert.deepEqual(await call(p1, 'lobby:start', { gameId: 'rock-paper-scissors' }), { ok: true, gameId: 'rock-paper-scissors' });
   assert.equal((await hostView).view.phase, 'choose');
   assert.equal((await p2View).view.you, 1);
 

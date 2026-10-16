@@ -17,6 +17,8 @@ import sketchGuess from './sketch-guess.js';
  *
  * category is 'competitive' (the default: you play against each other) or
  * 'casual' (you play together, nobody really loses). The lobby groups them.
+ * needsPhone: true keeps a game out of "random" when both players use
+ * controllers (it needs a private screen).
  *
  * create(ctx) returns an instance with:
  *   start()                  begin (or restart) the match
@@ -39,7 +41,7 @@ export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
     .sort((a, b) => byCategory(a) - byCategory(b))
-    .map(({ id, name, tagline, category }) => ({ id, name, tagline, category: category || 'competitive' }));
+    .map(({ id, name, tagline, category, needsPhone }) => ({ id, name, tagline, category: category || 'competitive', needsPhone: Boolean(needsPhone) }));
 }
 
 export function getGame(id) {

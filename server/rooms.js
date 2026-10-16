@@ -92,6 +92,19 @@ export class Room {
     for (const p of this.players) if (p && p.local) p.connected = tvHere;
   }
 
+  /** Rename a controller player (phones pick their name when they join). */
+  renameLocal(slot, rawName) {
+    const p = this.players[slot];
+    if (!p || !p.local) return { error: 'Only controller players can be renamed here.' };
+    const name = sanitizeName(rawName);
+    if (!name) return { error: 'Please enter a name.' };
+    const other = this.players[1 - slot];
+    if (other && other.name.toLowerCase() === name.toLowerCase()) return { error: 'The other player already has that name.' };
+    p.name = name;
+    this.broadcastState();
+    return { ok: true, name };
+  }
+
   removePlayer(slot) {
     if (!this.players[slot]) return;
     this.players[slot] = null;
@@ -105,13 +118,23 @@ export class Room {
 
   // ---- games -------------------------------------------------------------
 
+  /** A random game for the "🎲 Random" button: not the one just played, and playable by these players. */
+  pickRandomGame(rng = Math.random) {
+    const allLocal = this.players.every((p) => p && p.local);
+    let pool = listGames().filter((g) => !(g.needsPhone && allLocal));
+    if (pool.length > 1) pool = pool.filter((g) => g.id !== this.lastGameId);
+    return pool[Math.floor(rng() * pool.length)].id;
+  }
+
   startGame(gameId) {
+    if (gameId === 'random') gameId = this.pickRandomGame();
     const def = getGame(gameId);
     if (!def) return { error: 'Unknown game.' };
     if (!this.readyToPlay) return { error: 'Waiting for two players.' };
 
     this.stopGame({ silent: true });
     this.lastPhase = null;
+    this.lastGameId = def.id;
     const generation = ++this.generation;
     const room = this;
     const live = () => room.generation === generation;
@@ -142,7 +165,7 @@ export class Room {
     this.game = def.create(ctx);
     this.broadcastState();
     this.game.start();
-    return { ok: true };
+    return { ok: true, gameId: def.id };
   }
 
   stopGame({ silent = false } = {}) {
@@ -178,8 +201,9 @@ export class Room {
       players: this.players.map((p, slot) =>
         p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local) } : null,
       ),
-      games: listGames(),
+      games: this.lobbyGames(),
       h2h: this.headToHead(),
+      knownNames: this.stats ? this.stats.knownNames() : [],
     };
   }
 
@@ -223,6 +247,19 @@ export class Room {
       match.scores = Array.isArray(view.scores) && view.scores.length === 2 ? view.scores.slice() : null;
     }
     this.stats.record(match);
+  }
+
+  /** Games for the lobby: within each category, the most recently played first. */
+  lastPlayedOrder() {
+    return this.stats ? this.stats.lastPlayed() : {};
+  }
+
+  lobbyGames() {
+    const last = this.lastPlayedOrder();
+    const games = listGames().map((g, i) => ({ ...g, lastPlayed: last[g.id] || null, order: i }));
+    return games
+      .sort((a, b) => (a.category === b.category ? (b.lastPlayed || 0) - (a.lastPlayed || 0) || a.order - b.order : a.order - b.order))
+      .map(({ order, ...g }) => g);
   }
 
   /** The record between the two seated players, for the lobby. */

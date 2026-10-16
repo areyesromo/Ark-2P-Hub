@@ -78,6 +78,12 @@
     casual: '🎨 Casual <span>Play together, just for fun</span>',
   };
 
+  // The first lobby card picks a game at random (the server chooses, see Room#pickRandomGame).
+  const RANDOM = { id: 'random', name: '🎲 Random game', tagline: "Can't decide? Let the hub pick one for you." };
+  function lobbyCards() {
+    return [RANDOM].concat(state.games);
+  }
+
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
     $('join-warn').classList.toggle('hidden', !state.joinGuess);
@@ -92,15 +98,18 @@
     $('h2h').classList.toggle('hidden', !h2h);
 
     const padFocus = Object.keys(padSeats).length > 0;
-    if (focus >= state.games.length) focus = 0;
-    $('game-list').innerHTML = state.games.map(function (g, i) {
-      const heading = i === 0 || state.games[i - 1].category !== g.category
+    const cards = lobbyCards();
+    if (focus >= cards.length) focus = 0;
+    const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
+    $('game-list').innerHTML = cards.map(function (g, i) {
+      const heading = i > 0 && (i === 1 || cards[i - 1].category !== g.category)
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
         : '';
+      const tag = newest && g.lastPlayed === newest ? '<em class="tag">⏱ Last played</em>' : '';
       return (
         heading +
-        '<button class="game-card' + (padFocus && i === focus ? ' pad-focus' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + '</strong>' +
+        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
+        '<strong>' + Ark.escapeHtml(g.name) + tag + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
@@ -233,7 +242,7 @@
   // "local" seats on the server; this page sends their input with pad:input.
 
   const PAD_KEY = 'ark.pads';
-  let padSeats = {}; // pad index -> { slot, token }
+  let padSeats = {}; // pad index -> { slot, token, name? }
   let connectedPads = [];
   let focus = 0; // the game card controllers have selected in the lobby
   let padMessage = '';
@@ -255,9 +264,10 @@
     padSeats = {};
     if (!stored || stored.code !== code) return savePads();
     Object.keys(stored.pads || {}).forEach(function (idx) {
-      socket.emit('pad:join', { name: padName(Number(idx)), token: stored.pads[idx].token }, function (res) {
+      const seat = stored.pads[idx];
+      socket.emit('pad:join', { name: seat.name || padName(Number(idx)), token: seat.token }, function (res) {
         if (!res || !res.ok) return;
-        padSeats[idx] = { slot: res.slot, token: res.token };
+        padSeats[idx] = { slot: res.slot, token: res.token, name: seat.name };
         savePads();
       });
     });
@@ -284,7 +294,7 @@
     let text;
     if (padMessage) text = padMessage;
     else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
-    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · D-pad + A pick a game';
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · D-pad + A pick a game';
     $('pad-hint').textContent = text;
   }
 
@@ -297,12 +307,38 @@
     if (show) el.textContent = '🎮 ' + r.padHint + ' · Back: lobby';
   }
 
+  /**
+   * Controllers can't type, so Y cycles a controller player's name through
+   * the names on the leaderboard (and back to "Controller N"). That way
+   * their wins count for them.
+   */
+  function renamePad(idx, seat) {
+    const other = state.players[1 - seat.slot];
+    const taken = other ? other.name.toLowerCase() : null;
+    const names = [];
+    [padName(Number(idx))].concat(state.knownNames || []).forEach(function (n) {
+      const k = n.toLowerCase();
+      if (k !== taken && !names.some(function (m) { return m.toLowerCase() === k; })) names.push(n);
+    });
+    const now = state.players[seat.slot] ? state.players[seat.slot].name.toLowerCase() : '';
+    const at = names.findIndex(function (n) { return n.toLowerCase() === now; });
+    const name = names[(at + 1) % names.length];
+    socket.emit('pad:rename', { slot: seat.slot, name: name }, function (res) {
+      if (!res || !res.ok) return flashPad('🎮 ' + ((res && res.error) || "Couldn't rename."));
+      seat.name = res.name;
+      savePads();
+      flashPad('🎮 Controller ' + (Number(idx) + 1) + ' is now playing as ' + res.name +
+        (names.length > 1 ? ' · press Y again for another name' : ' · finish a game with a phone name to add more'));
+    });
+  }
+
   function joinPad(idx) {
     socket.emit('pad:join', { name: padName(idx) }, function (res) {
       if (!res || !res.ok) return flashPad('🎮 ' + ((res && res.error) || "Couldn't join."));
       padSeats[idx] = { slot: res.slot, token: res.token };
       savePads();
       ArkPads.rumble(idx, 150);
+      if (state && state.phase !== 'playing') renderLobby(); // show the controller's focus right away
     });
   }
 
@@ -356,7 +392,9 @@
       if (btn === 'A' || btn === 'START') joinPad(idx);
       return;
     }
-    const n = state.games.length;
+    const cards = lobbyCards();
+    const n = cards.length;
+    if (btn === 'Y') return renamePad(idx, seat);
     if (btn === 'B') {
       socket.emit('pad:leave', { slot: seat.slot });
       delete padSeats[idx];
@@ -366,7 +404,7 @@
     } else if (btn === 'RIGHT' || btn === 'DOWN') {
       focus = (focus + 1) % n;
     } else if (btn === 'A' || btn === 'START') {
-      if (state.readyToPlay) socket.emit('lobby:start', { gameId: state.games[focus].id });
+      if (state.readyToPlay) socket.emit('lobby:start', { gameId: cards[focus].id });
       else flashPad('🎮 Waiting for a second player.');
       return;
     } else {
