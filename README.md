@@ -19,6 +19,7 @@ container on your home network.
 | **Rock Paper Scissors** | Pick in secret on your phone; the TV reveals both. First to 3. |
 | **Pong** | The classic, in real time. Drag on your phone's touch strip (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
 | **Light Cycles** | Tron-style. Your cycle leaves a wall behind it: make your rival crash into it. Tap a side of the phone pad or swipe to turn. Cycles speed up as the round goes on. First to 3. |
+| **Snake Battle** | Two snakes, one arena. Eat the glowing food to grow; hit a wall, yourself or your rival and you lose the round. After 60 seconds the longer snake wins. Same controls as Light Cycles. First to 3. |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
 ## Controllers
@@ -39,6 +40,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Pong | **Left stick** or **D-pad ↑↓** | Move your paddle |
 | Light Cycles | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |
 | Air Hockey | **Left stick** or **D-pad** | Move your mallet (in TV directions) |
+| Snake Battle | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |
 | Game over | **A** / **Start** | Rematch |
 
 Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
@@ -194,6 +196,6 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 ## Roadmap ideas
 
-- More real-time games: snake battle, tank duel
+- More real-time games: tank duel
 - Quiz / trivia battle, drawing duels
 - Sounds, match history and a persistent leaderboard

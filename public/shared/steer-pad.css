@@ -1,0 +1,26 @@
+/* Phone steering pad shared by grid games (see steer-pad.js). */
+
+.steer-pad {
+  flex: 1;
+  position: relative;
+  border-radius: 24px;
+  border: 3px solid var(--me);
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.06) 0 18%, transparent 19%), var(--panel);
+  touch-action: none;
+  overflow: hidden;
+}
+.steer-pad .arrow {
+  position: absolute;
+  font-size: 3.2rem;
+  line-height: 1;
+  color: var(--muted);
+  opacity: 0.45;
+  transform: translate(-50%, -50%);
+  transition: opacity 80ms, color 80ms, transform 80ms;
+}
+.steer-pad .arrow.up { left: 50%; top: 16%; }
+.steer-pad .arrow.down { left: 50%; top: 84%; }
+.steer-pad .arrow.left { left: 16%; top: 50%; }
+.steer-pad .arrow.right { left: 84%; top: 50%; }
+.steer-pad .arrow.on { color: var(--me); opacity: 1; transform: translate(-50%, -50%) scale(1.25); text-shadow: 0 0 18px var(--me); }
+.steer-pad .hint { position: absolute; inset: auto 0 12px; color: var(--muted); font-size: 0.9rem; }
