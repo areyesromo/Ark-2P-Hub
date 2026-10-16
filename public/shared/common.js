@@ -48,6 +48,24 @@
     return loading[key];
   }
 
+  /** Load a helper script once (e.g. drawing code shared by a game's TV and phone renderers). */
+  const scripts = {};
+  function loadScript(src) {
+    if (!scripts[src]) {
+      scripts[src] = new Promise(function (resolve, reject) {
+        const s = document.createElement('script');
+        s.src = src;
+        s.onload = resolve;
+        s.onerror = function () {
+          delete scripts[src];
+          reject(new Error('Could not load ' + src));
+        };
+        document.head.appendChild(s);
+      });
+    }
+    return scripts[src];
+  }
+
   /** Add a game's stylesheet once. */
   function loadCss(href) {
     if (document.querySelector('link[data-ark-css="' + href + '"]')) return;
@@ -84,6 +102,7 @@
     register: register,
     loadRenderer: loadRenderer,
     loadCss: loadCss,
+    loadScript: loadScript,
     scoreboardHtml: scoreboardHtml,
     colorFor: function (slot) { return slot === 0 ? 'var(--p1)' : 'var(--p2)'; },
   };

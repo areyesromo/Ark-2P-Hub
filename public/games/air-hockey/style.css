@@ -48,50 +48,13 @@
 .ah-phone .status.won { color: var(--good); font-weight: 900; font-size: 1.8rem; }
 .ah-phone .status.lost { color: var(--bad); font-weight: 900; font-size: 1.8rem; }
 
-/* Your half of the table, turned to face you: centre line on top, your goal at the bottom. */
-.ah-pad {
+/* The whole table, upright, your goal at the bottom. The canvas keeps the table's real shape. */
+.ah-field {
   flex: 1;
-  position: relative;
-  border-radius: 28px 28px 40px 40px;
-  border: 3px solid var(--me);
-  background:
-    radial-gradient(circle at 50% 0, transparent 0 22%, rgba(255, 255, 255, 0.12) 22.4% 23.2%, transparent 23.6%),
-    linear-gradient(to bottom, rgba(255, 255, 255, 0.18) 0 3px, transparent 3px),
-    var(--panel);
-  touch-action: none;
-  overflow: hidden;
+  min-height: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
-.ah-pad .goal {
-  position: absolute;
-  bottom: -3px;
-  left: 32%;
-  right: 32%;
-  height: 10px;
-  border-radius: 6px 6px 0 0;
-  background: var(--me);
-  box-shadow: 0 0 18px var(--me);
-}
-.ah-pad .label {
-  position: absolute;
-  left: 0;
-  right: 0;
-  font-size: 0.8rem;
-  color: var(--muted);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-}
-.ah-pad .label.top { top: 10px; }
-.ah-pad .label.bottom { bottom: 18px; }
-.ah-pad .knob {
-  position: absolute;
-  width: 70px;
-  height: 70px;
-  margin: -35px 0 0 -35px;
-  border-radius: 50%;
-  border: 8px solid var(--me);
-  background: radial-gradient(circle, var(--me) 0 28%, rgba(0, 0, 0, 0.3) 30%);
-  box-shadow: 0 0 22px var(--me);
-  left: 50%;
-  top: 75%;
-}
+.ah-field canvas { display: block; touch-action: none; }
 .ah-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }

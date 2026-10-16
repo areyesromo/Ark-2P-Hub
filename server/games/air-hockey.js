@@ -2,9 +2,9 @@
 // each player keeps their mallet in their own half. The server runs 2D
 // physics at 60 Hz and pushes ~30 views a second (same loop as Pong).
 //
-// Phones send a finger position on a pad that shows *their* half of the
-// table turned to face them (their goal at the bottom of the phone, the
-// centre line at the top). Controllers send stick direction in TV
+// Phones show the whole table turned upright (their goal at the bottom,
+// the rival's at the top) and send the finger's table position; the server
+// keeps each mallet in its own half. Controllers send stick direction in TV
 // coordinates. Both move the mallet at the same top speed.
 
 export const WIN_SCORE = 7;
@@ -43,22 +43,6 @@ function bounds(slot) {
   return slot === 0
     ? { x0: r, x1: HALF - r, y0: r, y1: FIELD.h - r }
     : { x0: HALF + r, x1: FIELD.w - r, y0: r, y1: FIELD.h - r };
-}
-
-/**
- * Phone pad -> table position. u = finger across the pad (0 left .. 1 right),
- * v = down the pad (0 top = centre line .. 1 bottom = own goal).
- */
-export function padToTable(slot, u, v) {
-  const b = bounds(slot);
-  const toward = 1 - clamp(v, 0, 1); // 0 at own goal, 1 at the centre line
-  const across = clamp(u, 0, 1);
-  if (slot === 0) {
-    // Facing right: phone-up = +x, phone-right = +y (down the TV).
-    return { x: b.x0 + toward * (b.x1 - b.x0), y: b.y0 + across * (b.y1 - b.y0) };
-  }
-  // Facing left: phone-up = -x, phone-right = -y (up the TV).
-  return { x: b.x1 - toward * (b.x1 - b.x0), y: b.y1 - across * (b.y1 - b.y0) };
 }
 
 export class AirHockey {
@@ -217,9 +201,9 @@ export class AirHockey {
 
   onInput(slot, input) {
     if (input.type === 'rematch' && this.phase === 'over') return this.start();
-    if (input.type === 'move' && Number.isFinite(input.u) && Number.isFinite(input.v)) {
-      const t = padToTable(slot, input.u, input.v);
-      this.controls[slot] = { mode: 'target', x: t.x, y: t.y };
+    if (input.type === 'move' && Number.isFinite(input.x) && Number.isFinite(input.y)) {
+      // Phone: where the finger is on the table. The mallet heads there and stops at its own half.
+      this.controls[slot] = { mode: 'target', x: clamp(input.x, 0, FIELD.w), y: clamp(input.y, 0, FIELD.h) };
     } else if (input.type === 'axis' && Number.isFinite(input.x) && Number.isFinite(input.y)) {
       this.controls[slot] = { mode: 'axis', x: clamp(input.x, -1, 1), y: clamp(input.y, -1, 1) };
     }
@@ -245,15 +229,20 @@ export class AirHockey {
     };
   }
 
+  /** Phones draw the whole table too, so they get the same pieces as the TV. */
   playerView(slot) {
+    const v = this.hostView();
     return {
-      phase: this.phase,
+      phase: v.phase,
       you: slot,
-      scores: this.scores,
-      winScore: WIN_SCORE,
-      countdown: this.countdown(),
-      lastScorer: this.lastScorer,
-      winner: this.winner,
+      scores: v.scores,
+      winScore: v.winScore,
+      countdown: v.countdown,
+      puck: v.puck,
+      mallets: v.mallets,
+      field: v.field,
+      lastScorer: v.lastScorer,
+      winner: v.winner,
     };
   }
 }
@@ -261,6 +250,6 @@ export class AirHockey {
 export default {
   id: 'air-hockey',
   name: 'Air Hockey',
-  tagline: 'Your phone is your half of the table: slide your mallet and smash the puck into their goal. First to 7.',
+  tagline: 'The whole table on your phone too: slide your mallet and smash the puck into their goal. First to 7.',
   create: (ctx) => new AirHockey(ctx),
 };
