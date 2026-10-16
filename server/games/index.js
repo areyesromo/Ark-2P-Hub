@@ -5,6 +5,7 @@ import tron from './tron.js';
 import airHockey from './air-hockey.js';
 import snake from './snake.js';
 import tanks from './tanks.js';
+import quiz from './quiz.js';
 
 /**
  * Every game is a module exporting:
@@ -23,7 +24,7 @@ import tanks from './tanks.js';
  * To add a game: write the module, list it below, and add the two renderers
  * under public/games/<id>/.
  */
-const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey, snake, tanks];
+const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey, snake, tanks, quiz];
 
 export function listGames() {
   return GAMES.map(({ id, name, tagline }) => ({ id, name, tagline }));
