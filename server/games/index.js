@@ -2,6 +2,7 @@ import reactionDuel from './reaction-duel.js';
 import rockPaperScissors from './rock-paper-scissors.js';
 import pong from './pong.js';
 import tron from './tron.js';
+import airHockey from './air-hockey.js';
 
 /**
  * Every game is a module exporting:
@@ -20,7 +21,7 @@ import tron from './tron.js';
  * To add a game: write the module, list it below, and add the two renderers
  * under public/games/<id>/.
  */
-const GAMES = [reactionDuel, rockPaperScissors, pong, tron];
+const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey];
 
 export function listGames() {
   return GAMES.map(({ id, name, tagline }) => ({ id, name, tagline }));
