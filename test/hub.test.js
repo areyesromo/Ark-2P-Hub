@@ -191,3 +191,42 @@ test('controller players: seated by the TV, present with the TV, driven only by 
   await call(host2, 'pad:leave', { slot: 1 });
   await freed;
 });
+
+test('after a server restart the TV reopens the same room, and phones can rejoin it', async () => {
+  const host = client();
+  const { code, hostToken } = await call(host, 'host:create', {});
+  host.close();
+  server.rooms.rooms.get(code).dispose();
+  server.rooms.rooms.delete(code); // what a restart looks like: the room is gone
+
+  const host2 = client();
+  const resumed = await call(host2, 'host:resume', { code, hostToken, origin: 'http://192.168.1.20:3000' });
+  assert.equal(resumed.ok, true);
+  assert.equal(resumed.code, code, 'same code, so phones find it again');
+  assert.equal(resumed.hostToken, hostToken);
+  const phone = client();
+  const joined = await call(phone, 'player:join', { code, name: 'Ana', token: 'old-token-from-before' });
+  assert.equal(joined.ok, true);
+
+  // Junk can't claim rooms: a bad token or a code that's taken.
+  const bad = await call(client(), 'host:resume', { code: 'ZZZZ', hostToken: 'not-a-token' });
+  assert.ok(bad.error);
+  assert.equal(server.rooms.get('ZZZZ'), null);
+  const stolen = await call(client(), 'host:resume', { code, hostToken: 'f'.repeat(32) });
+  assert.ok(stolen.error);
+});
+
+test('/healthz counts games in progress (the Pi updater waits for 0)', async () => {
+  const before = await (await fetch(`${url}/healthz`)).json();
+  const host = client();
+  const { code } = await call(host, 'host:create', {});
+  await call(host, 'pad:join', { name: 'P1' });
+  await call(host, 'pad:join', { name: 'P2' });
+  assert.deepEqual(await call(host, 'lobby:start', { gameId: 'quiz' }), { ok: true, gameId: 'quiz' });
+  const during = await (await fetch(`${url}/healthz`)).json();
+  assert.equal(during.playing, before.playing + 1);
+  await call(host, 'lobby:return');
+  const after = await (await fetch(`${url}/healthz`)).json();
+  assert.equal(after.playing, before.playing);
+  assert.ok(server.rooms.get(code));
+});

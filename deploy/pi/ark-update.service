@@ -1,11 +1,11 @@
+# Installed by install.sh, which fills in User and the folder.
 [Unit]
-Description=Pull the latest Ark 2P Hub image and restart if it changed
+Description=Update Ark 2P Hub (waits until nobody is playing)
 Wants=network-online.target
 After=network-online.target docker.service
 
 [Service]
 Type=oneshot
-WorkingDirectory=/opt/ark
-ExecStart=/usr/bin/docker compose pull --quiet
-ExecStart=/usr/bin/docker compose up -d --remove-orphans
-ExecStart=/usr/bin/docker image prune -f
+User=@USER@
+WorkingDirectory=@DIR@
+ExecStart=@DIR@/ark-update.sh

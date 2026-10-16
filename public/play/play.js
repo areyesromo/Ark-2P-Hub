@@ -5,6 +5,7 @@
   const STORE_KEY = 'ark.player';
   const socket = io();
   const $ = (id) => document.getElementById(id);
+  Ark.watchVersion(socket);
 
   let session = loadSession(); // { code, token, name } once joined
   let me = null; // { slot, name, code }
@@ -31,10 +32,21 @@
   $('name').value = (session && session.name) || '';
   if (urlCode) setTimeout(function () { $('name').focus(); }, 50);
 
-  function join(code, name, token, silent) {
+  const REJOIN_TRIES = 15; // ~30 s: after a server update the TV reopens the same room
+  let rejoinTimer = null;
+
+  function join(code, name, token, silent, attempt) {
+    attempt = attempt || 0;
+    clearTimeout(rejoinTimer);
     $('join-btn').disabled = true;
     socket.emit('player:join', { code: code, name: name, token: token }, function (res) {
       $('join-btn').disabled = false;
+      // Rejoining after a restart: the room comes back once the TV reconnects, so keep trying a while.
+      if (silent && res && /No room/.test(res.error || '') && attempt < REJOIN_TRIES) {
+        $('me-conn').textContent = 'Waiting for the TV…';
+        rejoinTimer = setTimeout(function () { join(code, name, token, true, attempt + 1); }, 2000);
+        return;
+      }
       if (!res || !res.ok) {
         if (!silent) $('join-error').textContent = (res && res.error) || 'Could not join.';
         if (silent) saveSession({ code: '', token: null, name: session ? session.name : '' });
@@ -43,6 +55,7 @@
       }
       saveSession({ code: res.code, token: res.token, name: res.name });
       me = { slot: res.slot, name: res.name, code: res.code };
+      $('me-conn').textContent = '';
       $('join-error').textContent = '';
       showController();
       // The room snapshot arrives just before this callback, so apply it now.

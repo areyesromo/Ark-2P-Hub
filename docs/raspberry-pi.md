@@ -1,106 +1,120 @@
-# Raspberry Pi 4 setup
+# Raspberry Pi: a plug-in game console
 
-The Pi does both jobs: it runs the hub in Docker **and** shows the TV screen
-over HDMI in a full-screen browser. Phones join over Wi-Fi. When you merge to
-`main`, GitHub builds a new image and the Pi picks it up within ~10 minutes.
+A Raspberry Pi 4 (or 5) can be the whole thing: it runs the hub, shows the TV
+screen full-screen over HDMI as soon as it boots, pairs Bluetooth
+controllers, and updates itself from GitHub. Phones join over Wi-Fi as usual.
 
 ```
-GitHub (push to main) ──► Actions builds arm64 image ──► ghcr.io
-                                                          │  pulled every 10 min
-Raspberry Pi 4 ◄──────────────────────────────────────────┘
- ├─ Docker: ark-2p-hub (port 3000)
+GitHub (merge to main) ──► Actions builds an arm64 image ──► ghcr.io
+                                                              │  checked every 10 min
+Raspberry Pi ◄────────────────────────────────────────────────┘
+ ├─ Docker: ark-2p-hub (port 3000)       🎮🎮 Bluetooth controllers
  └─ Chromium kiosk ──HDMI──► TV          📱📱 phones ──Wi-Fi──► Pi:3000
 ```
 
 ## 1. Flash the OS
 
-Use **Raspberry Pi Imager** → *Raspberry Pi OS (64-bit)* **with desktop**.
-In the Imager's settings, set a hostname (e.g. `ark`), your Wi-Fi, a user and
-enable SSH. Ethernet is better than Wi-Fi for the Pi if you can.
+Use **Raspberry Pi Imager** → *Raspberry Pi OS (64-bit)* **with desktop**. In
+the Imager's settings, set a hostname (e.g. `ark`), your Wi-Fi, a user, and
+enable SSH. Ethernet is better than Wi-Fi if you can.
 
 Give the Pi a fixed IP (a DHCP reservation in your router is easiest) so the
 QR code never changes.
 
-## 2. Install Docker
+## 2. Run the installer
+
+Plug the Pi into the TV, boot it, then open a terminal on it (or SSH in) and run,
+as your normal user (not `sudo`):
 
 ```bash
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER   # log out and back in afterwards
+curl -fsSL https://raw.githubusercontent.com/areyesromo/Ark-2P-Hub/main/deploy/pi/install.sh | bash
+sudo reboot
 ```
 
-## 3. Run the hub
+That's it. After the reboot the TV shows the lobby with a QR code.
+
+What the installer does (it's safe to run again any time, e.g. to repair the setup):
+
+1. Installs Docker if needed.
+2. Puts everything in `/opt/ark` and starts the hub (the prebuilt image from
+   GitHub; if that can't be downloaded, it builds from source instead).
+3. Turns on **auto-update** every 10 minutes.
+4. Sets the Pi to log in to the desktop by itself, turns off screen blanking,
+   and starts the **kiosk** (full-screen TV screen) at login on any recent Pi OS
+   desktop (labwc, Wayfire or LXDE).
+
+Options go in front of `bash`, e.g. `curl … | ADMIN_PASSWORD=secret bash`:
+
+| Option | Does |
+| --- | --- |
+| `ADMIN_PASSWORD=…` | Password for Settings (`/admin/`); otherwise you create one there |
+| `PUBLIC_URL=http://192.168.1.50:3000` | Fix the address phones use |
+| `ARK_SOURCE=1` | Build from source on the Pi instead of using the prebuilt image |
+| `ARK_NO_KIOSK=1` | Only run the server (no TV screen on this Pi) |
+| `ARK_DIR=/some/path` | Install somewhere other than `/opt/ark` |
+
+The first two end up in `/opt/ark/.env`; edit it and run
+`cd /opt/ark && docker compose up -d` to change them later.
+
+> **Image can't be pulled?** GHCR packages can start out private. The
+> installer then builds from source automatically. To use the prebuilt image
+> instead, make the package public (GitHub → your profile → *Packages* →
+> `ark-2p-hub` → *Package settings* → *Change visibility*) and run the
+> installer again.
+
+## 3. Pair controllers
+
+Once per Bluetooth controller:
 
 ```bash
-sudo mkdir -p /opt/ark && sudo chown $USER /opt/ark
-cd /opt/ark
-curl -fsSLO https://raw.githubusercontent.com/areyesromo/Ark-2P-Hub/main/deploy/pi/docker-compose.yml
-docker compose up -d
+/opt/ark/pair-controller.sh
 ```
 
-> **Private image?** GHCR packages start private. Either make the package
-> public (GitHub → your profile → *Packages* → `ark-2p-hub` → *Package
-> settings* → *Change visibility*), or log the Pi in once with a personal
-> access token that has `read:packages`:
-> `echo <token> | docker login ghcr.io -u <github-user> --password-stdin`
+Put the controller in pairing mode when it asks:
 
-Check it: open `http://<pi-ip>:3000/host/` from any computer.
+| Controller | Pairing mode |
+| --- | --- |
+| Xbox | Hold the small pair button on top until the logo flashes fast |
+| PlayStation (DualShock 4 / DualSense) | Hold **Share** (or **Create**) + **PS** until the light bar flashes |
+| Switch Pro | Hold the sync button on top |
+| 8BitDo | See its manual (often **Start** + **X** or **Y**) |
 
-The compose file uses `network_mode: host` so the server sees the Pi's real
-LAN address and puts it in the QR code, even though the kiosk browser itself
-opens `localhost`.
+The script finds it, pairs it and *trusts* it, so from then on it reconnects by
+itself when you switch it on. On the TV, press **A** to join. If an older Xbox
+controller pairs but won't connect, run `/opt/ark/pair-controller.sh --xbox-fix`
+once, reboot, and pair again.
 
-## 4. Auto-update from GitHub
+USB controllers just work: plug them in.
 
-```bash
-cd /opt/ark
-curl -fsSLO https://raw.githubusercontent.com/areyesromo/Ark-2P-Hub/main/deploy/pi/ark-update.service
-curl -fsSLO https://raw.githubusercontent.com/areyesromo/Ark-2P-Hub/main/deploy/pi/ark-update.timer
-sudo cp ark-update.service ark-update.timer /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable --now ark-update.timer
-```
+## Updates
 
-Every 10 minutes it pulls `:latest` and restarts the container only if the
-image changed. Force an update right away with
-`sudo systemctl start ark-update.service`.
+Every 10 minutes the Pi checks for a new version (merging to `main` on
+GitHub builds one). A new version is downloaded in the background but only
+installed **when nobody is in the middle of a game**. After an update the TV
+reloads itself and keeps the **same room code**, and phones reconnect to
+their seats on their own. The version is shown in the TV's bottom-right corner.
 
-> **Prefer building from source on the Pi?** Skip the GHCR image and the
-> timer: clone the repo and use `./update.sh` instead (see the
-> README's *Update and redeploy from GitHub*). Building on a Pi 4 takes a
-> minute or two.
+- Update right now: `sudo systemctl start ark-update.service`
+- Update even if a game is running: `cd /opt/ark && FORCE=1 ./ark-update.sh`
+- See what it did: `journalctl -u ark-update.service -n 20`
 
-## 5. Kiosk mode (TV screen on boot)
+## Kiosk tips
 
-```bash
-cd /opt/ark
-curl -fsSLO https://raw.githubusercontent.com/areyesromo/Ark-2P-Hub/main/deploy/pi/kiosk.sh
-chmod +x kiosk.sh
-```
+- **Get to the desktop:** plug in a keyboard, run `touch ~/.ark-kiosk-stop` in a
+  terminal (or over SSH), then press `Alt+F4`. The kiosk comes back at the next
+  boot. Without that file, closing the browser just reopens it (it also comes
+  back by itself if it ever crashes).
+- **Sound** plays through HDMI straight away; the kiosk browser is allowed to
+  play sound without a tap. If there's no sound, pick HDMI as the output in the
+  desktop's volume menu.
+- **TV overscan / resolution:** *Screen Configuration* on the desktop, or
+  `sudo raspi-config` → *Display Options*.
+- The mouse pointer hides itself after a few seconds.
 
-Then make the desktop start it at login. Enable auto-login first:
-`sudo raspi-config` → *System Options* → *Boot / Auto Login* → *Desktop Autologin*.
+## Doing it by hand
 
-Recent Pi OS (Bookworm, **labwc**):
-
-```bash
-mkdir -p ~/.config/labwc
-echo '/opt/ark/kiosk.sh &' >> ~/.config/labwc/autostart
-```
-
-Older Bookworm (**Wayfire**): add to `~/.config/wayfire.ini`:
-
-```ini
-[autostart]
-ark = /opt/ark/kiosk.sh
-```
-
-Reboot. The TV should show the lobby with a QR code. To get out of kiosk mode,
-plug in a keyboard and press `Alt+F4`, or SSH in.
-
-### Tips
-
-- **Screen blanking:** `sudo raspi-config` → *Display Options* → *Screen Blanking* → off.
-- **TV overscan / resolution:** set in *Screen Configuration* on the desktop, or
-  `raspi-config` → *Display Options*.
-- **Real controllers:** Bluetooth gamepads pair through the desktop Bluetooth
-  menu. Controller support in games is on the roadmap.
+Everything the installer uses is in [`deploy/pi/`](../deploy/pi):
+`docker-compose.yml` (prebuilt image) or `docker-compose.source.yml` (build
+from a clone in `/opt/ark/repo`), `ark-update.sh` with its systemd
+`.service`/`.timer`, `kiosk.sh` for the desktop's autostart, and
+`pair-controller.sh`.

@@ -4,6 +4,17 @@
   const STORE_KEY = 'ark.host';
   const socket = io();
   const $ = (id) => document.getElementById(id);
+  Ark.watchVersion(socket, function (v) {
+    $('version').textContent = 'v' + v.version + (v.commit && v.commit !== 'dev' ? ' · ' + v.commit.slice(0, 7) : '');
+  });
+
+  // Nobody uses a mouse on a TV: hide the pointer until it moves.
+  let cursorTimer = null;
+  window.addEventListener('mousemove', function () {
+    document.body.classList.add('cursor-on');
+    clearTimeout(cursorTimer);
+    cursorTimer = setTimeout(function () { document.body.classList.remove('cursor-on'); }, 3000);
+  });
 
   let state = null;
   let current = null; // { gameId, renderer } mounted on the stage
@@ -40,7 +51,7 @@
     const prev = saved();
     if (!prev) return createRoom();
     // Survive TV refreshes and server hiccups by reclaiming the same room.
-    socket.emit('host:resume', prev, function (res) {
+    socket.emit('host:resume', { code: prev.code, hostToken: prev.hostToken, origin: location.origin }, function (res) {
       if (res && res.ok) onRoom(res);
       else createRoom();
     });

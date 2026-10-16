@@ -1,0 +1,22 @@
+# Raspberry Pi, source mode: build the hub from a clone in ./repo instead of
+# pulling the prebuilt image (install.sh falls back to this when the image
+# can't be pulled, or with ARK_SOURCE=1). ark-update.sh pulls and rebuilds.
+services:
+  ark:
+    build:
+      context: ./repo
+      args:
+        GIT_SHA: ${GIT_SHA:-unknown}
+    image: ark-2p-hub:local
+    container_name: ark-2p-hub
+    restart: unless-stopped
+    network_mode: host
+    environment:
+      PORT: "3000"
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      PUBLIC_URL: ${PUBLIC_URL:-}
+    volumes:
+      - ark-data:/app/data
+
+volumes:
+  ark-data:

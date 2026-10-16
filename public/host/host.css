@@ -140,3 +140,5 @@ body { overflow: hidden; }
 .h2h .muted { color: var(--muted); font-weight: 400; }
 .game-card .tag { font-style: normal; font-size: 0.75rem; font-weight: 700; color: var(--warn); margin-left: 0.5rem; vertical-align: middle; }
 .game-card.random { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 1rem; padding-top: 0.8rem; padding-bottom: 0.8rem; border-style: dashed; }
+body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
+.version { position: fixed; right: 12px; bottom: 6px; font-size: 0.75rem; color: var(--muted); opacity: 0.5; pointer-events: none; }

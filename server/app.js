@@ -51,7 +51,7 @@ export function createApp({
     }
   }
 
-  app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size }));
+  app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
   app.get('/version', (_req, res) => res.json(VERSION));
   app.get('/api/stats', (_req, res) => res.json(stats.leaderboard()));
   app.use(
