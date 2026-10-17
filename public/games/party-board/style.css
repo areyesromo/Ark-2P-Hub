@@ -1,0 +1,52 @@
+/* Party Board (TV) */
+.pb-host { flex: 1; min-height: 0; display: grid; grid-template-columns: 13rem 1fr 13rem; gap: 1rem; align-items: stretch; position: relative; }
+.pb-host[data-phase="minigame"] > :not(.pb-mini) { display: none; }
+.pb-host:not([data-phase="minigame"]) .pb-mini { display: none; }
+.pb-mini { grid-column: 1 / -1; display: flex; min-height: 0; }
+.pb-hud { display: flex; flex-direction: column; gap: 0.5rem; align-items: center; padding: 1rem 0.6rem; border-radius: 18px; border: 3px solid var(--line); background: var(--panel); height: 100%; box-sizing: border-box; }
+.pb-hud.active.p1 { border-color: var(--p1); box-shadow: 0 0 1.5rem rgba(34, 211, 238, 0.35); }
+.pb-hud.active.p2 { border-color: var(--p2); box-shadow: 0 0 1.5rem rgba(244, 114, 182, 0.35); }
+.pb-hud .name { font-size: 1.5rem; font-weight: 900; }
+.pb-hud .big { font-size: 2.6rem; font-weight: 900; }
+.pb-hud .coins { font-size: 1.8rem; font-weight: 800; }
+.pb-hud .items { display: flex; gap: 0.3rem; font-size: 1.8rem; flex-wrap: wrap; justify-content: center; }
+.pb-hud .muted, .pb-centre .muted { color: var(--muted); font-size: 1rem; }
+.pb-boardbox { position: relative; min-height: 0; border-radius: 22px; background: radial-gradient(ellipse at center, #14532d, #0c2a18 75%); border: 3px solid #166534; }
+.pb-board { position: absolute; inset: 0; }
+.pb-space { position: absolute; width: 3rem; height: 3rem; margin: -1.5rem 0 0 -1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; border: 3px solid rgba(255, 255, 255, 0.85); box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.45); }
+.pb-space.blue, .pb-space.start { background: #2563eb; }
+.pb-space.red { background: #dc2626; }
+.pb-space.event { background: #16a34a; }
+.pb-space.bonus { background: #9333ea; }
+.pb-space.shop { background: #f59e0b; }
+.pb-space.star { background: #facc15; font-size: 1.9rem; box-shadow: 0 0 1.2rem #facc15; animation: mi-pulse 0.8s infinite alternate; }
+.pb-token { position: absolute; width: 2.2rem; height: 2.2rem; margin-left: -1.1rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #0b1020; border: 3px solid #fff; box-shadow: 0 0.4rem 0.6rem rgba(0, 0, 0, 0.6); transition: left 0.22s ease-out, top 0.22s ease-out; z-index: 2; }
+.pb-token.p1 { background: var(--p1); }
+.pb-token.p2 { background: var(--p2); }
+.pb-centre { position: absolute; left: 14%; right: 14%; top: 24%; bottom: 24%; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; text-align: center; z-index: 3; }
+.pb-turn { font-size: 1.4rem; font-weight: 800; color: #e2e8f0; }
+.pb-dice { display: flex; gap: 0.6rem; align-items: center; }
+.pb-dice span { width: 4rem; height: 4rem; border-radius: 0.8rem; background: #f8fafc; color: #111827; display: flex; align-items: center; justify-content: center; font-size: 2.4rem; font-weight: 900; box-shadow: 0 0.3rem 0 rgba(0, 0, 0, 0.3); animation: mi-pop 0.25s ease-out; }
+.pb-dice em { font-style: normal; font-size: 1.8rem; font-weight: 900; color: var(--warn); }
+.pb-msg { font-size: 2rem; font-weight: 900; color: var(--warn); text-shadow: 0 2px 8px #000; }
+.pb-sub { font-size: 1.4rem; }
+.pb-ask { font-size: 1.5rem; font-weight: 800; }
+.pb-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
+.pb-opts span { padding: 0.35rem 0.8rem; border-radius: 10px; background: rgba(15, 23, 42, 0.85); border: 3px solid var(--line); font-size: 1.15rem; }
+.pb-opts span.cur { border-color: var(--warn); }
+.pb-time { color: var(--muted); font-size: 1rem; }
+/* phone */
+.pb-phone-root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.pb-phone { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px 16px 18px; text-align: center; overflow-y: auto; }
+.pb-me { display: flex; gap: 16px; align-items: baseline; font-size: 1.6rem; font-weight: 900; }
+.pb-me .muted { font-size: 1rem; font-weight: 600; }
+.pb-items { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.pb-items span { padding: 4px 10px; border-radius: 10px; background: var(--panel); }
+.pb-items .muted, .pb-phone .muted { color: var(--muted); background: none; }
+.pb-dice.small span { width: 3rem; height: 3rem; font-size: 1.8rem; }
+.pb-msg.small { font-size: 1.4rem; }
+.pb-choices { display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 420px; }
+.pb-choices button { font-size: 1.3rem; padding: 16px; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.pb-choices button small { font-size: 0.85rem; font-weight: 600; opacity: 0.8; }
+.pb-wait { font-size: 1.4rem; color: var(--muted); margin-top: 20px; }
+.pb-big { font-size: 2rem; font-weight: 900; color: var(--warn); margin-top: 16px; }
