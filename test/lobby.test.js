@@ -69,3 +69,20 @@ test('known names come from the history, most recent first, without repeats', ()
   assert.deepEqual(stats.knownNames(2), ['Dee', 'Ben']);
   assert.deepEqual(room({ stats }).publicState().knownNames, ['Dee', 'Ben', 'Cat', 'ana']);
 });
+
+test("a game's saved settings survive going back to the lobby, per room and per game", () => {
+  const r = room();
+  r.startGame('word-race');
+  r.handleInput(0, { type: 'setting', key: 'size', value: 6 });
+  r.handleInput(1, { type: 'setting', key: 'time', value: 180 });
+  r.stopGame();
+  r.startGame('pong');
+  r.stopGame();
+  r.startGame('word-race');
+  assert.deepEqual(r.game.hostView().settings, { size: 6, time: 180, rounds: 3 });
+  r.stopGame();
+  const other = room();
+  other.startGame('word-race');
+  assert.deepEqual(other.game.hostView().settings.size, 4, 'another room starts from the defaults');
+  other.stopGame();
+});

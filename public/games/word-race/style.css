@@ -1,6 +1,15 @@
 /* ---- grid (TV and phone) ---- */
 
-.wr-grid { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 3%; aspect-ratio: 1; user-select: none; -webkit-user-select: none; }
+/* minmax(0, 1fr): equal cells whatever is in them, so tiles don't shift while a word is traced */
+.wr-grid {
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  grid-template-rows: repeat(var(--n), minmax(0, 1fr));
+  gap: 3%;
+  aspect-ratio: 1;
+  user-select: none;
+  -webkit-user-select: none;
+}
 .wr-grid .tile {
   position: relative;
   display: grid;
@@ -12,14 +21,26 @@
   font-weight: 900;
   transition: transform 0.08s;
 }
-.wr-grid .tile .face { font-size: 2.4em; line-height: 1; }
-.wr-grid .tile .n { position: absolute; top: 6%; right: 9%; font-size: 0.8em; font-weight: 800; opacity: 0.8; }
+.wr-grid .tile .face { font-size: calc(9.6em / var(--n)); line-height: 1; } /* 2.4em on 4x4, smaller on bigger grids */
+.wr-grid .tile .n { position: absolute; top: 6%; right: 9%; font-size: calc(3.2em / var(--n)); font-weight: 800; opacity: 0.8; }
 .wr-grid .tile.on { transform: scale(0.94); color: #0b0d17; }
 .wr-grid .tile.on.p1, .wr-grid .tile.on.me { background: var(--p1); box-shadow: 0 0.2em 0 #0e7490; }
 .wr-grid .tile.on.p2 { background: var(--p2); box-shadow: 0 0.2em 0 #9d174d; }
 .wr-grid .tile.on.last { outline: 4px solid #fff; }
 .wr-grid .tile.aim.p1 { outline: 5px solid var(--p1); outline-offset: 3px; }
 .wr-grid .tile.aim.p2 { outline: 5px solid var(--p2); outline-offset: 3px; }
+
+/* ---- setup (TV and phone) ---- */
+
+.wr-setup { display: flex; flex-direction: column; gap: 0.9em; margin: 1em 0; text-align: left; }
+.wr-setup .row { padding: 0.5em 0.7em; border-radius: 12px; border: 3px solid transparent; }
+.wr-setup .row.focus.p1 { border-color: var(--p1); }
+.wr-setup .row.focus.p2 { border-color: var(--p2); }
+.wr-setup .row.focus.p1.p2 { border-color: var(--p1) var(--p2) var(--p2) var(--p1); }
+.wr-setup .title { font-weight: 800; color: var(--muted); margin-bottom: 0.4em; }
+.wr-setup .seg { display: flex; flex-wrap: wrap; gap: 0.4em; }
+.wr-setup .opt { flex: 1; min-width: 4.5em; padding: 0.6em 0.5em; background: var(--panel); color: inherit; font-weight: 800; }
+.wr-setup .opt.on { background: var(--good); color: #052e16; }
 
 /* ---- TV ---- */
 
@@ -76,4 +97,7 @@
 .wr-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
 .wr-toast.ok { background: var(--good); color: #052e16; }
 .wr-toast.bad { background: var(--bad); color: #450a0a; }
-.wr-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.wr-phone .rematch, .wr-phone .go { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.wr-phone .change { align-self: center; }
+.wr-phone .wr-setup { margin: 0; }
+.wr-host .opt { pointer-events: none; }

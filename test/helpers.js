@@ -6,6 +6,7 @@ export function fakeCtx(names = ['Ana', 'Ben']) {
   const ctx = {
     updates: 0,
     players: names.map((name, slot) => ({ slot, name })),
+    saved: {},
     now: () => now,
     setTimeout(fn, ms) {
       const t = { id: ++seq, at: now + ms, fn };

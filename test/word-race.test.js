@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { WordRace, spell, solve, isWord, wordPoints, neighbours, rollGrid, TIMING, WIN_SCORE, MAX_ROUNDS, MIN_GRID_WORDS } from '../server/games/word-race.js';
+import { WordRace, spell, solve, isWord, wordPoints, neighbours, rollGrid, TIMING, WIN_SCORE, MAX_ROUNDS, MIN_GRID_WORDS, DEFAULTS } from '../server/games/word-race.js';
 import { fakeCtx } from './helpers.js';
 
 // A fixed grid for the game tests:
@@ -22,6 +22,7 @@ function setup() {
   const ctx = fakeCtx();
   const game = new WordRace(ctx);
   game.start();
+  game.onInput(0, { type: 'go' }); // default settings: 4x4, 90 s, best of 3
   game.grid = GRID.slice(); // a known grid instead of a random one
   return { ctx, game };
 }
@@ -50,8 +51,12 @@ test('the solver finds the words a grid holds; random grids are rich enough', ()
   for (const w of all) assert.ok(isWord(w) && w.length >= 3);
   const game = new WordRace(fakeCtx());
   game.start();
-  assert.ok(game.possible >= MIN_GRID_WORDS, `only ${game.possible} words`);
+  game.onInput(1, { type: 'go' });
+  assert.ok(game.possible >= MIN_GRID_WORDS[4], `only ${game.possible} words`);
   assert.equal(rollGrid().length, 16);
+  assert.equal(rollGrid(5).length, 25);
+  assert.equal(rollGrid(6).length, 36);
+  assert.ok(solve(rollGrid(6)).size > 0);
 });
 
 test('the grid stays hidden in the countdown, then words count during play', () => {
@@ -124,4 +129,80 @@ test(`best of 3: first to ${WIN_SCORE} rounds; drawn rounds stop after ${MAX_ROU
   }
   assert.equal(game.phase, 'over');
   assert.equal(game.draw, true);
+});
+
+test('setup: defaults, either player changes settings, bad values are ignored, the room remembers them', () => {
+  const ctx = fakeCtx();
+  const game = new WordRace(ctx);
+  game.start();
+  const v = game.hostView();
+  assert.equal(v.phase, 'setup');
+  assert.deepEqual(v.settings, DEFAULTS);
+  assert.equal(v.grid, null);
+  game.onInput(0, { type: 'setting', key: 'size', value: 5 });
+  game.onInput(1, { type: 'setting', key: 'time', value: 60 });
+  game.onInput(1, { type: 'setting', key: 'rounds', value: 1 });
+  for (const [key, value] of [['size', 9], ['time', '60'], ['rounds', 2], ['__proto__', 1], ['toString', 1]]) game.onInput(0, { type: 'setting', key, value });
+  game.onInput(0, { type: 'word', path: [0, 1, 2] }); // ignored in setup
+  assert.deepEqual(game.settings, { size: 5, time: 60, rounds: 1 });
+  assert.deepEqual(ctx.saved.settings, { size: 5, time: 60, rounds: 1 });
+
+  // A new launch in the same room starts from the saved settings.
+  const again = new WordRace(Object.assign(fakeCtx(), { saved: ctx.saved }));
+  again.start();
+  assert.deepEqual(again.settings, { size: 5, time: 60, rounds: 1 });
+  // ...but not from junk.
+  const junk = new WordRace(Object.assign(fakeCtx(), { saved: { settings: { size: 99, time: 60 } } }));
+  assert.deepEqual(junk.settings, { size: DEFAULTS.size, time: 60, rounds: DEFAULTS.rounds });
+});
+
+test('a 5x5, 60-second, best-of-1 match', () => {
+  const ctx = fakeCtx();
+  const game = new WordRace(ctx);
+  game.start();
+  game.onInput(0, { type: 'setting', key: 'size', value: 5 });
+  game.onInput(0, { type: 'setting', key: 'time', value: 60 });
+  game.onInput(0, { type: 'setting', key: 'rounds', value: 1 });
+  game.onInput(1, { type: 'setting', key: 'size', value: 4 }); // the other player changes their mind...
+  game.onInput(1, { type: 'setting', key: 'size', value: 5 }); // ...and back
+  game.onInput(1, { type: 'go' });
+  assert.equal(game.phase, 'countdown');
+  assert.equal(game.hostView().winScore, 1);
+  // C A T S X
+  // O R E Q X
+  // D O G X X
+  // X X X X X
+  // X X X X X
+  game.grid = 'CATSXOREQXDOGXXXXXXXXXXXX'.split('');
+  toPlay(ctx);
+  const v = game.playerView(0);
+  assert.equal(v.size, 5);
+  assert.equal(v.grid.length, 25);
+  assert.equal(v.playMs, 60000);
+  game.onInput(0, { type: 'word', path: [0, 1, 2] }); // cat
+  game.onInput(0, { type: 'word', path: [0, 5, 6, 7] }); // core
+  game.onInput(1, { type: 'word', path: [4, 5, 6] }); // X then O: not touching on 5x5
+  assert.equal(game.feedback[1], null);
+  assert.deepEqual(game.words[0], ['cat', 'core']);
+  ctx.advance(59000);
+  assert.equal(game.phase, 'play');
+  ctx.advance(1000);
+  assert.equal(game.phase, 'over', 'best of 1: one round decides it');
+  assert.equal(game.winner, 0);
+
+  // Rematch keeps the settings; "setup" goes back to the setup screen.
+  game.onInput(1, { type: 'rematch' });
+  assert.equal(game.phase, 'countdown');
+  assert.equal(game.grid.length, 25);
+  assert.deepEqual(game.scores, [0, 0]);
+  for (let r = 0; r < 3; r++) { // nobody finds anything: drawn rounds, stopped after best-of-1 + 2
+    toPlay(ctx);
+    ctx.advance(60000);
+    if (game.phase === 'reveal') ctx.advance(TIMING.revealMs);
+  }
+  assert.equal(game.phase, 'over');
+  assert.equal(game.draw, true);
+  game.onInput(0, { type: 'setup' });
+  assert.equal(game.phase, 'setup');
+  assert.equal(ctx.pendingTimers(), 0);
 });

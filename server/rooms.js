@@ -44,6 +44,7 @@ export class Room {
     this.game = null;
     this.generation = 0;
     this.timers = new Set();
+    this.saved = {}; // per game: what it asked to keep between launches (e.g. chosen settings)
     this.touch();
   }
 
@@ -147,6 +148,8 @@ export class Room {
         return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}`, local: Boolean(p && p.local) }));
       },
       now: () => Date.now(),
+      // Kept by the room between launches of this game, e.g. the settings picked last time.
+      saved: (this.saved[def.id] = this.saved[def.id] || {}),
       setTimeout(fn, ms) {
         const t = setTimeout(() => {
           room.timers.delete(t);
