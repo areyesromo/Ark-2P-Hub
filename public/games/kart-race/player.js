@@ -5,7 +5,9 @@
     { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
     { key: 'laps', title: 'Laps', fmt: function (n) { return n + ' laps'; } },
     { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : 'Best of ' + n; } },
+    { key: 'items', title: 'Items (? boxes)', fmt: function (n) { return n ? 'On' : 'Off'; } },
   ];
+  const ITEM_ICON = { banana: '🍌', turbo: '⚡', shield: '🛡️' };
 
   let root = null;
   let els = null;
@@ -59,7 +61,7 @@
     if (v.phase === 'finish' && v.result) {
       return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>';
     }
-    return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
+    return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
   }
 
   function render(v) {
@@ -67,7 +69,7 @@
     trackNames = v.trackNames || trackNames;
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut], v.result]);
+    const key = JSON.stringify([v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.item, k.spin, k.shield], v.result]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';
@@ -76,6 +78,11 @@
     els.go.classList.toggle('hidden', !setup);
     els.controls.classList.toggle('hidden', setup || v.phase === 'over');
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
+    // The item button shows what you're holding.
+    const item = k && k.item;
+    els.item.textContent = item ? ITEM_ICON[item] : '—';
+    els.item.classList.toggle('ready', Boolean(item));
+    els.item.classList.toggle('hidden', !v.settings.items);
     els.change.classList.toggle('hidden', v.phase !== 'over');
     if (setup || v.phase === 'over') {
       held.left = held.right = held.brake = false;
@@ -94,7 +101,7 @@
         '<button class="primary go hidden">Start</button>' +
         '<div class="kr-controls">' +
         '<div class="kr-steer"><button class="kr-btn left">◀</button><button class="kr-btn right">▶</button></div>' +
-        '<button class="kr-btn brake">BRAKE</button>' +
+        '<div class="kr-bottom"><button class="kr-btn item">🎁</button><button class="kr-btn brake">BRAKE</button></div>' +
         '</div>' +
         '<button class="primary rematch hidden">Rematch</button>' +
         '<button class="ghost change hidden">Change settings</button>';
@@ -107,12 +114,19 @@
         left: root.querySelector('.left'),
         right: root.querySelector('.right'),
         brake: root.querySelector('.brake'),
+        item: root.querySelector('.item'),
         rematch: root.querySelector('.rematch'),
         change: root.querySelector('.change'),
       };
       holdButton(els.left, 'left');
       holdButton(els.right, 'right');
       holdButton(els.brake, 'brake');
+      els.item.addEventListener('pointerdown', function (e) {
+        e.preventDefault();
+        if (!view || !view.karts || !view.karts[view.you].item) return;
+        api.send({ type: 'item' });
+        api.vibrate(30);
+      });
       Ark.setup.bind(els.setup, api);
       els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
       els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });

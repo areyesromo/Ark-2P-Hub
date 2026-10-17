@@ -10,6 +10,7 @@
 .kr-side.p2 .pos { color: var(--p2); }
 .kr-side .lap { color: var(--muted); font-weight: 700; }
 .kr-side .lap .cut { color: #fca5a5; }
+.kr-side .pos .item { font-size: 1.6rem; }
 .kr-mid { text-align: center; }
 .kr-mid .track { color: var(--muted); font-weight: 700; }
 .kr-mid .clock { font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; }
@@ -43,5 +44,8 @@
 .kr-steer { flex: 1; min-height: 0; display: flex; gap: 12px; }
 .kr-btn { flex: 1; border-radius: 22px; font-size: 3rem; font-weight: 900; background: var(--panel); border: 2px solid var(--line); color: var(--text); touch-action: none; user-select: none; -webkit-user-select: none; }
 .kr-btn.on { background: var(--me); color: #06121c; border-color: #fff; }
-.kr-btn.brake { flex: 0 0 22%; font-size: 1.4rem; letter-spacing: 0.15em; }
+.kr-bottom { flex: 0 0 22%; display: flex; gap: 12px; }
+.kr-btn.brake { flex: 2; font-size: 1.4rem; letter-spacing: 0.15em; }
+.kr-btn.item { flex: 1; font-size: 2.6rem; opacity: 0.4; }
+.kr-btn.item.ready { opacity: 1; border-color: var(--warn); box-shadow: 0 0 1.2rem rgba(250, 204, 21, 0.45); }
 .kr-btn.brake.on { background: var(--bad); color: #fff; }

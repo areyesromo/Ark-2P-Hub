@@ -6,7 +6,9 @@
     { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
     { key: 'laps', title: 'Laps', fmt: function (n) { return n + ' laps'; } },
     { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : 'Best of ' + n; } },
+    { key: 'items', title: 'Items (? boxes)', fmt: function (n) { return n ? 'On' : 'Off'; } },
   ];
+  const ITEM_ICON = { banana: '🍌', turbo: '⚡', shield: '🛡️' };
   const DEADZONE = 0.15;
 
   let root = null;
@@ -62,7 +64,7 @@
       const side = function (slot) {
         const k = v.karts[slot];
         return '<div class="kr-side p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div>' +
-          '<div class="pos">' + ordinal(v.positions[slot]) + '</div>' +
+          '<div class="pos">' + ordinal(v.positions[slot]) + (k.item ? ' <span class="item">' + ITEM_ICON[k.item] + '</span>' : '') + '</div>' +
           '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div></div>';
       };
       html = side(0) +
@@ -161,10 +163,51 @@
     });
   }
 
+  /** ? boxes, spinning gently in rainbow colours, and the bananas on the road. */
+  function drawBoxes(g, v, now) {
+    v.boxes.forEach(function (b, i) {
+      g.save();
+      g.translate(b.x, b.y);
+      g.rotate(now / 700 + i);
+      g.fillStyle = 'hsl(' + ((now / 8 + i * 40) % 360) + ', 85%, 60%)';
+      g.globalAlpha = 0.9;
+      g.fillRect(-0.4, -0.4, 0.8, 0.8);
+      g.globalAlpha = 1;
+      g.strokeStyle = '#fff';
+      g.lineWidth = 0.07;
+      g.strokeRect(-0.4, -0.4, 0.8, 0.8);
+      g.rotate(-(now / 700 + i));
+      g.fillStyle = '#fff';
+      g.font = 'bold 0.6px sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText('?', 0, 0.04);
+      g.restore();
+    });
+    // Bananas: drawn, not emoji (a kiosk browser may have no colour emoji font).
+    v.bananas.forEach(function (b) {
+      g.save();
+      g.translate(b.x, b.y);
+      g.rotate(-0.5);
+      g.lineCap = 'round';
+      g.strokeStyle = '#a16207';
+      g.lineWidth = 0.32;
+      g.beginPath();
+      g.arc(0, -0.25, 0.42, 0.35, Math.PI - 0.35);
+      g.stroke();
+      g.strokeStyle = '#facc15';
+      g.lineWidth = 0.22;
+      g.beginPath();
+      g.arc(0, -0.25, 0.42, 0.45, Math.PI - 0.45);
+      g.stroke();
+      g.restore();
+    });
+  }
+
   function drawKart(g, k, s, slot, now) {
     g.save();
     g.translate(s.x, s.y);
-    g.rotate(s.angle);
+    g.rotate(s.angle + (k.spin ? now / 60 : 0)); // spinning out after a banana
     if (k.boosting) {
       // Exhaust flame.
       g.fillStyle = Math.floor(now / 60) % 2 ? '#f97316' : '#facc15';
@@ -198,6 +241,13 @@
     g.beginPath();
     g.arc(-0.1, 0, 0.14, 0, Math.PI * 2);
     g.fill();
+    if (k.shield) {
+      g.strokeStyle = 'rgba(125, 211, 252, ' + (0.6 + 0.3 * Math.sin(now / 120)) + ')';
+      g.lineWidth = 0.1;
+      g.beginPath();
+      g.arc(0, 0, 0.75, 0, Math.PI * 2);
+      g.stroke();
+    }
     g.restore();
   }
 
@@ -234,6 +284,7 @@
     g.fillStyle = 'rgba(255,255,255,0.04)';
     for (let x = 0; x < f.w; x += 2) g.fillRect(x, 0, 1, f.h);
     drawTrack(g, v);
+    drawBoxes(g, v, now);
     // Karts: eased towards the newest positions, nudged along their heading.
     const dt = v.phase === 'race' || v.phase === 'finish' ? Math.min(performance.now() - viewAt, 60) / 1000 : 0;
     if (!shown) shown = v.karts.map(function (c) { return { x: c.x, y: c.y, angle: c.angle }; });
@@ -270,9 +321,13 @@
       if (b.bumps > a.bumps + 2) out.push('puck');
       if (b.laps > a.laps) out.push('correct');
       if (b.cuts > (a.cuts || 0)) out.push('wrong');
+      if (b.items > (a.items || 0)) out.push('eat');
+      if (b.spins > (a.spins || 0)) out.push('crash');
+      if (b.blocked > (a.blocked || 0)) out.push('lock');
+      if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
       return out;
     },
-    padHint: 'Stick or D-pad ← → to steer · B / LT / ↓ to brake · Setup: ↑↓ row, ←→ change, A start · End: A rematch, Y settings',
+    padHint: 'Stick or D-pad ← → to steer · B / LT / ↓ to brake · A / X / RT to use your item · Setup: ↑↓ row, ←→ change, A start · End: A rematch, Y settings',
     padPoll: padPoll,
     pad: function (btn, v, slot) {
       if (v.phase === 'setup') {
@@ -288,6 +343,7 @@
         if (btn === 'A' || btn === 'START') return { type: 'rematch' };
         return btn === 'Y' ? { type: 'setup' } : null;
       }
+      if (v.phase === 'race' && (btn === 'A' || btn === 'X' || btn === 'RT')) return { type: 'item' };
       return null; // driving is read every frame by padPoll
     },
     mount: function (el) {
