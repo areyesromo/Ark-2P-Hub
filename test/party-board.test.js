@@ -462,3 +462,187 @@ test('views during a minigame leave the board out (it updates up to 20 times a s
   assert.ok(v.players && v.mini);
   assert.ok(h.g.playerView(0).board === undefined);
 });
+
+// ---- forks and warps ----
+// 0 → 1 (fork) → A: 2 3 4 5 | B: 6 7(warp → 0) 8 9 → 10 → 11 → 0
+const FORKY = {
+  name: 'Forky', tier: 'easy', starPrice: 20, shopMarkup: 1,
+  spaces: [
+    { type: 'start', next: [1] }, { type: 'blue', next: [2, 6] },
+    { type: 'blue', next: [3], starCandidate: true }, { type: 'shop', next: [4] }, { type: 'event', next: [5] }, { type: 'blue', next: [10], starCandidate: true },
+    { type: 'red', next: [7] }, { type: 'warp', warp: 0, next: [8] }, { type: 'bonus', next: [9] }, { type: 'event', next: [10] },
+    { type: 'blue', next: [11], starCandidate: true }, { type: 'blue', next: [0], starCandidate: true },
+  ].map((sp, i) => ({ x: 0.05 + i * 0.07, y: 0.5, ...sp })),
+};
+
+function forky() {
+  const ctx = fakeCtx();
+  const q = [0]; // the star on space 2
+  const g = new PartyBoard(ctx, () => (q.length ? q.shift() : 0.5), FORKY, [claim]);
+  g.start();
+  const settle = () => {
+    const phase = g.hostView().phase;
+    for (let i = 0; i < 2000; i++) {
+      const v = g.hostView();
+      if (v.prompt || v.phase !== phase) return v;
+      ctx.advance(50);
+    }
+    throw new Error('never settled');
+  };
+  const choose = (slot, value) => g.onInput(slot, { type: 'choose', value });
+  const roll = (n) => { q.push(D(n)); choose(0, 'roll'); return settle(); };
+  return { g, ctx, q, settle, choose, roll, p: (s) => g.hostView().players[s] };
+}
+
+test('fork: the walk stops and asks, with a preview of each path', () => {
+  const f = forky();
+  const v = f.roll(3);
+  assert.equal(v.prompt.kind, 'path');
+  assert.deepEqual(v.prompt.options, ['0', '1']);
+  assert.equal(f.p(0).space, 1);
+  assert.deepEqual(v.prompt.extra.previews, [['star', 'shop', 'event', 'blue'], ['red', 'warp', 'bonus', 'event']]);
+});
+
+test('fork: path 2 then a warp: landing on it sends you to its target, no effect there', () => {
+  const f = forky();
+  f.roll(3);
+  f.choose(0, '1');
+  const v = f.settle();
+  assert.equal(f.p(0).space, 0);
+  assert.equal(f.p(0).coins, 10, 'no start-space coins at the warp target');
+  assert.equal(v.prompt.slot, 1, 'the turn ended');
+});
+
+test('fork: an idle player takes the first path after 15 s', () => {
+  const f = forky();
+  f.roll(2);
+  f.ctx.advance(TIMING.promptMs);
+  f.settle();
+  assert.equal(f.p(0).space, 2);
+});
+
+test('fork: passing a warp does nothing; the star pass-by still asks after a fork', () => {
+  let f = forky();
+  f.roll(4);
+  f.choose(0, '1');
+  let v = f.settle();
+  assert.equal(f.p(0).space, 8);
+  assert.equal(v.prompt.kind, 'slot');
+  f = forky();
+  f.g.players[0].coins = 20;
+  f.roll(3);
+  f.choose(0, '0');
+  v = f.settle();
+  assert.equal(v.prompt.kind, 'star');
+  assert.equal(f.p(0).space, 2);
+});
+
+// ---- maps, prices, settings ----
+
+test('expert prices: the star costs 30, the shop 50% more', () => {
+  const ctx = fakeCtx();
+  const q = [0];
+  const g = new PartyBoard(ctx, () => (q.length ? q.shift() : 0.5), { ...FORKY, starPrice: 30, shopMarkup: 1.5 }, [claim]);
+  g.start();
+  assert.equal(g.hostView().items.mushroom.price, 8);
+  assert.equal(g.hostView().board.starPrice, 30);
+  g.players[0].coins = 9;
+  assert.deepEqual(g.shopItems(0), ['mushroom']);
+  g.players[0].coins = 25;
+  q.push(D(3));
+  g.onInput(0, { type: 'choose', value: 'roll' });
+  for (let i = 0; i < 100 && !(g.hostView().prompt && g.hostView().prompt.kind !== 'roll'); i++) ctx.advance(50);
+  g.onInput(0, { type: 'choose', value: '0' });
+  for (let i = 0; i < 100 && !(g.hostView().prompt && g.hostView().prompt.kind !== 'path'); i++) ctx.advance(50);
+  assert.notEqual(g.hostView().prompt.kind, 'star', '25 coins: no star offer at 30');
+  g.players[0].coins = 30;
+  g.players[0].space = 1;
+  g.turn = 0;
+  let asked = null;
+  g.ask = (kind) => { asked = kind; };
+  g.players[0].space = 2; // standing on the star with 30
+  g.passBy(() => {});
+  assert.equal(asked, 'star', '30 coins: offered');
+});
+
+test('the map setting picks the map; random picks one of the five', () => {
+  const pick = (settings, rng) => {
+    const ctx = fakeCtx();
+    ctx.settings = settings;
+    const g = new PartyBoard(ctx, rng, undefined, [claim]);
+    g.start();
+    return g.hostView().board;
+  };
+  assert.equal(pick({ map: 'pipes' }, () => 0.5).name, MAPS.pipes.name);
+  assert.equal(pick({ map: 'volcano' }, () => 0.5).tier, 'expert');
+  const q = [0.99];
+  assert.equal(pick({ map: 'random' }, () => (q.length ? q.shift() : 0.5)).name, MAPS.volcano.name);
+});
+
+// ---- Harsh mode ----
+
+function seeded(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 2 ** 32;
+  };
+}
+const HAZARDS = ['thunder', 'skull', 'tornado'];
+
+test('harsh off: no hazards; harsh on: 15% of blue/red, never on the start, stars, forks or warp targets', () => {
+  for (const [id, map] of Object.entries(MAPS)) {
+    const off = fakeCtx();
+    off.settings = { map: id, harsh: 0 };
+    const g0 = new PartyBoard(off, seeded(1), undefined, [claim]);
+    g0.start();
+    assert.equal(g0.hostView().board.spaces.filter((s) => HAZARDS.includes(s.type)).length, 0, id);
+    const plain = map.spaces.filter((s) => s.type === 'blue' || s.type === 'red').length;
+    const want = Math.max(2, Math.round(plain * 0.15));
+    const targets = new Set(map.spaces.filter((s) => s.type === 'warp').map((s) => s.warp));
+    for (let seed = 1; seed <= 100; seed++) {
+      const ctx = fakeCtx();
+      ctx.settings = { map: id, harsh: 1 };
+      const g = new PartyBoard(ctx, seeded(seed), undefined, [claim]);
+      g.start();
+      const spaces = g.hostView().board.spaces;
+      const hz = spaces.map((s, i) => [s, i]).filter(([s]) => HAZARDS.includes(s.type));
+      assert.equal(hz.length, want, `${id} seed ${seed}`);
+      for (const [s, i] of hz) {
+        assert.ok(i !== 0 && !s.starCandidate && s.next.length === 1 && !targets.has(i), `${id} seed ${seed}: hazard on ${i}`);
+        assert.ok(['blue', 'red'].includes(map.spaces[i].type));
+      }
+    }
+    assert.ok(map.spaces.every((s) => !HAZARDS.includes(s.type)), 'the shared map is never changed');
+  }
+});
+
+/** The island with space 1 turned into `type`; player 0 rolls a 1 onto it. */
+function hazardAt(type, prep) {
+  const map = { ...MAPS.island, spaces: MAPS.island.spaces.map((s, i) => (i === 1 ? { ...s, type } : s)) };
+  const ctx = fakeCtx();
+  const q = [0];
+  const g = new PartyBoard(ctx, () => (q.length ? q.shift() : 0.5), map, [claim]);
+  g.start();
+  if (prep) prep(g, q);
+  q.push(0.01);
+  g.onInput(0, { type: 'choose', value: 'roll' });
+  for (let i = 0; i < 200 && !(g.hostView().prompt && g.hostView().prompt.slot === 1); i++) ctx.advance(50);
+  return g.hostView().players[0];
+}
+
+test('thunder: lose half your coins (rounded down lost)', () => {
+  assert.equal(hazardAt('thunder', (g) => { g.players[0].coins = 11; }).coins, 6);
+});
+
+test('skull: lose a star; with none, 10 coins; never below 0', () => {
+  assert.deepEqual([hazardAt('skull', (g) => { g.players[0].stars = 1; }).stars], [0]);
+  assert.equal(hazardAt('skull', (g) => { g.players[0].coins = 15; }).coins, 5);
+  assert.equal(hazardAt('skull', (g) => { g.players[0].coins = 3; }).coins, 0);
+});
+
+test('tornado: blown to a random space (not the start, not here), no effect there', () => {
+  const p = hazardAt('tornado', (g, q) => q.push(0.01)); // the die, then the tornado's pick
+  assert.ok(p.space !== 0 && p.space !== 1, `landed on ${p.space}`);
+  assert.equal(p.coins, 10);
+});
