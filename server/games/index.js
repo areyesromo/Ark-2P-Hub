@@ -70,7 +70,7 @@ const GAMES = [
   withSetup(connectFour, firstTo(ROUNDS_WON, [3, 1, 5])),
   memoryMatch,
   withSetup(bombSquad, {
-    level: { title: 'Difficulty', values: [2, 1, 3], label: (n) => `${BOMB_LEVELS[n].name} · ${BOMB_LEVELS[n].modules} modules, ${BOMB_LEVELS[n].ms / 60000} min` },
+    level: { title: 'Difficulty', values: [2, 1, 3, 4], label: (n) => `${BOMB_LEVELS[n].name} · ${BOMB_LEVELS[n].modules} modules, ${BOMB_LEVELS[n].ms / 60000} min` },
     bombs: { title: 'Bombs (you swap roles each one)', values: [3, 1, 5], label: (n) => (n === 1 ? 'One bomb' : `${n} bombs`) },
   }),
   withSetup(marbleMaze, {

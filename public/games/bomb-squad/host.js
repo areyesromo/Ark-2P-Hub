@@ -1,7 +1,7 @@
 (function () {
   Ark.loadCss('/games/bomb-squad/style.css');
   const esc = Ark.escapeHtml;
-  const MODULE_NAMES = { wires: 'Wires', button: 'Button', symbols: 'Symbols', password: 'Password' };
+  const MODULE_NAMES = { wires: 'Wires', button: 'Button', symbols: 'Symbols', password: 'Password', simon: 'Simon', maze: 'Maze', switches: 'Switches' };
 
   let root = null;
   let els = null;

@@ -4,11 +4,13 @@
 // the right rules and says what to do. Three strikes, or the timer running
 // out, and it goes off. You swap roles every bomb and collect stars for each
 // one defused (more for time to spare). The TV shows the timer and progress.
+// Every bomb comes with its own freshly dealt rulebook (see
+// bomb-squad-modules.js), so there's no learning the manual by heart.
 
 import { settingOf } from './options.js';
 import {
-  makeEdgework, makeModules, manual, wireAnswer, buttonAction, clockText, symbolOrder, passwordShown,
-  STRIP_DIGITS, HOLD_MS, WHEEL_SIZE,
+  makeEdgework, makeModules, makeRulebook, manualOf, wireAnswer, buttonAction, clockText, symbolOrder, passwordShown,
+  simonPress, mazeBlocked, mazeStep, switchTarget, HOLD_MS, WHEEL_SIZE, SIMON_COLORS, MAZE_DIRS,
 } from './bomb-squad-modules.js';
 
 export const BOMBS = 3;
@@ -18,9 +20,9 @@ export const LEVELS = {
   1: { name: 'Easy', modules: 2, ms: 4 * 60000 },
   2: { name: 'Normal', modules: 3, ms: 4 * 60000 },
   3: { name: 'Hard', modules: 4, ms: 3.5 * 60000 },
+  4: { name: 'Expert', modules: 6, ms: 5 * 60000 },
 };
 export const TIMING = { briefMs: 6000, resultMs: 5000 };
-const MANUAL = manual();
 
 export class BombSquad {
   constructor(ctx, rng = Math.random) {
@@ -67,7 +69,8 @@ export class BombSquad {
   nextBomb() {
     this.bombIndex++;
     const lv = LEVELS[this.level];
-    this.bomb = { edge: makeEdgework(this.rng), modules: makeModules(lv.modules, this.rng), strikes: 0, totalMs: lv.ms, endsAt: null };
+    const rules = makeRulebook(this.rng);
+    this.bomb = { rules, edge: makeEdgework(this.rng), modules: makeModules(rules, lv.modules, this.rng), strikes: 0, totalMs: lv.ms, endsAt: null };
     this.result = null;
     this.phase = 'brief';
     this.phaseEnds = this.ctx.now() + TIMING.briefMs;
@@ -137,12 +140,12 @@ export class BombSquad {
     if (this.phase !== 'live' || slot !== this.defuser) return;
     const m = this.bomb.modules[input.module];
     if (!m || m.solved) return;
-    const edge = this.bomb.edge;
+    const { edge, rules } = this.bomb;
     if (m.type === 'wires' && input.type === 'cut') {
       const i = input.wire;
       if (!Number.isInteger(i) || i < 0 || i >= m.wires.length || m.cut.includes(i)) return;
       m.cut.push(i);
-      return i === wireAnswer(m.wires, edge) ? this.solve(m) : this.strike();
+      return i === wireAnswer(rules, m.wires, edge) ? this.solve(m) : this.strike();
     }
     if (m.type === 'button' && input.type === 'press') {
       if (m.pressedAt !== null) return;
@@ -155,15 +158,15 @@ export class BombSquad {
       if (m.pressedAt === null) return;
       const held = this.ctx.now() - m.pressedAt >= HOLD_MS;
       m.pressedAt = null;
-      const want = buttonAction(m, edge);
+      const want = buttonAction(rules, m, edge);
       if (want === 'tap') return held ? this.strike() : this.solve(m);
       if (!held) return this.strike();
-      return clockText(this.timeLeft()).includes(String(STRIP_DIGITS[m.strip])) ? this.solve(m) : this.strike();
+      return clockText(this.timeLeft()).includes(String(rules.strip[m.strip])) ? this.solve(m) : this.strike();
     }
     if (m.type === 'symbols' && input.type === 'symbol') {
       const i = input.index;
       if (!Number.isInteger(i) || i < 0 || i > 3 || m.pressed.includes(i)) return;
-      const next = symbolOrder(m.symbols)[m.pressed.length];
+      const next = symbolOrder(rules, m.symbols)[m.pressed.length];
       if (i !== next) return this.strike();
       m.pressed.push(i);
       return m.pressed.length === 4 ? this.solve(m) : this.ctx.update();
@@ -177,6 +180,37 @@ export class BombSquad {
     if (m.type === 'password' && input.type === 'submit') {
       return passwordShown(m) === m.word ? this.solve(m) : this.strike();
     }
+    if (m.type === 'simon' && input.type === 'simon') {
+      if (!SIMON_COLORS.includes(input.color)) return;
+      const want = simonPress(rules, edge, this.bomb.strikes, m.sequence[m.entered.length]);
+      if (input.color !== want) {
+        m.entered = []; // start this stage's sequence again
+        return this.strike();
+      }
+      m.entered.push(input.color);
+      if (m.entered.length === m.stage) {
+        m.stage++;
+        m.entered = [];
+        if (m.stage > m.sequence.length) return this.solve(m);
+      }
+      return this.ctx.update();
+    }
+    if (m.type === 'maze' && input.type === 'move') {
+      if (!MAZE_DIRS.includes(input.dir)) return;
+      if (mazeBlocked(rules.mazes[m.index], m.at[0], m.at[1], input.dir)) return this.strike();
+      m.at = mazeStep(m.at, input.dir);
+      return m.at[0] === m.goal[0] && m.at[1] === m.goal[1] ? this.solve(m) : this.ctx.update();
+    }
+    if (m.type === 'switches' && input.type === 'flip') {
+      const k = input.switch;
+      if (!Number.isInteger(k) || k < 0 || k >= m.up.length) return;
+      m.up[k] = !m.up[k];
+      return this.ctx.update();
+    }
+    if (m.type === 'switches' && input.type === 'check') {
+      const target = switchTarget(rules, m.lights);
+      return m.up.every((u, k) => u === target[k]) ? this.solve(m) : this.strike();
+    }
   }
 
   // ---- views ----
@@ -186,6 +220,7 @@ export class BombSquad {
     const now = this.ctx.now();
     return {
       edge: this.bomb.edge,
+      edition: this.bomb.rules.edition,
       modules: this.bomb.modules.map((m) => {
         const base = { type: m.type, solved: m.solved };
         if (m.type === 'wires') return { ...base, wires: m.wires, cut: m.cut };
@@ -194,6 +229,9 @@ export class BombSquad {
           return { ...base, color: m.color, label: m.label, pressed: m.pressedAt !== null, strip: holding ? m.strip : null };
         }
         if (m.type === 'symbols') return { ...base, symbols: m.symbols, pressed: m.pressed };
+        if (m.type === 'simon') return { ...base, flashes: m.sequence.slice(0, m.stage), entered: m.entered.length, stage: m.stage, stages: m.sequence.length };
+        if (m.type === 'maze') return { ...base, markers: this.bomb.rules.mazes[m.index].markers, at: m.at, goal: m.goal };
+        if (m.type === 'switches') return { ...base, lights: m.lights, up: m.up };
         return { ...base, letters: passwordShown(m).toUpperCase(), wheels: m.wheels.length };
       }),
     };
@@ -234,7 +272,7 @@ export class BombSquad {
     if (live && this.bomb) {
       v.role = slot === this.defuser ? 'defuser' : 'expert';
       if (v.role === 'defuser') v.bomb = this.bombFace();
-      else v.manual = MANUAL;
+      else v.manual = manualOf(this.bomb.rules, [...new Set(this.bomb.modules.map((m) => m.type))]);
     }
     return v;
   }
@@ -246,6 +284,6 @@ export default {
   category: 'casual',
   needsPhone: true, // the bomb and the manual are both secret
   music: 'thinking',
-  tagline: 'Co-op: one of you has a bomb on your phone, the other has the manual. Talk it through and defuse it before the timer runs out. Swap every bomb.',
+  tagline: 'Co-op: one of you has a bomb on your phone, the other has the manual (new rules every bomb). Talk it through and defuse it before the timer runs out. Swap every bomb.',
   create: (ctx) => new BombSquad(ctx),
 };
