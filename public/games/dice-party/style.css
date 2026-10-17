@@ -7,7 +7,7 @@
 .dp-dice { display: flex; gap: 1rem; font-size: 2.2rem; margin-top: 1rem; }
 .dp-slot { position: relative; display: inline-flex; flex-direction: column; align-items: center; padding: 0.2em; border-radius: 0.4em; border: 0.1em solid transparent; }
 .dp-slot.cur { border-color: var(--me); }
-.dp-slot b, .dp-die b { font-size: 0.4em; color: var(--warn); letter-spacing: 0.1em; margin-top: 0.3em; }
+.dp-slot b, .dp-die b { font-size: 0.4em; color: var(--warn); letter-spacing: 0.1em; margin-top: 0.7em; }
 .dp-card { border-collapse: collapse; font-size: 1.15rem; justify-self: center; min-width: 22rem; }
 .dp-card th, .dp-card td { padding: 0.25rem 0.8rem; border-bottom: 1px solid var(--line); text-align: center; }
 .dp-card td:first-child { text-align: left; }
