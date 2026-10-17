@@ -6,7 +6,7 @@
   const lastSide = [0, 0];
 
   function meter(got, need, res) {
-    return '<div class="mi-meter' + (res ? ' full' : '') + '"><i style="height:' + Math.min(100, (100 * got) / need) + '%"></i></div>';
+    return '<div class="mi-meter' + (res ? ' full' : '') + '" style="--k:' + Math.min(100, (100 * got) / need) + '%"><i></i></div>';
   }
 
   let hostEl = null;

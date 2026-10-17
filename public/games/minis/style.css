@@ -66,18 +66,19 @@
 .mi-gauge.bad { border-color: var(--bad); }
 /* shake-it */
 .mi-meter { width: 60px; height: 200px; border-radius: 14px; background: #1e293b; border: 3px solid var(--line); display: flex; align-items: flex-end; overflow: hidden; }
-.mi-meter i { display: block; width: 100%; background: linear-gradient(0deg, #f59e0b, #4ade80); transition: height 0.1s; }
+.mi-meter i { display: block; width: 100%; height: var(--k, 0%); background: linear-gradient(0deg, #f59e0b, #4ade80); transition: height 0.1s; }
 .mi-meter.full { border-color: #4ade80; }
 .mi-side .slot { display: flex; align-items: center; gap: 1rem; }
 .mi-side .emoji { font-size: 3.4rem; }
 .mi-side .emoji.shaking { animation: mi-shake 0.15s infinite alternate; }
 .mi-phone .mi-meter { width: 100%; height: 36px; flex-direction: row; align-items: stretch; }
-.mi-phone .mi-meter i { height: auto !important; transition: width 0.1s; }
+.mi-phone .mi-meter i { width: var(--k, 0%); height: auto; transition: width 0.1s; }
 .mi-phone .slot { width: 90%; display: flex; align-items: center; gap: 10px; }
 @keyframes mi-shake { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
 /* pick games */
 .mi-pick { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
-.mi-question { text-align: center; }
+.mi-question { text-align: center; width: 100%; }
+.mi-pick .grid { width: 100%; }
 .mi-question:empty { display: none; }
 .mi-pick .mi-choices { width: 100%; }
 .mi-choices .choice { display: flex; align-items: center; justify-content: center; padding: 0.5rem; border-radius: 12px; background: rgba(255, 255, 255, 0.05); font-size: 2.2rem; font-weight: 900; border: 3px solid transparent; }
