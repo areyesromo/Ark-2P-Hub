@@ -5,7 +5,7 @@ import tron from './tron.js';
 import airHockey from './air-hockey.js';
 import snake from './snake.js';
 import tanks from './tanks.js';
-import quiz from './quiz.js';
+import quiz, { TOPICS } from './quiz.js';
 import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
 import sketchGuess from './sketch-guess.js';
@@ -53,7 +53,10 @@ const GAMES = [
   withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
   bombDuel,
-  withSetup(quiz, { questions: { title: 'Questions', values: [10, 5, 15, 20], label: (n) => `${n} questions` } }),
+  withSetup(quiz, {
+    questions: { title: 'Questions', values: [10, 5, 15, 20], label: (n) => `${n} questions` },
+    topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
+  }),
   wordRace,
   miniGolf,
   withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` } }),

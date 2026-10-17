@@ -13,6 +13,11 @@ export const WORDS = {
     'bone', 'umbrella', 'candle', 'balloon', 'gift', 'pencil', 'scissors', 'glasses', 'button', 'shirt',
     'pants', 'dress', 'tooth', 'mountain', 'island', 'beach', 'wave', 'sandwich', 'cookie', 'donut',
     'lemon', 'cherry', 'grapes', 'mushroom', 'turtle', 'whale', 'owl', 'horse', 'lion', 'bear',
+    'pear', 'strawberry', 'corn', 'potato', 'tomato', 'lollipop', 'cupcake', 'bowl', 'spoon', 'fork',
+    'plate', 'bottle', 'rabbit', 'sheep', 'chicken', 'monkey', 'shark', 'crab', 'worm', 'fox',
+    'pumpkin', 'glove', 'scarf', 'boot', 'bucket', 'comb', 'light bulb', 'envelope', 'flag', 'pillow',
+    'truck', 'wheel', 'ant', 'ladybug', 'mouth', 'leg', 'lightning', 'onion', 'pie', 'candy',
+    'fence', 'broom', 'axe', 'feather', 'shell', 'nest', 'jar', 'zebra', 'tiger', 'bathtub',
   ],
   medium: [
     'giraffe', 'elephant', 'penguin', 'octopus', 'dinosaur', 'butterfly', 'kangaroo', 'crocodile', 'jellyfish', 'squirrel',
@@ -25,6 +30,11 @@ export const WORDS = {
     'backpack', 'suitcase', 'wallet', 'trophy', 'medal', 'crayon', 'paintbrush', 'hammer', 'saw', 'shovel',
     'basketball', 'football', 'tennis', 'bowling', 'surfing', 'skiing', 'swimming', 'fishing', 'juggling', 'yoga',
     'birthday', 'wedding', 'picnic', 'haircut', 'sneeze', 'snore', 'shadow', 'spiderweb', 'footprint', 'fireworks',
+    'peacock', 'koala', 'panda', 'gorilla', 'camel', 'seahorse', 'starfish', 'lobster', 'parrot', 'dolphin',
+    'beaver', 'raccoon', 'scorpion', 'caterpillar', 'ostrich', 'rhino', 'hippo', 'superhero', 'princess', 'knight',
+    'clown', 'cowboy', 'alien', 'witch', 'fairy', 'chef', 'king', 'windmill', 'barn', 'playground',
+    'treehouse', 'magnifying glass', 'wheelbarrow', 'binoculars', 'trumpet', 'violin', 'piano', 'harp', 'burrito', 'sushi',
+    'pretzel', 'waffle', 'roller skates', 'sledding', 'dancing', 'motorcycle', 'bulldozer', 'scooter', 'swing', 'mailbox',
   ],
   hard: [
     'gravity', 'echo', 'time travel', 'daydream', 'nightmare', 'jealous', 'invisible', 'electricity', 'vacation', 'traffic jam',
@@ -33,6 +43,10 @@ export const WORDS = {
     'evolution', 'recycling', 'photosynthesis', 'democracy', 'internet', 'pyramid', 'stonehenge', 'mummy', 'gladiator', 'samurai',
     'chameleon', 'platypus', 'narwhal', 'hedgehog', 'flamingo', 'scarecrow', 'werewolf', 'centaur', 'phoenix', 'yeti',
     'escalator', 'vending machine', 'treadmill', 'lawn mower', 'wind turbine', 'satellite', 'barbecue', 'chandelier', 'hammock', 'trampoline',
+    'tug of war', 'sunburn', 'shipwreck', 'snowball fight', 'pillow fight', 'tightrope', 'bungee jumping', 'sandstorm', 'blizzard', 'tsunami',
+    'heatwave', 'hide and seek', 'musical chairs', 'sleepover', 'thunderstorm', 'spring cleaning', 'garage sale', 'jigsaw puzzle', 'domino effect', 'constellation',
+    'hibernation', 'migration', 'metamorphosis', 'camouflage', 'hypnosis', 'ventriloquist', 'marionette', 'scuba diving', 'hang gliding', 'rock climbing',
+    'cartwheel', 'somersault', 'sunrise', 'brainstorm', 'surprise party', 'family tree', 'zip line', 'carousel', 'snow globe', 'scavenger hunt',
   ],
 };
 

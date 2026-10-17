@@ -7,7 +7,7 @@
 // typing. With two controllers there's nobody to draw, so the game says so.
 
 import { WORDS, STARS } from './sketch-words.js';
-import { settingOf } from './options.js';
+import { settingOf, usedIn } from './options.js';
 
 export const ROUNDS = 6;
 export const TIMING = { chooseMs: 15000, drawMs: 80000, revealMs: 5000 };
@@ -54,7 +54,7 @@ export class SketchGuess {
     this.rounds = settingOf(ctx, 'rounds', ROUNDS);
     this.rng = rng;
     this.words = words;
-    this.used = new Set();
+    this.used = usedIn(ctx, 'words'); // offered in earlier matches in this room
     this.timer = null;
     this.pushTimer = null;
     this.matches = 0;

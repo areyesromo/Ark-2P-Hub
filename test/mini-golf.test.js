@@ -28,7 +28,7 @@ const outside = (hole, x, y) =>
   !inPolygon(hole.bounds, x, y) || (hole.blocks || []).some((p) => inPolygon(p, x, y));
 
 test('every hole is sound: tee and cup on open green, away from walls and hazards', () => {
-  assert.equal(COURSE.length, 9);
+  assert.equal(COURSE.length, 15);
   for (const hole of COURSE) {
     for (const [x, y] of [hole.tee, hole.cup]) {
       assert.ok(x > 0 && x < FIELD.w && y > 0 && y < FIELD.h, hole.name);
@@ -173,18 +173,18 @@ test('controllers: the stick aims, holding A charges, letting go shoots', () => 
   assert.ok(b.aim.angle > before + 0.5);
 });
 
-test('setup: pick 3, 6 or 9 holes (remembered), drawn from the course in order', () => {
+test('setup: pick 3 to 15 holes (remembered), drawn from the course in order', () => {
   const ctx = fakeCtx();
   const game = new MiniGolf(ctx);
   game.start();
   assert.equal(game.hostView().phase, 'setup');
   assert.equal(game.settings.holes, 6);
-  game.onInput(0, { type: 'setting', key: 'holes', value: 9 });
+  game.onInput(0, { type: 'setting', key: 'holes', value: 15 });
   game.onInput(0, { type: 'setting', key: 'holes', value: 4 }); // not a choice
-  assert.equal(game.settings.holes, 9);
-  assert.deepEqual(ctx.saved.settings, { holes: 9 });
+  assert.equal(game.settings.holes, 15);
+  assert.deepEqual(ctx.saved.settings, { holes: 15 });
   game.onInput(0, { type: 'go' });
-  assert.deepEqual(game.holes, [0, 1, 2, 3, 4, 5, 6, 7, 8]);
+  assert.deepEqual(game.holes, COURSE.map((_, i) => i), 'all 15, in order');
   const three = pickHoles(3);
   assert.equal(three.length, 3);
   assert.deepEqual(three, three.slice().sort((a, b) => a - b));

@@ -103,3 +103,13 @@ class SetupFirst {
     return this.game ? { ...this.game.playerView(slot), ...this.hub() } : { phase: 'setup', you: slot, players: this.ctx.players, ...this.hub() };
   }
 }
+
+/**
+ * A Set the room keeps between launches of a game (in ctx.saved), e.g. the
+ * questions already asked, so coming back to a game doesn't repeat them.
+ */
+export function usedIn(ctx, key) {
+  if (!ctx.saved) return new Set();
+  const all = ctx.saved.used || (ctx.saved.used = {});
+  return all[key] || (all[key] = new Set());
+}

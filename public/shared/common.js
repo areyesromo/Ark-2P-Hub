@@ -194,7 +194,7 @@
   function hubSetupParts(v) {
     const h = v.hubSetup;
     return {
-      rows: h.rows.map(function (r) { return { key: r.key, title: r.title, fmt: function (value) { return r.labels[value] || String(value); } }; }),
+      rows: h.rows.map(function (r) { return { key: r.key, title: escapeHtml(r.title), fmt: function (value) { return escapeHtml(r.labels[value] || String(value)); } }; }),
       view: { settings: h.settings, options: h.options, players: v.players },
     };
   }

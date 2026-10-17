@@ -8,9 +8,11 @@
 // controllers use the same letters.
 
 import { QUESTIONS } from './quiz-questions.js';
-import { settingOf } from './options.js';
+import { settingOf, usedIn } from './options.js';
 
 export const PER_MATCH = 10;
+/** The question bank's categories, in order: the Topic setting picks one (0 is "Mixed"). */
+export const TOPICS = [...new Set(QUESTIONS.map((q) => q.cat))];
 export const BASE = 500;
 export const SPEED_BONUS = 500;
 export const TIMING = { countdownMs: 3000, questionMs: 15000, revealMs: 4000 };
@@ -20,9 +22,11 @@ export class QuizBattle {
   constructor(ctx, rng = Math.random, bank = QUESTIONS) {
     this.ctx = ctx;
     this.perMatch = settingOf(ctx, 'questions', PER_MATCH);
+    const topic = TOPICS[settingOf(ctx, 'topic', 0) - 1];
     this.rng = rng;
-    this.bank = bank;
-    this.used = new Set(); // asked in earlier matches with this pair: rematches don't repeat
+    this.bank = topic && bank.some((q) => q.cat === topic) ? bank.filter((q) => q.cat === topic) : bank;
+    // Asked in earlier matches in this room, so rematches (and the next visit) don't repeat.
+    this.used = usedIn(ctx, 'quiz:' + (topic || 'all'));
     this.timer = null;
   }
 

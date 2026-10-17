@@ -4,6 +4,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { listGames, getGame } from '../server/games/index.js';
+import { TOPICS } from '../server/games/quiz.js';
 import { fakeCtx } from './helpers.js';
 
 /** A fresh game from the hub's list, with controller players (so Battleship skips placing ships). */
@@ -74,9 +75,26 @@ test('each wrapped game honours its setting', () => {
     assert.equal(start(id, 'wins', value).v.winScore, value, id);
   }
   assert.equal(start('quiz', 'questions', 5).v.total, 5);
+  const topical = start('quiz', 'topic', 2).game.game; // the wrapper's game
+  assert.ok(topical.questions.length > 0);
+  assert.ok(topical.questions.every((q) => q.cat === TOPICS[1]), `all ${TOPICS[1]}`);
   assert.equal(start('draw-duel', 'rounds', 3).v.rounds, 3);
   assert.equal(start('sketch-guess', 'rounds', 4).v.rounds, 4);
   const { v } = start('battleship', 'shotSeconds', 15); // controller players: straight to firing
   assert.equal(v.phase, 'aim');
   assert.equal(v.timeLeftMs, 15000);
+});
+
+test('coming back to Quiz Battle in the same room does not repeat questions', () => {
+  const saved = {};
+  const asked = new Set();
+  for (let visit = 0; visit < 3; visit++) {
+    const { game } = create('quiz', saved);
+    game.onInput(0, { type: 'go' });
+    for (const q of game.game.questions) {
+      assert.ok(!asked.has(q.text), `repeated: ${q.text}`);
+      asked.add(q.text);
+    }
+  }
+  assert.equal(asked.size, 30);
 });

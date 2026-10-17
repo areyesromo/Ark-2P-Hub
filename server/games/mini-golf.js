@@ -3,7 +3,7 @@
 // putt (the phone shows the hole too); controllers aim with the stick and
 // hold A to charge the shot. Water costs a stroke and puts you back where
 // you shot from; after MAX_STROKES you pick up. Fewest strokes over the
-// round wins. Players pick 3, 6 or 9 holes on the setup screen.
+// round wins. Players pick 3 to 15 holes on the setup screen.
 //
 // The course is 20 x 12 units, landscape (as the TV shows it). The server
 // runs the physics at 30 Hz with substeps, so fast balls never skip through
@@ -15,7 +15,7 @@ export const FIELD = { w: 20, h: 12 };
 export const BALL_R = 0.22;
 export const CUP_R = 0.38;
 export const MAX_STROKES = 8; // not in after this many: pick up and score MAX_STROKES + 1
-export const OPTIONS = { holes: [6, 3, 9] };
+export const OPTIONS = { holes: [6, 3, 9, 12, 15] };
 export const TIMING = { introMs: 3000, playMs: 90000, holeEndMs: 4500 };
 export const PHYSICS = {
   tickMs: 1000 / 30,
@@ -115,6 +115,55 @@ export const COURSE = [
     water: [rect(10, 1, 19, 4.6), rect(10, 7.4, 19, 11), rect(10, 4.6, 11.2, 5.3), rect(10, 6.7, 11.2, 7.4)],
     sand: [rect(17.2, 4.6, 19, 7.4)],
     bumpers: [[6, 3.5, 0.5], [6, 8.5, 0.5]],
+  },
+  {
+    name: 'Switchback',
+    par: 4,
+    tee: [3, 2.5],
+    cup: [17, 9.7],
+    bounds: rect(1, 1, 19, 11),
+    blocks: [rect(1, 4, 15, 4.6), rect(5, 7.4, 19, 8)],
+  },
+  {
+    name: 'Pinball',
+    par: 3,
+    tee: [2.5, 6],
+    cup: [17.5, 6],
+    bounds: rect(1, 1, 19, 11),
+    bumpers: [[6, 4, 0.55], [6, 8, 0.55], [9, 2.5, 0.55], [9, 6, 0.55], [9, 9.5, 0.55], [12, 4, 0.55], [12, 8, 0.55], [15, 6, 0.55]],
+  },
+  {
+    name: 'Moat',
+    par: 3,
+    tee: [3, 6],
+    cup: [15, 6],
+    bounds: rect(1, 1, 19, 11),
+    // A ring of water round the cup, open on the left.
+    water: [rect(12, 2.5, 18, 3.5), rect(12, 8.5, 18, 9.5), rect(17, 3.5, 18, 8.5), rect(12, 3.5, 13, 5.2), rect(12, 6.8, 13, 8.5)],
+  },
+  {
+    name: 'Sand Dunes',
+    par: 3,
+    tee: [3, 8.5],
+    cup: [17.5, 8.5],
+    bounds: rect(1, 1.5, 19, 10.5),
+    sand: [rect(6, 1.5, 9, 6), rect(10, 6, 13, 10.5), rect(14, 1.5, 16, 5)],
+  },
+  {
+    name: 'Hourglass',
+    par: 2,
+    tee: [3, 6],
+    cup: [17, 6],
+    // Two rooms joined by a narrow neck.
+    bounds: [[1, 1], [8, 1], [9, 5], [11, 5], [12, 1], [19, 1], [19, 11], [12, 11], [11, 7], [9, 7], [8, 11], [1, 11]],
+  },
+  {
+    name: 'Bank Shot',
+    par: 3,
+    tee: [3, 3],
+    cup: [17, 3],
+    bounds: rect(1, 1, 19, 11),
+    blocks: [rect(9.5, 1, 10.5, 8.5)],
   },
 ];
 
