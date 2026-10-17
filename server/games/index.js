@@ -18,6 +18,7 @@ import kartRace from './kart-race.js';
 import memoryMatch from './memory-match.js';
 import bombSquad, { LEVELS as BOMB_LEVELS } from './bomb-squad.js';
 import marbleMaze, { LEVELS as MAZE_LEVELS } from './marble-maze.js';
+import mindMeld from './mind-meld.js';
 import { withSetup } from './options.js';
 
 /**
@@ -76,6 +77,7 @@ const GAMES = [
     levels: { title: 'Mazes', values: [3, 5, 1], label: (n) => (n === 1 ? 'One maze' : n === MAZE_LEVELS.length ? `All ${n} mazes` : `${n} mazes`) },
     controls: { title: 'Who tilts what', values: [1, 2], label: (n) => (n === 1 ? 'Split: one ↔, one ↕' : 'Shared: both steer') },
   }),
+  withSetup(mindMeld, { rounds: { title: 'Rounds (you swap who gives the clue)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
 ];
 
