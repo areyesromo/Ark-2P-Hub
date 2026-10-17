@@ -578,3 +578,71 @@ test('the map setting picks the map; random picks one of the five', () => {
   const q = [0.99];
   assert.equal(pick({ map: 'random' }, () => (q.length ? q.shift() : 0.5)).name, MAPS.volcano.name);
 });
+
+// ---- Harsh mode ----
+
+function seeded(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s = (s * 1664525 + 1013904223) >>> 0;
+    return s / 2 ** 32;
+  };
+}
+const HAZARDS = ['thunder', 'skull', 'tornado'];
+
+test('harsh off: no hazards; harsh on: 15% of blue/red, never on the start, stars, forks or warp targets', () => {
+  for (const [id, map] of Object.entries(MAPS)) {
+    const off = fakeCtx();
+    off.settings = { map: id, harsh: 0 };
+    const g0 = new PartyBoard(off, seeded(1), undefined, [claim]);
+    g0.start();
+    assert.equal(g0.hostView().board.spaces.filter((s) => HAZARDS.includes(s.type)).length, 0, id);
+    const plain = map.spaces.filter((s) => s.type === 'blue' || s.type === 'red').length;
+    const want = Math.max(2, Math.round(plain * 0.15));
+    const targets = new Set(map.spaces.filter((s) => s.type === 'warp').map((s) => s.warp));
+    for (let seed = 1; seed <= 100; seed++) {
+      const ctx = fakeCtx();
+      ctx.settings = { map: id, harsh: 1 };
+      const g = new PartyBoard(ctx, seeded(seed), undefined, [claim]);
+      g.start();
+      const spaces = g.hostView().board.spaces;
+      const hz = spaces.map((s, i) => [s, i]).filter(([s]) => HAZARDS.includes(s.type));
+      assert.equal(hz.length, want, `${id} seed ${seed}`);
+      for (const [s, i] of hz) {
+        assert.ok(i !== 0 && !s.starCandidate && s.next.length === 1 && !targets.has(i), `${id} seed ${seed}: hazard on ${i}`);
+        assert.ok(['blue', 'red'].includes(map.spaces[i].type));
+      }
+    }
+    assert.ok(map.spaces.every((s) => !HAZARDS.includes(s.type)), 'the shared map is never changed');
+  }
+});
+
+/** The island with space 1 turned into `type`; player 0 rolls a 1 onto it. */
+function hazardAt(type, prep) {
+  const map = { ...MAPS.island, spaces: MAPS.island.spaces.map((s, i) => (i === 1 ? { ...s, type } : s)) };
+  const ctx = fakeCtx();
+  const q = [0];
+  const g = new PartyBoard(ctx, () => (q.length ? q.shift() : 0.5), map, [claim]);
+  g.start();
+  if (prep) prep(g, q);
+  q.push(0.01);
+  g.onInput(0, { type: 'choose', value: 'roll' });
+  for (let i = 0; i < 200 && !(g.hostView().prompt && g.hostView().prompt.slot === 1); i++) ctx.advance(50);
+  return g.hostView().players[0];
+}
+
+test('thunder: lose half your coins (rounded down lost)', () => {
+  assert.equal(hazardAt('thunder', (g) => { g.players[0].coins = 11; }).coins, 6);
+});
+
+test('skull: lose a star; with none, 10 coins; never below 0', () => {
+  assert.deepEqual([hazardAt('skull', (g) => { g.players[0].stars = 1; }).stars], [0]);
+  assert.equal(hazardAt('skull', (g) => { g.players[0].coins = 15; }).coins, 5);
+  assert.equal(hazardAt('skull', (g) => { g.players[0].coins = 3; }).coins, 0);
+});
+
+test('tornado: blown to a random space (not the start, not here), no effect there', () => {
+  const p = hazardAt('tornado', (g, q) => q.push(0.01)); // the die, then the tornado's pick
+  assert.ok(p.space !== 0 && p.space !== 1, `landed on ${p.space}`);
+  assert.equal(p.coins, 10);
+});

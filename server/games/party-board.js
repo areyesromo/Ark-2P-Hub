@@ -25,6 +25,8 @@ export const ITEMS = {
 };
 export const EVENTS = ['shower', 'swap', 'steal', 'lucky', 'star'];
 export const EVENT_COINS = { shower: 5, steal: 5, lucky: 10 };
+export const HAZARDS = ['thunder', 'skull', 'tornado'];
+export const HARSH = { share: 0.15, min: 2, skullCoins: 10 };
 export const SLOT = { reels: 3, faces: 5, three: 15, pair: 5, none: 1 };
 
 export class PartyBoard {
@@ -37,6 +39,7 @@ export class PartyBoard {
     this.pool = poolFor(pool, settingOf(ctx, 'style', 'mix'));
     this.turns = settingOf(ctx, 'turns', 10);
     this.bonusOn = settingOf(ctx, 'bonus', 1) === 1;
+    this.harsh = settingOf(ctx, 'harsh', 0) === 1;
     this.epoch = 0;
     this.timers = [];
   }
@@ -61,6 +64,8 @@ export class PartyBoard {
     this.epoch++;
     this.clearTimers();
     this.map = this.pickMap();
+    this.board = this.map.spaces.map((sp) => ({ ...sp })); // this match's copy (Harsh mode changes it)
+    if (this.harsh) this.placeHazards();
     this.players = [0, 1].map(() => ({ space: 0, coins: START_COINS, stars: 0, items: [], earned: 0, minigames: 0 }));
     this.playlist = new Playlist(this.pool.map((d) => d.id), this.rng); // one per match: no repeats until all are played
     this.star = this.pickStar(null);
@@ -78,7 +83,22 @@ export class PartyBoard {
   }
 
   get spaces() {
-    return this.map.spaces;
+    return this.board;
+  }
+
+  /** Harsh mode: turn ~15% of the plain spaces into hazards (never the start, stars, forks or warp exits). */
+  placeHazards() {
+    const exits = new Set(this.board.filter((sp) => sp.type === 'warp').map((sp) => sp.warp));
+    const spots = this.board.map((sp, i) => i).filter((i) => {
+      const sp = this.board[i];
+      return i !== 0 && (sp.type === 'blue' || sp.type === 'red') && !sp.starCandidate && sp.next.length === 1 && !exits.has(i);
+    });
+    const plain = this.board.filter((sp) => sp.type === 'blue' || sp.type === 'red').length;
+    const n = Math.min(spots.length, Math.max(HARSH.min, Math.round(plain * HARSH.share)));
+    for (let k = 0; k < n; k++) {
+      const i = spots.splice(Math.floor(this.rng() * spots.length), 1)[0];
+      this.board[i].type = HAZARDS[Math.floor(this.rng() * HAZARDS.length)];
+    }
   }
 
   pickMap() {
@@ -277,6 +297,24 @@ export class PartyBoard {
       return done();
     }
     if (type === 'bonus') return this.slot(done);
+    if (type === 'thunder') {
+      const lost = -this.coins(slot, -Math.floor(this.players[slot].coins / 2));
+      this.say(`⚡ Thunder! −${lost} 🪙`);
+      return done();
+    }
+    if (type === 'skull') {
+      if (this.players[slot].stars > 0) {
+        this.players[slot].stars--;
+        this.say('💀 Skull! −1 ⭐');
+      } else this.say(`💀 Skull! −${-this.coins(slot, -HARSH.skullCoins)} 🪙`);
+      return done();
+    }
+    if (type === 'tornado') {
+      const spots = this.spaces.map((sp, i) => i).filter((i) => i !== 0 && i !== space);
+      this.players[slot].space = spots[Math.floor(this.rng() * spots.length)];
+      this.say('🌪️ Tornado!');
+      return done();
+    }
     if (type === 'warp') {
       this.players[slot].space = this.spaces[space].warp;
       this.say('🌀 Warp!');

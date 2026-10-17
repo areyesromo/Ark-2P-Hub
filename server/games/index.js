@@ -72,6 +72,7 @@ const GAMES = [
     turns: { title: 'Game length', values: [10, 15, 20], label: (n) => `${n} turns` },
     style: { title: 'Minigames', values: ['mix', '2d', '3d'], label: (s) => ({ mix: 'Mix of 2D and 3D', '2d': '2D only', '3d': '3D only' })[s] },
     bonus: { title: 'Bonus stars at the end', values: [1, 0], label: (b) => (b ? 'Bonus stars' : 'No bonus stars') },
+    harsh: { title: 'Hazards', values: [0, 1], label: (h) => (h ? '💀 Harsh mode (⚡ 💀 🌪️ spaces)' : 'Normal spaces') },
   }),
   withSetup(partyMinis, {
     ...firstTo('Wins needed', [3, 4, 5]),
