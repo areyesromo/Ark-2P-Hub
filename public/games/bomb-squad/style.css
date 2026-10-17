@@ -121,7 +121,7 @@
 .bs-edge .edition { flex-basis: 100%; font-size: 0.75rem; color: #4b5563; letter-spacing: 0.08em; }
 
 /* Simon: four pads that light up in turn. */
-.bs-simon { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; width: min(100%, 300px); margin: 6px auto; transform: rotate(45deg) scale(0.86); }
+.bs-simon { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; width: min(100%, 260px); margin: 6px auto; }
 .bs-simon .pad { aspect-ratio: 1; border-radius: 14px; border: 3px solid rgba(0, 0, 0, 0.45); opacity: 0.4; transition: opacity 80ms, box-shadow 80ms; touch-action: manipulation; }
 .bs-simon .pad.c-red { background: #ef4444; }
 .bs-simon .pad.c-blue { background: #3b82f6; }
