@@ -4,7 +4,7 @@ export const TIMING = { stepMs: 600, pauseMs: 400, inputMs: 10000 };
 export const START_LENGTH = 3;
 
 export default {
-  id: 'memory-path', kind: 'party', name: 'Memory Path', order: 'REMEMBER!', howTo: 'Watch the path, then tap it back in order', durationMs: 30000,
+  id: 'memory-path', kind: 'party', look: '2d', name: 'Memory Path', order: 'REMEMBER!', howTo: 'Watch the path, then tap it back in order', durationMs: 30000,
   create(api) {
     const cell = () => Math.floor(api.rng() * 9);
     const seq = Array.from({ length: START_LENGTH - 1 }, cell);

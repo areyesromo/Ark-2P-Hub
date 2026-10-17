@@ -3,7 +3,7 @@
 export const FLIGHT_MS = 600;
 
 export default {
-  id: 'hot-potato', kind: 'party', name: 'Hot Potato', order: 'PASS IT!', howTo: 'Holding the bomb? Tap PASS (or A) to throw it back', durationMs: 25000,
+  id: 'hot-potato', kind: 'party', look: '2d', name: 'Hot Potato', order: 'PASS IT!', howTo: 'Holding the bomb? Tap PASS (or A) to throw it back', durationMs: 25000,
   create(api) {
     let holder = api.rng() < 0.5 ? 0 : 1;
     let flying = false;

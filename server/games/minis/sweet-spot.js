@@ -12,7 +12,7 @@ export function wheelValue(ms, offset) {
 }
 
 export default {
-  id: 'sweet-spot', kind: 'party', name: 'Sweet Spot', order: 'STOP ON 10!', howTo: 'Stop your wheel (or A) on the biggest number, 3 times', durationMs: 25000,
+  id: 'sweet-spot', kind: 'party', look: '2d', name: 'Sweet Spot', order: 'STOP ON 10!', howTo: 'Stop your wheel (or A) on the biggest number, 3 times', durationMs: 25000,
   create(api) {
     const offset = () => Math.floor(api.rng() * STEP_MS * 10);
     const spins = [[], []];

@@ -71,3 +71,16 @@ test('Party Minigames is in the lobby as a competitive game', () => {
   assert.ok(g);
   assert.equal(g.category, 'competitive');
 });
+
+test('Party Minigames style: 2D only, 3D only or a mix', async () => {
+  const { PARTIES } = await import('../server/games/minis/index.js');
+  for (const m of PARTIES) assert.ok(m.look === '2d' || m.look === '3d', `${m.id} has a look`);
+  const pool = (style) => {
+    const ctx = fakeCtx();
+    if (style) ctx.settings = { style };
+    return new PartyMinis(ctx).pool.map((m) => m.look);
+  };
+  assert.ok(pool().includes('2d') && pool().includes('3d'));
+  assert.ok(pool('2d').every((l) => l === '2d'));
+  assert.ok(pool('3d').length >= 3 && pool('3d').every((l) => l === '3d'));
+});

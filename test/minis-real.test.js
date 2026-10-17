@@ -29,11 +29,11 @@ test('Party Minigames from the lobby plays every party minigame', () => {
   game.start();
   game.onInput(0, { type: 'go' });
   const seen = new Set();
-  for (let i = 0; i < 2000 && seen.size < 5; i++) {
+  for (let i = 0; i < 8000 && seen.size < 10; i++) {
     const v = game.hostView();
     if (v.phase === 'over') game.onInput(0, { type: 'rematch' });
     if (v.phase === 'play') seen.add(v.mini.id);
     ctx.advance(250);
   }
-  assert.equal(seen.size, 5);
+  assert.equal(seen.size, 10);
 });

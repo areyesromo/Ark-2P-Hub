@@ -7,10 +7,17 @@ import { PARTIES } from './minis/index.js';
 import { settingOf } from './options.js';
 
 export const WINS = 3;
+/** Which minigames a match picks from: every one, or only the 2D / 3D ones. */
+export const STYLES = ['mix', '2d', '3d'];
+
+export function poolFor(pool, style) {
+  const picked = style === '2d' || style === '3d' ? pool.filter((m) => m.look === style) : pool;
+  return picked.length ? picked : pool;
+}
 
 export class PartyMinis extends MiniGame {
   constructor(ctx, pool = PARTIES, rng = Math.random) {
-    super(ctx, pool, rng);
+    super(ctx, poolFor(pool, settingOf(ctx, 'style', 'mix')), rng);
     this.target = settingOf(ctx, 'wins', WINS);
   }
 
