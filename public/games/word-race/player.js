@@ -12,6 +12,7 @@
   let loaded = false;
   let path = []; // the trace in progress
   let tracing = false;
+  let lastPt = null; // where the finger was last seen, to fill in fast moves
   let lastFeedback = 0;
   let toastTimer = null;
   let gridKey = '';
@@ -44,22 +45,44 @@
     drawGrid();
   }
 
+  /**
+   * Follow the finger to (x, y). Browsers merge fast moves (one event per
+   * frame), so walk the straight line from the last point in small steps:
+   * otherwise a quick swipe can skip right over a tile.
+   */
+  function follow(x, y) {
+    const tile = els.grid.querySelector('.tile');
+    const step = tile ? tile.getBoundingClientRect().width / 5 : 10;
+    const from = lastPt || { x: x, y: y };
+    const n = Math.max(1, Math.ceil(Math.hypot(x - from.x, y - from.y) / step));
+    for (let k = 1; k <= n; k++) extend(tileAt(from.x + ((x - from.x) * k) / n, from.y + ((y - from.y) * k) / n));
+    lastPt = { x: x, y: y };
+  }
+
+  function followEvent(e) {
+    const all = e.getCoalescedEvents ? e.getCoalescedEvents() : [];
+    (all.length ? all : [e]).forEach(function (p) { follow(p.clientX, p.clientY); });
+  }
+
   function onDown(e) {
     if (!canPlay()) return;
     e.preventDefault();
     if (els.grid.setPointerCapture) els.grid.setPointerCapture(e.pointerId);
     tracing = true;
     path = [];
-    extend(tileAt(e.clientX, e.clientY));
+    lastPt = null;
+    follow(e.clientX, e.clientY);
   }
 
   function onMove(e) {
-    if (tracing) extend(tileAt(e.clientX, e.clientY));
+    if (tracing) followEvent(e);
   }
 
-  function onUp() {
+  function onUp(e) {
     if (!tracing) return;
+    if (e && e.type === 'pointerup') follow(e.clientX, e.clientY);
     tracing = false;
+    lastPt = null;
     if (path.length >= 2 && canPlay()) api.send({ type: 'word', path: path });
     path = [];
     drawGrid();
@@ -105,7 +128,8 @@
 
   function status(v) {
     const you = v.you;
-    if (v.phase === 'countdown') return 'Get ready… ' + v.countdown;
+    if (v.phase === 'setup') return '<span class="big">Word Race</span><br>Pick the settings (either of you can), then start.';
+    if (v.phase === 'countdown') return 'Get ready… ' + v.countdown + (loaded ? '<br><small>' + ArkWords.summary(v) + '</small>' : '');
     if (v.phase === 'play') {
       const pts = v.yourWords.reduce(function (s, w) { return s + w.points; }, 0);
       return v.yourWords.length + ' words · ' + pts + ' pts · ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's · them: ' + v.counts[1 - you];
@@ -133,14 +157,19 @@
     if (!view || view.round !== v.round) path = [];
     view = v;
     drawGrid();
-    const key = JSON.stringify([v.phase, v.round, v.countdown, Math.ceil(v.timeLeftMs / 1000), v.yourWords.length, v.counts, v.scores, Boolean(v.result)]);
+    const key = JSON.stringify([v.phase, v.round, v.countdown, Math.ceil(v.timeLeftMs / 1000), v.yourWords.length, v.counts, v.scores, Boolean(v.result), v.settings, loaded]);
     if (key === textKey) return;
     textKey = key;
-    els.score.textContent = 'You ' + v.scores[v.you] + ' – ' + v.scores[1 - v.you] + ' Them · best of 3 · round ' + v.round;
+    const setup = v.phase === 'setup';
+    els.score.textContent = setup ? '' : 'You ' + v.scores[v.you] + ' – ' + v.scores[1 - v.you] + ' Them' +
+      (v.settings.rounds > 1 ? ' · best of ' + v.settings.rounds : '') + ' · round ' + v.round;
     els.status.innerHTML = status(v);
+    els.setup.innerHTML = setup && loaded ? ArkWords.setupHtml(v) : '';
+    els.go.classList.toggle('hidden', !setup);
     els.words.innerHTML = myWords(v);
     els.hint.classList.toggle('hidden', v.phase !== 'play' || v.yourWords.length > 0);
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
+    els.change.classList.toggle('hidden', v.phase !== 'over');
   }
 
   Ark.register('player', 'word-race', {
@@ -151,12 +180,15 @@
       root.innerHTML =
         '<div class="score"></div>' +
         '<div class="status"></div>' +
+        '<div class="wr-setup-box"></div>' +
+        '<button class="primary go hidden">Start</button>' +
         '<div class="wr-word"></div>' +
         '<div class="wr-pad"></div>' +
         '<p class="hint">Swipe across touching letters, then lift your finger.</p>' +
         '<div class="wr-toast"></div>' +
         '<ul class="wr-words"></ul>' +
-        '<button class="primary rematch hidden">Rematch</button>';
+        '<button class="primary rematch hidden">Rematch</button>' +
+        '<button class="ghost change hidden">Change settings</button>';
       el.appendChild(root);
       els = {
         score: root.querySelector('.score'),
@@ -167,15 +199,29 @@
         toast: root.querySelector('.wr-toast'),
         words: root.querySelector('.wr-words'),
         rematch: root.querySelector('.rematch'),
+        change: root.querySelector('.change'),
+        setup: root.querySelector('.wr-setup-box'),
+        go: root.querySelector('.go'),
       };
       els.grid.addEventListener('pointerdown', onDown);
       els.grid.addEventListener('pointermove', onMove);
       els.grid.addEventListener('pointerup', onUp);
       els.grid.addEventListener('pointercancel', onUp);
       els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });
+      els.change.addEventListener('click', function () { api.send({ type: 'setup' }); });
+      els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
+      els.setup.addEventListener('click', function (e) {
+        const btn = e.target.closest && e.target.closest('.opt');
+        if (!btn) return;
+        api.send({ type: 'setting', key: btn.getAttribute('data-key'), value: Number(btn.getAttribute('data-value')) });
+        api.vibrate(8);
+      });
       gridReady.then(function () {
         loaded = true;
-        if (view) drawGrid();
+        if (view) {
+          textKey = '';
+          render(view);
+        }
       });
     },
     update: render,

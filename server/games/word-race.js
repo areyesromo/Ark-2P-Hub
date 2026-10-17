@@ -2,7 +2,8 @@
 // and race to find words by tracing paths of touching tiles (across, down or
 // diagonally, each tile at most once per word). Longer words score more.
 // When the time's up, words you BOTH found cancel out, so rare finds win.
-// Best of 3 rounds.
+// Before the first round either player can pick the grid size (4x4 to 6x6),
+// the time per round and the match length; the room remembers the choice.
 //
 // The server checks every word from the path that was traced, against a
 // ~275k-word dictionary (the word-list package).
@@ -10,17 +11,35 @@
 import fs from 'node:fs';
 import wordListPath from 'word-list';
 
-export const SIZE = 4;
-export const WIN_SCORE = 2; // rounds needed: best of 3
-export const MAX_ROUNDS = 5; // drawn rounds can stretch a match; after this, most rounds won takes it
+export const SIZE = 4; // the default grid
 export const MIN_LETTERS = 3;
-export const MIN_GRID_WORDS = 40; // reroll grids poorer than this
-export const TIMING = { countdownMs: 3000, playMs: 90000, revealMs: 12000 };
+export const TIMING = { countdownMs: 3000, playMs: 90000, revealMs: 12000 }; // playMs: the default round time
+
+/** What the players can choose in the setup screen; the first value of each is the default. */
+export const OPTIONS = {
+  size: [4, 5, 6], // grid is size x size
+  time: [90, 60, 120, 180], // seconds per round
+  rounds: [3, 1, 5], // best of
+};
+export const DEFAULTS = { size: OPTIONS.size[0], time: OPTIONS.time[0], rounds: OPTIONS.rounds[0] };
+export const MIN_GRID_WORDS = { 4: 40, 5: 100, 6: 150 }; // reroll grids poorer than this
+
+/** Rounds needed to win a best-of-n match, and when drawn rounds stop it. */
+export const winScoreFor = (rounds) => Math.ceil(rounds / 2);
+export const maxRoundsFor = (rounds) => rounds + 2;
+export const WIN_SCORE = winScoreFor(DEFAULTS.rounds);
+export const MAX_ROUNDS = maxRoundsFor(DEFAULTS.rounds);
 
 // The 16 classic Boggle dice. 'Q' is the "Qu" face.
 const DICE = [
   'AAEEGN', 'ABBJOO', 'ACHOPS', 'AFFKPS', 'AOOTTW', 'CIMOTU', 'DEILRX', 'DELRVY',
   'DISTTY', 'EEGHNW', 'EEINSU', 'EHRTVW', 'EIOSST', 'ELRTTY', 'HIMNUQ', 'HLNNRZ',
+];
+// The 25 Big Boggle dice, for 5x5. 6x6 adds 11 of the classic dice to these.
+const BIG_DICE = [
+  'AAAFRS', 'AAEEEE', 'AAFIRS', 'ADENNN', 'AEEEEM', 'AEEGMU', 'AEGMNN', 'AFIRSY', 'BJKQXZ',
+  'CCENST', 'CEIILT', 'CEILPT', 'CEIPST', 'DDHNOT', 'DHHLOR', 'DHLNOR', 'DHLNOR', 'EIIITT',
+  'EMOTTT', 'ENSSSU', 'FIPRSY', 'GORRVW', 'IPRRRY', 'NOOTUW', 'OOOTTU',
 ];
 
 /** Boggle scoring by word length. */
@@ -36,13 +55,13 @@ export function wordPoints(word) {
 
 // ---- dictionary ---------------------------------------------------------------
 
-let WORDS = null; // sorted, lower case, 3..17 letters
+let WORDS = null; // sorted, lower case, 3+ letters
 
 export function dictionary() {
   if (!WORDS) {
     WORDS = fs.readFileSync(wordListPath, 'utf8')
       .split('\n')
-      .filter((w) => w.length >= MIN_LETTERS && w.length <= SIZE * SIZE + 1 && /^[a-z]+$/.test(w))
+      .filter((w) => w.length >= MIN_LETTERS && /^[a-z]+$/.test(w))
       .sort();
   }
   return WORDS;
@@ -73,16 +92,19 @@ function isPrefix(p) {
 
 // ---- grid -----------------------------------------------------------------------
 
-export function neighbours(i) {
-  const r = Math.floor(i / SIZE);
-  const c = i % SIZE;
+/** The side of a square grid. */
+const sideOf = (grid) => Math.round(Math.sqrt(grid.length));
+
+export function neighbours(i, size = SIZE) {
+  const r = Math.floor(i / size);
+  const c = i % size;
   const out = [];
   for (let dr = -1; dr <= 1; dr++) {
     for (let dc = -1; dc <= 1; dc++) {
       if (!dr && !dc) continue;
       const rr = r + dr;
       const cc = c + dc;
-      if (rr >= 0 && rr < SIZE && cc >= 0 && cc < SIZE) out.push(rr * SIZE + cc);
+      if (rr >= 0 && rr < size && cc >= 0 && cc < size) out.push(rr * size + cc);
     }
   }
   return out;
@@ -95,36 +117,45 @@ const tileText = (face) => (face === 'Q' ? 'qu' : face.toLowerCase());
 export function solve(grid) {
   const found = new Set();
   const used = new Array(grid.length).fill(false);
+  const size = sideOf(grid);
+  const near = grid.map((_, i) => neighbours(i, size));
   function walk(i, sofar) {
     const word = sofar + tileText(grid[i]);
     if (!isPrefix(word)) return;
     if (word.length >= MIN_LETTERS && isWord(word)) found.add(word);
     used[i] = true;
-    for (const n of neighbours(i)) if (!used[n]) walk(n, word);
+    for (const n of near[i]) if (!used[n]) walk(n, word);
     used[i] = false;
   }
   for (let i = 0; i < grid.length; i++) walk(i, '');
   return found;
 }
 
-export function rollGrid(rng = Math.random) {
-  const dice = DICE.slice();
-  for (let i = dice.length - 1; i > 0; i--) {
+function shuffle(list, rng) {
+  for (let i = list.length - 1; i > 0; i--) {
     const j = Math.floor(rng() * (i + 1));
-    [dice[i], dice[j]] = [dice[j], dice[i]];
+    [list[i], list[j]] = [list[j], list[i]];
   }
-  return dice.map((d) => d[Math.floor(rng() * 6)]);
+  return list;
+}
+
+export function rollGrid(size = SIZE, rng = Math.random) {
+  let dice = DICE.slice();
+  if (size === 5) dice = BIG_DICE.slice();
+  if (size === 6) dice = BIG_DICE.concat(shuffle(DICE.slice(), rng).slice(0, 11));
+  return shuffle(dice, rng).map((d) => d[Math.floor(rng() * 6)]);
 }
 
 /** The word a traced path spells, or null if the path isn't a valid trace. */
 export function spell(grid, path) {
   if (!Array.isArray(path) || path.length < 2 || path.length > grid.length) return null;
+  const size = sideOf(grid);
   const seen = new Set();
   let word = '';
   for (let k = 0; k < path.length; k++) {
     const i = path[k];
     if (!Number.isInteger(i) || i < 0 || i >= grid.length || seen.has(i)) return null;
-    if (k > 0 && !neighbours(path[k - 1]).includes(i)) return null;
+    if (k > 0 && !neighbours(path[k - 1], size).includes(i)) return null;
     seen.add(i);
     word += tileText(grid[i]);
   }
@@ -138,9 +169,30 @@ export class WordRace {
     this.ctx = ctx;
     this.rng = rng;
     this.timer = null;
+    // Settings the room kept from last time, if still valid.
+    const saved = (ctx.saved && ctx.saved.settings) || {};
+    this.settings = {};
+    for (const key of Object.keys(OPTIONS)) this.settings[key] = OPTIONS[key].includes(saved[key]) ? saved[key] : DEFAULTS[key];
   }
 
+  /** The setup screen: pick the grid size, time and match length. */
   start() {
+    this.stopTimer();
+    this.phase = 'setup';
+    this.phaseEnds = null;
+    this.scores = [0, 0];
+    this.round = 0;
+    this.winner = null;
+    this.draw = false;
+    this.grid = null;
+    this.possible = 0;
+    this.words = [[], []];
+    this.feedback = [null, null];
+    this.result = null;
+    this.ctx.update();
+  }
+
+  begin() {
     this.scores = [0, 0];
     this.round = 0;
     this.winner = null;
@@ -148,14 +200,26 @@ export class WordRace {
     this.newRound();
   }
 
+  setOption(key, value) {
+    if (!Object.prototype.hasOwnProperty.call(OPTIONS, key) || !OPTIONS[key].includes(value)) return;
+    this.settings[key] = value;
+    if (this.ctx.saved) this.ctx.saved.settings = { ...this.settings };
+    this.ctx.update();
+  }
+
+  get winScore() {
+    return winScoreFor(this.settings.rounds);
+  }
+
   newRound() {
     this.round++;
+    const size = this.settings.size;
     let grid;
     let all;
     for (let tries = 0; tries < 30; tries++) {
-      grid = rollGrid(this.rng);
+      grid = rollGrid(size, this.rng);
       all = solve(grid);
-      if (all.size >= MIN_GRID_WORDS) break;
+      if (all.size >= MIN_GRID_WORDS[size]) break;
     }
     this.grid = grid;
     this.possible = all.size;
@@ -163,7 +227,7 @@ export class WordRace {
     this.feedback = [null, null]; // last answer to each player's attempt
     this.seq = 0;
     this.result = null;
-    this.runPhase('countdown', TIMING.countdownMs, () => this.runPhase('play', TIMING.playMs, () => this.endRound()));
+    this.runPhase('countdown', TIMING.countdownMs, () => this.runPhase('play', this.settings.time * 1000, () => this.endRound()));
   }
 
   runPhase(phase, ms, onEnd) {
@@ -172,6 +236,11 @@ export class WordRace {
     this.onPhaseEnd = onEnd;
     this.ctx.update();
     this.scheduleStep();
+  }
+
+  stopTimer() {
+    if (this.timer) this.ctx.clearTimeout(this.timer);
+    this.timer = null;
   }
 
   scheduleStep() {
@@ -201,8 +270,8 @@ export class WordRace {
     const winner = points[0] === points[1] ? null : points[0] > points[1] ? 0 : 1;
     if (winner !== null) this.scores[winner]++;
     this.result = { tally, points, winner };
-    if (winner !== null && this.scores[winner] >= WIN_SCORE) return this.finish(winner);
-    if (this.round >= MAX_ROUNDS) {
+    if (winner !== null && this.scores[winner] >= this.winScore) return this.finish(winner);
+    if (this.round >= maxRoundsFor(this.settings.rounds)) {
       const [a, b] = this.scores;
       return this.finish(a === b ? null : a > b ? 0 : 1);
     }
@@ -210,8 +279,7 @@ export class WordRace {
   }
 
   finish(winner) {
-    if (this.timer) this.ctx.clearTimeout(this.timer);
-    this.timer = null;
+    this.stopTimer();
     this.winner = winner;
     this.draw = winner === null;
     this.phase = 'over';
@@ -220,7 +288,16 @@ export class WordRace {
   }
 
   onInput(slot, input) {
-    if (input.type === 'rematch' && this.phase === 'over') return this.start();
+    if (this.phase === 'setup') {
+      if (input.type === 'setting') this.setOption(input.key, input.value);
+      if (input.type === 'go') this.begin();
+      return;
+    }
+    if (this.phase === 'over') {
+      if (input.type === 'rematch') this.begin(); // same settings
+      if (input.type === 'setup') this.start();
+      return;
+    }
     if (input.type !== 'word' || this.phase !== 'play') return;
     const word = spell(this.grid, input.path);
     if (word === null) return;
@@ -245,16 +322,18 @@ export class WordRace {
     return {
       phase: this.phase,
       round: this.round,
-      size: SIZE,
-      grid: this.phase === 'countdown' ? null : this.grid,
+      size: this.settings.size,
+      settings: this.settings,
+      options: OPTIONS,
+      grid: this.phase === 'countdown' || this.phase === 'setup' ? null : this.grid,
       countdown: this.phase === 'countdown' ? Math.ceil(this.timeLeftMs() / 1000) : 0,
       timeLeftMs: this.timeLeftMs(),
-      playMs: TIMING.playMs,
+      playMs: this.settings.time * 1000,
       counts: this.words.map((w) => w.length),
       possible: this.possible,
       result: revealing ? this.result : null,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       winner: this.winner,
       draw: this.draw,
     };
@@ -276,6 +355,6 @@ export class WordRace {
 export default {
   id: 'word-race',
   name: 'Word Race',
-  tagline: 'Same letter grid, 90 seconds: swipe words on your phone. Words you both find cancel out, so go rare. Best of 3.',
+  tagline: 'Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Pick the grid size, time and rounds.',
   create: (ctx) => new WordRace(ctx),
 };
