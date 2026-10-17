@@ -1,5 +1,6 @@
 (function () {
   Ark.loadCss('/games/kart-race/style.css');
+  const tiltReady = Ark.loadScript('/shared/tilt.js');
   let trackNames = []; // from the server's views
   const ROWS = [
     { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
@@ -186,32 +187,15 @@
     }
   }
 
-  // ---- tilt (the motion sensor) ----
-  // Phones only let a web page read the motion sensor on a secure (https://)
-  // page, and on iPhones only after asking; the hub is plain http, so tilt
-  // works on some phones and not others. If no reading comes, fall back to
-  // the joystick and say why.
+  // ---- tilt (the motion sensor, see shared/tilt.js) ----
+  // Phones only allow the sensor on secure (https) pages: on plain http we
+  // fall back to the joystick and offer the hub's https address instead.
 
-  const tilt = { listening: false, got: false, raw: 0, centre: 0, timer: null };
+  const tilt = { raw: 0, centre: 0, on: false };
+  let secureUrl = null; // where to go for tilt, when this page can't
 
-  /** The screen's rotation: 0, 90, 180 or 270 (counter-clockwise turns of the phone). */
-  function screenAngle() {
-    const a = window.screen && screen.orientation && typeof screen.orientation.angle === 'number' ? screen.orientation.angle : Number(window.orientation) || 0;
-    return ((a % 360) + 360) % 360;
-  }
-
-  function onTilt(e) {
-    if (e.beta === null || e.beta === undefined || e.gamma === null || e.gamma === undefined) return;
-    tilt.got = true;
-    const b = e.beta * Math.PI / 180;
-    const g = e.gamma * Math.PI / 180;
-    // How far up the phone's own x and y axes point (from the W3C angles).
-    const xUp = -Math.cos(b) * Math.sin(g);
-    const yUp = Math.sin(b);
-    // ...and so how far up the right-hand side of the controller points.
-    const a = (screenAngle() + (root && root.classList.contains('rotated') ? 90 : 0)) % 360;
-    const rightUp = a === 0 ? xUp : a === 90 ? -yUp : a === 180 ? -xUp : yUp;
-    tilt.raw = -rightUp; // lower the right side to steer right
+  function onTilt(t) {
+    tilt.raw = -t.right; // lower the right side to steer right
     if (style !== 'tilt' || !els) return;
     analog = clamp((tilt.raw - tilt.centre) / TILT_FULL);
     if (els.wheel) els.wheel.style.transform = 'rotate(' + Math.round(dead(analog) * 90) + 'deg)';
@@ -219,58 +203,43 @@
   }
 
   function stopTilt() {
-    clearTimeout(tilt.timer);
-    if (tilt.listening) window.removeEventListener('deviceorientation', onTilt);
-    tilt.listening = false;
+    tilt.on = false;
+    if (window.ArkTilt) ArkTilt.stop();
   }
 
-  function tiltUnavailable(why) {
-    stopTilt();
-    tiltNote = why + ' Using the joystick instead.';
+  function onTiltError(code, message) {
+    tilt.on = false;
+    if (code === 'ask') {
+      tiltNote = message;
+      return renderPrefs();
+    }
+    secureUrl = code === 'insecure' && api ? api.secureUrl({ 'ark.kart.controls': 'tilt', 'ark.kart.layout': layout }) : null;
+    tiltNote = message + ' Using the joystick for now.';
     setStyle('joystick', true);
   }
 
-  /** Start reading the sensor. `asked` when called from a tap (iPhones need one to ask permission). */
-  function startTilt(asked) {
-    if (tilt.listening) return;
-    const insecure = window.isSecureContext === false;
-    if (typeof window.DeviceOrientationEvent === 'undefined') {
-      return tiltUnavailable(insecure
-        ? 'Phones only let web pages use the motion sensor over a secure (https) connection, and the hub runs on plain http.'
-        : 'This phone has no motion sensor the browser can read.');
-    }
-    const listen = function () {
-      tilt.listening = true;
-      tilt.got = false;
-      window.addEventListener('deviceorientation', onTilt);
-      tilt.timer = setTimeout(function () {
-        if (tilt.got) return;
-        tiltUnavailable(insecure
-          ? 'Phones only let web pages use the motion sensor over a secure (https) connection, and the hub runs on plain http.'
-          : 'No reading from the motion sensor.');
-      }, 1500);
-    };
-    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      if (!asked) {
-        tiltNote = 'Tap 📱 Tilt again to allow the motion sensor.';
-        return renderPrefs();
+  /** Start reading the sensor. `fromTap`: called from a tap (iPhones need one to ask permission). */
+  function startTilt(fromTap) {
+    if (tilt.on) return;
+    tilt.on = true;
+    tiltReady.then(function () {
+      if (!els || style !== 'tilt') {
+        tilt.on = false;
+        return;
       }
-      DeviceOrientationEvent.requestPermission().then(function (answer) {
-        if (answer === 'granted') listen();
-        else tiltUnavailable('Motion sensor access was not allowed.');
-      }).catch(function () {
-        tiltUnavailable(insecure
-          ? 'iPhones only allow the motion sensor on secure (https) pages, and the hub runs on plain http.'
-          : 'Motion sensor access was not allowed.');
+      ArkTilt.start(onTilt, onTiltError, {
+        fromTap: fromTap,
+        extra: function () { return root && root.classList.contains('rotated') ? 90 : 0; },
       });
-      return;
-    }
-    listen();
+    });
   }
 
   function setStyle(next, keepNote) {
     if (next !== 'tilt') stopTilt();
-    if (!keepNote) tiltNote = '';
+    if (!keepNote) {
+      tiltNote = '';
+      secureUrl = null;
+    }
     style = next;
     store(STYLE_KEY, style);
     if (!els) return;
@@ -292,7 +261,9 @@
       seg(STYLES, STYLE_LABEL, style, 'data-style') +
       '<div class="title">Layout while racing</div>' +
       seg(LAYOUTS, LAYOUT_LABEL, layout, 'data-layout') +
-      (tiltNote ? '<p class="kr-note">' + Ark.escapeHtml(tiltNote) + '</p>' : '');
+      (tiltNote ? '<p class="kr-note">' + Ark.escapeHtml(tiltNote) + '</p>' : '') +
+      (secureUrl ? '<a class="btn ghost kr-secure" href="' + Ark.escapeHtml(secureUrl) + '">🔒 Switch to the secure page for tilt</a>' +
+        '<p class="kr-note muted">Your phone will warn that the page isn\'t private (the hub signs its own certificate): choose Advanced → Proceed, once. You keep your seat.</p>' : '');
   }
 
   function status(v) {

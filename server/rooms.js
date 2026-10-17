@@ -251,7 +251,13 @@ export class Room {
   recordResult(view) {
     const def = getGame(this.gameId);
     const category = def.category || 'competitive';
-    if (category !== 'casual' && this.tournament.record({ game: def.name, winner: view.winner })) this.broadcastState();
+    if (category !== 'casual' && this.tournament.record({ game: def.name, winner: view.winner })) {
+      const t = this.tournament;
+      if (t.champion !== null && this.stats) {
+        this.stats.recordTournament({ players: this.players.map((p, slot) => (p ? p.name : `Player ${slot + 1}`)), winner: t.champion, wins: t.wins.slice(), bestOf: t.bestOf });
+      }
+      this.broadcastState();
+    }
     if (!this.stats) return;
     const match = {
       game: def.id,

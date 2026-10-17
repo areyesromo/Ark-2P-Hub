@@ -50,3 +50,6 @@
 .sm-dash:active { transform: scale(0.98); }
 .sm-dash.cooling { color: rgba(255, 255, 255, 0.6); }
 .sm-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+
+/* The movement pad (joystick, D-pad or tilt) fills this: see shared/move-pad.css. */
+.sm-phone .sm-stick { flex: 1; min-height: 0; display: flex; border: 0; background: none; border-radius: 0; overflow: visible; }

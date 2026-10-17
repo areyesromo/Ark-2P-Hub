@@ -18,6 +18,8 @@ services:
       # set it if the TV uses http://localhost (Pi kiosk) or you run behind a proxy.
       # PUBLIC_URL: "http://192.168.1.50:3000"
       PORT: "3000"
+      # The same port also answers https:// (self-signed), for phones that use tilt controls.
+      # HTTPS: "off"
       # Optional: set the admin password here instead of creating one at /admin/.
       # ADMIN_PASSWORD: "change-me"
     volumes:

@@ -28,10 +28,10 @@ one you just played).
 | **Pong** | The classic, in real time. Drag on your phone's touch strip (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
 | **Light Cycles** | Tron-style. Your cycle leaves a wall behind it: make your rival crash into it. Tap a side of the phone pad or swipe to turn. Cycles speed up as the round goes on. First to 3. |
 | **Snake Battle** | Two snakes, one arena. Eat the glowing food to grow; hit a wall, yourself or your rival and you lose the round. After 60 seconds the longer snake wins. Same controls as Light Cycles. First to 3. |
-| **Tank Duel** | Top-down tank battle with cover. Drive with the joystick, fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
-| **Sumo** | Two discs on a round clay ring: steer with a joystick (with momentum), and press **DASH** to ram (1.5 s cooldown; a dashing hit knocks harder). Leave the ring and you lose the round; after 15 s the ring starts shrinking, so every round ends. First to 3. |
+| **Tank Duel** | Top-down tank battle with cover. Drive with the joystick (or pick ✛ D-pad or 📱 Tilt on your phone), fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
+| **Sumo** | Two discs on a round clay ring: steer with a joystick, ✛ D-pad or 📱 Tilt, picked on your phone (with momentum), and press **DASH** to ram (1.5 s cooldown; a dashing hit knocks harder). Leave the ring and you lose the round; after 15 s the ring starts shrinking, so every round ends. First to 3. |
 | **Bomb Duel** | Bomberman-style, on a 15×11 arena of stone pillars and wooden crates. Walk with the D-pad on your phone (or a controller) and drop bombs with the big button: they go off after 2.5 s in a cross, smash the first crate each way and set off other bombs. Crates can hide power-ups: 💣 an extra bomb, 🔥 a longer blast, 👟 more speed. Caught in a blast, you lose the round (a trade is a draw); after 90 s the walls close in from the edges. Pick the round wins needed (2, 3 or 5) and how many crates before you start. |
-| **Kart Race** | Top-down racing on the TV. Your kart accelerates on its own: steer from your phone and BRAKE for the tight bends. Each phone picks its own controller on the setup screen: 🔘 **Buttons** (hold ◀ ▶), 🕹️ **Joystick** (steer as far as you push; pull down to brake), 👆 **Slide** (put a finger down anywhere and slide) or 📱 **Tilt** (turn the phone like a wheel; tap to re-centre. Phones only let a web page use the motion sensor on a secure https page, and the hub runs on plain http, so tilt works on some phones only. Where it can't, the phone says so and switches to the joystick). Pick a layout too: 🔄 Auto (follows how you hold the phone), ↔ Landscape (sideways even with rotation locked) or ↕ Portrait. Grass slows you right down, yellow boost pads shoot you forward, and you can bump your rival. Rainbow ? boxes give you an item to use with the ITEM button: a 🍌 banana to drop behind you (whoever hits it spins out), a ⚡ turbo, or a 🛡️ shield against bananas (the kart behind gets more turbos). Six tracks (Speedway, Kidney, Serpent, Grand Prix, Hairpins, Zigzag); no cutting across the grass: rejoin the road further on and you're put back where you left it. First across the line after the last lap wins. |
+| **Kart Race** | Top-down racing on the TV. Your kart accelerates on its own: steer from your phone and BRAKE for the tight bends. Each phone picks its own controller on the setup screen: 🔘 **Buttons** (hold ◀ ▶), 🕹️ **Joystick** (steer as far as you push; pull down to brake), 👆 **Slide** (put a finger down anywhere and slide) or 📱 **Tilt** (turn the phone like a wheel; tap to re-centre. Phones only let a web page use the motion sensor on a secure https page: on plain http the phone switches to the joystick and offers **🔒 Switch to the secure page**, see [Secure page (https)](#secure-page-https)). Pick a layout too: 🔄 Auto (follows how you hold the phone), ↔ Landscape (sideways even with rotation locked) or ↕ Portrait. Grass slows you right down, yellow boost pads shoot you forward, and you can bump your rival. Rainbow ? boxes give you an item to use with the ITEM button: a 🍌 banana to drop behind you (whoever hits it spins out), a ⚡ turbo, or a 🛡️ shield against bananas (the kart behind gets more turbos). Six tracks (Speedway, Kidney, Serpent, Grand Prix, Hairpins, Zigzag); no cutting across the grass: rejoin the road further on and you're put back where you left it. First across the line after the last lap wins. |
 | **Quiz Battle** | 10 trivia questions from a bank of 250 (science, geography, history, movies, music, sports, games, food, nature and tech; play them mixed or pick one topic). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
 | **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. 150 shapes (basic shapes, pictures like a rocket or a cat, letters and numbers), never repeated until you've seen them all. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
 | **Battleship** | Hide your 5 ships on your phone (tap a ship, tap where it goes, tap it again to turn it, or shuffle), then take turns firing at the enemy grid. The TV shows both oceans with every hit and miss; ships stay hidden until sunk. 30 s per shot. Sink the whole fleet to win. |
@@ -142,10 +142,25 @@ tournament. The score sits in the TV's top bar during games and on the phones
 at the end of each match. **↺ Start over** clears it. After a win, the next
 game starts a new series. A new player taking a seat also starts a new series.
 On a controller, **X** in the lobby cycles the length.
+Won tournaments are saved: the leaderboard (`/stats/`) counts each player's
+🏆 titles and lists recent tournaments. The lobby shows the two players'
+tournament record next to their head to head.
+
+## Secure page (https)
+
+The hub answers both `http://` and `https://` on the same port (3000).
+Phones need the https page for the motion sensor (📱 Tilt in Kart Race, Tank
+Duel and Sumo). When a phone picks Tilt on the http page, it offers
+**🔒 Switch to the secure page**: the same room and the same seat, over https.
+The hub signs its own certificate (made once and kept in the data folder), so
+each phone warns the first time. Choose **Advanced → Proceed** (Android) or
+**Show details → visit this website** (iPhone). To make every phone start on
+https, set the join address in Settings (`/admin/`) to
+`https://<your-server>:3000`. Set `HTTPS=off` to serve plain http only.
 
 ## Leaderboard and match history
 
-Every finished match is saved (in `stats.json` in the data folder, so it
+Every finished match (and every tournament won) is saved (in `stats.json` in the data folder, so it
 survives updates). The lobby on the TV and phones shows the record between the
 two players seated, e.g. **🏆 Abe 14 – 9 Sam · last: Pong, Abe won 5–3**, plus
 stars earned together in casual games. The 🏆 button on the TV (and the link in
@@ -323,8 +338,8 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 - Reaction times are measured on the server, so they include Wi-Fi latency
   (usually a few ms on a LAN). It's the same for both players.
 - Phone screen wake-lock and vibration work where the browser allows it;
-  iOS needs HTTPS for wake-lock, so put a reverse proxy (e.g. Caddy) in front
-  if you want that.
+  iOS needs HTTPS for wake-lock, which the hub's secure page provides (see
+  [Secure page (https)](#secure-page-https)).
 
 ## Roadmap ideas
 
