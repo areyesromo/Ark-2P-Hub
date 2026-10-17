@@ -1,8 +1,8 @@
 (function () {
   Ark.loadCss('/games/kart-race/style.css');
-  const TRACK_NAMES = ['Speedway', 'Kidney', 'Serpent'];
+  let trackNames = []; // from the server's views
   const ROWS = [
-    { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : TRACK_NAMES[n - 1]; } },
+    { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
     { key: 'laps', title: 'Laps', fmt: function (n) { return n + ' laps'; } },
     { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : 'Best of ' + n; } },
   ];
@@ -59,14 +59,15 @@
     if (v.phase === 'finish' && v.result) {
       return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>';
     }
-    return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
+    return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
   }
 
   function render(v) {
     view = v;
+    trackNames = v.trackNames || trackNames;
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting], v.result]);
+    const key = JSON.stringify([v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut], v.result]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';

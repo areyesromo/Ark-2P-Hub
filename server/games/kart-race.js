@@ -2,7 +2,8 @@
 // controller's stick), the karts accelerate on their own, brake for the tight
 // bends. Grass slows you right down, boost pads speed you up, and the karts
 // bump off each other. First across the line after the last lap wins the
-// race. Players pick the track, laps and one race or best of 3.
+// race. Six tracks; players pick the track (or a mix), laps and one race or
+// best of 3.
 //
 // A track is a closed loop of control points (a smooth curve through them)
 // with a fixed width, on a 32 x 18 field (16:9 like the TV). The server runs
@@ -16,6 +17,7 @@ export const KART = { r: 0.42, accel: 7, maxSpeed: 8.5, grassSpeed: 3, brake: 16
 export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
 export const TIMING = { countdownMs: 3500, finishMs: 3500 };
 export const SAMPLES = 240; // points on each track's centre line
+export const CUT_JUMP = 0.05; // progress (fraction of a lap) gained in one tick that can only be a shortcut
 
 /**
  * The tracks: control points (clockwise on screen), boost pads as
@@ -37,10 +39,28 @@ export const TRACKS = [
     points: [[4, 5], [9, 3], [14, 5], [18, 3], [24, 3], [28, 6], [27, 12], [22, 15], [17, 13], [12, 15], [6, 14], [3, 10]],
     boosts: [[0.33, 0], [0.83, 0]],
   },
+  {
+    name: 'Grand Prix',
+    // A long back straight, a chicane on the right and a wiggle along the bottom.
+    points: [[3.5, 4], [10, 3], [17, 4.5], [22, 3], [28, 4], [28.5, 9], [25, 10.2], [28, 14.5], [20, 15], [14, 13], [8, 15], [3.5, 13], [4.5, 8.5]],
+    boosts: [[0.12, 0], [0.62, 0]],
+  },
+  {
+    name: 'Hairpins',
+    // Four long straights joined by tight hairpins: brake hard!
+    points: [[4, 3], [26, 3], [28.5, 5.2], [26, 7.3], [13, 7.3], [11.2, 9.4], [13, 11.5], [26, 11.5], [28.5, 13.6], [26, 15.7], [4, 15.7], [2.6, 9.4]],
+    boosts: [[0.08, 0], [0.45, 0], [0.82, 0]],
+  },
+  {
+    name: 'Zigzag',
+    // Saw teeth along the top, a dip along the bottom.
+    points: [[3.5, 3.5], [9, 3], [12, 8.6], [15, 3.5], [19, 3.5], [22, 8.6], [25, 3.5], [28.5, 4], [28.5, 14.5], [22, 15], [16, 12.6], [10, 15], [3.5, 14.5]],
+    boosts: [[0.6, 0], [0.92, 0]],
+  },
 ];
 
 export const OPTIONS = {
-  track: [0, 1, 2, 3], // 0: a different track each race
+  track: [0, 1, 2, 3, 4, 5, 6], // 0: a different track each race
   laps: [5, 3, 8],
   races: [1, 3], // one race, or best of 3
 };
@@ -139,7 +159,7 @@ export class KartRace {
     this.scores = [0, 0];
     this.race = 0;
     this.winner = null;
-    this.events = { bumps: 0, boosts: 0, laps: 0 };
+    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0 };
     this.lastTrack = -1;
     this.newRace();
     this.loop();
@@ -175,6 +195,7 @@ export class KartRace {
         halfway: false,
         boostUntil: 0,
         offTrack: false,
+        cutAt: -Infinity,
         finishedAt: null,
       };
     });
@@ -285,10 +306,28 @@ export class KartRace {
     this.events.bumps++;
   }
 
-  /** Count laps: crossing the line forwards after the halfway point is a lap; backwards takes it away. */
+  /**
+   * Count laps: crossing the line forwards after the halfway point is a lap;
+   * backwards takes it away. And no shortcuts: progress along the lap only
+   * creeps forward a little each tick, so rejoining the road much further on
+   * means the kart cut across the grass. It goes back to where it left the
+   * road, stopped.
+   */
   lapCheck(k, slot, now) {
-    const p = locate(this.track, k.x, k.y).s;
+    const where = locate(this.track, k.x, k.y);
+    const p = where.s;
     const was = k.progress;
+    const jump = ((p - was + 1.5) % 1) - 0.5; // forwards, across the line or not
+    if (jump > CUT_JUMP) {
+      // Out on the grass the nearest bit of road can be a later stretch: hold
+      // the progress until the kart is back on the tarmac, and only if it
+      // rejoins further on is it a shortcut.
+      if (where.d > TRACK_WIDTH / 2) return;
+      const back = pointAt(this.track, was);
+      Object.assign(k, { x: back.x, y: back.y, angle: back.angle, speed: 0, cutAt: now });
+      this.events.cuts++;
+      return;
+    }
     k.progress = p;
     if (p > 0.4 && p < 0.6) k.halfway = true;
     if (k.finishedAt !== null) return;
@@ -366,6 +405,7 @@ export class KartRace {
       options: OPTIONS,
       field: FIELD,
       trackWidth: TRACK_WIDTH,
+      trackNames: TRACKS.map((t) => t.name),
       kartR: KART.r,
       race: this.race,
       races: this.settings.races,
@@ -384,6 +424,7 @@ export class KartRace {
             laps: k.laps,
             boosting: now < k.boostUntil,
             offTrack: k.offTrack,
+            cut: now - k.cutAt < 1500, // "Shortcut!" for a moment
             finished: k.finishedAt !== null,
           }))
         : null,

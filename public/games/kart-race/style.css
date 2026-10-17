@@ -9,6 +9,7 @@
 .kr-side.p1 .pos { color: var(--p1); }
 .kr-side.p2 .pos { color: var(--p2); }
 .kr-side .lap { color: var(--muted); font-weight: 700; }
+.kr-side .lap .cut { color: #fca5a5; }
 .kr-mid { text-align: center; }
 .kr-mid .track { color: var(--muted); font-weight: 700; }
 .kr-mid .clock { font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; }
