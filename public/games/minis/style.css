@@ -106,3 +106,47 @@
 .mi-hand { font-size: 6rem; }
 .mi-donttouch { touch-action: none; }
 .mi-donttouch .msg { font-size: 1.6rem; font-weight: 900; }
+/* balloon */
+.mi-balloon { line-height: 1; transition: font-size 0.08s; }
+.mi-count { font-size: 1.4rem; font-weight: 800; color: var(--muted); }
+.mi-side .slot { flex-direction: column; }
+/* hot-potato */
+.mi-potato { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; position: relative; }
+.mi-potato .bomb { position: absolute; top: 50%; left: 25%; transform: translate(-50%, -50%); font-size: 7rem; transition: left 0.6s ease-in-out; animation: mi-shake 0.2s infinite alternate; z-index: 1; }
+.mi-potato[data-at="p2"] .bomb { left: 75%; }
+.mi-potato.flying .bomb { animation: none; }
+.mi-pass { background: var(--bad); color: #fff; }
+.mi-hot .msg { color: var(--bad); }
+.mi-phone-stage .msg { font-size: 1.5rem; font-weight: 900; }
+/* quick-draw */
+.mi-draw { flex: 1; display: grid; grid-template-columns: 1fr 1.4fr 1fr; align-items: center; text-align: center; border-radius: 18px; transition: background 0.1s; }
+.mi-draw .cowboy { font-size: 7rem; line-height: 1.1; }
+.mi-draw .cowboy div { font-size: 1.6rem; font-weight: 800; }
+.mi-draw .cowboy.p2 { transform: scaleX(-1); }
+.mi-draw .cowboy.p2 div { transform: scaleX(-1); }
+.mi-draw.bang, .mi-draw-phone.bang { background: rgba(250, 204, 21, 0.25); }
+.mi-bang { font-size: 6rem; font-weight: 900; color: var(--warn); animation: mi-pop 0.2s ease-out; }
+.mi-wait { font-size: 2.2rem; font-weight: 900; }
+.mi-duels { font-size: 1.6rem; color: var(--muted); font-weight: 800; }
+.mi-draw-phone .mi-bang { font-size: 3.4rem; }
+.mi-draw-phone .mi-wait { font-size: 1.5rem; }
+.mi-fire { background: var(--warn); color: #111; }
+/* memory-path */
+.mi-memory { flex: 1; display: grid; grid-template-columns: 1fr 1.3fr 1fr; gap: 1.2rem; align-items: stretch; }
+.mi-memory .mid { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; }
+.mi-memory .len { color: var(--muted); font-weight: 800; }
+.mi-memory .prog { font-size: 1.8rem; font-weight: 900; }
+.mi-tiles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.5rem; width: min(100%, 300px); }
+.mi-tiles .tile { aspect-ratio: 1; border-radius: 12px; background: #1e293b; border: 3px solid var(--line); padding: 0; }
+.mi-tiles .tile.lit { background: var(--warn); box-shadow: 0 0 1.2rem var(--warn); }
+.mi-tiles .tile.cur { border-color: var(--me); }
+.mi-side .mi-tiles { width: min(80%, 180px); }
+.mi-memory-phone .mi-tiles { width: min(90vw, 340px); }
+.mi-memory-phone .prog { font-size: 1.4rem; font-weight: 900; }
+/* sweet-spot */
+.mi-wheel { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+.mi-wheel .num { width: 2.2em; height: 2.2em; display: flex; align-items: center; justify-content: center; font-size: 4rem; font-weight: 900; border-radius: 50%; background: #1e293b; border: 4px solid var(--line); }
+.mi-wheel .num.spinning { border-color: var(--warn); }
+.mi-wheel .spins { display: flex; gap: 0.8rem; font-size: 1.6rem; font-weight: 800; }
+.mi-wheel .spins b { color: var(--warn); }
+.mi-phone .mi-wheel .num { font-size: 3.2rem; }
