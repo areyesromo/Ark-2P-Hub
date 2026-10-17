@@ -121,6 +121,60 @@
     return parts.join(' · ');
   }
 
+  /**
+   * The tournament (best of N games, see server/tournament.js) from the room
+   * state. opts.controls adds the length buttons and "start over"
+   * (data-tourney="0|3|5|7|reset"); opts.compact is the one-line version for
+   * the TV during a game. Empty when it's off and there are no controls.
+   */
+  function tournamentHtml(players, t, opts) {
+    opts = opts || {};
+    if (!t || (!t.bestOf && !opts.controls)) return '';
+    const name = function (slot) {
+      return '<span class="p' + (slot + 1) + '-text">' + escapeHtml(players[slot] ? players[slot].name : 'Player ' + (slot + 1)) + '</span>';
+    };
+    const pips = function (slot) {
+      let html = '';
+      for (let i = 0; i < t.target; i++) html += '<i class="pip' + (i < t.wins[slot] ? ' p' + (slot + 1) : '') + '"></i>';
+      return '<span class="pips">' + html + '</span>';
+    };
+    const score = t.bestOf
+      ? '<div class="t-score">' + name(0) + ' ' + pips(0) + ' <strong>' + t.wins[0] + ' – ' + t.wins[1] + '</strong> ' + pips(1) + ' ' + name(1) + '</div>'
+      : '';
+    const champ = t.champion === 0 || t.champion === 1
+      ? '<div class="t-champ">🏆 ' + name(t.champion) + ' wins the tournament ' + t.wins[t.champion] + '–' + t.wins[1 - t.champion] + '!</div>'
+      : '';
+    const head = '<div class="t-head">🏆 Tournament' + (t.bestOf
+      ? ' <span class="muted">best of ' + t.bestOf + ' games · first to ' + t.target + (champ ? ' · the next game starts a new one' : '') + '</span>'
+      : ' <span class="muted">· a series across games, off for now</span>') + '</div>';
+    if (opts.compact) return '<div class="ark-tourney compact">' + (champ || score) + '</div>';
+    let html = head;
+    if (opts.controls) {
+      html += '<div class="t-lengths">' + (t.lengths || [0, 3, 5, 7]).map(function (n) {
+        return '<button class="ghost' + (n === t.bestOf ? ' on' : '') + '" data-tourney="' + n + '">' + (n ? 'Best of ' + n : 'Off') + '</button>';
+      }).join('') + '</div>';
+    }
+    html += champ + score;
+    if (t.games && t.games.length) {
+      html += '<div class="t-games">' + t.games.map(function (g) {
+        return '<span class="chip' + (g.winner === null ? '' : ' p' + (g.winner + 1)) + '">' + escapeHtml(g.game) + ' · ' +
+          (g.winner === null ? 'draw' : escapeHtml(players[g.winner] ? players[g.winner].name : 'P' + (g.winner + 1))) + '</span>';
+      }).join('') + '</div>';
+      if (opts.controls) html += '<button class="ghost t-reset" data-tourney="reset">↺ Start over</button>';
+    }
+    return '<div class="ark-tourney' + (t.bestOf ? ' on' : '') + '">' + html + '</div>';
+  }
+
+  /** Clicks on tournament controls (see tournamentHtml) -> the lobby:tournament event. */
+  function bindTournament(el, socket) {
+    el.addEventListener('click', function (e) {
+      const btn = e.target.closest('[data-tourney]');
+      if (!btn) return;
+      const v = btn.getAttribute('data-tourney');
+      socket.emit('lobby:tournament', v === 'reset' ? { reset: true } : { bestOf: Number(v) });
+    });
+  }
+
   // ---- setup screens (match settings picked before a game starts) ----
   // A game's views carry `settings` ({ key: value }) and `options`
   // ({ key: [values] }, see server/games/options.js). rows describes how to
@@ -231,6 +285,8 @@
   window.Ark = {
     watchVersion: watchVersion,
     h2hHtml: h2hHtml,
+    tournamentHtml: tournamentHtml,
+    bindTournament: bindTournament,
     escapeHtml: escapeHtml,
     register: register,
     loadRenderer: loadRenderer,

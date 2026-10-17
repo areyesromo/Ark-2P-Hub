@@ -107,6 +107,7 @@
     const h2h = Ark.h2hHtml(state.players, state.h2h);
     $('h2h').innerHTML = h2h;
     $('h2h').classList.toggle('hidden', !h2h);
+    $('tourney').innerHTML = Ark.tournamentHtml(state.players, state.tournament, { controls: true });
 
     const padFocus = Object.keys(padSeats).length > 0;
     const cards = lobbyCards();
@@ -136,6 +137,15 @@
   });
 
   $('to-lobby').addEventListener('click', function () { socket.emit('lobby:return'); });
+  Ark.bindTournament($('tourney'), socket);
+
+  /** During a game the tournament score sits in the middle of the top bar. */
+  function renderTourneyBar() {
+    const t = state && state.tournament;
+    const show = Boolean(state && state.phase === 'playing' && t && t.bestOf);
+    $('tourney-bar').classList.toggle('hidden', !show);
+    $('tourney-bar').innerHTML = show ? Ark.tournamentHtml(state.players, t, { compact: true }) : '';
+  }
 
   $('fullscreen').addEventListener('click', function () {
     const root = document.documentElement;
@@ -266,6 +276,7 @@
       renderLobby();
     }
     renderPadFooter();
+    renderTourneyBar();
     updateMusic();
     showHubSetup(Ark.setup.isHub(lastView) ? lastView : null);
   });
@@ -368,7 +379,7 @@
     let text;
     if (padMessage) text = padMessage;
     else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
-    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · D-pad + A pick a game';
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · X tournament · D-pad + A pick a game';
     $('pad-hint').textContent = text;
   }
 
@@ -481,6 +492,14 @@
     const cards = lobbyCards();
     const n = cards.length;
     if (btn === 'Y') return renamePad(idx, seat);
+    if (btn === 'X') {
+      // Cycle the tournament: off, best of 3, 5, 7.
+      const t = state.tournament;
+      const lengths = (t && t.lengths) || [0, 3, 5, 7];
+      const next = lengths[(lengths.indexOf(t ? t.bestOf : 0) + 1) % lengths.length];
+      socket.emit('lobby:tournament', { bestOf: next });
+      return flashPad('🏆 Tournament: ' + (next ? 'best of ' + next + ' games' : 'off') + ' · X to change');
+    }
     if (btn === 'B') {
       socket.emit('pad:leave', { slot: seat.slot });
       delete padSeats[idx];

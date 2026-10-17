@@ -11,6 +11,7 @@ const reply = (ack, payload) => {
  *   player:leave
  *   lobby:start   { gameId | 'random' }     -> ack { ok, gameId } | { error }
  *   lobby:return
+ *   lobby:tournament { bestOf } | { reset: true } -> ack { ok, tournament } | { error }
  *   game:input    { type, ... }              (players only, game-specific)
  *
  * Controllers plugged into the TV (host only):
@@ -145,6 +146,11 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
     socket.on('lobby:return', (_data, ack) => {
       if (room && room.game) room.stopGame();
       reply(ack, { ok: true });
+    });
+
+    socket.on('lobby:tournament', (data, ack) => {
+      if (!room) return reply(ack, { error: 'Not in a room.' });
+      reply(ack, room.setTournament(asObject(data)));
     });
 
     socket.on('game:input', (data) => {

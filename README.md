@@ -31,7 +31,7 @@ one you just played).
 | **Tank Duel** | Top-down tank battle with cover. Drive with the joystick, fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
 | **Sumo** | Two discs on a round clay ring: steer with a joystick (with momentum), and press **DASH** to ram (1.5 s cooldown; a dashing hit knocks harder). Leave the ring and you lose the round; after 15 s the ring starts shrinking, so every round ends. First to 3. |
 | **Bomb Duel** | Bomberman-style, on a 15×11 arena of stone pillars and wooden crates. Walk with the D-pad on your phone (or a controller) and drop bombs with the big button: they go off after 2.5 s in a cross, smash the first crate each way and set off other bombs. Crates can hide power-ups: 💣 an extra bomb, 🔥 a longer blast, 👟 more speed. Caught in a blast, you lose the round (a trade is a draw); after 90 s the walls close in from the edges. Pick the round wins needed (2, 3 or 5) and how many crates before you start. |
-| **Kart Race** | Top-down racing on the TV. Your kart accelerates on its own: hold ◀ ▶ on your phone to steer and BRAKE for the tight bends (turn your phone sideways for a gamepad-style layout, or pick 🔄 Auto / ↔ Landscape / ↕ Portrait on the controller). Grass slows you right down, yellow boost pads shoot you forward, and you can bump your rival. Rainbow ? boxes give you an item to use with the ITEM button: a 🍌 banana to drop behind you (whoever hits it spins out), a ⚡ turbo, or a 🛡️ shield against bananas (the kart behind gets more turbos). Six tracks (Speedway, Kidney, Serpent, Grand Prix, Hairpins, Zigzag); no cutting across the grass: rejoin the road further on and you're put back where you left it. First across the line after the last lap wins. |
+| **Kart Race** | Top-down racing on the TV. Your kart accelerates on its own: steer from your phone and BRAKE for the tight bends. Each phone picks its own controller on the setup screen: 🔘 **Buttons** (hold ◀ ▶), 🕹️ **Joystick** (steer as far as you push; pull down to brake), 👆 **Slide** (put a finger down anywhere and slide) or 📱 **Tilt** (turn the phone like a wheel; tap to re-centre. Phones only let a web page use the motion sensor on a secure https page, and the hub runs on plain http, so tilt works on some phones only. Where it can't, the phone says so and switches to the joystick). Pick a layout too: 🔄 Auto (follows how you hold the phone), ↔ Landscape (sideways even with rotation locked) or ↕ Portrait. Grass slows you right down, yellow boost pads shoot you forward, and you can bump your rival. Rainbow ? boxes give you an item to use with the ITEM button: a 🍌 banana to drop behind you (whoever hits it spins out), a ⚡ turbo, or a 🛡️ shield against bananas (the kart behind gets more turbos). Six tracks (Speedway, Kidney, Serpent, Grand Prix, Hairpins, Zigzag); no cutting across the grass: rejoin the road further on and you're put back where you left it. First across the line after the last lap wins. |
 | **Quiz Battle** | 10 trivia questions from a bank of 250 (science, geography, history, movies, music, sports, games, food, nature and tech; play them mixed or pick one topic). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
 | **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. 150 shapes (basic shapes, pictures like a rocket or a cat, letters and numbers), never repeated until you've seen them all. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
 | **Battleship** | Hide your 5 ships on your phone (tap a ship, tap where it goes, tap it again to turn it, or shuffle), then take turns firing at the enemy grid. The TV shows both oceans with every hit and miss; ships stay hidden until sunk. 30 s per shot. Sink the whole fleet to win. |
@@ -84,6 +84,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Lobby | **A** / **Start** | Join (takes a free seat as "Controller 1/2") |
 | Lobby | **D-pad**, then **A** | Pick a game and start it (the first card, 🎲 Random, lets the hub choose) |
 | Lobby | **Y** | Change your name: cycles through names on the leaderboard, so your wins count for you |
+| Lobby | **X** | Tournament: off, best of 3, 5 or 7 games |
 | Lobby | **B** | Leave your seat |
 | Any game | **Back / Select** | Back to the lobby |
 | Reaction Duel | any face button, bumper or trigger | Tap |
@@ -130,6 +131,17 @@ made up fresh every 8 bars, so it doesn't loop the same tune. The 🎵 button
 turns music on and off separately from the sound effects (remembered on that
 TV). A new game picks its mood with `music: 'action' | 'thinking' |
 'casual'` (by default competitive games get action, casual games casual).
+
+## Tournament
+
+Play a series across games: in the lobby (TV or either phone) pick
+**Best of 3**, **5** or **7**, or **Off** (the default). Every competitive match
+you finish counts (rematches too). A draw scores nothing, and casual games
+don't count. The first to win most of the games, e.g. 3 of 5, takes the
+tournament. The score sits in the TV's top bar during games and on the phones
+at the end of each match. **↺ Start over** clears it. After a win, the next
+game starts a new series. A new player taking a seat also starts a new series.
+On a controller, **X** in the lobby cycles the length.
 
 ## Leaderboard and match history
 
