@@ -7,7 +7,7 @@
 // so they're pushed at most every DRAW_PUSH_MS while people draw.
 
 import { SHAPES, accuracy, fitted } from './draw-shapes.js';
-import { settingOf } from './options.js';
+import { settingOf, usedIn } from './options.js';
 
 export const ROUNDS = 5;
 export const TIMING = { countdownMs: 3000, showMs: 4000, drawMs: 20000, revealMs: 6000 };
@@ -22,7 +22,7 @@ export class DrawDuel {
     this.roundCount = settingOf(ctx, 'rounds', ROUNDS);
     this.rng = rng;
     this.shapes = shapes;
-    this.used = new Set(); // shown in earlier matches with this pair
+    this.used = usedIn(ctx, 'shapes'); // shown in earlier matches in this room
     this.timer = null;
     this.pushTimer = null;
   }

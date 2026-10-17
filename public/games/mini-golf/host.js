@@ -45,7 +45,7 @@
       html = '<div class="panel"><div class="big-title">⛳ Mini Golf</div>' +
         Ark.setup.html(v, ArkGolf.ROWS, Ark.setup.focus(v, ArkGolf.ROWS, pads)) +
         '<div class="sub">Pick on your phone, or with a controller (←→). <strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.<br>' +
-        'Holes are drawn at random from the 9-hole course.</div></div>';
+        'Holes are drawn at random from the 15-hole course.</div></div>';
     } else if (v.phase === 'intro') {
       html = '<div class="panel small"><div class="big">' + (v.countdown || '') + '</div><div class="sub">Hole ' + v.holeNo + ': <strong>' + esc(v.hole.name) + '</strong> · Par ' + v.hole.par +
         '<br>Pull back on your phone and let go to putt. Water costs a stroke.</div></div>';

@@ -31,18 +31,18 @@ one you just played).
 | **Tank Duel** | Top-down tank battle with cover. Drive with the joystick, fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
 | **Sumo** | Two discs on a round clay ring: steer with a joystick (with momentum), and press **DASH** to ram (1.5 s cooldown; a dashing hit knocks harder). Leave the ring and you lose the round; after 15 s the ring starts shrinking, so every round ends. First to 3. |
 | **Bomb Duel** | Bomberman-style, on a 15×11 arena of stone pillars and wooden crates. Walk with the D-pad on your phone (or a controller) and drop bombs with the big button: they go off after 2.5 s in a cross, smash the first crate each way and set off other bombs. Crates can hide power-ups: 💣 an extra bomb, 🔥 a longer blast, 👟 more speed. Caught in a blast, you lose the round (a trade is a draw); after 90 s the walls close in from the edges. Pick the round wins needed (2, 3 or 5) and how many crates before you start. |
-| **Quiz Battle** | 10 trivia questions (science, geography, movies, music, sports, games and more). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
-| **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. 125 shapes (basic shapes, pictures like a rocket or a cat, letters and numbers), never repeated until you've seen them all. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
+| **Quiz Battle** | 10 trivia questions from a bank of 250 (science, geography, history, movies, music, sports, games, food, nature and tech; play them mixed or pick one topic). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
+| **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. 150 shapes (basic shapes, pictures like a rocket or a cat, letters and numbers), never repeated until you've seen them all. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
 | **Battleship** | Hide your 5 ships on your phone (tap a ship, tap where it goes, tap it again to turn it, or shuffle), then take turns firing at the enemy grid. The TV shows both oceans with every hit and miss; ships stay hidden until sunk. 30 s per shot. Sink the whole fleet to win. |
 | **Word Race** | Boggle for two: the same letter grid on both phones and the TV. Swipe across touching letters (sideways, up/down or diagonally) to spell words of 3+ letters, checked against a ~275k-word dictionary; longer words score more (3–4 letters 1, 5 → 2, 6 → 3, 7 → 5, 8+ → 11). When the time's up, words you **both** found cancel out, so hunt for the rare ones. Before the match, either player picks the grid (4×4, 5×5 or 6×6), the time per round (1, 1½, 2 or 3 min) and the length (one round, best of 3 or best of 5); the hub remembers your choice, and at the end you can rematch or change them. |
-| **Mini Golf** | Both of you play the same hole at once (the balls roll through each other). Pull back anywhere on your phone and let go to putt: the further you pull, the harder the shot; the phone shows the hole too. 9 holes with walls, bumpers, sand, water (a stroke penalty, back where you shot from) and a windmill. 8 shots per hole, then you pick up and score 9; 90 s per hole. Pick 3, 6 or 9 holes before you start. Fewest strokes wins. |
+| **Mini Golf** | Both of you play the same hole at once (the balls roll through each other). Pull back anywhere on your phone and let go to putt: the further you pull, the harder the shot; the phone shows the hole too. 15 holes with walls, bumpers, sand, water (a stroke penalty, back where you shot from), a moat and a windmill. 8 shots per hole, then you pick up and score 9; 90 s per hole. Pick 3, 6, 9, 12 or 15 holes before you start. Fewest strokes wins. |
 | **Connect Four** | The classic: drop discs into a 7×6 grid and line up four (across, down or diagonally) before your rival. Tap a column on your phone, which shows the board too. 20 s per move (a random column if you run out); who starts swaps every round. First to 3 rounds. |
 
 ### 🎨 Casual
 
 | Game | How it plays |
 | --- | --- |
-| **Sketch & Guess** | One of you picks a secret word (easy, medium or hard, from 260) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a "so close!"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw. |
+| **Sketch & Guess** | One of you picks a secret word (easy, medium or hard, from 400) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a "so close!"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw. |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
 **Every game opens on a setup screen** where either player picks the match
@@ -56,12 +56,12 @@ starts). The numbers above are the defaults; you can change, for example:
 | Air Hockey | Goals to win: 5, 7 or 10 |
 | Light Cycles, Snake Battle, Tank Duel, Sumo, Bomb Duel | Round wins needed: 2, 3 or 5 |
 | Connect Four | One round, or first to 3 or 5 |
-| Quiz Battle | 5, 10, 15 or 20 questions |
+| Quiz Battle | 5, 10, 15 or 20 questions, and the topic (mixed or one category) |
 | Draw Duel | 3, 5, 7 or 10 rounds |
 | Battleship | 15, 30 or 60 s per shot |
 | Sketch & Guess | 4, 6, 8 or 10 rounds |
 | Word Race | Grid size, time per round and match length |
-| Mini Golf | 3, 6 or 9 holes |
+| Mini Golf | 3, 6, 9, 12 or 15 holes |
 | Bomb Duel | Also how many crates |
 
 The room remembers your choice for next time. At the end of a match,
@@ -310,5 +310,6 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 **More content**
 
-- More quiz packs, drawing shapes and Sketch & Guess words
-- More Mini Golf holes
+- Even more quiz questions, shapes, words and holes: they're plain lists in
+  `server/games/quiz-questions.js`, `shape-library.js`, `sketch-words.js` and
+  `mini-golf.js` (COURSE), so adding your own is easy
