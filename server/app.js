@@ -1,5 +1,7 @@
 import fs from 'node:fs';
 import http from 'node:http';
+import net from 'node:net';
+import tls from 'node:tls';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import express from 'express';
@@ -7,7 +9,8 @@ import QRCode from 'qrcode';
 import { Server } from 'socket.io';
 import { RoomManager } from './rooms.js';
 import { registerSocketHandlers } from './sockets.js';
-import { resolveJoin } from './network.js';
+import { resolveJoin, detectLanAddress } from './network.js';
+import { loadOrCreateCert } from './tls.js';
 import { Settings } from './settings.js';
 import { adminRouter } from './admin.js';
 import { Stats } from './stats.js';
@@ -25,9 +28,11 @@ export function createApp({
   publicUrl = process.env.PUBLIC_URL,
   dataDir = process.env.DATA_DIR || path.join(ROOT_DIR, 'data'),
   adminPassword = process.env.ADMIN_PASSWORD,
+  https = process.env.HTTPS !== 'off',
 } = {}) {
   const app = express();
   const httpServer = http.createServer(app);
+  const listener = https ? dualProtocol(httpServer, loadOrCreateCert(dataDir, certNames(publicUrl))) : httpServer;
   const io = new Server(httpServer, {
     // Phones on flaky Wi-Fi: keep the default reconnection, but notice dead sockets quickly.
     pingInterval: 10000,
@@ -83,12 +88,58 @@ export function createApp({
     httpServer,
     io,
     rooms,
-    listen: () => new Promise((resolve) => httpServer.listen(port, () => resolve(httpServer.address()))),
+    https,
+    listen: () => new Promise((resolve) => listener.listen(port, () => resolve(listener.address()))),
     close: () =>
       new Promise((resolve) => {
         clearInterval(sweeper);
         for (const room of rooms.rooms.values()) room.dispose();
+        if (listener !== httpServer) listener.close();
         io.close(() => resolve());
       }),
   };
+}
+
+/** Names for the https certificate: this machine and the join address, if set. */
+function certNames(publicUrl) {
+  const names = ['localhost', '127.0.0.1'];
+  const lan = detectLanAddress();
+  if (lan) names.push(lan);
+  try {
+    if (publicUrl) names.push(new URL(publicUrl).hostname);
+  } catch {
+    // not a URL: skip it
+  }
+  return [...new Set(names)];
+}
+
+/**
+ * http and https on one port: a TLS handshake starts with byte 0x16, plain
+ * http with a letter. Either way the connection ends up at the same http
+ * server (and so the same Socket.IO server and rooms); https connections
+ * are decrypted on the way.
+ */
+function dualProtocol(httpServer, { key, cert }) {
+  const secure = tls.createServer({ key, cert });
+  secure.on('secureConnection', (socket) => httpServer.emit('connection', socket));
+  secure.on('tlsClientError', () => {}); // e.g. a phone that hasn't accepted the certificate yet
+  const open = new Set();
+  const server = net.createServer((socket) => {
+    open.add(socket);
+    socket.on('close', () => open.delete(socket));
+    socket.on('error', () => {});
+    socket.once('data', (first) => {
+      socket.pause();
+      socket.unshift(first);
+      (first[0] === 0x16 ? secure : httpServer).emit('connection', socket);
+      process.nextTick(() => socket.resume());
+    });
+  });
+  // Closing drops open connections too (idle keep-alives would hold it open).
+  const close = server.close.bind(server);
+  server.close = (cb) => {
+    close(cb);
+    for (const socket of open) socket.destroy();
+  };
+  return server;
 }

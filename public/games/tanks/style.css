@@ -97,3 +97,6 @@
 .tk-fire.held { transform: scale(0.98); background: #dc2626; }
 .tk-fire.reloading { opacity: 0.6; }
 .tk-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+
+/* The movement pad (joystick, D-pad or tilt) fills this: see shared/move-pad.css. */
+.tk-phone .tk-stick { flex: 1; min-height: 0; display: flex; border: 0; background: none; border-radius: 0; overflow: visible; }

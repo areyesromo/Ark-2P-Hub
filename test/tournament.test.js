@@ -89,3 +89,35 @@ test('a room counts finished competitive matches, not casual ones; a new player 
   assert.equal(t.bestOf, 3);
   r.dispose();
 });
+
+test('a won tournament is saved to the history: titles on the leaderboard and in the head to head', async () => {
+  const { Stats } = await import('../server/stats.js');
+  const fs = await import('node:fs');
+  const os = await import('node:os');
+  const path = await import('node:path');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-titles-'));
+  const stats = new Stats(dir);
+  const r = new Room('TEST', { to: () => ({ emit() {} }) }, { stats });
+  r.hostSockets.add('tv');
+  r.seatPlayer('Ana', null, { local: true });
+  r.seatPlayer('Ben', null, { local: true });
+  r.setTournament({ bestOf: 3 });
+  playRps(r, 1);
+  playRps(r, 0);
+  assert.equal(stats.tournaments.length, 0, 'not won yet');
+  playRps(r, 1);
+  assert.equal(stats.tournaments.length, 1);
+  assert.deepEqual({ ...stats.tournaments[0], at: 0 }, { at: 0, players: ['Ana', 'Ben'], winner: 1, wins: [1, 2], bestOf: 3 });
+  playRps(r, 1); // the next game starts a new series: nothing more saved yet
+  assert.equal(stats.tournaments.length, 1);
+
+  const board = new Stats(dir).leaderboard(); // and it was saved to disk
+  assert.equal(board.players.find((p) => p.name === 'Ben').titles, 1);
+  assert.equal(board.players.find((p) => p.name === 'Ana').titles, 0);
+  assert.equal(board.tournaments.length, 1);
+  assert.deepEqual(stats.headToHead('ben', 'ana').titles, [1, 0]);
+  stats.reset();
+  assert.equal(stats.tournaments.length, 0);
+  r.dispose();
+  fs.rmSync(dir, { recursive: true, force: true });
+});

@@ -117,6 +117,7 @@
         parts.push('<span class="muted">last: ' + escapeHtml(last.name) + ', ' + who + (last.scores ? ' ' + last.scores.join('–') : '') + '</span>');
       }
     }
+    if (h.titles && (h.titles[0] || h.titles[1])) parts.push('🏆 tournaments ' + a + ' <strong>' + h.titles[0] + ' – ' + h.titles[1] + '</strong> ' + b);
     if (h.team.played) parts.push('🎨 ' + h.team.stars + '⭐ together');
     return parts.join(' · ');
   }

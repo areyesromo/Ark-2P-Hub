@@ -2,6 +2,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 
 export const MAX_MATCHES = 2000; // oldest are dropped beyond this
+export const MAX_TOURNAMENTS = 500;
 const RECENT = 30;
 
 /** Players are matched by name, ignoring case and surrounding spaces. */
@@ -15,20 +16,24 @@ export const nameKey = (name) => String(name || '').trim().toLowerCase();
  *   { at, game, gameName, category, players: [name0, name1],
  *     winner: 0 | 1 | null, draw, scores: [a, b] | null,   // competitive
  *     stars, maxStars }                                     // casual (team) games
+ *
+ * A won tournament (best of N games, see tournament.js):
+ *   { at, players: [name0, name1], winner: 0 | 1, wins: [a, b], bestOf }
  */
 export class Stats {
   constructor(dataDir) {
     this.file = dataDir ? path.join(dataDir, 'stats.json') : null;
-    this.matches = this.load();
+    const data = this.load();
+    this.matches = Array.isArray(data.matches) ? data.matches : [];
+    this.tournaments = Array.isArray(data.tournaments) ? data.tournaments : [];
   }
 
   load() {
-    if (!this.file) return [];
+    if (!this.file) return {};
     try {
-      const data = JSON.parse(fs.readFileSync(this.file, 'utf8'));
-      return Array.isArray(data.matches) ? data.matches : [];
+      return JSON.parse(fs.readFileSync(this.file, 'utf8')) || {};
     } catch {
-      return [];
+      return {};
     }
   }
 
@@ -37,7 +42,7 @@ export class Stats {
     try {
       fs.mkdirSync(path.dirname(this.file), { recursive: true });
       const tmp = `${this.file}.tmp`;
-      fs.writeFileSync(tmp, JSON.stringify({ matches: this.matches }));
+      fs.writeFileSync(tmp, JSON.stringify({ matches: this.matches, tournaments: this.tournaments }));
       fs.renameSync(tmp, this.file);
     } catch (err) {
       console.error('Could not save match history:', err.message);
@@ -50,8 +55,15 @@ export class Stats {
     this.save();
   }
 
+  recordTournament(t) {
+    this.tournaments.push({ at: Date.now(), ...t });
+    if (this.tournaments.length > MAX_TOURNAMENTS) this.tournaments.splice(0, this.tournaments.length - MAX_TOURNAMENTS);
+    this.save();
+  }
+
   reset() {
     this.matches = [];
+    this.tournaments = [];
     this.save();
   }
 
@@ -59,8 +71,13 @@ export class Stats {
   headToHead(a, b) {
     const ka = nameKey(a);
     const kb = nameKey(b);
-    const out = { played: 0, wins: [0, 0], draws: 0, byGame: [], recent: [], team: { played: 0, stars: 0, maxStars: 0 } };
+    const out = { played: 0, wins: [0, 0], draws: 0, byGame: [], recent: [], team: { played: 0, stars: 0, maxStars: 0 }, titles: [0, 0] };
     if (!ka || !kb || ka === kb) return out;
+    for (const t of this.tournaments) {
+      const keys = t.players.map(nameKey);
+      const flip = keys[0] === kb && keys[1] === ka;
+      if (flip || (keys[0] === ka && keys[1] === kb)) out.titles[flip ? 1 - t.winner : t.winner]++;
+    }
     const games = new Map();
     for (const m of this.matches) {
       const keys = m.players.map(nameKey);
@@ -114,7 +131,7 @@ export class Stats {
     const pairs = new Map();
     const player = (name) => {
       const k = nameKey(name);
-      if (!players.has(k)) players.set(k, { name, played: 0, wins: 0, losses: 0, draws: 0, teamGames: 0, stars: 0 });
+      if (!players.has(k)) players.set(k, { name, played: 0, wins: 0, losses: 0, draws: 0, teamGames: 0, stars: 0, titles: 0 });
       const p = players.get(k);
       p.name = name; // latest spelling wins
       return p;
@@ -149,6 +166,7 @@ export class Stats {
         pairs.set(pairKey, { a, b });
       }
     }
+    for (const t of this.tournaments) player(t.players[t.winner]).titles++;
     const nameOf = (k) => (players.get(k) || { name: k }).name;
     return {
       players: [...players.values()]
@@ -168,6 +186,7 @@ export class Stats {
         .filter((r) => r.played)
         .sort((x, y) => y.played - x.played),
       recent: this.matches.slice(-RECENT).reverse(),
+      tournaments: this.tournaments.slice(-10).reverse(),
       total: this.matches.length,
     };
   }

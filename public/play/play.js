@@ -7,6 +7,23 @@
   const $ = (id) => document.getElementById(id);
   Ark.watchVersion(socket);
 
+  // Arriving from the "switch to the secure page" link (see api.secureUrl):
+  // take the seat over with the token it carries, and the preferences.
+  (function adoptSecureLink() {
+    const q = new URLSearchParams(location.search);
+    const token = q.get('token');
+    if (!token) return;
+    try {
+      localStorage.setItem(STORE_KEY, JSON.stringify({ code: (q.get('room') || '').toUpperCase(), token: token, name: q.get('name') || '' }));
+      q.getAll('pref').forEach(function (p) {
+        const at = p.indexOf(':');
+        const key = p.slice(0, at);
+        if (at > 0 && /^ark\.[a-z.]+$/.test(key) && key !== STORE_KEY) localStorage.setItem(key, p.slice(at + 1));
+      });
+    } catch (e) { /* private mode */ }
+    if (history.replaceState) history.replaceState(null, '', location.pathname + '?room=' + encodeURIComponent(q.get('room') || ''));
+  })();
+
   let session = loadSession(); // { code, token, name } once joined
   let me = null; // { slot, name, code }
   let state = null;
@@ -179,6 +196,17 @@
     send: function (input) { socket.emit('game:input', input); },
     vibrate: function (pattern) { if (navigator.vibrate) navigator.vibrate(pattern); },
     get slot() { return me ? me.slot : 0; },
+    /**
+     * This page over https (same seat, same address), for things phones only
+     * allow on secure pages (the motion sensor). prefs: { 'ark.key': value }
+     * to carry over (each address keeps its own). null when already secure.
+     */
+    secureUrl: function (prefs) {
+      if (location.protocol === 'https:' || !session || !session.token) return null;
+      const q = new URLSearchParams({ room: session.code, name: session.name, token: session.token });
+      Object.keys(prefs || {}).forEach(function (k) { q.append('pref', k + ':' + prefs[k]); });
+      return 'https://' + location.host + '/play/?' + q.toString();
+    },
   };
 
   function unmountGame() {
