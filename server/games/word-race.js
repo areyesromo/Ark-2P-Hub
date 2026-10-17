@@ -10,6 +10,7 @@
 
 import fs from 'node:fs';
 import wordListPath from 'word-list';
+import { defaultsOf, loadSettings, applySetting } from './options.js';
 
 export const SIZE = 4; // the default grid
 export const MIN_LETTERS = 3;
@@ -21,7 +22,7 @@ export const OPTIONS = {
   time: [90, 60, 120, 180], // seconds per round
   rounds: [3, 1, 5], // best of
 };
-export const DEFAULTS = { size: OPTIONS.size[0], time: OPTIONS.time[0], rounds: OPTIONS.rounds[0] };
+export const DEFAULTS = defaultsOf(OPTIONS);
 export const MIN_GRID_WORDS = { 4: 40, 5: 100, 6: 150 }; // reroll grids poorer than this
 
 /** Rounds needed to win a best-of-n match, and when drawn rounds stop it. */
@@ -169,10 +170,7 @@ export class WordRace {
     this.ctx = ctx;
     this.rng = rng;
     this.timer = null;
-    // Settings the room kept from last time, if still valid.
-    const saved = (ctx.saved && ctx.saved.settings) || {};
-    this.settings = {};
-    for (const key of Object.keys(OPTIONS)) this.settings[key] = OPTIONS[key].includes(saved[key]) ? saved[key] : DEFAULTS[key];
+    this.settings = loadSettings(ctx, OPTIONS); // what the room picked last time, else the defaults
   }
 
   /** The setup screen: pick the grid size, time and match length. */
@@ -198,13 +196,6 @@ export class WordRace {
     this.winner = null;
     this.draw = false;
     this.newRound();
-  }
-
-  setOption(key, value) {
-    if (!Object.prototype.hasOwnProperty.call(OPTIONS, key) || !OPTIONS[key].includes(value)) return;
-    this.settings[key] = value;
-    if (this.ctx.saved) this.ctx.saved.settings = { ...this.settings };
-    this.ctx.update();
   }
 
   get winScore() {
@@ -289,7 +280,7 @@ export class WordRace {
 
   onInput(slot, input) {
     if (this.phase === 'setup') {
-      if (input.type === 'setting') this.setOption(input.key, input.value);
+      if (input.type === 'setting' && applySetting(this.ctx, OPTIONS, this.settings, input.key, input.value)) this.ctx.update();
       if (input.type === 'go') this.begin();
       return;
     }

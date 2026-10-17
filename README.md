@@ -34,6 +34,7 @@ one you just played).
 | **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. 125 shapes (basic shapes, pictures like a rocket or a cat, letters and numbers), never repeated until you've seen them all. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
 | **Battleship** | Hide your 5 ships on your phone (tap a ship, tap where it goes, tap it again to turn it, or shuffle), then take turns firing at the enemy grid. The TV shows both oceans with every hit and miss; ships stay hidden until sunk. 30 s per shot. Sink the whole fleet to win. |
 | **Word Race** | Boggle for two: the same letter grid on both phones and the TV. Swipe across touching letters (sideways, up/down or diagonally) to spell words of 3+ letters, checked against a ~275k-word dictionary; longer words score more (3–4 letters 1, 5 → 2, 6 → 3, 7 → 5, 8+ → 11). When the time's up, words you **both** found cancel out, so hunt for the rare ones. Before the match, either player picks the grid (4×4, 5×5 or 6×6), the time per round (1, 1½, 2 or 3 min) and the length (one round, best of 3 or best of 5); the hub remembers your choice, and at the end you can rematch or change them. |
+| **Mini Golf** | Both of you play the same hole at once (the balls roll through each other). Pull back anywhere on your phone and let go to putt: the further you pull, the harder the shot; the phone shows the hole too. 9 holes with walls, bumpers, sand, water (a stroke penalty, back where you shot from) and a windmill. 8 shots per hole, then you pick up and score 9; 90 s per hole. Pick 3, 6 or 9 holes before you start. Fewest strokes wins. |
 | **Connect Four** | The classic: drop discs into a 7×6 grid and line up four (across, down or diagonally) before your rival. Tap a column on your phone, which shows the board too. 20 s per move (a random column if you run out); who starts swaps every round. First to 3 rounds. |
 
 ### 🎨 Casual
@@ -69,6 +70,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Draw Duel | **Left stick** or **D-pad** moves a cursor, hold **A** / **RT** / **RB** to draw, **B** undo, **X** clear, **Y** / **START** done | Phones draw with a finger, which is easier; the controller is for brave players |
 | Battleship | **D-pad** aims at the enemy grid on the TV, **A** fires | A controller player's fleet is placed at random, since the TV can't keep it secret |
 | Word Race | Setup: **↑↓** picks a row, **←→** changes it, **A** starts. In the game: **D-pad** / **stick** moves a cursor, **A** adds the letter, **B** removes the last one, **Y** / **X** / **RT** submits the word. At the end, **A** rematches and **Y** changes the settings | Phones are easier (just swipe), and your trace shows on the TV for your rival to see |
+| Mini Golf | **Left stick** aims (or **←→** turns the aim), hold **A** / **RT** to charge, let go to putt | The power meter swings up and down while you hold, so let go at the right moment. Setup: **←→** picks the holes, **A** starts; at the end **A** rematches and **Y** changes the holes |
 | Connect Four | **D-pad** ← → (or the stick) moves your disc over the columns, **A** or **↓** drops it | |
 | Sketch & Guess | **A** / **B** / **X** / **Y** picks one of four words shown on the TV | Controller players always guess (the word has to stay secret from the guesser); wrong picks pause you for a moment |
 | Game over | **A** / **Start** | Rematch |
@@ -234,8 +236,11 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
    Use `ctx.setTimeout` (cleared automatically when the game ends) and call
    `ctx.update()` whenever state changes. `ctx.players[slot].local` is true
    for controller players, who have no private screen (see `battleship`).
-   `ctx.saved` is an object the room keeps between launches of your game,
-   e.g. for the settings players picked last time (see `word-race`).
+   `ctx.saved` is an object the room keeps between launches of your game.
+   For match settings picked on a setup screen, declare
+   `OPTIONS = { key: [default, ...choices] }` and use
+   `server/games/options.js` on the server and `Ark.setup` on the TV and
+   phones (see `word-race` and `mini-golf`): the room remembers the choice.
    Register it in `server/games/index.js`.
 2. **TV:** `public/games/<id>/host.js` calls
    `Ark.register('host', '<id>', { mount(el), update(view) })`.
@@ -271,6 +276,5 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 **More games**
 
-- Mini Golf: aim and drag on your phone, watch the ball roll on the TV
 - Bomberman-style duel: maze, bombs and power-ups
 - More quiz packs, drawing shapes and Sketch & Guess words

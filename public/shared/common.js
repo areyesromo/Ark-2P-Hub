@@ -121,6 +121,77 @@
     return parts.join(' · ');
   }
 
+  // ---- setup screens (match settings picked before a game starts) ----
+  // A game's views carry `settings` ({ key: value }) and `options`
+  // ({ key: [values] }, see server/games/options.js). rows describes how to
+  // show them: [{ key, title, fmt(value) -> label }].
+
+  /** Each option's values, smallest first. */
+  function setupChoices(v, key) {
+    return v.options[key].slice().sort(function (a, b) { return a - b; });
+  }
+
+  /**
+   * The settings as rows of buttons (phones tap them: data-key / data-value).
+   * focus: { key: 'p1 p2' } outlines the rows controller players are on (TV).
+   */
+  function setupHtml(v, rows, focus) {
+    return '<div class="ark-setup">' + rows.map(function (row) {
+      const f = focus && focus[row.key] ? ' focus ' + focus[row.key] : '';
+      return '<div class="row' + f + '"><div class="title">' + row.title + '</div><div class="seg">' +
+        setupChoices(v, row.key).map(function (value) {
+          return '<button type="button" class="opt' + (v.settings[row.key] === value ? ' on' : '') + '" data-key="' + row.key + '" data-value="' + value + '">' +
+            row.fmt(value) + '</button>';
+        }).join('') + '</div></div>';
+    }).join('') + '</div>';
+  }
+
+  /** One line summing the settings up, e.g. "5×5 · 2 min · Best of 3". */
+  function setupSummary(v, rows) {
+    return rows.map(function (row) { return row.fmt(v.settings[row.key]); }).join(' · ');
+  }
+
+  /**
+   * A controller on the setup screen: ↑↓ picks a row (state.row, kept by the
+   * renderer per player), ←→ changes it, A / Start begins. Returns the input
+   * to send, or null (call render again if state.row changed).
+   */
+  function setupPad(btn, v, rows, state) {
+    if (btn === 'A' || btn === 'START') return { type: 'go' };
+    if (btn === 'UP' || btn === 'DOWN') {
+      state.row = ((state.row || 0) + (btn === 'UP' ? -1 : 1) + rows.length) % rows.length;
+      return null;
+    }
+    if (btn === 'LEFT' || btn === 'RIGHT') {
+      const key = rows[state.row || 0].key;
+      const list = setupChoices(v, key);
+      const i = Math.min(list.length - 1, Math.max(0, list.indexOf(v.settings[key]) + (btn === 'LEFT' ? -1 : 1)));
+      return { type: 'setting', key: key, value: list[i] };
+    }
+    return null;
+  }
+
+  /** The focus map for setupHtml from controller players' rows: pads = { slot: { row } }. */
+  function setupFocus(v, rows, pads) {
+    const focus = {};
+    [0, 1].forEach(function (slot) {
+      if (!v.players[slot].local) return;
+      const key = rows[(pads[slot] && pads[slot].row) || 0].key;
+      focus[key] = (focus[key] ? focus[key] + ' ' : '') + 'p' + (slot + 1);
+    });
+    return focus;
+  }
+
+  /** Phones: send a setting when one of setupHtml's buttons inside `el` is tapped. */
+  function bindSetup(el, api) {
+    el.addEventListener('click', function (e) {
+      const btn = e.target.closest && e.target.closest('.ark-setup .opt');
+      if (!btn) return;
+      api.send({ type: 'setting', key: btn.getAttribute('data-key'), value: Number(btn.getAttribute('data-value')) });
+      if (api.vibrate) api.vibrate(8);
+    });
+  }
+
   /**
    * Reload the page when the server comes back as a newer version (after an
    * update, e.g. the Pi's auto-update), so screens never run stale code.
@@ -149,6 +220,7 @@
     loadCss: loadCss,
     loadScript: loadScript,
     scoreboardHtml: scoreboardHtml,
+    setup: { html: setupHtml, summary: setupSummary, pad: setupPad, focus: setupFocus, bind: bindSetup, choices: setupChoices },
     colorFor: function (slot) { return slot === 0 ? 'var(--p1)' : 'var(--p2)'; },
   };
 })();

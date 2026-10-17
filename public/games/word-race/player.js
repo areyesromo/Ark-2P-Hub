@@ -129,7 +129,7 @@
   function status(v) {
     const you = v.you;
     if (v.phase === 'setup') return '<span class="big">Word Race</span><br>Pick the settings (either of you can), then start.';
-    if (v.phase === 'countdown') return 'Get ready… ' + v.countdown + (loaded ? '<br><small>' + ArkWords.summary(v) + '</small>' : '');
+    if (v.phase === 'countdown') return 'Get ready… ' + v.countdown + (loaded ? '<br><small>' + Ark.setup.summary(v, ArkWords.ROWS) + '</small>' : '');
     if (v.phase === 'play') {
       const pts = v.yourWords.reduce(function (s, w) { return s + w.points; }, 0);
       return v.yourWords.length + ' words · ' + pts + ' pts · ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's · them: ' + v.counts[1 - you];
@@ -164,7 +164,7 @@
     els.score.textContent = setup ? '' : 'You ' + v.scores[v.you] + ' – ' + v.scores[1 - v.you] + ' Them' +
       (v.settings.rounds > 1 ? ' · best of ' + v.settings.rounds : '') + ' · round ' + v.round;
     els.status.innerHTML = status(v);
-    els.setup.innerHTML = setup && loaded ? ArkWords.setupHtml(v) : '';
+    els.setup.innerHTML = setup && loaded ? Ark.setup.html(v, ArkWords.ROWS) : '';
     els.go.classList.toggle('hidden', !setup);
     els.words.innerHTML = myWords(v);
     els.hint.classList.toggle('hidden', v.phase !== 'play' || v.yourWords.length > 0);
@@ -210,12 +210,7 @@
       els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });
       els.change.addEventListener('click', function () { api.send({ type: 'setup' }); });
       els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
-      els.setup.addEventListener('click', function (e) {
-        const btn = e.target.closest && e.target.closest('.opt');
-        if (!btn) return;
-        api.send({ type: 'setting', key: btn.getAttribute('data-key'), value: Number(btn.getAttribute('data-value')) });
-        api.vibrate(8);
-      });
+      Ark.setup.bind(els.setup, api);
       gridReady.then(function () {
         loaded = true;
         if (view) {

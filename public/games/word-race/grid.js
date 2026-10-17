@@ -30,39 +30,13 @@
     return a !== b && Math.abs(Math.floor(a / size) - Math.floor(b / size)) <= 1 && Math.abs((a % size) - (b % size)) <= 1;
   }
 
-  // ---- setup screen ----
+  // ---- setup screen (Ark.setup) ----
 
-  const LABELS = {
-    size: { title: 'Grid', fmt: function (n) { return n + '×' + n; } },
-    time: { title: 'Time per round', fmt: function (s) { return s % 60 ? Math.floor(s / 60) + '½ min' : s / 60 + ' min'; } },
-    rounds: { title: 'Match', fmt: function (n) { return n === 1 ? 'One round' : 'Best of ' + n; } },
-  };
-  const KEYS = ['size', 'time', 'rounds'];
+  const ROWS = [
+    { key: 'size', title: 'Grid', fmt: function (n) { return n + '×' + n; } },
+    { key: 'time', title: 'Time per round', fmt: function (s) { return s % 60 ? Math.floor(s / 60) + '½ min' : s / 60 + ' min'; } },
+    { key: 'rounds', title: 'Match', fmt: function (n) { return n === 1 ? 'One round' : 'Best of ' + n; } },
+  ];
 
-  /** The choices for one setting, smallest first. */
-  function choices(v, key) {
-    return v.options[key].slice().sort(function (a, b) { return a - b; });
-  }
-
-  /**
-   * The settings rows. focus: { key: 'p1 p2' } marks the rows controller
-   * players are on (TV only). Phones tap the buttons (data-key, data-value).
-   */
-  function setupHtml(v, focus) {
-    return '<div class="wr-setup">' + KEYS.map(function (key) {
-      const f = focus && focus[key] ? ' focus ' + focus[key] : '';
-      return '<div class="row' + f + '"><div class="title">' + LABELS[key].title + '</div><div class="seg">' +
-        choices(v, key).map(function (value) {
-          return '<button type="button" class="opt' + (v.settings[key] === value ? ' on' : '') + '" data-key="' + key + '" data-value="' + value + '">' +
-            LABELS[key].fmt(value) + '</button>';
-        }).join('') + '</div></div>';
-    }).join('') + '</div>';
-  }
-
-  /** One line summing the settings up, e.g. "5×5 · 2 min · Best of 3". */
-  function summary(v) {
-    return KEYS.map(function (key) { return LABELS[key].fmt(v.settings[key]); }).join(' · ');
-  }
-
-  window.ArkWords = { gridHtml: gridHtml, spell: spell, adjacent: adjacent, KEYS: KEYS, choices: choices, setupHtml: setupHtml, summary: summary };
+  window.ArkWords = { gridHtml: gridHtml, spell: spell, adjacent: adjacent, ROWS: ROWS };
 })();
