@@ -30,17 +30,17 @@
     },
     phone: {
       mount: function (el, mctx) {
-        let last = 0;
+        let lastMotion = 0;
         const shake = function () {
-          const now = performance.now();
-          if (now - last < SHAKE_MS) return;
-          last = now;
           mctx.send({ type: 'shake' });
           mctx.vibrate(10);
         };
+        // One jolt fires several motion events: count it once. Taps aren't throttled.
         const onMotion = function (e) {
           const a = e.accelerationIncludingGravity;
-          if (a && Math.hypot(a.x || 0, a.y || 0, a.z || 0) > SHAKE_G) shake();
+          if (!a || Math.hypot(a.x || 0, a.y || 0, a.z || 0) <= SHAKE_G || performance.now() - lastMotion < SHAKE_MS) return;
+          lastMotion = performance.now();
+          shake();
         };
         el.innerHTML = '<div class="mi-phone-stage"><div class="slot"></div><button class="primary mi-big-btn">🥤 SHAKE! (or tap)</button></div>';
         el.querySelector('button').addEventListener('pointerdown', function () {

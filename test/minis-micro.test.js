@@ -152,3 +152,31 @@ test('every seed deals a fair puzzle (4 distinct choices incl. the answer, one o
     assert.ok(s.zone.from >= 0.1 && s.zone.to <= 0.9);
   }
 });
+
+test('shake-it: fewer shakes needed as the speed goes up (never below 6)', () => {
+  const fast = (speed) => {
+    const ctx = fakeCtx();
+    const api = { players: ctx.players, rng: seeded(1), speed, now: ctx.now, elapsed: () => 0, update() {}, setTimeout: ctx.setTimeout, clearTimeout: ctx.clearTimeout, end() {} };
+    return shakeIt.create(api).view(0).need;
+  };
+  assert.equal(fast(1), 15);
+  assert.equal(fast(0.45), 7);
+  assert.equal(fast(0.2), 6);
+});
+
+test('tap-it: a miss locks that player out for 300 ms (no free mashing)', () => {
+  const { inst, ctx, ended } = run(tapIt);
+  const { seed } = inst.view(0);
+  ctx.advance(1000);
+  let p = targetAt(1000, seed);
+  inst.onInput(0, { type: 'tap', x: p.x > 0.5 ? p.x - 0.5 : p.x + 0.5, y: p.y, t: 1000 });
+  ctx.advance(100);
+  p = targetAt(1100, seed);
+  inst.onInput(0, { type: 'tap', x: p.x, y: p.y, t: 1100 }); // locked out
+  assert.equal(inst.view(0).res[0], null);
+  ctx.advance(250);
+  p = targetAt(1350, seed);
+  inst.onInput(0, { type: 'tap', x: p.x, y: p.y, t: 1350 });
+  assert.equal(inst.view(0).res[0], true);
+  assert.equal(ended(), null);
+});

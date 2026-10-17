@@ -19,7 +19,14 @@
 
   function load(id) {
     if (regs[id]) return Promise.resolve(regs[id]);
-    if (!loading[id]) loading[id] = Ark.loadScript('/games/minis/' + id + '.js').then(function () { return regs[id]; });
+    if (!loading[id]) {
+      loading[id] = Ark.loadScript('/games/minis/' + id + '.js').then(function () {
+        if (!regs[id]) throw new Error('No renderer for minigame ' + id);
+        return regs[id];
+      });
+      // A failed load (flaky Wi-Fi) is tried again the next time, not remembered.
+      loading[id].catch(function () { delete loading[id]; });
+    }
     return loading[id];
   }
 
@@ -58,7 +65,7 @@
         this.clear(stage);
         pendingKey = key;
         load(v.mini.id).then(function (r) {
-          if (pendingKey !== key || !r) return;
+          if (pendingKey !== key) return;
           pendingKey = null;
           const el = document.createElement('div');
           el.className = 'mi-mini mi-' + v.mini.id;
@@ -66,6 +73,8 @@
           current = { key: key, r: r, el: el };
           r[side].mount(el, makeCtx());
           r[side].update(lastView.state, lastView);
+        }, function () {
+          if (pendingKey === key) pendingKey = null; // the next update tries again
         });
       },
       clear: function (stage) {

@@ -46,7 +46,11 @@ export default {
         else if (++step[slot] === seq.length) finished[slot] = true;
         check();
       },
-      onTimeUp: () => api.end({ winner: out[0] !== out[1] ? (out[0] ? 1 : 0) : null }),
+      // Time's up: the one further along wins (out < partway < done).
+      onTimeUp() {
+        const far = (s) => (out[s] ? -1 : finished[s] ? seq.length : stage === 'input' ? step[s] : 0);
+        api.end({ winner: far(0) === far(1) ? null : far(0) > far(1) ? 0 : 1 });
+      },
       view: () => Object.assign({ stage, step, out, finished, length: seq.length }, stage === 'show' ? { seq } : {}),
     };
   },

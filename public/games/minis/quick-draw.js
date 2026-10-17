@@ -10,6 +10,19 @@
     const ms = l.ms.map(function (x) { return x === null ? '—' : x + ' ms'; });
     return '<div class="mi-wait">' + (me === undefined ? names[l.winner] : l.winner === me ? 'You' : 'They') + ' win the duel!</div><div class="muted">' + ms[0] + ' · ' + ms[1] + '</div>';
   }
+  // When this screen showed BANG for each duel: shots report their reaction
+  // time from it (rt), or -1 when fired before this screen saw BANG.
+  let bangDuel = 0;
+  let bangSeenAt = 0;
+  function see(s) {
+    if (s.stage === 'bang' && bangDuel !== s.duel) {
+      bangDuel = s.duel;
+      bangSeenAt = performance.now();
+    }
+  }
+  function fire(s) {
+    return { type: 'fire', rt: s.stage === 'bang' && bangDuel === s.duel ? Math.round(performance.now() - bangSeenAt) : -1 };
+  }
   function duels(s) { return '<div class="mi-duels">' + s.duelWins[0] + ' – ' + s.duelWins[1] + '</div>'; }
 
   let host = null;
@@ -23,6 +36,7 @@
         host = { el: el.firstChild, names: names };
       },
       update: function (s) {
+        see(s);
         if (!host) return;
         host.el.querySelector('.mid').innerHTML = duels(s) + status(s, host.names);
         host.el.classList.toggle('bang', s.stage === 'bang');
@@ -32,17 +46,22 @@
     phone: {
       mount: function (el, mctx) {
         el.innerHTML = '<div class="mi-phone-stage mi-draw-phone"><div class="msg"></div><button class="mi-big-btn mi-fire">🔫 FIRE!</button></div>';
-        phone = { el: el, slot: mctx.slot };
-        el.querySelector('button').addEventListener('pointerdown', function () { mctx.send({ type: 'fire' }); mctx.vibrate(30); });
+        phone = { el: el, slot: mctx.slot, s: null };
+        el.querySelector('button').addEventListener('pointerdown', function () {
+          if (phone && phone.s) mctx.send(fire(phone.s));
+          mctx.vibrate(30);
+        });
       },
       update: function (s) {
+        see(s);
         if (!phone) return;
+        phone.s = s;
         phone.el.querySelector('.msg').innerHTML = duels(s) + status(s, null, phone.slot);
         phone.el.classList.toggle('bang', s.stage === 'bang');
       },
       unmount: function () { phone = null; },
     },
-    pad: function (btn) { return btn === 'A' || btn === 'B' || btn === 'X' || btn === 'Y' || btn === 'RT' ? { type: 'fire' } : null; },
+    pad: function (btn, s) { return btn === 'A' || btn === 'B' || btn === 'X' || btn === 'Y' || btn === 'RT' ? fire(s) : null; },
     sounds: function (prev, s) { return s.stage === 'bang' && prev.stage !== 'bang' ? ['boom'] : []; },
   });
 })();

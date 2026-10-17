@@ -89,10 +89,9 @@ test('quick-draw: early fire loses the duel; faster shot wins; two duels win it'
   assert.deepEqual(inst.view(0).duelWins, [0, 1]);
   ctx.advance(1500); // next duel
   while (inst.view(0).stage !== 'bang') ctx.advance(10);
-  const bangAt = ctx.now();
   ctx.advance(400);
-  inst.onInput(1, { type: 'fire', t: bangAt + 350 });
-  inst.onInput(0, { type: 'fire', t: bangAt + 250 }); // arrived later, but was faster
+  inst.onInput(1, { type: 'fire', rt: 350 });
+  inst.onInput(0, { type: 'fire', rt: 250 }); // arrived later, but was faster
   assert.deepEqual(inst.view(0).duelWins, [1, 1]);
   assert.deepEqual(inst.view(0).last.ms, [250, 350]);
   ctx.advance(1500);
@@ -179,4 +178,35 @@ test('sweet-spot: unstopped spins score 0 at time-up', () => {
   inst.onInput(1, { type: 'stop', t: 500 });
   inst.onTimeUp();
   assert.deepEqual(ended(), { winner: 1 });
+});
+
+test('quick-draw: a shot fired before the phone saw BANG is early, even if it arrives after', () => {
+  const { inst, ctx } = run(quickDraw, 2);
+  while (inst.view(0).stage !== 'bang') ctx.advance(10);
+  ctx.advance(50);
+  inst.onInput(0, { type: 'fire', rt: -1 });
+  assert.equal(inst.view(0).last.early, 0);
+  assert.deepEqual(inst.view(0).duelWins, [0, 1]);
+});
+
+test('quick-draw: an impossible reaction time falls back to the server clock', () => {
+  const { inst, ctx } = run(quickDraw, 2);
+  while (inst.view(0).stage !== 'bang') ctx.advance(10);
+  ctx.advance(200);
+  inst.onInput(0, { type: 'fire', rt: 5000 });
+  inst.onInput(1, { type: 'fire', rt: 'x' });
+  const [a, b] = inst.view(0).last.ms;
+  assert.equal(a, b);
+  assert.ok(a >= 200 && a < 210, `server time since the bang, got ${a}`); // the loop above can pass the bang by <10 ms
+});
+
+test('memory-path: at time-up the one further along wins', () => {
+  const { inst, ctx, ended } = run(memoryPath, 6);
+  const seq = inst.view(0).seq.slice();
+  ctx.advance(3 * 600 + 400);
+  inst.onInput(0, { type: 'cell', i: seq[0] });
+  inst.onInput(0, { type: 'cell', i: seq[1] });
+  inst.onInput(1, { type: 'cell', i: seq[0] });
+  inst.onTimeUp();
+  assert.deepEqual(ended(), { winner: 0 });
 });
