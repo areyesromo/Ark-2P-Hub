@@ -49,6 +49,7 @@
   function render() {
     if (!root || !view || !loaded) return;
     const v = view;
+    ArkMemory.setThemes(v.themeNames);
     const k = JSON.stringify([v.phase, v.cards, v.turn, v.scores, v.settings, v.countdown, pads]);
     if (k === key) return;
     key = k;

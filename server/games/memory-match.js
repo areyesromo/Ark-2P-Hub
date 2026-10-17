@@ -6,16 +6,23 @@
 
 import { loadSettings, applySetting } from './options.js';
 
+// Only emoji from 2019 (Emoji 12) or older, so every TV and phone can show them
+// (Windows 10, for one, stops at Emoji 12), and no two in a set that look
+// alike (a memory game has to be fair).
 export const THEMES = [
   { name: 'Animals', faces: ['🐶', '🐱', '🐭', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯', '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🦉', '🐙', '🦋', '🐢', '🦀', '🐬', '🦒', '🐘'] },
   { name: 'Food', faces: ['🍎', '🍌', '🍇', '🍓', '🍒', '🍍', '🥝', '🍉', '🍋', '🥕', '🌽', '🍕', '🍔', '🌭', '🍟', '🍩', '🍪', '🧁', '🍦', '🥨', '🧀', '🥐', '🍣', '🌮'] },
   { name: 'Sports', faces: ['⚽', '🏀', '🏈', '⚾', '🎾', '🏐', '🏉', '🎱', '🏓', '🏸', '🥊', '⛳', '🏹', '🎣', '🛹', '⛸️', '🎿', '🏆', '🥇', '🚴', '🏊', '🧗', '🤿', '🎳'] },
-  { name: 'Things', faces: ['🚀', '🚗', '🚲', '⛵', '✈️', '🚂', '🎸', '🎺', '🥁', '🎲', '🧩', '🎈', '🎁', '💡', '🔑', '⏰', '📷', '🔭', '☂️', '🧲', '⚓', '🌈', '⭐', '🌙'] },
+  { name: 'Things', faces: ['🚗', '🚲', '⛵', '✈️', '🚂', '🎸', '🎺', '🥁', '🎲', '🧩', '🎈', '🎁', '💡', '🔑', '⏰', '📷', '🔭', '☂️', '🧲', '⚓', '🧸', '✂️', '🖍️', '📚'] },
+  { name: 'Faces', faces: ['😀', '😂', '😍', '😎', '🤔', '😴', '😱', '🥳', '😡', '🤢', '🤠', '🥶', '🥵', '😇', '🤓', '🤡', '👻', '👽', '🤖', '💩', '🎃', '😺', '🙈', '🤯'] },
+  { name: 'Nature', faces: ['🌵', '🌻', '🌹', '🌷', '🍄', '🌲', '🌴', '🍁', '🍀', '🌸', '🌾', '🌱', '🌋', '🏔️', '🌊', '🔥', '❄️', '⚡', '🌈', '☀️', '🌙', '⭐', '☁️', '💧'] },
+  { name: 'Space & travel', faces: ['🚀', '🛸', '🌍', '🪐', '☄️', '🌌', '🔭', '🛰️', '👨‍🚀', '🗺️', '🧭', '🏰', '🗽', '🗼', '🎡', '🎢', '⛺', '🏝️', '🚁', '🚤', '🚠', '🎠', '🌋', '🗿'] },
+  { name: 'Ocean', faces: ['🦀', '🐋', '🦈', '🐠', '🐟', '🐡', '🦑', '🦞', '🦐', '🐚', '🐬', '🐊', '🦪', '🐧', '🦦', '⚓', '🏄', '🤿', '🛥️', '🚢', '⛱️', '🧜', '🌊', '🦩'] },
 ];
 
 export const OPTIONS = {
   cards: [16, 24, 36], // 4x4, 4x6, 6x6
-  theme: [0, 1, 2, 3, 4], // 0: a mix of every theme
+  theme: [0, ...THEMES.map((_, i) => i + 1)], // 0: a mix of every theme
   turnSeconds: [20, 10, 30],
 };
 export const TIMING = { countdownMs: 2500, peekMs: 1300, matchMs: 700 };
@@ -47,7 +54,8 @@ export class MemoryMatch {
 
   begin() {
     const n = this.settings.cards / 2;
-    const pool = this.settings.theme === 0 ? THEMES.flatMap((t) => t.faces) : THEMES[this.settings.theme - 1].faces;
+    // Mixed: every theme's pictures, each once (a few appear in two themes).
+    const pool = this.settings.theme === 0 ? [...new Set(THEMES.flatMap((t) => t.faces))] : THEMES[this.settings.theme - 1].faces;
     const faces = this.shuffle(pool.slice()).slice(0, n);
     this.cards = this.shuffle(faces.concat(faces)).map((face) => ({ face, owner: null }));
     this.flipped = []; // indexes face up this turn (0, 1 or 2)
@@ -165,6 +173,7 @@ export class MemoryMatch {
       turn: this.turn,
       scores: this.scores,
       pairs: this.settings.cards / 2,
+      themeNames: THEMES.map((t) => t.name),
       winner: this.winner,
       draw: this.draw,
       lastMatch: this.lastMatch || null,
