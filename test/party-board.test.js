@@ -462,3 +462,77 @@ test('views during a minigame leave the board out (it updates up to 20 times a s
   assert.ok(v.players && v.mini);
   assert.ok(h.g.playerView(0).board === undefined);
 });
+
+// ---- forks and warps ----
+// 0 → 1 (fork) → A: 2 3 4 5 | B: 6 7(warp → 0) 8 9 → 10 → 11 → 0
+const FORKY = {
+  name: 'Forky', tier: 'easy', starPrice: 20, shopMarkup: 1,
+  spaces: [
+    { type: 'start', next: [1] }, { type: 'blue', next: [2, 6] },
+    { type: 'blue', next: [3], starCandidate: true }, { type: 'shop', next: [4] }, { type: 'event', next: [5] }, { type: 'blue', next: [10], starCandidate: true },
+    { type: 'red', next: [7] }, { type: 'warp', warp: 0, next: [8] }, { type: 'bonus', next: [9] }, { type: 'event', next: [10] },
+    { type: 'blue', next: [11], starCandidate: true }, { type: 'blue', next: [0], starCandidate: true },
+  ].map((sp, i) => ({ x: 0.05 + i * 0.07, y: 0.5, ...sp })),
+};
+
+function forky() {
+  const ctx = fakeCtx();
+  const q = [0]; // the star on space 2
+  const g = new PartyBoard(ctx, () => (q.length ? q.shift() : 0.5), FORKY, [claim]);
+  g.start();
+  const settle = () => {
+    const phase = g.hostView().phase;
+    for (let i = 0; i < 2000; i++) {
+      const v = g.hostView();
+      if (v.prompt || v.phase !== phase) return v;
+      ctx.advance(50);
+    }
+    throw new Error('never settled');
+  };
+  const choose = (slot, value) => g.onInput(slot, { type: 'choose', value });
+  const roll = (n) => { q.push(D(n)); choose(0, 'roll'); return settle(); };
+  return { g, ctx, q, settle, choose, roll, p: (s) => g.hostView().players[s] };
+}
+
+test('fork: the walk stops and asks, with a preview of each path', () => {
+  const f = forky();
+  const v = f.roll(3);
+  assert.equal(v.prompt.kind, 'path');
+  assert.deepEqual(v.prompt.options, ['0', '1']);
+  assert.equal(f.p(0).space, 1);
+  assert.deepEqual(v.prompt.extra.previews, [['star', 'shop', 'event', 'blue'], ['red', 'warp', 'bonus', 'event']]);
+});
+
+test('fork: path 2 then a warp: landing on it sends you to its target, no effect there', () => {
+  const f = forky();
+  f.roll(3);
+  f.choose(0, '1');
+  const v = f.settle();
+  assert.equal(f.p(0).space, 0);
+  assert.equal(f.p(0).coins, 10, 'no start-space coins at the warp target');
+  assert.equal(v.prompt.slot, 1, 'the turn ended');
+});
+
+test('fork: an idle player takes the first path after 15 s', () => {
+  const f = forky();
+  f.roll(2);
+  f.ctx.advance(TIMING.promptMs);
+  f.settle();
+  assert.equal(f.p(0).space, 2);
+});
+
+test('fork: passing a warp does nothing; the star pass-by still asks after a fork', () => {
+  let f = forky();
+  f.roll(4);
+  f.choose(0, '1');
+  let v = f.settle();
+  assert.equal(f.p(0).space, 8);
+  assert.equal(v.prompt.kind, 'slot');
+  f = forky();
+  f.g.players[0].coins = 20;
+  f.roll(3);
+  f.choose(0, '0');
+  v = f.settle();
+  assert.equal(v.prompt.kind, 'star');
+  assert.equal(f.p(0).space, 2);
+});

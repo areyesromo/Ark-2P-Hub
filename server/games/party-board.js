@@ -164,13 +164,33 @@ export class PartyBoard {
     this.after(() => this.walk(total), TIMING.rollMs + TIMING.stepMs); // the dice show, then one hop per step
   }
 
+  /** One hop on: at a fork, the player picks the way first. */
   walk(left) {
-    const p = this.players[this.turn];
-    p.space = this.spaces[p.space].next[0];
+    const here = this.spaces[this.players[this.turn].space];
+    if (here.next.length === 2) return this.forkPrompt(here.next, (to) => this.hop(to, left));
+    this.hop(here.next[0], left);
+  }
+
+  hop(to, left) {
+    this.players[this.turn].space = to;
     left--;
     this.ctx.update();
     if (left === 0) return this.after(() => this.land(), TIMING.stepMs);
     this.passBy(() => this.after(() => this.walk(left), TIMING.stepMs));
+  }
+
+  /** What lies ahead from space `i`: the next 4 spaces' types ('star' for the star). */
+  preview(i) {
+    const out = [];
+    for (let k = 0; k < 4; k++) {
+      out.push(i === this.star ? 'star' : this.spaces[i].type);
+      i = this.spaces[i].next[0];
+    }
+    return out;
+  }
+
+  forkPrompt(ways, go) {
+    this.ask('path', ['0', '1'], (v) => go(ways[Number(v)]), '0', { previews: ways.map((i) => this.preview(i)) });
   }
 
   /** On a space while walking past it: the star and the shop can stop you; then `next`. */
@@ -235,6 +255,11 @@ export class PartyBoard {
       return done();
     }
     if (type === 'bonus') return this.slot(done);
+    if (type === 'warp') {
+      this.players[slot].space = this.spaces[space].warp;
+      this.say('🌀 Warp!');
+      return done();
+    }
     const n = this.coins(slot, type === 'red' ? SPACE_COINS.red : SPACE_COINS.blue);
     this.say(n >= 0 ? `+${n} 🪙` : `${n} 🪙`);
     done();
