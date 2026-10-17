@@ -13,6 +13,8 @@ import { DiceParty } from '../server/games/dice-party.js';
 import { MicroMayhem } from '../server/games/micro-mayhem.js';
 import { PartyMinis } from '../server/games/party-minis.js';
 import { TIMING as MINI_TIMING } from '../server/games/minis/runner.js';
+import { PartyBoard, TIMING as PB_TIMING } from '../server/games/party-board.js';
+import { MAPS } from '../server/games/board/maps.js';
 import { LiarsDice } from '../server/games/liars-dice.js';
 
 /** Load public/games/<id>/host.js with a stub Ark and return what it registers. */
@@ -234,4 +236,30 @@ test('party minigames: go, point, fanfare', () => {
     ctx.advance(MINI_TIMING.resultPartyMs);
   }
   assert.deepEqual(heard(), ['fanfare']);
+});
+
+test('party board: hops tick, coins chime, the end fanfares', () => {
+  const ctx = fakeCtx();
+  ctx.settings = { turns: 10, style: 'mix', bonus: 0 };
+  const q = [0];
+  const game = new PartyBoard(ctx, () => (q.length ? q.shift() : 0.01), MAPS.island, [sayStub('party')]);
+  game.start();
+  const heard = listen('party-board', game);
+  game.onInput(0, { type: 'choose', value: 'roll' }); // rolls a 1
+  ctx.advance(PB_TIMING.rollMs);
+  heard();
+  ctx.advance(PB_TIMING.stepMs);
+  assert.deepEqual(heard(), ['tick']);
+  ctx.advance(PB_TIMING.stepMs); // lands on blue: +3
+  assert.deepEqual(heard(), ['point']);
+  game.round = 10;
+  ctx.advance(PB_TIMING.messageMs);
+  game.onInput(1, { type: 'choose', value: 'roll' });
+  ctx.advance(PB_TIMING.rollMs + PB_TIMING.stepMs * 2 + PB_TIMING.messageMs);
+  heard();
+  game.onInput(0, { type: 'ready' });
+  game.onInput(1, { type: 'ready' });
+  game.onInput(0, { type: 'win' });
+  ctx.advance(MINI_TIMING.resultPartyMs);
+  assert.ok(heard().includes('fanfare'));
 });

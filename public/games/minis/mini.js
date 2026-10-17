@@ -42,6 +42,8 @@
         if (v.phase === 'play' && key !== keyOf(v)) { key = keyOf(v); at = performance.now(); }
       },
       t: function (v) { return v && key === keyOf(v) ? Math.round(performance.now() - at) : 0; },
+      /** Forget the last minigame (a new match can bring the same one back as 0:id). */
+      reset: function () { key = null; },
     };
   }
 
@@ -163,6 +165,7 @@
       unmount: function () {
         cancelAnimationFrame(raf);
         mini.clear(null);
+        clk.reset();
         root = els = view = null;
         cardKey = '';
       },
@@ -274,6 +277,7 @@
       unmount: function () {
         cancelAnimationFrame(raf);
         mini.clear(null);
+        clk.reset();
         root = els = view = api = null;
         cardKey = '';
       },
