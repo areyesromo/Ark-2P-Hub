@@ -16,6 +16,7 @@ import miniGolf from './mini-golf.js';
 import bombDuel from './bomb-duel.js';
 import kartRace from './kart-race.js';
 import memoryMatch from './memory-match.js';
+import bombSquad, { LEVELS as BOMB_LEVELS } from './bomb-squad.js';
 import { withSetup } from './options.js';
 
 /**
@@ -66,6 +67,10 @@ const GAMES = [
   withSetup(battleship, { shotSeconds: { title: 'Time per shot', values: [30, 15, 60], label: (n) => `${n} s` } }),
   withSetup(connectFour, firstTo(ROUNDS_WON, [3, 1, 5])),
   memoryMatch,
+  withSetup(bombSquad, {
+    level: { title: 'Difficulty', values: [2, 1, 3], label: (n) => `${BOMB_LEVELS[n].name} · ${BOMB_LEVELS[n].modules} modules, ${BOMB_LEVELS[n].ms / 60000} min` },
+    bombs: { title: 'Bombs (you swap roles each one)', values: [3, 1, 5], label: (n) => (n === 1 ? 'One bomb' : `${n} bombs`) },
+  }),
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
 ];
 
