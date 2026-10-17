@@ -109,3 +109,15 @@ test('setup: card count, theme and turn time are remembered; bad values ignored'
   assert.deepEqual(ctx.saved.settings, { cards: 36, theme: 0, turnSeconds: 20 });
   for (const t of THEMES) assert.ok(t.faces.length >= 18 && new Set(t.faces).size === t.faces.length, `${t.name}: 18+ different faces`);
 });
+
+test('picture sets: every set can fill the biggest board; Mixed never repeats a picture', () => {
+  assert.ok(THEMES.length >= 8);
+  const { game } = playing({ cards: 36, theme: 0 });
+  const faces = game.cards.map((c) => c.face);
+  assert.equal(new Set(faces).size, 18, '18 different pictures, each twice');
+  assert.deepEqual(game.hostView().themeNames, THEMES.map((t) => t.name));
+  for (let t = 1; t <= THEMES.length; t++) {
+    const { game: g } = playing({ cards: 36, theme: t });
+    assert.equal(new Set(g.cards.map((c) => c.face)).size, 18, THEMES[t - 1].name);
+  }
+});

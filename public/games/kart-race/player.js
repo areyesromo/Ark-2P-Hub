@@ -8,6 +8,14 @@
     { key: 'items', title: 'Items (? boxes)', fmt: function (n) { return n ? 'On' : 'Off'; } },
   ];
   const ITEM_ICON = { banana: '🍌', turbo: '⚡', shield: '🛡️' };
+  // Controller layout, remembered on this phone: 'auto' follows how the phone
+  // is held; 'landscape' turns the controls sideways even if the phone's
+  // rotation is locked (◀ ▶ under the left thumb, ITEM / BRAKE under the right).
+  const LAYOUT_KEY = 'ark.kart.layout';
+  const LAYOUTS = ['auto', 'landscape', 'portrait'];
+  const LAYOUT_LABEL = { auto: '🔄 Auto', landscape: '↔ Landscape', portrait: '↕ Portrait' };
+  let layout = 'auto';
+  try { if (LAYOUTS.indexOf(localStorage.getItem(LAYOUT_KEY)) !== -1) layout = localStorage.getItem(LAYOUT_KEY); } catch (e) { /* private mode */ }
 
   let root = null;
   let els = null;
@@ -64,8 +72,20 @@
     return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
   }
 
+  /** Lay the controls out for the chosen layout and how the phone is held. */
+  function applyLayout() {
+    if (!root) return;
+    const tall = window.innerHeight > window.innerWidth;
+    const racing = Boolean(view) && view.phase !== 'setup' && view.phase !== 'over';
+    const landscape = layout === 'landscape' || (layout === 'auto' && !tall);
+    root.classList.toggle('landscape', landscape && racing);
+    root.classList.toggle('rotated', layout === 'landscape' && tall && racing); // turn the controls sideways
+    els.layout.textContent = LAYOUT_LABEL[layout];
+  }
+
   function render(v) {
     view = v;
+    applyLayout();
     trackNames = v.trackNames || trackNames;
     const me = v.you;
     const k = v.karts && v.karts[me];
@@ -96,6 +116,7 @@
       root = document.createElement('div');
       root.className = 'kr-phone';
       root.innerHTML =
+        '<button class="ghost kr-layout"></button>' +
         '<div class="status"></div>' +
         '<div class="kr-setup-box"></div>' +
         '<button class="primary go hidden">Start</button>' +
@@ -117,7 +138,15 @@
         item: root.querySelector('.item'),
         rematch: root.querySelector('.rematch'),
         change: root.querySelector('.change'),
+        layout: root.querySelector('.kr-layout'),
       };
+      els.layout.addEventListener('click', function () {
+        layout = LAYOUTS[(LAYOUTS.indexOf(layout) + 1) % LAYOUTS.length];
+        try { localStorage.setItem(LAYOUT_KEY, layout); } catch (e) { /* private mode */ }
+        applyLayout();
+      });
+      window.addEventListener('resize', applyLayout);
+      applyLayout();
       holdButton(els.left, 'left');
       holdButton(els.right, 'right');
       holdButton(els.brake, 'brake');
@@ -134,6 +163,7 @@
     },
     update: render,
     unmount: function () {
+      window.removeEventListener('resize', applyLayout);
       root = els = view = null;
       held.left = held.right = held.brake = false;
       sent = textKey = '';
