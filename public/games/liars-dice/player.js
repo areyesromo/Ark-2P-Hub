@@ -42,7 +42,7 @@
       return;
     }
     html += '<div class="ld-mine">' + (v.mine || []).map(function (d) { return ArkDice.html(d, v.wild && d === 1 ? 'wild' : ''); }).join('') + '</div>';
-    html += '<p class="ld-info">Your dice (hidden from ' + (v.counts[1 - mine]) + '-dice rival) · ' + v.total + ' dice in play' + (v.wild ? ' · ones are wild' : '') + '</p>';
+    html += '<p class="ld-info">Your dice · rival has ' + v.counts[1 - mine] + ' · ' + v.total + ' dice in play' + (v.wild ? ' · ones are wild' : '') + '</p>';
     if (v.phase === 'bidding') {
       html += '<div class="ld-current">' + (v.bid ? (v.bid.by === mine ? 'You bid ' : 'They bid ') + bidText(v.bid) : 'No bid yet') + '</div>';
       if (myTurn) {
