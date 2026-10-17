@@ -17,6 +17,7 @@ import bombDuel from './bomb-duel.js';
 import kartRace from './kart-race.js';
 import memoryMatch from './memory-match.js';
 import bombSquad, { LEVELS as BOMB_LEVELS } from './bomb-squad.js';
+import marbleMaze, { LEVELS as MAZE_LEVELS } from './marble-maze.js';
 import { withSetup } from './options.js';
 
 /**
@@ -70,6 +71,10 @@ const GAMES = [
   withSetup(bombSquad, {
     level: { title: 'Difficulty', values: [2, 1, 3], label: (n) => `${BOMB_LEVELS[n].name} · ${BOMB_LEVELS[n].modules} modules, ${BOMB_LEVELS[n].ms / 60000} min` },
     bombs: { title: 'Bombs (you swap roles each one)', values: [3, 1, 5], label: (n) => (n === 1 ? 'One bomb' : `${n} bombs`) },
+  }),
+  withSetup(marbleMaze, {
+    levels: { title: 'Mazes', values: [3, 5, 1], label: (n) => (n === 1 ? 'One maze' : n === MAZE_LEVELS.length ? `All ${n} mazes` : `${n} mazes`) },
+    controls: { title: 'Who tilts what', values: [1, 2], label: (n) => (n === 1 ? 'Split: one ↔, one ↕' : 'Shared: both steer') },
   }),
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
 ];

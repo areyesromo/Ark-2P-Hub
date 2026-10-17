@@ -1,0 +1,33 @@
+/* ---- TV ---- */
+
+.mm-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 1.3rem; }
+.mm-top { display: flex; justify-content: space-between; align-items: center; font-size: 1.5rem; font-weight: 800; }
+.mm-top .muted { color: var(--muted); font-weight: 700; }
+.mm-top .stars { color: var(--warn); }
+.mm-arena { flex: 1; min-height: 0; position: relative; border-radius: 18px; overflow: hidden; background: radial-gradient(ellipse at 50% 30%, #1e293b, #0b0d17 70%); }
+.mm-arena canvas { display: block; }
+.mm-clock { position: absolute; top: 0.8rem; left: 50%; transform: translateX(-50%); padding: 0.2rem 1.2rem; border-radius: 12px; background: rgba(11, 13, 23, 0.7); font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; z-index: 1; }
+.mm-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; text-align: center; pointer-events: none; z-index: 2; }
+.mm-overlay:empty { display: none; }
+.mm-overlay .panel { background: rgba(11, 13, 23, 0.9); border: 1px solid var(--line); border-radius: 20px; padding: 1.4rem 2.6rem; }
+.mm-overlay .title { font-size: 3rem; font-weight: 900; }
+.mm-overlay .won .title { color: var(--good); }
+.mm-overlay .count { font-size: 4rem; font-weight: 900; color: var(--warn); }
+.mm-overlay .stars { font-size: 2.6rem; }
+.mm-overlay .banner { align-self: flex-start; margin-top: 4.5rem; padding: 0.6rem 1.6rem; border-radius: 14px; background: rgba(11, 13, 23, 0.85); font-size: 2rem; font-weight: 900; color: #fb923c; }
+.mm-overlay table { margin: 0.8rem auto; border-collapse: collapse; font-size: 1.4rem; }
+.mm-overlay td { padding: 0.3rem 1rem; text-align: left; }
+.mm-overlay .muted { color: var(--muted); }
+.mm-who { text-align: center; font-size: 1.4rem; font-weight: 700; }
+
+/* ---- phone ---- */
+
+.mm-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; text-align: center; }
+.mm-axis { display: flex; align-items: center; justify-content: center; gap: 12px; font-size: 1.05rem; }
+.mm-axis .glyph { font-size: 2.6rem; font-weight: 900; color: var(--me); line-height: 1; }
+.mm-phone .status { font-size: 1.1rem; min-height: 1.4em; }
+.mm-phone .status .big { font-size: 2rem; font-weight: 900; color: var(--warn); }
+.mm-pad { flex: 1; min-height: 0; display: flex; }
+.mm-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.mm-pad.axis-x .mp-pad .arrow.up, .mm-pad.axis-x .mp-pad .arrow.down,
+.mm-pad.axis-y .mp-pad .arrow.left, .mm-pad.axis-y .mp-pad .arrow.right { opacity: 0.15; }
