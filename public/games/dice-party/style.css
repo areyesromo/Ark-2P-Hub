@@ -1,0 +1,33 @@
+/* ---- TV ---- */
+.dp-host { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; gap: 2rem; font-size: 1.4rem; }
+.dp-play { display: flex; flex-direction: column; align-items: center; gap: 1rem; text-align: center; }
+.dp-play .title { font-size: 2.8rem; font-weight: 900; }
+.dp-play .sub { font-size: 1.5rem; }
+.dp-play .muted, .dp-card .muted { color: var(--muted); }
+.dp-dice { display: flex; gap: 1rem; font-size: 2.2rem; margin-top: 1rem; }
+.dp-slot { position: relative; display: inline-flex; flex-direction: column; align-items: center; padding: 0.2em; border-radius: 0.4em; border: 0.1em solid transparent; }
+.dp-slot.cur { border-color: var(--me); }
+.dp-slot b, .dp-die b { font-size: 0.4em; color: var(--warn); letter-spacing: 0.1em; margin-top: 0.7em; }
+.dp-card { border-collapse: collapse; font-size: 1.15rem; justify-self: center; min-width: 22rem; }
+.dp-card th, .dp-card td { padding: 0.25rem 0.8rem; border-bottom: 1px solid var(--line); text-align: center; }
+.dp-card td:first-child { text-align: left; }
+.dp-card td.got { font-weight: 800; }
+.dp-card td.fresh { color: var(--warn); }
+.dp-card td.opt { color: var(--muted); font-style: italic; }
+.dp-card td.opt.zero { opacity: 0.4; }
+.dp-card tr.cur td { background: rgba(250, 204, 21, 0.18); }
+.dp-card tr.sum td { font-size: 0.95rem; }
+.dp-card tr.total td { font-weight: 900; font-size: 1.5rem; border-bottom: 0; }
+/* ---- phone ---- */
+.dp-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 14px 16px 18px; text-align: center; overflow-y: auto; }
+.dp-phone .dp-dice { gap: 6px; font-size: 0.95rem; margin: 0; }
+.dp-die { display: inline-flex; flex-direction: column; align-items: center; padding: 4px; background: transparent; border: 0; }
+.dp-die:disabled { opacity: 1; }
+.dp-info { margin: 0; color: var(--muted); }
+.dp-roll, .dp-score { font-size: 1.3rem; padding: 14px 28px; }
+.dp-boxes { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; width: 100%; max-width: 420px; }
+.dp-box { display: flex; justify-content: space-between; align-items: center; gap: 6px; padding: 10px 12px; background: var(--panel); border: 3px solid transparent; font-size: 0.95rem; text-align: left; }
+.dp-box strong { font-size: 1.2rem; }
+.dp-box.zero { opacity: 0.55; }
+.dp-box.on { border-color: var(--me); opacity: 1; }
+.dp-big { font-size: 2rem; font-weight: 900; color: var(--warn); margin-top: 20px; }
