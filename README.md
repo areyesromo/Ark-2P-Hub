@@ -33,6 +33,7 @@ one you just played).
 | **Quiz Battle** | 10 trivia questions (science, geography, movies, music, sports, games and more). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
 | **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. 125 shapes (basic shapes, pictures like a rocket or a cat, letters and numbers), never repeated until you've seen them all. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
 | **Battleship** | Hide your 5 ships on your phone (tap a ship, tap where it goes, tap it again to turn it, or shuffle), then take turns firing at the enemy grid. The TV shows both oceans with every hit and miss; ships stay hidden until sunk. 30 s per shot. Sink the whole fleet to win. |
+| **Word Race** | Boggle for two: the same 4×4 letter grid on both phones and the TV. Swipe across touching letters (sideways, up/down or diagonally) to spell words of 3+ letters, checked against a ~275k-word dictionary; longer words score more (3–4 letters 1, 5 → 2, 6 → 3, 7 → 5, 8+ → 11). After 90 s, words you **both** found cancel out, so hunt for the rare ones. Best of 3 rounds. |
 | **Connect Four** | The classic: drop discs into a 7×6 grid and line up four (across, down or diagonally) before your rival. Tap a column on your phone, which shows the board too. 20 s per move (a random column if you run out); who starts swaps every round. First to 3 rounds. |
 
 ### 🎨 Casual
@@ -67,6 +68,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Quiz Battle | **A** / **B** / **X** / **Y** to answer, or the **D-pad** as a diamond (↓ A, → B, ← X, ↑ Y) | Answer tiles on the TV are coloured like the buttons |
 | Draw Duel | **Left stick** or **D-pad** moves a cursor, hold **A** / **RT** / **RB** to draw, **B** undo, **X** clear, **Y** / **START** done | Phones draw with a finger, which is easier; the controller is for brave players |
 | Battleship | **D-pad** aims at the enemy grid on the TV, **A** fires | A controller player's fleet is placed at random, since the TV can't keep it secret |
+| Word Race | **D-pad** / **stick** moves a cursor, **A** adds the letter, **B** removes the last one, **Y** / **X** / **RT** submits the word | Phones are easier (just swipe), and your trace shows on the TV for your rival to see |
 | Connect Four | **D-pad** ← → (or the stick) moves your disc over the columns, **A** or **↓** drops it | |
 | Sketch & Guess | **A** / **B** / **X** / **Y** picks one of four words shown on the TV | Controller players always guess (the word has to stay secret from the guesser); wrong picks pause you for a moment |
 | Game over | **A** / **Start** | Rematch |
@@ -267,7 +269,6 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 **More games**
 
-- Typing or Word Race: race to type, or find words in a shared letter grid
 - Mini Golf: aim and drag on your phone, watch the ball roll on the TV
 - Bomberman-style duel: maze, bombs and power-ups
 - More quiz packs, drawing shapes and Sketch & Guess words
