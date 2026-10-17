@@ -1,0 +1,49 @@
+/* The dial (shared by the TV and phones): shared/dial.js draws it. */
+.md-dial { display: block; width: 100%; height: auto; overflow: visible; }
+.md-dial .face { fill: #f5ecd7; stroke: #3b2f1e; stroke-width: 2; }
+.md-dial .tick { stroke: #8b7355; stroke-width: 1; }
+.md-dial .target-line { stroke: #111827; stroke-width: 1; stroke-dasharray: 3 2; }
+.md-dial .needle { stroke: #dc2626; stroke-width: 3.5; stroke-linecap: round; }
+.md-dial .hub { fill: #1f2937; stroke: #dc2626; stroke-width: 2; }
+
+/* ---- TV ---- */
+
+.md-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; font-size: 1.3rem; }
+.md-top { align-self: stretch; display: flex; justify-content: space-between; font-size: 1.6rem; font-weight: 800; }
+.md-top .stars { color: var(--warn); }
+.md-timer { color: var(--muted); }
+.md-clue { font-size: 4rem; font-weight: 900; text-align: center; max-width: 90%; overflow-wrap: anywhere; }
+.md-clue.waiting { font-size: 2.4rem; font-weight: 800; }
+.md-sub { font-size: 1.7rem; min-height: 1.4em; text-align: center; }
+.md-scale { flex: 1; min-height: 0; width: min(80rem, 100%); display: grid; grid-template-columns: 1fr 4fr 1fr; align-items: end; gap: 1rem; }
+.md-scale .md-dial { max-height: 100%; }
+.md-scale .end { font-size: 2rem; font-weight: 900; padding-bottom: 0.4rem; }
+.md-scale .end.left { text-align: right; color: #93c5fd; }
+.md-scale .end.right { color: #fca5a5; }
+.md-msg { margin: auto; text-align: center; }
+.md-msg .title { font-size: 3rem; font-weight: 900; }
+.md-msg table { margin: 1rem auto; border-collapse: collapse; font-size: 1.4rem; }
+.md-msg td { padding: 0.3rem 1rem; text-align: left; }
+.md-msg .muted { color: var(--muted); }
+
+/* ---- phone ---- */
+
+.md-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 18px; text-align: center; overflow-y: auto; }
+.md-phone .md-top { font-size: 1rem; }
+.md-role { font-size: 1.5rem; font-weight: 900; color: var(--me); }
+.md-help { margin: 0; color: var(--muted); }
+.md-help strong { color: var(--text); }
+.md-phone .md-clue { font-size: 2rem; }
+.md-result { font-size: 1.4rem; font-weight: 800; }
+.md-dial-box { display: grid; grid-template-columns: 1fr; gap: 4px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.md-dial-box .end { font-weight: 900; font-size: 1rem; }
+.md-dial-box .end.left { order: 2; text-align: left; color: #93c5fd; }
+.md-dial-box .end.right { order: 3; text-align: right; color: #fca5a5; margin-top: -1.5em; }
+.md-dial-box .md-dial { order: 1; }
+.md-dial-box.turnable .md-dial .face { stroke: var(--me); stroke-width: 3; }
+.md-form { display: flex; gap: 8px; }
+.md-input { flex: 1; min-width: 0; font-size: 1.2rem; padding: 12px; }
+.md-controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
+.md-controls button { padding: 14px 0; font-size: 1.2rem; }
+.md-over { font-size: 2.4rem; font-weight: 900; color: var(--warn); margin-top: 20px; }
+.md-rematch { align-self: center; padding: 16px 32px; font-size: 1.1rem; }
