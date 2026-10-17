@@ -14,6 +14,7 @@ import sumo from './sumo.js';
 import wordRace from './word-race.js';
 import miniGolf from './mini-golf.js';
 import bombDuel from './bomb-duel.js';
+import kartRace from './kart-race.js';
 import { withSetup } from './options.js';
 
 /**
@@ -53,6 +54,7 @@ const GAMES = [
   withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
   bombDuel,
+  kartRace,
   withSetup(quiz, {
     questions: { title: 'Number of questions', values: [10, 5, 15, 20], label: (n) => String(n) },
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
