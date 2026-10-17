@@ -24,6 +24,8 @@
   let frame = null;
   let frameMounted = false;
   let key = '';
+  let receivedAt = 0;
+  let ticker = null;
 
   function frameCfg() {
     return {
@@ -69,7 +71,8 @@
       if (v.message) h += '<div class="pb-msg small">' + esc(v.message) + '</div>';
       if (p && p.slot === me) {
         h += '<div class="pb-ask">' + ASK[p.kind] + (p.kind === 'slot' ? ' <b>' + p.extra.reels.concat(['?', '?', '?']).slice(0, 3).join(' ') + '</b>' : '') + '</div><div class="pb-choices">' +
-          p.options.map(function (o) { return '<button class="' + (o === 'none' || o === 'no' ? 'ghost' : 'primary') + '" data-v="' + esc(o) + '">' + option(v, p.kind, o) + '</button>'; }).join('') + '</div>';
+          p.options.map(function (o) { return '<button class="' + (o === 'none' || o === 'no' ? 'ghost' : 'primary') + '" data-v="' + esc(o) + '">' + option(v, p.kind, o) + '</button>'; }).join('') + '</div>' +
+          '<div class="pb-time" data-end="' + (receivedAt + p.msLeft) + '">' + Math.ceil(p.msLeft / 1000) + ' s</div>';
       } else if (v.turn !== me || !p) {
         h += '<div class="pb-wait">' + (v.turn === me ? '…' : 'Their turn…') + '</div>';
       }
@@ -88,6 +91,13 @@
       root = document.createElement('div');
       root.className = 'pb-phone-root';
       el.appendChild(root);
+      // Count the open choice's time down between views (none arrive while waiting).
+      ticker = setInterval(function () {
+        if (!root) return;
+        root.querySelectorAll('.pb-time[data-end]').forEach(function (t) {
+          t.textContent = Math.max(0, Math.ceil((Number(t.getAttribute('data-end')) - performance.now()) / 1000)) + ' s';
+        });
+      }, 250);
       root.addEventListener('click', function (e) {
         const b = e.target.closest('button');
         if (!b || !view || view.phase === 'minigame') return;
@@ -101,9 +111,11 @@
     },
     update: function (v) {
       view = v;
+      receivedAt = performance.now();
       render();
     },
     unmount: function () {
+      clearInterval(ticker);
       if (frameMounted) frame.unmount();
       frameMounted = false;
       root = view = null;

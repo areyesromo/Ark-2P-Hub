@@ -41,6 +41,8 @@
   let view = null;
   let frame = null; // the minigame frame (ArkMini.hostFrame)
   let frameMounted = false;
+  let receivedAt = 0;
+  let ticker = null;
 
   function frameCfg() {
     return {
@@ -93,7 +95,7 @@
       h += '<div class="pb-ask">' + nameOf(v, p.slot) + ': ' + KIND[p.kind] + (p.kind === 'slot' ? ' <b>' + p.extra.reels.concat(['?', '?', '?']).slice(0, 3).join(' ') + '</b>' : '') + '</div>' +
         '<div class="pb-opts">' + p.options.map(function (o, i) {
           return '<span class="' + (local && cursors[p.slot] === i ? 'cur' : '') + '">' + esc(label(v, p.kind, o)) + '</span>';
-        }).join('') + '</div><div class="pb-time">' + Math.ceil(p.msLeft / 1000) + ' s</div>';
+        }).join('') + '</div><div class="pb-time" data-end="' + (receivedAt + p.msLeft) + '">' + Math.ceil(p.msLeft / 1000) + ' s</div>';
     }
     return h;
   }
@@ -114,6 +116,14 @@
     els.right.innerHTML = hud(v, 1);
     els.board.innerHTML = drawBoard(v);
     els.centre.innerHTML = centre(v);
+  }
+
+  /** Count the open choice's time down between views (none arrive while waiting). */
+  function tickDown(el) {
+    if (!el) return;
+    el.querySelectorAll('.pb-time[data-end]').forEach(function (t) {
+      t.textContent = Math.max(0, Math.ceil((Number(t.getAttribute('data-end')) - performance.now()) / 1000)) + ' s';
+    });
   }
 
   miniReady.then(function () {
@@ -166,6 +176,7 @@
       root.className = 'pb-host';
       root.innerHTML = '<div class="pb-left"></div><div class="pb-boardbox"><div class="pb-board"></div><div class="pb-centre"></div></div><div class="pb-right"></div><div class="pb-mini"></div>';
       el.appendChild(root);
+      ticker = setInterval(function () { tickDown(root); }, 250);
       els = {
         left: root.querySelector('.pb-left'), right: root.querySelector('.pb-right'),
         board: root.querySelector('.pb-board'), centre: root.querySelector('.pb-centre'), mini: root.querySelector('.pb-mini'),
@@ -174,9 +185,11 @@
     },
     update: function (v) {
       view = v;
+      receivedAt = performance.now();
       render();
     },
     unmount: function () {
+      clearInterval(ticker);
       if (frameMounted) frame.unmount();
       frameMounted = false;
       root = els = view = null;

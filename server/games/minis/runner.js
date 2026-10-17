@@ -48,11 +48,12 @@ export class Playlist {
 }
 
 export class MiniGame {
-  constructor(ctx, pool, rng = Math.random) {
+  /** playlist: share one across games (Party Board's rounds) so minigames don't repeat. */
+  constructor(ctx, pool, rng = Math.random, playlist = null) {
     this.ctx = ctx;
     this.pool = pool;
     this.rng = rng;
-    this.playlist = new Playlist(pool.map((d) => d.id), rng);
+    this.playlist = playlist || new Playlist(pool.map((d) => d.id), rng);
     this.epoch = 0; // bumps with every minigame, so a stale api.end is ignored
     this.timers = []; // the current minigame's timers
     this.phaseTimer = null;
@@ -210,8 +211,8 @@ export class MiniGame {
  * onDone(result) instead of ending the match.
  */
 export class OneMini extends MiniGame {
-  constructor(ctx, pool, rng, onDone) {
-    super(ctx, pool, rng);
+  constructor(ctx, pool, rng, onDone, playlist) {
+    super(ctx, pool, rng, playlist);
     this.onDone = onDone;
   }
 

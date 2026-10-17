@@ -5,7 +5,7 @@
 
 import { MAPS } from './board/maps.js';
 import { PARTIES } from './minis/index.js';
-import { OneMini } from './minis/runner.js';
+import { OneMini, Playlist } from './minis/runner.js';
 import { poolFor } from './party-minis.js';
 import { settingOf } from './options.js';
 
@@ -59,6 +59,7 @@ export class PartyBoard {
     this.epoch++;
     this.clearTimers();
     this.players = [0, 1].map(() => ({ space: 0, coins: START_COINS, stars: 0, items: [], earned: 0, minigames: 0 }));
+    this.playlist = new Playlist(this.pool.map((d) => d.id), this.rng); // one per match: no repeats until all are played
     this.star = this.pickStar(null);
     this.round = 1;
     this.turn = 0;
@@ -181,8 +182,10 @@ export class PartyBoard {
     next();
   }
 
-  starPrompt(next) {
+  /** Buy the star? `landed`: on its space, where "no" still pays the space's blue +3. */
+  starPrompt(next, landed) {
     this.ask('star', ['yes', 'no'], (v) => {
+      if (v !== 'yes' && landed) this.say(`+${this.coins(this.turn, SPACE_COINS.blue)} 🪙`);
       if (v === 'yes') {
         this.coins(this.turn, -STAR_PRICE);
         this.players[this.turn].stars++;
@@ -221,7 +224,7 @@ export class PartyBoard {
       this.ctx.update();
       this.after(() => this.endTurn(), TIMING.messageMs);
     };
-    if (space === this.star && this.players[slot].coins >= STAR_PRICE) return this.starPrompt(done);
+    if (space === this.star && this.players[slot].coins >= STAR_PRICE) return this.starPrompt(done, true);
     if (type === 'shop') {
       if (this.shopItems(slot).length) return this.shopPrompt(done);
       this.say('🛒 Nothing you can buy');
@@ -297,7 +300,7 @@ export class PartyBoard {
     this.phase = 'minigame';
     this.mini = new OneMini(this.ctx, this.pool, this.rng, (r) => {
       if (e === this.epoch) this.miniDone(r);
-    });
+    }, this.playlist);
     this.mini.start();
   }
 
@@ -354,7 +357,7 @@ export class PartyBoard {
 
   view(slot) {
     const p = this.prompt;
-    return {
+    const v = {
       phase: this.phase,
       round: this.round,
       turns: this.turns,
@@ -371,6 +374,12 @@ export class PartyBoard {
       draw: this.draw,
       scores: this.players.map((x) => x.stars),
     };
+    // Minigames update up to 20 times a second and don't show the board: leave it out.
+    if (this.phase === 'minigame') {
+      delete v.board;
+      delete v.items;
+    }
+    return v;
   }
 
   hostView() {

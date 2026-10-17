@@ -410,3 +410,55 @@ test('inputs: the other player, unknown values or no prompt are ignored', () => 
   h.choose(0, 'roll'); // the prompt is gone
   assert.equal(h.v().dice.values.length, 1);
 });
+
+// ---- review fixes ----
+
+test('minigames: no repeats until each has been played (one playlist per match)', () => {
+  const ctx = fakeCtx();
+  const pool = ['a', 'b', 'c'].map((id) => ({ ...claim, id }));
+  const q = [0];
+  let x = 3;
+  const g = new PartyBoard(ctx, () => (q.length ? q.shift() : ((x = (x * 9301 + 49297) % 233280) / 233280)), MAPS.island, pool);
+  g.start();
+  const seen = [];
+  for (let r = 0; r < 3; r++) {
+    for (const s of [0, 1]) {
+      g.players[s].space = 0;
+      g.star = 25;
+      g.onInput(s, { type: 'choose', value: 'roll' });
+      for (let i = 0; i < 400 && g.hostView().phase === 'board' && !(g.hostView().prompt && g.hostView().prompt.slot !== s); i++) ctx.advance(50);
+      if (g.hostView().prompt && g.hostView().prompt.slot === s) g.onInput(s, { type: 'choose', value: g.hostView().prompt.options.slice(-1)[0] });
+      for (let i = 0; i < 400 && g.hostView().phase === 'board' && !(g.hostView().prompt && (g.hostView().prompt.slot !== s || g.hostView().prompt.kind === 'roll')); i++) ctx.advance(50);
+    }
+    assert.equal(g.hostView().phase, 'minigame');
+    seen.push(g.hostView().mini.mini.id);
+    g.onInput(0, { type: 'ready' });
+    g.onInput(1, { type: 'ready' });
+    g.onInput(0, { type: 'draw' });
+    ctx.advance(MINI.resultPartyMs);
+  }
+  assert.deepEqual(seen.slice().sort(), ['a', 'b', 'c']);
+});
+
+test('star: landing on it and saying no still pays the blue +3', () => {
+  const h = board();
+  h.g.players[0].coins = 20;
+  h.q.push(D(2));
+  h.choose(0, 'roll');
+  const v = h.settle();
+  assert.equal(v.prompt.kind, 'star');
+  h.choose(0, 'no');
+  h.settle();
+  assert.equal(h.p(0).coins, 23);
+});
+
+test('views during a minigame leave the board out (it updates up to 20 times a second)', () => {
+  const h = board();
+  h.roll(0, 1);
+  const v = h.roll(1, 1);
+  assert.equal(v.phase, 'minigame');
+  assert.equal(v.board, undefined);
+  assert.equal(v.items, undefined);
+  assert.ok(v.players && v.mini);
+  assert.ok(h.g.playerView(0).board === undefined);
+});
