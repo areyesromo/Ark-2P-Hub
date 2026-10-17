@@ -29,8 +29,8 @@ Validity (checked by a test for every map):
 | island | 🏝️ Party Island | easy | the existing 28-space loop | 20 | 1 |
 | lagoons | 🌊 Twin Lagoons | easy | one fork: a short path (red / event heavy) or a longer safe one (blue / shop) that rejoin | 20 | 1 |
 | pipes | 🔧 Pipe Works | medium | two forks; two warps: one jumps ahead (shortcut), one sends you back to near the start | 20 | 1 |
-| haunted | 👻 Haunted Maze | hard | three forks incl. a side loop that leads back before the fork; two backward warps; ~40 % red; star candidates far from the start | 25 | 1 |
-| volcano | 🌋 Volcano Peak | expert | four forks; three one-way warps (mostly backward); ~55 % red among blue/red | 30 | 1.5 |
+| haunted | 👻 Haunted Maze | hard | three forks incl. a side loop that leads back before the fork; two backward warps; ~50 % red; star candidates far from the start | 25 | 1 |
+| volcano | 🌋 Volcano Peak | expert | four forks; three one-way warps (mostly backward); ~65 % red among blue/red | 30 | 1.5 |
 
 Exact layouts are data in `maps.js`; the test above guards them.
 

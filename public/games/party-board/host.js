@@ -65,13 +65,23 @@
     };
   }
 
-  /** The links between spaces (arrows at forks) and the warps' dashed jumps, under the spaces. */
+  /**
+   * The links between spaces and the warps' dashed jumps, under the spaces;
+   * an arrow halfway along every link shows which way it runs (yellow at forks).
+   * Arrows are HTML, turned by the board's real width and height.
+   */
   function links(spaces) {
     let l = '';
+    let arrows = '';
+    const W = els.board.clientWidth || 16;
+    const H = els.board.clientHeight || 9;
     spaces.forEach(function (s) {
       s.next.forEach(function (n) {
         const t = spaces[n];
-        l += '<line x1="' + s.x * 100 + '" y1="' + s.y * 100 + '" x2="' + t.x * 100 + '" y2="' + t.y * 100 + '"' + (s.next.length > 1 ? ' class="fork" marker-end="url(#pb-arrow)"' : '') + '/>';
+        const fork = s.next.length > 1;
+        l += '<line x1="' + s.x * 100 + '" y1="' + s.y * 100 + '" x2="' + t.x * 100 + '" y2="' + t.y * 100 + '"' + (fork ? ' class="fork"' : '') + '/>';
+        const deg = Math.atan2((t.y - s.y) * H, (t.x - s.x) * W) * 180 / Math.PI;
+        arrows += '<i class="pb-arrow' + (fork ? ' fork' : '') + '" style="left:' + (s.x + t.x) * 50 + '%;top:' + (s.y + t.y) * 50 + '%;transform:translate(-50%,-50%) rotate(' + deg.toFixed(1) + 'deg)"></i>';
       });
       if (s.type === 'warp') {
         const w = spaces[s.warp];
@@ -80,7 +90,7 @@
         l += '<path class="warp" d="M' + s.x * 100 + ' ' + s.y * 100 + ' Q' + mx + ' ' + my + ' ' + w.x * 100 + ' ' + w.y * 100 + '"/>';
       }
     });
-    return '<svg class="pb-links" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><marker id="pb-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z"/></marker></defs>' + l + '</svg>';
+    return '<svg class="pb-links" viewBox="0 0 100 100" preserveAspectRatio="none">' + l + '</svg>' + arrows;
   }
 
   function drawBoard(v) {

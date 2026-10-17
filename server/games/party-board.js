@@ -1,5 +1,5 @@
 // Party Board: a Mario Party-style board for two. Take turns rolling and
-// walking around the island, collect coins, buy ⭐ stars (20 🪙), and play a
+// walking around one of the maps (server/games/board/maps.js), collect coins, buy ⭐ stars (20 🪙 on most maps), and play a
 // party minigame after every round. Most stars after the last turn wins;
 // coins break ties. The minigames are Party Minigames' (server/games/minis/).
 
@@ -481,6 +481,6 @@ export default {
   name: 'Party Board',
   category: 'competitive',
   music: 'casual',
-  tagline: 'A Mario Party-style board for two: roll, walk the island, grab coins, buy ⭐ stars, raid the shop for items, and battle in a party minigame every round. Most stars wins.',
+  tagline: 'A Mario Party-style board for two: roll, pick your path across one of five maps, grab coins, buy ⭐ stars, raid the shop for items, and battle in a party minigame every round. Most stars wins.',
   create: (ctx) => new PartyBoard(ctx),
 };
