@@ -3,6 +3,7 @@
 // sleeps or the page is refreshed.
 (function () {
   const STORE_KEY = 'ark.player';
+  const COOKIE = 'ark_player'; // a backup of the seat (see loadSession)
   const socket = io();
   const $ = (id) => document.getElementById(id);
   Ark.watchVersion(socket);
@@ -31,8 +32,15 @@
   let lastView = null; // newest game view, kept so it can be applied once a renderer mounts
   let wakeLock = null;
 
+  // The seat is kept in localStorage, with a cookie as a backup: some phone
+  // browsers (in-app QR viewers, private tabs) lose one but not the other on a reload.
   function loadSession() {
-    try { return JSON.parse(localStorage.getItem(STORE_KEY)) || null; } catch (e) { return null; }
+    try {
+      const s = JSON.parse(localStorage.getItem(STORE_KEY));
+      if (s) return s;
+    } catch (e) { /* private mode */ }
+    const m = document.cookie.match(new RegExp('(?:^|; )' + COOKIE + '=([^;]*)'));
+    try { return m ? JSON.parse(decodeURIComponent(m[1])) : null; } catch (e) { return null; }
   }
   function saveSession(s) {
     session = s;
@@ -40,6 +48,7 @@
       if (s) localStorage.setItem(STORE_KEY, JSON.stringify(s));
       else localStorage.removeItem(STORE_KEY);
     } catch (e) { /* private mode */ }
+    document.cookie = COOKIE + '=' + (s ? encodeURIComponent(JSON.stringify(s)) + '; max-age=86400' : '; max-age=0') + '; path=/; SameSite=Lax';
   }
 
   // ---- join ------------------------------------------------------------
@@ -98,6 +107,13 @@
       join(session.code, session.name, session.token, true);
     }
   });
+
+  // "Still there?" from the server, when someone joins under our name (see player:join).
+  socket.on('player:ping', function (ack) { if (typeof ack === 'function') ack(true); });
+
+  // Leaving or reloading the page: say so now, so the TV doesn't wait to notice.
+  window.addEventListener('pagehide', function () { socket.disconnect(); });
+  window.addEventListener('pageshow', function (e) { if (e.persisted) socket.connect(); }); // back from the leaderboard
 
   socket.on('disconnect', function () {
     $('me-conn').textContent = 'Reconnecting…';

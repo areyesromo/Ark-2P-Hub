@@ -89,7 +89,10 @@ export class Room {
     const same = this.players.findIndex((p) => p && p.name.toLowerCase() === name.toLowerCase());
     if (same !== -1) {
       const p = this.players[same];
-      if (p.connected || p.local || local) return { error: `Someone here is already called ${p.name}. Pick another name.` };
+      if (p.connected || p.local || local) {
+        // `clash`: a phone seat that may only look connected (see player:join, which checks).
+        return { error: `Someone here is already called ${p.name}. Pick another name.`, clash: !p.local && !local ? same : undefined };
+      }
       p.token = newToken(); // the old device's token stops working
       p.name = name;
       return { slot: same, player: p, rejoined: true };
