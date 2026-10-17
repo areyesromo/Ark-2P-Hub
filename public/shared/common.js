@@ -259,7 +259,9 @@
     el.addEventListener('click', function (e) {
       const btn = e.target.closest && e.target.closest('.ark-setup .opt');
       if (!btn) return;
-      api.send({ type: 'setting', key: btn.getAttribute('data-key'), value: Number(btn.getAttribute('data-value')) });
+      // Numbers go as numbers; word choices ('fast', '3d') as they are.
+      const raw = btn.getAttribute('data-value');
+      api.send({ type: 'setting', key: btn.getAttribute('data-key'), value: raw !== '' && !isNaN(raw) ? Number(raw) : raw });
       if (api.vibrate) api.vibrate(8);
     });
   }

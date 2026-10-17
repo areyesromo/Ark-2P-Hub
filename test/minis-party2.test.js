@@ -211,3 +211,10 @@ test('penalty: nobody picking in time: the kicker misses', () => {
   assert.equal(inst.view(0).last.goal, false);
   inst.onInput(1, { type: 'pick', side: 7 }); // junk
 });
+
+test('penalty: before the first kick (the intro card) the view names a real kicker', () => {
+  const ctx = fakeCtx();
+  const api = { players: ctx.players, rng: seeded(1), speed: 1, now: ctx.now, elapsed: () => 0, update() {}, setTimeout: ctx.setTimeout, clearTimeout: ctx.clearTimeout, end() {} };
+  const v = penalty.create(api).view(null);
+  assert.equal(v.kicker, 0);
+});

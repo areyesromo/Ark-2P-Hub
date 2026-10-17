@@ -14,7 +14,7 @@ export default {
     let timer = null;
     const goals = [0, 0];
     const taken = [0, 0];
-    const kicker = () => (kick - 1) % 2;
+    const kicker = () => (kick ? (kick - 1) % 2 : 0); // before the first kick (the intro card): player 1 is up
 
     function newKick() {
       kick++;
