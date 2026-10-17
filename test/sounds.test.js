@@ -10,6 +10,9 @@ import { SketchGuess } from '../server/games/sketch-guess.js';
 import { DrawDuel, TIMING as DD_TIMING } from '../server/games/draw-duel.js';
 import { RockPaperScissors } from '../server/games/rock-paper-scissors.js';
 import { DiceParty } from '../server/games/dice-party.js';
+import { MicroMayhem } from '../server/games/micro-mayhem.js';
+import { PartyMinis } from '../server/games/party-minis.js';
+import { TIMING as MINI_TIMING } from '../server/games/minis/runner.js';
 import { LiarsDice } from '../server/games/liars-dice.js';
 
 /** Load public/games/<id>/host.js with a stub Ark and return what it registers. */
@@ -176,4 +179,59 @@ test("liar's dice: bid, then the reveal", () => {
   assert.deepEqual(heard(), ['lock']);
   game.onInput(game.turn, { type: 'liar' });
   assert.deepEqual(heard(), ['reveal']);
+});
+
+/** A minigame each player wins / passes by saying so. */
+const sayStub = (kind) => ({
+  id: 'say', kind, name: 'Say', order: 'SAY!', howTo: 'say', durationMs: 5000,
+  create(api) {
+    const res = [null, null];
+    return {
+      start() {},
+      onInput(slot, input) {
+        if (kind === 'party') return api.end({ winner: slot });
+        res[slot] = input.type === 'pass';
+        if (res[0] !== null && res[1] !== null) api.end({ pass: res.slice() });
+      },
+      view: () => ({}),
+    };
+  },
+});
+
+test('micro mayhem: go, wrong / correct, fanfare', () => {
+  const ctx = fakeCtx();
+  ctx.settings = { lives: 3 };
+  const game = new MicroMayhem(ctx, [sayStub('micro')]);
+  game.start();
+  const heard = listen('micro-mayhem', game);
+  ctx.advance(MINI_TIMING.introMicroMs);
+  assert.deepEqual(heard(), ['go']);
+  game.onInput(0, { type: 'pass' });
+  game.onInput(1, { type: 'pass' });
+  assert.deepEqual(heard(), ['correct']);
+  for (let i = 0; i < 3; i++) {
+    ctx.advance(MINI_TIMING.resultMicroMs + MINI_TIMING.introMicroMs);
+    heard();
+    game.onInput(0, { type: 'pass' });
+    game.onInput(1, { type: 'fail' });
+    assert.deepEqual(heard(), ['wrong']);
+  }
+  ctx.advance(MINI_TIMING.resultMicroMs);
+  assert.deepEqual(heard(), ['fanfare']);
+});
+
+test('party minigames: go, point, fanfare', () => {
+  const ctx = fakeCtx();
+  const game = new PartyMinis(ctx, [sayStub('party')]);
+  game.start();
+  const heard = listen('party-minis', game);
+  for (let i = 0; i < 3; i++) {
+    game.onInput(0, { type: 'ready' });
+    game.onInput(1, { type: 'ready' });
+    assert.deepEqual(heard(), ['go']);
+    game.onInput(1, { type: 'win' });
+    assert.deepEqual(heard(), ['point']);
+    ctx.advance(MINI_TIMING.resultPartyMs);
+  }
+  assert.deepEqual(heard(), ['fanfare']);
 });

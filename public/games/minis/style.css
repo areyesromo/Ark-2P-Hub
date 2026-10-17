@@ -1,0 +1,53 @@
+/* Minigames (Micro Mayhem, Party Minigames): the frame, then each minigame. */
+/* ---- frame (TV) ---- */
+.mi-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.6rem; position: relative; font-size: 1.4rem; }
+.mi-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; font-weight: 800; font-size: 1.6rem; }
+.mi-top .r { text-align: right; }
+.mi-top .m { color: var(--muted); font-size: 1.3rem; }
+.mx-hearts i, .pm-stars i { font-style: normal; margin: 0 0.12em; opacity: 0.18; filter: grayscale(1); }
+.mx-hearts i.on, .pm-stars i.on { opacity: 1; filter: none; }
+.mx-sudden { color: var(--warn); animation: mi-pulse 0.6s infinite alternate; }
+.mi-timer { height: 10px; border-radius: 5px; background: var(--line); overflow: hidden; }
+.mi-timer i { display: block; height: 100%; width: 100%; background: var(--me); }
+.mi-timer i.hurry { background: var(--bad); }
+.mi-stage { flex: 1; min-height: 0; position: relative; display: flex; }
+.mi-mini { flex: 1; min-height: 0; display: flex; position: relative; }
+.mi-card { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.mi-card:empty { display: none; }
+.mi-card-in { pointer-events: auto; text-align: center; padding: 2rem 3rem; border-radius: 24px; background: rgba(10, 12, 24, 0.88); border: 3px solid var(--line); display: flex; flex-direction: column; gap: 0.8rem; align-items: center; }
+.mi-card-in.intro .order { font-size: 5rem; font-weight: 900; letter-spacing: 0.04em; color: var(--warn); animation: mi-pop 0.35s ease-out; }
+.mi-card-in .how { font-size: 1.6rem; }
+.mi-card-in .title { font-size: 3rem; font-weight: 900; }
+.mi-card-in .big { font-size: 2.2rem; font-weight: 900; }
+.mi-card-in .ok, .mi-ok { color: #4ade80; }
+.mi-card-in .bad, .mi-bad { color: var(--bad); }
+.mi-card-in .muted { color: var(--muted); }
+.mi-ready { display: flex; gap: 2rem; font-size: 1.5rem; }
+.mi-ready .on { font-weight: 900; }
+.mx-verdicts { display: flex; gap: 3rem; font-size: 2rem; }
+.mx-verdicts div { display: flex; flex-direction: column; gap: 0.4rem; }
+.mx-verdicts b { font-size: 2.6rem; }
+[data-phase="intro"] .mi-stage, [data-phase="result"] .mi-stage { filter: blur(3px) brightness(0.6); }
+@keyframes mi-pop { from { transform: scale(0.4); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+@keyframes mi-pulse { from { opacity: 0.55; } to { opacity: 1; } }
+/* ---- frame (phone) ---- */
+.mi-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px 14px 14px; position: relative; }
+.mi-phone .mi-top { display: flex; justify-content: space-between; font-size: 1rem; }
+.mi-phone .mi-timer { height: 8px; }
+.mi-phone .mi-card-in { padding: 22px 20px; margin: 0 14px; }
+.mi-phone .mi-card-in.intro .order { font-size: 2.6rem; }
+.mi-phone .mi-card-in .how { font-size: 1.1rem; }
+.mi-phone .mi-card-in .big { font-size: 1.8rem; }
+.mi-phone .mi-card-in button { font-size: 1.3rem; padding: 14px 32px; }
+/* ---- shared minigame bits ---- */
+.mi-split { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 1.2rem; }
+.mi-side { position: relative; border-radius: 18px; border: 3px solid var(--line); background: var(--panel); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem; padding: 1rem; overflow: hidden; }
+.mi-side.p1 { border-color: rgba(34, 211, 238, 0.5); }
+.mi-side.p2 { border-color: rgba(244, 114, 182, 0.5); }
+.mi-side > .who { position: absolute; top: 0.5rem; left: 0.8rem; font-weight: 800; }
+.mi-side > .mi-ok, .mi-side > .mi-bad { position: absolute; top: 0.3rem; right: 0.8rem; font-size: 2.4rem; }
+.mi-big-btn { flex: 1; min-height: 160px; width: 100%; font-size: 2rem; font-weight: 900; border-radius: 24px; }
+.mi-choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.mi-choices button { font-size: 1.8rem; font-weight: 900; padding: 18px 0; }
+.mi-choices button.cur { outline: 4px solid var(--warn); }
+.mi-phone-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
