@@ -1,0 +1,71 @@
+/* ---- TV ---- */
+
+.bd-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; font-size: 1.2rem; }
+.bd-stats { display: flex; justify-content: space-between; align-items: center; font-size: 1.4rem; font-weight: 800; min-height: 1.6em; }
+.bd-stat.p1 { color: var(--p1); }
+.bd-stat.p2 { color: var(--p2); }
+.bd-clock { font-variant-numeric: tabular-nums; color: var(--muted); }
+.bd-clock.danger { color: #fca5a5; animation: bd-blink 0.8s steps(2) infinite; }
+@keyframes bd-blink { 50% { opacity: 0.45; } }
+.bd-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.bd-arena canvas { display: block; border-radius: 8px; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5); }
+.bd-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; text-align: center; }
+.bd-overlay:empty { display: none; }
+.bd-overlay .panel { background: rgba(11, 13, 23, 0.88); border: 1px solid var(--line); border-radius: 18px; padding: 1.4rem 2.2rem; max-width: 46rem; }
+.bd-overlay .panel.small { padding: 1rem 2rem; }
+.bd-overlay .big { font-size: 6rem; font-weight: 900; line-height: 1; }
+.bd-overlay .title { font-size: 2.6rem; font-weight: 900; }
+.bd-overlay .sub { font-size: 1.5rem; line-height: 1.5; }
+.bd-overlay .sub strong { color: var(--warn); }
+.bd-overlay .ark-setup { font-size: 1.4rem; }
+
+/* ---- phone ---- */
+
+.bd-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 16px; text-align: center; }
+.bd-phone .score { color: var(--muted); font-weight: 700; min-height: 1.2em; }
+.bd-phone .status { font-size: 1.1rem; min-height: 1.4em; }
+.bd-phone .status .big { font-size: 1.8rem; font-weight: 900; }
+.bd-phone .won { color: var(--good); font-weight: 900; }
+.bd-phone .lost { color: var(--bad); font-weight: 900; }
+.bd-phone .power { font-size: 1.3rem; font-weight: 800; min-height: 1.4em; }
+.bd-phone .ark-setup { margin: 0; }
+.bd-phone .go, .bd-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.bd-phone .change { align-self: center; }
+
+.bd-controls { flex: 1; min-height: 0; display: flex; align-items: center; gap: 14px; }
+.bd-dpad {
+  position: relative;
+  flex: 1.6;
+  aspect-ratio: 1;
+  max-height: 100%;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--panel) 0 18%, var(--bg-2) 19% 100%);
+  border: 2px solid var(--line);
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.bd-dpad .arrow { position: absolute; font-size: 1.8rem; color: var(--muted); transform: translate(-50%, -50%); pointer-events: none; transition: color 0.08s, transform 0.08s; }
+.bd-dpad .arrow.up { left: 50%; top: 17%; }
+.bd-dpad .arrow.down { left: 50%; top: 83%; }
+.bd-dpad .arrow.left { left: 17%; top: 50%; }
+.bd-dpad .arrow.right { left: 83%; top: 50%; }
+.bd-dpad .arrow.on { color: var(--me); transform: translate(-50%, -50%) scale(1.35); }
+.bd-bomb {
+  flex: 1;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.6rem;
+  background: radial-gradient(circle at 35% 30%, #f87171, #b91c1c);
+  color: #fff;
+  border: 3px solid #fecaca;
+  touch-action: none;
+  user-select: none;
+  -webkit-user-select: none;
+}
+.bd-bomb span { font-size: 0.9rem; font-weight: 900; letter-spacing: 0.1em; }
+.bd-bomb.hit { transform: scale(0.92); filter: brightness(1.3); }
