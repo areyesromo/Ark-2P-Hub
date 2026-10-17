@@ -174,6 +174,7 @@ export class ConnectFour {
 
 export default {
   id: 'connect-four',
+  music: 'thinking',
   name: 'Connect Four',
   tagline: 'Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3.',
   create: (ctx) => new ConnectFour(ctx),

@@ -345,6 +345,7 @@ export class WordRace {
 
 export default {
   id: 'word-race',
+  music: 'thinking',
   name: 'Word Race',
   tagline: 'Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Pick the grid size, time and rounds.',
   create: (ctx) => new WordRace(ctx),

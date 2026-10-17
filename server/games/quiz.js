@@ -184,6 +184,7 @@ export class QuizBattle {
 
 export default {
   id: 'quiz',
+  music: 'thinking',
   name: 'Quiz Battle',
   tagline: '10 trivia questions. Answer on your phone or controller; right and fast scores more. Most points wins.',
   create: (ctx) => new QuizBattle(ctx),

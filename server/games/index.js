@@ -40,13 +40,23 @@ import bombDuel from './bomb-duel.js';
 const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey, snake, tanks, sumo, bombDuel, quiz, wordRace, miniGolf, drawDuel, battleship, connectFour, sketchGuess];
 
 export const CATEGORIES = ['competitive', 'casual'];
+/** Background music moods a game can ask for; by default competitive games get 'action', casual ones 'casual'. */
+export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
 
 /** Games for the lobby, grouped by category (in CATEGORIES order) so lists and controller focus agree. */
 export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
     .sort((a, b) => byCategory(a) - byCategory(b))
-    .map(({ id, name, tagline, category, needsPhone }) => ({ id, name, tagline, category: category || 'competitive', needsPhone: Boolean(needsPhone) }));
+    .map(({ id, name, tagline, category, needsPhone, music }) => ({
+      id,
+      name,
+      tagline,
+      category: category || 'competitive',
+      needsPhone: Boolean(needsPhone),
+      // The TV's background music for this game (see public/host/music.js).
+      music: MUSIC_MOODS.includes(music) ? music : category === 'casual' ? 'casual' : 'action',
+    }));
 }
 
 export function getGame(id) {
