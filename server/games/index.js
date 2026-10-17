@@ -10,6 +10,7 @@ import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
 import sketchGuess from './sketch-guess.js';
 import connectFour from './connect-four.js';
+import sumo from './sumo.js';
 
 /**
  * Every game is a module exporting:
@@ -33,7 +34,7 @@ import connectFour from './connect-four.js';
  * To add a game: write the module, list it below, and add the two renderers
  * under public/games/<id>/.
  */
-const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey, snake, tanks, quiz, drawDuel, battleship, connectFour, sketchGuess];
+const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey, snake, tanks, sumo, quiz, drawDuel, battleship, connectFour, sketchGuess];
 
 export const CATEGORIES = ['competitive', 'casual'];
 

@@ -1,0 +1,52 @@
+/* ---- TV ---- */
+
+.sm-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; font-size: 1.2rem; }
+.sm-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.sm-arena canvas { display: block; }
+.sm-overlay {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  pointer-events: none;
+  text-align: center;
+}
+.sm-overlay .big { font-size: 7rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.9); }
+.sm-overlay .sub { font-size: 1.7rem; color: var(--text); text-shadow: 0 0 1rem #000, 0 0 1rem #000, 0 0 2rem #000; }
+.sm-overlay .sub strong { color: var(--warn); }
+.sm-overlay .shrink { position: absolute; top: 0.5rem; left: 0; right: 0; color: #fca5a5; font-weight: 800; }
+
+/* ---- phone ---- */
+
+.sm-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; text-align: center; }
+.sm-phone .score { color: var(--muted); font-weight: 700; }
+.sm-phone .status { font-size: 1.1rem; min-height: 1.4em; }
+.sm-phone .status.won { color: var(--good); font-weight: 900; font-size: 1.8rem; }
+.sm-phone .status.lost { color: var(--bad); font-weight: 900; font-size: 1.8rem; }
+
+/* Floating joystick: touch anywhere in the pad, drag away from where you touched. */
+.sm-stick { flex: 1; position: relative; border-radius: 24px; border: 3px solid var(--me); background: var(--panel); touch-action: none; overflow: hidden; }
+.sm-stick .base, .sm-stick .knob { position: absolute; border-radius: 50%; transform: translate(-50%, -50%); left: 50%; top: 50%; pointer-events: none; }
+.sm-stick .base { width: 140px; height: 140px; border: 2px solid rgba(255, 255, 255, 0.18); }
+.sm-stick .knob { width: 64px; height: 64px; background: var(--me); box-shadow: 0 0 22px var(--me); opacity: 0.9; }
+.sm-stick .hint { position: absolute; inset: auto 0 12px; color: var(--muted); font-size: 0.9rem; }
+
+/* DASH fills up again from left to right while it recharges. */
+.sm-dash {
+  --fill: 100;
+  height: 110px;
+  border-radius: 24px;
+  font-size: 2rem;
+  font-weight: 900;
+  letter-spacing: 0.12em;
+  color: #fff;
+  border: 3px solid #fbbf24;
+  background: linear-gradient(90deg, #d97706 calc(var(--fill) * 1%), #3f3a2a calc(var(--fill) * 1%));
+  touch-action: none;
+}
+.sm-dash:active { transform: scale(0.98); }
+.sm-dash.cooling { color: rgba(255, 255, 255, 0.6); }
+.sm-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
