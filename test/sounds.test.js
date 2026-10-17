@@ -9,6 +9,8 @@ import { QuizBattle, TIMING as QUIZ_TIMING } from '../server/games/quiz.js';
 import { SketchGuess } from '../server/games/sketch-guess.js';
 import { DrawDuel, TIMING as DD_TIMING } from '../server/games/draw-duel.js';
 import { RockPaperScissors } from '../server/games/rock-paper-scissors.js';
+import { DiceParty } from '../server/games/dice-party.js';
+import { LiarsDice } from '../server/games/liars-dice.js';
 
 /** Load public/games/<id>/host.js with a stub Ark and return what it registers. */
 function renderer(id) {
@@ -148,4 +150,30 @@ test('sumo: whoosh for a dash, a crash for a fall', async () => {
   game.players[1].x = 100; // off the ring
   ctx.advance(20);
   assert.ok(heard().includes('crash'));
+});
+
+test('dice party: roll, hold, score', () => {
+  const game = new DiceParty(fakeCtx(), () => 0.5);
+  game.start();
+  const heard = listen('dice-party', game);
+  game.onInput(game.turn, { type: 'roll' });
+  assert.deepEqual(heard(), ['drop']);
+  game.onInput(game.turn, { type: 'hold', die: 0 });
+  assert.deepEqual(heard(), ['lock']);
+  game.onInput(game.turn, { type: 'score', box: 'fours' });
+  assert.deepEqual(heard(), ['point']);
+  game.onInput(game.turn, { type: 'roll' });
+  heard();
+  game.onInput(game.turn, { type: 'score', box: 'ones' });
+  assert.deepEqual(heard(), ['wrong']);
+});
+
+test("liar's dice: bid, then the reveal", () => {
+  const game = new LiarsDice(fakeCtx(), () => 0.5);
+  game.start();
+  const heard = listen('liars-dice', game);
+  game.onInput(game.turn, { type: 'bid', qty: 2, face: 3 });
+  assert.deepEqual(heard(), ['lock']);
+  game.onInput(game.turn, { type: 'liar' });
+  assert.deepEqual(heard(), ['reveal']);
 });

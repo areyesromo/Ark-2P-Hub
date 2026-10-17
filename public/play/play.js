@@ -161,6 +161,7 @@
 
   const GROUPS = {
     competitive: '⚔️ Competitive <span>Head to head: one of you wins</span>',
+    board: '🎲 Dice &amp; Board <span>Classic games, head to head</span>',
     casual: '🎨 Casual <span>Play together, just for fun</span>',
   };
 

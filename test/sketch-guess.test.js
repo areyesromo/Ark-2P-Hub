@@ -191,11 +191,12 @@ test('two controllers: nobody can draw in secret, so the game asks for a phone',
   assert.equal(game.hostView().phase, 'needPhone');
 });
 
-test('the lobby lists competitive games first, then casual ones', () => {
+test('the lobby lists competitive games first, then dice & board, then casual ones', () => {
   const games = listGames();
   const cats = games.map((g) => g.category);
-  assert.deepEqual([...new Set(cats)], ['competitive', 'casual']);
-  assert.equal(cats.lastIndexOf('competitive') < cats.indexOf('casual'), true);
+  assert.deepEqual([...new Set(cats)], ['competitive', 'board', 'casual']);
+  assert.equal(cats.lastIndexOf('competitive') < cats.indexOf('board'), true);
+  assert.equal(cats.lastIndexOf('board') < cats.indexOf('casual'), true);
   assert.equal(games.find((g) => g.id === 'sketch-guess').category, 'casual');
   assert.equal(games.find((g) => g.id === 'draw-duel').category, 'competitive');
 });

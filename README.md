@@ -13,8 +13,8 @@ container on your home network.
 
 ## Games
 
-The lobby groups games into **⚔️ Competitive** (head to head, one of you wins)
-and **🎨 Casual** (you play together, nobody really loses). Within each group
+The lobby groups games into **⚔️ Competitive** (head to head, one of you wins),
+**🎲 Dice & Board** (classic table games, head to head) and **🎨 Casual** (you play together, nobody really loses). Within each group
 the games you played most recently come first (the last one is tagged
 ⏱ Last played), and **🎲 Random game** at the top picks one for you (never the
 one you just played).
@@ -39,6 +39,13 @@ one you just played).
 | **Mini Golf** | Both of you play the same hole at once (the balls roll through each other). Pull back anywhere on your phone and let go to putt: the further you pull, the harder the shot; the phone shows the hole too. 15 holes with walls, bumpers, sand, water (a stroke penalty, back where you shot from), a moat and a windmill. 8 shots per hole, then you pick up and score 9; 90 s per hole. Pick 3, 6, 9, 12 or 15 holes before you start. Fewest strokes wins. |
 | **Connect Four** | The classic: drop discs into a 7×6 grid and line up four (across, down or diagonally) before your rival. Tap a column on your phone, which shows the board too. 20 s per move (a random column if you run out); who starts swaps every round. First to 3 rounds. |
 | **Memory Match** | A grid of face-down picture cards on the TV and your phone. Take turns flipping two: a pair is yours and you go again, otherwise they turn back over (remember them!) and it's your rival's go. Most pairs wins. |
+
+### 🎲 Dice & Board
+
+| Game | How it plays |
+| --- | --- |
+| **Liar's Dice** | Your dice are hidden under a cup on your phone (the TV shows only how many each of you has). Take turns bidding how many of a face there are across *both* players' dice ("three 5s"): raise the count, or keep it and bid a higher face. Or call **Liar!**: the cups lift on the TV, and if there are fewer than bid, the bidder loses a die; otherwise the caller does. Ones are wild (they count as every face). Lose all your dice and you lose. Needs two phones. |
+| **Dice Party** | Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards, with what each open box would score. Highest total wins. |
 
 ### 🎨 Casual
 
@@ -68,6 +75,8 @@ starts). The numbers above are the defaults; you can change, for example:
 | Bomb Squad | Easy (2 modules), Normal (3), Hard (4) or Expert (6), and 1, 3 or 5 bombs |
 | Marble Maze | 1, 3 or all 5 mazes; split (one ↔, one ↕) or shared controls |
 | Mind Meld | 4, 6, 8 or 10 rounds |
+| Liar's Dice | 5, 3 or 4 dice each; ones wild or not |
+| Dice Party | Full game (13 rounds) or quick (6) |
 | Word Race | Grid size, time per round and match length |
 | Mini Golf | 3, 6, 9, 12 or 15 holes |
 | Bomb Duel | Also how many crates |
@@ -93,6 +102,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Lobby | **X** | Tournament: off, best of 3, 5 or 7 games |
 | Mind Meld | **Left stick** or **D-pad ← →** turns the dial, **A** locks in | Controller players always guess; the clue-giver needs a phone to type |
 | Marble Maze | **Left stick** or **D-pad** tilts the board | In split mode only your axis counts: player 1 left/right, player 2 forwards/back. **A** plays again at the end |
+| Dice Party | **X** rolls · **← →** picks a die, **A** holds it · **↑ ↓** picks a box, **Y** scores it | The TV highlights your die and box; Liar's Dice needs phones (the dice are secret) |
 | Lobby | **B** | Leave your seat |
 | Lobby | **Back** | Free the seats of phones that have left (shown as *Reconnecting…*) |
 | Any game | **Back / Select** | Back to the lobby |
@@ -316,7 +326,7 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
 
 1. **Logic:** create `server/games/<id>.js` exporting
    `{ id, name, tagline, category, create(ctx) }` (`category` is
-   `'competitive'`, the default, or `'casual'`). The instance implements
+   `'competitive'`, the default, `'board'` or `'casual'`). The instance implements
    `start()`, `onInput(slot, input)`, `hostView()`, `playerView(slot)`.
    Use `ctx.setTimeout` (cleared automatically when the game ends) and call
    `ctx.update()` whenever state changes. `ctx.players[slot].local` is true
@@ -369,7 +379,7 @@ joystick, D-pad or tilt pads:
 - **Kitchen Rush** (co-op): an Overcooked-style kitchen; chop, cook and serve orders before they expire.
 - **Trivia Quest** (co-op): beat a monster together with the quiz questions.
 - **Micro Mayhem**: five-second micro-games that speed up, WarioWare style.
-- **Liar's Dice** and **Crazy Eights**: secret dice and hands on your phone.
+- **Crazy Eights**: a secret hand of cards on your phone.
 
 **More content**
 

@@ -19,6 +19,8 @@ import memoryMatch from './memory-match.js';
 import bombSquad, { LEVELS as BOMB_LEVELS } from './bomb-squad.js';
 import marbleMaze, { LEVELS as MAZE_LEVELS } from './marble-maze.js';
 import mindMeld from './mind-meld.js';
+import liarsDice from './liars-dice.js';
+import diceParty from './dice-party.js';
 import { withSetup } from './options.js';
 
 /**
@@ -26,8 +28,9 @@ import { withSetup } from './options.js';
  *
  *   { id, name, tagline, category?, create(ctx) }
  *
- * category is 'competitive' (the default: you play against each other) or
- * 'casual' (you play together, nobody really loses). The lobby groups them.
+ * category is 'competitive' (the default: you play against each other),
+ * 'board' (dice, cards and board games, also head to head) or 'casual'
+ * (you play together, nobody really loses). The lobby groups them.
  * needsPhone: true keeps a game out of "random" when both players use
  * controllers (it needs a private screen).
  *
@@ -78,10 +81,15 @@ const GAMES = [
     controls: { title: 'Who tilts what', values: [1, 2], label: (n) => (n === 1 ? 'Split: one ↔, one ↕' : 'Shared: both steer') },
   }),
   withSetup(mindMeld, { rounds: { title: 'Rounds (you swap who gives the clue)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
+  withSetup(liarsDice, {
+    dice: { title: 'Dice each', values: [5, 3, 4], label: (n) => `${n} dice` },
+    wild: { title: 'Ones', values: [1, 0], label: (n) => (n ? 'Wild (count as any face)' : 'Just ones') },
+  }),
+  withSetup(diceParty, { rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) } }),
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
 ];
 
-export const CATEGORIES = ['competitive', 'casual'];
+export const CATEGORIES = ['competitive', 'board', 'casual'];
 /** Background music moods a game can ask for; by default competitive games get 'action', casual ones 'casual'. */
 export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
 
