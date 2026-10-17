@@ -147,3 +147,9 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 #hub-setup { font-size: 1.4rem; }
 #hub-setup .muted { font-size: 1.2rem; }
 #hub-setup .muted strong { color: var(--warn); }
+
+/* Tournament: under the head to head in the lobby; centred in the top bar during games. */
+.tourney { font-size: 1.15rem; }
+.tourney:empty { display: none; }
+.tourney-bar { flex: 1; display: flex; justify-content: center; min-width: 0; font-size: 1.15rem; }
+.tourney-bar .ark-tourney.compact { padding: 0.25em 1em; }

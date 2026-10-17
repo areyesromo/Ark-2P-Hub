@@ -1,5 +1,6 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import { getGame, listGames } from './games/index.js';
+import { Tournament } from './tournament.js';
 
 export const MAX_PLAYERS = 2;
 const NAME_MAX = 16;
@@ -45,6 +46,7 @@ export class Room {
     this.generation = 0;
     this.timers = new Set();
     this.saved = {}; // per game: what it asked to keep between launches (e.g. chosen settings)
+    this.tournament = new Tournament(); // best of N games, off until the players turn it on
     this.touch();
   }
 
@@ -87,6 +89,7 @@ export class Room {
 
     const player = { name, token: newToken(), socketId: null, connected: local && this.hostSockets.size > 0, local };
     this.players[slot] = player;
+    this.tournament.reset(); // someone new: a fresh series
     return { slot, player, rejoined: false };
   }
 
@@ -112,6 +115,7 @@ export class Room {
   removePlayer(slot) {
     if (!this.players[slot]) return;
     this.players[slot] = null;
+    this.tournament.reset();
     if (this.game) this.stopGame();
     else this.broadcastState();
   }
@@ -183,6 +187,15 @@ export class Room {
     if (!silent) this.broadcastState();
   }
 
+  /** The lobby's tournament controls: { bestOf } changes the length, { reset: true } starts over. */
+  setTournament({ bestOf, reset } = {}) {
+    if (reset) this.tournament.reset();
+    else if (!this.tournament.setLength(Number(bestOf))) return { error: 'Pick off, 3, 5 or 7 games.' };
+    this.touch();
+    this.broadcastState();
+    return { ok: true, tournament: this.tournament.view() };
+  }
+
   handleInput(slot, input) {
     if (!this.game || !input || typeof input !== 'object') return;
     this.touch();
@@ -209,6 +222,7 @@ export class Room {
       ),
       games: this.lobbyGames(),
       h2h: this.headToHead(),
+      tournament: this.tournament.view(),
       knownNames: this.stats ? this.stats.knownNames() : [],
     };
   }
@@ -235,9 +249,10 @@ export class Room {
    * games report the team's stars.
    */
   recordResult(view) {
-    if (!this.stats) return;
     const def = getGame(this.gameId);
     const category = def.category || 'competitive';
+    if (category !== 'casual' && this.tournament.record({ game: def.name, winner: view.winner })) this.broadcastState();
+    if (!this.stats) return;
     const match = {
       game: def.id,
       gameName: def.name,

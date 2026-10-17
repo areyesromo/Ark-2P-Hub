@@ -139,6 +139,7 @@
     const h2h = Ark.h2hHtml(state.players, state.h2h);
     $('h2h').innerHTML = h2h;
     $('h2h').classList.toggle('hidden', !h2h);
+    $('tourney').innerHTML = Ark.tournamentHtml(state.players, state.tournament, { controls: true });
 
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
     $('phone-games').innerHTML =
@@ -155,6 +156,16 @@
         '</button>'
       );
     }).join('');
+  }
+
+  Ark.bindTournament($('tourney'), socket);
+
+  /** At the end of a match the phones show the tournament score too. */
+  function renderTourneyBar() {
+    const t = state && state.tournament;
+    const show = Boolean(state && state.phase === 'playing' && t && t.bestOf && lastView && lastView.gameId === state.gameId && lastView.view.phase === 'over');
+    $('tourney-bar').classList.toggle('hidden', !show);
+    $('tourney-bar').innerHTML = show ? Ark.tournamentHtml(state.players, t, { compact: true }) : '';
   }
 
   $('phone-games').addEventListener('click', function (e) {
@@ -201,6 +212,7 @@
     $('phone-lobby').classList.toggle('hidden', playing);
     $('phone-stage').classList.toggle('hidden', !playing);
     $('lobby-btn').disabled = !playing;
+    renderTourneyBar();
     showHubSetup(playing && lastView && Ark.setup.isHub(lastView.view) && lastView.gameId === s.gameId ? lastView.view : null);
     if (playing) {
       if (!current || current.gameId !== s.gameId) mountGame(s.gameId);
@@ -215,6 +227,7 @@
     const v = msg.view;
     showHubSetup(Ark.setup.isHub(v) ? v : null);
     $('hub-change').classList.toggle('hidden', !(v.hubSetup && v.phase === 'over'));
+    renderTourneyBar();
     if (Ark.setup.isHub(v)) return; // the game hasn't started: the hub shows its setup screen
     if (current && current.renderer && current.gameId === msg.gameId) current.renderer.update(v);
   });

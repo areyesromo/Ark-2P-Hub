@@ -50,9 +50,24 @@
 .kr-btn.item.ready { opacity: 1; border-color: var(--warn); box-shadow: 0 0 1.2rem rgba(250, 204, 21, 0.45); }
 .kr-btn.brake.on { background: var(--bad); color: #fff; }
 
-/* Layout switch (Auto / Landscape / Portrait), top right of the phone. */
-.kr-phone { position: relative; }
-.kr-layout { position: absolute; top: 8px; right: 12px; z-index: 1; padding: 4px 10px; font-size: 0.8rem; }
+/* The controller settings on the setup and end screens (this phone only). */
+.kr-phone .kr-prefs { gap: 0.5em; margin: 0; padding-top: 0.6em; border-top: 1px solid var(--line); }
+.kr-prefs .title span { font-weight: 400; }
+.kr-prefs .opt { min-width: 0; font-size: 0.9rem; }
+.kr-prefs .opt.on { background: var(--me); color: #06121c; }
+.kr-note { margin: 0; color: var(--warn); font-size: 0.9rem; }
+
+/* Joystick, slide pad and tilt wheel (the steering side of the controls). */
+.kr-stick, .kr-slide, .kr-tilt { flex: 1; position: relative; display: flex; align-items: center; justify-content: center; border-radius: 22px; background: var(--panel); border: 2px solid var(--line); touch-action: none; user-select: none; -webkit-user-select: none; overflow: hidden; }
+.kr-hint { position: absolute; bottom: 8px; left: 0; right: 0; color: var(--muted); font-size: 0.85rem; pointer-events: none; }
+.kr-stick::before { content: ''; position: absolute; width: min(76%, 76vmin); aspect-ratio: 1; border-radius: 50%; border: 3px dashed var(--line); }
+.kr-knob { width: min(34%, 30vmin); aspect-ratio: 1; border-radius: 50%; background: var(--me); box-shadow: 0 0 1.4rem rgba(0, 0, 0, 0.5); opacity: 0.85; pointer-events: none; }
+.kr-slide::before { content: ''; position: absolute; left: 6%; right: 6%; top: 50%; height: 6px; margin-top: -3px; border-radius: 3px; background: var(--line); }
+.kr-mark { position: absolute; left: 50%; top: 50%; width: 3.2rem; height: 3.2rem; margin: -1.6rem 0 0 -1.6rem; border-radius: 50%; border: 3px solid var(--muted); pointer-events: none; }
+.kr-mark.on { border-color: #fff; background: var(--me); }
+.kr-wheel { position: relative; width: min(60%, 46vmin); aspect-ratio: 1; border-radius: 50%; border: 10px solid var(--me); pointer-events: none; transition: transform 60ms linear; }
+.kr-wheel i { position: absolute; left: 0; right: 0; top: 50%; height: 10px; margin-top: -5px; background: var(--me); }
+.kr-wheel::after { content: ''; position: absolute; left: 50%; top: 50%; width: 10px; height: 50%; margin-left: -5px; background: var(--me); }
 
 /* Landscape: ◀ ▶ under the left thumb, ITEM over BRAKE under the right. */
 .kr-phone.landscape { padding: 8px 12px 12px; gap: 8px; }
@@ -67,14 +82,10 @@
 .kr-phone.landscape .kr-btn.item { flex: 1; }
 .kr-phone.landscape .kr-btn.brake { flex: 1.6; }
 
-/* Landscape on a phone held upright (rotation locked): turn the whole controller sideways. */
+/* Landscape on a phone held upright (rotation locked): turn the whole controller
+   sideways. player.js sizes it to the game area, so the hub's bar (and its ⋯ menu) stays reachable. */
 .kr-phone.rotated {
   position: fixed;
-  top: 0;
-  left: 100vw;
-  width: 100vh;
-  width: 100dvh;
-  height: 100vw;
   transform: rotate(90deg);
   transform-origin: 0 0;
   z-index: 30;

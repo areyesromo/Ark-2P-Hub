@@ -110,3 +110,28 @@ input {
 .ark-setup .seg { display: flex; flex-wrap: wrap; gap: 0.4em; }
 .ark-setup .opt { flex: 1 1 auto; min-width: 4.5em; padding: 0.6em 0.5em; background: var(--panel); color: inherit; font-weight: 800; }
 .ark-setup .opt.on { background: var(--good); color: #052e16; }
+
+/* Tournament (best of N games) in the lobby, and one line on the TV during games: Ark.tournamentHtml */
+.ark-tourney { display: flex; flex-direction: column; align-items: center; gap: 0.5em; padding: 0.7em 1em; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); text-align: center; }
+.ark-tourney.on { border-color: var(--warn); }
+.ark-tourney .t-head { font-weight: 800; }
+.ark-tourney .muted { color: var(--muted); font-weight: 400; }
+.ark-tourney .t-lengths { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4em; }
+.ark-tourney .t-lengths button { padding: 0.35em 0.8em; font-size: 0.9em; }
+.ark-tourney .t-lengths button.on { background: var(--warn); color: #1c1402; border-color: var(--warn); }
+.ark-tourney .t-score { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.4em; font-weight: 800; }
+.ark-tourney .t-score strong { font-size: 1.3em; }
+.ark-tourney .pips { display: inline-flex; gap: 0.25em; }
+.ark-tourney .pip { width: 0.7em; height: 0.7em; border-radius: 50%; border: 2px solid var(--muted); opacity: 0.6; }
+.ark-tourney .pip.p1 { background: var(--p1); border-color: var(--p1); opacity: 1; }
+.ark-tourney .pip.p2 { background: var(--p2); border-color: var(--p2); opacity: 1; }
+.ark-tourney .t-champ { font-size: 1.3em; font-weight: 900; color: var(--warn); }
+.ark-tourney .t-games { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em; font-size: 0.85em; }
+.ark-tourney .chip { padding: 0.15em 0.6em; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.ark-tourney .chip.p1 { border-color: var(--p1); color: var(--p1); }
+.ark-tourney .chip.p2 { border-color: var(--p2); color: var(--p2); }
+.ark-tourney .t-reset { padding: 0.3em 0.9em; font-size: 0.85em; }
+.ark-tourney.compact { flex-direction: row; padding: 0.35em 1em; background: rgba(11, 13, 23, 0.9); }
+.ark-tourney.compact, .ark-tourney.compact .t-score { flex-wrap: nowrap; white-space: nowrap; }
+.ark-tourney.compact .t-champ { font-size: 1em; }
+.ark-tourney:not(.on):not(.compact) { flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 0.4em 1em; }
