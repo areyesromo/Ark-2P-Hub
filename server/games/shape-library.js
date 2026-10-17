@@ -62,6 +62,31 @@ function crescent() {
 
 const heart = () => curve((t) => [16 * Math.sin(t) ** 3, -(13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t))], 64);
 
+/** Scale and move a path (aspect kept) so it sits centred in the box x, y, w, h. */
+function fit(p, x, y, w, h) {
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  for (let i = 0; i < p.length; i += 2) {
+    minX = Math.min(minX, p[i]);
+    maxX = Math.max(maxX, p[i]);
+    minY = Math.min(minY, p[i + 1]);
+    maxY = Math.max(maxY, p[i + 1]);
+  }
+  const s = Math.min(w / (maxX - minX), h / (maxY - minY));
+  const ox = x + (w - (maxX - minX) * s) / 2 - minX * s;
+  const oy = y + (h - (maxY - minY) * s) / 2 - minY * s;
+  return p.map((v, i) => (i % 2 ? oy + v * s : ox + v * s));
+}
+
+/** Close a path by repeating its first point at the end. */
+const closed = (p) => p.concat(p.slice(0, 2));
+
+/** A "V" arrowhead at (x1, y1) for a line coming from (x0, y0): barbs `len` long, `deg` off the line. */
+function arrowhead(x0, y0, x1, y1, len = 0.15, deg = 35) {
+  const back = Math.atan2(y0 - y1, x0 - x1);
+  const barb = (d) => [x1 + len * Math.cos(back + d * RAD), y1 + len * Math.sin(back + d * RAD)];
+  return [...barb(deg), x1, y1, ...barb(-deg)];
+}
+
 // ---- basic shapes ------------------------------------------------------------
 
 const BASICS = [
@@ -95,6 +120,7 @@ const BASICS = [
   { name: 'Raindrop', paths: [join([0.5, 0], arc(0.5, 0.65, 0.33, -40, 220), [0.5, 0])] },
   { name: 'Mountain', paths: [[0, 1, 0.35, 0.2, 0.55, 0.6, 0.75, 0.35, 1, 1]] },
   { name: 'Hourglass', paths: [[0.2, 0.05, 0.8, 0.05, 0.2, 0.95, 0.8, 0.95, 0.2, 0.05]] },
+  { name: 'Cube', paths: [rect(0, 0.3, 0.7, 0.7), [0, 0.3, 0.3, 0, 1, 0, 1, 0.7, 0.7, 1], [0.7, 0.3, 1, 0]] },
 ];
 
 // ---- pictures ----------------------------------------------------------------
@@ -164,6 +190,34 @@ const PICTURES = [
   { name: 'Window', paths: [rect(0.1, 0.1, 0.8, 0.8), [0.5, 0.1, 0.5, 0.9], [0.1, 0.5, 0.9, 0.5]] },
   { name: 'Igloo', paths: [join(arc(0.5, 0.85, 0.45, 180, 360), [0.05, 0.85]), join([0.38, 0.85], arc(0.5, 0.85, 0.12, 180, 360))] },
   { name: 'Lightning cloud', paths: [join([0.15, 0.55], arc(0.25, 0.42, 0.13, 100, 270), arc(0.5, 0.32, 0.2, 200, 340), arc(0.75, 0.42, 0.13, 270, 440), [0.15, 0.55]), [0.5, 0.55, 0.4, 0.78, 0.55, 0.78, 0.45, 1]] },
+
+  // Everyday things, food and nature.
+  { name: 'Heart with arrow', paths: [fit(heart(), 0.2, 0.2, 0.6, 0.55), [0.05, 0.9, 0.95, 0.07], arrowhead(0.05, 0.9, 0.95, 0.07), arrowhead(0.05, 0.9, 0.16, 0.8, 0.12, 40)] },
+  { name: 'Moon and star', paths: [fit(crescent(), 0, 0.05, 0.6, 0.9), fit(star(5), 0.62, 0.08, 0.38, 0.38)] },
+  { name: 'Rain cloud', paths: [join([0.15, 0.55], arc(0.25, 0.42, 0.13, 100, 270), arc(0.5, 0.32, 0.2, 200, 340), arc(0.75, 0.42, 0.13, 270, 440), [0.15, 0.55]), [0.3, 0.65, 0.22, 0.9], [0.52, 0.65, 0.44, 0.9], [0.74, 0.65, 0.66, 0.9]] },
+  { name: 'Hot-air balloon', paths: [closed(join(arc(0.5, 0.35, 0.33, 140, 400), [0.6, 0.68, 0.4, 0.68])), [0.4, 0.68, 0.4, 0.82], [0.6, 0.68, 0.6, 0.82], rect(0.38, 0.82, 0.24, 0.15)] },
+  { name: 'Ice lolly', paths: [join(arc(0.5, 0.3, 0.25, 180, 360), [0.75, 0.75, 0.25, 0.75, 0.25, 0.3]), [0.44, 0.75, 0.44, 0.97, 0.56, 0.97, 0.56, 0.75]] },
+  { name: 'Cupcake', paths: [join(arc(0.5, 0.55, 0.35, 180, 360), [0.15, 0.55]), [0.2, 0.55, 0.3, 0.95, 0.7, 0.95, 0.8, 0.55], [0.4, 0.55, 0.43, 0.95], [0.6, 0.55, 0.57, 0.95], circle(0.5, 0.13, 0.07)] },
+  { name: 'Hammer', paths: [rect(0.15, 0.08, 0.7, 0.2), rect(0.43, 0.28, 0.14, 0.67)] },
+  { name: 'Magnifying glass', paths: [circle(0.4, 0.4, 0.3), [0.6, 0.68, 0.68, 0.6, 0.97, 0.89, 0.89, 0.97, 0.6, 0.68]] },
+  { name: 'Pear', paths: [closed(join(arc(0.5, 0.7, 0.28, -30, 210), arc(0.5, 0.33, 0.15, 180, 360))), [0.5, 0.18, 0.53, 0.04], earc(0.63, 0.1, 0.09, 0.04, 0, 360, 20)] },
+  { name: 'Carrot', paths: [[0.3, 0.3, 0.7, 0.3, 0.5, 1, 0.3, 0.3], [0.5, 0.3, 0.33, 0.02], [0.5, 0.3, 0.5, 0], [0.5, 0.3, 0.67, 0.02], [0.4, 0.5, 0.5, 0.5], [0.5, 0.7, 0.58, 0.7]] },
+  { name: 'Banana', paths: [closed(join(earc(0.5, 0.2, 0.48, 0.6, 10, 170), earc(0.5, 0.2, 0.42, 0.38, 165, 15))), [0.94, 0.29, 0.98, 0.18]] },
+  { name: 'Tulip', paths: [closed(join([0.25, 0.1, 0.375, 0.25, 0.5, 0.1, 0.625, 0.25, 0.75, 0.1, 0.75, 0.35], arc(0.5, 0.35, 0.25, 0, 180))), [0.5, 0.6, 0.5, 1], [0.5, 0.95, 0.68, 0.85, 0.8, 0.62, 0.62, 0.76, 0.5, 0.95]] },
+  { name: 'Watermelon slice', paths: [join(arc(0.5, 0.25, 0.48, 0, 180), [0.98, 0.25]), arc(0.5, 0.25, 0.38, 8, 172), circle(0.35, 0.38, 0.035), circle(0.5, 0.46, 0.035), circle(0.65, 0.38, 0.035)] },
+  { name: 'Bottle', paths: [[0.42, 0, 0.58, 0, 0.58, 0.2, 0.75, 0.38, 0.75, 0.97, 0.25, 0.97, 0.25, 0.38, 0.42, 0.2, 0.42, 0], [0.42, 0.08, 0.58, 0.08], [0.25, 0.55, 0.75, 0.55], [0.25, 0.8, 0.75, 0.8]] },
+  { name: 'Eye', paths: [join(arc(0.5, 1, 0.7, -134.4, -45.6), arc(0.5, 0, 0.7, 45.6, 134.4)), circle(0.5, 0.5, 0.18), circle(0.5, 0.5, 0.07)] },
+
+  // Tools, clothes and objects.
+  { name: 'Scissors', paths: [circle(0.27, 0.8, 0.15), circle(0.73, 0.8, 0.15), [0.35, 0.67, 0.68, 0], [0.65, 0.67, 0.32, 0]] },
+  { name: 'Axe', paths: [rect(0.42, 0.05, 0.1, 0.92), join([0.52, 0.2, 0.8, 0.02], earc(0.8, 0.3, 0.12, 0.28, -90, 90), [0.52, 0.38])] },
+  { name: 'Bucket', paths: [[0.15, 0.4, 0.25, 0.97, 0.75, 0.97, 0.85, 0.4], ellipse(0.5, 0.4, 0.35, 0.07), arc(0.5, 0.5, 0.333, 180, 360)] },
+  { name: 'Sock', paths: [join([0.3, 0, 0.62, 0, 0.62, 0.55, 0.82, 0.6], arc(0.82, 0.75, 0.15, -90, 90), [0.5, 0.9], arc(0.5, 0.7, 0.2, 90, 180), [0.3, 0]), [0.3, 0.15, 0.62, 0.15]] },
+  { name: 'T-shirt', paths: [join([0.35, 0.05, 0.05, 0.22, 0.15, 0.42, 0.27, 0.36, 0.27, 0.95, 0.73, 0.95, 0.73, 0.36, 0.85, 0.42, 0.95, 0.22, 0.65, 0.05], arc(0.5, 0.05, 0.15, 0, 180))] },
+  { name: 'Television', paths: [rect(0.05, 0.28, 0.9, 0.65), rect(0.13, 0.36, 0.6, 0.49), [0.3, 0.02, 0.5, 0.28, 0.7, 0.02], circle(0.84, 0.48, 0.04), circle(0.84, 0.66, 0.04)] },
+  { name: 'Top hat', paths: [[0.25, 0.75, 0.25, 0.05, 0.75, 0.05, 0.75, 0.75], ellipse(0.5, 0.8, 0.48, 0.1), [0.25, 0.6, 0.75, 0.6]] },
+  { name: 'Speech bubble', paths: [closed(join(earc(0.5, 0.4, 0.48, 0.36, 125, 435), [0.15, 0.98]))] },
+  { name: 'Bow and arrow', paths: [arc(0.15, 0.5, 0.45, -80, 80), [0.228, 0.057, 0.228, 0.943], [0.05, 0.5, 0.95, 0.5], arrowhead(0.05, 0.5, 0.95, 0.5, 0.13), arrowhead(0.05, 0.5, 0.14, 0.5, 0.1, 40)] },
 ];
 
 // ---- letters and numbers -----------------------------------------------------

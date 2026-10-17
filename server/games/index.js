@@ -54,7 +54,7 @@ const GAMES = [
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
   bombDuel,
   withSetup(quiz, {
-    questions: { title: 'Questions', values: [10, 5, 15, 20], label: (n) => `${n} questions` },
+    questions: { title: 'Number of questions', values: [10, 5, 15, 20], label: (n) => String(n) },
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
   }),
   wordRace,
