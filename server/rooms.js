@@ -83,6 +83,18 @@ export class Room {
     const name = sanitizeName(rawName);
     if (!name) return { error: 'Please enter a name.' };
 
+    // Same name as someone seated: while they're here, it's someone else (pick another name);
+    // once their phone has gone, it's them coming back without their token (another browser,
+    // cleared storage, the camera app's browser), so they get their seat back, not a second one.
+    const same = this.players.findIndex((p) => p && p.name.toLowerCase() === name.toLowerCase());
+    if (same !== -1) {
+      const p = this.players[same];
+      if (p.connected || p.local || local) return { error: `Someone here is already called ${p.name}. Pick another name.` };
+      p.token = newToken(); // the old device's token stops working
+      p.name = name;
+      return { slot: same, player: p, rejoined: true };
+    }
+
     let slot = this.players.findIndex((p) => p === null);
     if (slot === -1) slot = this.players.findIndex((p) => p && !p.connected);
     if (slot === -1) return { error: 'This room already has two players.' };

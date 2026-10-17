@@ -21,6 +21,7 @@
   let pendingView = null;
   let lastView = null; // newest view of the current game (controllers map buttons against it)
   let roomCode = null;
+  let kickArmed = null; // a seat's ✕ tapped once: { slot, timer } (see kick below)
   const lastPolled = {}; // pad index -> last analog input sent (see padPoll below)
 
   // ---- room lifecycle --------------------------------------------------
@@ -78,7 +79,9 @@
       return;
     }
     el.className = 'seat filled' + (p.connected ? '' : ' away');
+    const confirming = kickArmed && kickArmed.slot === slot;
     el.innerHTML =
+      '<button class="kick' + (confirming ? ' armed' : '') + '" data-kick="' + slot + '" title="Remove this player">' + (confirming ? 'Remove?' : '✕') + '</button>' +
       label +
       '<span class="who">' + Ark.escapeHtml(p.name) + '</span>' +
       '<span class="status">' + (p.local ? '🎮 Controller · ' : '') + (p.connected ? 'Ready' : 'Reconnecting…') + '</span>';
@@ -137,6 +140,22 @@
   });
 
   $('to-lobby').addEventListener('click', function () { socket.emit('lobby:return'); });
+
+  // Removing a player: tap ✕ on their seat, then "Remove?" within a few seconds.
+  function kick(slot) {
+    clearTimeout(kickArmed && kickArmed.timer);
+    kickArmed = null;
+    socket.emit('host:kick', { slot: slot });
+  }
+  document.querySelector('.seats').addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-kick]');
+    if (!btn) return;
+    const slot = Number(btn.getAttribute('data-kick'));
+    if (kickArmed && kickArmed.slot === slot) return kick(slot);
+    clearTimeout(kickArmed && kickArmed.timer);
+    kickArmed = { slot: slot, timer: setTimeout(function () { kickArmed = null; if (state) renderLobby(); }, 4000) };
+    renderLobby();
+  });
   Ark.bindTournament($('tourney'), socket);
 
   /** During a game the tournament score sits in the middle of the top bar. */
@@ -335,6 +354,12 @@
 
   const padName = function (idx) { return 'Controller ' + (idx + 1); };
 
+  /** Seats held by phones that have disconnected. */
+  function awayPhones() {
+    if (!state) return [];
+    return state.players.map(function (p, slot) { return p && !p.local && !p.connected ? slot : -1; }).filter(function (s) { return s !== -1; });
+  }
+
   function savePads() {
     // Until the room is known (a refresh is still resuming), there's nothing to save yet;
     // saving now would wipe the seats restorePads() is about to take back.
@@ -379,7 +404,8 @@
     let text;
     if (padMessage) text = padMessage;
     else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
-    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · X tournament · D-pad + A pick a game';
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · X tournament · D-pad + A pick a game' +
+      (awayPhones().length ? ' · Back: free the seat of a phone that left' : '');
     $('pad-hint').textContent = text;
   }
 
@@ -484,7 +510,12 @@
       return;
     }
 
-    // Lobby
+    // Lobby. Back (on any controller) frees the seats of phones that have gone.
+    if (btn === 'BACK') {
+      const away = awayPhones();
+      away.forEach(function (slot) { socket.emit('host:kick', { slot: slot }); });
+      return flashPad(away.length ? '🎮 Freed ' + away.length + ' seat' + (away.length > 1 ? 's' : '') : '🎮 No seats to free: everyone is here');
+    }
     if (!seat) {
       if (btn === 'A' || btn === 'START') joinPad(idx);
       return;

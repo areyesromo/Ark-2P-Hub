@@ -86,3 +86,25 @@ test("a game's saved settings survive going back to the lobby, per room and per 
   assert.deepEqual(other.game.hostView().settings.size, 4, 'another room starts from the defaults');
   other.stopGame();
 });
+
+test('a phone that comes back without its token (other browser, cleared storage) gets its own seat back, not a second one', () => {
+  const r = new Room('TEST', io, { stats: new Stats(null) });
+  r.hostSockets.add('tv');
+  const first = r.seatPlayer('Test3', null);
+  const oldToken = first.player.token;
+  first.player.connected = false; // the phone went away
+  const again = r.seatPlayer(' test3 ', null); // same person, no token
+  assert.equal(again.slot, first.slot);
+  assert.equal(again.rejoined, true);
+  assert.equal(r.players.filter(Boolean).length, 1, 'no second seat');
+  assert.notEqual(again.player.token, oldToken, 'a fresh token: the old device can\'t take the seat back');
+  assert.equal(r.seatPlayer('Test3', oldToken).rejoined, true, 'while the seat is free, the name still gets it');
+});
+
+test('two people with the same name: the second has to pick another while the first is here', () => {
+  const r = new Room('TEST', io, { stats: new Stats(null) });
+  const a = r.seatPlayer('Sam', null);
+  a.player.connected = true;
+  assert.match(r.seatPlayer('SAM', null).error, /already called Sam/);
+  assert.equal(r.players.filter(Boolean).length, 1);
+});

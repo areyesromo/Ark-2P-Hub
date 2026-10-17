@@ -234,3 +234,47 @@ test('/healthz counts games in progress (the Pi updater waits for 0)', async () 
   assert.equal(after.playing, before.playing);
   assert.ok(server.rooms.get(code));
 });
+
+test('the TV can remove a player: their phone is told, stops counting as that player, and the seat is free', async () => {
+  const host = client();
+  const { code } = await call(host, 'host:create', {});
+  const ana = client();
+  const ben = client();
+  const a = await call(ana, 'player:join', { code, name: 'Ana' });
+  await call(ben, 'player:join', { code, name: 'Ben' });
+  assert.match((await call(ben, 'host:kick', { slot: 0 })).error, /Only the TV/);
+  await call(host, 'lobby:start', { gameId: 'rock-paper-scissors' });
+
+  const kicked = next(ana, 'player:kicked');
+  const freed = next(host, 'room:state', (s) => s.players[0] === null && s.phase === 'lobby');
+  assert.deepEqual(await call(host, 'host:kick', { slot: 0 }), { ok: true });
+  const msg = await kicked;
+  assert.equal(msg.removed, true);
+  assert.match(msg.reason, /TV removed you/);
+  await freed;
+  assert.match((await call(host, 'host:kick', { slot: 0 })).error, /Nobody/);
+
+  // The removed phone's socket no longer drives anything; its old token gets no seat back.
+  const room = server.rooms.get(code);
+  ana.emit('lobby:start', { gameId: 'pong' });
+  await new Promise((r) => setTimeout(r, 50));
+  assert.equal(room.game, null);
+  const back = await call(ana, 'player:join', { code, name: 'Ana', token: a.token });
+  assert.notEqual(back.token, a.token, 'joins again as a new player');
+});
+
+test('a phone joining again under its own name, without its token, takes back its seat instead of a second one', async () => {
+  const host = client();
+  const { code } = await call(host, 'host:create', {});
+  const first = client();
+  await call(first, 'player:join', { code, name: 'Test3' });
+  const gone = next(host, 'room:state', (s) => s.players[0] && !s.players[0].connected);
+  first.close(); // e.g. the phone opened the link in another browser
+  await gone;
+  const second = client();
+  const res = await call(second, 'player:join', { code, name: 'Test3' });
+  assert.equal(res.slot, 0);
+  const s = server.rooms.get(code).publicState();
+  assert.equal(s.players.filter(Boolean).length, 1);
+  assert.equal(s.players[0].connected, true);
+});
