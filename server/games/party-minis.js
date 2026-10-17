@@ -1,0 +1,43 @@
+// Party Minigames: a Mario Party-style playlist of 20-40 second head-to-head
+// minigames (balloon pumping, hot potato, quick draw...). Win a minigame to
+// score; first to 3 wins. The minigames live in server/games/minis/.
+
+import { MiniGame } from './minis/runner.js';
+import { PARTIES } from './minis/index.js';
+import { settingOf } from './options.js';
+
+export const WINS = 3;
+
+export class PartyMinis extends MiniGame {
+  constructor(ctx, pool = PARTIES, rng = Math.random) {
+    super(ctx, pool, rng);
+    this.target = settingOf(ctx, 'wins', WINS);
+  }
+
+  reset() {
+    this.wins = [0, 0];
+    this.scores = this.wins;
+  }
+
+  score(result) {
+    if (result.winner === 0 || result.winner === 1) this.wins[result.winner]++;
+    if (this.wins.includes(this.target)) this.winner = this.wins[0] === this.target ? 0 : 1;
+  }
+
+  isOver() {
+    return this.winner !== null;
+  }
+
+  extraView() {
+    return { wins: this.wins, target: this.target };
+  }
+}
+
+export default {
+  id: 'party-minis',
+  name: 'Party Minigames',
+  category: 'competitive',
+  music: 'casual',
+  tagline: 'Mario Party-style showdowns: pump a balloon till it pops, pass the hot potato, out-draw your rival, repeat the glowing path. Win a minigame to score; first to 3 takes it.',
+  create: (ctx) => new PartyMinis(ctx),
+};

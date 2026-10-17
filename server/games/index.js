@@ -21,6 +21,7 @@ import marbleMaze, { LEVELS as MAZE_LEVELS } from './marble-maze.js';
 import mindMeld from './mind-meld.js';
 import liarsDice from './liars-dice.js';
 import microMayhem from './micro-mayhem.js';
+import partyMinis from './party-minis.js';
 import diceParty from './dice-party.js';
 import { withSetup } from './options.js';
 
@@ -61,6 +62,7 @@ const GAMES = [
   withSetup(snake, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup(partyMinis, firstTo('Wins needed', [3, 4, 5])),
   withSetup(microMayhem, {
     lives: { title: 'Lives', values: [3, 5], label: (n) => `${n} lives` },
     pace: { title: 'Pace', values: ['normal', 'fast'], label: (p) => (p === 'fast' ? 'Fast (starts at speed 3)' : 'Normal') },
