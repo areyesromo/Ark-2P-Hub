@@ -100,7 +100,8 @@ export class MiniGame {
 
   nextMini() {
     const epoch = ++this.epoch;
-    const def = this.pool.find((d) => d.id === this.playlist.next());
+    const id = this.playlist.next();
+    const def = this.pool.find((d) => d.id === id);
     const ctx = this.ctx;
     const api = {
       players: ctx.players,

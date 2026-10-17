@@ -161,3 +161,18 @@ test('over when the game says so; rematch starts again', () => {
   assert.equal(g.hostView().count, 0);
   assert.equal(g.playerView(1).you, 1);
 });
+
+test('a pool of several minigames plays them all, each once per round', () => {
+  const { micro } = stubs();
+  const pool = ['a', 'b', 'c'].map((id) => ({ ...micro, id }));
+  const ctx = fakeCtx();
+  const g = new TestGame(ctx, pool);
+  g.start();
+  const ids = [];
+  for (let i = 0; i < 6; i++) {
+    ids.push(g.hostView().mini.id);
+    ctx.advance(TIMING.introMicroMs + micro.durationMs + TIMING.resultMicroMs);
+  }
+  assert.deepEqual(ids.slice(0, 3).sort(), ['a', 'b', 'c']);
+  assert.deepEqual(ids.slice(3).sort(), ['a', 'b', 'c']);
+});
