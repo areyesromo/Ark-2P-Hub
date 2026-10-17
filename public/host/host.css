@@ -153,3 +153,9 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 .tourney:empty { display: none; }
 .tourney-bar { flex: 1; display: flex; justify-content: center; min-width: 0; font-size: 1.15rem; }
 .tourney-bar .ark-tourney.compact { padding: 0.25em 1em; }
+
+/* Removing a player: ✕ on the seat, then "Remove?" to confirm. */
+.seat { position: relative; }
+.seat .kick { position: absolute; top: 0.6rem; right: 0.6rem; padding: 0.2rem 0.6rem; font-size: 0.95rem; background: transparent; color: var(--muted); border: 1px solid var(--line); opacity: 0.55; }
+.seat .kick:hover, .seat .kick.armed { opacity: 1; color: #fff; }
+.seat .kick.armed { background: var(--bad); border-color: var(--bad); }

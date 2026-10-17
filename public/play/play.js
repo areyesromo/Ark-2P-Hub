@@ -104,6 +104,8 @@
   });
 
   socket.on('player:kicked', function (msg) {
+    // Removed by the TV: forget the seat, so we don't rejoin by ourselves.
+    if (msg.removed) saveSession({ code: '', token: null, name: session ? session.name : '' });
     me = null;
     $('join-error').textContent = msg.reason;
     showJoin();

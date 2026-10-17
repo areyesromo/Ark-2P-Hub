@@ -94,6 +94,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Mind Meld | **Left stick** or **D-pad ← →** turns the dial, **A** locks in | Controller players always guess; the clue-giver needs a phone to type |
 | Marble Maze | **Left stick** or **D-pad** tilts the board | In split mode only your axis counts: player 1 left/right, player 2 forwards/back. **A** plays again at the end |
 | Lobby | **B** | Leave your seat |
+| Lobby | **Back** | Free the seats of phones that have left (shown as *Reconnecting…*) |
 | Any game | **Back / Select** | Back to the lobby |
 | Reaction Duel | any face button, bumper or trigger | Tap |
 | Rock Paper Scissors | **X** ✊ · **Y** ✋ · **B** ✌️ (or D-pad ← ↑ →) | Pick (stays secret, the TV only shows 🔒) |
@@ -287,7 +288,13 @@ Phone P2    /play  ◄──┘
   should see (e.g. Rock Paper Scissors picks stay secret).
 - **Reconnects are built in.** Phones keep a seat token, so a locked screen,
   a refresh or a Wi-Fi blip drops you straight back into your seat. The TV
-  resumes its room after a refresh too.
+  resumes its room after a refresh too. A phone that lost its token (another
+  browser, cleared storage) gets its seat back by joining under the same name
+  while that seat shows *Reconnecting…*; while the player is still there, the
+  name is taken.
+- **Removing a player:** tap ✕ on their seat on the TV, then **Remove?** to
+  confirm (their phone goes back to the join screen). With a controller,
+  **Back** in the lobby frees the seats of phones that have left.
 - **Room codes** are 4 letters; rooms are cleaned up after 30 idle minutes.
 
 ```
