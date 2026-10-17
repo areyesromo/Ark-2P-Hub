@@ -204,3 +204,23 @@ export class MiniGame {
     return Object.assign(this.view(slot), { you: slot });
   }
 }
+
+/**
+ * Exactly one minigame (for Party Board): after its result card, calls
+ * onDone(result) instead of ending the match.
+ */
+export class OneMini extends MiniGame {
+  constructor(ctx, pool, rng, onDone) {
+    super(ctx, pool, rng);
+    this.onDone = onDone;
+  }
+
+  isOver() {
+    return this.count >= 1;
+  }
+
+  finish() {
+    this.phase = 'done';
+    this.onDone(this.lastResult);
+  }
+}
