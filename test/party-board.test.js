@@ -135,6 +135,7 @@ test('board: after both turns a minigame; winner +10, a draw +3 each; then the n
   assert.equal(h.p(1).minigames, 1);
   assert.equal(h.v().round, 2);
   assert.equal(h.v().prompt.slot, 0);
+  h.g.star = 25; // out of the way: this test is not about buying stars
   h.roll(0, 4); // 1 -> 5 blue
   h.roll(1, 4);
   h.minigame(null);
@@ -198,4 +199,214 @@ test('board: a rematch mid-walk leaves no stale steps behind', () => {
   h.ctx.advance(TIMING.stepMs * 20);
   assert.equal(h.p(0).space, 0);
   assert.equal(h.v().prompt.kind, 'roll');
+});
+
+// ---- star, shop, items, events, slot, time-outs ----
+// The star starts on space 2; shops are 6 and 18; events 4, 14, 24; bonus 10, 22.
+const D = (n) => (n - 1) / 10 + 0.01; // rng value that rolls n
+const EV = { shower: 0.01, swap: 0.21, steal: 0.41, lucky: 0.61, star: 0.81 };
+
+test('star: passing it with 20 coins offers it; yes buys and moves it, no walks on', () => {
+  const h = board();
+  h.g.players[0].coins = 20;
+  h.q.push(D(3));
+  h.choose(0, 'roll');
+  let v = h.settle();
+  assert.equal(v.prompt.kind, 'star');
+  assert.deepEqual(v.prompt.options, ['yes', 'no']);
+  h.q.push(0); // the star moves to the first other candidate
+  h.choose(0, 'yes');
+  v = h.settle();
+  assert.equal(h.p(0).stars, 1);
+  assert.equal(v.board.star, 7);
+  assert.equal(h.p(0).space, 3);
+  assert.equal(h.p(0).coins, 0, 'paid 20, then the red space (never below 0)');
+  const k = board();
+  k.g.players[0].coins = 20;
+  k.q.push(D(3));
+  k.choose(0, 'roll');
+  k.settle();
+  k.choose(0, 'no');
+  k.settle();
+  assert.equal(k.p(0).stars, 0);
+  assert.equal(k.v().board.star, 2);
+});
+
+test('star: passing with 19 coins asks nothing', () => {
+  const h = board();
+  h.g.players[0].coins = 19;
+  const v = h.roll(0, 3);
+  assert.equal(v.prompt.slot, 1);
+  assert.equal(h.p(0).space, 3);
+});
+
+test('shop: offers what you can afford, only with a free slot; buying takes coins', () => {
+  const h = board();
+  h.g.players[0].coins = 9;
+  h.q.push(D(7));
+  h.choose(0, 'roll');
+  let v = h.settle();
+  assert.equal(v.prompt.kind, 'shop');
+  assert.deepEqual(v.prompt.options, ['mushroom', 'coin-thief', 'none']);
+  h.choose(0, 'coin-thief');
+  v = h.settle();
+  assert.deepEqual(h.p(0).items, ['coin-thief']);
+  assert.equal(h.p(0).coins, 1 + 3, 'paid 8, then blue space 7');
+  const k = board();
+  k.g.players[0].coins = 50;
+  k.g.players[0].items = ['mushroom', 'mushroom', 'warp'];
+  k.g.star = 25; // not passing it
+  k.g.turnStart();
+  k.choose(0, 'none');
+  k.settle();
+  k.q.push(D(7));
+  k.choose(0, 'roll');
+  v = k.settle();
+  assert.equal(v.prompt.slot, 1, 'three items: the shop does not ask');
+});
+
+test('items: mushroom +3, double dice, warp, coin thief, star thief', () => {
+  let h = board();
+  h.g.players[0].items = ['mushroom'];
+  h.g.turnStart();
+  assert.deepEqual(h.v().prompt.options, ['mushroom', 'none']);
+  h.choose(0, 'mushroom');
+  h.settle();
+  h.roll(0, 2);
+  assert.equal(h.p(0).space, 5);
+  assert.deepEqual(h.p(0).items, []);
+
+  h = board();
+  h.g.players[0].items = ['double'];
+  h.g.turnStart();
+  h.choose(0, 'double');
+  h.settle();
+  h.q.push(D(1), D(1));
+  h.choose(0, 'roll');
+  h.settle();
+  assert.equal(h.p(0).space, 2);
+
+  h = board();
+  h.g.players[1].space = 5;
+  h.g.players[0].items = ['warp'];
+  h.g.turnStart();
+  h.choose(0, 'warp');
+  h.settle();
+  assert.deepEqual([h.p(0).space, h.p(1).space], [5, 0]);
+
+  h = board();
+  h.g.players[1].coins = 7;
+  h.g.players[0].items = ['coin-thief'];
+  h.g.turnStart();
+  h.choose(0, 'coin-thief');
+  h.settle();
+  assert.deepEqual([h.p(0).coins, h.p(1).coins], [17, 0]);
+
+  h = board();
+  h.g.players[1].stars = 1;
+  h.g.players[0].items = ['star-thief'];
+  h.g.turnStart();
+  h.choose(0, 'star-thief');
+  h.settle();
+  assert.deepEqual([h.p(0).stars, h.p(1).stars], [1, 0]);
+});
+
+test('items: the star thief is not offered (or taken) when the rival has no stars', () => {
+  const h = board();
+  h.g.players[0].items = ['star-thief'];
+  h.g.turnStart();
+  assert.equal(h.v().prompt.kind, 'roll');
+  h.choose(0, 'star-thief');
+  assert.equal(h.v().prompt.kind, 'roll');
+  assert.deepEqual(h.p(0).items, ['star-thief']);
+});
+
+test('events: shower, swap, steal (only what they have), lucky, the star moves', () => {
+  const at = (ev, prep) => {
+    const h = board();
+    if (prep) prep(h.g);
+    h.q.push(D(4), EV[ev]);
+    if (ev === 'star') h.q.push(0);
+    h.choose(0, 'roll');
+    h.settle();
+    return h;
+  };
+  let h = at('shower');
+  assert.deepEqual([h.p(0).coins, h.p(1).coins], [15, 15]);
+  h = at('swap', (g) => { g.players[1].space = 9; });
+  assert.deepEqual([h.p(0).space, h.p(1).space], [9, 4]);
+  h = at('steal', (g) => { g.players[1].coins = 2; });
+  assert.deepEqual([h.p(0).coins, h.p(1).coins], [12, 0]);
+  h = at('lucky');
+  assert.equal(h.p(0).coins, 20);
+  h = at('star');
+  assert.equal(h.v().board.star, 7);
+});
+
+test('slot machine: three of a kind +15, a pair +5, else +1', () => {
+  const spin = (a, b, c) => {
+    const h = board();
+    h.g.players[0].coins = 4; // too little to be stopped by the shop on the way
+    h.q.push(D(10));
+    h.choose(0, 'roll');
+    let v = h.settle();
+    assert.equal(v.prompt.kind, 'slot');
+    for (const r of [a, b, c]) {
+      h.q.push(r);
+      h.choose(0, 'stop');
+    }
+    v = h.settle();
+    return h.p(0).coins;
+  };
+  assert.equal(spin(0.01, 0.01, 0.01), 4 + 15);
+  assert.equal(spin(0.01, 0.01, 0.5), 4 + 5);
+  assert.equal(spin(0.01, 0.3, 0.5), 4 + 1);
+});
+
+test('time-outs: roll rolls, item none, star no, shop none, slot stops', () => {
+  let h = board();
+  h.g.players[0].items = ['mushroom'];
+  h.g.turnStart();
+  h.ctx.advance(TIMING.promptMs);
+  assert.equal(h.v().prompt.kind, 'roll', 'item: none');
+  h.ctx.advance(TIMING.promptMs);
+  assert.ok(h.v().dice, 'roll: rolled');
+  h = board();
+  h.g.players[0].coins = 20;
+  h.q.push(D(3));
+  h.choose(0, 'roll');
+  h.settle();
+  h.ctx.advance(TIMING.promptMs);
+  h.settle();
+  assert.equal(h.p(0).stars, 0, 'star: no');
+  h = board();
+  h.g.players[0].coins = 9;
+  h.q.push(D(7));
+  h.choose(0, 'roll');
+  h.settle();
+  h.ctx.advance(TIMING.promptMs);
+  h.settle();
+  assert.deepEqual(h.p(0).items, [], 'shop: none');
+  h = board();
+  h.g.players[0].coins = 4;
+  h.q.push(D(10));
+  h.choose(0, 'roll');
+  h.settle();
+  h.ctx.advance(TIMING.promptMs);
+  const v = h.settle();
+  assert.ok(h.p(0).coins > 4, 'slot: all reels stopped and paid');
+  assert.equal(v.prompt.slot, 1);
+});
+
+test('inputs: the other player, unknown values or no prompt are ignored', () => {
+  const h = board();
+  h.choose(1, 'roll');
+  assert.equal(h.v().dice, null);
+  h.choose(0, 'banana');
+  assert.equal(h.v().dice, null);
+  h.g.onInput(0, null);
+  h.g.onInput(0, { type: 'choose' });
+  h.choose(0, 'roll');
+  h.choose(0, 'roll'); // the prompt is gone
+  assert.equal(h.v().dice.values.length, 1);
 });

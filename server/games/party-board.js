@@ -14,6 +14,18 @@ export const START_COINS = 10;
 export const STAR_PRICE = 20;
 export const MINI_PRIZE = { win: 10, draw: 3 };
 export const SPACE_COINS = { blue: 3, red: -3 };
+export const MAX_ITEMS = 3;
+/** The shop, in the order it lists them. */
+export const ITEMS = {
+  mushroom: { name: '🍄 Mushroom', price: 5, what: '+3 to your roll' },
+  'coin-thief': { name: '🦹 Coin Thief', price: 8, what: 'steal up to 10 🪙' },
+  double: { name: '🎲 Double Dice', price: 10, what: 'roll two dice' },
+  warp: { name: '🌀 Warp', price: 10, what: 'swap places with your rival' },
+  'star-thief': { name: '👻 Star Thief', price: 35, what: 'steal a ⭐' },
+};
+export const EVENTS = ['shower', 'swap', 'steal', 'lucky', 'star'];
+export const EVENT_COINS = { shower: 5, steal: 5, lucky: 10 };
+export const SLOT = { reels: 3, faces: 5, three: 15, pair: 5, none: 1 };
 
 export class PartyBoard {
   constructor(ctx, rng = Math.random, map = MAPS.island, pool = PARTIES) {
@@ -88,8 +100,9 @@ export class PartyBoard {
   }
 
   // ---- prompts ----
-  ask(kind, options, onAnswer, fallback) {
-    const prompt = { slot: this.turn, kind, options, deadline: this.ctx.now() + TIMING.promptMs, onAnswer };
+  ask(kind, options, onAnswer, fallback, extra) {
+    if (this.prompt) this.ctx.clearTimeout(this.prompt.timer);
+    const prompt = { slot: this.turn, kind, options, deadline: this.ctx.now() + TIMING.promptMs, onAnswer, extra };
     prompt.timer = this.after(() => this.answer(fallback), TIMING.promptMs);
     this.prompt = prompt;
     this.ctx.update();
@@ -107,7 +120,34 @@ export class PartyBoard {
   turnStart() {
     this.dice = null;
     this.turnState = { mushroom: false, double: false };
-    this.rollPrompt();
+    const usable = this.usableItems(this.turn);
+    if (!usable.length) return this.rollPrompt();
+    this.ask('item', usable.concat('none'), (id) => this.useItem(id), 'none');
+  }
+
+  /** The items `slot` can use now (each kind once; the star thief only if the rival has a star). */
+  usableItems(slot) {
+    const rival = this.players[1 - slot];
+    return Object.keys(ITEMS).filter((id) => this.players[slot].items.includes(id) && (id !== 'star-thief' || rival.stars > 0));
+  }
+
+  useItem(id) {
+    if (id === 'none') return this.rollPrompt();
+    const slot = this.turn;
+    const me = this.players[slot];
+    const rival = this.players[1 - slot];
+    me.items.splice(me.items.indexOf(id), 1);
+    if (id === 'mushroom') this.turnState.mushroom = true;
+    if (id === 'double') this.turnState.double = true;
+    if (id === 'warp') [me.space, rival.space] = [rival.space, me.space];
+    if (id === 'coin-thief') this.coins(slot, -this.coins(1 - slot, -10));
+    if (id === 'star-thief') {
+      rival.stars--;
+      me.stars++;
+    }
+    this.say(ITEMS[id].name + '!');
+    this.ctx.update();
+    this.after(() => this.rollPrompt(), TIMING.messageMs);
   }
 
   rollPrompt() {
@@ -128,17 +168,117 @@ export class PartyBoard {
     p.space = (p.space + 1) % this.spaces.length;
     left--;
     this.ctx.update();
-    if (left > 0) this.after(() => this.walk(left), TIMING.stepMs);
-    else this.after(() => this.land(), TIMING.stepMs);
+    if (left === 0) return this.after(() => this.land(), TIMING.stepMs);
+    this.passBy(() => this.after(() => this.walk(left), TIMING.stepMs));
+  }
+
+  /** On a space while walking past it: the star and the shop can stop you; then `next`. */
+  passBy(next) {
+    const slot = this.turn;
+    const space = this.players[slot].space;
+    if (space === this.star && this.players[slot].coins >= STAR_PRICE) return this.starPrompt(next);
+    if (this.spaces[space].type === 'shop' && this.shopItems(slot).length) return this.shopPrompt(next);
+    next();
+  }
+
+  starPrompt(next) {
+    this.ask('star', ['yes', 'no'], (v) => {
+      if (v === 'yes') {
+        this.coins(this.turn, -STAR_PRICE);
+        this.players[this.turn].stars++;
+        this.star = this.pickStar(this.star);
+        this.say('⭐ Got a star!');
+      }
+      this.ctx.update();
+      next();
+    }, 'no');
+  }
+
+  /** What `slot` can buy: affordable, with a free item slot. */
+  shopItems(slot) {
+    const p = this.players[slot];
+    if (p.items.length >= MAX_ITEMS) return [];
+    return Object.keys(ITEMS).filter((id) => ITEMS[id].price <= p.coins);
+  }
+
+  shopPrompt(next) {
+    this.ask('shop', this.shopItems(this.turn).concat('none'), (id) => {
+      if (id !== 'none') {
+        this.coins(this.turn, -ITEMS[id].price);
+        this.players[this.turn].items.push(id);
+        this.say('🛒 Bought ' + ITEMS[id].name);
+      }
+      this.ctx.update();
+      next();
+    }, 'none');
   }
 
   land() {
     const slot = this.turn;
-    const type = this.spaces[this.players[slot].space].type;
+    const space = this.players[slot].space;
+    const type = this.spaces[space].type;
+    const done = () => {
+      this.ctx.update();
+      this.after(() => this.endTurn(), TIMING.messageMs);
+    };
+    if (space === this.star && this.players[slot].coins >= STAR_PRICE) return this.starPrompt(done);
+    if (type === 'shop') {
+      if (this.shopItems(slot).length) return this.shopPrompt(done);
+      this.say('🛒 Nothing you can buy');
+      return done();
+    }
+    if (type === 'event') {
+      this.event(EVENTS[Math.floor(this.rng() * EVENTS.length)]);
+      return done();
+    }
+    if (type === 'bonus') return this.slot(done);
     const n = this.coins(slot, type === 'red' ? SPACE_COINS.red : SPACE_COINS.blue);
     this.say(n >= 0 ? `+${n} 🪙` : `${n} 🪙`);
-    this.ctx.update();
-    this.after(() => this.endTurn(), TIMING.messageMs);
+    done();
+  }
+
+  event(kind) {
+    const slot = this.turn;
+    const me = this.players[slot];
+    const rival = this.players[1 - slot];
+    if (kind === 'shower') {
+      this.coins(0, EVENT_COINS.shower);
+      this.coins(1, EVENT_COINS.shower);
+      this.say('🌧️ Coin shower! +5 🪙 each');
+    } else if (kind === 'swap') {
+      [me.space, rival.space] = [rival.space, me.space];
+      this.say('🔀 Swap places!');
+    } else if (kind === 'steal') {
+      const n = -this.coins(1 - slot, -EVENT_COINS.steal);
+      this.coins(slot, n);
+      this.say(`💰 Stole ${n} 🪙`);
+    } else if (kind === 'lucky') {
+      this.coins(slot, EVENT_COINS.lucky);
+      this.say('🍀 Lucky! +10 🪙');
+    } else {
+      this.star = this.pickStar(this.star);
+      this.say('👻 The star moved!');
+    }
+    this.lastEvent = kind;
+  }
+
+  /** The bonus space's slot machine: stop three reels (1-5); three of a kind, a pair, or a consolation coin. */
+  slot(done) {
+    const reels = [];
+    const spin = () => {
+      this.ask('slot', ['stop'], (v) => {
+        do reels.push(1 + Math.floor(this.rng() * SLOT.faces));
+        while (v === 'stop-all' && reels.length < SLOT.reels);
+        if (reels.length < SLOT.reels) return spin();
+        const kinds = new Set(reels).size;
+        const n = kinds === 1 ? SLOT.three : kinds === 2 ? SLOT.pair : SLOT.none;
+        this.coins(this.turn, n);
+        this.slotReels = reels.slice();
+        this.say(`🎰 ${reels.join(' ')}: +${n} 🪙`);
+        done();
+      }, 'stop-all', { reels: reels.slice() });
+    };
+    spin();
   }
 
   endTurn() {
@@ -223,6 +363,7 @@ export class PartyBoard {
       board: { spaces: this.spaces, star: this.star },
       prompt: p ? { slot: p.slot, kind: p.kind, options: p.options, msLeft: Math.max(0, p.deadline - this.ctx.now()), extra: p.extra || null } : null,
       dice: this.dice,
+      items: ITEMS,
       message: this.message,
       mini: this.mini ? (slot === null ? this.mini.hostView() : this.mini.playerView(slot)) : null,
       bonusStars: this.bonusStars,
