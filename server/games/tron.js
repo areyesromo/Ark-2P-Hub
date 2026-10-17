@@ -5,6 +5,8 @@
 // Trails are sent as their corner points (plus the current head), not the
 // whole grid, so every update stays tiny.
 
+import { settingOf } from './options.js';
+
 export const GRID = { w: 64, h: 36 };
 export const WIN_SCORE = 3;
 export const TIMING = { countdownMs: 3000, crashMs: 2200 };
@@ -21,6 +23,7 @@ const START = [
 export class Tron {
   constructor(ctx) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.timer = null;
   }
 
@@ -122,7 +125,7 @@ export class Tron {
     if (roundWinner !== null) this.scores[roundWinner]++;
     this.result = { crashed, draw, roundWinner };
 
-    const champ = this.scores.findIndex((s) => s >= WIN_SCORE);
+    const champ = this.scores.findIndex((s) => s >= this.winScore);
     if (champ !== -1) {
       this.winner = champ;
       if (this.timer) this.ctx.clearTimeout(this.timer);
@@ -154,7 +157,7 @@ export class Tron {
       phase: this.phase,
       round: this.round,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       players: this.ctx.players,
       grid: GRID,
       countdown: this.countdown(),
@@ -175,7 +178,7 @@ export class Tron {
       round: this.round,
       you: slot,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       countdown: this.countdown(),
       dir: this.cycles[slot].dir,
       result: this.result,

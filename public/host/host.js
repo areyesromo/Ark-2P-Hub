@@ -218,7 +218,9 @@
     pendingView = null;
     lastView = null;
     Object.keys(lastPolled).forEach(function (k) { delete lastPolled[k]; });
+    Object.keys(hubPads).forEach(function (k) { delete hubPads[k]; });
     $('stage').innerHTML = '';
+    showHubSetup(null);
   }
 
   function mountGame(gameId) {
@@ -265,16 +267,50 @@
     }
     renderPadFooter();
     updateMusic();
+    showHubSetup(Ark.setup.isHub(lastView) ? lastView : null);
   });
 
   socket.on('game:view', function (msg) {
     if (!current || current.gameId !== msg.gameId) return;
-    playGameSounds(lastView, msg.view);
+    const setup = Ark.setup.isHub(msg.view);
+    if (!setup) playGameSounds(Ark.setup.isHub(lastView) ? null : lastView, msg.view);
+    const wasSetup = Ark.setup.isHub(lastView);
     lastView = msg.view;
     updateMusic();
+    showHubSetup(setup ? msg.view : null);
+    if (setup !== wasSetup) renderPadFooter();
+    if (setup) return; // the game hasn't started: the hub shows its setup screen
     if (current.renderer) current.renderer.update(msg.view);
     else pendingView = msg.view;
   });
+
+  // ---- the hub's setup screen ------------------------------------------
+  // For games that don't draw their own (wrapped with withSetup on the
+  // server): pick settings from the phones or with a controller, then start.
+
+  const hubPads = {}; // controller players: slot -> { row }
+  let hubSetupKey = '';
+
+  function showHubSetup(v) {
+    const playing = Boolean(state && state.phase === 'playing');
+    $('hub-setup').classList.toggle('hidden', !v || !playing);
+    $('stage').classList.toggle('hidden', Boolean(v) || !playing);
+    if (!v) {
+      hubSetupKey = '';
+      return;
+    }
+    const parts = Ark.setup.hubParts(v);
+    const focus = Ark.setup.focus(parts.view, parts.rows, hubPads);
+    const key = JSON.stringify([v.hubSetup.settings, focus]);
+    if (key === hubSetupKey) return;
+    hubSetupKey = key;
+    const game = (state.games || []).find(function (g) { return g.id === state.gameId; });
+    $('hub-setup').innerHTML =
+      '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
+      '<p class="muted">Set up the match on your phone, or with a controller: ↑↓ picks a row, ←→ changes it. ' +
+      '<strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</p>' +
+      Ark.setup.html(parts.view, parts.rows, focus);
+  }
   // ---- controllers -----------------------------------------------------
   // Controllers are read on this page (see gamepads.js). Their players are
   // "local" seats on the server; this page sends their input with pad:input.
@@ -340,9 +376,10 @@
     const el = $('pad-footer');
     const r = current && current.renderer;
     const anyPad = state && state.players.some(function (p) { return p && p.local; });
-    const show = Boolean(state && state.phase === 'playing' && anyPad && r && r.padHint);
+    const setup = Ark.setup.isHub(lastView);
+    const show = Boolean(state && state.phase === 'playing' && anyPad && (setup || (r && r.padHint)));
     el.classList.toggle('hidden', !show);
-    if (show) el.textContent = '🎮 ' + r.padHint + ' · Back: lobby';
+    if (show) el.textContent = '🎮 ' + (setup ? '↑↓ pick a row · ←→ change it · A start' : r.padHint) + ' · Back: lobby';
   }
 
   /**
@@ -399,7 +436,7 @@
   // padPoll(); we only send when the resulting input changes.
   ArkPads.onFrame(function () {
     const r = current && current.renderer;
-    if (!state || state.phase !== 'playing' || !r || !r.padPoll || !lastView) return;
+    if (!state || state.phase !== 'playing' || !r || !r.padPoll || !lastView || Ark.setup.isHub(lastView)) return;
     Object.keys(padSeats).forEach(function (idx) {
       const input = r.padPoll({ held: ArkPads.held(Number(idx)), stick: ArkPads.stick(Number(idx)) }, lastView, padSeats[idx].slot);
       const key = input ? JSON.stringify(input) : '';
@@ -415,6 +452,17 @@
 
     if (state.phase === 'playing') {
       if (btn === 'BACK') return socket.emit('lobby:return');
+      if (seat && Ark.setup.isHub(lastView)) {
+        if (!hubPads[seat.slot]) hubPads[seat.slot] = { row: 0 };
+        const parts = Ark.setup.hubParts(lastView);
+        const input = Ark.setup.pad(btn, parts.view, parts.rows, hubPads[seat.slot]);
+        if (input) socket.emit('pad:input', { slot: seat.slot, input: input });
+        showHubSetup(lastView);
+        return;
+      }
+      if (seat && lastView && lastView.hubSetup && lastView.phase === 'over' && btn === 'Y') {
+        return socket.emit('pad:input', { slot: seat.slot, input: { type: 'setup' } });
+      }
       const r = current && current.renderer;
       if (!seat || !r || !r.pad || !lastView) return;
       const input = r.pad(btn, lastView, seat.slot);

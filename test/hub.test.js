@@ -80,8 +80,11 @@ test('full flow: two phones join, play, reconnect, and return to lobby', async (
   const hostView = next(host, 'game:view', (m) => m.gameId === 'rock-paper-scissors');
   const p2View = next(p2, 'game:view', (m) => m.gameId === 'rock-paper-scissors');
   assert.deepEqual(await call(p1, 'lobby:start', { gameId: 'rock-paper-scissors' }), { ok: true, gameId: 'rock-paper-scissors' });
-  assert.equal((await hostView).view.phase, 'choose');
+  assert.equal((await hostView).view.phase, 'setup', 'it opens on its setup screen');
   assert.equal((await p2View).view.you, 1);
+  const choosing = next(host, 'game:view', (m) => m.view.phase === 'choose');
+  p2.emit('game:input', { type: 'go' });
+  assert.equal((await choosing).view.winScore, 3);
 
   // P1 locks in: P2 learns that, but not what.
   const p2Sees = next(p2, 'game:view', (m) => m.view.opponentLocked);
@@ -168,6 +171,7 @@ test('controller players: seated by the TV, present with the TV, driven only by 
 
   // The controller plays through the TV; a phone can't send input for it.
   await call(host, 'lobby:start', { gameId: 'rock-paper-scissors' });
+  host.emit('pad:input', { slot: 1, input: { type: 'go' } }); // past the setup screen
   const locked = next(host, 'game:view', (m) => m.view.locked && m.view.locked[1]);
   phone.emit('pad:input', { slot: 1, input: { type: 'pick', choice: 'rock' } });
   host.emit('pad:input', { slot: 0, input: { type: 'pick', choice: 'rock' } }); // slot 0 is a phone: ignored

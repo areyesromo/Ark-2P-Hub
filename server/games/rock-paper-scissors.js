@@ -1,6 +1,8 @@
 // Classic Rock-Paper-Scissors. Picks are secret on each phone until both are
 // locked in, then the TV reveals them. First to WIN_SCORE wins.
 
+import { settingOf } from './options.js';
+
 export const WIN_SCORE = 3;
 export const REVEAL_MS = 3000;
 export const CHOICES = ['rock', 'paper', 'scissors'];
@@ -15,6 +17,7 @@ export function judge(a, b) {
 export class RockPaperScissors {
   constructor(ctx) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.timer = null;
   }
 
@@ -47,7 +50,7 @@ export class RockPaperScissors {
     this.roundWinner = judge(this.picks[0], this.picks[1]);
     if (this.roundWinner !== null) this.scores[this.roundWinner]++;
 
-    const champ = this.scores.findIndex((s) => s >= WIN_SCORE);
+    const champ = this.scores.findIndex((s) => s >= this.winScore);
     if (champ !== -1) {
       this.phase = 'over';
       this.winner = champ;
@@ -69,7 +72,7 @@ export class RockPaperScissors {
       phase: this.phase,
       round: this.round,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       players: this.ctx.players,
       locked: this.picks.map(Boolean),
       picks: this.visiblePicks(),
@@ -84,7 +87,7 @@ export class RockPaperScissors {
       round: this.round,
       you: slot,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       yourPick: this.picks[slot],
       opponentLocked: Boolean(this.picks[1 - slot]),
       opponentPick: this.phase === 'choose' ? null : this.picks[1 - slot],

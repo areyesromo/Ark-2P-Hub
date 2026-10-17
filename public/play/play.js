@@ -184,7 +184,7 @@
       if (current !== mounting) return;
       mounting.renderer = renderer;
       renderer.mount($('phone-stage'), api);
-      if (lastView && lastView.gameId === gameId) renderer.update(lastView.view);
+      if (lastView && lastView.gameId === gameId && !Ark.setup.isHub(lastView.view)) renderer.update(lastView.view);
     }).catch(function (err) {
       $('phone-stage').textContent = err.message;
     });
@@ -201,6 +201,7 @@
     $('phone-lobby').classList.toggle('hidden', playing);
     $('phone-stage').classList.toggle('hidden', !playing);
     $('lobby-btn').disabled = !playing;
+    showHubSetup(playing && lastView && Ark.setup.isHub(lastView.view) && lastView.gameId === s.gameId ? lastView.view : null);
     if (playing) {
       if (!current || current.gameId !== s.gameId) mountGame(s.gameId);
     } else {
@@ -211,8 +212,39 @@
 
   socket.on('game:view', function (msg) {
     lastView = msg;
-    if (current && current.renderer && current.gameId === msg.gameId) current.renderer.update(msg.view);
+    const v = msg.view;
+    showHubSetup(Ark.setup.isHub(v) ? v : null);
+    $('hub-change').classList.toggle('hidden', !(v.hubSetup && v.phase === 'over'));
+    if (Ark.setup.isHub(v)) return; // the game hasn't started: the hub shows its setup screen
+    if (current && current.renderer && current.gameId === msg.gameId) current.renderer.update(v);
   });
+
+  // The setup screen for games that don't draw their own (see withSetup on the server).
+  let hubSetupKey = '';
+  function showHubSetup(v) {
+    $('hub-setup').classList.toggle('hidden', !v);
+    if (state && state.phase === 'playing') $('phone-stage').classList.toggle('hidden', Boolean(v));
+    if (!v) {
+      hubSetupKey = '';
+      $('hub-change').classList.add('hidden');
+      return;
+    }
+    const key = JSON.stringify(v.hubSetup.settings);
+    if (key === hubSetupKey) return;
+    hubSetupKey = key;
+    const game = state && (state.games || []).find(function (g) { return g.id === state.gameId; });
+    const parts = Ark.setup.hubParts(v);
+    $('hub-setup').innerHTML =
+      '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
+      '<p class="muted">Pick the settings (either of you can), then start.</p>' +
+      Ark.setup.html(parts.view, parts.rows) +
+      '<button class="primary hub-go">Start</button>';
+  }
+  Ark.setup.bind($('hub-setup'), api);
+  $('hub-setup').addEventListener('click', function (e) {
+    if (e.target.closest('.hub-go')) api.send({ type: 'go' });
+  });
+  $('hub-change').addEventListener('click', function () { api.send({ type: 'setup' }); });
 
   // ---- keep the screen awake while playing -----------------------------
 

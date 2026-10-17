@@ -3,6 +3,8 @@
 // Rounds last at most ROUND_MS; when time runs out the longer snake wins.
 // First to WIN_SCORE rounds. Same turn controls as Light Cycles.
 
+import { settingOf } from './options.js';
+
 export const GRID = { w: 32, h: 18 };
 export const WIN_SCORE = 3;
 export const START_LENGTH = 4;
@@ -23,6 +25,7 @@ const key = (x, y) => y * GRID.w + x;
 export class SnakeBattle {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.rng = rng;
     this.timer = null;
   }
@@ -167,7 +170,7 @@ export class SnakeBattle {
     this.frozenLeft = this.timeLeft(); // the clock stops where the round ended
     if (result.roundWinner !== null) this.scores[result.roundWinner]++;
     this.result = result;
-    const champ = this.scores.findIndex((s) => s >= WIN_SCORE);
+    const champ = this.scores.findIndex((s) => s >= this.winScore);
     if (champ !== -1) {
       this.winner = champ;
       if (this.timer) this.ctx.clearTimeout(this.timer);
@@ -205,7 +208,7 @@ export class SnakeBattle {
       phase: this.phase,
       round: this.round,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       players: this.ctx.players,
       grid: GRID,
       countdown: this.countdown(),
@@ -223,7 +226,7 @@ export class SnakeBattle {
       round: this.round,
       you: slot,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       countdown: this.countdown(),
       timeLeft: this.timeLeft(),
       dir: this.snakes[slot].dir,

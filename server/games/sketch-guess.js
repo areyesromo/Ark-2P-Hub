@@ -7,6 +7,7 @@
 // typing. With two controllers there's nobody to draw, so the game says so.
 
 import { WORDS, STARS } from './sketch-words.js';
+import { settingOf } from './options.js';
 
 export const ROUNDS = 6;
 export const TIMING = { chooseMs: 15000, drawMs: 80000, revealMs: 5000 };
@@ -50,6 +51,7 @@ export function judge(guess, word) {
 export class SketchGuess {
   constructor(ctx, rng = Math.random, words = WORDS) {
     this.ctx = ctx;
+    this.rounds = settingOf(ctx, 'rounds', ROUNDS);
     this.rng = rng;
     this.words = words;
     this.used = new Set();
@@ -196,7 +198,7 @@ export class SketchGuess {
     this.stars += stars;
     this.result = { word: this.word, guessed, ms, stars };
     this.history.push({ word: this.word, level: this.level, drawer: this.drawer, guessed, ms, stars });
-    const last = this.round >= ROUNDS;
+    const last = this.round >= this.rounds;
     this.runPhase('reveal', TIMING.revealMs, () => (last ? this.finish() : this.nextRound()));
   }
 
@@ -290,7 +292,7 @@ export class SketchGuess {
     return {
       phase: this.phase,
       round: this.round,
-      rounds: ROUNDS,
+      rounds: this.rounds,
       drawer: this.drawer,
       guesser: this.guesser,
       level: this.level,
@@ -307,7 +309,7 @@ export class SketchGuess {
       result: this.result,
       history: this.history,
       stars: this.stars,
-      maxStars: ROUNDS * (3 + STARS.hard),
+      maxStars: this.rounds * (3 + STARS.hard),
     };
   }
 

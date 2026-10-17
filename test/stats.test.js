@@ -84,19 +84,25 @@ function roomWithPlayers(stats) {
   return room;
 }
 
+/** Start Rock Paper Scissors (past its setup screen, with the default settings). */
+function startRps(room) {
+  room.startGame('rock-paper-scissors');
+  room.handleInput(0, { type: 'go' });
+}
+
 /** Finish a Rock Paper Scissors match from 2-0 with one more round. */
 function finishRps(room, winner) {
-  room.game.scores = winner === 0 ? [2, 0] : [0, 2];
+  room.game.game.scores = winner === 0 ? [2, 0] : [0, 2]; // room.game is the setup screen around the game
   room.handleInput(0, { type: 'pick', choice: winner === 0 ? 'rock' : 'scissors' });
   room.handleInput(1, { type: 'pick', choice: winner === 0 ? 'scissors' : 'rock' });
-  assert.equal(room.game.phase, 'over');
+  assert.equal(room.game.hostView().phase, 'over');
 }
 
 test('a room records each finished match once, including rematches, and shows the head to head', () => {
   const stats = new Stats(null);
   const room = roomWithPlayers(stats);
   assert.equal(room.publicState().h2h.played, 0);
-  room.startGame('rock-paper-scissors');
+  startRps(room);
   finishRps(room, 0);
   room.pushGameViews(); // more views of the same end screen don't count again
   assert.equal(stats.matches.length, 1);
@@ -112,7 +118,7 @@ test('a room records each finished match once, including rematches, and shows th
   assert.deepEqual(h.wins, [1, 1]);
 
   // Leaving mid-match records nothing.
-  room.startGame('rock-paper-scissors');
+  startRps(room);
   room.handleInput(0, { type: 'pick', choice: 'rock' });
   room.stopGame();
   assert.equal(stats.matches.length, 2);

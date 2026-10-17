@@ -8,6 +8,8 @@
 //
 // Same loop as Pong/Air Hockey: physics at 60 Hz, ~30 views a second.
 
+import { settingOf } from './options.js';
+
 export const WIN_SCORE = 3;
 export const FIELD = { w: 16, h: 9 };
 
@@ -43,6 +45,7 @@ function circleRect(x, y, r, o) {
 export class TankDuel {
   constructor(ctx) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.timer = null;
   }
 
@@ -235,7 +238,7 @@ export class TankDuel {
     this.shells = []; // nothing left hanging in the air during the pause
     if (result.roundWinner !== null) this.scores[result.roundWinner]++;
     this.result = result;
-    const champ = this.scores.findIndex((s) => s >= WIN_SCORE);
+    const champ = this.scores.findIndex((s) => s >= this.winScore);
     if (champ !== -1) {
       this.winner = champ;
       if (this.timer) this.ctx.clearTimeout(this.timer);
@@ -272,7 +275,7 @@ export class TankDuel {
       phase: this.phase,
       round: this.round,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       players: this.ctx.players,
       countdown: this.countdown(),
       timeLeft: this.timeLeft(),
@@ -297,7 +300,7 @@ export class TankDuel {
       round: this.round,
       you: slot,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       countdown: this.countdown(),
       timeLeft: this.timeLeft(),
       hp: this.tanks.map((x) => x.hp),

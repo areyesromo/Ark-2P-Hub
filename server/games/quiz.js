@@ -8,6 +8,7 @@
 // controllers use the same letters.
 
 import { QUESTIONS } from './quiz-questions.js';
+import { settingOf } from './options.js';
 
 export const PER_MATCH = 10;
 export const BASE = 500;
@@ -18,6 +19,7 @@ export const LABELS = ['A', 'B', 'X', 'Y'];
 export class QuizBattle {
   constructor(ctx, rng = Math.random, bank = QUESTIONS) {
     this.ctx = ctx;
+    this.perMatch = settingOf(ctx, 'questions', PER_MATCH);
     this.rng = rng;
     this.bank = bank;
     this.used = new Set(); // asked in earlier matches with this pair: rematches don't repeat
@@ -33,15 +35,15 @@ export class QuizBattle {
     this.runPhase('countdown', TIMING.countdownMs, () => this.ask());
   }
 
-  /** PER_MATCH questions not asked before (starting over once the bank runs dry), answers shuffled. */
+  /** The match's questions (this.perMatch of them), none asked before (starting over once the bank runs dry), answers shuffled. */
   pickQuestions() {
     let pool = this.bank.map((_, i) => i).filter((i) => !this.used.has(i));
-    if (pool.length < PER_MATCH) {
+    if (pool.length < this.perMatch) {
       this.used.clear();
       pool = this.bank.map((_, i) => i);
     }
     const picked = [];
-    while (picked.length < Math.min(PER_MATCH, pool.length)) {
+    while (picked.length < Math.min(this.perMatch, pool.length)) {
       const i = pool.splice(Math.floor(this.rng() * pool.length), 1)[0];
       this.used.add(i);
       const src = this.bank[i];
