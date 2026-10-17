@@ -1,6 +1,8 @@
 // Wait for GO, then tap. Tapping early is a false start and hands the point
 // to your opponent. First to WIN_SCORE takes the duel.
 
+import { settingOf } from './options.js';
+
 export const WIN_SCORE = 3;
 export const TIMING = {
   readyMs: 1500, // "get ready" before the waiting starts
@@ -13,6 +15,7 @@ export const TIMING = {
 export class ReactionDuel {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.rng = rng;
     this.timer = null;
   }
@@ -67,7 +70,7 @@ export class ReactionDuel {
     if (result.winner !== null) this.scores[result.winner]++;
     this.result = result;
 
-    const champ = this.scores.findIndex((s) => s >= WIN_SCORE);
+    const champ = this.scores.findIndex((s) => s >= this.winScore);
     if (champ !== -1) {
       this.phase = 'over';
       this.winner = champ;
@@ -97,7 +100,7 @@ export class ReactionDuel {
       phase: this.phase,
       round: this.round,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       players: this.ctx.players,
       result: this.result,
       winner: this.winner,
@@ -111,7 +114,7 @@ export class ReactionDuel {
       round: this.round,
       you: slot,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       result: this.result,
       winner: this.winner,
     };

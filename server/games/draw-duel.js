@@ -7,6 +7,7 @@
 // so they're pushed at most every DRAW_PUSH_MS while people draw.
 
 import { SHAPES, accuracy, fitted } from './draw-shapes.js';
+import { settingOf } from './options.js';
 
 export const ROUNDS = 5;
 export const TIMING = { countdownMs: 3000, showMs: 4000, drawMs: 20000, revealMs: 6000 };
@@ -18,6 +19,7 @@ const round3 = (v) => Math.round(v * 1000) / 1000;
 export class DrawDuel {
   constructor(ctx, rng = Math.random, shapes = SHAPES) {
     this.ctx = ctx;
+    this.roundCount = settingOf(ctx, 'rounds', ROUNDS);
     this.rng = rng;
     this.shapes = shapes;
     this.used = new Set(); // shown in earlier matches with this pair
@@ -38,12 +40,12 @@ export class DrawDuel {
 
   pickShapes() {
     let pool = this.shapes.map((_, i) => i).filter((i) => !this.used.has(i));
-    if (pool.length < ROUNDS) {
+    if (pool.length < this.roundCount) {
       this.used.clear();
       pool = this.shapes.map((_, i) => i);
     }
     const picked = [];
-    while (picked.length < Math.min(ROUNDS, pool.length)) {
+    while (picked.length < Math.min(this.roundCount, pool.length)) {
       const i = pool.splice(Math.floor(this.rng() * pool.length), 1)[0];
       this.used.add(i);
       picked.push({ name: this.shapes[i].name, paths: this.shapes[i].paths, display: fitted(this.shapes[i].paths) });

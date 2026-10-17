@@ -182,6 +182,23 @@
     return focus;
   }
 
+  /**
+   * The hub's own setup screen, for games wrapped with withSetup on the server
+   * (their views carry hubSetup: { rows, settings, options }).
+   */
+  function isHubSetup(v) {
+    return Boolean(v && v.hubSetup && v.phase === 'setup');
+  }
+
+  /** hubSetup's rows ({ key, title, labels }) as setupHtml rows, plus a view-like object for it. */
+  function hubSetupParts(v) {
+    const h = v.hubSetup;
+    return {
+      rows: h.rows.map(function (r) { return { key: r.key, title: r.title, fmt: function (value) { return r.labels[value] || String(value); } }; }),
+      view: { settings: h.settings, options: h.options, players: v.players },
+    };
+  }
+
   /** Phones: send a setting when one of setupHtml's buttons inside `el` is tapped. */
   function bindSetup(el, api) {
     el.addEventListener('click', function (e) {
@@ -220,7 +237,7 @@
     loadCss: loadCss,
     loadScript: loadScript,
     scoreboardHtml: scoreboardHtml,
-    setup: { html: setupHtml, summary: setupSummary, pad: setupPad, focus: setupFocus, bind: bindSetup, choices: setupChoices },
+    setup: { html: setupHtml, summary: setupSummary, pad: setupPad, focus: setupFocus, bind: bindSetup, choices: setupChoices, isHub: isHubSetup, hubParts: hubSetupParts },
     colorFor: function (slot) { return slot === 0 ? 'var(--p1)' : 'var(--p2)'; },
   };
 })();

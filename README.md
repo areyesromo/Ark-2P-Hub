@@ -45,6 +45,29 @@ one you just played).
 | **Sketch & Guess** | One of you picks a secret word (easy, medium or hard, from 260) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a "so close!"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw. |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
+**Every game opens on a setup screen** where either player picks the match
+settings on their phone (or a controller: ↑↓ picks a row, ←→ changes it, A
+starts). The numbers above are the defaults; you can change, for example:
+
+| Game | Setting |
+| --- | --- |
+| Reaction Duel, Rock Paper Scissors | Points to win: 3, 5 or 7 |
+| Pong | Points to win: 3, 5, 7 or 11 |
+| Air Hockey | Goals to win: 5, 7 or 10 |
+| Light Cycles, Snake Battle, Tank Duel, Sumo, Bomb Duel | Round wins needed: 2, 3 or 5 |
+| Connect Four | One round, or first to 3 or 5 |
+| Quiz Battle | 5, 10, 15 or 20 questions |
+| Draw Duel | 3, 5, 7 or 10 rounds |
+| Battleship | 15, 30 or 60 s per shot |
+| Sketch & Guess | 4, 6, 8 or 10 rounds |
+| Word Race | Grid size, time per round and match length |
+| Mini Golf | 3, 6 or 9 holes |
+| Bomb Duel | Also how many crates |
+
+The room remembers your choice for next time. At the end of a match,
+**Rematch** plays again with the same settings and **⚙ Change settings** (or
+**Y** on a controller) goes back to the setup screen.
+
 ## Controllers
 
 Each player can use a phone **or** a game controller. Mix and match: two
@@ -253,6 +276,9 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
    `OPTIONS = { key: [default, ...choices] }` and use
    `server/games/options.js` on the server and `Ark.setup` on the TV and
    phones (see `word-race` and `mini-golf`): the room remembers the choice.
+   Simpler: register your game wrapped in `withSetup(game, spec)` (see
+   `server/games/index.js`) and read the choice with
+   `settingOf(ctx, key, default)`: the hub draws the setup screen for you.
    Register it in `server/games/index.js`.
 2. **TV:** `public/games/<id>/host.js` calls
    `Ark.register('host', '<id>', { mount(el), update(view) })`.
@@ -281,10 +307,6 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
   if you want that.
 
 ## Roadmap ideas
-
-**The hub**
-
-- Setup screens for the older games too (points to win in Pong and Air Hockey, questions per Quiz Battle...)
 
 **More content**
 

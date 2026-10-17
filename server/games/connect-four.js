@@ -4,6 +4,8 @@
 // rounds wins the match. Each move has a clock: run out and a random column
 // is played for you.
 
+import { settingOf } from './options.js';
+
 export const COLS = 7;
 export const ROWS = 6;
 export const WIN_SCORE = 3;
@@ -35,6 +37,7 @@ export function findLine(board, col, row) {
 export class ConnectFour {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.rng = rng;
     this.timer = null;
   }
@@ -119,7 +122,7 @@ export class ConnectFour {
     this.line = line;
     this.result = { winner, draw: winner === null };
     if (winner !== null) this.scores[winner]++;
-    if (winner !== null && this.scores[winner] >= WIN_SCORE) {
+    if (winner !== null && this.scores[winner] >= this.winScore) {
       this.winner = winner;
       this.phase = 'over';
       this.ctx.update();
@@ -156,7 +159,7 @@ export class ConnectFour {
       line: this.line,
       result: this.result,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       timeLeftMs: this.phase === 'play' ? Math.max(0, this.turnEnds - this.ctx.now()) : 0,
       turnMs: TIMING.turnMs,
       winner: this.winner,

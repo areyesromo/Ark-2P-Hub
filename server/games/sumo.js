@@ -7,6 +7,8 @@
 //
 // Same loop as Pong/Air Hockey/Tank Duel: physics at 60 Hz, ~30 views a second.
 
+import { settingOf } from './options.js';
+
 export const WIN_SCORE = 3;
 export const FIELD = { w: 12, h: 12 }; // the ring sits in the middle
 export const RING = { r: 5, minR: 1.6, shrinkAfterMs: 15000, shrinkMs: 30000 };
@@ -23,6 +25,7 @@ const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 export class Sumo {
   constructor(ctx) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.timer = null;
   }
 
@@ -182,7 +185,7 @@ export class Sumo {
   endRound(winner, reason) {
     this.result = { winner, draw: winner === null, reason };
     if (winner !== null) this.scores[winner]++;
-    if (winner !== null && this.scores[winner] >= WIN_SCORE) {
+    if (winner !== null && this.scores[winner] >= this.winScore) {
       this.winner = winner;
       this.phase = 'over';
       this.phaseEnds = null;
@@ -238,7 +241,7 @@ export class Sumo {
       timeLeft: this.phase === 'play' ? Math.max(0, Math.ceil((TIMING.roundMs - (now - this.playStarted)) / 1000)) : 0,
       result: this.result,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       winner: this.winner,
     };
   }

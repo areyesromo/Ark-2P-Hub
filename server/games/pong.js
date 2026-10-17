@@ -3,6 +3,8 @@
 // absolute paddle position from a touch strip, controllers send stick/D-pad
 // direction; both move the paddle at the same top speed, so neither is faster.
 
+import { settingOf } from './options.js';
+
 export const WIN_SCORE = 5;
 
 // Field in arbitrary units, 16:9 like the TV.
@@ -37,6 +39,7 @@ const PADDLE_MAX = FIELD.h - FIELD.paddleH / 2;
 export class Pong {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.rng = rng;
     this.timer = null;
   }
@@ -157,7 +160,7 @@ export class Pong {
     this.scores[scorer]++;
     this.lastScorer = scorer;
     this.resetBall(1 - scorer);
-    if (this.scores[scorer] >= WIN_SCORE) {
+    if (this.scores[scorer] >= this.winScore) {
       this.winner = scorer;
       if (this.timer) this.ctx.clearTimeout(this.timer);
       this.timer = null;
@@ -193,7 +196,7 @@ export class Pong {
     return {
       phase: this.phase,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       players: this.ctx.players,
       countdown: this.phaseEnds ? Math.max(0, Math.ceil((this.phaseEnds - this.ctx.now()) / 1000)) : 0,
       ball: { x: b.x, y: b.y, vx: b.vx, vy: b.vy },
@@ -210,7 +213,7 @@ export class Pong {
       phase: this.phase,
       you: slot,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       countdown: this.phaseEnds ? Math.max(0, Math.ceil((this.phaseEnds - this.ctx.now()) / 1000)) : 0,
       lastScorer: this.lastScorer,
       winner: this.winner,

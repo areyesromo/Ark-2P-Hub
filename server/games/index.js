@@ -14,6 +14,7 @@ import sumo from './sumo.js';
 import wordRace from './word-race.js';
 import miniGolf from './mini-golf.js';
 import bombDuel from './bomb-duel.js';
+import { withSetup } from './options.js';
 
 /**
  * Every game is a module exporting:
@@ -37,7 +38,29 @@ import bombDuel from './bomb-duel.js';
  * To add a game: write the module, list it below, and add the two renderers
  * under public/games/<id>/.
  */
-const GAMES = [reactionDuel, rockPaperScissors, pong, tron, airHockey, snake, tanks, sumo, bombDuel, quiz, wordRace, miniGolf, drawDuel, battleship, connectFour, sketchGuess];
+// Setup screens for the games that don't draw their own (see withSetup in
+// options.js). The first value of each list is the default.
+const firstTo = (title, values) => ({ wins: { title, values, label: (n) => (n === 1 ? 'One round' : `First to ${n}`) } });
+const ROUNDS_WON = 'Round wins needed';
+
+const GAMES = [
+  withSetup(reactionDuel, firstTo('Points to win', [3, 5, 7])),
+  withSetup(rockPaperScissors, firstTo('Points to win', [3, 5, 7])),
+  withSetup(pong, firstTo('Points to win', [5, 3, 7, 11])),
+  withSetup(tron, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup(airHockey, firstTo('Goals to win', [7, 5, 10])),
+  withSetup(snake, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
+  bombDuel,
+  withSetup(quiz, { questions: { title: 'Questions', values: [10, 5, 15, 20], label: (n) => `${n} questions` } }),
+  wordRace,
+  miniGolf,
+  withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` } }),
+  withSetup(battleship, { shotSeconds: { title: 'Time per shot', values: [30, 15, 60], label: (n) => `${n} s` } }),
+  withSetup(connectFour, firstTo(ROUNDS_WON, [3, 1, 5])),
+  withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
+];
 
 export const CATEGORIES = ['competitive', 'casual'];
 /** Background music moods a game can ask for; by default competitive games get 'action', casual ones 'casual'. */

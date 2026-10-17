@@ -7,6 +7,8 @@
 // keeps each mallet in its own half. Controllers send stick direction in TV
 // coordinates. Both move the mallet at the same top speed.
 
+import { settingOf } from './options.js';
+
 export const WIN_SCORE = 7;
 
 export const FIELD = {
@@ -48,6 +50,7 @@ function bounds(slot) {
 export class AirHockey {
   constructor(ctx) {
     this.ctx = ctx;
+    this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.timer = null;
   }
 
@@ -189,7 +192,7 @@ export class AirHockey {
     // The puck restarts, still, in the half of the player who conceded.
     const conceder = 1 - scorer;
     this.puck = { x: conceder === 0 ? FIELD.w / 4 : (FIELD.w * 3) / 4, y: FIELD.h / 2, vx: 0, vy: 0 };
-    if (this.scores[scorer] >= WIN_SCORE) {
+    if (this.scores[scorer] >= this.winScore) {
       this.winner = scorer;
       if (this.timer) this.ctx.clearTimeout(this.timer);
       this.timer = null;
@@ -218,7 +221,7 @@ export class AirHockey {
     return {
       phase: this.phase,
       scores: this.scores,
-      winScore: WIN_SCORE,
+      winScore: this.winScore,
       players: this.ctx.players,
       countdown: this.countdown(),
       puck: { x: p.x, y: p.y, vx: p.vx, vy: p.vy },

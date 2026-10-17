@@ -5,6 +5,8 @@
 // Controller players have no private screen, so they get a random fleet that
 // nobody sees until it's hit; they just aim and fire on the TV.
 
+import { settingOf } from './options.js';
+
 export const SIZE = 10;
 export const FLEET = [
   { name: 'Carrier', len: 5 },
@@ -60,6 +62,7 @@ export function randomFleet(rng = Math.random) {
 export class Battleship {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
+    this.turnMs = settingOf(ctx, 'shotSeconds', TIMING.turnMs / 1000) * 1000;
     this.rng = rng;
     this.timer = null;
     this.matches = 0;
@@ -115,7 +118,7 @@ export class Battleship {
   aim() {
     this.stopTimer();
     this.ready = [true, true]; // whatever was placed when the placing clock ran out is final
-    this.runPhase('aim', TIMING.turnMs, () => this.fire(this.turn, this.randomTarget(1 - this.turn)));
+    this.runPhase('aim', this.turnMs, () => this.fire(this.turn, this.randomTarget(1 - this.turn)));
   }
 
   randomTarget(target) {
