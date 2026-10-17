@@ -1,0 +1,79 @@
+/* ---- grid (TV and phone) ---- */
+
+.wr-grid { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 3%; aspect-ratio: 1; user-select: none; -webkit-user-select: none; }
+.wr-grid .tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  border-radius: 14%;
+  background: linear-gradient(160deg, #fff7e6, #e9d8b4);
+  color: #1f2937;
+  box-shadow: 0 0.25em 0 #b49a6a, 0 0.4em 0.8em rgba(0, 0, 0, 0.4);
+  font-weight: 900;
+  transition: transform 0.08s;
+}
+.wr-grid .tile .face { font-size: 2.4em; line-height: 1; }
+.wr-grid .tile .n { position: absolute; top: 6%; right: 9%; font-size: 0.8em; font-weight: 800; opacity: 0.8; }
+.wr-grid .tile.on { transform: scale(0.94); color: #0b0d17; }
+.wr-grid .tile.on.p1, .wr-grid .tile.on.me { background: var(--p1); box-shadow: 0 0.2em 0 #0e7490; }
+.wr-grid .tile.on.p2 { background: var(--p2); box-shadow: 0 0.2em 0 #9d174d; }
+.wr-grid .tile.on.last { outline: 4px solid #fff; }
+.wr-grid .tile.aim.p1 { outline: 5px solid var(--p1); outline-offset: 3px; }
+.wr-grid .tile.aim.p2 { outline: 5px solid var(--p2); outline-offset: 3px; }
+
+/* ---- TV ---- */
+
+.wr-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; font-size: 1.2rem; }
+.wr-main { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; gap: 2.5rem; }
+.wr-mid { display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; justify-content: center; }
+.wr-mid .wr-grid { height: min(62vh, 44vw); font-size: 1.6rem; }
+.wr-bar { height: 12px; border-radius: 6px; background: var(--bg-2); overflow: hidden; }
+.wr-bar .fill { height: 100%; width: 0; background: var(--good); border-radius: 6px; }
+.wr-bar .fill.low { background: var(--bad); }
+.wr-banner { text-align: center; font-size: 2rem; font-weight: 900; }
+.wr-banner .sub, .wr-center .sub { font-size: 1.1rem; font-weight: 400; color: var(--muted); margin-top: 0.3rem; }
+.wr-center { width: min(62vh, 44vw); text-align: center; }
+.wr-center .big { font-size: 8rem; font-weight: 900; }
+
+.wr-side { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-height: 0; overflow: hidden; }
+.wr-side .name { font-size: 1.6rem; font-weight: 900; }
+.wr-side .count { font-size: 6rem; font-weight: 900; line-height: 1; }
+.wr-side.p1 .count, .wr-side.p1 .pts { color: var(--p1); }
+.wr-side.p2 .count, .wr-side.p2 .pts { color: var(--p2); }
+.wr-side .pts { font-size: 2.6rem; font-weight: 900; }
+.wr-side ul, .wr-words { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0.4rem; justify-content: center; }
+.wr-side li, .wr-words li { padding: 0.2rem 0.6rem; border-radius: 8px; background: var(--panel); font-weight: 800; letter-spacing: 0.04em; }
+.wr-side li em, .wr-words li em { font-style: normal; color: var(--good); margin-left: 0.4rem; font-size: 0.85em; }
+.wr-side li.shared, .wr-words li.shared { opacity: 0.45; text-decoration: line-through; }
+.wr-side li.shared em, .wr-words li.shared em { color: var(--bad); }
+
+/* ---- phone ---- */
+
+.wr-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 10px 14px 14px; text-align: center; position: relative; }
+.wr-phone .score { color: var(--muted); font-size: 0.95rem; }
+.wr-phone .status { min-height: 1.4em; font-weight: 700; }
+.wr-phone .status .big { font-size: 1.8rem; font-weight: 900; }
+.wr-phone .won { color: var(--good); font-weight: 900; }
+.wr-phone .lost { color: var(--bad); font-weight: 900; }
+.wr-word { min-height: 1.6em; font-size: 1.6rem; font-weight: 900; letter-spacing: 0.12em; color: var(--me); }
+.wr-pad { touch-action: none; font-size: 1rem; }
+.wr-pad .wr-grid { width: 100%; }
+.wr-phone .hint { margin: 0; color: var(--muted); font-size: 0.9rem; }
+.wr-words { max-height: 30vh; overflow-y: auto; }
+.wr-toast {
+  position: absolute;
+  left: 50%;
+  top: 30%;
+  transform: translate(-50%, -50%) scale(0.9);
+  padding: 10px 18px;
+  border-radius: 14px;
+  font-weight: 900;
+  font-size: 1.2rem;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s, transform 0.15s;
+}
+.wr-toast.show { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+.wr-toast.ok { background: var(--good); color: #052e16; }
+.wr-toast.bad { background: var(--bad); color: #450a0a; }
+.wr-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
