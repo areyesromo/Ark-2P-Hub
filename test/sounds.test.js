@@ -134,3 +134,18 @@ test('connect four: a clunk for each disc', async () => {
   assert.deepEqual(heard(), ['drop']);
   assert.deepEqual(heard(), [], 'clock updates are silent');
 });
+
+test('sumo: whoosh for a dash, a crash for a fall', async () => {
+  const { Sumo, TIMING } = await import('../server/games/sumo.js');
+  const ctx = fakeCtx();
+  const game = new Sumo(ctx);
+  game.start();
+  const heard = listen('sumo', game);
+  ctx.advance(TIMING.countdownMs + 20);
+  heard();
+  game.onInput(0, { type: 'dash' });
+  assert.ok(heard().includes('whoosh'));
+  game.players[1].x = 100; // off the ring
+  ctx.advance(20);
+  assert.ok(heard().includes('crash'));
+});
