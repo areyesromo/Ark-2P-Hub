@@ -157,6 +157,8 @@
     isMuted: function () { return muted; },
     setMuted: setMuted,
     unlocked: unlocked,
+    /** The shared AudioContext (null until it can be made), for the background music. */
+    context: function () { return ctx; },
     /** When a click/tap/key last tried to switch audio on (so that click isn't also a mute toggle). */
     unlockAttemptAt: function () { return unlockAttemptAt; },
     onChange: function (fn) { listeners.push(fn); },

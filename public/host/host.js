@@ -164,6 +164,31 @@
   ArkSound.onChange(renderSoundButton);
   renderSoundButton();
 
+  // ---- music -------------------------------------------------------------
+  // The lobby has its own laid-back tune; each game asks for a mood (see
+  // MUSIC_MOODS in server/games/index.js). A game's setup screen and its
+  // end screen get the lobby tune; the 🎵 button turns music on and off.
+
+  function renderMusicButton() {
+    const on = ArkMusic.isEnabled();
+    $('music').classList.toggle('off', !on);
+    $('music').title = on ? 'Music is on' : 'Music is off';
+  }
+  $('music').addEventListener('click', function () {
+    ArkMusic.setEnabled(!ArkMusic.isEnabled());
+  });
+  ArkMusic.onChange(renderMusicButton);
+  renderMusicButton();
+
+  function updateMusic() {
+    let mood = 'lobby';
+    if (state && state.phase === 'playing' && lastView && lastView.phase !== 'setup' && lastView.phase !== 'over') {
+      const game = (state.games || []).find(function (g) { return g.id === state.gameId; });
+      if (game && game.music) mood = game.music;
+    }
+    ArkMusic.setMood(mood);
+  }
+
   function sum(a) {
     return a ? a.reduce(function (x, y) { return x + y; }, 0) : 0;
   }
@@ -239,12 +264,14 @@
       renderLobby();
     }
     renderPadFooter();
+    updateMusic();
   });
 
   socket.on('game:view', function (msg) {
     if (!current || current.gameId !== msg.gameId) return;
     playGameSounds(lastView, msg.view);
     lastView = msg.view;
+    updateMusic();
     if (current.renderer) current.renderer.update(msg.view);
     else pendingView = msg.view;
   });

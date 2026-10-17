@@ -96,6 +96,7 @@ export class RockPaperScissors {
 
 export default {
   id: 'rock-paper-scissors',
+  music: 'thinking',
   name: 'Rock Paper Scissors',
   tagline: 'Pick in secret on your phone or controller. The TV reveals both. First to 3.',
   create: (ctx) => new RockPaperScissors(ctx),

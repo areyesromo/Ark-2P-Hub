@@ -92,6 +92,16 @@ shows **🔈 Tap for sound** in the top bar: click it, or press OK on a TV remot
 or any key. The 🔊 button mutes and unmutes (remembered on that TV). The
 Raspberry Pi kiosk is allowed to play sound straight away.
 
+There's background music too, composed live in the browser as it plays: a
+laid-back tune in the lobby (and on game setup and results screens), and in
+games one of three moods: **action** chiptune for the real-time games,
+**thinking** for the quiz, word and board games, and **casual** for the
+relaxed ones. Each mood keeps its chords, bass and beat, but the melody is
+made up fresh every 8 bars, so it doesn't loop the same tune. The 🎵 button
+turns music on and off separately from the sound effects (remembered on that
+TV). A new game picks its mood with `music: 'action' | 'thinking' |
+'casual'` (by default competitive games get action, casual games casual).
+
 ## Leaderboard and match history
 
 Every finished match is saved (in `stats.json` in the data folder, so it
@@ -274,8 +284,9 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 **The hub**
 
-- Background music for the lobby and games
+- Setup screens for the older games too (points to win in Pong and Air Hockey, questions per Quiz Battle...)
 
-**More games**
+**More content**
 
 - More quiz packs, drawing shapes and Sketch & Guess words
+- More Mini Golf holes
