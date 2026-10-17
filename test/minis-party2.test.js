@@ -126,7 +126,8 @@ test('tower-stack: overlap stays, overhang is cut, a miss ends your tower', () =
   dropAt(inst, ctx, 0, 0.3);
   v = inst.view(0);
   assert.ok(Math.abs(v.towers[0][2].w - (v.towers[0][1].w - 0.3)) < 0.03, 'the overhang is cut off');
-  dropAt(inst, ctx, 1, 1.1); // past the edge: out
+  dropAt(inst, ctx, 1, 0.6); // narrows player 2's tower to 0.4
+  dropAt(inst, ctx, 1, 0.5); // past the edge of that: out
   assert.equal(inst.view(0).out[1], true);
   // Player 0 is already taller than player 1 will ever be: it ends.
   assert.deepEqual(ended(), { winner: 0 });
@@ -217,4 +218,10 @@ test('penalty: before the first kick (the intro card) the view names a real kick
   const api = { players: ctx.players, rng: seeded(1), speed: 1, now: ctx.now, elapsed: () => 0, update() {}, setTimeout: ctx.setTimeout, clearTimeout: ctx.clearTimeout, end() {} };
   const v = penalty.create(api).view(null);
   assert.equal(v.kicker, 0);
+});
+
+test('tower-stack: the first block always lands (the swing never clears the base)', () => {
+  assert.ok(swingAt(400, { amp: 0.9, period: 1600 }) <= 0.9);
+  const { inst } = run(towerStack);
+  assert.ok(inst.view(0).swing.amp < 1, 'the swing stays over the 1-wide base');
 });

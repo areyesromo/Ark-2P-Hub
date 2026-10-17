@@ -68,7 +68,7 @@
       m.position.set(baseX(p) + swingAt(t - s.blockStart[p], s.swing) * U, BLOCK_H / 2 + (tower.length + 1.2) * BLOCK_H, 0);
     });
     h.camY += (Math.max(2, top * BLOCK_H) - h.camY) * 0.05;
-    h.gl.camera.position.set(0, h.camY + 3.5, 13);
+    h.gl.camera.position.set(0, h.camY + 2.5, 9.5);
     h.gl.camera.lookAt(0, h.camY, 0);
   }
 

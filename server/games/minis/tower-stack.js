@@ -3,7 +3,7 @@
 // your tower is finished. Tallest tower wins.
 import { plausibleT } from './runner.js';
 
-export const SWING = { amp: 1.2, period: 1600 };
+export const SWING = { amp: 0.9, period: 1600 }; // under the 1-wide base: the first block always lands
 export const PERFECT = 0.03; // this close snaps on, full width
 export const NEXT_MS = 400;
 
