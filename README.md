@@ -39,6 +39,8 @@ one you just played).
 | **Mini Golf** | Both of you play the same hole at once (the balls roll through each other). Pull back anywhere on your phone and let go to putt: the further you pull, the harder the shot; the phone shows the hole too. 15 holes with walls, bumpers, sand, water (a stroke penalty, back where you shot from), a moat and a windmill. 8 shots per hole, then you pick up and score 9; 90 s per hole. Pick 3, 6, 9, 12 or 15 holes before you start. Fewest strokes wins. |
 | **Connect Four** | The classic: drop discs into a 7×6 grid and line up four (across, down or diagonally) before your rival. Tap a column on your phone, which shows the board too. 20 s per move (a random column if you run out); who starts swaps every round. First to 3 rounds. |
 | **Memory Match** | A grid of face-down picture cards on the TV and your phone. Take turns flipping two: a pair is yours and you go again, otherwise they turn back over (remember them!) and it's your rival's go. Most pairs wins. |
+| **Micro Mayhem** | WarioWare-style: tiny games of 3-4 seconds, both of you at once. A big order flashes up (TAP IT! STOP IT! SHAKE IT! ODD ONE OUT! COUNT 'EM! SWIPE IT! DON'T TOUCH! QUICK MATH!) and you have a moment to do it on your phone or controller. Miss one and you lose a ❤️; every 5 games the speed goes up. Last one with lives wins (both out at once: sudden death). |
+| **Party Minigames** | Mario Party-style showdowns of 20-40 seconds: **Balloon Pump** (mash to pop yours first), **Hot Potato** (pass the bomb back before the secret fuse runs out), **Quick Draw** (fire on BANG!, too early loses), **Memory Path** (repeat the glowing path as it grows) and **Sweet Spot** (stop your spinning number high, three times). A *Next up* card explains each one; tap Ready. Win a minigame for a ⭐, first to 3 wins. |
 
 ### 🎲 Dice & Board
 
@@ -77,6 +79,8 @@ starts). The numbers above are the defaults; you can change, for example:
 | Mind Meld | 4, 6, 8 or 10 rounds |
 | Liar's Dice | 5, 3 or 4 dice each; ones wild or not |
 | Dice Party | Full game (13 rounds) or quick (6) |
+| Micro Mayhem | 3 or 5 lives; normal pace or fast (starts at speed 3) |
+| Party Minigames | First to 3, 4 or 5 wins |
 | Word Race | Grid size, time per round and match length |
 | Mini Golf | 3, 6, 9, 12 or 15 holes |
 | Bomb Duel | Also how many crates |
@@ -122,6 +126,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Word Race | Setup: **↑↓** picks a row, **←→** changes it, **A** starts. In the game: **D-pad** / **stick** moves a cursor, **A** adds the letter, **B** removes the last one, **Y** / **X** / **RT** submits the word. At the end, **A** rematches and **Y** changes the settings | Phones are easier (just swipe), and your trace shows on the TV for your rival to see |
 | Mini Golf | **Left stick** aims (or **←→** turns the aim), hold **A** / **RT** to charge, let go to putt | The power meter swings up and down while you hold, so let go at the right moment. Setup: **←→** picks the holes, **A** starts; at the end **A** rematches and **Y** changes the holes |
 | Connect Four | **D-pad** ← → (or the stick) moves your disc over the columns, **A** or **↓** drops it | |
+| Micro Mayhem, Party Minigames | Follow the order: **A** taps / stops / pumps / fires, **D-pad** picks and swipes, the **stick** steers the Tap it! cursor and wiggles to shake | **A** is Ready on the *Next up* card and rematch at the end |
 | Memory Match | **D-pad** moves a cursor over the cards on the TV, **A** flips one (on your turn) | |
 | Sketch & Guess | **A** / **B** / **X** / **Y** picks one of four words shown on the TV | Controller players always guess (the word has to stay secret from the guesser); wrong picks pause you for a moment |
 | Game over | **A** / **Start** | Rematch |
@@ -354,6 +359,12 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
    and sends inputs with `api.send({...})`.
 4. Add a test in `test/` using the `fakeCtx()` helper (manual clock, no waiting).
 
+**Adding a minigame** to Micro Mayhem or Party Minigames is smaller: write
+`server/games/minis/<id>.js` (`{ id, kind: 'micro' | 'party', name, order, howTo,
+durationMs, create(api) }`, see `server/games/minis/runner.js`) and its renderer
+`public/games/minis/<id>.js` (`ArkMini.register(id, { host, phone, pad })`, see
+`public/games/minis/mini.js`), then list it in `server/games/minis/index.js`.
+
 `pong` is the template for real-time games (server physics loop, canvas on the
 TV, touch strip on the phone), `reaction-duel` for timing games and
 `rock-paper-scissors` for turn-based / hidden-information games.
@@ -378,7 +389,7 @@ joystick, D-pad or tilt pads:
 - **Tower Stack 3D** (co-op or versus): drop blocks to build the tallest tower before it topples.
 - **Kitchen Rush** (co-op): an Overcooked-style kitchen; chop, cook and serve orders before they expire.
 - **Trivia Quest** (co-op): beat a monster together with the quiz questions.
-- **Micro Mayhem**: five-second micro-games that speed up, WarioWare style.
+- **More minigames**: Coin Grab, Tug of War, and a Mario Party-style board (dice, coins, stars) between them.
 - **Crazy Eights**: a secret hand of cards on your phone.
 
 **More content**
