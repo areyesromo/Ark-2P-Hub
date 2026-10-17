@@ -166,7 +166,7 @@ export class PartyBoard {
 
   walk(left) {
     const p = this.players[this.turn];
-    p.space = (p.space + 1) % this.spaces.length;
+    p.space = this.spaces[p.space].next[0];
     left--;
     this.ctx.update();
     if (left === 0) return this.after(() => this.land(), TIMING.stepMs);
