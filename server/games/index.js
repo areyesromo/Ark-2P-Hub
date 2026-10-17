@@ -15,6 +15,7 @@ import wordRace from './word-race.js';
 import miniGolf from './mini-golf.js';
 import bombDuel from './bomb-duel.js';
 import kartRace from './kart-race.js';
+import memoryMatch from './memory-match.js';
 import { withSetup } from './options.js';
 
 /**
@@ -64,6 +65,7 @@ const GAMES = [
   withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` } }),
   withSetup(battleship, { shotSeconds: { title: 'Time per shot', values: [30, 15, 60], label: (n) => `${n} s` } }),
   withSetup(connectFour, firstTo(ROUNDS_WON, [3, 1, 5])),
+  memoryMatch,
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
 ];
 
