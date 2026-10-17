@@ -7,7 +7,7 @@ import { T_SLACK_MS } from './runner.js';
 export const TIMING = { waitMinMs: 2000, waitMaxMs: 6000, graceMs: 300, noShotMs: 3000, betweenMs: 1500 };
 
 export default {
-  id: 'quick-draw', kind: 'party', name: 'Quick Draw', order: 'WAIT FOR IT…', howTo: 'Fire (or A) on BANG! Too early loses', durationMs: 40000,
+  id: 'quick-draw', kind: 'party', look: '2d', name: 'Quick Draw', order: 'WAIT FOR IT…', howTo: 'Fire (or A) on BANG! Too early loses', durationMs: 40000,
   create(api) {
     const duelWins = [0, 0];
     let duel = 0;

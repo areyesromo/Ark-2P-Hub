@@ -62,7 +62,10 @@ const GAMES = [
   withSetup(snake, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
-  withSetup(partyMinis, firstTo('Wins needed', [3, 4, 5])),
+  withSetup(partyMinis, {
+    ...firstTo('Wins needed', [3, 4, 5]),
+    style: { title: 'Minigames', values: ['mix', '2d', '3d'], label: (s) => ({ mix: 'Mix of 2D and 3D', '2d': '2D only', '3d': '3D only' })[s] },
+  }),
   withSetup(microMayhem, {
     lives: { title: 'Lives', values: [3, 5], label: (n) => `${n} lives` },
     pace: { title: 'Pace', values: ['normal', 'fast'], label: (p) => (p === 'fast' ? 'Fast (starts at speed 3)' : 'Normal') },

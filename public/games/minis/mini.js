@@ -365,6 +365,73 @@
     };
   }
 
+
+  // ---- 3D (three.js, served at /vendor/three/, as Marble Maze uses it) ----
+  let threeReady = null;
+  function three() {
+    if (!threeReady) threeReady = import('/vendor/three/three.module.min.js');
+    return threeReady;
+  }
+
+  /**
+   * A three.js scene filling `el`, drawn every frame. Returns a promise of
+   * { THREE, scene, camera, renderer, onFrame(fn), dispose() }; onFrame
+   * callbacks run before each draw. Pixel ratio is capped (Pi-friendly).
+   */
+  function scene3d(el, opts) {
+    opts = opts || {};
+    return three().then(function (THREE) {
+      const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+      renderer.shadowMap.enabled = true;
+      el.appendChild(renderer.domElement);
+      renderer.domElement.className = 'mi-3d';
+      const scene = new THREE.Scene();
+      const camera = new THREE.PerspectiveCamera(opts.fov || 40, 16 / 9, 0.1, 200);
+      scene.add(new THREE.HemisphereLight(0xdbeafe, 0x1e1b16, 1.1));
+      const sun = new THREE.DirectionalLight(0xffffff, 2);
+      sun.position.set(4, 10, 6);
+      sun.castShadow = true;
+      sun.shadow.mapSize.set(1024, 1024);
+      const sc = sun.shadow.camera;
+      sc.left = sc.bottom = -12;
+      sc.right = sc.top = 12;
+      scene.add(sun);
+      const frames = [];
+      let w = 0;
+      let h = 0;
+      let raf = requestAnimationFrame(function draw() {
+        raf = requestAnimationFrame(draw);
+        const W = el.clientWidth;
+        const H = el.clientHeight;
+        if (W && H && (W !== w || H !== h)) {
+          w = W;
+          h = H;
+          renderer.setSize(W, H, false);
+          camera.aspect = W / H;
+          camera.updateProjectionMatrix();
+        }
+        frames.forEach(function (fn) { fn(); });
+        renderer.render(scene, camera);
+      });
+      return {
+        THREE: THREE,
+        scene: scene,
+        camera: camera,
+        renderer: renderer,
+        onFrame: function (fn) { frames.push(fn); },
+        dispose: function () {
+          cancelAnimationFrame(raf);
+          renderer.dispose();
+          if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
+        },
+      };
+    });
+  }
+
+  /** Player colours for 3D: P1 cyan, P2 pink (as the CSS --p1 / --p2). */
+  const P_COLORS = [0x22d3ee, 0xf472b6];
+
   window.ArkMini = {
     register: function (id, r) { regs[id] = r; },
     load: load,
@@ -375,6 +442,8 @@
     mark: mark,
     moveCursor: moveCursor,
     pickGame: pickGame,
+    scene3d: scene3d,
+    P_COLORS: P_COLORS,
     DIR_ARROW: DIR_ARROW,
   };
 })();
