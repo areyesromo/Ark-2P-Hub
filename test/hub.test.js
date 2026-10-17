@@ -278,3 +278,23 @@ test('a phone joining again under its own name, without its token, takes back it
   assert.equal(s.players.filter(Boolean).length, 1);
   assert.equal(s.players[0].connected, true);
 });
+
+test('a reloaded phone whose old connection looks alive (but is gone) can take its seat back by name; a phone that is really there keeps it', async () => {
+  const host = client();
+  const { code } = await call(host, 'host:create', {});
+  // The old page: connected as far as the server knows, but it no longer answers (it was reloaded).
+  const ghost = client();
+  await call(ghost, 'player:join', { code, name: 'Abe' });
+  const back = client();
+  const res = await call(back, 'player:join', { code, name: 'abe' });
+  assert.equal(res.ok, true, JSON.stringify(res));
+  assert.equal(res.slot, 0);
+  assert.equal(server.rooms.get(code).players.filter(Boolean).length, 1);
+
+  // A phone that is really there answers the check, so the name stays taken.
+  const live = client();
+  live.on('player:ping', (ack) => ack && ack(true));
+  await call(live, 'player:join', { code, name: 'Sam' });
+  const copy = await call(client(), 'player:join', { code, name: 'Sam' });
+  assert.match(copy.error, /already called Sam/);
+});

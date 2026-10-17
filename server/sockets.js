@@ -26,8 +26,19 @@ const reply = (ack, payload) => {
  *   host:qr       { qr }                     (TV only: join address changed in Settings)
  *   game:view     { gameId, view }           (host and each player get their own view)
  *   player:kicked { reason, removed? }       (this phone lost its seat; `removed`: the TV took it away)
+ *   player:ping   ack()                      (are you still there? see player:join)
  */
+/** How long a phone gets to answer "still there?" before its seat counts as free. */
+export const PING_MS = 2500;
+
 export function registerSocketHandlers(io, rooms, { refreshJoin }) {
+  /** Does this seated phone still answer? */
+  function answers(player) {
+    const s = player && player.socketId && io.sockets.sockets.get(player.socketId);
+    if (!s) return Promise.resolve(false);
+    return new Promise((resolve) => s.timeout(PING_MS).emit('player:ping', (err) => resolve(!err)));
+  }
+
   io.on('connection', (socket) => {
     // What this socket is bound to. A socket is in at most one room at a time.
     let room = null;
@@ -129,11 +140,24 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
       reply(ack, { ok: true, code: target.code, hostToken: target.hostToken, qr: target.qr });
     });
 
-    socket.on('player:join', (data, ack) => {
+    socket.on('player:join', async (data, ack) => {
       const { code, name, token } = asObject(data);
       const target = rooms.get(code);
       if (!target) return reply(ack, { error: 'No room with that code.' });
-      const seat = target.seatPlayer(name, token);
+      let seat = target.seatPlayer(name, token);
+      // Someone joins under the name of a phone that looks connected. A reloaded page
+      // doesn't always close its connection, so the server may not know it's gone yet:
+      // ask that phone. No answer means it's gone, and this is the same person back.
+      if (seat.clash !== undefined && !(await answers(target.players[seat.clash]))) {
+        const p = target.players[seat.clash];
+        const old = p && p.socketId && io.sockets.sockets.get(p.socketId);
+        if (old) old.disconnect(true);
+        if (p) {
+          p.connected = false;
+          p.socketId = null;
+        }
+        seat = target.seatPlayer(name, token);
+      }
       if (seat.error) return reply(ack, { error: seat.error });
       bindPlayer(target, seat.slot);
       reply(ack, { ok: true, code: target.code, slot: seat.slot, token: seat.player.token, name: seat.player.name });
