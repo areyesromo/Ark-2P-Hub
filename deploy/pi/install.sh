@@ -115,6 +115,10 @@ else
   else
     say "raspi-config not found: turn on desktop auto-login and turn off screen blanking yourself."
   fi
+  # Colour emoji for the TV (Memory Match cards, power-up icons...).
+  if [ "$DRY" = 1 ] || ! dpkg -s fonts-noto-color-emoji >/dev/null 2>&1; then
+    run sudo apt-get install -y fonts-noto-color-emoji
+  fi
   # Start the kiosk with whichever desktop this Pi OS uses.
   add_line "$HOME/.config/labwc/autostart" "$DIR/kiosk.sh &" # Bookworm, labwc (current default)
   if [ -f "$HOME/.config/wayfire.ini" ] || command -v wayfire >/dev/null 2>&1; then # older Bookworm

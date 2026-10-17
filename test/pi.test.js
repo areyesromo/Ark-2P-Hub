@@ -20,7 +20,7 @@ function install(home, env = {}) {
 test('installer (dry run): installs, starts, auto-updates and sets up the kiosk once', () => {
   const home = tmp();
   const out = install(home);
-  for (const expected of ['sudo mkdir -p /opt/ark', 'docker pull ghcr.io/areyesromo/ark-2p-hub:latest', 'compose up -d', 'enable --now ark-update.timer']) {
+  for (const expected of ['sudo mkdir -p /opt/ark', 'docker pull ghcr.io/areyesromo/ark-2p-hub:latest', 'compose up -d', 'enable --now ark-update.timer', 'apt-get install -y fonts-noto-color-emoji']) {
     assert.ok(out.includes(expected), `missing: ${expected}\n${out}`);
   }
   assert.ok(out.includes('cp ' + path.join(PI, 'kiosk.sh')), 'run from a clone, it copies its own files');
