@@ -51,3 +51,58 @@
 .mi-choices button { font-size: 1.8rem; font-weight: 900; padding: 18px 0; }
 .mi-choices button.cur { outline: 4px solid var(--warn); }
 .mi-phone-stage { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px; text-align: center; }
+/* tap-it */
+.mi-arena { position: relative; flex: 1; align-self: stretch; width: 100%; min-height: 200px; border-radius: 18px; background: radial-gradient(circle, rgba(255, 255, 255, 0.06), transparent 70%); touch-action: none; }
+.mi-arena .tgt { position: absolute; font-size: 4.2rem; line-height: 1; user-select: none; }
+.mi-arena .cur { position: absolute; font-size: 2.6rem; line-height: 1; color: var(--warn); font-weight: 900; }
+.mi-arena.hit .tgt { filter: drop-shadow(0 0 1rem #4ade80); }
+.mi-arena.done:not(.hit) .tgt { opacity: 0.4; }
+.mi-phone .mi-arena .tgt { font-size: 4.6rem; }
+/* stop-it */
+.mi-gauge { position: relative; width: 90%; height: 64px; border-radius: 14px; background: #1e293b; border: 3px solid var(--line); overflow: hidden; }
+.mi-gauge .zone { position: absolute; top: 0; bottom: 0; background: rgba(74, 222, 128, 0.55); }
+.mi-gauge .needle { position: absolute; top: -4px; bottom: -4px; width: 8px; margin-left: -4px; background: #fff; border-radius: 4px; box-shadow: 0 0 0.6rem #fff; }
+.mi-gauge.ok { border-color: #4ade80; }
+.mi-gauge.bad { border-color: var(--bad); }
+/* shake-it */
+.mi-meter { width: 60px; height: 200px; border-radius: 14px; background: #1e293b; border: 3px solid var(--line); display: flex; align-items: flex-end; overflow: hidden; }
+.mi-meter i { display: block; width: 100%; background: linear-gradient(0deg, #f59e0b, #4ade80); transition: height 0.1s; }
+.mi-meter.full { border-color: #4ade80; }
+.mi-side .slot { display: flex; align-items: center; gap: 1rem; }
+.mi-side .emoji { font-size: 3.4rem; }
+.mi-side .emoji.shaking { animation: mi-shake 0.15s infinite alternate; }
+.mi-phone .mi-meter { width: 100%; height: 36px; flex-direction: row; align-items: stretch; }
+.mi-phone .mi-meter i { height: auto !important; transition: width 0.1s; }
+.mi-phone .slot { width: 90%; display: flex; align-items: center; gap: 10px; }
+@keyframes mi-shake { from { transform: rotate(-18deg); } to { transform: rotate(18deg); } }
+/* pick games */
+.mi-pick { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+.mi-question { text-align: center; }
+.mi-question:empty { display: none; }
+.mi-pick .mi-choices { width: 100%; }
+.mi-choices .choice { display: flex; align-items: center; justify-content: center; padding: 0.5rem; border-radius: 12px; background: rgba(255, 255, 255, 0.05); font-size: 2.2rem; font-weight: 900; border: 3px solid transparent; }
+.mi-choices .choice.cur { border-color: var(--warn); }
+.mi-choices .picked { border: 3px solid var(--me); background: rgba(255, 255, 255, 0.14); }
+.mi-phone .mi-choices button { font-size: 2rem; }
+.mi-field { position: relative; height: 220px; border-radius: 18px; background: linear-gradient(#14532d, #166534); margin: 0 auto; width: min(100%, 640px); }
+.mi-field span { position: absolute; font-size: 2.4rem; transform: translate(-50%, -50%); }
+.mi-phone .mi-field { height: 190px; }
+.mi-phone .mi-field span { font-size: 1.8rem; }
+.mi-sum { font-size: 4rem; font-weight: 900; }
+.mi-phone .mi-sum { font-size: 2.6rem; }
+/* swipe-it */
+.mi-arrows { display: flex; gap: 1rem; font-size: 3.4rem; }
+.mi-arrows span { opacity: 0.45; }
+.mi-arrows span.now { opacity: 1; transform: scale(1.2); }
+.mi-arrows span.done { opacity: 1; filter: drop-shadow(0 0 0.5rem #4ade80); }
+.mi-swipe { touch-action: none; }
+.mi-swipe .pad { display: grid; grid-template-columns: repeat(3, 80px); grid-template-rows: repeat(3, 70px); gap: 6px; }
+.mi-swipe .pad button { font-size: 2rem; padding: 0; }
+.mi-swipe .pad [data-dir="up"] { grid-column: 2; grid-row: 1; }
+.mi-swipe .pad [data-dir="left"] { grid-column: 1; grid-row: 2; }
+.mi-swipe .pad [data-dir="right"] { grid-column: 3; grid-row: 2; }
+.mi-swipe .pad [data-dir="down"] { grid-column: 2; grid-row: 3; }
+/* dont-touch */
+.mi-hand { font-size: 6rem; }
+.mi-donttouch { touch-action: none; }
+.mi-donttouch .msg { font-size: 1.6rem; font-weight: 900; }

@@ -283,6 +283,79 @@
     return j < 0 || j >= n ? i : j;
   }
 
+
+  /**
+   * A whole renderer for "pick the right one" micros (odd one out, count,
+   * math): a question on top and a grid of choices; phones tap, controllers
+   * move a highlight with the D-pad and press A. opts:
+   *   question(state) -> html, labels(state) -> html[], values(state) -> [],
+   *   input(value) -> the input to send, picked(state, slot) -> value or null, cols
+   */
+  function pickGame(opts) {
+    const cursors = [0, 0];
+    let host = null;
+    let phone = null;
+
+    function grid(s, slot, withCursor, buttons) {
+      const values = opts.values(s);
+      const picked = opts.picked(s, slot);
+      return '<div class="mi-choices" style="grid-template-columns:repeat(' + opts.cols + ',1fr)">' + opts.labels(s).map(function (label, i) {
+        const cls = (withCursor && cursors[slot] === i ? ' cur' : '') + (picked !== null && picked === values[i] ? ' picked' : '');
+        return buttons
+          ? '<button class="ghost' + cls + '" data-i="' + i + '"' + (picked !== null ? ' disabled' : '') + '>' + label + '</button>'
+          : '<span class="choice' + cls + '">' + label + '</span>';
+      }).join('') + '</div>';
+    }
+
+    function drawHost() {
+      if (!host || !host.s) return;
+      const s = host.s;
+      host.q.innerHTML = opts.question(s);
+      host.sides.forEach(function (el, slot) {
+        el.innerHTML = '<div class="who">' + nameOf({ players: host.players }, slot) + '</div>' + mark(s.res[slot]) +
+          grid(s, slot, host.players[slot] && host.players[slot].local, false);
+      });
+    }
+
+    return {
+      host: {
+        mount: function (el, mctx) {
+          cursors[0] = cursors[1] = 0;
+          el.innerHTML = '<div class="mi-pick"><div class="mi-question"></div><div class="mi-split"><div class="mi-side p1"></div><div class="mi-side p2"></div></div></div>';
+          host = { q: el.querySelector('.mi-question'), sides: Array.prototype.slice.call(el.querySelectorAll('.mi-side')), players: mctx.players, s: null };
+        },
+        update: function (s) { if (host) { host.s = s; drawHost(); } },
+        unmount: function () { host = null; },
+      },
+      phone: {
+        mount: function (el, mctx) {
+          el.innerHTML = '<div class="mi-phone-stage mi-pick"><div class="mi-question"></div><div class="grid"></div></div>';
+          phone = { el: el, slot: mctx.slot };
+          el.addEventListener('click', function (e) {
+            const b = e.target.closest('[data-i]');
+            if (!b || b.disabled || !phone || !phone.s) return;
+            mctx.send(opts.input(opts.values(phone.s)[Number(b.getAttribute('data-i'))]));
+            mctx.vibrate(15);
+          });
+        },
+        update: function (s) {
+          if (!phone) return;
+          phone.s = s;
+          phone.el.querySelector('.mi-question').innerHTML = opts.question(s) + mark(s.res[phone.slot]);
+          phone.el.querySelector('.grid').innerHTML = grid(s, phone.slot, false, true);
+        },
+        unmount: function () { phone = null; },
+      },
+      pad: function (btn, s, slot) {
+        const n = opts.values(s).length;
+        if (btn === 'A') return opts.input(opts.values(s)[cursors[slot]]);
+        cursors[slot] = moveCursor(cursors[slot], btn, n, opts.cols);
+        drawHost();
+        return null;
+      },
+    };
+  }
+
   window.ArkMini = {
     register: function (id, r) { regs[id] = r; },
     load: load,
@@ -292,6 +365,7 @@
     nameOf: nameOf,
     mark: mark,
     moveCursor: moveCursor,
+    pickGame: pickGame,
     DIR_ARROW: DIR_ARROW,
   };
 })();
