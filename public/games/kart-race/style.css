@@ -1,0 +1,46 @@
+/* ---- TV ---- */
+
+.kr-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 1.2rem; }
+.kr-hud { display: flex; justify-content: space-between; align-items: center; min-height: 4.2rem; }
+.kr-side { display: flex; flex-direction: column; min-width: 12rem; }
+.kr-side.p2 { align-items: flex-end; text-align: right; }
+.kr-side .name { font-size: 1.5rem; font-weight: 900; }
+.kr-side .pos { font-size: 2rem; font-weight: 900; line-height: 1; }
+.kr-side.p1 .pos { color: var(--p1); }
+.kr-side.p2 .pos { color: var(--p2); }
+.kr-side .lap { color: var(--muted); font-weight: 700; }
+.kr-mid { text-align: center; }
+.kr-mid .track { color: var(--muted); font-weight: 700; }
+.kr-mid .clock { font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.kr-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.kr-arena canvas { display: block; border-radius: 10px; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5); }
+.kr-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; text-align: center; }
+.kr-overlay:empty { display: none; }
+.kr-overlay .panel { background: rgba(11, 13, 23, 0.88); border: 1px solid var(--line); border-radius: 18px; padding: 1.4rem 2.2rem; max-width: 46rem; }
+.kr-overlay .panel.small { padding: 1rem 2rem; }
+.kr-overlay .title { font-size: 2.6rem; font-weight: 900; }
+.kr-overlay .sub { font-size: 1.5rem; line-height: 1.5; }
+.kr-overlay .sub strong { color: var(--warn); }
+.kr-overlay .ark-setup { font-size: 1.4rem; }
+.kr-overlay .banner { align-self: flex-start; margin-top: 1rem; padding: 0.6rem 1.6rem; border-radius: 14px; background: rgba(11, 13, 23, 0.85); font-size: 2rem; font-weight: 900; }
+.kr-overlay .lights { display: flex; gap: 1.2rem; justify-content: center; margin-bottom: 0.6rem; }
+.kr-overlay .light { width: 4rem; height: 4rem; border-radius: 50%; background: #3f1d1d; border: 3px solid #111; }
+.kr-overlay .light.on { background: #ef4444; box-shadow: 0 0 2rem #ef4444; }
+
+/* ---- phone ---- */
+
+.kr-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 10px 14px 16px; text-align: center; }
+.kr-phone .status { min-height: 3.4em; font-size: 1.1rem; }
+.kr-phone .status .big { font-size: 2rem; font-weight: 900; }
+.kr-phone .status .pos { font-size: 2.6rem; color: var(--me); }
+.kr-phone .won { color: var(--good); font-weight: 900; }
+.kr-phone .lost { color: var(--bad); font-weight: 900; }
+.kr-phone .ark-setup { margin: 0; }
+.kr-phone .go, .kr-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.kr-phone .change { align-self: center; }
+.kr-controls { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
+.kr-steer { flex: 1; min-height: 0; display: flex; gap: 12px; }
+.kr-btn { flex: 1; border-radius: 22px; font-size: 3rem; font-weight: 900; background: var(--panel); border: 2px solid var(--line); color: var(--text); touch-action: none; user-select: none; -webkit-user-select: none; }
+.kr-btn.on { background: var(--me); color: #06121c; border-color: #fff; }
+.kr-btn.brake { flex: 0 0 22%; font-size: 1.4rem; letter-spacing: 0.15em; }
+.kr-btn.brake.on { background: var(--bad); color: #fff; }

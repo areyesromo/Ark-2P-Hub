@@ -31,6 +31,7 @@ one you just played).
 | **Tank Duel** | Top-down tank battle with cover. Drive with the joystick, fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
 | **Sumo** | Two discs on a round clay ring: steer with a joystick (with momentum), and press **DASH** to ram (1.5 s cooldown; a dashing hit knocks harder). Leave the ring and you lose the round; after 15 s the ring starts shrinking, so every round ends. First to 3. |
 | **Bomb Duel** | Bomberman-style, on a 15×11 arena of stone pillars and wooden crates. Walk with the D-pad on your phone (or a controller) and drop bombs with the big button: they go off after 2.5 s in a cross, smash the first crate each way and set off other bombs. Crates can hide power-ups: 💣 an extra bomb, 🔥 a longer blast, 👟 more speed. Caught in a blast, you lose the round (a trade is a draw); after 90 s the walls close in from the edges. Pick the round wins needed (2, 3 or 5) and how many crates before you start. |
+| **Kart Race** | Top-down racing on the TV. Your kart accelerates on its own: hold ◀ ▶ on your phone to steer and BRAKE for the tight bends. Grass slows you right down, yellow boost pads shoot you forward, and you can bump your rival. Three tracks (Speedway, Kidney, Serpent); first across the line after the last lap wins. |
 | **Quiz Battle** | 10 trivia questions from a bank of 250 (science, geography, history, movies, music, sports, games, food, nature and tech; play them mixed or pick one topic). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. |
 | **Draw Duel** | A shape flashes up for 4 seconds, then vanishes: redraw it from memory on your phone. 150 shapes (basic shapes, pictures like a rocket or a cat, letters and numbers), never repeated until you've seen them all. Each drawing is scored 0–100% for how closely it matches (size and position don't matter); the TV shows both drawings live and overlays the real shape at the reveal. 5 rounds, most points wins. |
 | **Battleship** | Hide your 5 ships on your phone (tap a ship, tap where it goes, tap it again to turn it, or shuffle), then take turns firing at the enemy grid. The TV shows both oceans with every hit and miss; ships stay hidden until sunk. 30 s per shot. Sink the whole fleet to win. |
@@ -63,6 +64,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Word Race | Grid size, time per round and match length |
 | Mini Golf | 3, 6, 9, 12 or 15 holes |
 | Bomb Duel | Also how many crates |
+| Kart Race | Track (or a mix), 3, 5 or 8 laps, one race or best of 3 |
 
 The room remembers your choice for next time. At the end of a match,
 **Rematch** plays again with the same settings and **⚙ Change settings** (or
@@ -91,6 +93,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Tank Duel | **Left stick** or **D-pad** to drive, **A** / **RT** / **RB** / **X** to fire | Point where you want to go; the gun faces where you drive |
 | Sumo | **Left stick** or **D-pad** to move, **A** / **B** / **RT** to dash | The dash goes where you're steering (or straight at your rival if you're not) |
 | Bomb Duel | **D-pad** or **left stick** to walk (held), **A** / **B** / **X** / **RT** to drop a bomb | Setup: **↑↓** picks a row, **←→** changes it, **A** starts; at the end **A** rematches and **Y** changes the settings |
+| Kart Race | **Left stick** or **D-pad ← →** to steer, **B** / **LT** / **↓** to brake | The kart accelerates by itself. Setup: **↑↓** picks a row, **←→** changes it, **A** starts; at the end **A** rematches and **Y** changes the settings |
 | Quiz Battle | **A** / **B** / **X** / **Y** to answer, or the **D-pad** as a diamond (↓ A, → B, ← X, ↑ Y) | Answer tiles on the TV are coloured like the buttons |
 | Draw Duel | **Left stick** or **D-pad** moves a cursor, hold **A** / **RT** / **RB** to draw, **B** undo, **X** clear, **Y** / **START** done | Phones draw with a finger, which is easier; the controller is for brave players |
 | Battleship | **D-pad** aims at the enemy grid on the TV, **A** fires | A controller player's fleet is placed at random, since the TV can't keep it secret |
