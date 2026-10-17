@@ -45,6 +45,7 @@ one you just played).
 | Game | How it plays |
 | --- | --- |
 | **Sketch & Guess** | One of you picks a secret word (easy, medium or hard, from 400) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a "so close!"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw. |
+| **Bomb Squad** | A co-op bomb-defusal game for two phones. One of you has the bomb on your phone (wires to cut, a big button to tap or hold, symbol keys to press in order, letter wheels to spell a password), the other has the defusal manual on theirs, and neither may look at the other's screen. The defuser describes, the expert finds the rules and says what to do. Three strikes or the timer running out and it goes 💥. The TV shows the countdown, strikes and which modules are done. You swap roles every bomb and collect stars (more for time to spare). Easy, Normal or Hard (2 to 4 modules), 1, 3 or 5 bombs. |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
 **Every game opens on a setup screen** where either player picks the match
@@ -62,6 +63,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Draw Duel | 3, 5, 7 or 10 rounds |
 | Battleship | 15, 30 or 60 s per shot |
 | Sketch & Guess | 4, 6, 8 or 10 rounds |
+| Bomb Squad | Easy, Normal or Hard, and 1, 3 or 5 bombs |
 | Word Race | Grid size, time per round and match length |
 | Mini Golf | 3, 6, 9, 12 or 15 holes |
 | Bomb Duel | Also how many crates |
@@ -342,6 +344,20 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
   [Secure page (https)](#secure-page-https)).
 
 ## Roadmap ideas
+
+**Wishlist: 3D and more co-op**
+
+The Pi 4's GPU handles WebGL, so these would use three.js (bundled with the
+hub, no internet needed), steered with the joystick, D-pad or tilt pads:
+
+- **3D Bowling**: swipe or tilt to roll; ten frames, highest score wins.
+- **Tower Stack 3D** (co-op or versus): drop blocks to build the tallest tower before it topples.
+- **Marble Maze** (co-op 3D): one of you tilts the board left and right, the other forwards and back, to roll the marble home.
+- **Kitchen Rush** (co-op): an Overcooked-style kitchen; chop, cook and serve orders before they expire.
+- **Mind Meld** (co-op): one gives a one-word clue for a secret spot on a scale, the other slides the dial to it.
+- **Trivia Quest** (co-op): beat a monster together with the quiz questions.
+- **Micro Mayhem**: five-second micro-games that speed up, WarioWare style.
+- **Liar's Dice** and **Crazy Eights**: secret dice and hands on your phone.
 
 **More content**
 
