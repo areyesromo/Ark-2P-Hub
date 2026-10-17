@@ -22,6 +22,7 @@ import mindMeld from './mind-meld.js';
 import liarsDice from './liars-dice.js';
 import microMayhem from './micro-mayhem.js';
 import partyMinis from './party-minis.js';
+import partyBoard from './party-board.js';
 import diceParty from './dice-party.js';
 import { withSetup } from './options.js';
 
@@ -62,6 +63,11 @@ const GAMES = [
   withSetup(snake, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup(partyBoard, {
+    turns: { title: 'Game length', values: [10, 15, 20], label: (n) => `${n} turns` },
+    style: { title: 'Minigames', values: ['mix', '2d', '3d'], label: (s) => ({ mix: 'Mix of 2D and 3D', '2d': '2D only', '3d': '3D only' })[s] },
+    bonus: { title: 'Bonus stars at the end', values: [1, 0], label: (b) => (b ? 'Bonus stars' : 'No bonus stars') },
+  }),
   withSetup(partyMinis, {
     ...firstTo('Wins needed', [3, 4, 5]),
     style: { title: 'Minigames', values: ['mix', '2d', '3d'], label: (s) => ({ mix: 'Mix of 2D and 3D', '2d': '2D only', '3d': '3D only' })[s] },
