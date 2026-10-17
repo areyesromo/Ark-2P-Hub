@@ -43,13 +43,8 @@
   }
 
   function setup(v) {
-    const focus = {};
-    [0, 1].forEach(function (slot) {
-      if (!v.players[slot].local) return;
-      const key = ArkWords.KEYS[padOf(slot).row];
-      focus[key] = (focus[key] ? focus[key] + ' ' : '') + 'p' + (slot + 1);
-    });
-    return '<div class="wr-center"><div class="wr-banner">Set up the match</div>' + ArkWords.setupHtml(v, focus) +
+    const focus = Ark.setup.focus(v, ArkWords.ROWS, pads);
+    return '<div class="wr-center"><div class="wr-banner">Set up the match</div>' + Ark.setup.html(v, ArkWords.ROWS, focus) +
       '<div class="sub">Change it on your phone, or with a controller: ↑↓ picks a row, ←→ changes it. ' +
       '<strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</div></div>';
   }
@@ -59,7 +54,7 @@
     if (v.phase === 'countdown') {
       return '<div class="wr-center"><div class="big">' + (v.countdown || '') + '</div><div class="sub">Round ' + v.round +
         ': find words by joining touching letters. Words you both find cancel out!</div>' +
-        (loaded ? '<div class="sub">' + ArkWords.summary(v) + '</div>' : '') + '</div>';
+        (loaded ? '<div class="sub">' + Ark.setup.summary(v, ArkWords.ROWS) + '</div>' : '') + '</div>';
     }
     if (!loaded || !v.grid) return '';
     const paths = [];
@@ -119,19 +114,9 @@
     pad: function (btn, v, slot) {
       const p = padOf(slot);
       if (v.phase === 'setup') {
-        if (btn === 'A' || btn === 'START') return { type: 'go' };
-        if (btn === 'UP' || btn === 'DOWN') {
-          p.row = (p.row + (btn === 'UP' ? -1 : 1) + ArkWords.KEYS.length) % ArkWords.KEYS.length;
-          render();
-          return null;
-        }
-        if (btn === 'LEFT' || btn === 'RIGHT') {
-          const key = ArkWords.KEYS[p.row];
-          const list = ArkWords.choices(v, key);
-          const i = Math.min(list.length - 1, Math.max(0, list.indexOf(v.settings[key]) + (btn === 'LEFT' ? -1 : 1)));
-          return { type: 'setting', key: key, value: list[i] };
-        }
-        return null;
+        const input = Ark.setup.pad(btn, v, ArkWords.ROWS, p);
+        render();
+        return input;
       }
       if (v.phase === 'over') {
         if (btn === 'A' || btn === 'START') return { type: 'rematch' };
