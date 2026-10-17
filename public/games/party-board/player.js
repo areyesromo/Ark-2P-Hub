@@ -9,14 +9,16 @@
   function option(v, kind, value) {
     if (value === 'none') return kind === 'item' ? '🎲 Just roll' : '🙅 Nothing';
     if (value === 'roll') return '🎲 ROLL!';
-    if (value === 'yes') return '⭐ Buy a star (20 🪙)';
+    if (value === 'yes') return '⭐ Buy a star (' + v.board.starPrice + ' 🪙)';
+    if (kind === 'path') return 'Path ' + (Number(value) + 1) + ': ' + v.prompt.extra.previews[Number(value)].map(function (t) { return PEEK[t] || '·'; }).join(' ');
     if (value === 'no') return 'No thanks';
     if (value === 'stop') return '🎰 STOP!';
     const it = v.items[value];
     return it ? it.name + (kind === 'shop' ? ' · ' + it.price + ' 🪙' : '') + '<small>' + esc(it.what) + '</small>' : esc(value);
   }
 
-  const ASK = { item: 'Use an item before you roll?', roll: 'Your turn!', star: 'You reached the star!', shop: 'Welcome to the shop!', slot: 'Stop the reels!' };
+  const ASK = { item: 'Use an item before you roll?', roll: 'Your turn!', star: 'You reached the star!', shop: 'Welcome to the shop!', slot: 'Stop the reels!', path: '🔀 A fork! Which way?' };
+  const PEEK = { start: '🏁', blue: '🔵', red: '🔴', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️', star: '⭐' };
 
   let root = null;
   let api = null;

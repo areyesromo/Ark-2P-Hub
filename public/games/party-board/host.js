@@ -6,8 +6,11 @@
   Ark.loadCss('/games/party-board/style.css');
   const miniReady = Ark.loadScript('/games/minis/mini.js');
   const esc = Ark.escapeHtml;
-  const ICON = { start: '🏁', blue: '', red: '', event: '❓', bonus: '🎰', shop: '🛒' };
-  const KIND = { item: 'Use an item?', roll: 'Roll!', star: 'Buy a ⭐ for 20 🪙?', shop: '🛒 The shop', slot: '🎰 Stop the reels!' };
+  const ICON = { start: '🏁', blue: '', red: '', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️' };
+  // A path preview: what each kind of space looks like in a line of icons.
+  const PEEK = { start: '🏁', blue: '🔵', red: '🔴', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️', star: '⭐' };
+  const KIND = { item: 'Use an item?', roll: 'Roll!', star: 'Buy a ⭐?', shop: '🛒 The shop', slot: '🎰 Stop the reels!', path: '🔀 Which way?' };
+  const TIER = { easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' };
 
   /** A short label for a prompt option (the phone shows the long one). */
   function label(v, kind, value) {
@@ -16,6 +19,8 @@
     if (value === 'yes') return 'Yes';
     if (value === 'no') return 'No';
     if (value === 'stop') return 'STOP';
+    if (kind === 'path') return 'Path ' + (Number(value) + 1) + ': ' + v.prompt.extra.previews[Number(value)].map(function (t) { return PEEK[t] || '·'; }).join(' ');
+    if (kind === 'star' && value === 'yes') return 'Yes · ' + v.board.starPrice + ' 🪙';
     const it = v.items[value];
     return it ? it.name + (kind === 'shop' ? ' · ' + it.price + ' 🪙' : '') : value;
   }
@@ -60,9 +65,27 @@
     };
   }
 
+  /** The links between spaces (arrows at forks) and the warps' dashed jumps, under the spaces. */
+  function links(spaces) {
+    let l = '';
+    spaces.forEach(function (s) {
+      s.next.forEach(function (n) {
+        const t = spaces[n];
+        l += '<line x1="' + s.x * 100 + '" y1="' + s.y * 100 + '" x2="' + t.x * 100 + '" y2="' + t.y * 100 + '"' + (s.next.length > 1 ? ' class="fork" marker-end="url(#pb-arrow)"' : '') + '/>';
+      });
+      if (s.type === 'warp') {
+        const w = spaces[s.warp];
+        const mx = (s.x + w.x) * 50;
+        const my = Math.min(s.y, w.y) * 100 - 12;
+        l += '<path class="warp" d="M' + s.x * 100 + ' ' + s.y * 100 + ' Q' + mx + ' ' + my + ' ' + w.x * 100 + ' ' + w.y * 100 + '"/>';
+      }
+    });
+    return '<svg class="pb-links" viewBox="0 0 100 100" preserveAspectRatio="none"><defs><marker id="pb-arrow" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="5" markerHeight="5" orient="auto-start-reverse"><path d="M0 0 L10 5 L0 10 z"/></marker></defs>' + l + '</svg>';
+  }
+
   function drawBoard(v) {
     const spaces = v.board.spaces;
-    let h = '';
+    let h = links(spaces);
     spaces.forEach(function (s, i) {
       h += '<div class="pb-space ' + s.type + (i === v.board.star ? ' star' : '') + '" style="left:' + s.x * 100 + '%;top:' + s.y * 100 + '%">' +
         (i === v.board.star ? '⭐' : ICON[s.type]) + '</div>';
@@ -86,7 +109,8 @@
         '<div class="pb-sub">⭐ ' + v.players[0].stars + ' – ' + v.players[1].stars + ' ⭐ · 🪙 ' + v.players[0].coins + ' – ' + v.players[1].coins + ' 🪙</div>' +
         '<div class="pb-sub muted">Rematch on a phone or press A (or ⚙ change the settings).</div>';
     }
-    let h = '<div class="pb-turn">Turn ' + v.round + ' / ' + v.turns + ' · ' + nameOf(v, v.turn) + '</div>';
+    let h = '<div class="pb-mapname ' + v.board.tier + '">' + esc(v.board.name) + ' · ' + TIER[v.board.tier] + '</div>' +
+      '<div class="pb-turn">Turn ' + v.round + ' / ' + v.turns + ' · ' + nameOf(v, v.turn) + '</div>';
     if (v.dice) h += '<div class="pb-dice">' + v.dice.values.map(function (d) { return '<span>' + d + '</span>'; }).join('') + (v.dice.bonus ? '<em>+' + v.dice.bonus + '</em>' : '') + '</div>';
     if (v.message) h += '<div class="pb-msg">' + esc(v.message) + '</div>';
     const p = v.prompt;
@@ -174,7 +198,7 @@
     mount: function (el) {
       root = document.createElement('div');
       root.className = 'pb-host';
-      root.innerHTML = '<div class="pb-left"></div><div class="pb-boardbox"><div class="pb-board"></div><div class="pb-centre"></div></div><div class="pb-right"></div><div class="pb-mini"></div>';
+      root.innerHTML = '<div class="pb-left"></div><div class="pb-mid"><div class="pb-boardbox"><div class="pb-board"></div></div><div class="pb-centre"></div></div><div class="pb-right"></div><div class="pb-mini"></div>';
       el.appendChild(root);
       ticker = setInterval(function () { tickDown(root); }, 250);
       els = {

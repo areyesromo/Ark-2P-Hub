@@ -41,7 +41,7 @@ one you just played).
 | **Memory Match** | A grid of face-down picture cards on the TV and your phone. Take turns flipping two: a pair is yours and you go again, otherwise they turn back over (remember them!) and it's your rival's go. Most pairs wins. |
 | **Micro Mayhem** | WarioWare-style: tiny games of 3-4 seconds, both of you at once. A big order flashes up (TAP IT! STOP IT! SHAKE IT! ODD ONE OUT! COUNT 'EM! SWIPE IT! DON'T TOUCH! QUICK MATH!) and you have a moment to do it on your phone or controller. Miss one and you lose a ❤️; every 5 games the speed goes up. Last one with lives wins (both out at once: sudden death). |
 | **Party Minigames** | Mario Party-style showdowns of 20-40 seconds: **Balloon Pump** (mash to pop yours first), **Hot Potato** (pass the bomb back before the secret fuse runs out), **Quick Draw** (fire on BANG!, too early loses), **Memory Path** (repeat the glowing path as it grows), **Sweet Spot** (stop your spinning number high, three times), **Coin Grab** (run around grabbing coins, dodge the 💣) and **Tug of War** (pull on the beat), plus three in **3D** on the TV: **Tower Stack** (drop the swinging block; the overhang is cut off), **Bowling Bash** (aim, power, two rolls) and **Penalty Shootout** (pick a corner or a dive, in secret). A *Next up* card explains each one; tap Ready. Win a minigame for a ⭐, first to 3 wins. |
-| **Party Board** | Mario Party-style: take turns rolling (tap to stop the die) and hopping around *Party Island*. 🔵 +3 🪙, 🔴 −3, ❓ events (coin shower, swap places, steal, lucky, the star moves), 🎰 a slot machine, 🛒 the shop (🍄 +3 roll, 🎲 double dice, 🌀 warp, 🦹 coin thief, 👻 star thief; hold 3). Pass the ⭐ with 20 🪙 to buy it. A party minigame after every round pays +10 🪙. Bonus stars at the end for the most minigames won and the most coins earned; most ⭐ wins. |
+| **Party Board** | Mario Party-style: take turns rolling (tap to stop the die) and hopping around one of five maps: 🏝️ Party Island and 🌊 Twin Lagoons (easy), 🔧 Pipe Works (medium), 👻 Haunted Maze (hard) and 🌋 Volcano Peak (expert: stars cost 30, the shop 50% more). Bigger maps have 🔀 forks (pick your path; the phone previews what's ahead) and 🌀 warp pipes, some sending you back. **💀 Harsh mode** scatters ⚡ thunder (lose half your coins), 💀 skulls (lose a star) and 🌪️ tornadoes (blown anywhere). 🔵 +3 🪙, 🔴 −3, ❓ events (coin shower, swap places, steal, lucky, the star moves), 🎰 a slot machine, 🛒 the shop (🍄 +3 roll, 🎲 double dice, 🌀 warp, 🦹 coin thief, 👻 star thief; hold 3). Pass the ⭐ with 20 🪙 to buy it. A party minigame after every round pays +10 🪙. Bonus stars at the end for the most minigames won and the most coins earned; most ⭐ wins. |
 
 ### 🎲 Dice & Board
 
@@ -82,7 +82,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Dice Party | Full game (13 rounds) or quick (6) |
 | Micro Mayhem | 3 or 5 lives; normal pace or fast (starts at speed 3) |
 | Party Minigames | First to 3, 4 or 5 wins; minigames: a mix, 2D only or 3D only |
-| Party Board | 10, 15 or 20 turns; minigames: a mix, 2D only or 3D only; bonus stars on or off |
+| Party Board | Map (random or one of five), 10, 15 or 20 turns; minigames: a mix, 2D only or 3D only; bonus stars on or off; Harsh mode on or off |
 | Word Race | Grid size, time per round and match length |
 | Mini Golf | 3, 6, 9, 12 or 15 holes |
 | Bomb Duel | Also how many crates |
@@ -392,7 +392,7 @@ joystick, D-pad or tilt pads:
 - **Tower Stack 3D** (co-op or versus): drop blocks to build the tallest tower before it topples.
 - **Kitchen Rush** (co-op): an Overcooked-style kitchen; chop, cook and serve orders before they expire.
 - **Trivia Quest** (co-op): beat a monster together with the quiz questions.
-- **More minigames**, more Party Board maps, and a 3D version of the board.
+- **More minigames**, and a 3D version of the Party Board.
 - **Crazy Eights**: a secret hand of cards on your phone.
 
 **More content**
