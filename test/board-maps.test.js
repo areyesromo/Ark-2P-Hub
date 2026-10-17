@@ -46,3 +46,39 @@ test('the island keeps its 28-space loop', () => {
   assert.equal(MAPS.island.starPrice, 20);
   assert.equal(MAPS.island.shopMarkup, 1);
 });
+
+const forks = (m) => m.spaces.filter((s) => s.next.length === 2).length;
+const warps = (m) => m.spaces.map((s, i) => [s, i]).filter(([s]) => s.type === 'warp');
+const backward = (m) => warps(m).filter(([s, i]) => s.warp < i).length;
+const redShare = (m) => {
+  const red = m.spaces.filter((s) => s.type === 'red').length;
+  const blue = m.spaces.filter((s) => s.type === 'blue').length;
+  return red / (red + blue);
+};
+
+test('every map is valid (no dead ends, no bad links)', () => {
+  assert.deepEqual(Object.keys(MAPS), ['island', 'lagoons', 'pipes', 'haunted', 'volcano']);
+  for (const [id, m] of Object.entries(MAPS)) assert.deepEqual(validateMap(m), [], id);
+});
+
+test('tiers and prices', () => {
+  const t = Object.fromEntries(Object.entries(MAPS).map(([id, m]) => [id, [m.tier, m.starPrice, m.shopMarkup]]));
+  assert.deepEqual(t, {
+    island: ['easy', 20, 1], lagoons: ['easy', 20, 1], pipes: ['medium', 20, 1], haunted: ['hard', 25, 1], volcano: ['expert', 30, 1.5],
+  });
+});
+
+test('layouts get harder: forks, warps and red spaces', () => {
+  assert.ok(forks(MAPS.lagoons) >= 1);
+  assert.ok(forks(MAPS.pipes) >= 2 && warps(MAPS.pipes).length >= 2 && backward(MAPS.pipes) >= 1);
+  assert.ok(forks(MAPS.haunted) >= 3 && backward(MAPS.haunted) >= 2 && redShare(MAPS.haunted) >= 0.35);
+  assert.ok(forks(MAPS.volcano) >= 4 && warps(MAPS.volcano).length >= 3 && redShare(MAPS.volcano) >= 0.5);
+});
+
+test('spaces are never on top of each other', () => {
+  for (const [id, m] of Object.entries(MAPS)) {
+    m.spaces.forEach((a, i) => m.spaces.forEach((b, j) => {
+      if (i < j) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) >= 0.07, `${id}: ${i} and ${j} are too close`);
+    }));
+  }
+});

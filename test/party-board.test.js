@@ -536,3 +536,45 @@ test('fork: passing a warp does nothing; the star pass-by still asks after a for
   assert.equal(v.prompt.kind, 'star');
   assert.equal(f.p(0).space, 2);
 });
+
+// ---- maps, prices, settings ----
+
+test('expert prices: the star costs 30, the shop 50% more', () => {
+  const ctx = fakeCtx();
+  const q = [0];
+  const g = new PartyBoard(ctx, () => (q.length ? q.shift() : 0.5), { ...FORKY, starPrice: 30, shopMarkup: 1.5 }, [claim]);
+  g.start();
+  assert.equal(g.hostView().items.mushroom.price, 8);
+  assert.equal(g.hostView().board.starPrice, 30);
+  g.players[0].coins = 9;
+  assert.deepEqual(g.shopItems(0), ['mushroom']);
+  g.players[0].coins = 25;
+  q.push(D(3));
+  g.onInput(0, { type: 'choose', value: 'roll' });
+  for (let i = 0; i < 100 && !(g.hostView().prompt && g.hostView().prompt.kind !== 'roll'); i++) ctx.advance(50);
+  g.onInput(0, { type: 'choose', value: '0' });
+  for (let i = 0; i < 100 && !(g.hostView().prompt && g.hostView().prompt.kind !== 'path'); i++) ctx.advance(50);
+  assert.notEqual(g.hostView().prompt.kind, 'star', '25 coins: no star offer at 30');
+  g.players[0].coins = 30;
+  g.players[0].space = 1;
+  g.turn = 0;
+  let asked = null;
+  g.ask = (kind) => { asked = kind; };
+  g.players[0].space = 2; // standing on the star with 30
+  g.passBy(() => {});
+  assert.equal(asked, 'star', '30 coins: offered');
+});
+
+test('the map setting picks the map; random picks one of the five', () => {
+  const pick = (settings, rng) => {
+    const ctx = fakeCtx();
+    ctx.settings = settings;
+    const g = new PartyBoard(ctx, rng, undefined, [claim]);
+    g.start();
+    return g.hostView().board;
+  };
+  assert.equal(pick({ map: 'pipes' }, () => 0.5).name, MAPS.pipes.name);
+  assert.equal(pick({ map: 'volcano' }, () => 0.5).tier, 'expert');
+  const q = [0.99];
+  assert.equal(pick({ map: 'random' }, () => (q.length ? q.shift() : 0.5)).name, MAPS.volcano.name);
+});

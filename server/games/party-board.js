@@ -28,10 +28,12 @@ export const EVENT_COINS = { shower: 5, steal: 5, lucky: 10 };
 export const SLOT = { reels: 3, faces: 5, three: 15, pair: 5, none: 1 };
 
 export class PartyBoard {
-  constructor(ctx, rng = Math.random, map = MAPS.island, pool = PARTIES) {
+  /** map: a map object (tests), else the 'map' setting: a map id or 'random'. */
+  constructor(ctx, rng = Math.random, map = null, pool = PARTIES) {
     this.ctx = ctx;
     this.rng = rng;
-    this.map = map;
+    this.mapChoice = map || settingOf(ctx, 'map', 'random');
+    this.map = MAPS.island;
     this.pool = poolFor(pool, settingOf(ctx, 'style', 'mix'));
     this.turns = settingOf(ctx, 'turns', 10);
     this.bonusOn = settingOf(ctx, 'bonus', 1) === 1;
@@ -58,6 +60,7 @@ export class PartyBoard {
   start() {
     this.epoch++;
     this.clearTimers();
+    this.map = this.pickMap();
     this.players = [0, 1].map(() => ({ space: 0, coins: START_COINS, stars: 0, items: [], earned: 0, minigames: 0 }));
     this.playlist = new Playlist(this.pool.map((d) => d.id), this.rng); // one per match: no repeats until all are played
     this.star = this.pickStar(null);
@@ -76,6 +79,25 @@ export class PartyBoard {
 
   get spaces() {
     return this.map.spaces;
+  }
+
+  pickMap() {
+    const c = this.mapChoice;
+    if (typeof c === 'object') return c;
+    if (c === 'random') {
+      const ids = Object.keys(MAPS);
+      return MAPS[ids[Math.floor(this.rng() * ids.length)]];
+    }
+    return MAPS[c] || MAPS.island;
+  }
+
+  get starPrice() {
+    return this.map.starPrice || STAR_PRICE;
+  }
+
+  /** An item's price on this map (Volcano Peak's shop costs 50% more). */
+  price(id) {
+    return Math.round(ITEMS[id].price * (this.map.shopMarkup || 1));
   }
 
   pickStar(not) {
@@ -197,7 +219,7 @@ export class PartyBoard {
   passBy(next) {
     const slot = this.turn;
     const space = this.players[slot].space;
-    if (space === this.star && this.players[slot].coins >= STAR_PRICE) return this.starPrompt(next);
+    if (space === this.star && this.players[slot].coins >= this.starPrice) return this.starPrompt(next);
     if (this.spaces[space].type === 'shop' && this.shopItems(slot).length) return this.shopPrompt(next);
     next();
   }
@@ -207,7 +229,7 @@ export class PartyBoard {
     this.ask('star', ['yes', 'no'], (v) => {
       if (v !== 'yes' && landed) this.say(`+${this.coins(this.turn, SPACE_COINS.blue)} 🪙`);
       if (v === 'yes') {
-        this.coins(this.turn, -STAR_PRICE);
+        this.coins(this.turn, -this.starPrice);
         this.players[this.turn].stars++;
         this.star = this.pickStar(this.star);
         this.say('⭐ Got a star!');
@@ -221,13 +243,13 @@ export class PartyBoard {
   shopItems(slot) {
     const p = this.players[slot];
     if (p.items.length >= MAX_ITEMS) return [];
-    return Object.keys(ITEMS).filter((id) => ITEMS[id].price <= p.coins);
+    return Object.keys(ITEMS).filter((id) => this.price(id) <= p.coins);
   }
 
   shopPrompt(next) {
     this.ask('shop', this.shopItems(this.turn).concat('none'), (id) => {
       if (id !== 'none') {
-        this.coins(this.turn, -ITEMS[id].price);
+        this.coins(this.turn, -this.price(id));
         this.players[this.turn].items.push(id);
         this.say('🛒 Bought ' + ITEMS[id].name);
       }
@@ -244,7 +266,7 @@ export class PartyBoard {
       this.ctx.update();
       this.after(() => this.endTurn(), TIMING.messageMs);
     };
-    if (space === this.star && this.players[slot].coins >= STAR_PRICE) return this.starPrompt(done, true);
+    if (space === this.star && this.players[slot].coins >= this.starPrice) return this.starPrompt(done, true);
     if (type === 'shop') {
       if (this.shopItems(slot).length) return this.shopPrompt(done);
       this.say('🛒 Nothing you can buy');
@@ -388,10 +410,10 @@ export class PartyBoard {
       turns: this.turns,
       turn: this.turn,
       players: this.players,
-      board: { spaces: this.spaces, star: this.star },
+      board: { name: this.map.name, tier: this.map.tier, spaces: this.spaces, star: this.star, starPrice: this.starPrice },
       prompt: p ? { slot: p.slot, kind: p.kind, options: p.options, msLeft: Math.max(0, p.deadline - this.ctx.now()), extra: p.extra || null } : null,
       dice: this.dice,
-      items: ITEMS,
+      items: Object.fromEntries(Object.keys(ITEMS).map((id) => [id, { ...ITEMS[id], price: this.price(id) }])),
       message: this.message,
       mini: this.mini ? (slot === null ? this.mini.hostView() : this.mini.playerView(slot)) : null,
       bonusStars: this.bonusStars,
