@@ -1,9 +1,9 @@
 (function () {
   Ark.loadCss('/games/kart-race/style.css');
   const esc = Ark.escapeHtml;
-  const TRACK_NAMES = ['Speedway', 'Kidney', 'Serpent'];
+  let trackNames = []; // from the server's views
   const ROWS = [
-    { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : TRACK_NAMES[n - 1]; } },
+    { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
     { key: 'laps', title: 'Laps', fmt: function (n) { return n + ' laps'; } },
     { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : 'Best of ' + n; } },
   ];
@@ -63,7 +63,7 @@
         const k = v.karts[slot];
         return '<div class="kr-side p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div>' +
           '<div class="pos">' + ordinal(v.positions[slot]) + '</div>' +
-          '<div class="lap">' + (k.finished ? '🏁 Finished' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div></div>';
+          '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div></div>';
       };
       html = side(0) +
         '<div class="kr-mid"><div class="track">' + esc(v.track.name) + (v.races > 1 ? ' · Race ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
@@ -269,6 +269,7 @@
       if (b.boosts > a.boosts) out.push('whoosh');
       if (b.bumps > a.bumps + 2) out.push('puck');
       if (b.laps > a.laps) out.push('correct');
+      if (b.cuts > (a.cuts || 0)) out.push('wrong');
       return out;
     },
     padHint: 'Stick or D-pad ← → to steer · B / LT / ↓ to brake · Setup: ↑↓ row, ←→ change, A start · End: A rematch, Y settings',
@@ -303,6 +304,7 @@
       raf = requestAnimationFrame(draw);
     },
     update: function (v) {
+      trackNames = v.trackNames || trackNames;
       if (!view || v.race !== view.race || !v.karts) shown = null; // a new race: back to the grid
       view = v;
       viewAt = performance.now();

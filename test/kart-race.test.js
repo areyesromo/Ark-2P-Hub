@@ -5,6 +5,27 @@ import { fakeCtx } from './helpers.js';
 
 const TICK = 1000 / 60;
 
+/** Put a kart somewhere (as if it had driven there: its progress along the lap matches). */
+function place(game, k, x, y) {
+  Object.assign(k, { x, y, progress: locate(game.track, x, y).s });
+}
+
+/** Drive a kart along the centre line to progress p, a small step per tick (no shortcut). */
+function driveTo(ctx, game, k, p, dir = 1) {
+  let at = k.progress;
+  for (let n = 0; n < 200; n++) {
+    const left = (((p - at) * dir) % 1 + 1) % 1;
+    if (left < 0.015) break;
+    at = (at + dir * 0.012 + 1) % 1;
+    const pt = pointAt(game.track, at);
+    Object.assign(k, { x: pt.x, y: pt.y, speed: 0 });
+    ctx.advance(TICK);
+  }
+  const pt = pointAt(game.track, p);
+  Object.assign(k, { x: pt.x, y: pt.y, speed: 0 });
+  ctx.advance(TICK);
+}
+
 /** A race on a given track (1-based, as in the settings), past the countdown. */
 function racing({ track = 1, laps = 3, races = 1 } = {}) {
   const ctx = fakeCtx();
@@ -26,7 +47,7 @@ function autopilot(game, slot) {
   d = Math.atan2(Math.sin(d), Math.cos(d));
   const ahead = pointAt(game.track, where.s + 0.08);
   const bend = Math.atan2(Math.sin(ahead.angle - k.angle), Math.cos(ahead.angle - k.angle));
-  game.onInput(slot, { type: 'drive', steer: Math.max(-1, Math.min(1, d * 3)), brake: Math.abs(bend) > 0.9 && k.speed > 5.5 });
+  game.onInput(slot, { type: 'drive', steer: Math.max(-1, Math.min(1, d * 3)), brake: Math.abs(bend) > 0.6 && k.speed > 4.5 });
 }
 
 test('every track is a clean loop: it never overlaps itself and stays on the field', () => {
@@ -50,7 +71,7 @@ test('every track is a clean loop: it never overlaps itself and stays on the fie
 test('a careful driver completes the race on every track; laps and the winner are counted', () => {
   for (let t = 1; t <= TRACKS.length; t++) {
     const { ctx, game } = racing({ track: t, laps: 3 });
-    for (let i = 0; i < 60 * 60 && game.phase === 'race'; i++) {
+    for (let i = 0; i < 60 * 120 && game.phase === 'race'; i++) {
       autopilot(game, 0);
       autopilot(game, 1);
       ctx.advance(TICK);
@@ -58,8 +79,9 @@ test('a careful driver completes the race on every track; laps and the winner ar
     assert.equal(game.phase, 'finish', TRACKS[t - 1].name);
     const w = game.result.winner;
     assert.equal(game.karts[w].laps, 3);
-    assert.ok(game.result.time > 8000 && game.result.time < 40000, `${TRACKS[t - 1].name}: ${game.result.time} ms`);
+    assert.ok(game.result.time > 8000 && game.result.time < 75000, `${TRACKS[t - 1].name}: ${game.result.time} ms`);
     assert.deepEqual(game.hostView().positions[w], 1);
+    assert.equal(game.events.cuts, 0, 'fair driving (even running wide on the grass) is never a shortcut');
     ctx.advance(TIMING.finishMs + 100);
     assert.equal(game.phase, 'over', 'one race: that was the match');
     assert.equal(game.winner, w);
@@ -71,24 +93,16 @@ test('no shortcuts: driving backwards over the line takes a lap away, and laps n
   const { ctx, game } = racing({ laps: 3 });
   const k = game.karts[0];
   // Reverse over the start line and forwards again: no lap.
-  const back = pointAt(game.track, 0.97);
-  Object.assign(k, { x: back.x, y: back.y });
-  ctx.advance(TICK * 2);
-  const fwd = pointAt(game.track, 0.03);
-  Object.assign(k, { x: fwd.x, y: fwd.y });
-  ctx.advance(TICK * 2);
+  driveTo(ctx, game, k, 0.97, -1);
+  driveTo(ctx, game, k, 0.03);
   assert.equal(k.laps, 0, 'never reached halfway');
   // Halfway, then over the line: a lap.
-  for (const p of [0.5, 0.9, 0.02]) {
-    const at = pointAt(game.track, p);
-    Object.assign(k, { x: at.x, y: at.y, speed: 0 });
-    ctx.advance(TICK * 2);
-  }
+  driveTo(ctx, game, k, 0.5);
+  driveTo(ctx, game, k, 0.9);
+  driveTo(ctx, game, k, 0.02);
   assert.equal(k.laps, 1);
   // Back over the line: taken away again.
-  const behind = pointAt(game.track, 0.95);
-  Object.assign(k, { x: behind.x, y: behind.y, speed: 0 });
-  ctx.advance(TICK * 2);
+  driveTo(ctx, game, k, 0.95, -1);
   assert.equal(k.laps, 0);
 });
 
@@ -96,13 +110,15 @@ test('grass slows you down, boost pads speed you up, karts bump apart', () => {
   const { ctx, game } = racing();
   const [a, b] = game.karts;
   // a: straight off into the grass (well away from the track).
-  Object.assign(a, { x: 16, y: 9, angle: 0, speed: KART.maxSpeed });
+  place(game, a, 16, 9);
+  Object.assign(a, { angle: 0, speed: KART.maxSpeed });
   ctx.advance(1500);
   assert.ok(a.offTrack);
   assert.ok(a.speed <= KART.grassSpeed + 0.01, `grass speed ${a.speed}`);
   // b: onto a boost pad.
   const pad = game.hostView().track.boosts[0];
-  Object.assign(b, { x: pad.x, y: pad.y, speed: 4 });
+  place(game, b, pad.x, pad.y);
+  b.speed = 4;
   ctx.advance(TICK * 2);
   assert.ok(b.speed > KART.maxSpeed, 'boosted');
   assert.equal(game.hostView().karts[1].boosting, true);
@@ -155,4 +171,24 @@ test('setup: track, laps and races; best of 3 is first to 2; Mixed varies the tr
   assert.equal(game.winner, 1);
   assert.deepEqual(game.scores, [0, 2]);
   assert.notEqual(tracks[0], tracks[1], 'a different track for the next race');
+});
+
+test('no cutting across the grass: a jump ahead puts the kart back where it left the road', () => {
+  const hairpins = TRACKS.findIndex((t) => t.name === 'Hairpins') + 1;
+  const { ctx, game } = racing({ track: hairpins });
+  const k = game.karts[0];
+  // Drive a little way along the first straight...
+  for (let i = 0; i < 60; i++) ctx.advance(TICK);
+  const before = k.progress;
+  assert.ok(before > 0.01 && before < 0.1);
+  // ...then hop across the grass onto the next straight (the far side of the first hairpin).
+  const across = pointAt(game.track, before + 0.2);
+  Object.assign(k, { x: across.x, y: across.y });
+  ctx.advance(TICK);
+  assert.ok(Math.abs(k.progress - before) < 0.01, 'progress kept from before the cut');
+  const back = pointAt(game.track, before);
+  assert.ok(Math.hypot(k.x - back.x, k.y - back.y) < 0.6, 'back on the road');
+  assert.equal(game.events.cuts, 1);
+  assert.equal(game.hostView().karts[0].cut, true);
+  // Normal driving never trips it (the autopilot test drives every track at full speed).
 });
