@@ -87,3 +87,17 @@
 .pb-recap-list th, .pb-recap-list td { padding: 0.2rem 0.4rem; border-bottom: 1px solid var(--line); }
 .pb-recap-list th { text-align: left; color: var(--muted); font-weight: 600; }
 .pb-recap-list td { text-align: center; font-weight: 800; }
+
+/* Tile art (the default): the steampunk faces in tiles/ replace the colours and icons. */
+.pb-space.art { width: 3.4rem; height: 3.4rem; margin: -1.7rem 0 0 -1.7rem; border: none; background: center / contain no-repeat; box-shadow: 0 0.3rem 0.5rem rgba(0, 0, 0, 0.55); }
+.pb-space.art.start { background-image: url(tiles/start.webp); }
+.pb-space.art.blue { background-image: url(tiles/blue.webp); }
+.pb-space.art.red { background-image: url(tiles/red.webp); }
+.pb-space.art.event { background-image: url(tiles/event.webp); }
+.pb-space.art.bonus { background-image: url(tiles/bonus.webp); }
+.pb-space.art.shop { background-image: url(tiles/shop.webp); }
+.pb-space.art.warp { background-image: url(tiles/warp.webp); }
+.pb-space.art.thunder { background-image: url(tiles/thunder.webp); }
+.pb-space.art.skull { background-image: url(tiles/skull.webp); }
+.pb-space.art.tornado { background-image: url(tiles/tornado.webp); }
+.pb-space.art.star { background-image: url(tiles/star.webp); box-shadow: 0 0 1.2rem #facc15; }

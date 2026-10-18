@@ -128,9 +128,10 @@
   function drawBoard(v) {
     const spaces = v.board.spaces;
     let h = links(spaces);
+    const art = v.board.tiles === 'art'; // the steampunk tile faces (tiles/*.webp) carry their own icons
     spaces.forEach(function (s, i) {
-      h += '<div class="pb-space ' + s.type + (i === v.board.star ? ' star' : '') + '" style="left:' + s.x * 100 + '%;top:' + s.y * 100 + '%">' +
-        (i === v.board.star ? '⭐' : ICON[s.type]) + '</div>';
+      h += '<div class="pb-space ' + s.type + (i === v.board.star ? ' star' : '') + (art ? ' art' : '') + '" style="left:' + s.x * 100 + '%;top:' + s.y * 100 + '%">' +
+        (art ? '' : i === v.board.star ? '⭐' : ICON[s.type]) + '</div>';
     });
     v.players.forEach(function (p, slot) {
       const s = spaces[p.space];
@@ -189,7 +190,7 @@
   }
 
   function show3d(v) {
-    const map = v.board.theme + ':' + v.board.name + ':' + v.board.spaces.length;
+    const map = v.board.theme + ':' + v.board.name + ':' + v.board.spaces.length + ':' + v.board.tiles;
     if (board3d && map !== board3dMap) drop3d();
     if (board3d) return board3d.update(v);
     if (board3dLoading) return;
@@ -202,7 +203,7 @@
       board3dLoading = false;
       if (!root || els.board !== into || !view || view.board.view !== '3d' || view.phase === 'minigame') return b.dispose();
       board3d = b;
-      board3dMap = view.board.theme + ':' + view.board.name + ':' + view.board.spaces.length;
+      board3dMap = view.board.theme + ':' + view.board.name + ':' + view.board.spaces.length + ':' + view.board.tiles;
       board3d.update(view);
     }, function () { board3dLoading = false; });
   }

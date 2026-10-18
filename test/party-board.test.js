@@ -741,3 +741,18 @@ test('recap: only in the end view, with each player\'s numbers and bonus stars; 
   assert.equal(h.v().recap, undefined);
   assert.deepEqual(tally(h.p(0)), [0, 0, 0, 0, 0]);
 });
+
+test('tile art: steampunk art by default, classic colours when chosen; offered in the setup', async () => {
+  const tilesOf = (settings) => {
+    const ctx = fakeCtx();
+    ctx.settings = settings;
+    const g = new PartyBoard(ctx, () => 0.5, undefined, [claim]);
+    g.start();
+    return g.hostView().board.tiles;
+  };
+  assert.equal(tilesOf({}), 'art');
+  assert.equal(tilesOf({ tiles: 'classic' }), 'classic');
+  const { getGame } = await import('../server/games/index.js');
+  const row = getGame('party-board').create(fakeCtx()).rows.find((r) => r.key === 'tiles');
+  assert.deepEqual(Object.keys(row.labels), ['art', 'classic']);
+});
