@@ -18,13 +18,13 @@ Regenerate the plans after a map change: `node tools/board-layout.mjs && python3
 
 ## The maps
 
-| id | Name | Spaces | Forks | Warps | Today's look | Brief (make it eye-popping) |
+| id | Name | Spaces | Forks | Warp spaces | Today's look | Brief (make it eye-popping) |
 | --- | --- | --- | --- | --- | --- | --- |
 | `island` | 🏝️ Party Island (easy) | 28, one loop | 0 | none | sand oval in the sea, a lawn, 3 palms | Tropical party island: turquoise shallows and foam around the beach, lush palms and flowers, a tiki hut or two, a pier, beach balls and a boat in the water, a volcano-free sky. Bright and welcoming. |
 | `lagoons` | 🌊 Twin Lagoons (easy) | 24 | 1 | none | sand, 3 ponds, palms, rocks | Two clear lagoons with reefs you can see into, wooden boardwalks, rope bridges, flamingos, a waterfall into a lagoon in the backdrop. |
-| `pipes` | 🔧 Pipe Works (medium) | 30 | 2 | 9→17, 19→1 | riveted metal floor, green pipes, crates | Steampunk factory yard (matches the tiles): brass pipes and valves, gauges, cogs turning, steam vents, a clock tower and chimneys in the backdrop. |
-| `haunted` | 👻 Haunted Maze (hard) | 32 | 3 | 11→3, 21→12 | dark ground, fog, dead trees, tombstones, lanterns, ghosts | Spooky but readable: twisted trees, graves, iron fences, a crooked mansion on a hill in the backdrop, a big moon, jack-o'-lanterns as light sources. |
-| `volcano` | 🌋 Volcano Peak (expert) | 34 | 4 | 7→1, 17→2, 26→0 | basalt slab on a lava sea, a cone with smoke behind | Basalt plateau over glowing lava rivers, cracked rock, crystals, a huge erupting volcano filling the backdrop. |
+| `pipes` | 🔧 Pipe Works (medium) | 30 | 2 | 2 | riveted metal floor, green pipes, crates | Steampunk factory yard (matches the tiles): brass pipes and valves, gauges, cogs turning, steam vents, a clock tower and chimneys in the backdrop. |
+| `haunted` | 👻 Haunted Maze (hard) | 32 | 3 | 2 | dark ground, fog, dead trees, tombstones, lanterns, ghosts | Spooky but readable: twisted trees, graves, iron fences, a crooked mansion on a hill in the backdrop, a big moon, jack-o'-lanterns as light sources. |
+| `volcano` | 🌋 Volcano Peak (expert) | 34 | 4 | 3 | basalt slab on a lava sea, a cone with smoke behind | Basalt plateau over glowing lava rivers, cracked rock, crystals, a huge erupting volcano filling the backdrop. |
 
 All five maps fit in **x −9.7 … +9.7, z −5.5 … +5.5** (the spaces); paths run between them.
 
@@ -37,7 +37,7 @@ All five maps fit in **x −9.7 … +9.7, z −5.5 … +5.5** (the spaces); path
   1-unit margin.
 - Sizes for reference: a tile is **1.3 across** and about 0.2 tall; a figure is about **1.9 tall**
   (2.3 with its name tag); the star floats at about y 3.2; the die tumbles at y 3.4 … 6.4 above the
-  roller; warp arcs rise to about 2.5 … 4 between their two spaces.
+  roller; a figure taking a warp flies in a high arc (up to about 8) to a random space.
 
 ## Where you can build
 
@@ -108,5 +108,5 @@ Keep each animated part a separate node with its pivot at its own centre.
 ## What the game draws (don't model these into the environment)
 
 The spaces (tile models + face art), the paths between spaces (planks / pipes / stone, per map),
-the warp arcs, the player figures, the star, the die and number plate, the coin pops, and the
+the warp flights, the player figures (the engineer and mechanic miniatures), the star, the die and number plate, the coin pops, and the
 name tags. The 2D board is separate and doesn't use these models.

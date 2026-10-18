@@ -59,7 +59,6 @@
 .pb-links line.fork { stroke: rgba(250, 204, 21, 0.75); }
 .pb-arrow { position: absolute; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 12px solid rgba(255, 255, 255, 0.7); pointer-events: none; }
 .pb-arrow.fork { border-left-color: #facc15; border-top-width: 9px; border-bottom-width: 9px; border-left-width: 15px; }
-.pb-links path.warp { fill: none; stroke: #22d3ee; stroke-width: 3px; stroke-dasharray: 8 7; vector-effect: non-scaling-stroke; }
 .pb-space.warp { background: #0891b2; }
 .pb-space.thunder { background: #a16207; }
 .pb-space.skull { background: #3f0d12; }

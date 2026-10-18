@@ -39,7 +39,7 @@ test('three.js add-ons: only .js files inside the add-ons folder', async () => {
 });
 
 test('the Party Board models are served (and kept small for the TV)', async () => {
-  for (const name of ['tile', 'coin', 'die', 'star']) {
+  for (const name of ['tile', 'coin', 'die', 'star', 'figure-engineer', 'figure-mechanic']) {
     const res = await fetch(url + `/games/party-board/models/${name}.glb`);
     assert.equal(res.status, 200, name);
     const buf = Buffer.from(await res.arrayBuffer());

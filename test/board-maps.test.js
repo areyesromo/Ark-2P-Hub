@@ -32,10 +32,12 @@ test('validateMap catches a dead end, a bad link, a 3-way fork and a self-link',
   m.spaces[8].next = [8 === 8 ? 7 : 0]; // 7 -> 8 -> 7: a trap that never gets back to the start
   m.spaces[7].next = [8];
   assert.ok(validateMap(m).some((p) => /start/.test(p)));
-  m = loop();
-  m.spaces[2].warp = 50;
-  m.spaces[2].type = 'warp';
-  assert.ok(validateMap(m).some((p) => /warp/.test(p)));
+});
+
+test('warp spaces have no fixed exit (where they send you is random)', () => {
+  for (const [id, m] of Object.entries(MAPS)) {
+    for (const s of m.spaces) assert.equal(s.warp, undefined, id);
+  }
 });
 
 test('the island keeps its 28-space loop', () => {
@@ -49,7 +51,6 @@ test('the island keeps its 28-space loop', () => {
 
 const forks = (m) => m.spaces.filter((s) => s.next.length === 2).length;
 const warps = (m) => m.spaces.map((s, i) => [s, i]).filter(([s]) => s.type === 'warp');
-const backward = (m) => warps(m).filter(([s, i]) => s.warp < i).length;
 const redShare = (m) => {
   const red = m.spaces.filter((s) => s.type === 'red').length;
   const blue = m.spaces.filter((s) => s.type === 'blue').length;
@@ -70,8 +71,8 @@ test('tiers and prices', () => {
 
 test('layouts get harder: forks, warps and red spaces', () => {
   assert.ok(forks(MAPS.lagoons) >= 1);
-  assert.ok(forks(MAPS.pipes) >= 2 && warps(MAPS.pipes).length >= 2 && backward(MAPS.pipes) >= 1);
-  assert.ok(forks(MAPS.haunted) >= 3 && backward(MAPS.haunted) >= 2 && redShare(MAPS.haunted) >= 0.35);
+  assert.ok(forks(MAPS.pipes) >= 2 && warps(MAPS.pipes).length >= 2);
+  assert.ok(forks(MAPS.haunted) >= 3 && warps(MAPS.haunted).length >= 2 && redShare(MAPS.haunted) >= 0.35);
   assert.ok(forks(MAPS.volcano) >= 4 && warps(MAPS.volcano).length >= 3 && redShare(MAPS.volcano) >= 0.5);
 });
 

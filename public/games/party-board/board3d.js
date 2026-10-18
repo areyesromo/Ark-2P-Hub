@@ -5,10 +5,11 @@
 (function () {
   const HOP_MS = 230;
   const TELE_MS = 520;
-  const FLY_MS = 1100; // along a warp's arc
+  const FLY_MS = 1200; // a warp flight
   const MOOD_MS = 700;
   const DIE_MS = 650;
-  const POP_MS = 1200; // a coin popping up (gained) or falling away (lost)
+  const POP_MS = 1200;
+  const FIGURES = ['figure-engineer', 'figure-mechanic']; // P1, P2 (models/<name>.glb) // a coin popping up (gained) or falling away (lost)
   const COLORS = { start: 0xf8fafc, blue: 0x2563eb, red: 0xdc2626, event: 0x16a34a, bonus: 0x9333ea, shop: 0xf59e0b, warp: 0x0891b2, thunder: 0xa16207, skull: 0x3f0d12, tornado: 0x6b21a8 };
   const ICON = { start: '🏁', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️' };
 
@@ -405,15 +406,11 @@
     return m;
   }
 
-  /** A warp: a glowing arc from the warp space to where it sends you, with an orb along it. */
-  function warpArc(T, color, p, q) {
+  /** A warp flight: a high arc from where the figure stands to where the warp sends it. */
+  function warpArc(T, p, q, top) {
     const mid = p.clone().add(q).multiplyScalar(0.5);
-    mid.y = 2.4 + p.distanceTo(q) * 0.12;
-    const curve = new T.QuadraticBezierCurve3(new T.Vector3(p.x, 0.4, p.z), mid, new T.Vector3(q.x, 0.4, q.z));
-    const tube = new T.Mesh(new T.TubeGeometry(curve, 40, 0.07, 6, false),
-      new T.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.6, transparent: true, opacity: 0.55 }));
-    const orb = new T.Mesh(new T.SphereGeometry(0.16, 12, 10), new T.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 1.5 }));
-    return { tube: tube, orb: orb, curve: curve };
+    mid.y = top + 3 + p.distanceTo(q) * 0.18;
+    return new T.QuadraticBezierCurve3(new T.Vector3(p.x, top + 0.08, p.z), mid, new T.Vector3(q.x, top + 0.08, q.z));
   }
 
   /**
@@ -472,8 +469,8 @@
    * half-metal: full metal looks black with nothing to reflect, and a reflection map costs
    * about a third of the frame rate.
    */
-  function tone(mat) {
-    mat.flatShading = true;
+  function tone(mat, smooth) {
+    mat.flatShading = !smooth;
     mat.metalness = Math.min(mat.metalness, 0.45);
     return mat;
   }
@@ -499,7 +496,7 @@
         gltf.scene.traverse(function (o) {
           if (!o.isMesh) return;
           const g = o.geometry.clone().applyMatrix4(o.matrixWorld).translate(-c.x, -c.y, -c.z);
-          Object.keys(g.attributes).forEach(function (k) { if (k !== 'position' && !(k === 'uv' && o.material.map)) g.deleteAttribute(k); });
+          Object.keys(g.attributes).forEach(function (k) { if (k !== 'position' && k !== 'normal' && !(k === 'uv' && o.material.map)) g.deleteAttribute(k); });
           const key = o.material.uuid; // one group per material (names can repeat: a coin's two faces)
           (groups[key] = groups[key] || { material: o.material, parts: [] }).parts.push(g);
         });
@@ -509,7 +506,7 @@
             geo = mods[1].mergeVertices(geo);
             geo = new mods[2].SimplifyModifier().modify(geo, Math.floor(geo.attributes.position.count * simplify));
           }
-          return { geometry: geo, material: tone(groups[k].material.clone()) };
+          return { geometry: geo, material: tone(groups[k].material.clone(), Boolean(geo.attributes.normal)) };
         });
         return { parts: parts, size: box.getSize(new T.Vector3()) };
       });
@@ -556,7 +553,7 @@
       const scene = gl.scene;
       const s = {
         built: false, tiles: [], star: null, starAt: null, starTarget: null, starFocusUntil: 0,
-        art: false, faces: {}, steel: null, top: 0.32, model: null, props: {}, pops: [], figs: [], warps: [], warpBy: {}, sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
+        art: false, faces: {}, steel: null, top: 0.32, apart: 0.42, model: null, props: {}, pops: [], figs: [], sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
       function build(v) {
@@ -579,7 +576,7 @@
         if (v.board.tiles === 'art') {
           tileModel(T).then(useModel, function (e) { console.warn('Party Board: no tile model', e); });
           // The star, die and coins: the models replace the plain shapes as they arrive.
-          ['star', 'die', 'coin'].forEach(function (name) {
+          ['star', 'die', 'coin', 'figure-engineer', 'figure-mechanic'].forEach(function (name) {
             propModel(T, name, name === 'star' ? 0.6 : 0).then(function (m) { useProp(name, m); }, function (e) { console.warn('Party Board: no ' + name + ' model', e); });
           });
         }
@@ -596,12 +593,6 @@
           sp.next.forEach(function (n) {
             scene.add(link(T, look.link, p, at(T, v.board.spaces[n]), path));
           });
-          if (sp.type === 'warp' && v.board.spaces[sp.warp]) {
-            const w = warpArc(T, look.warp, p, at(T, v.board.spaces[sp.warp]));
-            scene.add(w.tube, w.orb);
-            s.warps.push(w);
-            s.warpBy[i] = w.curve;
-          }
         });
         const sparkMat = new T.MeshBasicMaterial({ color: look.warp, transparent: true, opacity: 0.8 });
         for (let k = 0; k < 6; k++) {
@@ -698,6 +689,21 @@
       function useProp(name, m) {
         if (s.disposed) return;
         s.props[name] = m;
+        const slot = FIGURES.indexOf(name);
+        if (slot !== -1 && s.figs[slot]) {
+          // The player's miniature replaces the toy figure; a ring in the player's colour under it.
+          const body = s.figs[slot].f.body;
+          body.clear();
+          const mini = propObject(T, m, 1);
+          mini.scale.setScalar(1.05 / m.size.x); // its base a little narrower than a tile
+          mini.position.y = (m.size.y / 2) * mini.scale.x;
+          body.add(mini);
+          s.apart = 0.55; // two miniatures on one space stand further apart than toy figures
+          const ring = new T.Mesh(new T.TorusGeometry(0.56, 0.05, 8, 40), new T.MeshStandardMaterial({ color: ArkMini.P_COLORS[slot], emissive: ArkMini.P_COLORS[slot], emissiveIntensity: 0.8 }));
+          ring.rotation.x = Math.PI / 2;
+          ring.position.y = 0.04;
+          s.figs[slot].f.group.add(ring);
+        }
         if (name === 'star' && s.star) {
           const star = propObject(T, m, 1.4);
           // The prize: a warm glow so it reads from across the board.
@@ -725,7 +731,7 @@
       /** Where a figure stands on `space` (side by side when both are there). */
       function standing(v, slot, space) {
         const p = at(T, v.board.spaces[space]);
-        if (v.players[1 - slot].space === space) p.x += slot ? 0.42 : -0.42;
+        if (v.players[1 - slot].space === space) p.x += slot ? s.apart : -s.apart;
         p.y = s.top;
         return p;
       }
@@ -761,13 +767,13 @@
           if (p.space !== fig.space) {
             const was = v.board.spaces[fig.space];
             const step = was.next.indexOf(p.space) !== -1;
-            // Took a warp (its counter went up): fly along the warp's arc.
+            // Took a warp (its counter went up): fly over the board to wherever it sent you.
             const warped = prev && p.warps > prev.players[slot].warps;
-            const fly = !step && warped && was.type === 'warp' && was.warp === p.space && s.warpBy[fig.space];
+            const fly = !step && warped && was.type === 'warp';
             fig.from = fig.f.group.position.clone();
             fig.to = standing(v, slot, p.space);
             fig.t0 = now;
-            fig.curve = fly || null;
+            fig.curve = fly ? warpArc(T, fig.from, fig.to, s.top) : null;
             fig.kind = step ? 'hop' : fly ? 'fly' : /Tornado/.test(v.message || '') ? 'spin' : 'warp';
             fig.space = p.space;
           }
@@ -869,8 +875,7 @@
           fig.blob.material.opacity = Math.max(0.12, 0.35 - lift * 0.06);
           g.rotation.y += ((fig.face || 0) - g.rotation.y) * 0.2;
         });
-        // Warp orbs travel their arcs; the map's own motion (ghosts, smoke, lava).
-        s.warps.forEach(function (w, k) { w.orb.position.copy(w.curve.getPoint((t * 0.45 + k * 0.37) % 1)); });
+        // The map's own motion (ghosts, smoke, lava).
         if (s.tick) s.tick(t);
         // The star floats and spins, gliding to a new spot.
         s.starAt.lerp(s.starTarget, 0.05);
