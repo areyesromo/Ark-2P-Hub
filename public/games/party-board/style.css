@@ -35,8 +35,10 @@
 .pb-sub { font-size: 1.4rem; }
 .pb-ask { font-size: 1.5rem; font-weight: 800; }
 .pb-opts { display: flex; gap: 0.5rem; flex-wrap: wrap; justify-content: center; }
-.pb-opts span { padding: 0.35rem 0.8rem; border-radius: 10px; background: rgba(15, 23, 42, 0.85); border: 3px solid var(--line); font-size: 1.15rem; }
-.pb-opts span.cur { border-color: var(--warn); }
+.pb-opts > span { padding: 0.35rem 0.8rem; border-radius: 10px; background: rgba(15, 23, 42, 0.85); border: 3px solid var(--line); font-size: 1.15rem; }
+.pb-opts > span.cur { border-color: var(--warn); }
+.pb-opts b { padding: 0 0.3rem; border-radius: 6px; border: 2px solid transparent; }
+.pb-opts b.cur { border-color: var(--warn); }
 .pb-time { color: var(--muted); font-size: 1rem; }
 /* phone */
 .pb-phone-root { flex: 1; min-height: 0; display: flex; flex-direction: column; }
@@ -72,6 +74,7 @@
 /* The end-of-match recap: a card over the board (TV), a you-vs-them table (phone). */
 .pb-recap { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; pointer-events: none; }
 .pb-recap:empty { display: none; }
+.pb-recap.side { justify-content: flex-start; padding-left: 2%; }
 .pb-recap-card { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 0.5rem 1.4rem 0.7rem; border-radius: 20px; background: rgba(11, 15, 30, 0.88); border: 3px solid var(--line); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); max-height: 96%; overflow: hidden; }
 .pb-recap-card .pb-msg { font-size: clamp(1.1rem, 3vh, 1.7rem); }
 .pb-recap-card table { border-collapse: collapse; font-size: clamp(0.8rem, 2.1vh, 1.15rem); }
@@ -100,3 +103,10 @@
 .pb-space.art.skull { background-image: url(tiles/skull.webp); }
 .pb-space.art.tornado { background-image: url(tiles/tornado.webp); }
 .pb-space.art.star { background-image: url(tiles/star.webp); box-shadow: 0 0 1.2rem #facc15; }
+
+/* Picking a character (phone). */
+.pb-pick { display: flex; gap: 0.8rem; justify-content: center; margin: 0.6rem 0; }
+.pb-char { flex: 1; max-width: 11rem; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.6rem; border-radius: 18px; background: var(--panel); border: 3px solid var(--line); color: inherit; font-weight: 800; font-size: 1.05rem; }
+.pb-char img { width: 100%; aspect-ratio: 1; object-fit: contain; }
+.pb-char.picked { border-color: var(--warn); box-shadow: 0 0 1rem rgba(250, 204, 21, 0.5); }
+.pb-char.ghost { opacity: 0.4; }

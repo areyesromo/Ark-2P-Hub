@@ -35,6 +35,8 @@
       (v.bonusStars ? '<tr><th>🌟 Bonus</th><td>' + bonus(mine) + '</td><td>' + bonus(them) + '</td></tr>' : '') + '</table>';
   }
 
+  const CHARACTER = { engineer: '⚙️ Engineer', mechanic: '🔧 Mechanic' };
+
   let root = null;
   let api = null;
   let view = null;
@@ -71,14 +73,22 @@
     }
     if (frameMounted) { frame.unmount(); frameMounted = false; }
     const p = v.prompt;
-    const k = JSON.stringify([v.phase, v.players, p && [p.slot, p.kind, p.options, p.extra], v.message, v.dice, v.round, v.winner]);
+    const k = JSON.stringify([v.phase, v.players, p && [p.slot, p.kind, p.options, p.extra], v.message, v.dice, v.round, v.winner, v.pick && v.pick.picks]);
     if (k === key) return;
     key = k;
     const mine = v.players[me];
     const them = v.players[1 - me];
     let h = '<div class="pb-phone"><div class="pb-me"><span>⭐ ' + mine.stars + '</span><span>🪙 ' + mine.coins + '</span><span class="muted">Them ⭐ ' + them.stars + ' · 🪙 ' + them.coins + '</span></div>' +
       '<div class="pb-items">' + (mine.items.length ? mine.items.map(function (id) { return '<span>' + esc(v.items[id].name) + '</span>'; }).join('') : '<span class="muted">No items: the 🛒 shop sells them</span>') + '</div>';
-    if (v.phase === 'over') {
+    if (v.phase === 'pick') {
+      const mine = v.pick.picks[me];
+      h += '<div class="pb-ask">' + (mine ? 'You picked the ' + CHARACTER[mine] + '!' : 'Pick your character') + '</div><div class="pb-pick">' +
+        v.pick.options.map(function (c) {
+          return '<button class="pb-char' + (mine === c ? ' picked' : '') + (mine && mine !== c ? ' ghost' : '') + '" data-pick="' + c + '"' + (mine ? ' disabled' : '') + '>' +
+            '<img src="/games/party-board/figures/' + c + '.webp" alt=""><span>' + CHARACTER[c] + '</span></button>';
+        }).join('') + '</div>' +
+        (mine ? '<div class="pb-wait">' + (v.pick.picks[1 - me] ? '' : 'Waiting for them…') + '</div>' : '<div class="pb-time" data-end="' + (receivedAt + v.pick.msLeft) + '">' + Math.ceil(v.pick.msLeft / 1000) + ' s</div>');
+    } else if (v.phase === 'over') {
       h += '<div class="pb-big">' + (v.draw ? '🤝 A draw' : v.winner === me ? '🏆 You win!' : 'You lose') + '</div>' + recap(v) + '<button class="primary pb-rematch">Rematch</button>';
     } else if (v.phase === 'bonus') {
       h += '<div class="pb-big">🌟 Bonus stars…</div>';
@@ -119,6 +129,10 @@
         const b = e.target.closest('button');
         if (!b || !view || view.phase === 'minigame') return;
         if (b.classList.contains('pb-rematch')) return api.send({ type: 'rematch' });
+        if (b.hasAttribute('data-pick')) {
+          api.send({ type: 'pick', value: b.getAttribute('data-pick') });
+          return api.vibrate(15);
+        }
         const value = b.getAttribute('data-v');
         if (value === null) return;
         api.send({ type: 'choose', value: value });

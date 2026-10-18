@@ -9,7 +9,9 @@ import { OneMini, Playlist } from './minis/runner.js';
 import { poolFor } from './party-minis.js';
 import { settingOf } from './options.js';
 
-export const TIMING = { stepMs: 250, promptMs: 15000, messageMs: 1500, bonusMs: 4000, rollMs: 800 };
+export const TIMING = { stepMs: 250, promptMs: 15000, messageMs: 1500, bonusMs: 4000, rollMs: 800, pickMs: 15000 };
+/** The 3D miniatures players pick from (models/figure-<id>.glb); the defaults are P1, P2. */
+export const CHARACTERS = ['engineer', 'mechanic'];
 export const START_COINS = 10;
 export const STAR_PRICE = 20;
 export const MINI_PRIZE = { win: 10, draw: 3 };
@@ -45,6 +47,8 @@ export class PartyBoard {
     this.tiles = ['art', 'light', 'classic'].includes(tiles) ? tiles : 'art';
     this.epoch = 0;
     this.timers = [];
+    this.characters = CHARACTERS.slice();
+    this.picked = false; // picks are made once per game; a rematch keeps them
   }
 
   // ---- timers (every callback dies with a rematch) ----
@@ -82,6 +86,26 @@ export class PartyBoard {
     this.bonusStars = null;
     this.winner = null;
     this.draw = false;
+    this.picks = null;
+    // The miniatures only show on the 3D board with the 3D models: pick them first (once).
+    if (this.view3d && this.tiles === 'art' && !this.picked) return this.pickStart();
+    this.turnStart();
+  }
+
+  pickStart() {
+    this.phase = 'pick';
+    this.picks = [null, null];
+    this.pickDeadline = this.ctx.now() + TIMING.pickMs;
+    this.after(() => this.pickEnd(), TIMING.pickMs);
+    this.ctx.update();
+  }
+
+  /** Both picked, or time's up: whoever didn't pick keeps the default. */
+  pickEnd() {
+    if (this.phase !== 'pick') return;
+    this.picked = true;
+    this.picks = null;
+    this.phase = 'board';
     this.turnStart();
   }
 
@@ -456,6 +480,14 @@ export class PartyBoard {
   onInput(slot, input) {
     if (!input || typeof input !== 'object') return;
     if (this.phase === 'minigame' && this.mini) return this.mini.onInput(slot, input);
+    if (this.phase === 'pick') {
+      if (input.type !== 'pick' || !CHARACTERS.includes(input.value) || this.picks[slot] !== null) return;
+      this.picks[slot] = input.value;
+      this.characters[slot] = input.value;
+      if (this.picks.every(Boolean)) return this.pickEnd();
+      this.ctx.update();
+      return;
+    }
     if (this.phase === 'over') {
       if (input.type === 'rematch') this.start();
       return;
@@ -483,6 +515,8 @@ export class PartyBoard {
       winner: this.winner,
       draw: this.draw,
       scores: this.players.map((x) => x.stars),
+      characters: this.characters,
+      pick: this.phase === 'pick' ? { picks: this.picks, options: CHARACTERS, msLeft: Math.max(0, this.pickDeadline - this.ctx.now()) } : null,
     };
     if (this.phase === 'over') v.recap = this.recap();
     // Minigames update up to 20 times a second and don't show the board: leave it out.

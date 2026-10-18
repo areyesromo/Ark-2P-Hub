@@ -9,7 +9,8 @@
   const MOOD_MS = 700;
   const DIE_MS = 650;
   const POP_MS = 1200;
-  const FIGURES = ['figure-engineer', 'figure-mechanic']; // P1, P2 (models/<name>.glb) // a coin popping up (gained) or falling away (lost)
+  const FIGURES = ['figure-engineer', 'figure-mechanic']; // the miniatures players pick from (models/<name>.glb)
+  const PEDESTAL = { x: 0, z: -8, top: 1.6, scale: 1.6 }; // the winner stands on it, bigger // the winner's spot at the end, behind the board // a coin popping up (gained) or falling away (lost)
   const COLORS = { start: 0xf8fafc, blue: 0x2563eb, red: 0xdc2626, event: 0x16a34a, bonus: 0x9333ea, shop: 0xf59e0b, warp: 0x0891b2, thunder: 0xa16207, skull: 0x3f0d12, tornado: 0x6b21a8 };
   const ICON = { start: '🏁', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️' };
 
@@ -553,7 +554,7 @@
       const scene = gl.scene;
       const s = {
         built: false, tiles: [], star: null, starAt: null, starTarget: null, starFocusUntil: 0,
-        art: false, faces: {}, steel: null, top: 0.32, apart: 0.42, model: null, props: {}, pops: [], figs: [], sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
+        art: false, faces: {}, steel: null, top: 0.32, apart: 0.42, model: null, props: {}, pops: [], figs: [], sparks: [], victory: null, pedestal: null, confetti: null, tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
       function build(v) {
@@ -689,21 +690,7 @@
       function useProp(name, m) {
         if (s.disposed) return;
         s.props[name] = m;
-        const slot = FIGURES.indexOf(name);
-        if (slot !== -1 && s.figs[slot]) {
-          // The player's miniature replaces the toy figure; a ring in the player's colour under it.
-          const body = s.figs[slot].f.body;
-          body.clear();
-          const mini = propObject(T, m, 1);
-          mini.scale.setScalar(1.05 / m.size.x); // its base a little narrower than a tile
-          mini.position.y = (m.size.y / 2) * mini.scale.x;
-          body.add(mini);
-          s.apart = 0.55; // two miniatures on one space stand further apart than toy figures
-          const ring = new T.Mesh(new T.TorusGeometry(0.56, 0.05, 8, 40), new T.MeshStandardMaterial({ color: ArkMini.P_COLORS[slot], emissive: ArkMini.P_COLORS[slot], emissiveIntensity: 0.8 }));
-          ring.rotation.x = Math.PI / 2;
-          ring.position.y = 0.04;
-          s.figs[slot].f.group.add(ring);
-        }
+        if (FIGURES.indexOf(name) !== -1) [0, 1].forEach(dressFigure);
         if (name === 'star' && s.star) {
           const star = propObject(T, m, 1.4);
           // The prize: a warm glow so it reads from across the board.
@@ -712,6 +699,61 @@
           scene.add(star);
           s.star = star;
         }
+      }
+
+      /**
+       * A player's piece: the miniature they picked (view.characters), once its model is in,
+       * with a ring in the player's colour under it; else the toy figure.
+       */
+      function dressFigure(slot) {
+        const fig = s.figs[slot];
+        const name = 'figure-' + ((s.last && s.last.characters && s.last.characters[slot]) || ['engineer', 'mechanic'][slot]);
+        const m = s.props[name];
+        if (!fig || !m || fig.model === name) return;
+        fig.model = name;
+        fig.f.body.clear();
+        const mini = propObject(T, m, 1);
+        mini.scale.setScalar(1.05 / m.size.x); // its base a little narrower than a tile
+        mini.position.y = (m.size.y / 2) * mini.scale.x;
+        fig.f.body.add(mini);
+        s.apart = 0.55; // two miniatures on one space stand further apart than toy figures
+        if (!fig.ring) {
+          fig.ring = new T.Mesh(new T.TorusGeometry(0.56, 0.05, 8, 40), new T.MeshStandardMaterial({ color: ArkMini.P_COLORS[slot], emissive: ArkMini.P_COLORS[slot], emissiveIntensity: 0.8 }));
+          fig.ring.rotation.x = Math.PI / 2;
+          fig.ring.position.y = 0.04;
+          fig.f.group.add(fig.ring);
+        }
+      }
+
+      /** The winner's pedestal (built at the first end), brass with a gold top, and its confetti. */
+      function pedestal() {
+        if (s.pedestal) return;
+        const g = new T.Group();
+        const brass = mat(T, 0xb08d57, { roughness: 0.4, metalness: 0.45 });
+        const gold = mat(T, 0xe8b931, { roughness: 0.3, metalness: 0.45, emissive: 0x4a3200 });
+        [[1.15, 1.3, 0.4, 0.2, brass], [0.8, 0.9, 1.0, 0.9, brass], [1.1, 1.0, 0.2, 1.5, gold]].forEach(function (c) {
+          const m = new T.Mesh(new T.CylinderGeometry(c[0], c[1], c[2], 40), c[4]);
+          m.position.y = c[3];
+          g.add(m);
+        });
+        g.position.set(PEDESTAL.x, 0, PEDESTAL.z);
+        scene.add(g);
+        s.pedestal = g;
+        const colors = [0xfacc15, 0x22d3ee, 0xf472b6, 0xffffff];
+        s.confetti = [];
+        for (let k = 0; k < 70; k++) {
+          const c = new T.Mesh(new T.PlaneGeometry(0.14, 0.08), new T.MeshBasicMaterial({ color: colors[k % 4], side: T.DoubleSide }));
+          c.userData = { x: (Math.random() - 0.5) * 6, z: (Math.random() - 0.5) * 3, y0: Math.random() * 6, v: 0.6 + Math.random() * 0.8, spin: Math.random() * 6 };
+          c.visible = false;
+          scene.add(c);
+          s.confetti.push(c);
+        }
+      }
+
+      /** Where a winner stands on the pedestal (side by side on a draw). */
+      function onPedestal(slot) {
+        const two = s.victory.slots.length > 1;
+        return new T.Vector3(PEDESTAL.x + (two ? (slot ? 0.55 : -0.55) : 0), PEDESTAL.top, PEDESTAL.z);
       }
 
       /** Coins pop up from a figure when it gains (fall away when it loses), one per 3 or so. */
@@ -762,6 +804,27 @@
         v.board.spaces.forEach(function (sp, i) {
           if (s.tiles[i]) dress(s.tiles[i], sp.type, i === v.board.star);
         });
+        s.last = v; // dressFigure reads the picks from it
+        [0, 1].forEach(dressFigure);
+        // The end: the winner (both on a draw) flies up onto the pedestal.
+        if (v.phase === 'over' && !s.victory) {
+          pedestal();
+          s.victory = { t0: now, slots: v.draw ? [0, 1] : [v.winner] };
+          s.victory.slots.forEach(function (slot) {
+            const fig = s.figs[slot];
+            const to = onPedestal(slot);
+            fig.from = fig.f.group.position.clone();
+            fig.to = to;
+            fig.t0 = now;
+            fig.kind = 'fly';
+            const mid = fig.from.clone().add(to).multiplyScalar(0.5);
+            mid.y = PEDESTAL.top + 4;
+            fig.curve = new T.QuadraticBezierCurve3(new T.Vector3(fig.from.x, fig.from.y + 0.08, fig.from.z), mid, new T.Vector3(to.x, to.y + 0.08, to.z));
+          });
+        } else if (v.phase !== 'over' && s.victory) {
+          s.victory = null; // a rematch: back to the board
+          s.confetti.forEach(function (c) { c.visible = false; });
+        }
         v.players.forEach(function (p, slot) {
           const fig = s.figs[slot];
           if (p.space !== fig.space) {
@@ -855,12 +918,16 @@
               if (fig.kind === 'fly') s.sparks.forEach(function (sp) { sp.visible = false; });
               fig.from = null;
             }
-            // Keep side by side when both share a space.
-            const want = standing(v, slot, fig.space);
+            const winner = s.victory && s.victory.slots.indexOf(slot) !== -1;
+            // Keep side by side when both share a space (a winner: on the pedestal).
+            const want = winner ? onPedestal(slot) : standing(v, slot, fig.space);
             g.position.x += (want.x - g.position.x) * 0.15;
             g.position.z += (want.z - g.position.z) * 0.15;
             const turn = v.phase === 'board' && v.turn === slot;
-            y = s.top + (turn ? Math.abs(Math.sin(t * 3)) * 0.12 : Math.sin(t * 2 + slot) * 0.03);
+            y = winner ? PEDESTAL.top + Math.abs(Math.sin(t * 2.5)) * 0.25 : s.top + (turn ? Math.abs(Math.sin(t * 3)) * 0.12 : Math.sin(t * 2 + slot) * 0.03);
+            if (winner) fig.face = t * 1.4; // a slow victory spin
+            const big = winner ? PEDESTAL.scale / (s.victory.slots.length > 1 ? 1.3 : 1) : 1;
+            g.scale.setScalar(g.scale.x + (big - g.scale.x) * 0.15);
           }
           if (fig.mood) {
             const m = (now - fig.moodAt) / MOOD_MS;
@@ -869,18 +936,31 @@
             else { body.scale.y *= 0.82; body.rotation.x = 0.35 * Math.sin(m * Math.PI); }
           }
           g.position.y = y;
-          const lift = Math.max(0, y - s.top);
-          fig.blob.position.set(g.position.x, s.top + 0.015, g.position.z);
+          const lift = Math.max(0, y - (s.victory && s.victory.slots.indexOf(slot) !== -1 && !fig.from ? PEDESTAL.top : s.top));
+          const ground = s.victory && s.victory.slots.indexOf(slot) !== -1 && !fig.from ? PEDESTAL.top : s.top;
+          fig.blob.position.set(g.position.x, ground + 0.015, g.position.z);
           fig.blob.scale.setScalar(Math.max(0.35, 1 - lift * 0.25) * body.scale.x);
           fig.blob.material.opacity = Math.max(0.12, 0.35 - lift * 0.06);
-          g.rotation.y += ((fig.face || 0) - g.rotation.y) * 0.2;
+          if (s.victory && s.victory.slots.indexOf(slot) !== -1 && !fig.from) g.rotation.y = fig.face;
+          else g.rotation.y += ((fig.face || 0) - g.rotation.y) * 0.2;
         });
+        // Confetti over the pedestal.
+        if (s.victory && s.confetti) {
+          s.confetti.forEach(function (c) {
+            const d = c.userData;
+            const y = 7 - ((d.y0 + (now - s.victory.t0) / 1000 * d.v) % 7);
+            c.visible = true;
+            c.position.set(PEDESTAL.x + d.x + Math.sin(t * 2 + d.spin) * 0.3, y, PEDESTAL.z + d.z);
+            c.rotation.set(t * 3 + d.spin, t * 2 + d.spin, 0);
+          });
+        }
         // The map's own motion (ghosts, smoke, lava).
         if (s.tick) s.tick(t);
         // The star floats and spins, gliding to a new spot.
         s.starAt.lerp(s.starTarget, 0.05);
         s.star.position.set(s.starAt.x, s.top + 3 + Math.sin(t * 2) * 0.15, s.starAt.z); // above a figure on its spot
         s.star.rotation.y = t * 1.6;
+        s.star.visible = !s.victory; // the end belongs to the winner
         // The die: tumbles in, then lands showing the roll.
         s.die.forEach(function (d) {
           const roller = s.figs[s.dieTurn].f.group.position;
@@ -925,6 +1005,10 @@
         } else if (now < s.starFocusUntil) {
           target = s.starAt.clone();
           offset = new T.Vector3(0, 7, 7.5);
+        } else if (s.victory) {
+          // The pedestal on the right of the screen, beside the recap card (on the left).
+          target = new T.Vector3(PEDESTAL.x - 2.2, PEDESTAL.top + 1.2, PEDESTAL.z);
+          offset = new T.Vector3(0, 2.2, 7.2);
         } else if (v.phase === 'board') {
           target = s.figs[v.turn].f.group.position.clone();
           target.y = 0.5;
