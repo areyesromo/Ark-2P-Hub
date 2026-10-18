@@ -25,6 +25,33 @@
     return it ? it.name + (kind === 'shop' ? ' · ' + it.price + ' 🪙' : '') : value;
   }
 
+  // The end-of-match recap: [key, label, which value is best: 'high' | 'low' | null].
+  const RECAP = [
+    ['stars', '⭐ Stars', 'high'], ['coins', '🪙 Coins', 'high'], ['minigames', '🎮 Minigames won', 'high'],
+    ['earned', '💰 Coins earned', 'high'], ['spent', '🛍️ Coins spent', null], ['lost', '💸 Coins lost', 'low'],
+    ['bought', '🛒 Stars bought', 'high'], ['stolen', '🦹 Stars stolen', 'high'], ['warps', '🌀 Warps', null],
+  ];
+  const BONUS = { minigame: '🎮 Minigame ⭐', coin: '🪙 Coin ⭐' };
+
+  function recapCard(v) {
+    const r = v.recap;
+    const cell = function (row, slot) {
+      const a = r[slot][row[0]];
+      const b = r[1 - slot][row[0]];
+      const best = row[2] && a !== b && (row[2] === 'high' ? a > b : a < b);
+      return '<td class="p' + (slot + 1) + (best ? ' best' : '') + '">' + a + '</td>';
+    };
+    return '<div class="pb-recap-card">' +
+      '<div class="pb-mapname ' + v.board.tier + '">' + esc(v.board.name) + ' · ' + TIER[v.board.tier] + '</div>' +
+      '<div class="pb-msg">' + (v.draw ? '🤝 A draw!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
+      '<table><tr><th></th><th>' + nameOf(v, 0) + '</th><th>' + nameOf(v, 1) + '</th></tr>' +
+      RECAP.map(function (row) { return '<tr><th>' + row[1] + '</th>' + cell(row, 0) + cell(row, 1) + '</tr>'; }).join('') +
+      (v.bonusStars ? '<tr><th>🌟 Bonus stars</th>' + [0, 1].map(function (slot) {
+        return '<td class="p' + (slot + 1) + ' bonus">' + (r[slot].bonus.map(function (k) { return BONUS[k]; }).join('<br>') || '—') + '</td>';
+      }).join('') + '</tr>' : '') +
+      '</table></div>';
+  }
+
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.names[slot]) + '</span>';
   }
@@ -120,9 +147,7 @@
       }).join('');
     }
     if (v.phase === 'over') {
-      return '<div class="pb-msg">' + (v.draw ? '🤝 A draw!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
-        '<div class="pb-sub">⭐ ' + v.players[0].stars + ' – ' + v.players[1].stars + ' ⭐ · 🪙 ' + v.players[0].coins + ' – ' + v.players[1].coins + ' 🪙</div>' +
-        '<div class="pb-sub muted">Rematch on a phone or press A (or ⚙ change the settings).</div>';
+      return '<div class="pb-sub muted">🏁 Rematch on a phone or press A (or ⚙ change the settings).</div>';
     }
     let h = '<div class="pb-mapname ' + v.board.tier + '">' + esc(v.board.name) + ' · ' + TIER[v.board.tier] + '</div>' +
       '<div class="pb-turn">Turn ' + v.round + ' / ' + v.turns + ' · ' + nameOf(v, v.turn) + '</div>';
@@ -160,6 +185,7 @@
       els.board.innerHTML = drawBoard(v);
     }
     els.centre.innerHTML = centre(v);
+    els.recap.innerHTML = v.phase === 'over' && v.recap ? recapCard(v) : '';
   }
 
   function show3d(v) {
@@ -242,12 +268,13 @@
     mount: function (el) {
       root = document.createElement('div');
       root.className = 'pb-host';
-      root.innerHTML = '<div class="pb-left"></div><div class="pb-mid"><div class="pb-boardbox"><div class="pb-board"></div></div><div class="pb-centre"></div></div><div class="pb-right"></div><div class="pb-mini"></div>';
+      root.innerHTML = '<div class="pb-left"></div><div class="pb-mid"><div class="pb-boardbox"><div class="pb-board"></div><div class="pb-recap"></div></div><div class="pb-centre"></div></div><div class="pb-right"></div><div class="pb-mini"></div>';
       el.appendChild(root);
       ticker = setInterval(function () { tickDown(root); }, 250);
       els = {
         left: root.querySelector('.pb-left'), right: root.querySelector('.pb-right'),
         board: root.querySelector('.pb-board'), centre: root.querySelector('.pb-centre'), mini: root.querySelector('.pb-mini'),
+        recap: root.querySelector('.pb-recap'),
       };
       render();
     },

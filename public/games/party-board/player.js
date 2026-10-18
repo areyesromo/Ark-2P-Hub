@@ -20,6 +20,21 @@
   const ASK = { item: 'Use an item before you roll?', roll: 'Your turn!', star: 'You reached the star!', shop: 'Welcome to the shop!', slot: 'Stop the reels!', path: '🔀 A fork! Which way?' };
   const PEEK = { start: '🏁', blue: '🔵', red: '🔴', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️', star: '⭐' };
 
+  const RECAP = [['stars', '⭐ Stars'], ['coins', '🪙 Coins'], ['minigames', '🎮 Minigames won'], ['earned', '💰 Earned'],
+    ['spent', '🛍️ Spent'], ['lost', '💸 Lost'], ['bought', '🛒 Stars bought'], ['stolen', '🦹 Stars stolen'], ['warps', '🌀 Warps']];
+  const BONUS = { minigame: '🎮', coin: '🪙' };
+
+  /** You vs them, one line per number. */
+  function recap(v) {
+    if (!v.recap) return '';
+    const mine = v.recap[v.you];
+    const them = v.recap[1 - v.you];
+    const bonus = function (r) { return r.bonus.map(function (k) { return BONUS[k] + '⭐'; }).join(' ') || '—'; };
+    return '<table class="pb-recap-list"><tr><th></th><th>You</th><th>Them</th></tr>' +
+      RECAP.map(function (row) { return '<tr><th>' + row[1] + '</th><td>' + mine[row[0]] + '</td><td>' + them[row[0]] + '</td></tr>'; }).join('') +
+      (v.bonusStars ? '<tr><th>🌟 Bonus</th><td>' + bonus(mine) + '</td><td>' + bonus(them) + '</td></tr>' : '') + '</table>';
+  }
+
   let root = null;
   let api = null;
   let view = null;
@@ -64,7 +79,7 @@
     let h = '<div class="pb-phone"><div class="pb-me"><span>⭐ ' + mine.stars + '</span><span>🪙 ' + mine.coins + '</span><span class="muted">Them ⭐ ' + them.stars + ' · 🪙 ' + them.coins + '</span></div>' +
       '<div class="pb-items">' + (mine.items.length ? mine.items.map(function (id) { return '<span>' + esc(v.items[id].name) + '</span>'; }).join('') : '<span class="muted">No items: the 🛒 shop sells them</span>') + '</div>';
     if (v.phase === 'over') {
-      h += '<div class="pb-big">' + (v.draw ? '🤝 A draw' : v.winner === me ? '🏆 You win!' : 'You lose') + '</div><button class="primary pb-rematch">Rematch</button>';
+      h += '<div class="pb-big">' + (v.draw ? '🤝 A draw' : v.winner === me ? '🏆 You win!' : 'You lose') + '</div>' + recap(v) + '<button class="primary pb-rematch">Rematch</button>';
     } else if (v.phase === 'bonus') {
       h += '<div class="pb-big">🌟 Bonus stars…</div>';
     } else {

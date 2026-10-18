@@ -665,3 +665,79 @@ test('board view: 3D on every map when chosen (2D by default); the view names th
     assert.equal(b.theme, id);
   }
 });
+
+// ---- the end-of-match recap ----
+
+const tally = (p) => [p.spent, p.lost, p.bought, p.stolen, p.warps];
+
+test('recap counters: stars bought and coins spent (star, shop); coins lost (red, thieves, hazards); stars stolen; warps', () => {
+  // [spent, lost, bought, stolen, warps]
+  let h = board();
+  assert.deepEqual(tally(h.p(0)), [0, 0, 0, 0, 0]);
+  h.g.players[0].coins = 23;
+  h.q.push(D(3));
+  h.choose(0, 'roll');
+  h.settle();
+  h.choose(0, 'yes');
+  h.settle();
+  assert.deepEqual(tally(h.p(0)), [20, 3, 1, 0, 0], 'the star: 20 spent, then red −3');
+
+  h = board();
+  h.g.players[0].coins = 9;
+  h.q.push(D(7));
+  h.choose(0, 'roll');
+  h.settle();
+  h.choose(0, 'coin-thief');
+  h.settle();
+  assert.deepEqual(tally(h.p(0)), [8, 0, 0, 0, 0], 'the shop');
+
+  h = board();
+  h.g.players[1].coins = 7;
+  h.g.players[1].stars = 1;
+  h.g.players[0].items = ['coin-thief', 'star-thief'];
+  h.g.turnStart();
+  h.choose(0, 'coin-thief');
+  h.settle();
+  assert.deepEqual([h.p(1).lost, h.p(0).lost], [7, 0], 'the coin thief: the rival loses');
+  h.g.turnStart();
+  h.choose(0, 'star-thief');
+  h.settle();
+  assert.equal(h.p(0).stolen, 1);
+
+  assert.equal(hazardAt('thunder', (g) => { g.players[0].coins = 11; }).lost, 5);
+
+  const f = forky();
+  f.roll(3);
+  f.choose(0, '1');
+  f.settle();
+  assert.equal(f.p(0).warps, 1, 'landing on a warp space');
+});
+
+test('recap: only in the end view, with each player\'s numbers and bonus stars; a rematch resets the counters', () => {
+  const h = board({ turns: 10, style: 'mix', bonus: 1 });
+  h.g.players[1].coins = 0;
+  for (let r = 0; r < 10; r++) {
+    assert.equal(h.v().recap, undefined);
+    h.g.players[0].space = h.g.players[1].space = 0;
+    h.roll(0, 1);
+    h.roll(1, 1);
+    h.minigame(0);
+  }
+  assert.equal(h.v().recap, undefined, 'not during the bonus reveal');
+  h.ctx.advance(TIMING.bonusMs);
+  const v = h.v();
+  assert.equal(v.phase, 'over');
+  assert.equal(v.recap.length, 2);
+  const [a, b] = v.recap;
+  assert.deepEqual(Object.keys(a).sort(), ['bonus', 'bought', 'coins', 'earned', 'lost', 'minigames', 'spent', 'stars', 'stolen', 'warps']);
+  assert.equal(a.minigames, 10);
+  assert.equal(a.stars, v.players[0].stars);
+  assert.equal(b.coins, v.players[1].coins);
+  assert.deepEqual(a.bonus, ['minigame', 'coin']);
+  assert.deepEqual(b.bonus, []);
+  assert.deepEqual(h.g.playerView(1).recap, v.recap, 'phones get it too');
+  h.g.players[0].lost = 9;
+  h.g.onInput(0, { type: 'rematch' });
+  assert.equal(h.v().recap, undefined);
+  assert.deepEqual(tally(h.p(0)), [0, 0, 0, 0, 0]);
+});
