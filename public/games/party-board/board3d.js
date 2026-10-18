@@ -5,6 +5,7 @@
 (function () {
   const HOP_MS = 230;
   const TELE_MS = 520;
+  const FLY_MS = 1100; // along a warp's arc
   const MOOD_MS = 700;
   const DIE_MS = 650;
   const COLORS = { start: 0xf8fafc, blue: 0x2563eb, red: 0xdc2626, event: 0x16a34a, bonus: 0x9333ea, shop: 0xf59e0b, warp: 0x0891b2, thunder: 0xa16207, skull: 0x3f0d12, tornado: 0x6b21a8 };
@@ -420,7 +421,7 @@
       const scene = gl.scene;
       const s = {
         built: false, tiles: [], star: null, starAt: null, starTarget: null, starFocusUntil: 0,
-        figs: [], warps: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
+        figs: [], warps: [], warpBy: {}, sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
       function build(v) {
@@ -458,8 +459,16 @@
             const w = warpArc(T, look.warp, p, at(T, v.board.spaces[sp.warp]));
             scene.add(w.tube, w.orb);
             s.warps.push(w);
+            s.warpBy[i] = w.curve;
           }
         });
+        const sparkMat = new T.MeshBasicMaterial({ color: look.warp, transparent: true, opacity: 0.8 });
+        for (let k = 0; k < 6; k++) {
+          const sp = new T.Mesh(new T.SphereGeometry(0.12 - k * 0.012, 8, 6), sparkMat);
+          sp.visible = false;
+          scene.add(sp);
+          s.sparks.push(sp);
+        }
         const star = new T.Mesh(new T.ExtrudeGeometry(starShape(T), { depth: 0.2, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 2 }),
           new T.MeshStandardMaterial({ color: 0xfacc15, emissive: 0x8a6d00, roughness: 0.3, metalness: 0.3 }));
         star.castShadow = true;
@@ -520,11 +529,16 @@
         v.players.forEach(function (p, slot) {
           const fig = s.figs[slot];
           if (p.space !== fig.space) {
-            const step = v.board.spaces[fig.space].next.indexOf(p.space) !== -1;
+            const was = v.board.spaces[fig.space];
+            const step = was.next.indexOf(p.space) !== -1;
+            // Took a warp (its counter went up): fly along the warp's arc.
+            const warped = prev && p.warps > prev.players[slot].warps;
+            const fly = !step && warped && was.type === 'warp' && was.warp === p.space && s.warpBy[fig.space];
             fig.from = fig.f.group.position.clone();
             fig.to = standing(v, slot, p.space);
             fig.t0 = now;
-            fig.kind = step ? 'hop' : /Tornado/.test(v.message || '') ? 'spin' : 'warp';
+            fig.curve = fly || null;
+            fig.kind = step ? 'hop' : fly ? 'fly' : /Tornado/.test(v.message || '') ? 'spin' : 'warp';
             fig.space = p.space;
           }
           if (prev && prev.phase === 'board' && v.phase === 'board') {
@@ -564,13 +578,30 @@
             fig.to = standing(v, slot, fig.space);
             g.position.copy(fig.to);
           }
-          const k = fig.from ? Math.min(1, (now - fig.t0) / (fig.kind === 'hop' ? HOP_MS : TELE_MS)) : 1;
+          const k = fig.from ? Math.min(1, (now - fig.t0) / (fig.kind === 'hop' ? HOP_MS : fig.kind === 'fly' ? FLY_MS : TELE_MS)) : 1;
           if (fig.from && k < 1) {
             if (fig.kind === 'hop') {
               g.position.lerpVectors(fig.from, fig.to, k);
               y = 0.32 + Math.sin(k * Math.PI) * 0.9;
               body.scale.set(1 - Math.sin(k * Math.PI) * 0.12, 1 + Math.sin(k * Math.PI) * 0.18, 1);
               fig.face = Math.atan2(fig.to.x - fig.from.x, fig.to.z - fig.from.z);
+            } else if (fig.kind === 'fly') {
+              // Eased along the arc, then settling onto the target spot; a slow spin and a sparkle trail.
+              const e = k < 0.5 ? 2 * k * k : 1 - Math.pow(-2 * k + 2, 2) / 2;
+              const pt = fig.curve.getPoint(e);
+              g.position.set(pt.x, 0, pt.z);
+              y = pt.y - 0.08;
+              if (k > 0.85) {
+                const b = (k - 0.85) / 0.15;
+                g.position.x += (fig.to.x - g.position.x) * b;
+                g.position.z += (fig.to.z - g.position.z) * b;
+              }
+              body.rotation.y = e * Math.PI * 2;
+              s.sparks.forEach(function (sp, i) {
+                const q = fig.curve.getPoint(Math.max(0, e - 0.035 * (i + 1)));
+                sp.visible = e > 0.02 && k < 0.95;
+                sp.position.set(q.x, q.y + 0.5, q.z);
+              });
             } else if (fig.kind === 'spin') {
               g.position.lerpVectors(fig.from, fig.to, k);
               y = 0.32 + Math.sin(k * Math.PI) * 3.5;
@@ -582,7 +613,11 @@
               body.scale.set(sc, sc, sc);
             }
           } else {
-            if (fig.from) { g.position.copy(fig.to); fig.from = null; }
+            if (fig.from) {
+              g.position.copy(fig.to);
+              if (fig.kind === 'fly') s.sparks.forEach(function (sp) { sp.visible = false; });
+              fig.from = null;
+            }
             // Keep side by side when both share a space.
             const want = standing(v, slot, fig.space);
             g.position.x += (want.x - g.position.x) * 0.15;
@@ -623,10 +658,17 @@
             d.mesh.rotation.set(0.35, 0.6, 0);
           }
         });
-        // Camera: follows the player whose turn it is; the star when it moves; the whole island otherwise.
+        // Camera: follows a figure flying a warp (a bit higher); else the player whose turn it is;
+        // the star when it moves; the whole board otherwise.
         let target;
         let offset;
-        if (now < s.starFocusUntil) {
+        const flyer = s.figs.filter(function (fig) { return fig.from && fig.kind === 'fly'; })[0];
+        if (flyer) {
+          // Between the figure and where it lands, so both stay in view.
+          target = flyer.f.group.position.clone().lerp(flyer.to, 0.5);
+          target.y = 0.5;
+          offset = new T.Vector3(0, 12, 11);
+        } else if (now < s.starFocusUntil) {
           target = s.starAt.clone();
           offset = new T.Vector3(0, 7, 7.5);
         } else if (v.phase === 'board') {
@@ -637,8 +679,8 @@
           target = new T.Vector3(0, 0, 0);
           offset = new T.Vector3(0, 17, 13);
         }
-        s.look.lerp(target, 0.06);
-        s.cam.lerp(target.clone().add(offset), 0.05);
+        s.look.lerp(target, flyer ? 0.14 : 0.06);
+        s.cam.lerp(target.clone().add(offset), flyer ? 0.1 : 0.05);
         gl.camera.position.copy(s.cam);
         gl.camera.lookAt(s.look);
       });

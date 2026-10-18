@@ -69,3 +69,21 @@
 .pb-mapname.medium { border-color: #facc15; }
 .pb-mapname.hard { border-color: #ef4444; }
 .pb-mapname.expert { border-color: #a855f7; }
+
+/* The end-of-match recap: a card over the board (TV), a you-vs-them table (phone). */
+.pb-recap { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; pointer-events: none; }
+.pb-recap:empty { display: none; }
+.pb-recap-card { display: flex; flex-direction: column; align-items: center; gap: 0.25rem; padding: 0.5rem 1.4rem 0.7rem; border-radius: 20px; background: rgba(11, 15, 30, 0.88); border: 3px solid var(--line); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6); max-height: 96%; overflow: hidden; }
+.pb-recap-card .pb-msg { font-size: clamp(1.1rem, 3vh, 1.7rem); }
+.pb-recap-card table { border-collapse: collapse; font-size: clamp(0.8rem, 2.1vh, 1.15rem); }
+.pb-recap-card th, .pb-recap-card td { padding: 0.04rem 0.9rem; line-height: 1.25; }
+.pb-recap-card th { text-align: left; font-weight: 700; color: var(--muted); }
+.pb-recap-card tr:first-child th { text-align: center; font-size: 1.1em; }
+.pb-recap-card td { text-align: center; font-weight: 900; font-variant-numeric: tabular-nums; border-radius: 8px; }
+.pb-recap-card td.bonus { font-weight: 700; font-size: 0.9em; }
+.pb-recap-card td.best.p1 { background: rgba(34, 211, 238, 0.22); color: var(--p1); }
+.pb-recap-card td.best.p2 { background: rgba(244, 114, 182, 0.22); color: var(--p2); }
+.pb-recap-list { width: 100%; border-collapse: collapse; margin: 0.4rem 0 0.8rem; font-size: 1rem; }
+.pb-recap-list th, .pb-recap-list td { padding: 0.2rem 0.4rem; border-bottom: 1px solid var(--line); }
+.pb-recap-list th { text-align: left; color: var(--muted); font-weight: 600; }
+.pb-recap-list td { text-align: center; font-weight: 800; }

@@ -67,7 +67,7 @@ export class PartyBoard {
     this.map = this.pickMap();
     this.board = this.map.spaces.map((sp) => ({ ...sp })); // this match's copy (Harsh mode changes it)
     if (this.harsh) this.placeHazards();
-    this.players = [0, 1].map(() => ({ space: 0, coins: START_COINS, stars: 0, items: [], earned: 0, minigames: 0 }));
+    this.players = [0, 1].map(() => ({ space: 0, coins: START_COINS, stars: 0, items: [], earned: 0, minigames: 0, spent: 0, lost: 0, bought: 0, stolen: 0, warps: 0 }));
     this.playlist = new Playlist(this.pool.map((d) => d.id), this.rng); // one per match: no repeats until all are played
     this.star = this.pickStar(null);
     this.round = 1;
@@ -140,13 +140,21 @@ export class PartyBoard {
     return 1 + Math.floor(this.rng() * 10);
   }
 
-  /** Add (or take, never below 0) coins; gains count towards the coin star. */
+  /** Add (or take, never below 0) coins; gains count towards the coin star, takings as lost. */
   coins(slot, n) {
     const p = this.players[slot];
     const before = p.coins;
     p.coins = Math.max(0, p.coins + n);
     if (n > 0) p.earned += n;
+    else p.lost += before - p.coins;
     return p.coins - before;
+  }
+
+  /** Pay for the star or an item (counted as spent, not lost). */
+  spend(slot, n) {
+    const p = this.players[slot];
+    p.coins -= n;
+    p.spent += n;
   }
 
   say(message) {
@@ -198,6 +206,7 @@ export class PartyBoard {
     if (id === 'star-thief') {
       rival.stars--;
       me.stars++;
+      me.stolen++;
     }
     this.say(ITEMS[id].name + '!');
     this.ctx.update();
@@ -260,8 +269,9 @@ export class PartyBoard {
     this.ask('star', ['yes', 'no'], (v) => {
       if (v !== 'yes' && landed) this.say(`+${this.coins(this.turn, SPACE_COINS.blue)} 🪙`);
       if (v === 'yes') {
-        this.coins(this.turn, -this.starPrice);
+        this.spend(this.turn, this.starPrice);
         this.players[this.turn].stars++;
+        this.players[this.turn].bought++;
         this.star = this.pickStar(this.star);
         this.say('⭐ Got a star!');
       }
@@ -280,7 +290,7 @@ export class PartyBoard {
   shopPrompt(next) {
     this.ask('shop', this.shopItems(this.turn).concat('none'), (id) => {
       if (id !== 'none') {
-        this.coins(this.turn, -this.price(id));
+        this.spend(this.turn, this.price(id));
         this.players[this.turn].items.push(id);
         this.say('🛒 Bought ' + ITEMS[id].name);
       }
@@ -328,6 +338,7 @@ export class PartyBoard {
     }
     if (type === 'warp') {
       this.players[slot].space = this.spaces[space].warp;
+      this.players[slot].warps++;
       this.say('🌀 Warp!');
       return done();
     }
@@ -470,12 +481,22 @@ export class PartyBoard {
       draw: this.draw,
       scores: this.players.map((x) => x.stars),
     };
+    if (this.phase === 'over') v.recap = this.recap();
     // Minigames update up to 20 times a second and don't show the board: leave it out.
     if (this.phase === 'minigame') {
       delete v.board;
       delete v.items;
     }
     return v;
+  }
+
+  /** The end screen's numbers per player, with the bonus stars each won. */
+  recap() {
+    return this.players.map((p, slot) => ({
+      stars: p.stars, coins: p.coins, minigames: p.minigames, earned: p.earned, spent: p.spent,
+      lost: p.lost, bought: p.bought, stolen: p.stolen, warps: p.warps,
+      bonus: (this.bonusStars || []).filter((b) => b.slots.includes(slot)).map((b) => b.kind),
+    }));
   }
 
   hostView() {
