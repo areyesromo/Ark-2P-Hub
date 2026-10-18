@@ -41,7 +41,8 @@ export class PartyBoard {
     this.bonusOn = settingOf(ctx, 'bonus', 1) === 1;
     this.harsh = settingOf(ctx, 'harsh', 0) === 1;
     this.view3d = settingOf(ctx, 'view', '2d') === '3d';
-    this.tiles = settingOf(ctx, 'tiles', 'art') === 'classic' ? 'classic' : 'art';
+    const tiles = settingOf(ctx, 'tiles', 'art');
+    this.tiles = ['art', 'light', 'classic'].includes(tiles) ? tiles : 'art';
     this.epoch = 0;
     this.timers = [];
   }

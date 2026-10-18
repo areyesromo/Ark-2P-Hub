@@ -19,6 +19,7 @@ import { Stats } from './stats.js';
 const ROOT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const THREE_DIR = path.dirname(createRequire(import.meta.url).resolve('three')); // node_modules/three/build
+const THREE_ADDONS_DIR = path.join(THREE_DIR, '..', 'examples', 'jsm'); // GLTFLoader and friends
 const VERSION = {
   version: JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf8')).version,
   commit: process.env.ARK_COMMIT || 'dev',
@@ -80,6 +81,14 @@ export function createApp({
   );
   // three.js for the 3D games, served from the hub so it works without internet.
   app.use('/vendor/three', express.static(THREE_DIR, { maxAge: '7d' }));
+  // Its add-ons import the bare name 'three', which browsers can't resolve without an import map:
+  // serve them with that import pointed at the copy above, so every 3D script shares one three.js.
+  app.get('/vendor/three-addons/*', (req, res) => {
+    const file = path.resolve(THREE_ADDONS_DIR, req.params[0]);
+    if (!file.startsWith(THREE_ADDONS_DIR + path.sep) || !file.endsWith('.js') || !fs.existsSync(file)) return res.sendStatus(404);
+    const src = fs.readFileSync(file, 'utf8').replace(/from 'three'/g, "from '/vendor/three/three.module.min.js'");
+    res.type('text/javascript').set('Cache-Control', 'public, max-age=604800').send(src);
+  });
   app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
 
   registerSocketHandlers(io, rooms, { refreshJoin });

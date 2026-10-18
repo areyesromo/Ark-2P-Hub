@@ -415,18 +415,73 @@
     return { tube: tube, orb: orb, curve: curve };
   }
 
+  /**
+   * The tile model, loaded and prepared once per page: its parts merged per material (the
+   * face kept apart, to swap per space type), side rivets made low-poly.
+   * Resolves { body: [{ geometry, material }], face, scale, lift, top }.
+   */
+  let tileModelP = null;
+  const SIMPLIFY = 0.6; // share of vertices the simplifier removes
+  function tileModel(T) {
+    if (tileModelP) return tileModelP;
+    tileModelP = Promise.all([
+      import('/vendor/three-addons/loaders/GLTFLoader.js'),
+      import('/vendor/three-addons/utils/BufferGeometryUtils.js'),
+      import('/vendor/three-addons/modifiers/SimplifyModifier.js'),
+    ]).then(function (mods) {
+      return new mods[0].GLTFLoader().loadAsync('/games/party-board/models/tile.glb').then(function (gltf) {
+        const merge = mods[1].mergeGeometries;
+        gltf.scene.updateMatrixWorld(true);
+        const groups = {};
+        let face = null;
+        gltf.scene.traverse(function (o) {
+          if (!o.isMesh) return;
+          let g = o.geometry.clone().applyMatrix4(o.matrixWorld);
+          if (o.name === 'face') { face = g; return; }
+          if (/^rivet/.test(o.name)) {
+            // A rivet is a few pixels on screen: 24 triangles instead of 320.
+            g.computeBoundingBox();
+            const c = g.boundingBox.getCenter(new T.Vector3());
+            const r = g.boundingBox.getSize(new T.Vector3()).x / 2;
+            g = new T.SphereGeometry(r, 6, 4).translate(c.x, c.y, c.z);
+          }
+          Object.keys(g.attributes).forEach(function (k) { if (k !== 'position') g.deleteAttribute(k); });
+          const key = o.material.name || o.material.uuid;
+          (groups[key] = groups[key] || { material: o.material, parts: [] }).parts.push(g);
+        });
+        const body = Object.keys(groups).map(function (k) {
+          const mat = groups[k].material.clone();
+          mat.flatShading = true; // the model has no normals
+          // Full metals look black with nothing to reflect (and a reflection map costs about a
+          // third of the frame rate): half-metal keeps the brass and steel colours lit.
+          mat.metalness = Math.min(mat.metalness, 0.45);
+          // Simplified: far fewer triangles, no visible change at board distance.
+          const geo = mods[1].mergeVertices(merge(groups[k].parts));
+          return { geometry: new mods[2].SimplifyModifier().modify(geo, Math.floor(geo.attributes.position.count * SIMPLIFY)), material: mat };
+        });
+        const box = new T.Box3().setFromObject(gltf.scene);
+        const scale = 1.3 / (box.max.x - box.min.x);
+        return { body: body, face: face, scale: scale, lift: -box.min.y * scale, top: (box.max.y - box.min.y) * scale };
+      });
+    }).catch(function (e) {
+      tileModelP = null; // try again on the next board
+      throw e;
+    });
+    return tileModelP;
+  }
+
   function create(el) {
     return ArkMini.scene3d(el, { fov: 42 }).then(function (gl) {
       const T = gl.THREE;
       const scene = gl.scene;
       const s = {
         built: false, tiles: [], star: null, starAt: null, starTarget: null, starFocusUntil: 0,
-        art: false, faces: {}, steel: null, figs: [], warps: [], warpBy: {}, sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
+        art: false, faces: {}, steel: null, top: 0.32, model: null, figs: [], warps: [], warpBy: {}, sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
       function build(v) {
         const look = THEMES[v.board.theme] || THEMES.island;
-        s.art = v.board.tiles === 'art';
+        s.art = v.board.tiles !== 'classic';
         s.steel = new T.MeshStandardMaterial({ color: 0x8a94a6, roughness: 0.35, metalness: 0.75 });
         scene.background = new T.Color(look.bg);
         if (look.fog) scene.fog = new T.Fog(look.fog[0], look.fog[1], look.fog[2]);
@@ -440,6 +495,8 @@
           });
         }
         s.tick = look.scenery(T, scene, v.board.spaces) || null;
+        // 'art': the tile model (models/tile.glb); 'light': its faces on plain discs.
+        if (v.board.tiles === 'art') tileModel(T).then(useModel, function () { /* keep the plain tiles */ });
         const path = mat(T, look.link.color, look.link.pipe ? { roughness: 0.4, metalness: 0.3 } : { emissive: look.link.emissive || 0, roughness: 0.9 });
         v.board.spaces.forEach(function (sp, i) {
           const p = at(T, sp);
@@ -495,7 +552,8 @@
         t.face = face;
         if (t.icon) { scene.remove(t.icon); t.icon = null; }
         if (s.art) {
-          t.mesh.material = [s.steel, artFace(face), s.steel];
+          if (t.faceMesh) t.faceMesh.material = artFace(face, true);
+          else t.mesh.material = [s.steel, artFace(face), s.steel];
           return;
         }
         t.mesh.material = new T.MeshStandardMaterial({ color: COLORS[type] || 0x64748b, roughness: 0.5 });
@@ -506,26 +564,56 @@
         }
       }
 
-      /** One shared material per face image (loaded once). */
-      function artFace(face) {
-        if (!s.faces[face]) {
+      /** One shared material per face image (loaded once); `model`: for the tile model's face. */
+      function artFace(face, model) {
+        const key = face + (model ? ':model' : '');
+        if (!s.faces[key]) {
           const tex = new T.TextureLoader().load('/games/party-board/tiles/' + face + '.webp');
           tex.colorSpace = T.SRGBColorSpace;
           tex.anisotropy = 4;
-          // A cylinder's cap maps the image a quarter turn off: turn it upright (as seen from the camera).
-          tex.center.set(0.5, 0.5);
-          tex.rotation = Math.PI / 2;
+          if (model) tex.flipY = false; // glTF texture coordinates
+          else {
+            // A cylinder's cap maps the image a quarter turn off: turn it upright (as seen from the camera).
+            tex.center.set(0.5, 0.5);
+            tex.rotation = Math.PI / 2;
+          }
           // A little self-light so the art reads on dark maps too.
-          s.faces[face] = new T.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.1 });
+          s.faces[key] = new T.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.1 });
         }
-        return s.faces[face];
+        return s.faces[key];
+      }
+
+      /**
+       * Swap the plain tiles for the tile model (models/tile.glb) once it loads: its body is
+       * drawn for every tile in one batch per material; each tile keeps its own face.
+       */
+      function useModel(m) {
+        if (s.disposed || !s.art) return;
+        s.model = m;
+        s.top = m.top;
+        const matrix = new T.Matrix4();
+        m.body.forEach(function (part) {
+          const inst = new T.InstancedMesh(part.geometry, part.material, s.tiles.length);
+          s.tiles.forEach(function (t, i) {
+            matrix.makeScale(m.scale, m.scale, m.scale).setPosition(t.mesh.position.x, m.lift, t.mesh.position.z);
+            inst.setMatrixAt(i, matrix);
+          });
+          scene.add(inst);
+        });
+        s.tiles.forEach(function (t) {
+          t.mesh.visible = false;
+          t.faceMesh = new T.Mesh(m.face, artFace(t.face, true));
+          t.faceMesh.scale.setScalar(m.scale);
+          t.faceMesh.position.set(t.mesh.position.x, m.lift, t.mesh.position.z);
+          scene.add(t.faceMesh);
+        });
       }
 
       /** Where a figure stands on `space` (side by side when both are there). */
       function standing(v, slot, space) {
         const p = at(T, v.board.spaces[space]);
         if (v.players[1 - slot].space === space) p.x += slot ? 0.42 : -0.42;
-        p.y = 0.32;
+        p.y = s.top;
         return p;
       }
 
@@ -595,7 +683,7 @@
         s.figs.forEach(function (fig, slot) {
           const g = fig.f.group;
           const body = fig.f.body;
-          let y = 0.32;
+          let y = s.top;
           body.scale.set(1, 1, 1);
           body.rotation.set(0, 0, 0);
           if (!fig.to) {
@@ -606,7 +694,7 @@
           if (fig.from && k < 1) {
             if (fig.kind === 'hop') {
               g.position.lerpVectors(fig.from, fig.to, k);
-              y = 0.32 + Math.sin(k * Math.PI) * 0.9;
+              y = s.top + Math.sin(k * Math.PI) * 0.9;
               body.scale.set(1 - Math.sin(k * Math.PI) * 0.12, 1 + Math.sin(k * Math.PI) * 0.18, 1);
               fig.face = Math.atan2(fig.to.x - fig.from.x, fig.to.z - fig.from.z);
             } else if (fig.kind === 'fly') {
@@ -628,7 +716,7 @@
               });
             } else if (fig.kind === 'spin') {
               g.position.lerpVectors(fig.from, fig.to, k);
-              y = 0.32 + Math.sin(k * Math.PI) * 3.5;
+              y = s.top + Math.sin(k * Math.PI) * 3.5;
               body.rotation.y = k * Math.PI * 8;
             } else {
               // Warp: shrink away, reappear at the target.
@@ -647,7 +735,7 @@
             g.position.x += (want.x - g.position.x) * 0.15;
             g.position.z += (want.z - g.position.z) * 0.15;
             const turn = v.phase === 'board' && v.turn === slot;
-            y = 0.32 + (turn ? Math.abs(Math.sin(t * 3)) * 0.12 : Math.sin(t * 2 + slot) * 0.03);
+            y = s.top + (turn ? Math.abs(Math.sin(t * 3)) * 0.12 : Math.sin(t * 2 + slot) * 0.03);
           }
           if (fig.mood) {
             const m = (now - fig.moodAt) / MOOD_MS;
@@ -656,8 +744,8 @@
             else { body.scale.y *= 0.82; body.rotation.x = 0.35 * Math.sin(m * Math.PI); }
           }
           g.position.y = y;
-          const lift = Math.max(0, y - 0.32);
-          fig.blob.position.set(g.position.x, 0.335, g.position.z);
+          const lift = Math.max(0, y - s.top);
+          fig.blob.position.set(g.position.x, s.top + 0.015, g.position.z);
           fig.blob.scale.setScalar(Math.max(0.35, 1 - lift * 0.25) * body.scale.x);
           fig.blob.material.opacity = Math.max(0.12, 0.35 - lift * 0.06);
           g.rotation.y += ((fig.face || 0) - g.rotation.y) * 0.2;
@@ -709,7 +797,7 @@
         gl.camera.lookAt(s.look);
       });
 
-      return { update: update, dispose: function () { gl.dispose(); } };
+      return { update: update, dispose: function () { s.disposed = true; gl.dispose(); } };
     });
   }
 
