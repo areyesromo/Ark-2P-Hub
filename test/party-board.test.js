@@ -646,3 +646,19 @@ test('tornado: blown to a random space (not the start, not here), no effect ther
   assert.ok(p.space !== 0 && p.space !== 1, `landed on ${p.space}`);
   assert.equal(p.coins, 10);
 });
+
+// ---- the 3D board view ----
+
+test('board view: 3D only on Party Island for now (else 2D); 2D by default', () => {
+  const viewOf = (settings) => {
+    const ctx = fakeCtx();
+    ctx.settings = settings;
+    const g = new PartyBoard(ctx, () => 0.5, undefined, [claim]);
+    g.start();
+    return g.hostView().board.view;
+  };
+  assert.equal(viewOf({ map: 'island' }), '2d');
+  assert.equal(viewOf({ map: 'island', view: '3d' }), '3d');
+  assert.equal(viewOf({ map: 'pipes', view: '3d' }), '2d');
+  assert.equal(viewOf({ map: 'island', view: '2d' }), '2d');
+});

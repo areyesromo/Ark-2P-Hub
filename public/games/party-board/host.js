@@ -47,6 +47,10 @@
   let frame = null; // the minigame frame (ArkMini.hostFrame)
   let frameMounted = false;
   let receivedAt = 0;
+  // The 3D board (Board view: 3D): built while the board shows, dropped during
+  // minigames so the TV only draws one 3D scene at a time.
+  let board3d = null;
+  let board3dLoading = false;
   let ticker = null;
 
   function frameCfg() {
@@ -141,6 +145,7 @@
     if (key !== promptKey) { promptKey = key; cursors[0] = cursors[1] = 0; }
     root.setAttribute('data-phase', v.phase);
     if (v.phase === 'minigame') {
+      drop3d();
       if (frame && !frameMounted) { els.mini.innerHTML = ''; frame.mount(els.mini); frameMounted = true; }
       if (frame) frame.update(v.mini);
       return;
@@ -148,8 +153,33 @@
     if (frameMounted) { frame.unmount(); frameMounted = false; els.mini.innerHTML = ''; }
     els.left.innerHTML = hud(v, 0);
     els.right.innerHTML = hud(v, 1);
-    els.board.innerHTML = drawBoard(v);
+    if (v.board.view === '3d') show3d(v);
+    else {
+      drop3d();
+      els.board.innerHTML = drawBoard(v);
+    }
     els.centre.innerHTML = centre(v);
+  }
+
+  function show3d(v) {
+    if (board3d) return board3d.update(v);
+    if (board3dLoading) return;
+    board3dLoading = true;
+    els.board.innerHTML = '';
+    const into = els.board;
+    Promise.all([miniReady, Ark.loadScript('/games/party-board/board3d.js')]).then(function () {
+      return window.PB3D.create(into);
+    }).then(function (b) {
+      board3dLoading = false;
+      if (!root || els.board !== into || !view || view.board.view !== '3d' || view.phase === 'minigame') return b.dispose();
+      board3d = b;
+      board3d.update(view);
+    }, function () { board3dLoading = false; });
+  }
+
+  function drop3d() {
+    if (board3d) board3d.dispose();
+    board3d = null;
   }
 
   /** Count the open choice's time down between views (none arrive while waiting). */
@@ -224,6 +254,7 @@
     },
     unmount: function () {
       clearInterval(ticker);
+      drop3d();
       if (frameMounted) frame.unmount();
       frameMounted = false;
       root = els = view = null;

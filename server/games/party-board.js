@@ -40,6 +40,7 @@ export class PartyBoard {
     this.turns = settingOf(ctx, 'turns', 10);
     this.bonusOn = settingOf(ctx, 'bonus', 1) === 1;
     this.harsh = settingOf(ctx, 'harsh', 0) === 1;
+    this.view3d = settingOf(ctx, 'view', '2d') === '3d';
     this.epoch = 0;
     this.timers = [];
   }
@@ -113,6 +114,11 @@ export class PartyBoard {
 
   get starPrice() {
     return this.map.starPrice || STAR_PRICE;
+  }
+
+  /** '3d' or '2d': the 3D board is Party Island only, for now. */
+  boardView() {
+    return this.view3d && this.map === MAPS.island ? '3d' : '2d';
   }
 
   /** An item's price on this map (Volcano Peak's shop costs 50% more). */
@@ -448,7 +454,7 @@ export class PartyBoard {
       turns: this.turns,
       turn: this.turn,
       players: this.players,
-      board: { name: this.map.name, tier: this.map.tier, spaces: this.spaces, star: this.star, starPrice: this.starPrice },
+      board: { name: this.map.name, tier: this.map.tier, spaces: this.spaces, star: this.star, starPrice: this.starPrice, view: this.boardView() },
       prompt: p ? { slot: p.slot, kind: p.kind, options: p.options, msLeft: Math.max(0, p.deadline - this.ctx.now()), extra: p.extra || null } : null,
       dice: this.dice,
       items: Object.fromEntries(Object.keys(ITEMS).map((id) => [id, { ...ITEMS[id], price: this.price(id) }])),
