@@ -464,13 +464,13 @@ test('views during a minigame leave the board out (it updates up to 20 times a s
 });
 
 // ---- forks and warps ----
-// 0 → 1 (fork) → A: 2 3 4 5 | B: 6 7(warp → 0) 8 9 → 10 → 11 → 0
+// 0 → 1 (fork) → A: 2 3 4 5 | B: 6 7(warp) 8 9 → 10 → 11 → 0
 const FORKY = {
   name: 'Forky', tier: 'easy', starPrice: 20, shopMarkup: 1,
   spaces: [
     { type: 'start', next: [1] }, { type: 'blue', next: [2, 6] },
     { type: 'blue', next: [3], starCandidate: true }, { type: 'shop', next: [4] }, { type: 'event', next: [5] }, { type: 'blue', next: [10], starCandidate: true },
-    { type: 'red', next: [7] }, { type: 'warp', warp: 0, next: [8] }, { type: 'bonus', next: [9] }, { type: 'event', next: [10] },
+    { type: 'red', next: [7] }, { type: 'warp', next: [8] }, { type: 'bonus', next: [9] }, { type: 'event', next: [10] },
     { type: 'blue', next: [11], starCandidate: true }, { type: 'blue', next: [0], starCandidate: true },
   ].map((sp, i) => ({ x: 0.05 + i * 0.07, y: 0.5, ...sp })),
 };
@@ -503,14 +503,34 @@ test('fork: the walk stops and asks, with a preview of each path', () => {
   assert.deepEqual(v.prompt.extra.previews, [['star', 'shop', 'event', 'blue'], ['red', 'warp', 'bonus', 'event']]);
 });
 
-test('fork: path 2 then a warp: landing on it sends you to its target, no effect there', () => {
+test('fork: path 2 then a warp: it sends you to a random space, no effect there', () => {
   const f = forky();
   f.roll(3);
   f.choose(0, '1');
+  // Where the warp sends you: the rng picks among every space but the start, this one and other warps.
+  f.q.push(0.99);
   const v = f.settle();
-  assert.equal(f.p(0).space, 0);
-  assert.equal(f.p(0).coins, 10, 'no start-space coins at the warp target');
+  assert.equal(f.p(0).space, 11);
+  assert.equal(f.p(0).coins, 10, 'no blue-space coins where you land');
   assert.equal(v.prompt.slot, 1, 'the turn ended');
+});
+
+test('warp: the destination is random, never the start, the warp itself or another warp space', () => {
+  const seen = new Set();
+  for (let seed = 1; seed <= 200; seed++) {
+    const ctx = fakeCtx();
+    ctx.settings = { map: 'volcano' };
+    const g = new PartyBoard(ctx, seeded(seed), undefined, [claim]);
+    g.start();
+    const spaces = g.hostView().board.spaces;
+    const from = spaces.findIndex((s) => s.type === 'warp');
+    g.players[0].space = from;
+    g.land();
+    const to = g.players[0].space;
+    assert.ok(to !== 0 && to !== from && spaces[to].type !== 'warp', `seed ${seed}: warped to ${to}`);
+    seen.add(to);
+  }
+  assert.ok(seen.size >= 15, `only ${seen.size} destinations in 200 warps`);
 });
 
 test('fork: an idle player takes the first path after 15 s', () => {
@@ -590,7 +610,7 @@ function seeded(seed) {
 }
 const HAZARDS = ['thunder', 'skull', 'tornado'];
 
-test('harsh off: no hazards; harsh on: 15% of blue/red, never on the start, stars, forks or warp targets', () => {
+test('harsh off: no hazards; harsh on: 15% of blue/red, never on the start, stars or forks', () => {
   for (const [id, map] of Object.entries(MAPS)) {
     const off = fakeCtx();
     off.settings = { map: id, harsh: 0 };
@@ -599,7 +619,6 @@ test('harsh off: no hazards; harsh on: 15% of blue/red, never on the start, star
     assert.equal(g0.hostView().board.spaces.filter((s) => HAZARDS.includes(s.type)).length, 0, id);
     const plain = map.spaces.filter((s) => s.type === 'blue' || s.type === 'red').length;
     const want = Math.max(2, Math.round(plain * 0.15));
-    const targets = new Set(map.spaces.filter((s) => s.type === 'warp').map((s) => s.warp));
     for (let seed = 1; seed <= 100; seed++) {
       const ctx = fakeCtx();
       ctx.settings = { map: id, harsh: 1 };
@@ -609,7 +628,7 @@ test('harsh off: no hazards; harsh on: 15% of blue/red, never on the start, star
       const hz = spaces.map((s, i) => [s, i]).filter(([s]) => HAZARDS.includes(s.type));
       assert.equal(hz.length, want, `${id} seed ${seed}`);
       for (const [s, i] of hz) {
-        assert.ok(i !== 0 && !s.starCandidate && s.next.length === 1 && !targets.has(i), `${id} seed ${seed}: hazard on ${i}`);
+        assert.ok(i !== 0 && !s.starCandidate && s.next.length === 1, `${id} seed ${seed}: hazard on ${i}`);
         assert.ok(['blue', 'red'].includes(map.spaces[i].type));
       }
     }

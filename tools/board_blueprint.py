@@ -58,14 +58,6 @@ for mid, m in L['maps'].items():
                    (mx + 9 * math.cos(ang + 2.5), my + 9 * math.sin(ang + 2.5)),
                    (mx + 9 * math.cos(ang - 2.5), my + 9 * math.sin(ang - 2.5))]
             d.polygon(pts, fill='#facc15' if s.get('fork') else '#3f2d14')
-    # warps: dashed curves
-    for s in sp:
-        if s['type'] == 'warp':
-            t = sp[s['warp']]
-            a, b = P(s['x'], s['z']), P(t['x'], t['z'])
-            mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2 - 80
-            pts = [((1 - u) ** 2 * a[0] + 2 * (1 - u) * u * mx + u * u * b[0], (1 - u) ** 2 * a[1] + 2 * (1 - u) * u * my + u * u * b[1]) for u in [k / 40 for k in range(41)]]
-            for k in range(0, 40, 2): d.line([pts[k], pts[k + 1]], fill='#0891b2', width=3)
     # tiles
     rt = L['tile']['diameter'] / 2 * PX
     for s in sp:
@@ -76,7 +68,7 @@ for mid, m in L['maps'].items():
     d.rectangle([0, 0, W, 66], fill='#1f2937')
     d.text((16, 10), f"{m['name'].split(' ', 1)[1]} ({mid}, {m['tier']}): top-down plan, 1 square = 1 world unit", font=f_title, fill='white')
     d.text((16, 42), "+X right, +Z toward the camera. Red haze = keep out (tiles r 1.0, paths 0.6). Brown ellipse = current ground edge. "
-                     "Gold ring = star spot, yellow arrow = fork, dashed cyan = warp.", font=f_small, fill='#d1d5db')
+                     "Gold ring = star spot, yellow arrow = fork, cyan = warp (sends you to a random space).", font=f_small, fill='#d1d5db')
     out = os.path.join(DOCS, f'blueprint-{mid}.png')
     img.save(out, optimize=True)
     print(out)

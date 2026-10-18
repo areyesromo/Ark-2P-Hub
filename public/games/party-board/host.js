@@ -98,7 +98,7 @@
   }
 
   /**
-   * The links between spaces and the warps' dashed jumps, under the spaces;
+   * The links between spaces, under them (a warp's destination is random: no line for it);
    * an arrow halfway along every link shows which way it runs (yellow at forks).
    * Arrows are HTML, turned by the board's real width and height.
    */
@@ -115,12 +115,6 @@
         const deg = Math.atan2((t.y - s.y) * H, (t.x - s.x) * W) * 180 / Math.PI;
         arrows += '<i class="pb-arrow' + (fork ? ' fork' : '') + '" style="left:' + (s.x + t.x) * 50 + '%;top:' + (s.y + t.y) * 50 + '%;transform:translate(-50%,-50%) rotate(' + deg.toFixed(1) + 'deg)"></i>';
       });
-      if (s.type === 'warp') {
-        const w = spaces[s.warp];
-        const mx = (s.x + w.x) * 50;
-        const my = Math.min(s.y, w.y) * 100 - 12;
-        l += '<path class="warp" d="M' + s.x * 100 + ' ' + s.y * 100 + ' Q' + mx + ' ' + my + ' ' + w.x * 100 + ' ' + w.y * 100 + '"/>';
-      }
     });
     return '<svg class="pb-links" viewBox="0 0 100 100" preserveAspectRatio="none">' + l + '</svg>' + arrows;
   }

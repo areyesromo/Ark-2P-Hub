@@ -89,12 +89,11 @@ export class PartyBoard {
     return this.board;
   }
 
-  /** Harsh mode: turn ~15% of the plain spaces into hazards (never the start, stars, forks or warp exits). */
+  /** Harsh mode: turn ~15% of the plain spaces into hazards (never the start, stars or forks). */
   placeHazards() {
-    const exits = new Set(this.board.filter((sp) => sp.type === 'warp').map((sp) => sp.warp));
     const spots = this.board.map((sp, i) => i).filter((i) => {
       const sp = this.board[i];
-      return i !== 0 && (sp.type === 'blue' || sp.type === 'red') && !sp.starCandidate && sp.next.length === 1 && !exits.has(i);
+      return i !== 0 && (sp.type === 'blue' || sp.type === 'red') && !sp.starCandidate && sp.next.length === 1;
     });
     const plain = this.board.filter((sp) => sp.type === 'blue' || sp.type === 'red').length;
     const n = Math.min(spots.length, Math.max(HARSH.min, Math.round(plain * HARSH.share)));
@@ -339,7 +338,9 @@ export class PartyBoard {
       return done();
     }
     if (type === 'warp') {
-      this.players[slot].space = this.spaces[space].warp;
+      // Anywhere on the board but the start, here or another warp.
+      const spots = this.spaces.map((sp, i) => i).filter((i) => i !== 0 && i !== space && this.spaces[i].type !== 'warp');
+      this.players[slot].space = spots[Math.floor(this.rng() * spots.length)];
       this.players[slot].warps++;
       this.say('🌀 Warp!');
       return done();
