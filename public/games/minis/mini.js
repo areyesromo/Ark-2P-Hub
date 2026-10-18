@@ -387,7 +387,9 @@
     return three().then(function (THREE) {
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
-      renderer.shadowMap.enabled = true;
+      // Shadows are off (lighter on the Pi); scene3d(el, { shadows: true }) turns them on,
+      // e.g. for HD models later. Meshes keep their castShadow flags for that.
+      renderer.shadowMap.enabled = !!opts.shadows;
       el.appendChild(renderer.domElement);
       renderer.domElement.className = 'mi-3d';
       const scene = new THREE.Scene();
@@ -395,7 +397,7 @@
       scene.add(new THREE.HemisphereLight(0xdbeafe, 0x1e1b16, 1.1));
       const sun = new THREE.DirectionalLight(0xffffff, 2);
       sun.position.set(4, 10, 6);
-      sun.castShadow = true;
+      sun.castShadow = !!opts.shadows;
       sun.shadow.mapSize.set(1024, 1024);
       const sc = sun.shadow.camera;
       sc.left = sc.bottom = -12;

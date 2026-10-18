@@ -469,8 +469,11 @@
         s.starTarget = s.starAt.clone();
         ['#22d3ee', '#f472b6'].forEach(function (css, slot) {
           const f = figure(T, slot ? 0xf472b6 : 0x22d3ee, v.names[slot], css);
-          scene.add(f.group);
-          s.figs.push({ f: f, space: v.players[slot].space, from: null, to: null, t0: 0, kind: null, mood: null, moodAt: 0, face: 0 });
+          // A soft round shadow under the figure (real shadows are off): shrinks as it jumps.
+          const blob = new T.Mesh(new T.CircleGeometry(0.42, 24), new T.MeshBasicMaterial({ color: 0x000000, transparent: true, opacity: 0.35, depthWrite: false }));
+          blob.rotation.x = -Math.PI / 2;
+          scene.add(f.group, blob);
+          s.figs.push({ f: f, blob: blob, space: v.players[slot].space, from: null, to: null, t0: 0, kind: null, mood: null, moodAt: 0, face: 0 });
         });
         s.built = true;
       }
@@ -594,6 +597,10 @@
             else { body.scale.y *= 0.82; body.rotation.x = 0.35 * Math.sin(m * Math.PI); }
           }
           g.position.y = y;
+          const lift = Math.max(0, y - 0.32);
+          fig.blob.position.set(g.position.x, 0.335, g.position.z);
+          fig.blob.scale.setScalar(Math.max(0.35, 1 - lift * 0.25) * body.scale.x);
+          fig.blob.material.opacity = Math.max(0.12, 0.35 - lift * 0.06);
           g.rotation.y += ((fig.face || 0) - g.rotation.y) * 0.2;
         });
         // Warp orbs travel their arcs; the map's own motion (ghosts, smoke, lava).
