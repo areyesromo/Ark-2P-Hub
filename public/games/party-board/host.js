@@ -51,6 +51,7 @@
   // minigames so the TV only draws one 3D scene at a time.
   let board3d = null;
   let board3dLoading = false;
+  let board3dMap = ''; // a rematch may pick another map: then the scene is rebuilt
   let ticker = null;
 
   function frameCfg() {
@@ -162,6 +163,8 @@
   }
 
   function show3d(v) {
+    const map = v.board.theme + ':' + v.board.name + ':' + v.board.spaces.length;
+    if (board3d && map !== board3dMap) drop3d();
     if (board3d) return board3d.update(v);
     if (board3dLoading) return;
     board3dLoading = true;
@@ -173,6 +176,7 @@
       board3dLoading = false;
       if (!root || els.board !== into || !view || view.board.view !== '3d' || view.phase === 'minigame') return b.dispose();
       board3d = b;
+      board3dMap = view.board.theme + ':' + view.board.name + ':' + view.board.spaces.length;
       board3d.update(view);
     }, function () { board3dLoading = false; });
   }
