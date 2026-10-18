@@ -82,7 +82,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Dice Party | Full game (13 rounds) or quick (6) |
 | Micro Mayhem | 3 or 5 lives; normal pace or fast (starts at speed 3) |
 | Party Minigames | First to 3, 4 or 5 wins; minigames: a mix, 2D only or 3D only |
-| Party Board | Map (random or one of five), board view 2D or 🧊 3D (every map has its own scenery: a palm island, sandy lagoons, a metal pipe yard, a foggy graveyard with ghosts, a lava field under a smoking peak; toy figures hop the paths, warps glow as arcs and figures fly along them, a tumbling die, a camera that follows the turn), 10, 15 or 20 turns; minigames: a mix, 2D only or 3D only; bonus stars on or off; Harsh mode on or off |
+| Party Board | Map (random or one of five), tile art ⚙️ steampunk (default) or 🎨 classic colours, board view 2D or 🧊 3D (every map has its own scenery: a palm island, sandy lagoons, a metal pipe yard, a foggy graveyard with ghosts, a lava field under a smoking peak; toy figures hop the paths, warps glow as arcs and figures fly along them, a tumbling die, a camera that follows the turn), 10, 15 or 20 turns; minigames: a mix, 2D only or 3D only; bonus stars on or off; Harsh mode on or off |
 | Word Race | Grid size, time per round and match length |
 | Mini Golf | 3, 6, 9, 12 or 15 holes |
 | Bomb Duel | Also how many crates |

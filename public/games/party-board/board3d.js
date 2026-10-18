@@ -421,11 +421,13 @@
       const scene = gl.scene;
       const s = {
         built: false, tiles: [], star: null, starAt: null, starTarget: null, starFocusUntil: 0,
-        figs: [], warps: [], warpBy: {}, sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
+        art: false, faces: {}, steel: null, figs: [], warps: [], warpBy: {}, sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
       function build(v) {
         const look = THEMES[v.board.theme] || THEMES.island;
+        s.art = v.board.tiles === 'art';
+        s.steel = new T.MeshStandardMaterial({ color: 0x8a94a6, roughness: 0.35, metalness: 0.75 });
         scene.background = new T.Color(look.bg);
         if (look.fog) scene.fog = new T.Fog(look.fog[0], look.fog[1], look.fog[2]);
         if (look.light) {
@@ -441,17 +443,13 @@
         const path = mat(T, look.link.color, look.link.pipe ? { roughness: 0.4, metalness: 0.3 } : { emissive: look.link.emissive || 0, roughness: 0.9 });
         v.board.spaces.forEach(function (sp, i) {
           const p = at(T, sp);
-          const tile = new T.Mesh(new T.CylinderGeometry(0.62, 0.68, 0.32, 28), new T.MeshStandardMaterial({ color: COLORS[sp.type] || 0x64748b, roughness: 0.5 }));
+          const tile = new T.Mesh(new T.CylinderGeometry(0.62, 0.68, 0.32, 28));
           tile.position.set(p.x, 0.16, p.z);
           tile.castShadow = tile.receiveShadow = true;
           scene.add(tile);
-          let icon = null;
-          if (ICON[sp.type]) {
-            icon = emojiSprite(T, ICON[sp.type], 0.8);
-            icon.position.set(p.x, 0.85, p.z);
-            scene.add(icon);
-          }
-          s.tiles.push({ mesh: tile, icon: icon, type: sp.type });
+          const t = { mesh: tile, icon: null, face: null };
+          s.tiles.push(t);
+          dress(t, sp.type, i === v.board.star);
           sp.next.forEach(function (n) {
             scene.add(link(T, look.link, p, at(T, v.board.spaces[n]), path));
           });
@@ -487,6 +485,42 @@
         s.built = true;
       }
 
+      /**
+       * A tile's look for its type: with tile art, the steampunk face on top
+       * (the star's face under the star) and a steel rim; else a colour and an icon.
+       */
+      function dress(t, type, star) {
+        const face = s.art ? (star ? 'star' : type) : type;
+        if (t.face === face) return;
+        t.face = face;
+        if (t.icon) { scene.remove(t.icon); t.icon = null; }
+        if (s.art) {
+          t.mesh.material = [s.steel, artFace(face), s.steel];
+          return;
+        }
+        t.mesh.material = new T.MeshStandardMaterial({ color: COLORS[type] || 0x64748b, roughness: 0.5 });
+        if (ICON[type]) {
+          t.icon = emojiSprite(T, ICON[type], 0.8);
+          t.icon.position.set(t.mesh.position.x, 0.85, t.mesh.position.z);
+          scene.add(t.icon);
+        }
+      }
+
+      /** One shared material per face image (loaded once). */
+      function artFace(face) {
+        if (!s.faces[face]) {
+          const tex = new T.TextureLoader().load('/games/party-board/tiles/' + face + '.webp');
+          tex.colorSpace = T.SRGBColorSpace;
+          tex.anisotropy = 4;
+          // A cylinder's cap maps the image a quarter turn off: turn it upright (as seen from the camera).
+          tex.center.set(0.5, 0.5);
+          tex.rotation = Math.PI / 2;
+          // A little self-light so the art reads on dark maps too.
+          s.faces[face] = new T.MeshStandardMaterial({ map: tex, emissiveMap: tex, emissive: 0xffffff, emissiveIntensity: 0.35, roughness: 0.55, metalness: 0.1 });
+        }
+        return s.faces[face];
+      }
+
       /** Where a figure stands on `space` (side by side when both are there). */
       function standing(v, slot, space) {
         const p = at(T, v.board.spaces[space]);
@@ -512,19 +546,9 @@
           s.starTarget = starTo;
           s.starFocusUntil = now + 1600;
         }
-        // Hazards (Harsh mode) may differ per match: recolour tiles.
+        // Hazards (Harsh mode) differ per match, and the star moves: redress tiles.
         v.board.spaces.forEach(function (sp, i) {
-          const t = s.tiles[i];
-          if (t && t.type !== sp.type) {
-            t.type = sp.type;
-            t.mesh.material.color.setHex(COLORS[sp.type] || 0x64748b);
-            if (t.icon) { scene.remove(t.icon); t.icon = null; }
-            if (ICON[sp.type]) {
-              t.icon = emojiSprite(T, ICON[sp.type], 0.8);
-              t.icon.position.set(t.mesh.position.x, 0.85, t.mesh.position.z);
-              scene.add(t.icon);
-            }
-          }
+          if (s.tiles[i]) dress(s.tiles[i], sp.type, i === v.board.star);
         });
         v.players.forEach(function (p, slot) {
           const fig = s.figs[slot];
