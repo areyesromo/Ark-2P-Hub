@@ -386,6 +386,8 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
   any model before adding it with `tools/slim_glb.py` (drop unseen parts with `--drop`, shrink
   textures with `--tex`; see the top of the script). Models load when the board starts; until then,
   or if one is missing, the plain shapes stay.
+- Building 3D board environments (trees, buildings, backdrops) for each map: see the art brief,
+  blueprints and renders in [`docs/party-board-art/`](docs/party-board-art/README.md).
 
 ## Roadmap ideas
 
