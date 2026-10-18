@@ -391,6 +391,24 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 ## Roadmap ideas
 
+**The plan: 2D on the Pi, 3D on Steam**
+
+The hub keeps running on a Raspberry Pi (Docker + the browser) with the **2D** Party Board: light,
+no 3D engine needed. The **3D** board becomes the desktop experience, built for a Steam Deck as the
+minimum and a gaming PC as typical, with the graphics turned all the way up:
+
+1. **Desktop app**: Electron (Node + Chromium) wraps the hub: it starts the server inside the app
+   and opens the TV screen full-screen; phones still join with the QR code. A Windows installer and
+   a Linux AppImage (Steam Deck: add it to Steam as a non-Steam game; the Deck's controls are a
+   gamepad, so the Deck can be P1). Big 3D assets ship inside the app, not in the Pi's Docker image.
+2. **High graphics** in the app: real shadows, glow on emissive parts (lava, furnaces, pumpkins),
+   fog and mist, full-resolution textures, the full-detail characters; plus each map's environment
+   model (`env-<map>.glb`, with `space_NN` anchors, `path_` / `pedestal` nodes and animated parts;
+   see [`docs/party-board-art/`](docs/party-board-art/README.md)).
+3. **Steam**: Steamworks (achievements, overlay), Steam Deck verification (readable at 1280×800, full
+   controller support), the store page. Optional later: online rooms (a relay so friends can join
+   from anywhere, as Jackbox does) and Remote Play Together.
+
 **Wishlist: 3D and more co-op**
 
 The Pi 4's GPU handles WebGL, so these would use three.js like Marble Maze
@@ -402,7 +420,7 @@ joystick, D-pad or tilt pads:
 - **Kitchen Rush** (co-op): an Overcooked-style kitchen; chop, cook and serve orders before they expire.
 - **Trivia Quest** (co-op): beat a monster together with the quiz questions.
 - **More minigames**.
-- **HD 3D models and textures** for the 3D board and minigames: detailed figures (arms, faces, a victory pose), richer scenery, with shadows turned back on (`scene3d(el, { shadows: true })`).
+- **HD 3D models and textures** for the 3D board and minigames (part of the desktop plan above): richer scenery and the full-detail characters, with shadows turned back on (`scene3d(el, { shadows: true })`).
 - **Crazy Eights**: a secret hand of cards on your phone.
 
 **More content**
