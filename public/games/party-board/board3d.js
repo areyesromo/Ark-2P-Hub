@@ -10,7 +10,7 @@
   const DIE_MS = 650;
   const POP_MS = 1200;
   const FIGURES = ['figure-engineer', 'figure-mechanic']; // the miniatures players pick from (models/<name>.glb)
-  const PEDESTAL = { x: 0, z: -8.5, top: 1.95 }; // the winner's spot at the end, behind the board // a coin popping up (gained) or falling away (lost)
+  const PEDESTAL = { x: 0, z: -8, top: 1.6, scale: 1.6 }; // the winner stands on it, bigger // the winner's spot at the end, behind the board // a coin popping up (gained) or falling away (lost)
   const COLORS = { start: 0xf8fafc, blue: 0x2563eb, red: 0xdc2626, event: 0x16a34a, bonus: 0x9333ea, shop: 0xf59e0b, warp: 0x0891b2, thunder: 0xa16207, skull: 0x3f0d12, tornado: 0x6b21a8 };
   const ICON = { start: '🏁', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️' };
 
@@ -731,7 +731,7 @@
         const g = new T.Group();
         const brass = mat(T, 0xb08d57, { roughness: 0.4, metalness: 0.45 });
         const gold = mat(T, 0xe8b931, { roughness: 0.3, metalness: 0.45, emissive: 0x4a3200 });
-        [[1.6, 1.75, 0.5, 0.25, brass], [1.15, 1.3, 1.2, 1.1, brass], [1.5, 1.4, 0.25, 1.82, gold]].forEach(function (c) {
+        [[1.15, 1.3, 0.4, 0.2, brass], [0.8, 0.9, 1.0, 0.9, brass], [1.1, 1.0, 0.2, 1.5, gold]].forEach(function (c) {
           const m = new T.Mesh(new T.CylinderGeometry(c[0], c[1], c[2], 40), c[4]);
           m.position.y = c[3];
           g.add(m);
@@ -753,7 +753,7 @@
       /** Where a winner stands on the pedestal (side by side on a draw). */
       function onPedestal(slot) {
         const two = s.victory.slots.length > 1;
-        return new T.Vector3(PEDESTAL.x + (two ? (slot ? 0.6 : -0.6) : 0), PEDESTAL.top, PEDESTAL.z);
+        return new T.Vector3(PEDESTAL.x + (two ? (slot ? 0.55 : -0.55) : 0), PEDESTAL.top, PEDESTAL.z);
       }
 
       /** Coins pop up from a figure when it gains (fall away when it loses), one per 3 or so. */
@@ -926,6 +926,8 @@
             const turn = v.phase === 'board' && v.turn === slot;
             y = winner ? PEDESTAL.top + Math.abs(Math.sin(t * 2.5)) * 0.25 : s.top + (turn ? Math.abs(Math.sin(t * 3)) * 0.12 : Math.sin(t * 2 + slot) * 0.03);
             if (winner) fig.face = t * 1.4; // a slow victory spin
+            const big = winner ? PEDESTAL.scale / (s.victory.slots.length > 1 ? 1.3 : 1) : 1;
+            g.scale.setScalar(g.scale.x + (big - g.scale.x) * 0.15);
           }
           if (fig.mood) {
             const m = (now - fig.moodAt) / MOOD_MS;
@@ -958,6 +960,7 @@
         s.starAt.lerp(s.starTarget, 0.05);
         s.star.position.set(s.starAt.x, s.top + 3 + Math.sin(t * 2) * 0.15, s.starAt.z); // above a figure on its spot
         s.star.rotation.y = t * 1.6;
+        s.star.visible = !s.victory; // the end belongs to the winner
         // The die: tumbles in, then lands showing the roll.
         s.die.forEach(function (d) {
           const roller = s.figs[s.dieTurn].f.group.position;
@@ -1004,8 +1007,8 @@
           offset = new T.Vector3(0, 7, 7.5);
         } else if (s.victory) {
           // The pedestal on the right of the screen, beside the recap card (on the left).
-          target = new T.Vector3(PEDESTAL.x - 2.6, PEDESTAL.top + 0.6, PEDESTAL.z);
-          offset = new T.Vector3(0, 3.2, 8.5);
+          target = new T.Vector3(PEDESTAL.x - 2.2, PEDESTAL.top + 1.2, PEDESTAL.z);
+          offset = new T.Vector3(0, 2.2, 7.2);
         } else if (v.phase === 'board') {
           target = s.figs[v.turn].f.group.position.clone();
           target.y = 0.5;
