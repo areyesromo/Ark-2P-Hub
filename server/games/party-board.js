@@ -116,9 +116,14 @@ export class PartyBoard {
     return this.map.starPrice || STAR_PRICE;
   }
 
-  /** '3d' or '2d': the 3D board is Party Island only, for now. */
+  /** '3d' or '2d' (the Board view setting). */
   boardView() {
-    return this.view3d && this.map === MAPS.island ? '3d' : '2d';
+    return this.view3d ? '3d' : '2d';
+  }
+
+  /** The map's id, for the 3D scenery (a test map counts as the island). */
+  get theme() {
+    return Object.keys(MAPS).find((id) => MAPS[id] === this.map) || 'island';
   }
 
   /** An item's price on this map (Volcano Peak's shop costs 50% more). */
@@ -454,7 +459,7 @@ export class PartyBoard {
       turns: this.turns,
       turn: this.turn,
       players: this.players,
-      board: { name: this.map.name, tier: this.map.tier, spaces: this.spaces, star: this.star, starPrice: this.starPrice, view: this.boardView() },
+      board: { name: this.map.name, tier: this.map.tier, spaces: this.spaces, star: this.star, starPrice: this.starPrice, view: this.boardView(), theme: this.theme },
       prompt: p ? { slot: p.slot, kind: p.kind, options: p.options, msLeft: Math.max(0, p.deadline - this.ctx.now()), extra: p.extra || null } : null,
       dice: this.dice,
       items: Object.fromEntries(Object.keys(ITEMS).map((id) => [id, { ...ITEMS[id], price: this.price(id) }])),

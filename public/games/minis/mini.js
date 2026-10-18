@@ -427,6 +427,7 @@
         dispose: function () {
           cancelAnimationFrame(raf);
           renderer.dispose();
+          renderer.forceContextLoss(); // free the GL context now, not at garbage collection
           if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);
         },
       };

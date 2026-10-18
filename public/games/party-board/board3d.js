@@ -1,6 +1,6 @@
-// Party Board in 3D (Board view: 3D, Party Island): a sandy island in the sea,
-// raised tiles joined by planks, a spinning ⭐, and two toy figures that hop
-// space by space while the camera follows whoever's turn it is.
+// Party Board in 3D (Board view: 3D): raised tiles joined by paths, a spinning ⭐,
+// and two toy figures that hop space by space while the camera follows whoever's
+// turn it is. Each map has its own scenery (THEMES, picked by view.board.theme).
 // PB3D.create(el) -> Promise<{ update(view), dispose() }>; uses ArkMini.scene3d.
 (function () {
   const HOP_MS = 230;
@@ -134,41 +134,310 @@
     return s;
   }
 
+
+  function mat(T, color, extra) {
+    return new T.MeshStandardMaterial(Object.assign({ color: color, roughness: 0.85 }, extra || {}));
+  }
+
+  function shadowed(m) {
+    m.castShadow = m.receiveShadow = true;
+    return m;
+  }
+
+  /** A flat, rounded ground under the whole board (an ellipse: the corners fit). */
+  function ground(T, color, opts) {
+    opts = opts || {};
+    const g = new T.Mesh(new T.CylinderGeometry(14.5, 15.5, 0.9, 64), mat(T, color, opts.mat));
+    g.scale.z = 0.66;
+    g.position.y = -0.45;
+    g.receiveShadow = true;
+    return g;
+  }
+
+  function water(T, color, opts) {
+    const m = new T.Mesh(new T.PlaneGeometry(160, 160), new T.MeshStandardMaterial(Object.assign({ color: color, roughness: 0.35, metalness: 0.1 }, opts || {})));
+    m.rotation.x = -Math.PI / 2;
+    m.position.y = -0.55;
+    return m;
+  }
+
+  /** Spots on the ground clear of every tile and path, for props (a fixed order per map). */
+  function freeSpots(T, spaces, want, clear) {
+    const pts = spaces.map(function (sp) { return at(T, sp); });
+    const segs = [];
+    spaces.forEach(function (sp, i) {
+      sp.next.forEach(function (n) { segs.push([pts[i], pts[n]]); });
+    });
+    function segDist(p, a, b) {
+      const dx = b.x - a.x;
+      const dz = b.z - a.z;
+      const l = dx * dx + dz * dz || 1;
+      const k = Math.max(0, Math.min(1, ((p.x - a.x) * dx + (p.z - a.z) * dz) / l));
+      return Math.hypot(p.x - (a.x + dx * k), p.z - (a.z + dz * k));
+    }
+    let seed = spaces.length * 7919 + 17;
+    function rnd() { seed = (seed * 16807) % 2147483647; return seed / 2147483647; }
+    const out = [];
+    for (let tries = 0; tries < 900 && out.length < want; tries++) {
+      // Inside the ground's ellipse, with a margin.
+      const a = rnd() * Math.PI * 2;
+      const r = Math.sqrt(rnd()) * 0.9;
+      const p = new T.Vector3(Math.cos(a) * r * 14, 0, Math.sin(a) * r * 9.2);
+      const ok = pts.every(function (q) { return Math.hypot(p.x - q.x, p.z - q.z) > clear + 0.7; }) &&
+        segs.every(function (sg) { return segDist(p, sg[0], sg[1]) > clear; }) &&
+        out.every(function (q) { return Math.hypot(p.x - q.x, p.z - q.z) > clear * 1.6; });
+      if (ok) out.push(p);
+    }
+    return out;
+  }
+
+  function rock(T, color, size) {
+    const m = shadowed(new T.Mesh(new T.DodecahedronGeometry(size, 0), mat(T, color, { flatShading: true })));
+    m.position.y = size * 0.4;
+    m.rotation.set(size * 3, size * 5, 0);
+    return m;
+  }
+
+  function pond(T, r) {
+    const g = new T.Group();
+    const rim = new T.Mesh(new T.CylinderGeometry(r + 0.18, r + 0.25, 0.1, 32), mat(T, 0xd6c08a));
+    rim.position.y = 0.02;
+    const w = new T.Mesh(new T.CylinderGeometry(r, r, 0.12, 32), mat(T, 0x22d3ee, { roughness: 0.2, metalness: 0.2, emissive: 0x0e4f5c }));
+    w.position.y = 0.04;
+    g.add(rim, w);
+    return g;
+  }
+
+  function greenPipe(T, h) {
+    const g = new T.Group();
+    const green = mat(T, 0x16a34a, { roughness: 0.4, metalness: 0.2 });
+    const body = shadowed(new T.Mesh(new T.CylinderGeometry(0.42, 0.42, h, 20), green));
+    body.position.y = h / 2;
+    const rim = shadowed(new T.Mesh(new T.CylinderGeometry(0.56, 0.56, 0.32, 20), green));
+    rim.position.y = h;
+    const hole = new T.Mesh(new T.CircleGeometry(0.4, 20), mat(T, 0x052e16));
+    hole.rotation.x = -Math.PI / 2;
+    hole.position.y = h + 0.17;
+    g.add(body, rim, hole);
+    return g;
+  }
+
+  function crate(T) {
+    const m = shadowed(new T.Mesh(new T.BoxGeometry(0.8, 0.8, 0.8), mat(T, 0xa16207)));
+    m.position.y = 0.4;
+    return m;
+  }
+
+  function deadTree(T) {
+    const g = new T.Group();
+    const bark = mat(T, 0x3b2f2f);
+    const trunk = shadowed(new T.Mesh(new T.CylinderGeometry(0.1, 0.2, 2, 6), bark));
+    trunk.position.y = 1;
+    g.add(trunk);
+    [[0.6, 1.4, 0.9], [-0.7, 1.1, -0.8], [0.2, 1.8, 0.5]].forEach(function (b) {
+      const br = shadowed(new T.Mesh(new T.CylinderGeometry(0.03, 0.07, 1, 5), bark));
+      br.position.set(b[0] * 0.4, b[1], 0);
+      br.rotation.z = -b[2];
+      g.add(br);
+    });
+    return g;
+  }
+
+  function tombstone(T) {
+    const g = new T.Group();
+    const stone = mat(T, 0x78716c);
+    const slab = shadowed(new T.Mesh(new T.BoxGeometry(0.6, 0.6, 0.18), stone));
+    slab.position.y = 0.3;
+    const top = shadowed(new T.Mesh(new T.CylinderGeometry(0.3, 0.3, 0.18, 16, 1, false, 0, Math.PI), stone));
+    top.rotation.set(Math.PI / 2, Math.PI / 2, 0);
+    top.position.y = 0.6;
+    g.add(slab, top);
+    return g;
+  }
+
+  function lantern(T) {
+    const g = new T.Group();
+    const post = new T.Mesh(new T.CylinderGeometry(0.05, 0.06, 1.3, 6), mat(T, 0x1c1917));
+    post.position.y = 0.65;
+    const glow = new T.Mesh(new T.SphereGeometry(0.17, 12, 10), new T.MeshStandardMaterial({ color: 0xfdba74, emissive: 0xf97316, emissiveIntensity: 2 }));
+    glow.position.y = 1.4;
+    g.add(post, glow);
+    return g;
+  }
+
+  /** The look of each map: background, lights, ground, path style, props and a little motion. */
+  const THEMES = {
+    island: {
+      bg: 0x0b2a4a, link: { color: 0x8d6e4a }, warp: 0x22d3ee,
+      scenery: function (T, scene) {
+        scene.add(water(T, 0x1d6fb8), ground(T, 0xe9d8a6, { mat: { roughness: 0.95 } }));
+        const lawn = new T.Mesh(new T.CylinderGeometry(7.6, 7.6, 0.08, 48), mat(T, 0x4d9a3a, { roughness: 1 }));
+        lawn.scale.z = 0.5;
+        lawn.position.y = 0.01;
+        lawn.receiveShadow = true;
+        scene.add(lawn);
+        // A few small palms in the middle, kept low so they don't hide the path.
+        [[-3.2, -0.4, 0.1], [0.4, 0.5, -0.08], [3.4, -0.6, 0.12]].forEach(function (p) {
+          const tree = palm(T, p[0], p[1], p[2]);
+          tree.scale.setScalar(0.6);
+          scene.add(tree);
+        });
+      },
+    },
+    lagoons: {
+      bg: 0x0c4a6e, link: { color: 0xc8a165 }, warp: 0x22d3ee,
+      scenery: function (T, scene, spaces) {
+        scene.add(water(T, 0x0ea5b7, { emissive: 0x053b44 }), ground(T, 0xf5e6b8, { mat: { roughness: 0.95 } }));
+        freeSpots(T, spaces, 9, 1.1).forEach(function (p, k) {
+          let prop;
+          if (k < 3) prop = pond(T, 1 - k * 0.15);
+          else if (k < 7) { prop = palm(T, 0, 0, (k % 2 ? 1 : -1) * 0.1); prop.scale.setScalar(0.5); }
+          else prop = rock(T, 0xa8a29e, 0.35);
+          prop.position.x = p.x;
+          prop.position.z = p.z;
+          scene.add(prop);
+        });
+      },
+    },
+    pipes: {
+      bg: 0x111827, link: { pipe: true, color: 0x22c55e }, warp: 0x4ade80, light: { hemi: 0.8, sun: 1.8 },
+      scenery: function (T, scene, spaces) {
+        scene.add(water(T, 0x0f172a, { roughness: 0.9 }));
+        const grid = canvasTexture(T, function (g, w, h) {
+          g.fillStyle = '#64748b';
+          g.fillRect(0, 0, w, h);
+          g.strokeStyle = '#475569';
+          g.lineWidth = 6;
+          g.strokeRect(0, 0, w, h);
+          g.fillStyle = '#94a3b8';
+          [[16, 16], [w - 16, 16], [16, h - 16], [w - 16, h - 16]].forEach(function (c) { g.beginPath(); g.arc(c[0], c[1], 5, 0, 7); g.fill(); });
+        });
+        grid.wrapS = grid.wrapT = T.RepeatWrapping;
+        grid.repeat.set(14, 14);
+        scene.add(ground(T, 0xffffff, { mat: { map: grid, roughness: 0.6, metalness: 0.5 } }));
+        freeSpots(T, spaces, 9, 1.1).forEach(function (p, k) {
+          const prop = k % 3 === 2 ? crate(T) : greenPipe(T, 0.5 + (k % 3) * 0.4);
+          prop.position.x = p.x;
+          prop.position.z = p.z;
+          prop.rotation.y = k;
+          scene.add(prop);
+        });
+      },
+    },
+    haunted: {
+      bg: 0x0f0a1a, fog: [0x1e1530, 26, 55], link: { color: 0x6b6478 }, warp: 0xa855f7, light: { hemi: 0.55, sun: 0.9, sunColor: 0xc4b5fd },
+      scenery: function (T, scene, spaces) {
+        scene.add(water(T, 0x120c1f, { roughness: 1 }), ground(T, 0x2e2640, { mat: { roughness: 1 } }));
+        const ghosts = [];
+        freeSpots(T, spaces, 11, 1).forEach(function (p, k) {
+          const prop = k % 3 === 0 ? deadTree(T) : k % 3 === 1 ? tombstone(T) : lantern(T);
+          if (k % 3 === 0) prop.scale.setScalar(0.75);
+          prop.position.x = p.x;
+          prop.position.z = p.z;
+          prop.rotation.y = k * 1.3;
+          scene.add(prop);
+          if (k < 4) {
+            const gh = emojiSprite(T, '👻', 0.9);
+            gh.position.set(p.x, 2.2, p.z);
+            gh.material.opacity = 0.75;
+            scene.add(gh);
+            ghosts.push(gh);
+          }
+        });
+        return function (t) {
+          ghosts.forEach(function (g, k) { g.position.y = 2.2 + Math.sin(t * 1.5 + k * 2) * 0.35; });
+        };
+      },
+    },
+    volcano: {
+      bg: 0x1c0a05, fog: [0x2a0f07, 22, 50], link: { color: 0x44403c, emissive: 0x7c2d12 }, warp: 0xfb923c, light: { hemi: 0.75, sun: 1.6, sunColor: 0xfed7aa },
+      scenery: function (T, scene, spaces) {
+        const lava = water(T, 0xea580c, { emissive: 0xc2410c, emissiveIntensity: 0.9, roughness: 0.6 });
+        scene.add(lava, ground(T, 0x292524, { mat: { flatShading: true } }));
+        // The peak itself, behind the board, with a glowing crater and smoke.
+        const peak = shadowed(new T.Mesh(new T.CylinderGeometry(1.7, 7, 8, 9, 1, true), mat(T, 0x3f3a36, { flatShading: true })));
+        peak.position.set(0, 3.2, -15);
+        const crater = new T.Mesh(new T.CircleGeometry(1.6, 16), new T.MeshStandardMaterial({ color: 0xf97316, emissive: 0xea580c, emissiveIntensity: 2 }));
+        crater.rotation.x = -Math.PI / 2;
+        crater.position.set(0, 7.2, -15);
+        scene.add(peak, crater);
+        const smoke = [];
+        for (let k = 0; k < 6; k++) {
+          const puff = new T.Mesh(new T.SphereGeometry(0.9, 10, 8), new T.MeshStandardMaterial({ color: 0x57534e, transparent: true, opacity: 0.5 }));
+          scene.add(puff);
+          smoke.push(puff);
+        }
+        freeSpots(T, spaces, 8, 1).forEach(function (p, k) {
+          const r = rock(T, k % 2 ? 0x1c1917 : 0x44403c, 0.3 + (k % 3) * 0.12);
+          r.position.x = p.x;
+          r.position.z = p.z;
+          scene.add(r);
+        });
+        return function (t) {
+          lava.material.emissiveIntensity = 0.75 + Math.sin(t * 1.3) * 0.2;
+          smoke.forEach(function (puff, k) {
+            const u = (t * 0.25 + k / smoke.length) % 1;
+            puff.position.set(Math.sin(k * 2.1 + t * 0.3) * 1.2, 7.6 + u * 6, -15 + u * 1.5);
+            puff.scale.setScalar(0.6 + u * 1.6);
+            puff.material.opacity = 0.55 * (1 - u);
+          });
+        };
+      },
+    },
+  };
+
+  /** A path between two spaces: a plank / stone strip, or (Pipe Works) a pipe. */
+  function link(T, look, p, q, material) {
+    const d = q.clone().sub(p);
+    const len = Math.max(0.1, d.length() - 1.1);
+    const m = look.pipe
+      ? new T.Mesh(new T.CylinderGeometry(0.16, 0.16, len, 10), material)
+      : new T.Mesh(new T.BoxGeometry(0.28, 0.07, len), material);
+    m.position.copy(p.clone().add(q).multiplyScalar(0.5));
+    m.position.y = look.pipe ? 0.12 : 0.05;
+    m.rotation.y = Math.atan2(d.x, d.z);
+    if (look.pipe) m.rotation.x = Math.PI / 2;
+    // Rotation order: lay the pipe along Z first, then turn it toward the next space.
+    m.rotation.order = 'YXZ';
+    m.receiveShadow = true;
+    return m;
+  }
+
+  /** A warp: a glowing arc from the warp space to where it sends you, with an orb along it. */
+  function warpArc(T, color, p, q) {
+    const mid = p.clone().add(q).multiplyScalar(0.5);
+    mid.y = 2.4 + p.distanceTo(q) * 0.12;
+    const curve = new T.QuadraticBezierCurve3(new T.Vector3(p.x, 0.4, p.z), mid, new T.Vector3(q.x, 0.4, q.z));
+    const tube = new T.Mesh(new T.TubeGeometry(curve, 40, 0.07, 6, false),
+      new T.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 0.6, transparent: true, opacity: 0.55 }));
+    const orb = new T.Mesh(new T.SphereGeometry(0.16, 12, 10), new T.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: 1.5 }));
+    return { tube: tube, orb: orb, curve: curve };
+  }
+
   function create(el) {
     return ArkMini.scene3d(el, { fov: 42 }).then(function (gl) {
       const T = gl.THREE;
       const scene = gl.scene;
-      scene.background = new T.Color(0x0b2a4a);
-
-      // Sea and island.
-      const sea = new T.Mesh(new T.PlaneGeometry(160, 160), new T.MeshStandardMaterial({ color: 0x1d6fb8, roughness: 0.35, metalness: 0.1 }));
-      sea.rotation.x = -Math.PI / 2;
-      sea.position.y = -0.55;
-      scene.add(sea);
-      const island = new T.Mesh(new T.CylinderGeometry(14.5, 15.5, 0.9, 64), new T.MeshStandardMaterial({ color: 0xe9d8a6, roughness: 0.95 }));
-      island.scale.z = 0.66;
-      island.position.y = -0.45;
-      island.receiveShadow = true;
-      scene.add(island);
-      const lawn = new T.Mesh(new T.CylinderGeometry(7.6, 7.6, 0.08, 48), new T.MeshStandardMaterial({ color: 0x4d9a3a, roughness: 1 }));
-      lawn.scale.z = 0.5;
-      lawn.position.y = 0.01;
-      lawn.receiveShadow = true;
-      scene.add(lawn);
-      // A few small palms in the middle, kept low so they don't hide the path.
-      [[-3.2, -0.4, 0.1], [0.4, 0.5, -0.08], [3.4, -0.6, 0.12]].forEach(function (p) {
-        const tree = palm(T, p[0], p[1], p[2]);
-        tree.scale.setScalar(0.6);
-        scene.add(tree);
-      });
-
       const s = {
         built: false, tiles: [], star: null, starAt: null, starTarget: null, starFocusUntil: 0,
-        figs: [], last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
+        figs: [], warps: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
       function build(v) {
-        const plank = new T.MeshStandardMaterial({ color: 0x8d6e4a, roughness: 0.9 });
+        const look = THEMES[v.board.theme] || THEMES.island;
+        scene.background = new T.Color(look.bg);
+        if (look.fog) scene.fog = new T.Fog(look.fog[0], look.fog[1], look.fog[2]);
+        if (look.light) {
+          scene.traverse(function (o) {
+            if (o.isHemisphereLight) o.intensity = look.light.hemi;
+            if (o.isDirectionalLight) {
+              o.intensity = look.light.sun;
+              if (look.light.sunColor) o.color.setHex(look.light.sunColor);
+            }
+          });
+        }
+        s.tick = look.scenery(T, scene, v.board.spaces) || null;
+        const path = mat(T, look.link.color, look.link.pipe ? { roughness: 0.4, metalness: 0.3 } : { emissive: look.link.emissive || 0, roughness: 0.9 });
         v.board.spaces.forEach(function (sp, i) {
           const p = at(T, sp);
           const tile = new T.Mesh(new T.CylinderGeometry(0.62, 0.68, 0.32, 28), new T.MeshStandardMaterial({ color: COLORS[sp.type] || 0x64748b, roughness: 0.5 }));
@@ -183,16 +452,13 @@
           }
           s.tiles.push({ mesh: tile, icon: icon, type: sp.type });
           sp.next.forEach(function (n) {
-            const q = at(T, v.board.spaces[n]);
-            const d = q.clone().sub(p);
-            const len = Math.max(0.1, d.length() - 1.1);
-            const m = new T.Mesh(new T.BoxGeometry(0.28, 0.07, len), plank);
-            m.position.copy(p.clone().add(q).multiplyScalar(0.5));
-            m.position.y = 0.05;
-            m.rotation.y = Math.atan2(d.x, d.z);
-            m.receiveShadow = true;
-            scene.add(m);
+            scene.add(link(T, look.link, p, at(T, v.board.spaces[n]), path));
           });
+          if (sp.type === 'warp' && v.board.spaces[sp.warp]) {
+            const w = warpArc(T, look.warp, p, at(T, v.board.spaces[sp.warp]));
+            scene.add(w.tube, w.orb);
+            s.warps.push(w);
+          }
         });
         const star = new T.Mesh(new T.ExtrudeGeometry(starShape(T), { depth: 0.2, bevelEnabled: true, bevelSize: 0.05, bevelThickness: 0.05, bevelSegments: 2 }),
           new T.MeshStandardMaterial({ color: 0xfacc15, emissive: 0x8a6d00, roughness: 0.3, metalness: 0.3 }));
@@ -330,6 +596,9 @@
           g.position.y = y;
           g.rotation.y += ((fig.face || 0) - g.rotation.y) * 0.2;
         });
+        // Warp orbs travel their arcs; the map's own motion (ghosts, smoke, lava).
+        s.warps.forEach(function (w, k) { w.orb.position.copy(w.curve.getPoint((t * 0.45 + k * 0.37) % 1)); });
+        if (s.tick) s.tick(t);
         // The star floats and spins, gliding to a new spot.
         s.starAt.lerp(s.starTarget, 0.05);
         s.star.position.set(s.starAt.x, 1.9 + Math.sin(t * 2) * 0.15, s.starAt.z);

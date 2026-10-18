@@ -649,16 +649,19 @@ test('tornado: blown to a random space (not the start, not here), no effect ther
 
 // ---- the 3D board view ----
 
-test('board view: 3D only on Party Island for now (else 2D); 2D by default', () => {
-  const viewOf = (settings) => {
+test('board view: 3D on every map when chosen (2D by default); the view names the map theme', () => {
+  const boardOf = (settings) => {
     const ctx = fakeCtx();
     ctx.settings = settings;
     const g = new PartyBoard(ctx, () => 0.5, undefined, [claim]);
     g.start();
-    return g.hostView().board.view;
+    return g.hostView().board;
   };
-  assert.equal(viewOf({ map: 'island' }), '2d');
-  assert.equal(viewOf({ map: 'island', view: '3d' }), '3d');
-  assert.equal(viewOf({ map: 'pipes', view: '3d' }), '2d');
-  assert.equal(viewOf({ map: 'island', view: '2d' }), '2d');
+  assert.equal(boardOf({ map: 'island' }).view, '2d');
+  assert.equal(boardOf({ map: 'island', view: '2d' }).view, '2d');
+  for (const id of ['island', 'lagoons', 'pipes', 'haunted', 'volcano']) {
+    const b = boardOf({ map: id, view: '3d' });
+    assert.equal(b.view, '3d', id);
+    assert.equal(b.theme, id);
+  }
 });
