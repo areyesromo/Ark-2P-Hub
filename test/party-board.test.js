@@ -776,3 +776,57 @@ test('tile art: steampunk art (3D models) by default, light or classic when chos
   const row = getGame('party-board').create(fakeCtx()).rows.find((r) => r.key === 'tiles');
   assert.deepEqual(Object.keys(row.labels), ['art', 'light', 'classic']);
 });
+
+// ---- picking a character (3D board with the 3D models) ----
+
+function picky(settings) {
+  const ctx = fakeCtx();
+  ctx.settings = { map: 'island', view: '3d', ...settings };
+  const g = new PartyBoard(ctx, () => 0.5, undefined, [claim]);
+  g.start();
+  return { g, ctx, v: () => g.hostView(), pick: (slot, value) => g.onInput(slot, { type: 'pick', value }) };
+}
+
+test('pick: a 3D board with the 3D models starts with each player picking the engineer or the mechanic', () => {
+  const k = picky();
+  let v = k.v();
+  assert.equal(v.phase, 'pick');
+  assert.deepEqual(v.pick.picks, [null, null]);
+  assert.deepEqual(v.pick.options, ['engineer', 'mechanic']);
+  assert.ok(v.pick.msLeft > 0);
+  assert.equal(v.prompt, null);
+  k.g.onInput(0, { type: 'choose', value: 'roll' }); // nothing else counts yet
+  k.pick(0, 'wizard'); // not a character
+  assert.deepEqual(k.v().pick.picks, [null, null]);
+  k.pick(1, 'engineer'); // both may pick the same one
+  k.pick(1, 'mechanic'); // a pick is final
+  assert.deepEqual(k.v().pick.picks, [null, 'engineer']);
+  k.pick(0, 'engineer');
+  v = k.v();
+  assert.equal(v.phase, 'board');
+  assert.deepEqual(v.characters, ['engineer', 'engineer']);
+  assert.equal(v.prompt.kind, 'roll');
+  assert.equal(v.pick, null);
+});
+
+test('pick: after 15 s, whoever hasn\'t picked gets the default (P1 engineer, P2 mechanic); a rematch keeps the picks', () => {
+  const k = picky();
+  k.pick(0, 'mechanic');
+  k.ctx.advance(TIMING.pickMs);
+  assert.equal(k.v().phase, 'board');
+  assert.deepEqual(k.v().characters, ['mechanic', 'mechanic']);
+  k.ctx.advance(TIMING.pickMs); // the time-out never fires twice
+  assert.equal(k.v().phase, 'board');
+  k.g.phase = 'over';
+  k.g.onInput(0, { type: 'rematch' });
+  assert.equal(k.v().phase, 'board', 'no second pick');
+  assert.deepEqual(k.v().characters, ['mechanic', 'mechanic']);
+});
+
+test('pick: no picking on a 2D board or with lighter tile art (the characters only show in 3D)', () => {
+  for (const settings of [{ view: '2d' }, { tiles: 'light' }, { tiles: 'classic' }]) {
+    const k = picky(settings);
+    assert.equal(k.v().phase, 'board', JSON.stringify(settings));
+    assert.deepEqual(k.v().characters, ['engineer', 'mechanic']);
+  }
+});

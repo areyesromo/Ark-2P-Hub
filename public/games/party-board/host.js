@@ -10,6 +10,7 @@
   // A path preview: what each kind of space looks like in a line of icons.
   const PEEK = { start: '🏁', blue: '🔵', red: '🔴', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️', star: '⭐' };
   const KIND = { item: 'Use an item?', roll: 'Roll!', star: 'Buy a ⭐?', shop: '🛒 The shop', slot: '🎰 Stop the reels!', path: '🔀 Which way?' };
+  const CHARACTER = { engineer: '⚙️ Engineer', mechanic: '🔧 Mechanic' };
   const TIER = { easy: 'Easy', medium: 'Medium', hard: 'Hard', expert: 'Expert' };
 
   /** A short label for a prompt option (the phone shows the long one). */
@@ -136,6 +137,17 @@
   }
 
   function centre(v) {
+    if (v.phase === 'pick') {
+      // Each player picks a miniature (phone, or ← → and A on a controller).
+      return '<div class="pb-msg">🎭 Pick your character</div><div class="pb-opts">' + [0, 1].map(function (slot) {
+        const picked = v.pick.picks[slot];
+        if (picked) return '<span>' + nameOf(v, slot) + ': ' + CHARACTER[picked] + ' ✅</span>';
+        if (!v.localPlayers[slot]) return '<span>' + nameOf(v, slot) + ': picking on their phone…</span>';
+        return '<span>' + nameOf(v, slot) + ': ' + v.pick.options.map(function (c, i) {
+          return '<b class="' + (cursors[slot] === i ? 'cur' : '') + '">' + CHARACTER[c] + '</b>';
+        }).join(' ') + '</span>';
+      }).join('') + '</div><div class="pb-time" data-end="' + (receivedAt + v.pick.msLeft) + '">' + Math.ceil(v.pick.msLeft / 1000) + ' s</div>';
+    }
     if (v.phase === 'bonus') {
       return '<div class="pb-msg">🌟 Bonus stars!</div>' + v.bonusStars.map(function (b) {
         return '<div class="pb-sub">' + (b.kind === 'minigame' ? '🎮 Minigame star' : '🪙 Coin star') + ': ' + b.slots.map(function (s) { return nameOf(v, s); }).join(' & ') + '</div>';
@@ -181,6 +193,8 @@
     }
     els.centre.innerHTML = centre(v);
     els.recap.innerHTML = v.phase === 'over' && v.recap ? recapCard(v) : '';
+    // In 3D the card moves aside: the winner stands on a pedestal to its right.
+    els.recap.classList.toggle('side', v.board.view === '3d');
   }
 
   function show3d(v) {
@@ -230,6 +244,7 @@
         if (window.ArkMini) out.push.apply(out, ArkMini.miniSounds(prev.mini, v.mini));
         return out;
       }
+      if (v.phase === 'pick' && prev.phase === 'pick' && v.pick.picks.filter(Boolean).length > prev.pick.picks.filter(Boolean).length) return ['lock'];
       if (v.phase === 'over' && prev.phase !== 'over') return ['fanfare'];
       if (v.phase === 'bonus' && prev.phase !== 'bonus') return ['reveal'];
       if (v.phase !== 'board' || prev.phase !== 'board') return [];
@@ -247,6 +262,16 @@
     pad: function (btn, v, slot) {
       if (v.phase === 'minigame') return frame ? frame.pad(btn, v.mini, slot) : null;
       if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
+      if (v.phase === 'pick') {
+        if (v.pick.picks[slot]) return null;
+        if (btn === 'A' || btn === 'START') return { type: 'pick', value: v.pick.options[cursors[slot]] || v.pick.options[0] };
+        const step = btn === 'LEFT' || btn === 'UP' ? -1 : btn === 'RIGHT' || btn === 'DOWN' ? 1 : 0;
+        if (step) {
+          cursors[slot] = (cursors[slot] + step + v.pick.options.length) % v.pick.options.length;
+          render();
+        }
+        return null;
+      }
       const p = v.prompt;
       if (v.phase !== 'board' || !p || p.slot !== slot) return null;
       if (btn === 'A' || btn === 'START') return { type: 'choose', value: p.options[cursors[slot]] || p.options[0] };
