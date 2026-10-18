@@ -8,6 +8,7 @@
   const FLY_MS = 1100; // along a warp's arc
   const MOOD_MS = 700;
   const DIE_MS = 650;
+  const POP_MS = 1200; // a coin popping up (gained) or falling away (lost)
   const COLORS = { start: 0xf8fafc, blue: 0x2563eb, red: 0xdc2626, event: 0x16a34a, bonus: 0x9333ea, shop: 0xf59e0b, warp: 0x0891b2, thunder: 0xa16207, skull: 0x3f0d12, tornado: 0x6b21a8 };
   const ICON = { start: '🏁', event: '❓', bonus: '🎰', shop: '🛒', warp: '🌀', thunder: '⚡', skull: '💀', tornado: '🌪️' };
 
@@ -446,15 +447,11 @@
             g = new T.SphereGeometry(r, 6, 4).translate(c.x, c.y, c.z);
           }
           Object.keys(g.attributes).forEach(function (k) { if (k !== 'position') g.deleteAttribute(k); });
-          const key = o.material.name || o.material.uuid;
+          const key = o.material.uuid; // one group per material (names can repeat: a coin's two faces)
           (groups[key] = groups[key] || { material: o.material, parts: [] }).parts.push(g);
         });
         const body = Object.keys(groups).map(function (k) {
-          const mat = groups[k].material.clone();
-          mat.flatShading = true; // the model has no normals
-          // Full metals look black with nothing to reflect (and a reflection map costs about a
-          // third of the frame rate): half-metal keeps the brass and steel colours lit.
-          mat.metalness = Math.min(mat.metalness, 0.45);
+          const mat = tone(groups[k].material.clone());
           // Simplified: far fewer triangles, no visible change at board distance.
           const geo = mods[1].mergeVertices(merge(groups[k].parts));
           return { geometry: new mods[2].SimplifyModifier().modify(geo, Math.floor(geo.attributes.position.count * SIMPLIFY)), material: mat };
@@ -470,13 +467,96 @@
     return tileModelP;
   }
 
+  /**
+   * Model materials for the TV: flat-shaded (the models have no normals), and metals kept
+   * half-metal: full metal looks black with nothing to reflect, and a reflection map costs
+   * about a third of the frame rate.
+   */
+  function tone(mat) {
+    mat.flatShading = true;
+    mat.metalness = Math.min(mat.metalness, 0.45);
+    return mat;
+  }
+
+  /**
+   * A prop model (models/<name>.glb: coin, die, star), loaded once per page: its parts merged
+   * per material and centred; with `simplify` (a share of vertices to remove), simplified,
+   * for a model that is always on screen. Resolves { parts: [{ geometry, material }], size }.
+   */
+  const propP = {};
+  function propModel(T, name, simplify) {
+    if (propP[name]) return propP[name];
+    propP[name] = Promise.all([
+      import('/vendor/three-addons/loaders/GLTFLoader.js'),
+      import('/vendor/three-addons/utils/BufferGeometryUtils.js'),
+      import('/vendor/three-addons/modifiers/SimplifyModifier.js'),
+    ]).then(function (mods) {
+      return new mods[0].GLTFLoader().loadAsync('/games/party-board/models/' + name + '.glb').then(function (gltf) {
+        gltf.scene.updateMatrixWorld(true);
+        const box = new T.Box3().setFromObject(gltf.scene);
+        const c = box.getCenter(new T.Vector3());
+        const groups = {};
+        gltf.scene.traverse(function (o) {
+          if (!o.isMesh) return;
+          const g = o.geometry.clone().applyMatrix4(o.matrixWorld).translate(-c.x, -c.y, -c.z);
+          Object.keys(g.attributes).forEach(function (k) { if (k !== 'position' && !(k === 'uv' && o.material.map)) g.deleteAttribute(k); });
+          const key = o.material.uuid; // one group per material (names can repeat: a coin's two faces)
+          (groups[key] = groups[key] || { material: o.material, parts: [] }).parts.push(g);
+        });
+        const parts = Object.keys(groups).map(function (k) {
+          let geo = mods[1].mergeGeometries(groups[k].parts);
+          if (simplify && !geo.attributes.uv) {
+            geo = mods[1].mergeVertices(geo);
+            geo = new mods[2].SimplifyModifier().modify(geo, Math.floor(geo.attributes.position.count * simplify));
+          }
+          return { geometry: geo, material: tone(groups[k].material.clone()) };
+        });
+        return { parts: parts, size: box.getSize(new T.Vector3()) };
+      });
+    }).catch(function (e) {
+      propP[name] = null; // try again on the next board
+      throw e;
+    });
+    return propP[name];
+  }
+
+  /** A new object from a prop model, `size` units across its longest side. */
+  function propObject(T, m, size) {
+    const g = new T.Group();
+    m.parts.forEach(function (p) { g.add(new T.Mesh(p.geometry, p.material)); });
+    g.scale.setScalar(size / Math.max(m.size.x, m.size.y, m.size.z));
+    return g;
+  }
+
+  /** The rolled number on a little brass plate (shown over the model die, which only has 1-6). */
+  function numberPlate(T, n) {
+    const tex = canvasTexture(T, function (g, w, h) {
+      g.fillStyle = '#3b2f1e';
+      g.beginPath();
+      g.roundRect(4, 4, w - 8, h - 8, 26);
+      g.fill();
+      g.fillStyle = '#d4a94e';
+      g.beginPath();
+      g.roundRect(14, 14, w - 28, h - 28, 18);
+      g.fill();
+      g.fillStyle = '#1f1408';
+      g.font = 'bold 110px sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillText(String(n), w / 2, h / 2 + 6);
+    }, 192, 160);
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, depthWrite: false }));
+    sp.scale.set(1.1, 0.92, 1);
+    return sp;
+  }
+
   function create(el) {
     return ArkMini.scene3d(el, { fov: 42 }).then(function (gl) {
       const T = gl.THREE;
       const scene = gl.scene;
       const s = {
         built: false, tiles: [], star: null, starAt: null, starTarget: null, starFocusUntil: 0,
-        art: false, faces: {}, steel: null, top: 0.32, model: null, figs: [], warps: [], warpBy: {}, sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
+        art: false, faces: {}, steel: null, top: 0.32, model: null, props: {}, pops: [], figs: [], warps: [], warpBy: {}, sparks: [], tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
       function build(v) {
@@ -496,7 +576,13 @@
         }
         s.tick = look.scenery(T, scene, v.board.spaces) || null;
         // 'art': the tile model (models/tile.glb); 'light': its faces on plain discs.
-        if (v.board.tiles === 'art') tileModel(T).then(useModel, function () { /* keep the plain tiles */ });
+        if (v.board.tiles === 'art') {
+          tileModel(T).then(useModel, function (e) { console.warn('Party Board: no tile model', e); });
+          // The star, die and coins: the models replace the plain shapes as they arrive.
+          ['star', 'die', 'coin'].forEach(function (name) {
+            propModel(T, name, name === 'star' ? 0.6 : 0).then(function (m) { useProp(name, m); }, function (e) { console.warn('Party Board: no ' + name + ' model', e); });
+          });
+        }
         const path = mat(T, look.link.color, look.link.pipe ? { roughness: 0.4, metalness: 0.3 } : { emissive: look.link.emissive || 0, roughness: 0.9 });
         v.board.spaces.forEach(function (sp, i) {
           const p = at(T, sp);
@@ -609,6 +695,33 @@
         });
       }
 
+      function useProp(name, m) {
+        if (s.disposed) return;
+        s.props[name] = m;
+        if (name === 'star' && s.star) {
+          const star = propObject(T, m, 1.4);
+          // The prize: a warm glow so it reads from across the board.
+          star.children.forEach(function (o) { o.material.emissive.setHex(0x6b4a00); o.material.emissiveIntensity = 0.6; });
+          scene.remove(s.star);
+          scene.add(star);
+          s.star = star;
+        }
+      }
+
+      /** Coins pop up from a figure when it gains (fall away when it loses), one per 3 or so. */
+      function coinPops(slot, delta, now) {
+        if (!s.props.coin || !delta) return;
+        const from = s.figs[slot].f.group.position;
+        const n = Math.min(6, Math.ceil(Math.abs(delta) / 3));
+        for (let k = 0; k < n; k++) {
+          const coin = propObject(T, s.props.coin, 0.75);
+          coin.visible = false;
+          coin.rotation.order = 'YXZ'; // stood on its edge, spinning about the vertical
+          scene.add(coin);
+          s.pops.push({ obj: coin, size: coin.scale.x, x: from.x, z: from.z, gain: delta > 0, t0: now + k * 90, a: (k / n) * Math.PI * 2 + slot });
+        }
+      }
+
       /** Where a figure stands on `space` (side by side when both are there). */
       function standing(v, slot, space) {
         const p = at(T, v.board.spaces[space]);
@@ -618,6 +731,11 @@
       }
 
       function dieFor(n) {
+        if (s.props.die) {
+          const d = propObject(T, s.props.die, 1.15);
+          scene.add(d);
+          return d;
+        }
         const m = new T.Mesh(new T.BoxGeometry(1, 1, 1), dieMaterials(T, n));
         m.castShadow = true;
         scene.add(m);
@@ -655,6 +773,7 @@
           }
           if (prev && prev.phase === 'board' && v.phase === 'board') {
             const was = prev.players[slot];
+            coinPops(slot, p.coins - was.coins, now);
             if (p.stars > was.stars || p.coins > was.coins) { fig.mood = 'jump'; fig.moodAt = now; }
             else if (p.stars < was.stars || p.coins < was.coins) { fig.mood = 'slump'; fig.moodAt = now; }
           }
@@ -662,7 +781,7 @@
         // The die: drops in above the roller and tumbles, then shows the roll.
         const key = v.dice ? v.round + ':' + v.turn + ':' + v.dice.values.join() : '';
         if (key !== s.dieKey) {
-          s.die.forEach(function (d) { scene.remove(d.mesh); });
+          s.die.forEach(function (d) { scene.remove(d.mesh); if (d.plate) scene.remove(d.plate); });
           s.die = [];
           s.dieKey = key;
           if (v.dice) {
@@ -755,7 +874,7 @@
         if (s.tick) s.tick(t);
         // The star floats and spins, gliding to a new spot.
         s.starAt.lerp(s.starTarget, 0.05);
-        s.star.position.set(s.starAt.x, 1.9 + Math.sin(t * 2) * 0.15, s.starAt.z);
+        s.star.position.set(s.starAt.x, s.top + 3 + Math.sin(t * 2) * 0.15, s.starAt.z); // above a figure on its spot
         s.star.rotation.y = t * 1.6;
         // The die: tumbles in, then lands showing the roll.
         s.die.forEach(function (d) {
@@ -766,9 +885,27 @@
             d.mesh.rotation.set(t * 9 + d.k, t * 7, t * 5);
           } else if (!d.settled) {
             d.settled = true;
-            d.mesh.material = dieMaterials(T, d.n);
             d.mesh.rotation.set(0.35, 0.6, 0);
+            if (d.mesh.isGroup) {
+              // The model die has pips for 1-6 only: the roll shows on a plate above it.
+              d.plate = numberPlate(T, d.n);
+              scene.add(d.plate);
+            } else d.mesh.material = dieMaterials(T, d.n);
           }
+          if (d.plate) d.plate.position.set(d.mesh.position.x, d.mesh.position.y + 1.15, d.mesh.position.z);
+        });
+        // Coin pops: up and away when gained; out from overhead and down to the ground when lost.
+        s.pops = s.pops.filter(function (c) {
+          const u = (now - c.t0) / POP_MS;
+          if (u < 0) return true;
+          if (u >= 1) { scene.remove(c.obj); return false; }
+          c.obj.visible = true;
+          const out = (c.gain ? 0.9 : 1.8) * u;
+          c.obj.position.set(c.x + Math.cos(c.a) * out, 0, c.z + Math.sin(c.a) * out);
+          c.obj.position.y = c.gain ? s.top + 1.9 + u * 2.4 : s.top + 2.4 + Math.sin(u * Math.PI) * 0.8 - u * 2.3;
+          c.obj.rotation.set(Math.PI / 2 - 0.3, t * 6 + c.a, 0);
+          c.obj.scale.setScalar(c.size * (u > 0.75 ? 1 - (u - 0.75) * 4 : 1));
+          return true;
         });
         // Camera: follows a figure flying a warp (a bit higher); else the player whose turn it is;
         // the star when it moves; the whole board otherwise.
