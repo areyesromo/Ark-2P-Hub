@@ -38,9 +38,12 @@ test('three.js add-ons: only .js files inside the add-ons folder', async () => {
   }
 });
 
-test('the Party Board tile model is served', async () => {
-  const res = await fetch(url + '/games/party-board/models/tile.glb');
-  assert.equal(res.status, 200);
-  const buf = Buffer.from(await res.arrayBuffer());
-  assert.equal(buf.subarray(0, 4).toString(), 'glTF');
+test('the Party Board models are served (and kept small for the TV)', async () => {
+  for (const name of ['tile', 'coin', 'die', 'star']) {
+    const res = await fetch(url + `/games/party-board/models/${name}.glb`);
+    assert.equal(res.status, 200, name);
+    const buf = Buffer.from(await res.arrayBuffer());
+    assert.equal(buf.subarray(0, 4).toString(), 'glTF', name);
+    assert.ok(buf.length < 400 * 1024, `${name}: ${buf.length} bytes`);
+  }
 });
