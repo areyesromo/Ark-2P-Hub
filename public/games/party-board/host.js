@@ -128,7 +128,7 @@
   function drawBoard(v) {
     const spaces = v.board.spaces;
     let h = links(spaces);
-    const art = v.board.tiles === 'art'; // the steampunk tile faces (tiles/*.webp) carry their own icons
+    const art = v.board.tiles !== 'classic'; // the steampunk tile faces (tiles/*.webp) carry their own icons
     spaces.forEach(function (s, i) {
       h += '<div class="pb-space ' + s.type + (i === v.board.star ? ' star' : '') + (art ? ' art' : '') + '" style="left:' + s.x * 100 + '%;top:' + s.y * 100 + '%">' +
         (art ? '' : i === v.board.star ? '⭐' : ICON[s.type]) + '</div>';
