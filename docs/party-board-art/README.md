@@ -16,6 +16,9 @@ normal gaming PC as typical: detail, real materials and live lighting are welcom
 | `layout.json` | The same data as numbers: every space's `x` / `z`, type, links, forks and star spots, per map. |
 | `now-<map>-overview.jpg` | The board today from the overview camera (the end screen / bonus reveal). |
 | `now-<map>-follow.jpg` | The board today from the gameplay camera (it follows the player whose turn it is). |
+| `preview-<map>-overview.jpg` / `-follow.jpg` | New layouts only: a blocky placeholder of the layout in 3D (plateaus at each level, stairs, bridges), to show the shape before modelling. |
+
+**New 3D layouts** (Volcano Peak first) have a height level per space: in `layout.json` each space has `y` (0 ground, 1.2 ledge, 2.4 top) and `links` (`walk`, `stairs` or `bridge`, one per `next`). Put each `space_NN` anchor at that height; build walkways, stairs and bridges as the links say. The blueprint shades the levels and draws stairs as rungs and bridges as purple rails.
 
 Regenerate the plans after a map change: `node tools/board-layout.mjs && python3 tools/board_blueprint.py`.
 
@@ -30,7 +33,7 @@ space must keep the same number, the same neighbours, the same forks, warps and 
 | `lagoons` | 🌊 Twin Lagoons (easy) | 24 | 7 → 8 / 14 | none | 2, 9, 12, 19 | Two clear lagoons with reefs, boardwalks, a rope bridge (a good spot for the fork's risky branch), flamingos, a waterfall in the backdrop. |
 | `pipes` | 🔧 Pipe Works (medium) | 30 | 4 → 5 / 23, 14 → 15 / 28 | 9, 19 | 2, 7, 14, 20 | Steampunk factory (matches the tiles and miniatures): catwalks, an iron arch bridge, furnaces, gears and gauges, a clock tower and chimneys in the backdrop. |
 | `haunted` | 👻 Haunted Maze (hard) | 32 | 5 → 6 / 23, 12 → 13 / 26, 18 → 19 / 30 | 11, 21 | 9, 15, 20, 27 | Spooky but readable: chasms with stone and plank bridges, graves, iron fences, glowing pumpkins, ghosts, a mansion on a hill and a big moon. |
-| `volcano` | 🌋 Volcano Peak (expert) | 34 | 2 → 3 / 24, 9 → 10 / 27, 14 → 15 / 30, 19 → 20 / 32 | 7, 17, 26 | 6, 15, 22, 31 | Basalt plateaus over lava rivers, glowing lava-crack paths, stairs and arch bridges, crystals, a huge erupting volcano behind. |
+| `volcano` | 🌋 Volcano Peak (expert) | 43, on 3 levels (new layout) | 2 → 3 / 28, 11 → 12 / 35, 20 → 21 / 38, 31 → 32 / 41 | 7, 18, 26 | 6, 15, 21, 29, 39 | Front ledge with basalt pillars over a lava gap (bridges 4 → 5 → 6), stairs up both sides to a mid ledge and the back plateau under the volcano, an arch bridge across the middle (30 → 31 → 32, a fork on the bridge), a crystal cave down the left (38 → 40). |
 
 A warp sends the player to a random space (it flies there), so warps need no pipes or lines.
 

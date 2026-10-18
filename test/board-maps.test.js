@@ -83,3 +83,20 @@ test('spaces are never on top of each other', () => {
     }));
   }
 });
+
+test('3D layouts: height levels, one level per stair, bridges on real links, paths never cross', () => {
+  const v = MAPS.volcano;
+  assert.ok(v.spaces.every((s) => [0, 1, 2].includes(s.h)), 'volcano is a 3D layout');
+  assert.ok(v.spaces.some((s) => s.bridge), 'with bridges');
+  const flat = () => ({ ...v, spaces: v.spaces.map((s) => ({ ...s, next: s.next.slice() })) });
+  let m = flat();
+  m.spaces[1].h = 2; // ground (0) -> top (2) in one step
+  assert.ok(validateMap(m).some((p) => /steep/.test(p)));
+  m = flat();
+  m.spaces[3].bridge = [9];
+  assert.ok(validateMap(m).some((p) => /bridge/.test(p)));
+  m = flat();
+  m.spaces[3].next = [4, 19]; // the front ledge straight to the back plateau, across everything
+  m.spaces[19].h = 1;
+  assert.ok(validateMap(m).some((p) => /cross/.test(p)));
+});
