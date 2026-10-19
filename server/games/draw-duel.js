@@ -224,6 +224,7 @@ export class DrawDuel {
 
 export default {
   id: 'draw-duel',
+  phoneOnly: true, // you draw with a finger
   music: 'casual',
   name: 'Draw Duel',
   tagline: 'A shape flashes up, then vanishes. Redraw it from memory on your phone; the closest match scores the most. 5 rounds.',

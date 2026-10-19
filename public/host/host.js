@@ -117,6 +117,7 @@
     const cards = lobbyCards();
     if (focus >= cards.length) focus = 0;
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
+    const pads = Ark.controllerSeated(state);
     $('game-list').innerHTML = cards.map(function (g, i) {
       const heading = i > 0 && (i === 1 || cards[i - 1].category !== g.category)
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
@@ -124,8 +125,8 @@
       const tag = newest && g.lastPlayed === newest ? '<em class="tag">⏱ Last played</em>' : '';
       return (
         heading +
-        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + tag + '</strong>' +
+        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (pads && g.phoneOnly ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !(pads && g.phoneOnly) ? '' : ' disabled') + '>' +
+        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : '') + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
@@ -541,8 +542,9 @@
     } else if (btn === 'RIGHT' || btn === 'DOWN') {
       focus = (focus + 1) % n;
     } else if (btn === 'A' || btn === 'START') {
-      if (state.readyToPlay) socket.emit('lobby:start', { gameId: cards[focus].id });
-      else flashPad('🎮 Waiting for a second player.');
+      if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
+      else if (cards[focus].phoneOnly) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');
+      else socket.emit('lobby:start', { gameId: cards[focus].id });
       return;
     } else {
       return;

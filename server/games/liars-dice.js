@@ -140,7 +140,7 @@ export default {
   id: 'liars-dice',
   name: "Liar's Dice",
   category: 'board',
-  needsPhone: true, // your dice are secret
+  phoneOnly: true, // your dice are secret
   music: 'thinking',
   tagline: 'Your dice are hidden on your phone. Bid how many of a face there are between you both, or call "Liar!". Lose a die each time you\'re wrong; last one with dice wins.',
   create: (ctx) => new LiarsDice(ctx),

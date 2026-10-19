@@ -178,6 +178,7 @@
     $('tourney').innerHTML = Ark.tournamentHtml(state.players, state.tournament, { controls: true });
 
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
+    const pads = Ark.controllerSeated(state);
     $('phone-games').innerHTML =
       '<button data-game="random" class="random"' + (state.readyToPlay ? '' : ' disabled') + '><strong>🎲 Random game</strong><span>Can\'t decide? Let the hub pick.</span></button>' +
       state.games.map(function (g, i) {
@@ -186,8 +187,8 @@
         : '';
       return (
         heading +
-        '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + '</strong>' +
+        '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (pads && g.phoneOnly ? ' class="phone-only"' : '') + (state.readyToPlay && !(pads && g.phoneOnly) ? '' : ' disabled') + '>' +
+        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : '') + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );

@@ -71,7 +71,7 @@ test('a room counts finished competitive matches, not casual ones; a new player 
   assert.equal(t.games[0].game, 'Rock Paper Scissors');
 
   // A casual game doesn't count.
-  const casual = r.lobbyGames().find((g) => g.category === 'casual');
+  const casual = r.lobbyGames().find((g) => g.category === 'casual' && !g.phoneOnly);
   r.startGame(casual.id);
   r.recordResult({ phase: 'over', winner: 1 });
   r.stopGame();

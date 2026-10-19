@@ -144,7 +144,8 @@ export class Room {
   /** A random game for the "🎲 Random" button: not the one just played, and playable by these players. */
   pickRandomGame(rng = Math.random) {
     const allLocal = this.players.every((p) => p && p.local);
-    let pool = listGames().filter((g) => !(g.needsPhone && allLocal));
+    const anyLocal = this.players.some((p) => p && p.local);
+    let pool = listGames().filter((g) => !(g.needsPhone && allLocal) && !(g.phoneOnly && anyLocal));
     if (pool.length > 1) pool = pool.filter((g) => g.id !== this.lastGameId);
     return pool[Math.floor(rng() * pool.length)].id;
   }
@@ -154,6 +155,7 @@ export class Room {
     const def = getGame(gameId);
     if (!def) return { error: 'Unknown game.' };
     if (!this.readyToPlay) return { error: 'Waiting for two players.' };
+    if (def.phoneOnly && this.players.some((p) => p && p.local)) return { error: `${def.name} needs two phones.` };
 
     this.stopGame({ silent: true });
     this.lastPhase = null;

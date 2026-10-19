@@ -285,12 +285,18 @@
     socket.on('connect', check);
   }
 
+  /** True when a controller (plugged into the TV) holds a seat: phone-only games are off then. */
+  function controllerSeated(state) {
+    return Boolean(state && state.players && state.players.some(function (p) { return p && p.local; }));
+  }
+
   window.Ark = {
     watchVersion: watchVersion,
     h2hHtml: h2hHtml,
     tournamentHtml: tournamentHtml,
     bindTournament: bindTournament,
     escapeHtml: escapeHtml,
+    controllerSeated: controllerSeated,
     register: register,
     loadRenderer: loadRenderer,
     loadCss: loadCss,

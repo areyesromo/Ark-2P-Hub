@@ -38,7 +38,9 @@ import { withSetup } from './options.js';
  * 'board' (dice, cards and board games, also head to head) or 'casual'
  * (you play together, nobody really loses). The lobby groups them.
  * needsPhone: true keeps a game out of "random" when both players use
- * controllers (it needs a private screen).
+ * controllers (one of them needs a private screen).
+ * phoneOnly: true means both players need a phone: with a controller seated, the
+ * lobby greys the game out and the room won't start it.
  *
  * create(ctx) returns an instance with:
  *   start()                  begin (or restart) the match
@@ -134,12 +136,13 @@ export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
     .sort((a, b) => byCategory(a) - byCategory(b))
-    .map(({ id, name, tagline, category, needsPhone, music }) => ({
+    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music }) => ({
       id,
       name,
       tagline,
       category: category || 'competitive',
-      needsPhone: Boolean(needsPhone),
+      needsPhone: Boolean(needsPhone || phoneOnly),
+      phoneOnly: Boolean(phoneOnly),
       // The TV's background music for this game (see public/host/music.js).
       music: MUSIC_MOODS.includes(music) ? music : category === 'casual' ? 'casual' : 'action',
     }));

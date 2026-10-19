@@ -332,7 +332,7 @@ export default {
   id: 'sketch-guess',
   name: 'Sketch & Guess',
   category: 'casual',
-  needsPhone: true, // someone has to draw in secret
+  phoneOnly: true, // someone has to draw in secret
   tagline: 'One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds.',
   create: (ctx) => new SketchGuess(ctx),
 };

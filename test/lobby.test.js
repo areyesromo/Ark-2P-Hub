@@ -46,11 +46,26 @@ test('random picks a playable game that is not the one just played', () => {
   assert.notEqual(res.gameId, 'pong');
   r.dispose();
 
+  // One phone, one controller: games one phone is enough for, but never a phone-only one.
   const withPhone = room({ phones: [true, false] });
   const seen = new Set();
   for (let i = 0; i < 400; i++) seen.add(withPhone.pickRandomGame());
-  assert.ok(seen.has('sketch-guess'), 'with a phone player every game can come up');
-  assert.equal(seen.size, listGames().length);
+  assert.ok(seen.has('mind-meld'), 'the phone player can give the clues');
+  for (const g of listGames().filter((x) => x.phoneOnly)) assert.ok(!seen.has(g.id), g.id);
+  // Two phones: every game can come up.
+  const phones = room({ phones: [true, true] });
+  const all = new Set();
+  for (let i = 0; i < 600; i++) all.add(phones.pickRandomGame());
+  assert.equal(all.size, listGames().length);
+});
+
+test('a phone-only game will not start while a controller holds a seat', () => {
+  const phoneOnly = listGames().filter((g) => g.phoneOnly).map((g) => g.id).sort();
+  assert.deepEqual(phoneOnly, ['bomb-squad', 'draw-duel', 'liars-dice', 'sketch-guess', 'word-race']);
+  const r = room({ phones: [true, false] });
+  assert.match(r.startGame('word-race').error, /two phones/);
+  assert.equal(r.game, null);
+  assert.ok(room({ phones: [true, true] }).startGame('word-race').ok);
 });
 
 test('controller players can be renamed; phone players and clashing names cannot', () => {
@@ -71,7 +86,7 @@ test('known names come from the history, most recent first, without repeats', ()
 });
 
 test("a game's saved settings survive going back to the lobby, per room and per game", () => {
-  const r = room();
+  const r = room({ phones: [true, true] });
   r.startGame('word-race');
   r.handleInput(0, { type: 'setting', key: 'size', value: 6 });
   r.handleInput(1, { type: 'setting', key: 'time', value: 180 });
@@ -81,7 +96,7 @@ test("a game's saved settings survive going back to the lobby, per room and per 
   r.startGame('word-race');
   assert.deepEqual(r.game.hostView().settings, { size: 6, time: 180, rounds: 3 });
   r.stopGame();
-  const other = room();
+  const other = room({ phones: [true, true] });
   other.startGame('word-race');
   assert.deepEqual(other.game.hostView().settings.size, 4, 'another room starts from the defaults');
   other.stopGame();
