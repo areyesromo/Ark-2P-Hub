@@ -49,6 +49,8 @@ one you just played).
 | --- | --- |
 | **Liar's Dice** | Your dice are hidden under a cup on your phone (the TV shows only how many each of you has). Take turns bidding how many of a face there are across *both* players' dice ("three 5s"): raise the count, or keep it and bid a higher face. Or call **Liar!**: the cups lift on the TV, and if there are fewer than bid, the bidder loses a die; otherwise the caller does. Ones are wild (they count as every face). Lose all your dice and you lose. Needs two phones. |
 | **Dice Party** | Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards, with what each open box would score. Highest total wins. |
+| **Checkers** | Classic draughts on the TV. Men step diagonally forward; jump to capture, and jumps are a must (a piece that can keep jumping must). Reach the far row to crown a ♛ king that moves both ways. Take every piece or leave your rival with no move; 40 moves without a capture is a draw. Tap a piece on your phone (the board turns so yours are at the bottom), then a ◯. 30 s per move. |
+| **Dots and Boxes** | Take turns joining two neighbouring dots. Close the fourth side of a box to claim it and go again, so don't hand your rival a chain of boxes. When every line is drawn, the most boxes wins. Tap a line on your phone. 20 s per move. |
 
 ### 🎨 Casual
 
@@ -80,6 +82,8 @@ starts). The numbers above are the defaults; you can change, for example:
 | Mind Meld | 4, 6, 8 or 10 rounds |
 | Liar's Dice | 5, 3 or 4 dice each; ones wild or not |
 | Dice Party | Full game (13 rounds) or quick (6) |
+| Checkers | One game, or first to 2 or 3 |
+| Dots and Boxes | A 4 × 4, 3 × 3 or 5 × 5 grid; one game, or first to 2 or 3 |
 | Micro Mayhem | 3 or 5 lives; normal pace or fast (starts at speed 3) |
 | Party Minigames | First to 3, 4 or 5 wins; minigames: a mix, 2D only or 3D only |
 | Party Board | Map (random or one of five), tile art ⚙️ steampunk with 3D models (default: steampunk tiles, a brass die with the roll on a number plate, a spinning collectible star, coins that pop up when won and scatter when lost), ⚙️ steampunk light (the faces on plain discs, for slower TVs) or 🎨 classic colours, board view 2D or 🧊 3D (every map has its own scenery: a palm island, sandy lagoons, a metal pipe yard, a foggy graveyard with ghosts, a lava field under a smoking peak; each player picks the steampunk engineer or mechanic miniature, which hop the paths, your character flies across the board when a warp flings it, a tumbling die, a camera that follows the turn), 10, 15 or 20 turns; minigames: a mix, 2D only or 3D only; bonus stars on or off; Harsh mode on or off |
@@ -109,6 +113,8 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Mind Meld | **Left stick** or **D-pad ← →** turns the dial, **A** locks in | Controller players always guess; the clue-giver needs a phone to type |
 | Marble Maze | **Left stick** or **D-pad** tilts the board | In split mode only your axis counts: player 1 left/right, player 2 forwards/back. **A** plays again at the end |
 | Dice Party | **X** rolls · **← →** picks a die, **A** holds it · **↑ ↓** picks a box, **Y** scores it | The TV highlights your die and box; Liar's Dice needs phones (the dice are secret) |
+| Checkers | **D-pad** moves the cursor · **A** picks a piece, **A** on a ◯ moves it · **B** drops it | Player 2's arrows are turned round (they sit at the top) |
+| Dots and Boxes | **D-pad** moves to a dot · **A**, then a direction draws the line from that dot · **B** cancels | |
 | Lobby | **B** | Leave your seat |
 | Lobby | **Back** | Free the seats of phones that have left (shown as *Reconnecting…*) |
 | Any game | **Back / Select** | Back to the lobby |
@@ -331,6 +337,10 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
 ```
 
 ## Adding a game
+
+First check [`docs/GAMES.md`](docs/GAMES.md): every game and minigame we have (what it is and its
+files) and the ideas not built yet, so a new one doesn't repeat an old one. After adding one, run
+`node tools/games-catalog.mjs` to update it (a test fails until you do).
 
 1. **Logic:** create `server/games/<id>.js` exporting
    `{ id, name, tagline, category, create(ctx) }` (`category` is

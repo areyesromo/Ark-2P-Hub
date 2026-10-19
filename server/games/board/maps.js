@@ -3,6 +3,8 @@
 //   type       start (acts as blue), blue, red, event, bonus, shop, warp (sends you to a random space)
 //   next       where a step goes: one index, or two at a fork (first = default)
 //   starCandidate  where the ⭐ can appear
+//   h          (3D layouts) height level: 0 ground, 1 ledge, 2 top; linked spaces differ by at most 1 (stairs)
+//   bridge     (3D layouts) the `next` links that cross a gap on a bridge
 // A map: { name, tier: easy | medium | hard | expert, starPrice, shopMarkup, spaces }.
 // validateMap() checks a map has no dead ends or bad links (test/board-maps.test.js).
 
@@ -36,6 +38,25 @@ function loop(points, codes) {
 function graph(rows) {
   return rows.map(([x, y, code, ...next]) => {
     const sp = { x, y, type: code.replace('*', ''), next };
+    if (code.endsWith('*')) sp.starCandidate = true;
+    return sp;
+  });
+}
+
+/** World size of the 2D board: x 0..1 spans 22 units, y 0..1 spans 13 (see board3d.js at()). */
+const WORLD = { w: 22, d: 13 };
+
+/**
+ * Spaces designed in 3D world units: rows [X, Z, h, code, ...next]; a next written 'b12' crosses a
+ * bridge to 12. x / y (0..1, for the 2D board) come from X / Z.
+ */
+function world(rows) {
+  const r3 = (n) => Math.round(n * 1000) / 1000;
+  return rows.map(([X, Z, h, code, ...links]) => {
+    const next = links.map((n) => (typeof n === 'string' ? Number(n.slice(1)) : n));
+    const sp = { x: r3(X / WORLD.w + 0.5), y: r3(Z / WORLD.d + 0.5), h, type: code.replace('*', ''), next };
+    const bridge = links.filter((n) => typeof n === 'string').map((n) => Number(n.slice(1)));
+    if (bridge.length) sp.bridge = bridge;
     if (code.endsWith('*')) sp.starCandidate = true;
     return sp;
   });
@@ -80,19 +101,25 @@ const HAUNTED = graph([
   [0.82, 0.7, 'red', 31], [0.72, 0.58, 'blue', 29],
 ]);
 
-// 🌋 Volcano Peak (expert): forks at 2, 9, 14 and 19, three pipes that drop
-// you back down, and mostly red slopes.
-const VOLCANO = graph([
-  [0.06, 0.9, 'start', 1], [0.18, 0.9, 'red', 2], [0.3, 0.9, 'blue', 3, 24], [0.42, 0.9, 'red', 4],
-  [0.54, 0.9, 'event', 5], [0.66, 0.9, 'red', 6], [0.78, 0.9, 'blue*', 7], [0.92, 0.9, 'warp', 8],
-  [0.94, 0.74, 'red', 9], [0.94, 0.58, 'shop', 10, 27], [0.94, 0.42, 'red', 11], [0.94, 0.26, 'blue', 12],
-  [0.94, 0.1, 'red', 13], [0.8, 0.08, 'bonus', 14], [0.66, 0.08, 'red', 15, 30], [0.52, 0.08, 'blue*', 16],
-  [0.38, 0.08, 'red', 17], [0.24, 0.08, 'warp', 18], [0.08, 0.1, 'red', 19], [0.06, 0.26, 'blue', 20, 32],
-  [0.06, 0.42, 'red', 21], [0.06, 0.58, 'event', 22], [0.06, 0.74, 'blue*', 23], [0.14, 0.8, 'red', 0],
-  [0.36, 0.75, 'red', 25], [0.48, 0.7, 'blue', 26], [0.6, 0.72, 'warp', 8],
-  [0.8, 0.6, 'red', 28], [0.7, 0.5, 'event', 29], [0.6, 0.4, 'red', 16],
-  [0.6, 0.22, 'red', 31], [0.45, 0.3, 'blue*', 18],
-  [0.2, 0.4, 'red', 33], [0.3, 0.55, 'blue', 22],
+// 🌋 Volcano Peak (expert), on three levels: a front ledge (with basalt pillars over a lava gap),
+// stairs up both sides to a mid ledge and the back plateau under the volcano. Forks: at 2 the inner
+// route climbs the left plateau and crosses the arch bridge; at 11 a shortcut over the right ledge;
+// at 20 down through the crystal cave; at 31 (on the bridge) a side path up to the back. Mostly red.
+const VOLCANO = world([
+  [-9.4, 5.2, 0, 'start', 1], [-7.3, 5.2, 0, 'red', 2], [-5.2, 5.2, 0, 'blue', 3, 28], [-3.1, 5.2, 0, 'red', 4],
+  [-1.0, 5.2, 0, 'event', 'b5'], [1.1, 5.2, 0, 'red', 'b6'], [3.2, 5.2, 0, 'blue*', 7], [5.3, 5.2, 0, 'warp', 8],
+  [7.4, 5.2, 0, 'red', 9], [9.5, 5.0, 0, 'shop', 10],
+  [9.7, 3.0, 0, 'red', 11], [9.7, 1.0, 1, 'blue', 12, 35], [9.7, -1.0, 1, 'red', 13], [9.7, -3.1, 2, 'bonus', 14],
+  [9.4, -5.2, 2, 'red', 15],
+  [7.3, -5.4, 2, 'blue*', 16], [5.2, -5.4, 2, 'red', 17], [3.1, -5.4, 2, 'red', 18], [1.0, -5.4, 2, 'warp', 19],
+  [-1.1, -5.4, 2, 'event', 20], [-3.2, -5.4, 2, 'blue', 21, 38], [-5.3, -5.4, 2, 'blue*', 22], [-7.4, -5.4, 2, 'red', 23],
+  [-9.4, -5.2, 2, 'blue', 24],
+  [-9.7, -3.1, 2, 'red', 25], [-9.7, -1.0, 1, 'red', 26], [-9.7, 1.0, 1, 'warp', 27], [-9.7, 3.1, 0, 'blue', 0],
+  [-5.6, 3.2, 0, 'red', 29], [-4.4, 1.3, 1, 'blue*', 30], [-2.5, 0.3, 1, 'red', 'b31'], [0.2, 0.3, 1, 'event', 'b32', 41],
+  [2.9, 0.3, 1, 'red', 33], [4.6, 1.9, 0, 'shop', 34], [6.3, 3.4, 0, 'red', 8],
+  [7.6, -0.6, 1, 'red', 36], [6.1, -2.0, 1, 'blue', 37], [4.7, -3.5, 2, 'red', 17],
+  [-3.6, -3.4, 2, 'red', 39], [-5.6, -2.5, 1, 'blue*', 40], [-7.5, -1.3, 1, 'red', 26],
+  [0.4, -1.8, 1, 'red', 42], [0.5, -3.6, 2, 'blue', 18],
 ]);
 
 export const MAPS = {
@@ -137,5 +164,24 @@ export function validateMap(map) {
   if (count('event') < 2) out.push('fewer than 2 events');
   if (count('bonus') < 1) out.push('no bonus space');
   if (new Set(s.map((sp) => sp.x + ',' + sp.y)).size !== s.length) out.push('two spaces in one spot');
+  // 3D layouts: one level per stair, bridges only on real links, no paths crossing.
+  if (s.some((sp) => sp.h !== undefined)) {
+    s.forEach((sp, i) => {
+      if (![0, 1, 2].includes(sp.h)) return out.push(`space ${i}: height level must be 0, 1 or 2`);
+      sp.next.forEach((n) => { if ([0, 1, 2].includes(s[n].h) && Math.abs(sp.h - s[n].h) > 1) out.push(`space ${i}: too steep to ${n}`); });
+      (sp.bridge || []).forEach((n) => { if (!sp.next.includes(n)) out.push(`space ${i}: bridge to ${n} isn't a link`); });
+    });
+    const links = s.flatMap((sp, i) => sp.next.map((n) => [i, n]));
+    // A bridge may pass over a path that's wholly below it.
+    const isBridge = (a, b) => (s[a].bridge || []).includes(b);
+    const over = (a, b, c, d) => isBridge(a, b) && Math.min(s[a].h, s[b].h) > Math.max(s[c].h, s[d].h);
+    const P = (i) => ({ X: s[i].x * WORLD.w, Z: s[i].y * WORLD.d });
+    const side = (a, b, c) => Math.sign((b.X - a.X) * (c.Z - a.Z) - (b.Z - a.Z) * (c.X - a.X));
+    links.forEach(([a, b], k) => links.slice(k + 1).forEach(([c, d]) => {
+      if (new Set([a, b, c, d]).size < 4 || over(a, b, c, d) || over(c, d, a, b)) return;
+      const [A, B, C, D] = [P(a), P(b), P(c), P(d)];
+      if (side(C, D, A) !== side(C, D, B) && side(A, B, C) !== side(A, B, D)) out.push(`paths ${a}-${b} and ${c}-${d} cross`);
+    }));
+  }
   return out;
 }

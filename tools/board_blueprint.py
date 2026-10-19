@@ -12,6 +12,7 @@ W, H = (X1 - X0) * PX, (Z1 - Z0) * PX + 70
 FONT = '/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf'
 BOLD = '/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf'
 f_small, f_tile, f_title = ImageFont.truetype(FONT, 13), ImageFont.truetype(BOLD, 15), ImageFont.truetype(BOLD, 24)
+LEVEL_FILL = [(214, 196, 150, 255), (166, 140, 96, 255), (112, 88, 58, 255)]   # ground, ledge, top
 COLORS = {'start': '#f8fafc', 'blue': '#2563eb', 'red': '#dc2626', 'event': '#16a34a', 'bonus': '#9333ea',
           'shop': '#f59e0b', 'warp': '#0891b2'}
 KEEP_TILE, KEEP_PATH = L['keepOut']['aroundTile'], L['keepOut']['aroundPath']
@@ -46,12 +47,29 @@ for mid, m in L['maps'].items():
     for s in sp:
         r = KEEP_TILE
         d.ellipse([P(s['x'] - r, s['z'] - r), P(s['x'] + r, s['z'] + r)], fill=(239, 68, 68, 45))
-    # paths with arrows
+    levels = m.get('levels')
+    # level plates under 3D layouts: a soft disc per space, darker = higher
+    if levels:
+        for s in sp:
+            r = 1.25
+            d.ellipse([P(s['x'] - r, s['z'] - r), P(s['x'] + r, s['z'] + r)], fill=LEVEL_FILL[s['level']])
+    # paths with arrows: walkways solid, stairs with rungs, bridges as a double rail
     for s in sp:
-        for n in s['next']:
+        for k, n in enumerate(s['next']):
             t = sp[n]
             a, b = P(s['x'], s['z']), P(t['x'], t['z'])
-            d.line([a, b], fill='#6b4f2a', width=6)
+            how = s['links'][k] if levels else 'walk'
+            ang = math.atan2(b[1] - a[1], b[0] - a[0])
+            nx, ny = -math.sin(ang), math.cos(ang)
+            if how == 'bridge':
+                for o in (-7, 7):
+                    d.line([(a[0] + nx * o, a[1] + ny * o), (b[0] + nx * o, b[1] + ny * o)], fill='#7c3aed', width=4)
+            else:
+                d.line([a, b], fill='#6b4f2a', width=6)
+            if how == 'stairs':
+                for u in [0.3, 0.4, 0.5, 0.6, 0.7]:
+                    cx, cy = a[0] + (b[0] - a[0]) * u, a[1] + (b[1] - a[1]) * u
+                    d.line([(cx + nx * 10, cy + ny * 10), (cx - nx * 10, cy - ny * 10)], fill='#3f2d14', width=3)
             mx, my = (a[0] + b[0]) / 2, (a[1] + b[1]) / 2
             ang = math.atan2(b[1] - a[1], b[0] - a[0])
             pts = [(mx + 9 * math.cos(ang), my + 9 * math.sin(ang)),
@@ -65,6 +83,16 @@ for mid, m in L['maps'].items():
         d.ellipse([cx - rt, cy - rt, cx + rt, cy + rt], fill=COLORS.get(s['type'], '#64748b'), outline='#111', width=2)
         if s.get('starCandidate'): d.ellipse([cx - rt - 5, cy - rt - 5, cx + rt + 5, cy + rt + 5], outline='#eab308', width=4)
         d.text((cx, cy), str(s['i']), font=f_tile, fill='#111' if s['type'] == 'start' else 'white', anchor='mm')
+        if levels: d.text((cx + rt - 2, cy + rt - 2), 'GMT'[s['level']], font=f_small, fill='#111', anchor='mm',
+                          stroke_width=3, stroke_fill='white')
+    if levels:
+        lx, ly = W - 330, 76
+        d.rectangle([lx, ly, W - 10, ly + 96], fill=(255, 255, 255, 220), outline='#555')
+        for k, (lab, col) in enumerate([('G  ground (y 0)', LEVEL_FILL[0]), ('M  ledge (y %.1f)' % L['levels']['step'], LEVEL_FILL[1]),
+                                         ('T  top (y %.1f)' % (2 * L['levels']['step']), LEVEL_FILL[2])]):
+            d.ellipse([lx + 10, ly + 8 + k * 22, lx + 28, ly + 26 + k * 22], fill=col)
+            d.text((lx + 36, ly + 10 + k * 22), lab, font=f_small, fill='#111')
+        d.text((lx + 10, ly + 74), 'rungs = stairs, purple rails = bridge', font=f_small, fill='#111')
     d.rectangle([0, 0, W, 66], fill='#1f2937')
     d.text((16, 10), f"{m['name'].split(' ', 1)[1]} ({mid}, {m['tier']}): top-down plan, 1 square = 1 world unit", font=f_title, fill='white')
     d.text((16, 42), "+X right, +Z toward the camera. Red haze = keep out (tiles r 1.0, paths 0.6). Brown ellipse = current ground edge. "

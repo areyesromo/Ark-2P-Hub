@@ -24,6 +24,8 @@ import microMayhem from './micro-mayhem.js';
 import partyMinis from './party-minis.js';
 import partyBoard from './party-board.js';
 import diceParty from './dice-party.js';
+import checkers from './checkers.js';
+import dotsBoxes from './dots-boxes.js';
 import { withSetup } from './options.js';
 
 /**
@@ -108,6 +110,11 @@ const GAMES = [
   withSetup(liarsDice, {
     dice: { title: 'Dice each', values: [5, 3, 4], label: (n) => `${n} dice` },
     wild: { title: 'Ones', values: [1, 0], label: (n) => (n ? 'Wild (count as any face)' : 'Just ones') },
+  }),
+  withSetup(checkers, firstTo('Games to win', [1, 2, 3])),
+  withSetup(dotsBoxes, {
+    size: { title: 'Grid', values: [4, 3, 5], label: (n) => `${n} × ${n} boxes` },
+    ...firstTo('Games to win', [1, 2, 3]),
   }),
   withSetup(diceParty, { rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) } }),
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),

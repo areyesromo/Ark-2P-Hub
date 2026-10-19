@@ -15,7 +15,7 @@ function seeded(seed) {
 
 test("both dice games sit in the lobby's Dice & Board group", () => {
   const board = listGames().filter((g) => g.category === 'board').map((g) => g.id);
-  assert.deepEqual(board.sort(), ['dice-party', 'liars-dice']);
+  for (const id of ['dice-party', 'liars-dice']) assert.ok(board.includes(id), id);
 });
 
 // ---- Liar's Dice ----
