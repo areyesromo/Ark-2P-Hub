@@ -246,13 +246,18 @@
         api = a;
         root = document.createElement('div');
         root.className = 'mi-phone ' + cfg.cls;
+        Ark.loadScript('/shared/motion.js');
         root.innerHTML = '<div class="mi-top"></div><div class="mi-timer"><i></i></div><div class="mi-stage"></div><div class="mi-card"></div>';
         el.appendChild(root);
         els = { top: root.querySelector('.mi-top'), bar: root.querySelector('.mi-timer i'), stage: root.querySelector('.mi-stage'), card: root.querySelector('.mi-card') };
         els.card.addEventListener('click', function (e) {
           const b = e.target.closest('button');
           if (!b) return;
-          if (b.classList.contains('mi-ready-btn')) { api.send({ type: 'ready' }); api.vibrate(15); }
+          if (b.classList.contains('mi-ready-btn')) {
+            api.send({ type: 'ready' });
+            api.vibrate(15);
+            if (window.ArkMotion) ArkMotion.ask(); // a tap: iPhones can ask for the motion sensor now
+          }
           if (b.classList.contains('mi-rematch')) api.send({ type: 'rematch' });
         });
         raf = requestAnimationFrame(frame);
