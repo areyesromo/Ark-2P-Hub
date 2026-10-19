@@ -150,3 +150,39 @@
 .kr-note.muted { color: var(--muted); }
 .kr-overlay .kr-setup .ark-setup { font-size: 1.15rem; margin: 0.6em 0; }
 .kr-overlay .kr-setup .sub { font-size: 1.2rem; }
+
+/* Racer and tyre picks (phone setup and end screens). */
+.kr-phone .kr-picks { gap: 0.5em; margin: 0; padding-top: 0.6em; border-top: 1px solid var(--line); }
+.kr-racers { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.kr-tyres { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; }
+.kr-racer, .kr-tyre { min-width: 0; padding: 6px 2px; border-radius: 10px; background: var(--panel); border: 2px solid var(--line); color: inherit; font-size: 0.8rem; font-weight: 800; line-height: 1.2; }
+.kr-racer span, .kr-tyre span { display: block; font-size: 1.5rem; }
+.kr-racer.on, .kr-tyre.on { border-color: #fff; background: var(--me); color: #06121c; }
+.kr-stats { display: flex; flex-direction: column; gap: 4px; text-align: left; }
+.kr-stats .who { font-weight: 800; margin-bottom: 2px; }
+.kr-stats .stat { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; }
+.kr-stats .stat span { width: 7.5em; color: var(--muted); }
+.kr-stats .bar { display: flex; gap: 3px; flex: 1; }
+.kr-stats .bar i { flex: 1; height: 10px; border-radius: 3px; background: rgba(255, 255, 255, 0.1); }
+.kr-stats .bar i.on { background: var(--me, #22d3ee); }
+.kr-stats .bar i.plus { background: var(--good); }
+.kr-stats .bar i.minus { background: transparent; box-shadow: inset 0 0 0 2px var(--bad); }
+
+/* TV: racer under each name, and both players' picks on the setup screen. */
+.kr-side .racer { font-size: 1rem; font-weight: 700; }
+.kr-setup-col { display: flex; flex-direction: column; gap: 0.8rem; flex: none; width: 19rem; }
+.kr-setup-col .kr-preview { width: 100%; }
+.kr-picks-tv { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; text-align: left; font-size: 0.95rem; }
+.kr-picks-tv .name { font-weight: 900; }
+.kr-picks-tv .line { padding: 0.1em 0.3em; border-radius: 8px; border: 2px solid transparent; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kr-picks-tv .line.focus.p1 { border-color: var(--p1); }
+.kr-picks-tv .line.focus.p2 { border-color: var(--p2); }
+.kr-picks-tv .muted { color: var(--muted); font-size: 0.85em; }
+.kr-picks-tv .stat { display: flex; align-items: center; gap: 0.4em; font-size: 0.75rem; color: var(--muted); }
+.kr-picks-tv .stat span { width: 6.2em; }
+.kr-picks-tv .bar { display: flex; gap: 2px; flex: 1; }
+.kr-picks-tv .bar i { flex: 1; height: 8px; border-radius: 2px; background: rgba(255, 255, 255, 0.1); }
+.kr-picks-tv .p1 .bar i.on { background: var(--p1); }
+.kr-picks-tv .p2 .bar i.on { background: var(--p2); }
+.kr-picks-tv .bar i.plus { background: var(--good); }
+.kr-picks-tv .bar i.minus { box-shadow: inset 0 0 0 2px var(--bad); }

@@ -13,6 +13,26 @@
     });
   }
   loadRoad(0);
+  // The racers and tyres (shared with the server): pick panel and kart shapes once loaded.
+  Ark.loadScript('/games/kart-race/racers.js').then(function () {
+    overlayKey = hudKey = '';
+    if (view && overlay) {
+      renderOverlay(view);
+      renderHud(view);
+    }
+  });
+  // Kart bodies by the racer's type: the outline (nose at +x), how far the nose reaches and the body's half width.
+  const SHAPES = {
+    classic: { nose: 0.55, half: 0.28, pts: [[0.55, 0], [0.3, -0.28], [-0.5, -0.28], [-0.5, 0.28], [0.3, 0.28]] },
+    long: { nose: 0.75, half: 0.26, pts: [[0.75, 0], [0.4, -0.26], [-0.5, -0.26], [-0.5, 0.26], [0.4, 0.26]] },
+    stubby: { nose: 0.42, half: 0.32, pts: [[0.42, 0], [0.25, -0.32], [-0.45, -0.32], [-0.45, 0.32], [0.25, 0.32]] },
+    wings: { nose: 0.55, half: 0.25, pts: [[0.55, 0], [0.3, -0.25], [0.2, -0.25], [0.2, -0.42], [-0.1, -0.42], [-0.1, -0.25], [-0.5, -0.25], [-0.5, 0.25], [-0.1, 0.25], [-0.1, 0.42], [0.2, 0.42], [0.2, 0.25], [0.3, 0.25]] },
+    boxy: { nose: 0.45, half: 0.33, pts: [[0.45, -0.33], [-0.5, -0.33], [-0.5, 0.33], [0.45, 0.33]] },
+    pointed: { nose: 0.6, half: 0.22, pts: [[0.6, 0], [0.1, -0.22], [-0.5, -0.22], [-0.5, 0.22], [0.1, 0.22]] },
+  };
+  const STAT_ROWS = [['speed', 'Speed'], ['accel', 'Acceleration'], ['handling', 'Handling'], ['weight', 'Weight']];
+  // Controllers on the setup screen: the settings rows, then their own racer and tyres.
+  const PICK_ROWS = ['racer', 'tyre'];
   const esc = Ark.escapeHtml;
   let trackNames = []; // from the server's views
   const ROWS = [
@@ -69,8 +89,13 @@
     return 'M' + dialAt(f0, r) + ' A' + r + ' ' + r + ' 0 ' + ((f1 - f0) * SWEEP > 180 ? 1 : 0) + ' 1 ' + dialAt(f1, r);
   }
 
-  function gaugeHtml(v) {
-    const top = v.boostSpeed;
+  /** The dial's top: room for the fastest racer on a boost. */
+  function gaugeTop(v) {
+    return v.boostSpeed + 2;
+  }
+
+  function gaugeHtml(v, k) {
+    const top = gaugeTop(v);
     let ticks = '';
     for (let kmh = 0; kmh <= top * KMH; kmh += 20) {
       const f = kmh / (top * KMH);
@@ -78,7 +103,7 @@
     }
     return '<div class="kr-gauge"><svg viewBox="0 0 100 86">' +
       '<path class="track" d="' + dialArc(0, 1, 43) + '"/>' +
-      '<path class="red" d="' + dialArc(v.maxSpeed / top, 1, 43) + '"/>' +
+      '<path class="red" d="' + dialArc((k.top || v.maxSpeed) / top, 1, 43) + '"/>' +
       '<path class="fill" d="' + dialArc(0, 1, 43) + '" pathLength="1"/>' +
       '<g class="ticks">' + ticks + '</g>' +
       '<line class="needle" x1="50" y1="50" x2="50" y2="14"/><circle cx="50" cy="50" r="4"/></svg>' +
@@ -89,7 +114,7 @@
   function updateGauges(v) {
     hud.querySelectorAll('.kr-gauge').forEach(function (el, slot) {
       const k = v.karts[slot];
-      const f = Math.min(1, Math.abs(k.speed) / v.boostSpeed);
+      const f = Math.min(1, Math.abs(k.speed) / gaugeTop(v));
       el.querySelector('.needle').style.transform = 'rotate(' + (-SWEEP / 2 + f * SWEEP) + 'deg)';
       el.querySelector('.fill').style.strokeDasharray = f + ' 1';
       el.querySelector('.read b').textContent = (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH);
@@ -106,6 +131,63 @@
     });
   }
 
+  /** "🔥 Rex · 🏁" under a player's name. */
+  function racerLine(k) {
+    const R = window.ArkKartRacers;
+    if (!R || !k.racer) return '';
+    const r = R.racer(k.racer);
+    return '<div class="racer">' + r.emoji + ' ' + r.name + ' · ' + R.tyre(k.tyre).emoji + '</div>';
+  }
+
+  /** One stat as 6 cells: the racer's own, plus (green) or minus (red) for the tyres. */
+  function statBar(base, mod) {
+    let h = '';
+    for (let i = 1; i <= 6; i++) {
+      const cls = mod > 0 && i > base && i <= base + mod ? 'plus' : mod < 0 && i > base + mod && i <= base ? 'minus' : i <= base ? 'on' : '';
+      h += '<i class="' + cls + '"></i>';
+    }
+    return h;
+  }
+
+  /** Both players' racers and tyres on the setup screen; a controller's Racer / Tyres row outlined. */
+  function picksHtml(v) {
+    const R = window.ArkKartRacers;
+    if (!R || !v.picks) return '';
+    return '<div class="kr-picks-tv">' + [0, 1].map(function (slot) {
+      const pick = v.picks[slot];
+      const r = R.racer(pick.racer);
+      const t = R.tyre(pick.tyre);
+      const row = v.players[slot].local && pads[slot] ? PICK_ROWS[(pads[slot].row || 0) - ROWS.length] : null;
+      const f = function (key) { return row === key ? ' focus p' + (slot + 1) : ''; };
+      return '<div class="pick p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div>' +
+        '<div class="line' + f('racer') + '"><span class="em">' + r.emoji + '</span> <b>' + r.name + '</b> <span class="muted">' + R.TYPES[r.type].label + '</span></div>' +
+        '<div class="line' + f('tyre') + '"><span class="em">' + t.emoji + '</span> ' + t.name + ' tyres</div>' +
+        STAT_ROWS.map(function (s) {
+          return '<div class="stat"><span>' + s[1] + '</span><div class="bar">' + statBar(r.stats[s[0]], t.mod[s[0]] || 0) + '</div></div>';
+        }).join('') + '</div>';
+    }).join('') + '</div>';
+  }
+
+  /** Ark.setup.focus for the settings rows only (a player on their Racer / Tyres row is outlined in the picks panel instead). */
+  function settingsFocus(v) {
+    const onPicks = function (slot) { return pads[slot] && (pads[slot].row || 0) >= ROWS.length; };
+    const focus = Ark.setup.focus(v, ROWS, [0, 1].map(function (slot) { return onPicks(slot) ? { row: 0 } : pads[slot]; }));
+    Object.keys(focus).forEach(function (key) {
+      focus[key] = focus[key].split(' ').filter(function (c) { return !onPicks(Number(c.slice(1)) - 1); }).join(' ');
+      if (!focus[key]) delete focus[key];
+    });
+    return focus;
+  }
+
+  /** A controller's ← / → on its Racer or Tyres row: the next one along (wrapping round). */
+  function cyclePick(v, slot, key, dir) {
+    const R = window.ArkKartRacers;
+    if (!R || !v.picks) return null;
+    const list = key === 'racer' ? R.RACERS : R.TYRES;
+    const i = list.map(function (x) { return x.id; }).indexOf(v.picks[slot][key]);
+    return { type: key, id: list[(i + dir + list.length) % list.length].id };
+  }
+
   function renderHud(v) {
     let html = '';
     if (v.karts) {
@@ -114,7 +196,7 @@
         return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
           '<div class="pos">' + ordinal(v.positions[slot]) + (k.item ? ' <span class="item">' + ITEM_ICON[k.item] + '</span>' : '') + '</div>' +
           '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
-          '<div class="laptime"></div></div>' + gaugeHtml(v) + '</div>';
+          racerLine(k) + '<div class="laptime"></div></div>' + gaugeHtml(v, k) + '</div>';
       };
       html = side(0) +
         '<div class="kr-mid"><div class="track">' + esc(v.track.name) + (v.races > 1 ? ' · Race ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
@@ -141,7 +223,7 @@
   function renderOverlay(v) {
     let html = '';
     if (v.phase === 'setup') {
-      html = '<div class="panel kr-setup"><div class="title">🏎️ Kart Race</div><div class="kr-setup-row">' + Ark.setup.html(v, ROWS, Ark.setup.focus(v, ROWS, pads)) + previewHtml(v, v.settings.track) + '</div>' +
+      html = '<div class="panel kr-setup"><div class="title">🏎️ Kart Race</div><div class="kr-setup-row">' + Ark.setup.html(v, ROWS, settingsFocus(v)) + '<div class="kr-setup-col">' + previewHtml(v, v.settings.track) + picksHtml(v) + '</div></div>' +
         '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</div></div>';
     } else if (v.phase === 'countdown') {
       const n = v.countdown;
@@ -315,6 +397,10 @@
   }
 
   function drawKart(g, k, s, slot, now) {
+    const R = window.ArkKartRacers;
+    const racer = R && k.racer ? R.racer(k.racer) : null;
+    const shape = SHAPES[racer ? racer.shape : 'classic'];
+    const wheel = R && k.tyre ? R.tyre(k.tyre).wheel : { len: 0.24, wide: 0.14 };
     g.save();
     g.translate(s.x, s.y);
     g.rotate(s.angle + (k.spin ? now / 60 : 0)); // spinning out after a banana
@@ -341,21 +427,22 @@
     g.shadowBlur = 8;
     // Wheels.
     g.fillStyle = '#111827';
-    [[-0.32, -0.34], [0.28, -0.34], [-0.32, 0.34], [0.28, 0.34]].forEach(function (w) { g.fillRect(w[0] - 0.12, w[1] - 0.07, 0.24, 0.14); });
-    // Body.
+    const wy = shape.half + 0.06; // wheels just outside the body
+    [[-0.32, -wy], [0.28, -wy], [-0.32, wy], [0.28, wy]].forEach(function (w) { g.fillRect(w[0] - wheel.len / 2, w[1] - wheel.wide / 2, wheel.len, wheel.wide); });
+    // Body: the racer's shape in the player's colour, with a stripe in the racer's type colour.
     g.fillStyle = colors[slot];
     g.beginPath();
-    g.moveTo(0.55, 0);
-    g.lineTo(0.3, -0.28);
-    g.lineTo(-0.5, -0.28);
-    g.lineTo(-0.5, 0.28);
-    g.lineTo(0.3, 0.28);
+    shape.pts.forEach(function (p, i) { if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); });
     g.closePath();
     g.fill();
     g.shadowBlur = 0;
     g.strokeStyle = '#fff';
     g.lineWidth = 0.05;
     g.stroke();
+    if (racer) {
+      g.fillStyle = racer.stripe;
+      g.fillRect(-0.45, -0.05, shape.nose - 0.1 + 0.45, 0.1);
+    }
     // Driver's helmet.
     g.fillStyle = '#f8fafc';
     g.beginPath();
@@ -452,12 +539,17 @@
       if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
       return out;
     },
-    padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row, ←→ change, A start · End: A rematch, Y settings',
+    padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A start · End: A rematch, Y settings',
     padPoll: padPoll,
     pad: function (btn, v, slot) {
       if (v.phase === 'setup') {
         if (!pads[slot]) pads[slot] = { row: 0 };
-        const input = Ark.setup.pad(btn, v, ROWS, pads[slot]);
+        const rows = ROWS.concat(PICK_ROWS.map(function (key) { return { key: key }; }));
+        const row = pads[slot].row || 0;
+        // ← → on the Racer / Tyres rows cycles this player's pick; everything else is the usual setup.
+        const input = row >= ROWS.length && (btn === 'LEFT' || btn === 'RIGHT')
+          ? cyclePick(v, slot, PICK_ROWS[row - ROWS.length], btn === 'LEFT' ? -1 : 1)
+          : Ark.setup.pad(btn, v, rows, pads[slot]);
         if (view) {
           overlayKey = '';
           renderOverlay(view);
