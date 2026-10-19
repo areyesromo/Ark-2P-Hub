@@ -1,6 +1,14 @@
 (function () {
   Ark.loadCss('/games/kart-race/style.css');
   const tiltReady = Ark.loadScript('/shared/tilt.js');
+  // The racers and tyres (shared with the server): draw the pick cards once it's here.
+  Ark.loadScript('/games/kart-race/racers.js').then(function () {
+    textKey = '';
+    if (view && els) render(view);
+  });
+  const RACER_KEY = 'ark.kart.racer';
+  const TYRE_KEY = 'ark.kart.tyre';
+  const STAT_ROWS = [['speed', 'Speed'], ['accel', 'Acceleration'], ['handling', 'Handling'], ['weight', 'Weight']];
   let trackNames = []; // from the server's views
   const ROWS = [
     { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
@@ -52,6 +60,7 @@
   const KMH = 12; // speed units -> km/h, as on the TV's dial
   let sent = '';
   let tiltNote = '';
+  let restored = false; // sent this phone's remembered racer and tyres yet?
 
   const clamp = function (x) { return Math.max(-1, Math.min(1, x)); };
   const dead = function (x) { return Math.abs(x) < DEAD ? 0 : x; };
@@ -275,6 +284,52 @@
         '<p class="kr-note muted">Your phone will warn that the page isn\'t private (the hub signs its own certificate): choose Advanced → Proceed, once. You keep your seat.</p>' : '');
   }
 
+  // ---- racer and tyres (setup and end screens) ----
+
+  function remembered(key) {
+    try { return localStorage.getItem(key); } catch (e) { return null; }
+  }
+
+  /** One stat as a bar of 6 cells: the racer's own, plus (green) or minus (red) for the tyres. */
+  function statBar(base, mod) {
+    let h = '';
+    for (let i = 1; i <= 6; i++) {
+      const cls = mod > 0 && i > base && i <= base + mod ? 'plus' : mod < 0 && i > base + mod && i <= base ? 'minus' : i <= base ? 'on' : '';
+      h += '<i class="' + cls + '"></i>';
+    }
+    return h;
+  }
+
+  function renderPicks(v) {
+    const R = window.ArkKartRacers;
+    if (!R) return '';
+    const mine = v.picks[v.you];
+    const racer = R.racer(mine.racer);
+    const tyre = R.tyre(mine.tyre);
+    return '<div class="title">Your racer</div><div class="kr-racers">' + R.RACERS.map(function (r) {
+      return '<button type="button" class="kr-racer' + (r.id === racer.id ? ' on' : '') + '" data-racer="' + r.id + '"><span>' + r.emoji + '</span>' + r.name + '</button>';
+    }).join('') + '</div>' +
+      '<div class="title">Tyres</div><div class="kr-tyres">' + R.TYRES.map(function (t) {
+        return '<button type="button" class="kr-tyre' + (t.id === tyre.id ? ' on' : '') + '" data-tyre="' + t.id + '"><span>' + t.emoji + '</span>' + t.name + '</button>';
+      }).join('') + '</div>' +
+      '<div class="kr-stats"><div class="who">' + racer.emoji + ' ' + racer.name + ' · ' + R.TYPES[racer.type].label + ' · ' + tyre.emoji + ' ' + tyre.name + '</div>' +
+      STAT_ROWS.map(function (row) {
+        return '<div class="stat"><span>' + row[1] + '</span><div class="bar">' + statBar(racer.stats[row[0]], tyre.mod[row[0]] || 0) + '</div></div>';
+      }).join('') + '</div>';
+  }
+
+  /** Once per visit to the setup screen: ask for this phone's remembered racer and tyres. */
+  function restorePicks(v) {
+    const R = window.ArkKartRacers;
+    if (restored || !R || v.phase !== 'setup') return;
+    restored = true;
+    const mine = v.picks[v.you];
+    const racer = remembered(RACER_KEY);
+    const tyre = remembered(TYRE_KEY);
+    if (racer && R.racer(racer).id === racer && racer !== mine.racer) api.send({ type: 'racer', id: racer });
+    if (tyre && R.tyre(tyre).id === tyre && tyre !== mine.tyre) api.send({ type: 'tyre', id: tyre });
+  }
+
   function status(v) {
     const me = v.you;
     if (v.phase === 'setup') return '<span class="big">🏎️ Kart Race</span><br>Pick the settings (either of you can), then start.';
@@ -334,13 +389,17 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.item, k.spin, k.shield], v.result]);
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.item, k.spin, k.shield], v.result]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';
     const between = setup || v.phase === 'over';
     els.status.innerHTML = status(v);
     els.setup.innerHTML = setup ? Ark.setup.html(v, ROWS) : '';
+    els.picks.innerHTML = between ? renderPicks(v) : '';
+    els.picks.classList.toggle('hidden', !between);
+    if (setup) restorePicks(v);
+    else restored = false; // ask again next time we're back at setup
     els.prefs.classList.toggle('hidden', !between);
     els.go.classList.toggle('hidden', !setup);
     els.controls.classList.toggle('hidden', between);
@@ -364,6 +423,7 @@
       root.innerHTML =
         '<div class="status"></div>' +
         '<div class="kr-setup-box"></div>' +
+        '<div class="ark-setup kr-picks hidden"></div>' +
         '<div class="ark-setup kr-prefs hidden"></div>' +
         '<button class="primary go hidden">Start</button>' +
         '<div class="kr-controls">' +
@@ -378,6 +438,7 @@
       els = {
         status: root.querySelector('.status'),
         setup: root.querySelector('.kr-setup-box'),
+        picks: root.querySelector('.kr-picks'),
         prefs: root.querySelector('.kr-prefs'),
         go: root.querySelector('.go'),
         controls: root.querySelector('.kr-controls'),
@@ -427,6 +488,18 @@
         api.vibrate(30);
       });
       Ark.setup.bind(els.setup, api);
+      els.picks.addEventListener('click', function (e) {
+        const r = e.target.closest('[data-racer]');
+        const t = e.target.closest('[data-tyre]');
+        if (r) {
+          store(RACER_KEY, r.getAttribute('data-racer'));
+          api.send({ type: 'racer', id: r.getAttribute('data-racer') });
+        }
+        if (t) {
+          store(TYRE_KEY, t.getAttribute('data-tyre'));
+          api.send({ type: 'tyre', id: t.getAttribute('data-tyre') });
+        }
+      });
       els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
       els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });
       els.change.addEventListener('click', function () { api.send({ type: 'setup' }); });
@@ -441,6 +514,7 @@
       analog = 0;
       stickBrake = stickGas = false;
       sent = textKey = '';
+      restored = false;
     },
   });
 })();
