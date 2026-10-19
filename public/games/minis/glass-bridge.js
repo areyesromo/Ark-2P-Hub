@@ -150,7 +150,7 @@
           const broken = r.row < s.rows ? s.broken[r.row] : [true, true];
           const held = r.row < s.rows ? s.solid[r.row] : [false, false];
           phone.el.querySelectorAll('[data-side]').forEach(function (b, side) {
-            b.disabled = broken[side];
+            b.disabled = broken[side] || r.busy;
             b.textContent = (side ? '' : '◀ ') + (broken[side] ? '💥' : held[side] ? '✅' : '🪟') + (side ? ' ▶' : '');
           });
         },

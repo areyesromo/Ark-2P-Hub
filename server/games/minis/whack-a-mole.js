@@ -39,7 +39,7 @@ export default {
         const kind = m.who === 'gold' ? 'gold' : m.who === slot ? 'mine' : 'theirs';
         points[slot] += POINTS[kind];
         holes[input.hole] = null;
-        last = { hole: input.hole, by: slot, kind, id: m.id };
+        last = { hole: input.hole, by: slot, kind, id: m.id, at: api.now() };
         api.update();
       },
       onTimeUp: () => api.end({ winner: points[0] === points[1] ? null : points[0] > points[1] ? 0 : 1 }),
@@ -48,7 +48,7 @@ export default {
         return {
           holes: holes.map((m) => (m && m.until > now ? { id: m.id, who: m.who, left: m.until - now } : null)),
           points,
-          last,
+          last: last && { hole: last.hole, by: last.by, kind: last.kind, id: last.id, ago: now - last.at },
         };
       },
     };

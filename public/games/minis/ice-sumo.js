@@ -89,7 +89,7 @@
           padReady.then(function () {
             if (phone !== p) return;
             p.pad = window.ArkMovePad.create({
-              api: mctx, key: 'ark.coins.controls', verb: 'slide',
+              api: mctx, key: 'ark.sumo.controls', verb: 'slide',
               onMove: function (x, y, now) {
                 p.pending = { x: Math.round(x * 100) / 100, y: Math.round(y * 100) / 100 };
                 const wait = SEND_MS - (Date.now() - p.last);

@@ -44,6 +44,7 @@ export default {
           r.side = null;
           r.busyUntil = now + FALL_MS;
         }
+        api.setTimeout(api.update, r.busyUntil - now + 1); // clear 'falling' / 'busy' on the screens
         api.update();
       },
       onTimeUp: () => {

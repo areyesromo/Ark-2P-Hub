@@ -2,9 +2,10 @@
 // (there's very little grip) and bump your rival off the edge. Off the ice loses at once;
 // at the end of time, whoever is nearer the middle wins.
 export const RINK_R = 5;
-export const PUCK = { r: 0.55, accel: 9, drag: 0.35, maxSpeed: 8 };
-export const BOUNCE = 1.05; // a lively bump
-export const TICK_MS = 1000 / 30;
+export const PUCK = { r: 0.55, accel: 6, drag: 0.5, maxSpeed: 6 };
+export const BOUNCE = 0.9; // a solid bump: the hitter keeps a little speed
+export const BUMP_SPEED = 1; // closing speed that counts as a bump (and plays a sound), not a shove
+export const TICK_MS = 50;
 const DURATION_MS = 30000;
 
 export default {
@@ -36,7 +37,7 @@ export default {
       a.vy -= j * ny;
       b.vx += j * nx;
       b.vy += j * ny;
-      bumps++;
+      if (closing > BUMP_SPEED) bumps++;
     }
 
     function tick() {
@@ -82,7 +83,7 @@ export default {
       onTimeUp: () => {
         over = true;
         const [a, b] = pucks.map((p) => Math.hypot(p.x, p.y));
-        api.end({ winner: Math.abs(a - b) < 0.05 ? null : a < b ? 0 : 1 });
+        api.end({ winner: a === b ? null : a < b ? 0 : 1 });
       },
       view: () => ({
         rink: RINK_R,
