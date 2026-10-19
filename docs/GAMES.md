@@ -86,7 +86,7 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Ice Rink Sumo | `ice-sumo` | party | 3D | Steer (joystick / stick) on the slippery ice and bump your rival off | `server/games/minis/ice-sumo.js`, `public/games/minis/ice-sumo.js`, `test/minis-party3.test.js` |
 | Simon Says | `simon-says` | party | 2D | Press the colour only when Simon says so | `server/games/minis/simon-says.js`, `public/games/minis/simon-says.js`, `test/minis-party3.test.js` |
 | Sword Duel | `sword-duel` | party | 2D | When the arrow shows, slash your phone that way (or swipe). Too soon or the wrong way: out of that point | `server/games/minis/sword-duel.js`, `public/games/minis/sword-duel.js`, `test/minis-motion.test.js` |
-| Pour It | `pour-it` | party | 2D | Tilt to pour (or hold POUR), level the phone to stop. Closest to the line wins; spill and you lose | `server/games/minis/pour-it.js`, `public/games/minis/pour-it.js`, `test/minis-motion.test.js` |
+| Pour It | `pour-it` | party | 2D | Hold the phone up like a bottle and tip it sideways to pour (or hold POUR); stand it up to stop. Closest to the line wins; spill and you lose | `server/games/minis/pour-it.js`, `public/games/minis/pour-it.js`, `test/minis-motion.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->

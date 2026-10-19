@@ -1,8 +1,10 @@
 // Pour It (server/games/minis/pour-it.js): tilt your phone to pour (or hold POUR), level it
 // to stop; get closest to the line without spilling. Phones only.
 (function () {
-  const TILT_START = 18; // degrees from how you held the phone at the start before it pours…
-  const TILT_FULL = 55; // …and where it pours flat out
+  // Like a bottle: hold the phone upright and tip it sideways to pour.
+  const TILT_START = 25; // degrees tipped from upright before it pours…
+  const TILT_FULL = 80; // …and where it pours flat out (lying on its side)
+  const UPRIGHT = 4; // m/s² of gravity across the screen: less and the phone is lying flat (no pour)
   const SEND_MS = 100;
 
   function glass(g, line) {
@@ -35,7 +37,7 @@
     },
     phone: {
       mount: function (el, mctx) {
-        el.innerHTML = '<div class="mi-phone-stage mi-pour-phone"><div class="msg"></div><div class="g"></div><button class="primary mi-big-btn">🫗 Hold to POUR</button><div class="how">Tilt the phone to pour, level it to stop · or hold the button</div></div>';
+        el.innerHTML = '<div class="mi-phone-stage mi-pour-phone"><div class="msg"></div><div class="bottle"><span>🥛</span></div><div class="g"></div><button class="primary mi-big-btn">🫗 Hold to POUR</button><div class="how">Hold the phone upright like a bottle and tip it sideways to pour; stand it up to stop · or hold the button</div></div>';
         const p = { el: el, slot: mctx.slot, mctx: mctx, tiltV: 0, holdV: 0, sent: -1, lastSend: 0, timer: null, stop: null, lastBuzz: 0, was: null };
         phone = p;
         const send = function () {
@@ -54,16 +56,17 @@
         btn.addEventListener('pointerleave', hold(0));
         Ark.loadScript('/shared/motion.js').then(function () {
           if (phone !== p) return;
-          // Pouring is tipping the phone away from how you held it when the minigame began,
-          // whichever way up that was (portrait or landscape): the angle between the two.
+          // Pouring is tipping the upright phone sideways, like a bottle: the angle of gravity
+          // across the screen, from straight down the phone (0°) to across it (90°). Leaning it
+          // towards or away from you doesn't pour; lying flat doesn't either.
+          const bottle = el.querySelector('.bottle span');
           p.stop = ArkMotion.on(function (r) {
             const g = r.gravity;
-            const len = Math.hypot(g.x, g.y, g.z) || 1;
-            if (!p.playing) { p.rest = { x: g.x / len, y: g.y / len, z: g.z / len }; p.tiltV = 0; return; }
-            if (!p.rest) p.rest = { x: g.x / len, y: g.y / len, z: g.z / len };
-            const dot = (g.x * p.rest.x + g.y * p.rest.y + g.z * p.rest.z) / len;
-            const deg = Math.acos(Math.max(-1, Math.min(1, dot))) * 180 / Math.PI;
-            p.tiltV = Math.max(0, Math.min(1, (deg - TILT_START) / (TILT_FULL - TILT_START)));
+            const across = Math.hypot(g.x, g.y);
+            const deg = across < UPRIGHT ? 0 : Math.atan2(Math.abs(g.x), Math.abs(g.y)) * 180 / Math.PI;
+            p.tiltV = p.playing ? Math.max(0, Math.min(1, (deg - TILT_START) / (TILT_FULL - TILT_START))) : 0;
+            bottle.style.transform = 'rotate(' + (g.x > 0 ? -deg : deg) + 'deg)';
+            bottle.parentNode.classList.toggle('pouring', p.tiltV > 0);
           });
         });
       },
