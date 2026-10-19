@@ -74,13 +74,14 @@
         // While you wait, the odd nibble buzzes the phone: it's not a bite yet!
         const nibble = function () {
           if (phone !== p) return;
-          if (p.stage === 'wait') p.mctx.vibrate(15);
+          if (p.stage === 'wait' && p.playing) p.mctx.vibrate(15);
           p.nibble = setTimeout(nibble, 700 + Math.random() * 1400);
         };
         p.nibble = setTimeout(nibble, 900);
       },
-      update: function (s) {
+      update: function (s, v) {
         if (!phone) return;
+        phone.playing = v.phase === 'play';
         const L = s.lines[phone.slot];
         const was = phone.stage;
         if (L.stage !== was) phone.mctx.vibrate(BUZZ[L.stage] || 0);

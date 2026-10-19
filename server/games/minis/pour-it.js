@@ -3,7 +3,8 @@
 // spill, which loses. When you've poured and held still for a moment, your glass is done.
 export const TICK_MS = 100;
 export const FLOW = 0.32; // of a glass per second, at full tilt
-export const SETTLE_MS = 1500; // poured, then this long without pouring: done
+export const SETTLE_MS = 2000; // poured, then this long without pouring: done
+export const MIN_FILL = 0.1; // a dribble (picking the phone up) doesn't count as having poured
 export const LINE = { min: 0.55, max: 0.85 };
 const DURATION_MS = 25000;
 
@@ -36,7 +37,7 @@ export default {
             g.spilled = true;
             g.done = true;
           }
-        } else if (g.fill > 0 && now - g.lastPour >= SETTLE_MS) g.done = true;
+        } else if (g.fill >= MIN_FILL && now - g.lastPour >= SETTLE_MS) g.done = true;
       });
       api.update();
       if (glasses.every((g) => g.done)) return finish();

@@ -1,8 +1,8 @@
 // Pour It (server/games/minis/pour-it.js): tilt your phone to pour (or hold POUR), level it
 // to stop; get closest to the line without spilling. Phones only.
 (function () {
-  const TILT_START = 0.25; // how far the phone leans (sine) before it starts to pour…
-  const TILT_FULL = 0.75; // …and where it pours flat out
+  const TILT_START = 18; // degrees from how you held the phone at the start before it pours…
+  const TILT_FULL = 55; // …and where it pours flat out
   const SEND_MS = 100;
 
   function glass(g, line) {
@@ -54,15 +54,23 @@
         btn.addEventListener('pointerleave', hold(0));
         Ark.loadScript('/shared/motion.js').then(function () {
           if (phone !== p) return;
+          // Pouring is tipping the phone away from how you held it when the minigame began,
+          // whichever way up that was (portrait or landscape): the angle between the two.
           p.stop = ArkMotion.on(function (r) {
-            const lean = Math.abs(r.tilt.right);
-            p.tiltV = Math.max(0, Math.min(1, (lean - TILT_START) / (TILT_FULL - TILT_START)));
+            const g = r.gravity;
+            const len = Math.hypot(g.x, g.y, g.z) || 1;
+            if (!p.playing) { p.rest = { x: g.x / len, y: g.y / len, z: g.z / len }; p.tiltV = 0; return; }
+            if (!p.rest) p.rest = { x: g.x / len, y: g.y / len, z: g.z / len };
+            const dot = (g.x * p.rest.x + g.y * p.rest.y + g.z * p.rest.z) / len;
+            const deg = Math.acos(Math.max(-1, Math.min(1, dot))) * 180 / Math.PI;
+            p.tiltV = Math.max(0, Math.min(1, (deg - TILT_START) / (TILT_FULL - TILT_START)));
           });
         });
       },
-      update: function (s) {
+      update: function (s, v) {
         if (!phone) return;
         const p = phone;
+        p.playing = v.phase === 'play';
         const g = s.glasses[p.slot];
         const them = s.glasses[1 - p.slot];
         // Buzz: a tick as you near the line, a long one if you spill.

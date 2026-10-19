@@ -22,9 +22,9 @@
     return l.why === 'slow' ? 'Too slow! No point' : 'Both missed! No point';
   }
 
-  /** The direction of a slash from a motion reading (the first jolt goes the way you swing). */
-  function slashDir(m) {
-    return Math.abs(m.x) > Math.abs(m.y) ? (m.x > 0 ? 'right' : 'left') : m.y > 0 ? 'up' : 'down';
+  /** Which way a velocity (x right, y up) points: the way the phone is swinging. */
+  function slashDir(v) {
+    return Math.abs(v.x) > Math.abs(v.y) ? (v.x > 0 ? 'right' : 'left') : v.y > 0 ? 'up' : 'down';
   }
 
   let host = null;
@@ -55,7 +55,7 @@
         phone = p;
         const slash = function (dir) {
           const now = performance.now();
-          if (now - p.lastSlash < 500 || !p.s || p.s.stage === 'point' || p.s.out[p.slot]) return;
+          if (now - p.lastSlash < 500 || !p.s || !p.playing || p.s.stage === 'point' || p.s.out[p.slot]) return;
           p.lastSlash = now;
           mctx.send({ type: 'slash', dir: dir });
           mctx.vibrate(20);
@@ -72,15 +72,26 @@
         });
         Ark.loadScript('/shared/motion.js').then(function () {
           if (phone !== p) return;
+          // Add up the movement into a (fading) velocity: its direction is the swing's, even
+          // when the hard stop at the end of a slash is what crosses the threshold.
+          const vel = { x: 0, y: 0, at: performance.now() };
           p.stop = ArkMotion.on(function (r) {
-            if (r.jolt > SLASH_JOLT) slash(slashDir(r.move));
+            const now = performance.now();
+            const dt = Math.min(0.05, (now - vel.at) / 1000);
+            vel.at = now;
+            // Decide on the swing so far (before this reading, which may be the stop); if the
+            // phone was still until now, this reading is the start of the swing itself.
+            if (r.jolt > SLASH_JOLT) slash(slashDir(Math.hypot(vel.x, vel.y) > 0.12 ? vel : r.move));
+            vel.x = vel.x * 0.85 + r.move.x * dt;
+            vel.y = vel.y * 0.85 + r.move.y * dt;
           });
         });
       },
-      update: function (s) {
+      update: function (s, v) {
         if (!phone) return;
         const p = phone;
         const me = p.slot;
+        p.playing = v.phase === 'play';
         // Buzz: the arrow is up; the point is yours / theirs.
         if (s.stage === 'go' && p.stage !== 'go') p.mctx.vibrate(60);
         if (s.stage === 'point' && p.stage !== 'point' && s.last) p.mctx.vibrate(s.last.winner === me ? [50, 30, 50] : s.last.winner === null ? 0 : 220);
