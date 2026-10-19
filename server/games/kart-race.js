@@ -1,24 +1,49 @@
-// Kart Race. A top-down race on the TV: steer with ◀ ▶ on your phone (or a
-// controller's stick), the karts accelerate on their own, brake for the tight
-// bends. Grass slows you right down, boost pads speed you up, and the karts
-// bump off each other. First across the line after the last lap wins the
+// Kart Race. A top-down race on the TV: hold GAS to drive (let go and you coast), steer with
+// your phone (or a controller's stick), BRAKE for the bends, and keep holding BRAKE once
+// stopped to reverse. Hold DRIFT through a bend to turn tighter; let go after a good drift for a
+// mini-boost. Walls line the track: a glancing hit slides you along, a head-on one bounces you
+// back. Grass slows you right down, boost pads speed you up, and the karts bump off each other. First across the line after the last lap wins the
 // race. ? boxes on the road hand out items: a banana to drop behind you (hit
 // one and you spin out), a turbo, or a shield against bananas. Six tracks;
 // players pick the track (or a mix), laps, one race or best of 3, and items
 // on or off.
 //
-// A track is a closed loop of control points (a smooth curve through them)
-// with a fixed width, on a 32 x 18 field (16:9 like the TV). The server runs
-// the physics at 60 Hz and pushes ~30 views a second.
+// A track is a closed loop of control points (a smooth curve through them, built by the shared
+// public/games/kart-race/track.js so every screen draws the same road) with a fixed width, on a
+// 32 x 18 field (16:9 like the TV). The server runs the physics at 60 Hz and pushes ~30 views a
+// second.
 
 import { loadSettings, applySetting } from './options.js';
+import '../../public/games/kart-race/track.js';
+
+const Road = globalThis.ArkKartTrack;
 
 export const FIELD = { w: 32, h: 18 };
 export const TRACK_WIDTH = 3.4;
-export const KART = { r: 0.42, accel: 7, maxSpeed: 8.5, grassSpeed: 3, brake: 16, drag: 1.2, turnRate: 2.6, boostSpeed: 12.5, boostMs: 1100 };
+export const KART = {
+  r: 0.42,
+  accel: 9, // holding GAS
+  maxSpeed: 8.5,
+  coast: 2.4, // slowing down with no pedal held
+  brake: 18,
+  reverseAccel: 7, // holding BRAKE once stopped
+  reverseSpeed: 3.2,
+  grassSpeed: 3.2,
+  turnRate: 2.8, // radians a second at full lock…
+  grip: 1.2, // …from this speed up (slower, it turns less; it never stops turning)
+  boostSpeed: 12.5,
+  boostMs: 1100,
+  driftTurn: 1.5, // drifting turns this much tighter
+  driftMinSpeed: 4.5,
+  driftDrag: 1.6, // a drift scrubs a little speed
+  driftChargeMs: 700, // drift this long, then let go: a mini-boost
+  miniBoostMs: 600,
+};
+/** Walls run this far outside the road's edge (past a strip of grass). */
+export const WALL = { out: 1.25, headOn: 0.72, bounce: 0.35 };
 export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
 export const TIMING = { countdownMs: 3500, finishMs: 3500 };
-export const SAMPLES = 240; // points on each track's centre line
+export const SAMPLES = Road.SAMPLES; // points on each track's centre line
 export const CUT_JUMP = 0.05; // progress (fraction of a lap) gained in one tick that can only be a shortcut
 
 /**
@@ -33,7 +58,8 @@ export const TRACKS = [
   },
   {
     name: 'Kidney',
-    points: [[5, 8], [8, 3.5], [15, 3], [22, 3.5], [27, 6], [27, 11], [23, 15], [18, 14.5], [16, 11], [14, 14.5], [9, 15], [5, 12.5]],
+    // The dip at the bottom used to be a spike no kart could turn: now a bend you can drive.
+    points: [[5, 8], [8, 3.5], [15, 3], [22, 3.5], [27, 6], [27, 11], [23, 15], [18.5, 14.8], [16, 12.4], [13.5, 14.8], [9, 15], [5, 12.5]],
     boosts: [[0.18, 0.6], [0.5, -0.6]],
   },
   {
@@ -44,20 +70,21 @@ export const TRACKS = [
   {
     name: 'Grand Prix',
     // A long back straight, a chicane on the right and a wiggle along the bottom.
-    points: [[3.5, 4], [10, 3], [17, 4.5], [22, 3], [28, 4], [28.5, 9], [25, 10.2], [28, 14.5], [20, 15], [14, 13], [8, 15], [3.5, 13], [4.5, 8.5]],
-    boosts: [[0.12, 0], [0.62, 0]],
+    // Starts on the top straight (the grid used to sit on a bend: you'd launch into the grass).
+    points: [[13.5, 3.7], [17, 4.5], [22, 3], [28, 4], [28.5, 9], [25, 10.2], [28, 14.5], [20, 15], [14, 13], [8, 15], [3.5, 13], [4.5, 8.5], [3.5, 4], [10, 3]],
+    boosts: [[0.95, 0], [0.48, 0]],
   },
   {
     name: 'Hairpins',
     // Four long straights joined by tight hairpins: brake hard!
-    points: [[4, 3], [26, 3], [28.5, 5.2], [26, 7.3], [13, 7.3], [11.2, 9.4], [13, 11.5], [26, 11.5], [28.5, 13.6], [26, 15.7], [4, 15.7], [2.6, 9.4]],
-    boosts: [[0.08, 0], [0.45, 0], [0.82, 0]],
+    points: [[9.5, 2.9], [15, 2.9], [25.5, 2.9], [27.9, 3.4], [28.9, 4.98], [27.9, 6.55], [25.5, 7.05], [19.5, 7.05], [13.5, 7.05], [11.5, 7.55], [10.5, 9.2], [11.5, 10.85], [13.5, 11.35], [19.5, 11.35], [25.5, 11.35], [27.9, 11.85], [28.9, 13.43], [27.9, 15.0], [25.5, 15.5], [15, 15.5], [4, 15.5], [2.6, 9.2], [4, 2.9]],
+    boosts: [[0.03, 0], [0.4, 0], [0.77, 0]],
   },
   {
     name: 'Zigzag',
     // Saw teeth along the top, a dip along the bottom.
-    points: [[3.5, 3.5], [9, 3], [12, 8.6], [15, 3.5], [19, 3.5], [22, 8.6], [25, 3.5], [28.5, 4], [28.5, 14.5], [22, 15], [16, 12.6], [10, 15], [3.5, 14.5]],
-    boosts: [[0.6, 0], [0.92, 0]],
+    points: [[3.5, 9], [3.5, 3.5], [9, 3], [12, 8], [15, 3.5], [19, 3.5], [22, 8], [25, 3.5], [28.5, 4], [28.5, 14.5], [22, 15], [16, 12.6], [10, 15], [3.5, 14.5]],
+    boosts: [[0.67, 0], [0.95, 0]],
   },
 ];
 
@@ -87,68 +114,25 @@ export const OPTIONS = {
 
 // ---- tracks ----------------------------------------------------------------------
 
-/** A smooth closed curve through the points (Catmull-Rom), as SAMPLES points. */
+/** The centre line of a track (see public/games/kart-race/track.js). */
 export function centreLine(points, n = SAMPLES) {
-  const out = [];
-  const m = points.length;
-  for (let i = 0; i < n; i++) {
-    const u = (i / n) * m;
-    const k = Math.floor(u);
-    const t = u - k;
-    const p0 = points[(k - 1 + m) % m];
-    const p1 = points[k % m];
-    const p2 = points[(k + 1) % m];
-    const p3 = points[(k + 2) % m];
-    const f = (a, b, c, d) => 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
-    out.push([f(p0[0], p1[0], p2[0], p3[0]), f(p0[1], p1[1], p2[1], p3[1])]);
-  }
-  return out;
+  return Road.centreLine(points, n);
 }
 
 /** Everything the game and the screens need about a track. */
 export function buildTrack(index) {
   const def = TRACKS[index];
-  const line = centreLine(def.points);
-  // Cumulative length, so "progress" is distance along the lap.
-  const cum = [0];
-  for (let i = 1; i <= line.length; i++) {
-    const a = line[i - 1];
-    const b = line[i % line.length];
-    cum.push(cum[i - 1] + Math.hypot(b[0] - a[0], b[1] - a[1]));
-  }
-  return { index, name: def.name, line, cum, length: cum[line.length], boosts: def.boosts };
+  return { index, name: def.name, boosts: def.boosts, ...Road.build(def.points) };
 }
 
-/** Where a point is relative to the track: progress 0..1 along the lap, and distance from the centre line. */
+/** Where a point is relative to the track: progress 0..1 along the lap, distance from the centre line, the nearest point on it. */
 export function locate(track, x, y) {
-  const { line, cum, length } = track;
-  let best = { d: Infinity, s: 0 };
-  for (let i = 0; i < line.length; i++) {
-    const a = line[i];
-    const b = line[(i + 1) % line.length];
-    const dx = b[0] - a[0];
-    const dy = b[1] - a[1];
-    const len2 = dx * dx + dy * dy;
-    const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / len2));
-    const d = Math.hypot(x - (a[0] + t * dx), y - (a[1] + t * dy));
-    if (d < best.d) best = { d, s: (cum[i] + t * Math.sqrt(len2)) / length, i };
-  }
-  return best;
+  return Road.locate(track, x, y);
 }
 
 /** A point on the centre line at progress p (0..1), with the direction of travel there, shifted sideways by `offset`. */
 export function pointAt(track, p, offset = 0) {
-  const { line, cum, length } = track;
-  const s = (((p % 1) + 1) % 1) * length;
-  let i = 0;
-  while (i < line.length - 1 && cum[i + 1] < s) i++;
-  const a = line[i];
-  const b = line[(i + 1) % line.length];
-  const seg = cum[i + 1] - cum[i] || 1;
-  const t = (s - cum[i]) / seg;
-  const dx = (b[0] - a[0]) / seg;
-  const dy = (b[1] - a[1]) / seg;
-  return { x: a[0] + (b[0] - a[0]) * t - dy * offset, y: a[1] + (b[1] - a[1]) * t + dx * offset, angle: Math.atan2(dy, dx) };
+  return Road.pointAt(track, p, offset);
 }
 
 // ---- game ---------------------------------------------------------------------------
@@ -179,7 +163,7 @@ export class KartRace {
     this.scores = [0, 0];
     this.race = 0;
     this.winner = null;
-    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0 };
+    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0 };
     this.lastTrack = -1;
     this.newRace();
     this.loop();
@@ -213,9 +197,16 @@ export class KartRace {
         x: p.x,
         y: p.y,
         angle: p.angle,
-        speed: 0,
+        speed: 0, // negative: reversing
         steer: 0,
+        gas: false,
         brake: false,
+        drift: false, // holding the drift button
+        drifting: false,
+        driftMs: 0,
+        lapStart: 0, // when this lap began (race time)
+        lastLap: null,
+        bestLap: null,
         laps: 0,
         progress: 0.012,
         halfway: false,
@@ -282,29 +273,38 @@ export class KartRace {
     k.offTrack = where.d > TRACK_WIDTH / 2;
     const boosting = now < k.boostUntil;
     const top = boosting ? KART.boostSpeed : k.offTrack ? KART.grassSpeed : KART.maxSpeed;
+    const toward = (v, target, rate) => (v > target ? Math.max(target, v - rate * dt) : Math.min(target, v + rate * dt));
     if (k.finishedAt !== null) {
-      k.speed = Math.max(0, k.speed - KART.brake * 0.4 * dt); // coast to a stop after the line
+      k.speed = toward(k.speed, 0, KART.brake * 0.4); // coast to a stop after the line
     } else if (now < k.spinUntil) {
-      k.speed = Math.max(0, k.speed - KART.brake * 1.5 * dt); // spinning out: no grip
-    } else if (k.brake) {
+      k.speed = toward(k.speed, 0, KART.brake * 1.5); // spinning out: no grip
+    } else if (k.brake && k.speed > 0.05) {
       k.speed = Math.max(0, k.speed - KART.brake * dt);
-    } else if (k.speed < top) {
-      k.speed = Math.min(top, k.speed + KART.accel * dt);
+    } else if (k.brake) {
+      // Stopped and still braking: back up.
+      k.speed = Math.max(-KART.reverseSpeed, k.speed - KART.reverseAccel * dt);
+    } else if (k.gas) {
+      if (k.speed < 0) k.speed = Math.min(0, k.speed + KART.brake * dt); // stop reversing first
+      else if (k.speed < top) k.speed = Math.min(top, k.speed + KART.accel * dt);
     } else {
-      // Over the limit (on grass, or a boost ran out): slow down, quickly on grass.
-      k.speed = Math.max(top, k.speed - (k.offTrack ? 14 : KART.drag * 4) * dt);
+      k.speed = toward(k.speed, 0, KART.coast);
     }
-    // Turning needs a bit of speed (and grip: none while spinning out).
-    if (now >= k.spinUntil) k.angle += k.steer * KART.turnRate * Math.min(1, k.speed / 3) * dt;
+    // Over the limit (on grass, or a boost ran out): slow down, quickly on grass.
+    if (k.speed > top) k.speed = Math.max(top, k.speed - (k.offTrack ? 12 : KART.coast * 2) * dt);
+    this.driftCheck(k, now, dt);
+    // Steering: full lock from walking pace up, less when crawling; with a pedal held it always
+    // turns some (so a kart nose-first against a wall can turn away). Backwards it turns the
+    // other way, like a car.
+    if (now >= k.spinUntil) {
+      const pedal = k.gas || k.brake;
+      const grip = Math.min(1, Math.max(Math.abs(k.speed) / KART.grip, pedal ? 0.45 : 0));
+      const dir = k.speed < -0.01 || (Math.abs(k.speed) <= 0.01 && k.brake) ? -1 : 1;
+      const rate = KART.turnRate * (k.drifting ? KART.driftTurn : 1);
+      k.angle += k.steer * rate * grip * dir * dt;
+    }
     k.x += Math.cos(k.angle) * k.speed * dt;
     k.y += Math.sin(k.angle) * k.speed * dt;
-    // The edge of the field is a wall.
-    const r = KART.r;
-    if (k.x < r || k.x > FIELD.w - r || k.y < r || k.y > FIELD.h - r) {
-      k.x = Math.min(FIELD.w - r, Math.max(r, k.x));
-      k.y = Math.min(FIELD.h - r, Math.max(r, k.y));
-      k.speed *= 0.5;
-    }
+    this.walls(k);
     // Boost pads.
     if (!k.offTrack && k.finishedAt === null) {
       for (const [p, off] of this.track.boosts) {
@@ -316,6 +316,73 @@ export class KartRace {
         }
       }
     }
+  }
+
+  /**
+   * Drifting: hold DRIFT and steer through a bend at speed to turn tighter, scrubbing a little
+   * speed. Let go after a long enough drift for a mini-boost.
+   */
+  driftCheck(k, now, dt) {
+    const can = k.drift && k.steer !== 0 && k.speed > KART.driftMinSpeed && now >= k.spinUntil && k.finishedAt === null;
+    if (can) {
+      k.drifting = true;
+      k.driftMs += dt * 1000;
+      k.speed = Math.max(0, k.speed - KART.driftDrag * dt);
+      return;
+    }
+    if (k.drifting && k.driftMs >= KART.driftChargeMs && !k.drift && now >= k.spinUntil) {
+      k.boostUntil = Math.max(k.boostUntil, now + KART.miniBoostMs);
+      k.speed = Math.max(k.speed, KART.maxSpeed + 1.5);
+      this.events.miniBoosts++;
+    }
+    k.drifting = false;
+    k.driftMs = 0;
+  }
+
+  /**
+   * The walls (WALL.out outside the road's edge) and the edge of the field. A glancing hit turns
+   * the kart along the wall and slides it on, a little slower; a head-on hit bounces it back.
+   */
+  walls(k) {
+    const r = KART.r;
+    const limit = TRACK_WIDTH / 2 + WALL.out - r;
+    const w = locate(this.track, k.x, k.y);
+    if (w.d > limit) {
+      const nx = (k.x - w.px) / w.d;
+      const ny = (k.y - w.py) / w.d;
+      k.x = w.px + nx * limit;
+      k.y = w.py + ny * limit;
+      this.hit(k, nx, ny);
+    }
+    // The edge of the field, in case a track runs close to it.
+    if (k.x < r) { k.x = r; this.hit(k, -1, 0); }
+    if (k.x > FIELD.w - r) { k.x = FIELD.w - r; this.hit(k, 1, 0); }
+    if (k.y < r) { k.y = r; this.hit(k, 0, -1); }
+    if (k.y > FIELD.h - r) { k.y = FIELD.h - r; this.hit(k, 0, 1); }
+  }
+
+  /** A wall with outward normal (nx, ny) was hit. */
+  hit(k, nx, ny) {
+    const dir = Math.sign(k.speed) || 1;
+    const mx = Math.cos(k.angle) * dir; // the way the kart is moving
+    const my = Math.sin(k.angle) * dir;
+    const into = mx * nx + my * ny; // 1: straight at the wall
+    if (into <= 0) return; // already moving away
+    this.events.walls++;
+    if (into > WALL.headOn) {
+      k.speed = -k.speed * WALL.bounce; // bounce back off it
+      k.drifting = false;
+      return;
+    }
+    // Glancing: turn along the wall (whichever way the kart was going) and lose a bit of speed.
+    let tx = -ny;
+    let ty = nx;
+    if (tx * mx + ty * my < 0) { tx = -tx; ty = -ty; }
+    const along = Math.atan2(ty * dir, tx * dir);
+    let diff = along - k.angle;
+    diff = Math.atan2(Math.sin(diff), Math.cos(diff));
+    k.angle += diff * 0.6;
+    k.speed *= 1 - 0.45 * into;
   }
 
   /** ? boxes and bananas. */
@@ -421,6 +488,10 @@ export class KartRace {
         k.laps++;
         k.halfway = false;
         this.events.laps++;
+        const t = now - this.raceStart;
+        k.lastLap = t - k.lapStart;
+        k.bestLap = k.bestLap === null ? k.lastLap : Math.min(k.bestLap, k.lastLap);
+        k.lapStart = t;
         if (k.laps >= this.settings.laps) this.finishLine(slot, now);
       }
     } else if (was < 0.25 && p > 0.75 && k.laps > 0) {
@@ -465,10 +536,13 @@ export class KartRace {
     }
     if (!this.karts) return;
     if (input.type === 'drive') {
+      // The whole driving state: steering, and which pedals / buttons are held.
       const k = this.karts[slot];
       const steer = Number(input.steer);
       k.steer = Number.isFinite(steer) ? Math.max(-1, Math.min(1, steer)) : 0;
+      k.gas = Boolean(input.gas);
       k.brake = Boolean(input.brake);
+      k.drift = Boolean(input.drift);
     }
     if (input.type === 'item') this.useItem(slot);
   }
@@ -492,7 +566,11 @@ export class KartRace {
       field: FIELD,
       trackWidth: TRACK_WIDTH,
       trackNames: TRACKS.map((t) => t.name),
+      trackPoints: this.phase === 'setup' ? TRACKS.map((t) => t.points) : null, // for the previews
       kartR: KART.r,
+      wallOut: WALL.out,
+      maxSpeed: KART.maxSpeed,
+      boostSpeed: KART.boostSpeed,
       race: this.race,
       races: this.settings.races,
       laps: this.settings.laps,
@@ -508,6 +586,11 @@ export class KartRace {
             angle: Math.round(k.angle * 1000) / 1000,
             speed: Math.round(k.speed * 100) / 100,
             laps: k.laps,
+            drifting: k.drifting,
+            driftCharge: k.drifting ? Math.min(1, k.driftMs / KART.driftChargeMs) : 0,
+            lapMs: this.raceStart && k.finishedAt === null ? Math.max(0, now - this.raceStart - k.lapStart) : null,
+            lastLap: k.lastLap,
+            bestLap: k.bestLap,
             boosting: now < k.boostUntil,
             offTrack: k.offTrack,
             cut: now - k.cutAt < 1500, // "Shortcut!" for a moment
@@ -538,6 +621,6 @@ export class KartRace {
 export default {
   id: 'kart-race',
   name: 'Kart Race',
-  tagline: 'Top-down racing: steer with ◀ ▶, brake for the bends, hit the boost pads and bump your rival off the line. Three tracks.',
+  tagline: 'Top-down racing: hold GAS, steer, brake for the bends (hold it to reverse), drift for a mini-boost, hit the boost pads and bump your rival off the line. Six tracks.',
   create: (ctx) => new KartRace(ctx),
 };
