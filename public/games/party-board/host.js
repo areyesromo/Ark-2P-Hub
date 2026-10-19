@@ -120,13 +120,34 @@
     return '<svg class="pb-links" viewBox="0 0 100 100" preserveAspectRatio="none">' + l + '</svg>' + arrows;
   }
 
+  /**
+   * At a fork, each branch's spaces (route k: 0 or 1), the number to show on its first space, and
+   * which branch a controller's cursor is on (-1: none, e.g. the chooser is on a phone).
+   */
+  function forkMarks(v) {
+    const p = v.prompt;
+    if (!p || p.kind !== 'path' || !p.extra.routes) return null;
+    const on = {};
+    p.extra.routes.forEach(function (r, k) { r.forEach(function (i, n) { if (on[i] === undefined) on[i] = { k: k, first: n === 0 }; }); });
+    return { on: on, sel: v.localPlayers[p.slot] ? cursors[p.slot] : -1 };
+  }
+
+  /** At a fork, the branch a controller's cursor is on (-1: none). */
+  function forkSel(v) {
+    const f = forkMarks(v);
+    return f ? f.sel : -1;
+  }
+
   function drawBoard(v) {
     const spaces = v.board.spaces;
     let h = links(spaces);
     const art = v.board.tiles !== 'classic'; // the steampunk tile faces (tiles/*.webp) carry their own icons
+    const fork = forkMarks(v);
     spaces.forEach(function (s, i) {
-      h += '<div class="pb-space ' + s.type + (i === v.board.star ? ' star' : '') + (art ? ' art' : '') + '" style="left:' + s.x * 100 + '%;top:' + s.y * 100 + '%">' +
-        (art ? '' : i === v.board.star ? '⭐' : ICON[s.type]) + '</div>';
+      const m = fork && fork.on[i];
+      h += '<div class="pb-space ' + s.type + (i === v.board.star ? ' star' : '') + (art ? ' art' : '') +
+        (m ? ' route r' + m.k + (fork.sel === m.k ? ' sel' : '') : '') + '" style="left:' + s.x * 100 + '%;top:' + s.y * 100 + '%">' +
+        (art ? '' : i === v.board.star ? '⭐' : ICON[s.type]) + (m && m.first ? '<b class="pb-fork-num r' + m.k + '">' + (m.k + 1) + '</b>' : '') + '</div>';
     });
     v.players.forEach(function (p, slot) {
       const s = spaces[p.space];
@@ -165,7 +186,7 @@
       const local = v.localPlayers[p.slot];
       h += '<div class="pb-ask">' + nameOf(v, p.slot) + ': ' + KIND[p.kind] + (p.kind === 'slot' ? ' <b>' + p.extra.reels.concat(['?', '?', '?']).slice(0, 3).join(' ') + '</b>' : '') + '</div>' +
         '<div class="pb-opts">' + p.options.map(function (o, i) {
-          return '<span class="' + (local && cursors[p.slot] === i ? 'cur' : '') + '">' + esc(label(v, p.kind, o)) + '</span>';
+          return '<span class="' + (local && cursors[p.slot] === i ? 'cur' : '') + (p.kind === 'path' ? ' route r' + i : '') + '">' + esc(label(v, p.kind, o)) + '</span>';
         }).join('') + '</div><div class="pb-time" data-end="' + (receivedAt + p.msLeft) + '">' + Math.ceil(p.msLeft / 1000) + ' s</div>';
     }
     return h;
@@ -200,7 +221,7 @@
   function show3d(v) {
     const map = v.board.theme + ':' + v.board.name + ':' + v.board.spaces.length + ':' + v.board.tiles;
     if (board3d && map !== board3dMap) drop3d();
-    if (board3d) return board3d.update(v);
+    if (board3d) return board3d.update(v, { forkSel: forkSel(v) });
     if (board3dLoading) return;
     board3dLoading = true;
     els.board.innerHTML = '';
@@ -212,7 +233,7 @@
       if (!root || els.board !== into || !view || view.board.view !== '3d' || view.phase === 'minigame') return b.dispose();
       board3d = b;
       board3dMap = view.board.theme + ':' + view.board.name + ':' + view.board.spaces.length + ':' + view.board.tiles;
-      board3d.update(view);
+      board3d.update(view, { forkSel: forkSel(view) });
     }, function () { board3dLoading = false; });
   }
 

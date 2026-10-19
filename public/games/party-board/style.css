@@ -110,3 +110,18 @@
 .pb-char img { width: 100%; aspect-ratio: 1; object-fit: contain; }
 .pb-char.picked { border-color: var(--warn); box-shadow: 0 0 1rem rgba(250, 204, 21, 0.5); }
 .pb-char.ghost { opacity: 0.4; }
+/* At a fork: each branch's spaces ringed in its colour, a big number on its first space, and the
+   branch a controller is pointing at glowing. The menu's "Path 1 / Path 2" use the same colours. */
+.pb-space.route { z-index: 1; }
+.pb-space.route.r0 { box-shadow: 0 0 0 0.3rem #f59e0b; }
+.pb-space.route.r1 { box-shadow: 0 0 0 0.3rem #a78bfa; }
+.pb-space.route.sel.r0 { box-shadow: 0 0 0 0.35rem #f59e0b, 0 0 1.4rem 0.5rem #f59e0b; }
+.pb-space.route.sel.r1 { box-shadow: 0 0 0 0.35rem #a78bfa, 0 0 1.4rem 0.5rem #a78bfa; }
+.pb-fork-num { position: absolute; top: -2.3rem; left: 50%; transform: translateX(-50%); width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; font-size: 1.3rem; font-weight: 900; color: #0b1020; border: 3px solid #fff; box-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.6); animation: mi-pulse 0.6s infinite alternate; }
+.pb-fork-num.r0 { background: #f59e0b; }
+.pb-fork-num.r1 { background: #a78bfa; }
+.pb-opts > span.route.r0 { border-color: #f59e0b; color: #fcd34d; }
+.pb-opts > span.route.r1 { border-color: #a78bfa; color: #ddd6fe; }
+.pb-opts > span.route.cur { background: rgba(255, 255, 255, 0.12); border-width: 4px; }
+.pb-choices button.route.r0 { background: #f59e0b; color: #0b1020; }
+.pb-choices button.route.r1 { background: #a78bfa; color: #0b1020; }
