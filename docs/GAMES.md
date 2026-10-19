@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (28)
+## Games (29)
 
 ### ⚔️ Competitive (20)
 
@@ -36,13 +36,14 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |
 | Memory Match | `memory-match` | Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. | `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js` |
 
-### 🎲 Dice & Board (4)
+### 🎲 Dice & Board (5)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
 | Liar's Dice | `liars-dice` | Your dice are hidden on your phone. Bid how many of a face there are between you both, or call "Liar!". Lose a die each time you're wrong; last one with dice wins. | `server/games/liars-dice.js`, `public/games/liars-dice/`, `test/dice.test.js`, `test/sounds.test.js` |
 | Checkers | `checkers` | Classic draughts: move diagonally, jump to capture (jumps are a must, and keep going if you can), reach the far side to crown a king. Take all their pieces or leave them stuck. | `server/games/checkers.js`, `public/games/checkers/`, `test/checkers.test.js` |
 | Dots and Boxes | `dots-boxes` | Take turns joining two dots. Close the fourth side of a box to claim it and go again; careful not to hand your rival a chain. Most boxes wins. | `server/games/dots-boxes.js`, `public/games/dots-boxes/`, `test/dots-boxes.test.js` |
+| Mancala | `mancala` | Sow stones around the bowls. End in your store to go again; end in an empty bowl of yours to capture across. Fullest store wins. | `server/games/mancala.js`, `public/games/mancala/`, `test/mancala.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
 ### 🤝 Co-op & casual (4)
@@ -54,7 +55,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (22)
+## Minigames (23)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -83,6 +84,7 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Fishing | `fishing` | party | 2D | Wait for the bite, HOOK it, then REEL without snapping the line | `server/games/minis/fishing.js`, `public/games/minis/fishing.js`, `test/minis-party3.test.js` |
 | Glass Bridge | `glass-bridge` | party | 3D | Pick ◀ left or right ▶ glass, row by row: one of each pair breaks | `server/games/minis/glass-bridge.js`, `public/games/minis/glass-bridge.js`, `test/minis-party3.test.js` |
 | Ice Rink Sumo | `ice-sumo` | party | 3D | Steer (joystick / stick) on the slippery ice and bump your rival off | `server/games/minis/ice-sumo.js`, `public/games/minis/ice-sumo.js`, `test/minis-party3.test.js` |
+| Simon Says | `simon-says` | party | 2D | Press the colour only when Simon says so | `server/games/minis/simon-says.js`, `public/games/minis/simon-says.js`, `test/minis-party3.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->
@@ -92,7 +94,6 @@ here (the test fails while an idea has the same name as a game or minigame in th
 
 ### Games
 
-- **Mancala**: sow stones around the bowls and capture across; quick and strategic for two.
 - **Kitchen Rush**: co-op, Overcooked-style: chop, cook and serve orders before they expire, passing ingredients between you.
 - **Trivia Quest**: co-op quiz adventure: answer questions together to bring down a monster's health bar before it gets you.
 - **Fake Out**: bluffing: both write a fake answer to an obscure question on the phone, then try to pick the real one (points for fooling the other).
@@ -101,7 +102,6 @@ here (the test fails while an idea has the same name as a game or minigame in th
 
 ### Minigames
 
-- **Simon Says** (micro or party, 2D): repeat a growing colour sequence; the first slip loses.
 - **Hurdle Dash** (party, 2D): side-view race: tap to run, swipe up to jump the hurdles.
 - **Pop the Most** (party, 2D): balloons float up; pop the ones in your colour before they escape.
 - **Bumper Cars** (party, 3D): ram your rival's car in an arena until their health runs out.
