@@ -117,6 +117,7 @@ const GAMES = [
   }),
   withSetup(mindMeld, { rounds: { title: 'Rounds (you swap who gives the clue)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
   withSetup(liarsDice, {
+    tutorial: { title: 'How to play', values: [1, 0], label: (t) => (t ? '📖 Show a quick example round first' : 'Skip it, we know the rules') },
     dice: { title: 'Dice each', values: [5, 3, 4], label: (n) => `${n} dice` },
     wild: { title: 'Ones', values: [1, 0], label: (n) => (n ? 'Wild (count as any face)' : 'Just ones') },
   }),

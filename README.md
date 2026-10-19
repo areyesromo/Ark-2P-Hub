@@ -47,7 +47,7 @@ one you just played).
 
 | Game | How it plays |
 | --- | --- |
-| **Liar's Dice** | Your dice are hidden under a cup on your phone (the TV shows only how many each of you has). Take turns bidding how many of a face there are across *both* players' dice ("three 5s"): raise the count, or keep it and bid a higher face. Or call **Liar!**: the cups lift on the TV, and if there are fewer than bid, the bidder loses a die; otherwise the caller does. Ones are wild (they count as every face). Lose all your dice and you lose. Needs two phones. |
+| **Liar's Dice** | Your dice are hidden under a cup on your phone (the TV shows only how many each of you has). Take turns bidding how many of a face there are across *both* players' dice ("three 5s"): raise the count, or keep it and bid a higher face. Or call **Liar!**: the cups lift on the TV, and if there are fewer than bid, the bidder loses a die; otherwise the caller does. Ones are wild (they count as every face). Lose all your dice and you lose. Needs two phones. Before the first match the TV plays a short example round (📖 How to play, a setting); during the game your phone explains each bid in plain words and shows the chance it's true. |
 | **Dice Party** | Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards, with what each open box would score. Highest total wins. |
 | **Checkers** | Classic draughts on the TV. Men step diagonally forward; jump to capture, and jumps are a must (a piece that can keep jumping must). Reach the far row to crown a ♛ king that moves both ways. Take every piece or leave your rival with no move; 40 moves without a capture is a draw. Tap a piece on your phone (the board turns so yours are at the bottom), then a ◯. 30 s per move. |
 | **Dots and Boxes** | Take turns joining two neighbouring dots. Close the fourth side of a box to claim it and go again, so don't hand your rival a chain of boxes. When every line is drawn, the most boxes wins. Tap a line on your phone. 20 s per move. |
@@ -81,7 +81,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Bomb Squad | Easy (2 modules), Normal (3), Hard (4) or Expert (6), and 1, 3 or 5 bombs |
 | Marble Maze | 1, 3 or all 5 mazes; split (one ↔, one ↕) or shared controls |
 | Mind Meld | 4, 6, 8 or 10 rounds |
-| Liar's Dice | 5, 3 or 4 dice each; ones wild or not |
+| Liar's Dice | The how-to-play example round first, or skip it; 5, 3 or 4 dice each; ones wild or not |
 | Dice Party | Full game (13 rounds) or quick (6) |
 | Checkers | One game, or first to 2 or 3 |
 | Dots and Boxes | A 4 × 4, 3 × 3 or 5 × 5 grid; one game, or first to 2 or 3 |

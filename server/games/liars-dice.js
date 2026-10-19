@@ -33,6 +33,8 @@ export class LiarsDice {
     this.rng = rng;
     this.startDice = settingOf(ctx, 'dice', DICE);
     this.wild = settingOf(ctx, 'wild', 1) === 1;
+    // The "how to play" demo before the first match (the setup screen offers it; off without one).
+    this.tutorial = settingOf(ctx, 'tutorial', 0) === 1;
     this.timer = null;
     this.firstStarter = 0;
   }
@@ -46,6 +48,13 @@ export class LiarsDice {
     this.roundNo = 0;
     this.turn = this.firstStarter;
     this.firstStarter = 1 - this.firstStarter;
+    if (this.tutorial) {
+      // Watch how to play first (the TV runs an example round); both press "Got it" to start.
+      this.tutorial = false; // once per launch: a rematch goes straight in
+      this.phase = 'howto';
+      this.ready = [false, false];
+      return this.ctx.update();
+    }
     this.newRound();
   }
 
@@ -64,6 +73,12 @@ export class LiarsDice {
   }
 
   onInput(slot, input) {
+    if (this.phase === 'howto') {
+      if (input.type !== 'ready' || (slot !== 0 && slot !== 1)) return;
+      this.ready[slot] = true;
+      if (this.ready[0] && this.ready[1]) return this.newRound();
+      return this.ctx.update();
+    }
     if (this.phase === 'over') {
       if (input.type === 'rematch') this.start();
       return;
@@ -116,6 +131,7 @@ export class LiarsDice {
       result: this.result,
       hands: revealed && this.result ? this.result.hands : null,
       winner: this.winner,
+      ready: this.phase === 'howto' ? this.ready : null,
       draw: false,
       scores: this.counts,
     };

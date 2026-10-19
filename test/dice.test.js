@@ -149,3 +149,20 @@ test('Dice Party: a quick game is 6 turns each', () => {
   }
   assert.equal(g.phase, 'over');
 });
+
+test("Liar's Dice: the how-to-play demo comes first (when chosen); both press Got it to start; a rematch skips it", () => {
+  const ctx = fakeCtx();
+  ctx.settings = { tutorial: 1 };
+  const g = new LiarsDice(ctx, seeded(2));
+  g.start();
+  assert.equal(g.hostView().phase, 'howto');
+  assert.equal(g.playerView(0).mine, undefined, 'no dice rolled yet');
+  g.onInput(0, { type: 'bid', qty: 1, face: 2 }); // not yet
+  g.onInput(0, { type: 'ready' });
+  assert.deepEqual(g.hostView().ready, [true, false]);
+  g.onInput(1, { type: 'ready' });
+  assert.equal(g.hostView().phase, 'bidding');
+  assert.equal(g.playerView(0).mine.length, 5);
+  g.start(); // rematch
+  assert.equal(g.hostView().phase, 'bidding');
+});
