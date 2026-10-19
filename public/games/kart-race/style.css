@@ -1,9 +1,47 @@
 /* ---- TV ---- */
 
 .kr-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 1.2rem; }
-.kr-hud { display: flex; justify-content: space-between; align-items: center; min-height: 4.2rem; }
-.kr-side { display: flex; flex-direction: column; min-width: 12rem; }
-.kr-side.p2 { align-items: flex-end; text-align: right; }
+.kr-hud { display: flex; justify-content: space-between; align-items: center; min-height: 6.6rem; }
+
+/* Speedometer: a dial per kart (needle and arc set by host.js), red past top speed (boost only). */
+.kr-gauge { position: relative; width: 7.6rem; flex: none; }
+.kr-gauge svg { display: block; width: 100%; overflow: visible; }
+.kr-gauge path { fill: none; stroke-linecap: round; }
+.kr-gauge .track { stroke: rgba(255, 255, 255, 0.12); stroke-width: 6; }
+.kr-gauge .red { stroke: rgba(239, 68, 68, 0.45); stroke-width: 6; }
+.kr-gauge .fill { stroke-width: 6; stroke-dasharray: 0 1; transition: stroke-dasharray 80ms linear; }
+.kr-side.p1 .kr-gauge .fill { stroke: var(--p1); }
+.kr-side.p2 .kr-gauge .fill { stroke: var(--p2); }
+.kr-gauge.boost .fill { stroke: #facc15; }
+.kr-gauge.reverse .fill { stroke: #f87171; }
+.kr-gauge .ticks path { stroke: rgba(255, 255, 255, 0.5); stroke-width: 1.5; }
+.kr-gauge .needle { stroke: #f8fafc; stroke-width: 2.6; stroke-linecap: round; transform-origin: 50px 50px; transform: rotate(-120deg); transition: transform 80ms linear; }
+.kr-gauge circle { fill: #f8fafc; }
+.kr-gauge .read { position: absolute; left: 0; right: 0; top: 62%; text-align: center; line-height: 1; }
+.kr-gauge .read b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.kr-gauge .read span { font-size: 0.7rem; color: var(--muted); }
+.kr-gauge .drift { height: 6px; margin: 0.25rem 1rem 0; border-radius: 3px; background: rgba(255, 255, 255, 0.1); visibility: hidden; overflow: hidden; }
+.kr-gauge .drift.on { visibility: visible; }
+.kr-gauge .drift i { display: block; height: 100%; width: 0; background: #60a5fa; }
+.kr-gauge .drift.ready i { background: #fb923c; }
+
+/* The setup screen's track preview. */
+.kr-overlay .panel.kr-setup { max-width: 72rem; padding: 1rem 2rem; }
+.kr-overlay .panel.kr-setup > .title { font-size: 2.2rem; }
+.kr-setup-row { display: flex; gap: 1.6rem; align-items: center; justify-content: center; text-align: left; }
+.kr-setup-row .ark-setup { flex: 1; min-width: 0; }
+.kr-preview { width: 15rem; flex: none; font-weight: 700; color: var(--muted); }
+.kr-preview svg { display: block; width: 100%; border-radius: 8px; }
+.kr-preview rect { fill: #2f6f3a; }
+.kr-preview path { fill: none; stroke-linejoin: round; }
+.kr-preview .kerb { stroke: #dc2626; }
+.kr-preview .road { stroke: #3f4652; }
+.kr-preview.mixed span { display: block; font-size: 4rem; }
+.kr-side { display: flex; align-items: center; gap: 1rem; min-width: 12rem; }
+.kr-side .info { display: flex; flex-direction: column; }
+.kr-side.p2 { flex-direction: row-reverse; text-align: right; }
+.kr-side.p2 .info { align-items: flex-end; }
+.kr-side .laptime { color: var(--muted); font-size: 1rem; font-variant-numeric: tabular-nums; min-height: 1.2em; }
 .kr-side .name { font-size: 1.5rem; font-weight: 900; }
 .kr-side .pos { font-size: 2rem; font-weight: 900; line-height: 1; }
 .kr-side.p1 .pos { color: var(--p1); }
@@ -20,7 +58,7 @@
 .kr-overlay:empty { display: none; }
 .kr-overlay .panel { background: rgba(11, 13, 23, 0.88); border: 1px solid var(--line); border-radius: 18px; padding: 1.4rem 2.2rem; max-width: 46rem; }
 .kr-overlay .panel.small { padding: 1rem 2rem; }
-.kr-overlay .title { font-size: 2.6rem; font-weight: 900; }
+.kr-overlay .panel > .title { font-size: 2.6rem; font-weight: 900; }
 .kr-overlay .sub { font-size: 1.5rem; line-height: 1.5; }
 .kr-overlay .sub strong { color: var(--warn); }
 .kr-overlay .ark-setup { font-size: 1.4rem; }
@@ -44,9 +82,27 @@
 .kr-steer { flex: 1; min-height: 0; display: flex; gap: 12px; }
 .kr-btn { flex: 1; border-radius: 22px; font-size: 3rem; font-weight: 900; background: var(--panel); border: 2px solid var(--line); color: var(--text); touch-action: none; user-select: none; -webkit-user-select: none; }
 .kr-btn.on { background: var(--me); color: #06121c; border-color: #fff; }
-.kr-bottom { flex: 0 0 22%; display: flex; gap: 12px; }
-.kr-btn.brake { flex: 2; font-size: 1.4rem; letter-spacing: 0.15em; }
-.kr-btn.item { flex: 1; font-size: 2.6rem; opacity: 0.4; }
+.kr-bottom { flex: 0 0 36%; display: grid; grid-template-columns: 1fr 1.5fr; grid-template-rows: 0.7fr 1fr; gap: 10px; }
+.kr-bottom.noitem .drift { grid-column: 1 / -1; }
+.kr-btn.brake, .kr-btn.gas, .kr-btn.drift { font-size: 1.3rem; letter-spacing: 0.12em; }
+.kr-btn small { display: block; font-size: 0.7rem; letter-spacing: 0; font-weight: 600; color: var(--muted); }
+.kr-btn.on small { color: inherit; }
+.kr-btn.gas { font-size: 1.7rem; border-color: rgba(74, 222, 128, 0.6); }
+.kr-btn.gas.on { background: var(--good); color: #06121c; }
+.kr-btn.drift.on { background: #60a5fa; color: #06121c; }
+.kr-btn.item { font-size: 2.2rem; opacity: 0.4; }
+.kr-btn.item.hidden { display: none; }
+
+/* The speed bar and lap times above the controls. */
+.kr-dash { flex: none; display: flex; align-items: center; gap: 10px; }
+.kr-speed { flex: 1; min-width: 5rem; height: 14px; border-radius: 7px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+.kr-speed i { display: block; height: 100%; width: 0; background: var(--me); transition: width 80ms linear; }
+.kr-speed.boost i { background: #facc15; }
+.kr-speed.reverse i { background: var(--bad); }
+.kr-speed.charged { box-shadow: 0 0 0.8rem #fb923c; }
+.kr-read { display: flex; flex-direction: column; align-items: flex-end; min-width: 6.5em; max-width: 65%; line-height: 1.15; }
+.kr-read .kmh { font-variant-numeric: tabular-nums; }
+.kr-read span { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .kr-btn.item.ready { opacity: 1; border-color: var(--warn); box-shadow: 0 0 1.2rem rgba(250, 204, 21, 0.45); }
 .kr-btn.brake.on { background: var(--bad); color: #fff; }
 
@@ -76,11 +132,10 @@
 .kr-phone.landscape .status .pos { font-size: 1.6rem; }
 .kr-phone.landscape .status br { display: none; }
 .kr-phone.landscape .status .pos::after { content: ' · '; color: var(--muted); }
-.kr-phone.landscape .kr-controls { flex-direction: row; }
-.kr-phone.landscape .kr-steer { flex: 1.35; }
-.kr-phone.landscape .kr-bottom { flex: 1; flex-direction: column; }
-.kr-phone.landscape .kr-btn.item { flex: 1; }
-.kr-phone.landscape .kr-btn.brake { flex: 1.6; }
+.kr-phone.landscape .kr-controls { display: grid; grid-template-columns: 1.2fr 1fr; grid-template-rows: auto 1fr; }
+.kr-phone.landscape .kr-dash { grid-column: 1 / -1; }
+.kr-phone.landscape .kr-steer { min-height: 0; }
+.kr-phone.landscape .kr-bottom { min-height: 0; }
 
 /* Landscape on a phone held upright (rotation locked): turn the whole controller
    sideways. player.js sizes it to the game area, so the hub's bar (and its ⋯ menu) stays reachable. */
@@ -93,3 +148,5 @@
 }
 .kr-secure { align-self: center; }
 .kr-note.muted { color: var(--muted); }
+.kr-overlay .kr-setup .ark-setup { font-size: 1.15rem; margin: 0.6em 0; }
+.kr-overlay .kr-setup .sub { font-size: 1.2rem; }

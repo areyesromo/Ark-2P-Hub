@@ -12,12 +12,14 @@
 
   // Each phone picks its own controller on the setup screen (remembered on the phone):
   //   buttons   hold ◀ / ▶
-  //   joystick  a stick: left/right steers as far as you push it, pull down to brake
+  //   joystick  a stick: left/right steers as far as you push it, push up for gas, pull down to brake
   //   slide     put a finger down anywhere on the pad and slide it left/right
   //   tilt      turn the phone like a steering wheel (needs the motion sensor)
   // and a layout: 'auto' follows how the phone is held; 'landscape' turns the
   // controls sideways even if the phone's rotation is locked (steering under
-  // the left thumb, ITEM / BRAKE under the right).
+  // the left thumb, the pedals under the right). The pedals are the same in every style: hold
+  // GAS to drive, let go to coast; hold BRAKE to stop and then reverse; hold DRIFT through a
+  // bend for a mini-boost when you let go.
   const STYLE_KEY = 'ark.kart.controls';
   const STYLES = ['buttons', 'joystick', 'slide', 'tilt'];
   const STYLE_LABEL = { buttons: '🔘 Buttons', joystick: '🕹️ Joystick', slide: '👆 Slide', tilt: '📱 Tilt' };
@@ -43,9 +45,11 @@
   let api = null;
   let view = null;
   let textKey = '';
-  const held = { left: false, right: false, brake: false };
+  const held = { left: false, right: false, brake: false, gas: false, drift: false };
   let analog = 0; // steering from the stick, slide or tilt: -1..1
   let stickBrake = false; // stick pulled down
+  let stickGas = false; // stick pushed up
+  const KMH = 12; // speed units -> km/h, as on the TV's dial
   let sent = '';
   let tiltNote = '';
 
@@ -56,21 +60,25 @@
   function send() {
     const steer = style === 'buttons' ? (held.right ? 1 : 0) - (held.left ? 1 : 0) : Math.round(dead(analog) * 10) / 10;
     const brake = held.brake || stickBrake;
-    const key = steer + '|' + brake;
+    const gas = held.gas || stickGas;
+    const drift = held.drift;
+    const key = steer + '|' + gas + '|' + brake + '|' + drift;
     if (!els || key === sent) return;
     sent = key;
-    api.send({ type: 'drive', steer: steer, brake: brake });
+    api.send({ type: 'drive', steer: steer, gas: gas, brake: brake, drift: drift });
     if (els.left) {
       els.left.classList.toggle('on', held.left);
       els.right.classList.toggle('on', held.right);
     }
     els.brake.classList.toggle('on', brake);
+    els.gas.classList.toggle('on', gas);
+    els.drift.classList.toggle('on', drift);
   }
 
   function release() {
-    held.left = held.right = held.brake = false;
+    held.left = held.right = held.brake = held.gas = held.drift = false;
     analog = 0;
-    stickBrake = false;
+    stickBrake = stickGas = false;
     send();
   }
 
@@ -144,7 +152,7 @@
       holdButton(els.left, 'left');
       holdButton(els.right, 'right');
     } else if (style === 'joystick') {
-      pad.innerHTML = '<div class="kr-stick"><div class="kr-knob"></div><span class="kr-hint">◀ ▶ steer · ▼ brake</span></div>';
+      pad.innerHTML = '<div class="kr-stick"><div class="kr-knob"></div><span class="kr-hint">◀ ▶ steer · ▲ gas · ▼ brake</span></div>';
       const stick = pad.querySelector('.kr-stick');
       els.knob = pad.querySelector('.kr-knob');
       dragPad(stick, function (p) {
@@ -153,11 +161,12 @@
         const y = clamp(p.y / reach);
         analog = x;
         stickBrake = y > 0.6;
+        stickGas = y < -0.35;
         els.knob.style.transform = 'translate(' + (x * 70) + '%, ' + (y * 70) + '%)';
         send();
       }, function () {
         analog = 0;
-        stickBrake = false;
+        stickBrake = stickGas = false;
         els.knob.style.transform = '';
         send();
       });
@@ -282,6 +291,24 @@
     return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
   }
 
+  function clock(ms) {
+    const t = ms / 1000;
+    return Math.floor(t / 60) + ':' + ('0' + (t % 60).toFixed(1)).slice(-4);
+  }
+
+  /** The speed bar and lap times (every view: they change all the time). */
+  function dash(v) {
+    const k = v.karts && v.karts[v.you];
+    if (!k) return;
+    const f = Math.min(1, Math.abs(k.speed) / v.boostSpeed);
+    els.bar.style.width = Math.round(f * 100) + '%';
+    els.speed.classList.toggle('boost', k.boosting);
+    els.speed.classList.toggle('reverse', k.speed < -0.05);
+    els.speed.classList.toggle('charged', k.driftCharge >= 1);
+    els.kmh.textContent = (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH) + ' km/h';
+    els.lap.textContent = (k.lapMs !== null ? '⏱ ' + clock(k.lapMs) : '') + (k.lastLap ? ' · last ' + clock(k.lastLap) : '') + (k.bestLap ? ' · best ' + clock(k.bestLap) : '');
+  }
+
   /** Lay the controls out for the chosen layout and how the phone is held. */
   function applyLayout() {
     if (!root) return;
@@ -304,6 +331,7 @@
     view = v;
     applyLayout();
     trackNames = v.trackNames || trackNames;
+    dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
     const key = JSON.stringify([v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.item, k.spin, k.shield], v.result]);
@@ -322,6 +350,7 @@
     els.item.textContent = item ? ITEM_ICON[item] : '—';
     els.item.classList.toggle('ready', Boolean(item));
     els.item.classList.toggle('hidden', !v.settings.items);
+    els.bottom.classList.toggle('noitem', !v.settings.items);
     els.change.classList.toggle('hidden', v.phase !== 'over');
     if (between) release();
   }
@@ -338,8 +367,10 @@
         '<div class="ark-setup kr-prefs hidden"></div>' +
         '<button class="primary go hidden">Start</button>' +
         '<div class="kr-controls">' +
+        '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
         '<div class="kr-steer"></div>' +
-        '<div class="kr-bottom"><button class="kr-btn item">🎁</button><button class="kr-btn brake">BRAKE</button></div>' +
+        '<div class="kr-bottom"><button class="kr-btn item">🎁</button><button class="kr-btn drift">DRIFT</button>' +
+        '<button class="kr-btn brake">BRAKE<small>hold: reverse</small></button><button class="kr-btn gas">GAS</button></div>' +
         '</div>' +
         '<button class="primary rematch hidden">Rematch</button>' +
         '<button class="ghost change hidden">Change settings</button>';
@@ -352,6 +383,13 @@
         controls: root.querySelector('.kr-controls'),
         steer: root.querySelector('.kr-steer'),
         brake: root.querySelector('.brake'),
+        gas: root.querySelector('.gas'),
+        drift: root.querySelector('.drift'),
+        bottom: root.querySelector('.kr-bottom'),
+        speed: root.querySelector('.kr-speed'),
+        bar: root.querySelector('.kr-speed i'),
+        kmh: root.querySelector('.kmh'),
+        lap: root.querySelector('.lapt'),
         item: root.querySelector('.item'),
         rematch: root.querySelector('.rematch'),
         change: root.querySelector('.change'),
@@ -380,6 +418,8 @@
       if (style === 'tilt') startTilt(false);
       applyLayout();
       holdButton(els.brake, 'brake');
+      holdButton(els.gas, 'gas');
+      holdButton(els.drift, 'drift');
       els.item.addEventListener('pointerdown', function (e) {
         e.preventDefault();
         if (!view || !view.karts || !view.karts[view.you].item) return;
@@ -397,9 +437,9 @@
       if (fit) fit.disconnect();
       stopTilt();
       root = els = view = host = fit = null;
-      held.left = held.right = held.brake = false;
+      held.left = held.right = held.brake = held.gas = held.drift = false;
       analog = 0;
-      stickBrake = false;
+      stickBrake = stickGas = false;
       sent = textKey = '';
     },
   });

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, TIMING, ITEMS, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
+import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, ITEMS, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
 import { fakeCtx } from './helpers.js';
 
 const TICK = 1000 / 60;
@@ -26,6 +26,12 @@ function driveTo(ctx, game, k, p, dir = 1) {
   ctx.advance(TICK);
 }
 
+/** Put kart k on the road at progress p, in the middle, facing along it. */
+function onRoad(game, k, p = 0.05, speed = 0) {
+  const pt = pointAt(game.track, p);
+  Object.assign(k, { x: pt.x, y: pt.y, angle: pt.angle, speed, progress: p });
+}
+
 /** A race on a given track (1-based, as in the settings), past the countdown. */
 function racing({ track = 1, laps = 3, races = 1, items = 1 } = {}) {
   const ctx = fakeCtx();
@@ -47,7 +53,8 @@ function autopilot(game, slot) {
   d = Math.atan2(Math.sin(d), Math.cos(d));
   const ahead = pointAt(game.track, where.s + 0.08);
   const bend = Math.atan2(Math.sin(ahead.angle - k.angle), Math.cos(ahead.angle - k.angle));
-  game.onInput(slot, { type: 'drive', steer: Math.max(-1, Math.min(1, d * 3)), brake: Math.abs(bend) > 0.6 && k.speed > 4.5 });
+  const brake = Math.abs(bend) > 0.6 && k.speed > 4.5;
+  game.onInput(slot, { type: 'drive', steer: Math.max(-1, Math.min(1, d * 3)), gas: !brake, brake });
 }
 
 test('every track is a clean loop: it never overlaps itself and stays on the field', () => {
@@ -104,6 +111,22 @@ test('no shortcuts: driving backwards over the line takes a lap away, and laps n
   // Back over the line: taken away again.
   driveTo(ctx, game, k, 0.95, -1);
   assert.equal(k.laps, 0);
+  assert.equal(k.lapStart, 0, 'back on lap 1: its clock runs from the start again (no fake best lap)');
+});
+
+test('controls held into the next race stay held; boost pads only push karts going forwards', () => {
+  const { ctx, game } = racing({ races: 3 });
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  game.newRace();
+  assert.equal(game.karts[0].gas, true, 'GAS still held: no need to lift and press again');
+  ctx.advance(TIMING.countdownMs + 50);
+  const k = game.karts[0];
+  const pad = game.hostView().track.boosts[0];
+  game.onInput(0, { type: 'drive', steer: 0 });
+  place(game, k, pad.x, pad.y);
+  k.speed = -2;
+  ctx.advance(TICK);
+  assert.ok(k.speed < 0, 'reversing over a pad');
 });
 
 test('grass slows you down, boost pads speed you up, karts bump apart', () => {
@@ -123,30 +146,109 @@ test('grass slows you down, boost pads speed you up, karts bump apart', () => {
   assert.ok(b.speed > KART.maxSpeed, 'boosted');
   assert.equal(game.hostView().karts[1].boosting, true);
   // Overlapping karts get pushed apart.
-  Object.assign(a, { x: 10, y: 10, speed: 0 });
-  Object.assign(b, { x: 10.3, y: 10, speed: 0 });
+  onRoad(game, a, 0.3);
+  Object.assign(b, { x: a.x + 0.3, y: a.y, speed: 0, progress: a.progress });
   ctx.advance(TICK);
   assert.ok(Math.hypot(a.x - b.x, a.y - b.y) >= KART.r * 2 - 1e-9);
   assert.ok(game.events.bumps > 0);
 });
 
-test('steering, braking and bad input', () => {
+test('gas, coasting, steering, braking, reverse and bad input', () => {
   const { ctx, game } = racing();
   const k = game.karts[0];
   ctx.advance(1000);
+  assert.equal(k.speed, 0, 'no gas, no go');
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(1000);
   const fast = k.speed;
-  assert.ok(fast > 4, 'karts accelerate on their own');
+  assert.ok(fast > 6, `holding gas accelerates (${fast})`);
+  onRoad(game, k, 0.05, fast);
+  game.onInput(0, { type: 'drive', steer: 0 });
+  ctx.advance(400);
+  assert.ok(k.speed < fast && k.speed > fast - 2, `let go: it coasts, slowing gently (${fast} -> ${k.speed})`);
   const heading = k.angle;
-  game.onInput(0, { type: 'drive', steer: 1, brake: false });
+  game.onInput(0, { type: 'drive', steer: 1, gas: true });
   ctx.advance(300);
   assert.ok(k.angle > heading + 0.3, 'turning right');
   game.onInput(0, { type: 'drive', steer: 0, brake: true });
-  ctx.advance(400);
+  ctx.advance(300);
   assert.ok(k.speed < fast - 3, 'braking');
-  game.onInput(0, { type: 'drive', steer: 'left', brake: 0 });
+  ctx.advance(1500);
+  assert.ok(k.speed < -1, `keep braking once stopped: reverse (${k.speed})`);
+  assert.ok(k.speed >= -KART.reverseSpeed);
+  // Reversing and steering turns the other way, like a car.
+  const back = k.angle;
+  game.onInput(0, { type: 'drive', steer: 1, brake: true });
+  ctx.advance(200);
+  assert.ok(k.angle < back, 'reversing with right lock swings the nose left');
+  // Gas while reversing stops first, then drives on.
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(800);
+  assert.ok(k.speed > 0);
+  // Even crawling off the mark, the kart can turn (it used to need speed to steer).
+  Object.assign(k, { speed: 0.4 });
+  const slow = k.angle;
+  game.onInput(0, { type: 'drive', steer: 1, gas: true });
+  ctx.advance(200);
+  assert.ok(k.angle - slow > 0.1, 'turns at a crawl');
+  game.onInput(0, { type: 'drive', steer: 'left', brake: 0, gas: 'yes' });
   assert.equal(k.steer, 0);
   game.onInput(0, { type: 'drive', steer: 99 });
   assert.equal(k.steer, 1);
+  assert.equal(k.gas, false);
+});
+
+test('walls: a glancing hit slides along; head-on bounces back; never stuck', () => {
+  const { ctx, game } = racing();
+  const k = game.karts[0];
+  const limit = TRACK_WIDTH / 2 + WALL.out - KART.r;
+  // Head-on into the outside wall at full speed.
+  const p = pointAt(game.track, 0.1);
+  const nx = -Math.sin(p.angle);
+  const ny = Math.cos(p.angle); // to the right of the road
+  place(game, k, p.x + nx * (limit - 0.3), p.y + ny * (limit - 0.3));
+  Object.assign(k, { angle: Math.atan2(ny, nx), speed: KART.maxSpeed });
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(TICK * 4);
+  assert.ok(game.events.walls > 0);
+  assert.ok(k.speed < 0, 'bounced back off the wall');
+  assert.ok(locate(game.track, k.x, k.y).d <= limit + 1e-6, 'kept inside the wall');
+  // Hold gas into the wall and steer: it turns away and drives off within a second.
+  game.onInput(0, { type: 'drive', steer: 1, gas: true });
+  ctx.advance(1000);
+  assert.ok(k.speed > 2, `driving away (${k.speed})`);
+  // A glancing hit (heading 20° into the wall) keeps most of the speed, turned along it.
+  place(game, k, p.x + nx * (limit - 0.15), p.y + ny * (limit - 0.15));
+  Object.assign(k, { angle: p.angle + 0.35, speed: KART.maxSpeed });
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(TICK * 3);
+  assert.ok(k.speed > KART.maxSpeed * 0.6, `slid on (${k.speed})`);
+});
+
+test('drift: tighter turns; a long enough drift gives a mini-boost on release', () => {
+  const { ctx, game } = racing();
+  const k = game.karts[0];
+  onRoad(game, k, 0.05, KART.maxSpeed);
+  game.onInput(0, { type: 'drive', steer: 1, gas: true, drift: true });
+  ctx.advance(TICK * 3);
+  assert.equal(game.hostView().karts[0].drifting, true);
+  // Keep it on the road while it drifts (a test can't steer a racing line).
+  for (let t = 0; t < KART.driftChargeMs + 50; t += 100) {
+    const { angle, speed } = k;
+    onRoad(game, k, 0.05, speed);
+    k.angle = angle;
+    ctx.advance(100);
+  }
+  assert.equal(game.hostView().karts[0].driftCharge, 1);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true, drift: false });
+  ctx.advance(TICK * 2);
+  assert.ok(game.hostView().karts[0].boosting, 'mini-boost');
+  assert.equal(game.events.miniBoosts, 1);
+  // Too slow to drift: nothing happens.
+  Object.assign(k, { speed: 2, boostUntil: 0 });
+  game.onInput(0, { type: 'drive', steer: 1, gas: false, drift: true });
+  ctx.advance(TICK * 2);
+  assert.equal(game.hostView().karts[0].drifting, false);
 });
 
 test('setup: track, laps and races; best of 3 is first to 2; Mixed varies the track', () => {

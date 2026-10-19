@@ -1,5 +1,18 @@
 (function () {
   Ark.loadCss('/games/kart-race/style.css');
+  // The track geometry the server drives on (track.js), so the road drawn is the road raced.
+  let Road = window.ArkKartTrack || null;
+  function loadRoad(tries) {
+    Ark.loadScript('/games/kart-race/track.js').then(function () {
+      Road = window.ArkKartTrack;
+      previews = {};
+      overlayKey = '';
+      if (view && overlay) renderOverlay(view);
+    }).catch(function () {
+      if (tries < 5) setTimeout(function () { loadRoad(tries + 1); }, 2000); // a flaky network: try again
+    });
+  }
+  loadRoad(0);
   const esc = Ark.escapeHtml;
   let trackNames = []; // from the server's views
   const ROWS = [
@@ -23,27 +36,11 @@
   let colors = null;
   let lineKey = '';
   let line = null; // the track's centre line, in field units
+  let walls = null; // [left, right] wall lines
+  let previews = {}; // track index -> SVG path of its centre line (setup screen)
   let hudKey = '';
   let overlayKey = '';
   const pads = {}; // controller players on the setup screen: slot -> { row }
-
-  /** The same smooth closed curve the server uses (Catmull-Rom through the control points). */
-  function centreLine(points, n) {
-    const out = [];
-    const m = points.length;
-    for (let i = 0; i < n; i++) {
-      const u = (i / n) * m;
-      const k = Math.floor(u);
-      const t = u - k;
-      const p = [points[(k - 1 + m) % m], points[k % m], points[(k + 1) % m], points[(k + 2) % m]];
-      const f = function (j) {
-        const a = p[0][j], b = p[1][j], c = p[2][j], d = p[3][j];
-        return 0.5 * (2 * b + (-a + c) * t + (2 * a - 5 * b + 4 * c - d) * t * t + (-a + 3 * b - 3 * c + d) * t * t * t);
-      };
-      out.push([f(0), f(1)]);
-    }
-    return out;
-  }
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -58,33 +55,98 @@
     return Math.floor(s / 60) + ':' + ('0' + (s % 60).toFixed(1)).slice(-4);
   }
 
+  // The speedometer: a dial from 0 to boost speed over a 240° sweep, shown as km/h.
+  const KMH = 12; // field units per second -> "km/h" on the dial
+  const SWEEP = 240;
+
+  /** A point on the dial (centre 50,50) at fraction f of the sweep, radius r. */
+  function dialAt(f, r) {
+    const a = ((-SWEEP / 2 + f * SWEEP) - 90) * Math.PI / 180;
+    return (50 + Math.cos(a) * r).toFixed(1) + ' ' + (50 + Math.sin(a) * r).toFixed(1);
+  }
+
+  function dialArc(f0, f1, r) {
+    return 'M' + dialAt(f0, r) + ' A' + r + ' ' + r + ' 0 ' + ((f1 - f0) * SWEEP > 180 ? 1 : 0) + ' 1 ' + dialAt(f1, r);
+  }
+
+  function gaugeHtml(v) {
+    const top = v.boostSpeed;
+    let ticks = '';
+    for (let kmh = 0; kmh <= top * KMH; kmh += 20) {
+      const f = kmh / (top * KMH);
+      ticks += '<path d="M' + dialAt(f, 40) + ' L' + dialAt(f, 46) + '"/>';
+    }
+    return '<div class="kr-gauge"><svg viewBox="0 0 100 86">' +
+      '<path class="track" d="' + dialArc(0, 1, 43) + '"/>' +
+      '<path class="red" d="' + dialArc(v.maxSpeed / top, 1, 43) + '"/>' +
+      '<path class="fill" d="' + dialArc(0, 1, 43) + '" pathLength="1"/>' +
+      '<g class="ticks">' + ticks + '</g>' +
+      '<line class="needle" x1="50" y1="50" x2="50" y2="14"/><circle cx="50" cy="50" r="4"/></svg>' +
+      '<div class="read"><b>0</b><span>km/h</span></div><div class="drift"><i></i></div></div>';
+  }
+
+  /** Move the needles and readouts (every view; the rest of the HUD only changes now and then). */
+  function updateGauges(v) {
+    hud.querySelectorAll('.kr-gauge').forEach(function (el, slot) {
+      const k = v.karts[slot];
+      const f = Math.min(1, Math.abs(k.speed) / v.boostSpeed);
+      el.querySelector('.needle').style.transform = 'rotate(' + (-SWEEP / 2 + f * SWEEP) + 'deg)';
+      el.querySelector('.fill').style.strokeDasharray = f + ' 1';
+      el.querySelector('.read b').textContent = (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH);
+      el.classList.toggle('boost', k.boosting);
+      el.classList.toggle('reverse', k.speed < -0.05);
+      const d = el.querySelector('.drift');
+      d.classList.toggle('on', k.drifting);
+      d.classList.toggle('ready', k.driftCharge >= 1);
+      d.querySelector('i').style.width = Math.round(k.driftCharge * 100) + '%';
+    });
+    hud.querySelectorAll('.kr-side .laptime').forEach(function (el, slot) {
+      const k = v.karts[slot];
+      el.textContent = (k.lapMs !== null ? '⏱ ' + clock(k.lapMs) : '') + (k.bestLap ? ' · best ' + clock(k.bestLap) : '');
+    });
+  }
+
   function renderHud(v) {
     let html = '';
     if (v.karts) {
       const side = function (slot) {
         const k = v.karts[slot];
-        return '<div class="kr-side p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div>' +
+        return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
           '<div class="pos">' + ordinal(v.positions[slot]) + (k.item ? ' <span class="item">' + ITEM_ICON[k.item] + '</span>' : '') + '</div>' +
-          '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div></div>';
+          '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
+          '<div class="laptime"></div></div>' + gaugeHtml(v) + '</div>';
       };
       html = side(0) +
         '<div class="kr-mid"><div class="track">' + esc(v.track.name) + (v.races > 1 ? ' · Race ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
         '<div class="clock">' + clock(v.raceMs) + '</div></div>' + side(1);
     }
-    if (html === hudKey) return;
-    hudKey = html;
-    hud.innerHTML = html;
+    if (html !== hudKey) {
+      hudKey = html;
+      hud.innerHTML = html;
+    }
+    if (v.karts) updateGauges(v);
+  }
+
+  /** A little map of a track (or a ? for Mixed) for the setup screen. */
+  function previewHtml(v, n) {
+    if (n === 0) return '<div class="kr-preview mixed"><span>🎲</span><div>Mixed: a different track each race</div></div>';
+    if (!Road || !v.trackPoints) return '';
+    if (!previews[n]) previews[n] = Road.svgPath(Road.centreLine(v.trackPoints[n - 1]));
+    const f = v.field;
+    return '<div class="kr-preview"><svg viewBox="0 0 ' + f.w + ' ' + f.h + '"><rect width="' + f.w + '" height="' + f.h + '" rx="0.8"/>' +
+      '<path class="kerb" d="' + previews[n] + '" stroke-width="' + (v.trackWidth + 0.5) + '"/>' +
+      '<path class="road" d="' + previews[n] + '" stroke-width="' + v.trackWidth + '"/></svg><div>' + esc(trackNames[n - 1] || '') + '</div></div>';
   }
 
   function renderOverlay(v) {
     let html = '';
     if (v.phase === 'setup') {
-      html = '<div class="panel"><div class="title">🏎️ Kart Race</div>' + Ark.setup.html(v, ROWS, Ark.setup.focus(v, ROWS, pads)) +
+      html = '<div class="panel kr-setup"><div class="title">🏎️ Kart Race</div><div class="kr-setup-row">' + Ark.setup.html(v, ROWS, Ark.setup.focus(v, ROWS, pads)) + previewHtml(v, v.settings.track) + '</div>' +
         '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</div></div>';
     } else if (v.phase === 'countdown') {
       const n = v.countdown;
       const lights = [3, 2, 1].map(function (i) { return '<span class="light' + (n <= i ? ' on' : '') + '"></span>'; }).join('');
-      html = '<div class="panel small"><div class="lights">' + lights + '</div><div class="sub">' + esc(v.track.name) + ' · ' + v.laps + ' laps · steer ◀ ▶, brake for the bends</div></div>';
+      html = '<div class="panel small"><div class="lights">' + lights + '</div><div class="sub">' + esc(v.track.name) + ' · ' + v.laps + ' laps · hold GAS to go, let go to coast, hold BRAKE to stop and reverse</div></div>';
     } else if (v.phase === 'finish' && v.result) {
       html = '<div class="banner">🏁 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' race ' + v.race : '') + '! <span class="muted">' + clock(v.result.time) + '</span></div>';
     } else if (v.phase === 'over') {
@@ -105,10 +167,58 @@
     g.stroke();
   }
 
+  /** Stroke runs of a loop, skipping null points (gaps). */
+  function strokeRuns(g, pts) {
+    g.beginPath();
+    let pen = false;
+    pts.concat([pts[0]]).forEach(function (p) {
+      if (!p) pen = false;
+      else if (pen) g.lineTo(p[0], p[1]);
+      else {
+        g.moveTo(p[0], p[1]);
+        pen = true;
+      }
+    });
+    g.stroke();
+  }
+
+  /**
+   * A wall, drawn `out` from the centre line (side: -1 left, +1 right), exactly where the server
+   * has one: it keeps a kart's centre within `limit` of the NEAREST road, so where another
+   * stretch of road is nearer than that (two roads side by side, as on Hairpins) there's no
+   * wall between them, just grass (and the shortcut check).
+   */
+  function wallLine(side, limit, out) {
+    const stop = Road.outline(line, side * limit); // where a kart's centre is held
+    return Road.outline(line, side * out).map(function (p, j) {
+      const q = stop[j];
+      let near = Infinity;
+      for (let i = 0; i < line.length; i++) near = Math.min(near, Math.hypot(line[i][0] - q[0], line[i][1] - q[1]));
+      return near < limit - 0.05 ? null : p;
+    });
+  }
+
   function drawTrack(g, v) {
     const W = v.trackWidth;
     g.lineJoin = 'round';
     g.lineCap = 'round';
+    // Walls (tyre barriers) beyond the grass verge: red and white, like the kerbs but chunkier.
+    walls.forEach(function (wall) {
+      g.strokeStyle = '#1f2937';
+      g.lineWidth = 0.42;
+      strokeRuns(g, wall);
+      g.lineCap = 'butt';
+      g.strokeStyle = '#ef4444';
+      g.lineWidth = 0.3;
+      g.setLineDash([0.45, 0.45]);
+      strokeRuns(g, wall);
+      g.strokeStyle = '#f1f5f9';
+      g.lineDashOffset = 0.45;
+      strokeRuns(g, wall);
+      g.lineDashOffset = 0;
+      g.setLineDash([]);
+      g.lineCap = 'round';
+    });
     // Kerbs: red with white dashes, a little wider than the road.
     g.strokeStyle = '#dc2626';
     g.lineWidth = W + 0.5;
@@ -217,6 +327,16 @@
       g.lineTo(-0.5, 0.16);
       g.fill();
     }
+    if (k.drifting) {
+      // Sparks off the back wheels: blue while charging, orange once a mini-boost is ready.
+      g.fillStyle = k.driftCharge >= 1 ? '#fb923c' : '#60a5fa';
+      for (let i = 0; i < 6; i++) {
+        const side = i % 2 ? 1 : -1;
+        g.beginPath();
+        g.arc(-0.45 - Math.random() * 0.35, side * (0.34 + Math.random() * 0.15), 0.05 + Math.random() * 0.05, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
     g.shadowColor = 'rgba(0,0,0,0.5)';
     g.shadowBlur = 8;
     // Wheels.
@@ -254,14 +374,17 @@
   function draw(now) {
     raf = requestAnimationFrame(draw);
     const v = view;
-    if (!v || !v.track || !v.karts || !colors) {
+    if (!v || !v.track || !v.karts || !colors || !Road) {
       if (canvas) canvas.getContext('2d').clearRect(0, 0, canvas.width, canvas.height);
       return;
     }
     const key = v.track.index + ':' + v.track.points.length;
     if (key !== lineKey) {
       lineKey = key;
-      line = centreLine(v.track.points, 240);
+      line = Road.centreLine(v.track.points);
+      const limit = v.trackWidth / 2 + v.wallOut - v.kartR;
+      const out = limit + v.kartR + 0.2; // just past where a kart's edge stops
+      walls = [wallLine(-1, limit, out), wallLine(1, limit, out)];
     }
     const f = v.field;
     const box = arena.getBoundingClientRect();
@@ -299,15 +422,17 @@
     v.karts.forEach(function (c, i) { drawKart(g, c, shown[i], i, now); });
   }
 
-  // Controllers: stick or D-pad ← → steers, B / LT / ↓ brakes.
+  // Controllers, like a console kart game: stick or D-pad ← → steers, RT / A is the gas,
+  // LT / B brakes (hold it once stopped to reverse), X / RB drifts, Y / LB uses your item.
   function padPoll(pad, v) {
     if (v.phase !== 'race' && v.phase !== 'countdown' && v.phase !== 'finish') return null;
     const held = pad.held;
+    const has = function (b) { return held.indexOf(b) !== -1; };
     let steer = Math.abs(pad.stick.x) > DEADZONE ? Math.round(pad.stick.x * 10) / 10 : 0;
-    if (held.indexOf('LEFT') !== -1) steer = -1;
-    if (held.indexOf('RIGHT') !== -1) steer = 1;
-    const brake = held.indexOf('B') !== -1 || held.indexOf('LT') !== -1 || held.indexOf('DOWN') !== -1 || pad.stick.y > 0.7;
-    return { type: 'drive', steer: steer, brake: brake };
+    if (has('LEFT')) steer = -1;
+    if (has('RIGHT')) steer = 1;
+    const brake = has('B') || has('LT');
+    return { type: 'drive', steer: steer, gas: !brake && (has('A') || has('RT')), brake: brake, drift: has('X') || has('RB') };
   }
 
   Ark.register('host', 'kart-race', {
@@ -327,7 +452,7 @@
       if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
       return out;
     },
-    padHint: 'Stick or D-pad ← → to steer · B / LT / ↓ to brake · A / X / RT to use your item · Setup: ↑↓ row, ←→ change, A start · End: A rematch, Y settings',
+    padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row, ←→ change, A start · End: A rematch, Y settings',
     padPoll: padPoll,
     pad: function (btn, v, slot) {
       if (v.phase === 'setup') {
@@ -343,7 +468,7 @@
         if (btn === 'A' || btn === 'START') return { type: 'rematch' };
         return btn === 'Y' ? { type: 'setup' } : null;
       }
-      if (v.phase === 'race' && (btn === 'A' || btn === 'X' || btn === 'RT')) return { type: 'item' };
+      if (v.phase === 'race' && (btn === 'Y' || btn === 'LB')) return { type: 'item' };
       return null; // driving is read every frame by padPoll
     },
     mount: function (el) {
@@ -369,7 +494,7 @@
     },
     unmount: function () {
       cancelAnimationFrame(raf);
-      root = hud = arena = canvas = overlay = view = shown = line = null;
+      root = hud = arena = canvas = overlay = view = shown = line = walls = null;
       lineKey = hudKey = overlayKey = '';
       Object.keys(pads).forEach(function (k) { delete pads[k]; });
     },
