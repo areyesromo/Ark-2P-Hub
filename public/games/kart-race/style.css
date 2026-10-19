@@ -95,14 +95,14 @@
 
 /* The speed bar and lap times above the controls. */
 .kr-dash { flex: none; display: flex; align-items: center; gap: 10px; }
-.kr-speed { flex: 1; height: 14px; border-radius: 7px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
+.kr-speed { flex: 1; min-width: 5rem; height: 14px; border-radius: 7px; background: var(--panel); border: 1px solid var(--line); overflow: hidden; }
 .kr-speed i { display: block; height: 100%; width: 0; background: var(--me); transition: width 80ms linear; }
 .kr-speed.boost i { background: #facc15; }
 .kr-speed.reverse i { background: var(--bad); }
 .kr-speed.charged { box-shadow: 0 0 0.8rem #fb923c; }
-.kr-read { display: flex; flex-direction: column; align-items: flex-end; min-width: 6.5em; line-height: 1.15; }
+.kr-read { display: flex; flex-direction: column; align-items: flex-end; min-width: 6.5em; max-width: 65%; line-height: 1.15; }
 .kr-read .kmh { font-variant-numeric: tabular-nums; }
-.kr-read span { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+.kr-read span { font-size: 0.75rem; color: var(--muted); font-variant-numeric: tabular-nums; text-align: right; }
 .kr-btn.item.ready { opacity: 1; border-color: var(--warn); box-shadow: 0 0 1.2rem rgba(250, 204, 21, 0.45); }
 .kr-btn.brake.on { background: var(--bad); color: #fff; }
 

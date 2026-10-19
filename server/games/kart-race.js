@@ -190,21 +190,25 @@ export class KartRace {
       for (const p of ITEMS.rows) for (const off of ITEMS.offsets) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0 });
     }
     this.bananas = [];
-    // Side by side just past the start line, facing along the track.
+    // Side by side just past the start line, facing along the track. The controls carry over
+    // (phones and controllers only send changes: GAS held through to the next race stays held).
+    const before = this.karts;
     this.karts = [0, 1].map((slot) => {
       const p = pointAt(this.track, 0.012, slot === 0 ? -0.75 : 0.75);
+      const was = before ? before[slot] : null;
       return {
         x: p.x,
         y: p.y,
         angle: p.angle,
         speed: 0, // negative: reversing
-        steer: 0,
-        gas: false,
-        brake: false,
-        drift: false, // holding the drift button
+        steer: was ? was.steer : 0,
+        gas: was ? was.gas : false,
+        brake: was ? was.brake : false,
+        drift: was ? was.drift : false, // holding the drift button
         drifting: false,
         driftMs: 0,
         lapStart: 0, // when this lap began (race time)
+        prevLapStart: 0, // …and the one before (reversing back over the line goes back to it)
         lastLap: null,
         bestLap: null,
         laps: 0,
@@ -309,7 +313,8 @@ export class KartRace {
     if (!k.offTrack && k.finishedAt === null) {
       for (const [p, off] of this.track.boosts) {
         const pad = pointAt(this.track, p, off);
-        if (Math.hypot(k.x - pad.x, k.y - pad.y) < 0.9 && now >= k.boostUntil - KART.boostMs + 300) {
+        // Forwards only: reversing over a pad doesn't fling you the other way.
+        if (k.speed >= 0 && Math.hypot(k.x - pad.x, k.y - pad.y) < 0.9 && now >= k.boostUntil - KART.boostMs + 300) {
           if (now >= k.boostUntil) this.events.boosts++;
           k.boostUntil = now + KART.boostMs;
           k.speed = Math.max(k.speed, KART.boostSpeed);
@@ -330,7 +335,7 @@ export class KartRace {
       k.speed = Math.max(0, k.speed - KART.driftDrag * dt);
       return;
     }
-    if (k.drifting && k.driftMs >= KART.driftChargeMs && !k.drift && now >= k.spinUntil) {
+    if (k.drifting && k.driftMs >= KART.driftChargeMs && !k.drift && now >= k.spinUntil && k.finishedAt === null) {
       k.boostUntil = Math.max(k.boostUntil, now + KART.miniBoostMs);
       k.speed = Math.max(k.speed, KART.maxSpeed + 1.5);
       this.events.miniBoosts++;
@@ -491,12 +496,14 @@ export class KartRace {
         const t = now - this.raceStart;
         k.lastLap = t - k.lapStart;
         k.bestLap = k.bestLap === null ? k.lastLap : Math.min(k.bestLap, k.lastLap);
+        k.prevLapStart = k.lapStart;
         k.lapStart = t;
         if (k.laps >= this.settings.laps) this.finishLine(slot, now);
       }
     } else if (was < 0.25 && p > 0.75 && k.laps > 0) {
       k.laps--;
       k.halfway = true;
+      k.lapStart = k.prevLapStart; // still on that lap: no 2-second "best lap" when you cross again
     }
   }
 

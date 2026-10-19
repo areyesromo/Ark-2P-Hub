@@ -111,6 +111,22 @@ test('no shortcuts: driving backwards over the line takes a lap away, and laps n
   // Back over the line: taken away again.
   driveTo(ctx, game, k, 0.95, -1);
   assert.equal(k.laps, 0);
+  assert.equal(k.lapStart, 0, 'back on lap 1: its clock runs from the start again (no fake best lap)');
+});
+
+test('controls held into the next race stay held; boost pads only push karts going forwards', () => {
+  const { ctx, game } = racing({ races: 3 });
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  game.newRace();
+  assert.equal(game.karts[0].gas, true, 'GAS still held: no need to lift and press again');
+  ctx.advance(TIMING.countdownMs + 50);
+  const k = game.karts[0];
+  const pad = game.hostView().track.boosts[0];
+  game.onInput(0, { type: 'drive', steer: 0 });
+  place(game, k, pad.x, pad.y);
+  k.speed = -2;
+  ctx.advance(TICK);
+  assert.ok(k.speed < 0, 'reversing over a pad');
 });
 
 test('grass slows you down, boost pads speed you up, karts bump apart', () => {

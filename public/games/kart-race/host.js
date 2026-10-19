@@ -2,12 +2,17 @@
   Ark.loadCss('/games/kart-race/style.css');
   // The track geometry the server drives on (track.js), so the road drawn is the road raced.
   let Road = window.ArkKartTrack || null;
-  Ark.loadScript('/games/kart-race/track.js').then(function () {
-    Road = window.ArkKartTrack;
-    previews = {};
-    overlayKey = '';
-    if (view && overlay) renderOverlay(view);
-  });
+  function loadRoad(tries) {
+    Ark.loadScript('/games/kart-race/track.js').then(function () {
+      Road = window.ArkKartTrack;
+      previews = {};
+      overlayKey = '';
+      if (view && overlay) renderOverlay(view);
+    }).catch(function () {
+      if (tries < 5) setTimeout(function () { loadRoad(tries + 1); }, 2000); // a flaky network: try again
+    });
+  }
+  loadRoad(0);
   const esc = Ark.escapeHtml;
   let trackNames = []; // from the server's views
   const ROWS = [
@@ -178,15 +183,18 @@
   }
 
   /**
-   * A wall `out` from the centre line, with gaps where another stretch of road is closer than
-   * that (two roads side by side, as on Hairpins): the server only keeps a kart within `out`
-   * of the NEAREST road, so there's no wall between them, just grass (and a shortcut check).
+   * A wall, drawn `out` from the centre line (side: -1 left, +1 right), exactly where the server
+   * has one: it keeps a kart's centre within `limit` of the NEAREST road, so where another
+   * stretch of road is nearer than that (two roads side by side, as on Hairpins) there's no
+   * wall between them, just grass (and the shortcut check).
    */
-  function wallLine(out) {
-    return Road.outline(line, out).map(function (p) {
+  function wallLine(side, limit, out) {
+    const stop = Road.outline(line, side * limit); // where a kart's centre is held
+    return Road.outline(line, side * out).map(function (p, j) {
+      const q = stop[j];
       let near = Infinity;
-      for (let i = 0; i < line.length; i++) near = Math.min(near, Math.hypot(line[i][0] - p[0], line[i][1] - p[1]));
-      return near < Math.abs(out) - 0.25 ? null : p;
+      for (let i = 0; i < line.length; i++) near = Math.min(near, Math.hypot(line[i][0] - q[0], line[i][1] - q[1]));
+      return near < limit - 0.05 ? null : p;
     });
   }
 
@@ -374,8 +382,9 @@
     if (key !== lineKey) {
       lineKey = key;
       line = Road.centreLine(v.track.points);
-      const out = v.trackWidth / 2 + v.wallOut + 0.2; // just past where a kart's edge stops
-      walls = [wallLine(-out), wallLine(out)];
+      const limit = v.trackWidth / 2 + v.wallOut - v.kartR;
+      const out = limit + v.kartR + 0.2; // just past where a kart's edge stops
+      walls = [wallLine(-1, limit, out), wallLine(1, limit, out)];
     }
     const f = v.field;
     const box = arena.getBoundingClientRect();
