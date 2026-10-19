@@ -24,7 +24,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Tank Duel | `tanks` | Top-down tank battle. Drive with the joystick, fire bouncing shells around cover. 3 hits and you are out. First to 3. | `server/games/tanks.js`, `public/games/tanks/`, `test/tanks.test.js` |
 | Sumo | `sumo` | Shove your rival off a shrinking ring. Steer with the stick, DASH to hit hard. First to 3. | `server/games/sumo.js`, `public/games/sumo/`, `test/sounds.test.js`, `test/sumo.test.js` |
 | Party Board | `party-board` | A Mario Party-style board for two: roll, pick your path across one of five maps, grab coins, buy ⭐ stars, raid the shop for items, and battle in a party minigame every round. Most stars wins. | `server/games/party-board.js`, `server/games/board/`, `public/games/minis/`, `public/games/party-board/`, `test/party-board.test.js`, `test/sounds.test.js` |
-| Party Minigames | `party-minis` | Mario Party-style showdowns: pump a balloon till it pops, pass the hot potato, out-draw your rival, repeat the glowing path. Win a minigame to score; first to 3 takes it. | `server/games/party-minis.js`, `server/games/minis/`, `public/games/minis/`, `public/games/party-minis/`, `test/minis-party2.test.js`, `test/party-minis.test.js`, `test/sounds.test.js` |
+| Party Minigames | `party-minis` | Mario Party-style showdowns: pump a balloon till it pops, pass the hot potato, out-draw your rival, repeat the glowing path. Win a minigame to score; first to 3 takes it. | `server/games/party-minis.js`, `server/games/minis/`, `public/games/minis/`, `public/games/party-minis/`, `test/minis-motion.test.js`, `test/minis-party2.test.js`, `test/party-minis.test.js`, `test/sounds.test.js` |
 | Micro Mayhem | `micro-mayhem` | Tiny games, three seconds each, both of you at once: TAP IT! STOP IT! SHAKE IT! Fail one and lose a life. It keeps getting faster; last one standing wins. | `server/games/micro-mayhem.js`, `server/games/minis/`, `public/games/minis/`, `public/games/micro-mayhem/`, `test/micro-mayhem.test.js`, `test/sounds.test.js` |
 | Bomb Duel | `bomb-duel` | Bomberman-style: blast crates for power-ups and trap your rival in a cross of fire. Walls close in after 90 s. | `server/games/bomb-duel.js`, `public/games/bomb-duel/`, `test/bomb-duel.test.js` |
 | Kart Race | `kart-race` | Top-down racing: steer with ◀ ▶, brake for the bends, hit the boost pads and bump your rival off the line. Three tracks. | `server/games/kart-race.js`, `public/games/kart-race/`, `test/kart-race.test.js` |
@@ -55,7 +55,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (23)
+## Minigames (25)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -81,10 +81,12 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Bowling Bash | `bowling` | party | 3D | Swipe up the lane: the angle aims, the speed is your power. Two rolls | `server/games/minis/bowling.js`, `public/games/minis/bowling.js`, `test/minis-party2.test.js` |
 | Penalty Shootout | `penalty` | party | 3D | Kicker: pick a corner. Keeper: pick where to dive | `server/games/minis/penalty.js`, `public/games/minis/penalty.js`, `test/minis-party2.test.js` |
 | Whack-a-Mole | `whack-a-mole` | party | 2D | Whack the moles in your colour (gold: +2), not theirs | `server/games/minis/whack-a-mole.js`, `public/games/minis/whack-a-mole.js`, `test/minis-party3.test.js` |
-| Fishing | `fishing` | party | 2D | Wait for the bite, HOOK it, then REEL without snapping the line | `server/games/minis/fishing.js`, `public/games/minis/fishing.js`, `test/minis-party3.test.js` |
+| Fishing | `fishing` | party | 2D | Wait for the bite, HOOK it (jerk the phone up, or tap), then REEL (wind the phone round, or tap) without snapping the line | `server/games/minis/fishing.js`, `public/games/minis/fishing.js`, `test/minis-party3.test.js` |
 | Glass Bridge | `glass-bridge` | party | 3D | Pick ◀ left or right ▶ glass, row by row: one of each pair breaks | `server/games/minis/glass-bridge.js`, `public/games/minis/glass-bridge.js`, `test/minis-party3.test.js` |
 | Ice Rink Sumo | `ice-sumo` | party | 3D | Steer (joystick / stick) on the slippery ice and bump your rival off | `server/games/minis/ice-sumo.js`, `public/games/minis/ice-sumo.js`, `test/minis-party3.test.js` |
 | Simon Says | `simon-says` | party | 2D | Press the colour only when Simon says so | `server/games/minis/simon-says.js`, `public/games/minis/simon-says.js`, `test/minis-party3.test.js` |
+| Sword Duel | `sword-duel` | party | 2D | When the arrow shows, slash your phone that way (or swipe). Too soon or the wrong way: out of that point | `server/games/minis/sword-duel.js`, `public/games/minis/sword-duel.js`, `test/minis-motion.test.js` |
+| Pour It | `pour-it` | party | 2D | Tilt to pour (or hold POUR), level the phone to stop. Closest to the line wins; spill and you lose | `server/games/minis/pour-it.js`, `public/games/minis/pour-it.js`, `test/minis-motion.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->

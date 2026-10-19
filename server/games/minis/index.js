@@ -22,6 +22,8 @@ import fishing from './fishing.js';
 import glassBridge from './glass-bridge.js';
 import iceSumo from './ice-sumo.js';
 import simonSays from './simon-says.js';
+import swordDuel from './sword-duel.js';
+import pourIt from './pour-it.js';
 
 export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath];
-export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays];
+export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt];

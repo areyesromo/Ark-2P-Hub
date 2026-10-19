@@ -9,7 +9,7 @@ export const SNAP_MS = 1000; // re-tying the line
 const DURATION_MS = 30000;
 
 export default {
-  id: 'fishing', kind: 'party', look: '2d', name: 'Fishing', order: 'GO FISH!', howTo: 'Wait for the bite, HOOK it, then REEL without snapping the line', durationMs: DURATION_MS,
+  id: 'fishing', kind: 'party', look: '2d', name: 'Fishing', order: 'GO FISH!', howTo: 'Wait for the bite, HOOK it (jerk the phone up, or tap), then REEL (wind the phone round, or tap) without snapping the line', durationMs: DURATION_MS,
   create(api) {
     // stage: 'wait' (line in the water), 'bite' (hook now!), 'reel', 'scared', 'snapped', 'caught'
     const lines = [0, 1].map(() => ({ stage: 'wait', since: 0, biteAt: 0, progress: 0, tension: 0, fish: 0, timer: null, tick: 0 }));
