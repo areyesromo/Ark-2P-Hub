@@ -355,7 +355,7 @@
   function dash(v) {
     const k = v.karts && v.karts[v.you];
     if (!k) return;
-    const f = Math.min(1, Math.abs(k.speed) / v.boostSpeed);
+    const f = Math.min(1, Math.abs(k.speed) / (v.boostSpeed + 2)); // the TV dial's scale
     els.bar.style.width = Math.round(f * 100) + '%';
     els.speed.classList.toggle('boost', k.boosting);
     els.speed.classList.toggle('reverse', k.speed < -0.05);
@@ -423,9 +423,10 @@
       root.innerHTML =
         '<div class="status"></div>' +
         '<div class="kr-setup-box"></div>' +
-        '<div class="ark-setup kr-picks hidden"></div>' +
+
         '<div class="ark-setup kr-prefs hidden"></div>' +
         '<button class="primary go hidden">Start</button>' +
+        '<div class="ark-setup kr-picks hidden"></div>' +
         '<div class="kr-controls">' +
         '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
         '<div class="kr-steer"></div>' +

@@ -621,6 +621,7 @@ export class KartRace {
             laps: k.laps,
             racer: k.racer,
             tyre: k.tyre,
+            top: k.car.maxSpeed, // this kart's top speed (its speedometer's red line)
             drifting: k.drifting,
             driftCharge: k.drifting ? Math.min(1, k.driftMs / KART.driftChargeMs) : 0,
             lapMs: this.raceStart && k.finishedAt === null ? Math.max(0, now - this.raceStart - k.lapStart) : null,

@@ -410,6 +410,7 @@ test('racer and tyre picks: own slot, setup/over only, bad ids ignored, kept acr
   assert.ok(Math.abs(game.karts[1].car.maxSpeed - 9.85) < 1e-9, 'Rex on Slicks: speed 6');
   assert.equal(game.hostView().karts[1].racer, 'rex');
   assert.equal(game.hostView().karts[1].tyre, 'slicks');
+  assert.ok(Math.abs(game.hostView().karts[1].top - 9.85) < 1e-9, "each kart's own top speed, for its speedometer");
   game.onInput(1, { type: 'racer', id: 'zip' });
   assert.equal(game.picks[1].racer, 'rex', 'no changing racer mid-race');
   game.finishLine(1, ctx.now());

@@ -94,7 +94,7 @@
     return v.boostSpeed + 2;
   }
 
-  function gaugeHtml(v) {
+  function gaugeHtml(v, k) {
     const top = gaugeTop(v);
     let ticks = '';
     for (let kmh = 0; kmh <= top * KMH; kmh += 20) {
@@ -103,7 +103,7 @@
     }
     return '<div class="kr-gauge"><svg viewBox="0 0 100 86">' +
       '<path class="track" d="' + dialArc(0, 1, 43) + '"/>' +
-      '<path class="red" d="' + dialArc(v.maxSpeed / top, 1, 43) + '"/>' +
+      '<path class="red" d="' + dialArc((k.top || v.maxSpeed) / top, 1, 43) + '"/>' +
       '<path class="fill" d="' + dialArc(0, 1, 43) + '" pathLength="1"/>' +
       '<g class="ticks">' + ticks + '</g>' +
       '<line class="needle" x1="50" y1="50" x2="50" y2="14"/><circle cx="50" cy="50" r="4"/></svg>' +
@@ -196,7 +196,7 @@
         return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
           '<div class="pos">' + ordinal(v.positions[slot]) + (k.item ? ' <span class="item">' + ITEM_ICON[k.item] + '</span>' : '') + '</div>' +
           '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
-          racerLine(k) + '<div class="laptime"></div></div>' + gaugeHtml(v) + '</div>';
+          racerLine(k) + '<div class="laptime"></div></div>' + gaugeHtml(v, k) + '</div>';
       };
       html = side(0) +
         '<div class="kr-mid"><div class="track">' + esc(v.track.name) + (v.races > 1 ? ' · Race ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
