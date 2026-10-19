@@ -327,12 +327,3 @@ test('a wrong symbol is a strike but keeps your progress; Simon starts the stage
   game.onInput(d, { type: 'submit', module: pi });
   assert.equal(game.phase, 'result', 'third strike');
 });
-
-test('controller players: the game asks for two phones', () => {
-  const ctx = fakeCtx();
-  ctx.players[1].local = true;
-  const game = new BombSquad(ctx, seeded(1));
-  game.start();
-  assert.equal(game.phase, 'needPhones');
-  assert.equal(ctx.pendingTimers(), 0);
-});

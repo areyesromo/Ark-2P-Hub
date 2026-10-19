@@ -1,7 +1,6 @@
 (function () {
   Ark.loadCss('/games/sketch-guess/style.css');
   const esc = Ark.escapeHtml;
-  const LABELS = ['A', 'B', 'X', 'Y'];
   const LEVEL_NAMES = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
   let root = null;
@@ -68,16 +67,13 @@
   }
 
   function topHtml(v) {
-    if (v.phase === 'needPhone' || v.phase === 'over') return '<span>Sketch &amp; Guess</span><span class="stars">⭐ ' + v.stars + '</span>';
+    if (v.phase === 'over') return '<span>Sketch &amp; Guess</span><span class="stars">⭐ ' + v.stars + '</span>';
     return '<span>🎨 ' + nameOf(v, v.drawer) + ' draws · 🤔 ' + nameOf(v, v.guesser) + ' guesses</span>' +
       '<span class="muted">Round ' + v.round + ' / ' + v.rounds + '</span>' +
       '<span class="stars">⭐ ' + v.stars + '</span>';
   }
 
   function overlayHtml(v) {
-    if (v.phase === 'needPhone') {
-      return '<div class="big">📱</div><div class="sub">Sketch &amp; Guess needs at least one phone player to draw the secret words.<br>Join from a phone, or press Back for the lobby.</div>';
-    }
     if (v.phase === 'choose') return '<div class="sub">' + nameOf(v, v.drawer) + ' is choosing a word…</div>';
     if (v.phase === 'reveal' && v.result) {
       const r = v.result;
@@ -95,7 +91,7 @@
       }).join('');
       return '<div class="result">⭐ ' + v.stars + ' / ' + v.maxStars + ' · ' + rating(v) + '</div>' +
         '<table class="sg-history">' + rows + '</table>' +
-        '<div class="sub small">Rematch or head back to the lobby from your phones or controllers.</div>';
+        '<div class="sub small">Rematch or head back to the lobby from your phones.</div>';
     }
     return '';
   }
@@ -105,12 +101,6 @@
     let html = '<div class="sg-blanks">' + esc(v.blanks).replace(/ /g, '&nbsp;&nbsp;') + '</div>' +
       '<div class="sg-level lvl ' + v.level + '">' + LEVEL_NAMES[v.level] + ' word</div>' +
       '<div class="sg-bar"><div class="fill"></div></div>';
-    if (v.options) {
-      html += '<div class="sg-options">' + v.options.map(function (o, i) {
-        const out = v.ruledOut.indexOf(i) !== -1;
-        return '<div class="opt c' + i + (out ? ' out' : '') + '"><span class="badge">' + LABELS[i] + '</span>' + esc(o) + '</div>';
-      }).join('') + '</div>' + (v.lockedMs > 0 ? '<div class="sg-wait">Wrong! Wait a moment…</div>' : '');
-    }
     const guesses = v.guesses.slice().reverse().map(function (g) {
       return '<li class="' + (g.close ? 'close' : '') + '">' + esc(g.text) + (g.close ? ' <em>so close!</em>' : '') + '</li>';
     }).join('');
@@ -119,7 +109,7 @@
   }
 
   function render(v) {
-    const key = JSON.stringify([v.phase, v.round, v.blanks, v.guesses, v.ruledOut, v.lockedMs > 0, v.stars, v.result && v.result.word]);
+    const key = JSON.stringify([v.phase, v.round, v.blanks, v.guesses, v.stars, v.result && v.result.word]);
     if (key !== textKey) {
       textKey = key;
       els.top.innerHTML = topHtml(v);
@@ -152,13 +142,6 @@
       }
       if (v.phase === 'reveal' && prev.phase !== 'reveal') out.push(v.result && v.result.guessed ? 'correct' : 'wrong');
       return out;
-    },
-    padHint: 'Guessing on a controller: A B X Y picks the word you think it is · wrong picks pause you briefly',
-    pad: function (btn, v, slot) {
-      if (v.phase === 'over' || v.phase === 'needPhone') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
-      const i = LABELS.indexOf(btn);
-      if (v.phase === 'draw' && slot === v.guesser && v.options && i !== -1 && v.ruledOut.indexOf(i) === -1) return { type: 'pick', index: i };
-      return null;
     },
     mount: function (el) {
       root = document.createElement('div');

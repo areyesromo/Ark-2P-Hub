@@ -228,7 +228,6 @@
   // ---- screens ----
 
   function bodyHtml(v) {
-    if (v.phase === 'needPhones') return '<div class="bs-card"><div class="big">📱 Two phones needed</div><p>The bomb and the manual are both secret, so each of you needs a phone. Go back to the lobby and join with phones.</p></div>';
     if (v.phase === 'over') {
       return '<div class="bs-card"><div class="big">' + v.stars + ' of ' + v.maxStars + ' ⭐</div><p>' +
         v.history.filter(function (h) { return h.defused; }).length + ' of ' + v.bombs + ' bombs defused.</p>' +

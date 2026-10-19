@@ -1,5 +1,5 @@
 // Draw Duel. Each round a shape is shown for a few seconds, then hidden; both
-// players redraw it from memory on their phone (or with a controller's stick).
+// players redraw it from memory on their phone.
 // Each drawing is scored 0-100% for how closely it matches the shape (size and
 // position don't matter). Most total points after ROUNDS rounds wins.
 //

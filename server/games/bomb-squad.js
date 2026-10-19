@@ -41,11 +41,6 @@ export class BombSquad {
     this.history = []; // { defuser, defused, reason, timeLeftMs, strikes, stars }
     this.result = null;
     this.bomb = null;
-    // Both screens must stay private: no controller players here.
-    if (this.ctx.players.some((p) => p.local)) {
-      this.phase = 'needPhones';
-      return this.ctx.update();
-    }
     this.nextBomb();
   }
 

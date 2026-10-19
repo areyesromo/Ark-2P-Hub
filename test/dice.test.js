@@ -73,18 +73,13 @@ test("Liar's Dice: dice stay secret until a challenge; the wrong side loses a di
   assert.deepEqual(g.counts, [5, 5]);
 });
 
-test("Liar's Dice: settings for dice and wild ones; controllers can't hide dice", () => {
+test("Liar's Dice: settings for dice and wild ones", () => {
   const ctx = fakeCtx();
   ctx.settings = { dice: 3, wild: 0 };
   const g = new LiarsDice(ctx, seeded(1));
   g.start();
   assert.deepEqual(g.counts, [3, 3]);
   assert.equal(g.wild, false);
-  const c2 = fakeCtx();
-  c2.players[0].local = true;
-  const g2 = new LiarsDice(c2, seeded(1));
-  g2.start();
-  assert.equal(g2.phase, 'needPhones');
 });
 
 // ---- Dice Party ----

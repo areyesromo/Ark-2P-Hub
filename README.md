@@ -87,7 +87,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Dots and Boxes | A 4 × 4, 3 × 3 or 5 × 5 grid; one game, or first to 2 or 3 |
 | Mancala | 4, 3 or 5 stones per bowl; one game, or first to 2 or 3 |
 | Micro Mayhem | 3 or 5 lives; normal pace or fast (starts at speed 3) |
-| Party Minigames | First to 3, 4 or 5 wins; minigames: a mix, 2D only or 3D only |
+| Party Minigames | First to 3, 4 or 5 wins; minigames: a random mix, random 2D, random 3D, or one minigame of your choice (to practise it) |
 | Party Board | Map (random or one of five), tile art ⚙️ steampunk with 3D models (default: steampunk tiles, a brass die with the roll on a number plate, a spinning collectible star, coins that pop up when won and scatter when lost), ⚙️ steampunk light (the faces on plain discs, for slower TVs) or 🎨 classic colours, board view 2D or 🧊 3D (every map has its own scenery: a palm island, sandy lagoons, a metal pipe yard, a foggy graveyard with ghosts, a lava field under a smoking peak; each player picks the steampunk engineer or mechanic miniature, which hop the paths, your character flies across the board when a warp flings it, a tumbling die, a camera that follows the turn), 10, 15 or 20 turns; minigames: a mix, 2D only or 3D only; bonus stars on or off; Harsh mode on or off |
 | Word Race | Grid size, time per round and match length |
 | Mini Golf | 3, 6, 9, 12 or 15 holes |
@@ -110,7 +110,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | --- | --- | --- |
 | Lobby | **A** / **Start** | Join (takes a free seat as "Controller 1/2") |
 | Lobby | **D-pad**, then **A** | Pick a game and start it (the first card, 🎲 Random, lets the hub choose) |
-| Lobby | **Y** | Change your name: cycles through names on the leaderboard, so your wins count for you |
+| Lobby | **Y** | Change your name: cycles through names on the leaderboard (so your wins count for you), then ready-made ones (Ace, Blaze, Comet…) |
 | Lobby | **X** | Tournament: off, best of 3, 5 or 7 games |
 | Mind Meld | **Left stick** or **D-pad ← →** turns the dial, **A** locks in | Controller players always guess; the clue-giver needs a phone to type |
 | Marble Maze | **Left stick** or **D-pad** tilts the board | In split mode only your axis counts: player 1 left/right, player 2 forwards/back. **A** plays again at the end |
@@ -132,21 +132,21 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Bomb Duel | **D-pad** or **left stick** to walk (held), **A** / **B** / **X** / **RT** to drop a bomb | Setup: **↑↓** picks a row, **←→** changes it, **A** starts; at the end **A** rematches and **Y** changes the settings |
 | Kart Race | **Left stick** or **D-pad ← →** to steer, **B** / **LT** / **↓** to brake, **A** / **X** / **RT** to use your item | The kart accelerates by itself. Setup: **↑↓** picks a row, **←→** changes it, **A** starts; at the end **A** rematches and **Y** changes the settings |
 | Quiz Battle | **A** / **B** / **X** / **Y** to answer, or the **D-pad** as a diamond (↓ A, → B, ← X, ↑ Y) | Answer tiles on the TV are coloured like the buttons |
-| Draw Duel | **Left stick** or **D-pad** moves a cursor, hold **A** / **RT** / **RB** to draw, **B** undo, **X** clear, **Y** / **START** done | Phones draw with a finger, which is easier; the controller is for brave players |
 | Battleship | **D-pad** aims at the enemy grid on the TV, **A** fires | A controller player's fleet is placed at random, since the TV can't keep it secret |
-| Word Race | Setup: **↑↓** picks a row, **←→** changes it, **A** starts. In the game: **D-pad** / **stick** moves a cursor, **A** adds the letter, **B** removes the last one, **Y** / **X** / **RT** submits the word. At the end, **A** rematches and **Y** changes the settings | Phones are easier (just swipe), and your trace shows on the TV for your rival to see |
 | Mini Golf | **Left stick** aims (or **←→** turns the aim), hold **A** / **RT** to charge, let go to putt | The power meter swings up and down while you hold, so let go at the right moment. Setup: **←→** picks the holes, **A** starts; at the end **A** rematches and **Y** changes the holes |
 | Connect Four | **D-pad** ← → (or the stick) moves your disc over the columns, **A** or **↓** drops it | |
 | Party Board | **← →** pick an answer, **A** confirms (roll, buy, use an item, stop the slot) | Minigames play as below |
 | Micro Mayhem, Party Minigames | Follow the order: **A** taps / stops / pumps / fires / whacks / reels, **A B X Y** are Simon's green / red / blue / yellow, **D-pad** picks and swipes (◀ ▶ on the Glass Bridge), the **stick** steers the Tap it! cursor, the Coin Grab runner and the Ice Rink Sumo puck, and wiggles to shake | **A** is Ready on the *Next up* card and rematch at the end |
 | Memory Match | **D-pad** moves a cursor over the cards on the TV, **A** flips one (on your turn) | |
-| Sketch & Guess | **A** / **B** / **X** / **Y** picks one of four words shown on the TV | Controller players always guess (the word has to stay secret from the guesser); wrong picks pause you for a moment |
 | Game over | **A** / **Start** | Rematch |
 
 Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
 Browsers only notice a controller after one of its buttons is pressed, so
 press A once if the TV says no controller is connected. Controllers rumble on
 input where the browser supports it.
+
+Word Race, Draw Duel, Liar's Dice, Bomb Squad and Sketch & Guess need two
+phones, so they're greyed out in the lobby while a controller is seated.
 
 ## Sound
 

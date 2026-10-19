@@ -44,10 +44,6 @@
   }
 
   function overlayHtml(v) {
-    if (v.phase === 'needPhones') {
-      return '<div class="panel"><div class="title">📱 Bomb Squad needs two phones</div>' +
-        '<p>One of you gets the bomb, the other the manual, and both have to stay secret. Join with phones and try again.</p></div>';
-    }
     if (v.phase === 'brief') {
       return '<div class="panel"><div class="title">💣 Bomb ' + v.bombIndex + ' of ' + v.bombs + '</div>' +
         '<p>🔧 ' + nameOf(v, v.defuser) + ' has the <strong>bomb</strong> · 📖 ' + nameOf(v, 1 - v.defuser) + ' has the <strong>manual</strong></p>' +

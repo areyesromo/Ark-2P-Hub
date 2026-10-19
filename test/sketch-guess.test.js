@@ -1,13 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { SketchGuess, ROUNDS, TIMING, LIMITS, HINT_AT, GUESS_COOLDOWN_MS, judge, normalise } from '../server/games/sketch-guess.js';
+import { SketchGuess, ROUNDS, TIMING, LIMITS, HINT_AT, judge, normalise } from '../server/games/sketch-guess.js';
 import { WORDS } from '../server/games/sketch-words.js';
 import { listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-function setup({ local = [false, false] } = {}) {
+function setup() {
   const ctx = fakeCtx();
-  local.forEach((l, slot) => (ctx.players[slot].local = l));
   const game = new SketchGuess(ctx);
   game.start();
   return { ctx, game };
@@ -157,38 +156,6 @@ test('two phones take turns drawing; the match ends after ROUNDS with a team tot
   assert.equal(game.phase, 'choose');
   assert.equal(game.drawer, 1, 'the other player draws first next time');
   assert.equal(game.stars, 0);
-});
-
-test('a controller player always guesses, from four options with a cooldown on wrong picks', () => {
-  const { ctx, game } = setup({ local: [true, false] });
-  for (let r = 0; r < 3; r++) {
-    assert.equal(game.drawer, 1, 'the phone player draws every round');
-    pick(game);
-    if (r < 2) {
-      game.onInput(1, { type: 'skip' });
-      ctx.advance(TIMING.revealMs);
-    }
-  }
-  const opts = game.hostView().options;
-  assert.equal(opts.length, 4);
-  assert.ok(opts.includes(game.word));
-  assert.equal(game.playerView(1).options.length, 4);
-  const wrong = opts.findIndex((o) => o !== game.word);
-  const right = opts.indexOf(game.word);
-  game.onInput(0, { type: 'pick', index: wrong });
-  assert.deepEqual(game.ruledOut, [wrong]);
-  game.onInput(0, { type: 'pick', index: right }); // still cooling down
-  assert.equal(game.phase, 'draw');
-  ctx.advance(GUESS_COOLDOWN_MS);
-  game.onInput(0, { type: 'pick', index: right });
-  assert.equal(game.phase, 'reveal');
-  assert.equal(game.result.guessed, true);
-});
-
-test('two controllers: nobody can draw in secret, so the game asks for a phone', () => {
-  const { game } = setup({ local: [true, true] });
-  assert.equal(game.phase, 'needPhone');
-  assert.equal(game.hostView().phase, 'needPhone');
 });
 
 test('the lobby lists competitive games first, then dice & board, then casual ones', () => {

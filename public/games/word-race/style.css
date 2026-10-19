@@ -24,11 +24,8 @@
 .wr-grid .tile .face { font-size: calc(9.6em / var(--n)); line-height: 1; } /* 2.4em on 4x4, smaller on bigger grids */
 .wr-grid .tile .n { position: absolute; top: 6%; right: 9%; font-size: calc(3.2em / var(--n)); font-weight: 800; opacity: 0.8; }
 .wr-grid .tile.on { transform: scale(0.94); color: #0b0d17; }
-.wr-grid .tile.on.p1, .wr-grid .tile.on.me { background: var(--p1); box-shadow: 0 0.2em 0 #0e7490; }
-.wr-grid .tile.on.p2 { background: var(--p2); box-shadow: 0 0.2em 0 #9d174d; }
+.wr-grid .tile.on.me { background: var(--p1); box-shadow: 0 0.2em 0 #0e7490; }
 .wr-grid .tile.on.last { outline: 4px solid #fff; }
-.wr-grid .tile.aim.p1 { outline: 5px solid var(--p1); outline-offset: 3px; }
-.wr-grid .tile.aim.p2 { outline: 5px solid var(--p2); outline-offset: 3px; }
 
 /* ---- TV ---- */
 

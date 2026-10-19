@@ -2,20 +2,17 @@
 (function () {
   /**
    * grid: size x size faces ('Q' is "Qu"). paths: [{ path: [tile...], cls }] drawn
-   * on top (a phone's own trace, or controller players' traces on the TV).
-   * cursors: [{ i, cls }] tiles to ring (controller aim).
+   * on top (a phone's own trace).
    */
-  function gridHtml(grid, size, paths, cursors) {
+  function gridHtml(grid, size, paths) {
     const mark = {};
     (paths || []).forEach(function (p) {
       p.path.forEach(function (i, k) { mark[i] = { cls: p.cls, n: k + 1, last: k === p.path.length - 1 }; });
     });
-    const aim = {};
-    (cursors || []).forEach(function (c) { aim[c.i] = c.cls; });
     let html = '<div class="wr-grid" style="--n:' + size + '">';
     grid.forEach(function (face, i) {
       const m = mark[i];
-      html += '<div class="tile' + (m ? ' on ' + m.cls + (m.last ? ' last' : '') : '') + (aim[i] ? ' aim ' + aim[i] : '') + '" data-i="' + i + '">' +
+      html += '<div class="tile' + (m ? ' on ' + m.cls + (m.last ? ' last' : '') : '') + '" data-i="' + i + '">' +
         '<span class="face">' + (face === 'Q' ? 'Qu' : face) + '</span>' + (m ? '<span class="n">' + m.n + '</span>' : '') + '</div>';
     });
     return html + '</div>';
