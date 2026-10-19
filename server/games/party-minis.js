@@ -10,7 +10,9 @@ export const WINS = 3;
 /** Which minigames a match picks from: every one, only the 2D / 3D ones, or one minigame's id (to practise it). */
 export const STYLES = ['mix', '2d', '3d'];
 
-export function poolFor(pool, style) {
+export function poolFor(pool, style, players = []) {
+  // A phone-only minigame (Bowling Bash: you swipe) never comes up with a controller seated.
+  if (players.some((p) => p && p.local)) pool = pool.filter((m) => !m.phoneOnly);
   const one = pool.filter((m) => m.id === style);
   if (one.length) return one;
   const picked = style === '2d' || style === '3d' ? pool.filter((m) => m.look === style) : pool;
@@ -19,7 +21,7 @@ export function poolFor(pool, style) {
 
 export class PartyMinis extends MiniGame {
   constructor(ctx, pool = PARTIES, rng = Math.random) {
-    super(ctx, poolFor(pool, settingOf(ctx, 'style', 'mix')), rng);
+    super(ctx, poolFor(pool, settingOf(ctx, 'style', 'mix'), ctx.players), rng);
     this.target = settingOf(ctx, 'wins', WINS);
   }
 

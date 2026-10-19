@@ -6,7 +6,9 @@ import { fakeCtx } from './helpers.js';
 import coinGrab, { TICK_MS, GRAB_R, STUN_MS } from '../server/games/minis/coin-grab.js';
 import tugOfWar, { BEAT_MS, PULL } from '../server/games/minis/tug-of-war.js';
 import towerStack, { swingAt } from '../server/games/minis/tower-stack.js';
-import bowling, { aimAt, powerAt, PINS } from '../server/games/minis/bowling.js';
+import bowling, { PINS } from '../server/games/minis/bowling.js';
+import { poolFor } from '../server/games/party-minis.js';
+import { PARTIES } from '../server/games/minis/index.js';
 import penalty, { TIMING as PK } from '../server/games/minis/penalty.js';
 
 function seeded(seed) {
@@ -142,18 +144,13 @@ test('tower-stack: time-up, taller wins; equal is a draw', () => {
 // ---- Bowling Bash ----
 
 /** Tap when the aim and then the power are as close as can be to the wanted values. */
+/** A swipe from the phone: wait for the lane to be ready, then bowl with this aim and power. */
 function bowl(inst, ctx, slot, aim, power) {
-  for (const [stage, fn, want] of [['aim', aimAt, aim], ['power', powerAt, power]]) {
-    while (inst.view(0).lanes[slot].stage !== stage) ctx.advance(10);
-    const lane = inst.view(0).lanes[slot];
-    let t = Math.max(ctx.now(), lane.since);
-    while (Math.abs(fn(t - lane.since) - want) > 0.02) t++;
-    ctx.advance(t - ctx.now());
-    inst.onInput(slot, { type: 'tap', t });
-  }
+  while (inst.view(0).lanes[slot].stage !== 'ready') ctx.advance(10);
+  inst.onInput(slot, { type: 'bowl', aim, power });
 }
 
-test('bowling: a good roll knocks most pins; two rolls each; more pins wins', () => {
+test('bowling: a good swipe knocks most pins; two rolls each; more pins wins', () => {
   const { inst, ctx, ended } = run(bowling, 4);
   assert.equal(PINS.length, 10);
   bowl(inst, ctx, 0, 0.15, 0.85);
@@ -168,12 +165,31 @@ test('bowling: a good roll knocks most pins; two rolls each; more pins wins', ()
   assert.deepEqual(ended(), { winner: 0 });
 });
 
-test('bowling: a tap in the wrong stage is ignored; unrolled at time-up scores 0', () => {
+test('bowling: no second swipe mid-roll; junk ignored; out-of-range clamped; unrolled scores 0', () => {
   const { inst, ended } = run(bowling, 4);
-  inst.onInput(0, { type: 'tap', t: 'x' });
-  assert.equal(inst.view(0).lanes[0].stage, 'power');
+  inst.onInput(0, { type: 'bowl', aim: 'x', power: 1 });
+  inst.onInput(0, { type: 'tap' });
+  assert.equal(inst.view(0).lanes[0].stage, 'ready');
+  inst.onInput(0, { type: 'bowl', aim: 9, power: -3 });
+  const lane = inst.view(0).lanes[0];
+  assert.equal(lane.stage, 'rolling');
+  assert.equal(lane.aim, 1);
+  assert.equal(lane.power, 0);
+  inst.onInput(0, { type: 'bowl', aim: 0.15, power: 0.85 });
+  assert.equal(inst.view(0).lanes[0].knocked.length, 1, 'one roll at a time');
   inst.onTimeUp();
-  assert.deepEqual(ended(), { winner: null });
+  assert.equal(ended().winner, null);
+});
+
+test('bowling is phone-only: never picked while a controller is seated', () => {
+  assert.equal(bowling.phoneOnly, true);
+  const phones = [{ local: false }, { local: false }];
+  const pad = [{ local: false }, { local: true }];
+  assert.ok(poolFor(PARTIES, 'mix', phones).includes(bowling));
+  assert.ok(!poolFor(PARTIES, 'mix', pad).includes(bowling));
+  assert.ok(!poolFor(PARTIES, '3d', pad).includes(bowling));
+  assert.ok(!poolFor(PARTIES, 'bowling', pad).includes(bowling), 'picking it with a controller falls back to the mix');
+  assert.deepEqual(poolFor(PARTIES, 'bowling', phones), [bowling]);
 });
 
 // ---- Penalty Shootout ----
