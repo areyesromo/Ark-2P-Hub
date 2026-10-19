@@ -1,5 +1,5 @@
-// The third batch of Party Minigames (2D: Whack-a-Mole, Fishing; 3D: Glass Bridge, Ice Rink
-// Sumo), each driven directly through its api.
+// The third batch of Party Minigames (2D: Whack-a-Mole, Fishing, Simon Says; 3D: Glass Bridge,
+// Ice Rink Sumo), each driven directly through its api.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
@@ -7,6 +7,7 @@ import whackAMole, { POINTS, SPAWN } from '../server/games/minis/whack-a-mole.js
 import fishing, { BITE, SCARE_MS, SNAP_MS } from '../server/games/minis/fishing.js';
 import glassBridge, { ROWS, STEP_MS, FALL_MS } from '../server/games/minis/glass-bridge.js';
 import iceSumo, { RINK_R, TICK_MS } from '../server/games/minis/ice-sumo.js';
+import simonSays, { COLORS, ORDER, POINTS as SIMON } from '../server/games/minis/simon-says.js';
 
 function seeded(seed) {
   let s = seed >>> 0;
@@ -199,4 +200,48 @@ test('ice-sumo: at the end of time the puck nearer the middle wins', () => {
   inst.debugPlace(1, { x: 3, y: 1 });
   inst.onTimeUp();
   assert.equal(ended().winner, 0);
+});
+
+// ---- Simon Says ----
+
+test('simon-says: obey Simon (+1), wrong colour or a trap order (-1); one answer per order', () => {
+  const { inst, ctx, ended } = run(simonSays, 9);
+  ctx.advance(600);
+  let v = inst.view(0);
+  assert.ok(v.order && v.order.simon, 'the first order is a real one');
+  inst.onInput(0, { type: 'press', color: v.order.color });
+  inst.onInput(1, { type: 'press', color: COLORS.find((c) => c !== v.order.color) });
+  inst.onInput(0, { type: 'press', color: v.order.color }); // a second press does nothing
+  inst.onInput(1, { type: 'press', color: 'purple' }); // not a colour
+  v = inst.view(0);
+  assert.deepEqual(v.points, [SIMON.right, SIMON.wrong]);
+  assert.deepEqual(v.answers, ['right', 'wrong']);
+  // Find a trap order (no "Simon says") and fall for it.
+  let trap = null;
+  for (let t = 0; t < 20000 && !trap; t += 50) {
+    ctx.advance(50);
+    const o = inst.view(0).order;
+    if (o && !o.done && !o.simon) trap = o;
+  }
+  assert.ok(trap, 'trap orders come up');
+  const before = inst.view(0).points[1];
+  inst.onInput(1, { type: 'press', color: trap.color });
+  assert.equal(inst.view(0).points[1], before + SIMON.trap);
+  assert.equal(inst.view(0).answers[1], 'trap');
+  inst.onTimeUp();
+  const [a, b] = inst.view(0).points;
+  assert.equal(ended().winner, a === b ? null : a > b ? 0 : 1);
+});
+
+test('simon-says: an order goes away after its time; late presses do nothing', () => {
+  const { inst, ctx } = run(simonSays, 3);
+  ctx.advance(600);
+  const o = inst.view(0).order;
+  ctx.advance(ORDER.startMs + 10);
+  assert.equal(inst.view(0).order.done, true);
+  inst.onInput(0, { type: 'press', color: o.color });
+  assert.deepEqual(inst.view(0).points, [0, 0]);
+  ctx.advance(ORDER.gapMs);
+  assert.equal(inst.view(0).order.id, o.id + 1, 'the next order');
+  assert.equal(inst.view(0).order.done, false);
 });

@@ -25,6 +25,7 @@ import partyMinis from './party-minis.js';
 import partyBoard from './party-board.js';
 import diceParty from './dice-party.js';
 import checkers from './checkers.js';
+import mancala from './mancala.js';
 import dotsBoxes from './dots-boxes.js';
 import { withSetup } from './options.js';
 
@@ -114,6 +115,10 @@ const GAMES = [
   withSetup(checkers, firstTo('Games to win', [1, 2, 3])),
   withSetup(dotsBoxes, {
     size: { title: 'Grid', values: [4, 3, 5], label: (n) => `${n} × ${n} boxes` },
+    ...firstTo('Games to win', [1, 2, 3]),
+  }),
+  withSetup(mancala, {
+    seeds: { title: 'Stones per pit', values: [4, 3, 5], label: (n) => `${n} stones` },
     ...firstTo('Games to win', [1, 2, 3]),
   }),
   withSetup(diceParty, { rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) } }),

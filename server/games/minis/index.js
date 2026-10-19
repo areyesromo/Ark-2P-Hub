@@ -21,6 +21,7 @@ import whackAMole from './whack-a-mole.js';
 import fishing from './fishing.js';
 import glassBridge from './glass-bridge.js';
 import iceSumo from './ice-sumo.js';
+import simonSays from './simon-says.js';
 
 export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath];
-export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo];
+export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays];
