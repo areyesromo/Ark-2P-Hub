@@ -14,5 +14,4 @@ A separate game module (its own entry in the lobby), not a mode of the 2D Kart R
   game can read them.
 - Reuses the 2D game's shared pieces: the racers, tyres and stats
   (`public/games/kart-race/racers.js`), coins and items, the driving model (gas, brake/reverse,
-  drift, walls) and
-  the controls (phone pedals, controller mapping). Each racer gets a 3D kart model.
+  drift, walls) and the controls (phone pedals, controller mapping). Each racer gets a 3D kart model.
