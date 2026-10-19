@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (26)
+## Games (28)
 
 ### ⚔️ Competitive (20)
 
@@ -36,11 +36,13 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |
 | Memory Match | `memory-match` | Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. | `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js` |
 
-### 🎲 Dice & Board (2)
+### 🎲 Dice & Board (4)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
 | Liar's Dice | `liars-dice` | Your dice are hidden on your phone. Bid how many of a face there are between you both, or call "Liar!". Lose a die each time you're wrong; last one with dice wins. | `server/games/liars-dice.js`, `public/games/liars-dice/`, `test/dice.test.js`, `test/sounds.test.js` |
+| Checkers | `checkers` | Classic draughts: move diagonally, jump to capture (jumps are a must, and keep going if you can), reach the far side to crown a king. Take all their pieces or leave them stuck. | `server/games/checkers.js`, `public/games/checkers/`, `test/checkers.test.js` |
+| Dots and Boxes | `dots-boxes` | Take turns joining two dots. Close the fourth side of a box to claim it and go again; careful not to hand your rival a chain. Most boxes wins. | `server/games/dots-boxes.js`, `public/games/dots-boxes/`, `test/dots-boxes.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
 ### 🤝 Co-op & casual (4)
@@ -86,8 +88,6 @@ here (the test fails while an idea has the same name as a game or minigame in th
 
 ### Games
 
-- **Checkers**: classic draughts on the TV; move with the phone or controller, forced jumps, kings. _(being built)_
-- **Dots and Boxes**: take turns drawing lines on a dot grid; close a box to score it and go again. _(being built)_
 - **Mancala**: sow stones around the bowls and capture across; quick and strategic for two.
 - **Kitchen Rush**: co-op, Overcooked-style: chop, cook and serve orders before they expire, passing ingredients between you.
 - **Trivia Quest**: co-op quiz adventure: answer questions together to bring down a monster's health bar before it gets you.

@@ -1,0 +1,44 @@
+/* ---- board (TV and phone) ---- */
+
+.db-board { aspect-ratio: 1; background: #0f172a; border-radius: 16px; box-shadow: 0 0 0 4px var(--line), 0 14px 30px -10px rgba(0, 0, 0, 0.7); }
+.db-board .dot { fill: #e2e8f0; }
+.db-board .dot.cur { stroke: #fff; stroke-width: 0.03; }
+.db-board .dot.armed { animation: db-pulse 0.6s ease-in-out infinite alternate; }
+.db-board line { stroke-linecap: round; }
+.db-board .open { stroke: rgba(148, 163, 184, 0.28); stroke-width: 0.04; stroke-dasharray: 0.08 0.08; }
+.db-board .drawn { stroke-width: 0.1; }
+.db-board .drawn.last { animation: db-flash 0.9s ease-out; }
+.db-board .hit { stroke: transparent; stroke-width: 0.42; pointer-events: stroke; cursor: pointer; }
+.db-board .hit:active { stroke: rgba(250, 204, 21, 0.35); }
+.db-board .box { opacity: 0.55; }
+.db-board .box.fresh { animation: db-pop 0.5s ease-out; }
+.db-board text { fill: #fff; font-size: 0.42px; font-weight: 900; text-anchor: middle; dominant-baseline: middle; }
+
+@keyframes db-pulse { to { r: 0.2; } }
+@keyframes db-flash { from { stroke: #fff; stroke-width: 0.18; } }
+@keyframes db-pop { from { opacity: 0.95; } }
+
+/* ---- TV ---- */
+
+.db-host { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; font-size: 1.2rem; }
+.db-status { text-align: center; font-size: 1.9rem; font-weight: 800; min-height: 2.5rem; }
+.db-status .clock { color: var(--muted); font-size: 0.7em; margin-left: 0.5rem; }
+.db-status .sub { font-size: 1.1rem; font-weight: 400; color: var(--muted); }
+.db-row { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; gap: 2rem; }
+.db-host .db-board { height: 100%; max-height: 100%; }
+.db-count { font-size: 2.2rem; font-weight: 900; }
+
+/* ---- phone ---- */
+
+.db-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 12px 12px 16px; text-align: center; }
+.db-phone .score { color: var(--muted); }
+.db-phone .you-are { display: flex; align-items: center; justify-content: center; gap: 8px; color: var(--muted); }
+.db-phone .swatch { display: inline-block; width: 20px; height: 20px; border-radius: 5px; }
+.db-phone .swatch.p1 { background: var(--p1); }
+.db-phone .swatch.p2 { background: var(--p2); }
+.db-phone .msg { margin: 0; font-size: 1.15rem; min-height: 1.5em; }
+.db-phone .won { color: var(--good); font-weight: 900; }
+.db-phone .lost { color: var(--bad); font-weight: 900; }
+.db-phone .big { font-size: 1.8rem; }
+.db-phone .db-board { width: 100%; }
+.db-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 8px; }
