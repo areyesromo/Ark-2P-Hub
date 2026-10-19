@@ -138,7 +138,10 @@
 
   $('game-list').addEventListener('click', function (e) {
     const btn = e.target.closest('[data-game]');
-    if (btn && !btn.disabled) socket.emit('lobby:start', { gameId: btn.getAttribute('data-game') });
+    if (!btn || btn.disabled) return;
+    socket.emit('lobby:start', { gameId: btn.getAttribute('data-game') }, function (res) {
+      if (res && res.error) flashPad('⚠️ ' + res.error);
+    });
   });
 
   $('to-lobby').addEventListener('click', function () { socket.emit('lobby:return'); });
@@ -547,7 +550,9 @@
     } else if (btn === 'A' || btn === 'START') {
       if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
       else if (cards[focus].phoneOnly) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');
-      else socket.emit('lobby:start', { gameId: cards[focus].id });
+      else socket.emit('lobby:start', { gameId: cards[focus].id }, function (res) {
+        if (res && res.error) flashPad('⚠️ ' + res.error);
+      });
       return;
     } else {
       return;

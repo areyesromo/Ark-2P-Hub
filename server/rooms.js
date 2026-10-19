@@ -98,6 +98,10 @@ export class Room {
       return { slot: same, player: p, rejoined: true };
     }
 
+    // A controller can't step into a phone-only game that's already running.
+    const running = this.gameId && getGame(this.gameId);
+    if (local && running && running.phoneOnly) return { error: `${running.name} needs two phones: join from the lobby.` };
+
     let slot = this.players.findIndex((p) => p === null);
     if (slot === -1) slot = this.players.findIndex((p) => p && !p.connected);
     if (slot === -1) return { error: 'This room already has two players.' };

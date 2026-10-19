@@ -207,7 +207,10 @@
 
   $('phone-games').addEventListener('click', function (e) {
     const btn = e.target.closest('[data-game]');
-    if (btn && !btn.disabled) socket.emit('lobby:start', { gameId: btn.getAttribute('data-game') });
+    if (!btn || btn.disabled) return;
+    socket.emit('lobby:start', { gameId: btn.getAttribute('data-game') }, function (res) {
+      if (res && res.error) alert(res.error); // e.g. a controller joined a moment ago
+    });
   });
 
   // ---- game ------------------------------------------------------------

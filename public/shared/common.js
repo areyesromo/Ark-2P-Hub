@@ -220,7 +220,8 @@
     if (btn === 'LEFT' || btn === 'RIGHT') {
       const key = rows[state.row || 0].key;
       const list = setupChoices(v, key);
-      const i = Math.min(list.length - 1, Math.max(0, list.indexOf(v.settings[key]) + (btn === 'LEFT' ? -1 : 1)));
+      // Wraps round, so the far end of a long list is one press away.
+      const i = (list.indexOf(v.settings[key]) + (btn === 'LEFT' ? -1 : 1) + list.length) % list.length;
       return { type: 'setting', key: key, value: list[i] };
     }
     return null;

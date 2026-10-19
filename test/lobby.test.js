@@ -123,3 +123,12 @@ test('two people with the same name: the second has to pick another while the fi
   assert.match(r.seatPlayer('SAM', null).error, /already called Sam/);
   assert.equal(r.players.filter(Boolean).length, 1);
 });
+
+test('a controller cannot take a seat while a phone-only game is running', () => {
+  const r = room({ phones: [true, true] });
+  r.startGame('word-race');
+  r.players[1].connected = false; // a phone dropped out
+  assert.match(r.seatPlayer('Pad', null, { local: true }).error, /two phones/);
+  r.stopGame();
+  assert.ok(!r.seatPlayer('Pad', null, { local: true }).error, 'from the lobby it can');
+});
