@@ -1,0 +1,107 @@
+# Ark 2P Hub: game catalog
+
+Every game and minigame in the hub, what it is and where its code lives. **Check here before adding
+a game**, so it doesn't repeat one we have; add new ideas to the list at the bottom.
+
+The tables are generated from the code: run `node tools/games-catalog.mjs` after adding or
+renaming a game or minigame (`test/catalog.test.js` fails until you do). A game is a module in
+`server/games/` listed in `server/games/index.js`, with its TV and phone screens in
+`public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
+`server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
+
+## Games (26)
+
+### ⚔️ Competitive (20)
+
+| Game | id | What it is | Files |
+| --- | --- | --- | --- |
+| Reaction Duel | `reaction-duel` | Wait for GO… then tap faster than your rival. Jump early and you lose the point. | `server/games/reaction-duel.js`, `public/games/reaction-duel/`, `test/reaction-duel.test.js` |
+| Rock Paper Scissors | `rock-paper-scissors` | Pick in secret on your phone or controller. The TV reveals both. First to 3. | `server/games/rock-paper-scissors.js`, `public/games/rock-paper-scissors/`, `test/rock-paper-scissors.test.js`, `test/sounds.test.js` |
+| Pong | `pong` | The classic. Drag on your phone or use the stick to move your paddle. First to 5. | `server/games/pong.js`, `public/games/pong/`, `test/pong.test.js` |
+| Light Cycles | `tron` | Tron-style. Leave a wall behind you and make your rival crash into it. First to 3. | `server/games/tron.js`, `public/games/tron/`, `test/tron.test.js` |
+| Air Hockey | `air-hockey` | The whole table on your phone too: slide your mallet and smash the puck into their goal. First to 7. | `server/games/air-hockey.js`, `public/games/air-hockey/`, `test/air-hockey.test.js` |
+| Snake Battle | `snake` | Two snakes, one arena. Eat to grow, make your rival crash. Longest snake wins when time runs out. First to 3. | `server/games/snake.js`, `public/games/snake/`, `test/snake.test.js` |
+| Tank Duel | `tanks` | Top-down tank battle. Drive with the joystick, fire bouncing shells around cover. 3 hits and you are out. First to 3. | `server/games/tanks.js`, `public/games/tanks/`, `test/tanks.test.js` |
+| Sumo | `sumo` | Shove your rival off a shrinking ring. Steer with the stick, DASH to hit hard. First to 3. | `server/games/sumo.js`, `public/games/sumo/`, `test/sounds.test.js`, `test/sumo.test.js` |
+| Party Board | `party-board` | A Mario Party-style board for two: roll, pick your path across one of five maps, grab coins, buy ⭐ stars, raid the shop for items, and battle in a party minigame every round. Most stars wins. | `server/games/party-board.js`, `server/games/board/`, `public/games/minis/`, `public/games/party-board/`, `test/party-board.test.js`, `test/sounds.test.js` |
+| Party Minigames | `party-minis` | Mario Party-style showdowns: pump a balloon till it pops, pass the hot potato, out-draw your rival, repeat the glowing path. Win a minigame to score; first to 3 takes it. | `server/games/party-minis.js`, `server/games/minis/`, `public/games/minis/`, `public/games/party-minis/`, `test/party-minis.test.js`, `test/sounds.test.js` |
+| Micro Mayhem | `micro-mayhem` | Tiny games, three seconds each, both of you at once: TAP IT! STOP IT! SHAKE IT! Fail one and lose a life. It keeps getting faster; last one standing wins. | `server/games/micro-mayhem.js`, `server/games/minis/`, `public/games/minis/`, `public/games/micro-mayhem/`, `test/micro-mayhem.test.js`, `test/sounds.test.js` |
+| Bomb Duel | `bomb-duel` | Bomberman-style: blast crates for power-ups and trap your rival in a cross of fire. Walls close in after 90 s. | `server/games/bomb-duel.js`, `public/games/bomb-duel/`, `test/bomb-duel.test.js` |
+| Kart Race | `kart-race` | Top-down racing: steer with ◀ ▶, brake for the bends, hit the boost pads and bump your rival off the line. Three tracks. | `server/games/kart-race.js`, `public/games/kart-race/`, `test/kart-race.test.js` |
+| Quiz Battle | `quiz` | 10 trivia questions. Answer on your phone or controller; right and fast scores more. Most points wins. | `server/games/quiz-questions.js`, `server/games/quiz.js`, `public/games/quiz/`, `test/quiz.test.js`, `test/setup.test.js`, `test/sounds.test.js` |
+| Word Race | `word-race` | Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Pick the grid size, time and rounds. | `server/games/word-race.js`, `public/games/word-race/`, `test/word-race.test.js` |
+| Mini Golf | `mini-golf` | Same hole, same time: pull back and putt on your phone. Walls, bumpers, sand, water and a windmill. Fewest strokes wins. | `server/games/mini-golf.js`, `public/games/mini-golf/`, `test/mini-golf.test.js` |
+| Draw Duel | `draw-duel` | A shape flashes up, then vanishes. Redraw it from memory on your phone; the closest match scores the most. 5 rounds. | `server/games/draw-duel.js`, `server/games/draw-shapes.js`, `server/games/shape-library.js`, `public/games/draw-duel/`, `test/draw-duel.test.js`, `test/sounds.test.js` |
+| Battleship | `battleship` | Hide your fleet on your phone, then take turns firing at the enemy grid. Sink all 5 ships to win. | `server/games/battleship.js`, `public/games/battleship/`, `test/battleship.test.js`, `test/sounds.test.js` |
+| Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |
+| Memory Match | `memory-match` | Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. | `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js` |
+
+### 🎲 Dice & Board (2)
+
+| Game | id | What it is | Files |
+| --- | --- | --- | --- |
+| Liar's Dice | `liars-dice` | Your dice are hidden on your phone. Bid how many of a face there are between you both, or call "Liar!". Lose a die each time you're wrong; last one with dice wins. | `server/games/liars-dice.js`, `public/games/liars-dice/`, `test/dice.test.js`, `test/sounds.test.js` |
+| Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
+
+### 🤝 Co-op & casual (4)
+
+| Game | id | What it is | Files |
+| --- | --- | --- | --- |
+| Bomb Squad | `bomb-squad` | Co-op: one of you has a bomb on your phone, the other has the manual (new rules every bomb). Talk it through and defuse it before the timer runs out. Swap every bomb. | `server/games/bomb-squad-modules.js`, `server/games/bomb-squad.js`, `public/games/bomb-squad/`, `test/bomb-squad.test.js` |
+| Marble Maze | `marble-maze` | Co-op 3D: tilt the board together to roll the marble to the goal. One of you tilts left and right, the other forwards and back. Mind the holes! | `server/games/marble-maze.js`, `public/games/marble-maze/`, `test/marble-maze.test.js` |
+| Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
+| Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
+
+## Minigames (18)
+
+Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
+play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
+
+| Minigame | id | Kind | Look | How to play | Files |
+| --- | --- | --- | --- | --- | --- |
+| Tap it! | `tap-it` | micro | 2D | Tap the moving target | `server/games/minis/tap-it.js`, `public/games/minis/tap-it.js`, `test/minis-micro.test.js` |
+| Stop it! | `stop-it` | micro | 2D | Stop the needle in the green | `server/games/minis/stop-it.js`, `public/games/minis/stop-it.js`, `test/minis-micro.test.js` |
+| Shake it! | `shake-it` | micro | 2D | Shake your phone (or tap fast) | `server/games/minis/shake-it.js`, `public/games/minis/shake-it.js`, `test/minis-micro.test.js` |
+| Odd one out! | `odd-one` | micro | 2D | Pick the one that is different | `server/games/minis/odd-one.js`, `public/games/minis/odd-one.js`, `test/minis-micro.test.js` |
+| Count 'em! | `count-em` | micro | 2D | How many sheep? Pick the number | `server/games/minis/count-em.js`, `public/games/minis/count-em.js`, `test/minis-micro.test.js` |
+| Swipe it! | `swipe-it` | micro | 2D | Swipe the way each arrow points | `server/games/minis/swipe-it.js`, `public/games/minis/swipe-it.js`, `test/minis-micro.test.js` |
+| Don't touch! | `dont-touch` | micro | 2D | Hands off! Any tap fails | `server/games/minis/dont-touch.js`, `public/games/minis/dont-touch.js`, `test/minis-micro.test.js` |
+| Quick math! | `quick-math` | micro | 2D | Pick the right answer | `server/games/minis/quick-math.js`, `public/games/minis/quick-math.js`, `test/minis-micro.test.js` |
+| Balloon Pump | `balloon` | party | 2D | Mash PUMP (or A) to pop your balloon first | `server/games/minis/balloon.js`, `public/games/minis/balloon.js`, `test/minis-party.test.js` |
+| Hot Potato | `hot-potato` | party | 2D | Holding the bomb? Tap PASS (or A) to throw it back | `server/games/minis/hot-potato.js`, `public/games/minis/hot-potato.js`, `test/minis-party.test.js` |
+| Quick Draw | `quick-draw` | party | 2D | Fire (or A) on BANG! Too early loses | `server/games/minis/quick-draw.js`, `public/games/minis/quick-draw.js`, `test/minis-party.test.js` |
+| Memory Path | `memory-path` | party | 2D | Watch the path, then tap it back in order | `server/games/minis/memory-path.js`, `public/games/minis/memory-path.js`, `test/minis-party.test.js` |
+| Sweet Spot | `sweet-spot` | party | 2D | Stop your wheel (or A) on the biggest number, 3 times | `server/games/minis/sweet-spot.js`, `public/games/minis/sweet-spot.js`, `test/minis-party.test.js` |
+| Coin Grab | `coin-grab` | party | 2D | Move (joystick / stick) to grab coins, dodge the bombs | `server/games/minis/coin-grab.js`, `public/games/minis/coin-grab.js`, `test/minis-party2.test.js` |
+| Tug of War | `tug-of-war` | party | 2D | Tap (or A) on the beat: timing beats mashing | `server/games/minis/tug-of-war.js`, `public/games/minis/tug-of-war.js`, `test/minis-party2.test.js` |
+| Tower Stack | `tower-stack` | party | 3D | Tap (or A) to drop the swinging block on your tower | `server/games/minis/tower-stack.js`, `public/games/minis/tower-stack.js`, `test/minis-party2.test.js` |
+| Bowling Bash | `bowling` | party | 3D | Tap (or A) to aim, tap again for power: two rolls | `server/games/minis/bowling.js`, `public/games/minis/bowling.js`, `test/minis-party2.test.js` |
+| Penalty Shootout | `penalty` | party | 3D | Kicker: pick a corner. Keeper: pick where to dive | `server/games/minis/penalty.js`, `public/games/minis/penalty.js`, `test/minis-party2.test.js` |
+
+## Ideas (not built yet)
+<!-- ideas: hand-written below this line, kept when the file is regenerated -->
+
+One line each: **name**, what it is, and how it would play. When an idea gets built, delete it from
+here (the test fails while an idea has the same name as a game or minigame in the tables above).
+
+### Games
+
+- **Checkers**: classic draughts on the TV; move with the phone or controller, forced jumps, kings. _(being built)_
+- **Dots and Boxes**: take turns drawing lines on a dot grid; close a box to score it and go again. _(being built)_
+- **Mancala**: sow stones around the bowls and capture across; quick and strategic for two.
+- **Kitchen Rush**: co-op, Overcooked-style: chop, cook and serve orders before they expire, passing ingredients between you.
+- **Trivia Quest**: co-op quiz adventure: answer questions together to bring down a monster's health bar before it gets you.
+- **Fake Out**: bluffing: both write a fake answer to an obscure question on the phone, then try to pick the real one (points for fooling the other).
+- **Crazy Eights**: card game with your secret hand on the phone; match suit or rank, eights are wild, first out wins.
+- **Desktop / Steam edition**: not a game, the big platform project (see the README's roadmap).
+
+### Minigames
+
+- **Whack-a-Mole** (party, 2D): moles pop up in your colour; whack yours first, don't hit theirs. _(being built)_
+- **Fishing** (party, 2D): wait for the bite, then reel by mashing without letting the tension snap the line. _(being built)_
+- **Glass Bridge** (party, 3D): pick the left or right panel, row by row; one of each pair cracks. Memory and luck. _(being built)_
+- **Ice Rink Sumo** (party, 3D): slide on ice and shove your rival off the edge. _(being built)_
+- **Simon Says** (micro or party, 2D): repeat a growing colour sequence; the first slip loses.
+- **Hurdle Dash** (party, 2D): side-view race: tap to run, swipe up to jump the hurdles.
+- **Pop the Most** (party, 2D): balloons float up; pop the ones in your colour before they escape.
+- **Bumper Cars** (party, 3D): ram your rival's car in an arena until their health runs out.

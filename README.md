@@ -332,6 +332,10 @@ update.sh / update.ps1     pull from GitHub, rebuild and redeploy
 
 ## Adding a game
 
+First check [`docs/GAMES.md`](docs/GAMES.md): every game and minigame we have (what it is and its
+files) and the ideas not built yet, so a new one doesn't repeat an old one. After adding one, run
+`node tools/games-catalog.mjs` to update it (a test fails until you do).
+
 1. **Logic:** create `server/games/<id>.js` exporting
    `{ id, name, tagline, category, create(ctx) }` (`category` is
    `'competitive'`, the default, `'board'` or `'casual'`). The instance implements
