@@ -37,7 +37,7 @@
     phone: {
       mount: function (el, mctx) {
         el.innerHTML = '<div class="mi-phone-stage mi-simon-phone"><div class="top"></div><div class="msg"></div><div class="pads">' +
-          COLORS.map(function (c) { return '<button class="pad ' + c + '" data-c="' + c + '">' + BTN[c] + '</button>'; }).join('') + '</div></div>';
+          COLORS.map(function (c) { return '<button class="mi-simon-pad ' + c + '" data-c="' + c + '">' + BTN[c] + '</button>'; }).join('') + '</div></div>';
         phone = { el: el, slot: mctx.slot };
         el.addEventListener('pointerdown', function (e) {
           const b = e.target.closest('[data-c]');

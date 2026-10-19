@@ -37,12 +37,14 @@
     return '';
   }
 
+  /** The aimed column; if that bowl is empty (or on first use), the nearest bowl with stones. */
   function colOf(slot, v) {
-    if (cols[slot] === undefined) {
-      // Start on a pit that has stones.
-      const first = v.legal.length ? v.legal[0] : pitAt(slot, 0);
-      cols[slot] = slot === 0 ? first : 12 - first;
-    }
+    const c = cols[slot] === undefined ? 0 : cols[slot];
+    if (v.legal.indexOf(pitAt(slot, c)) === -1 && v.legal.length) {
+      const near = v.legal.map(function (pit) { return slot === 0 ? pit : 12 - pit; })
+        .sort(function (a, b) { return Math.abs(a - c) - Math.abs(b - c); })[0];
+      cols[slot] = near;
+    } else cols[slot] = c;
     return cols[slot];
   }
 
@@ -57,12 +59,13 @@
   }
 
   Ark.register('host', 'mancala', {
-    padHint: 'D-pad ← → picks a pit · A sows it · A: rematch at the end',
+    padHint: 'D-pad ← → picks a bowl · A sows it · A: rematch at the end',
     // Sound: a patter for a sow, a chime for a capture or a go-again.
     sounds: function (prev, v) {
       const out = [];
       const k = function (x) { return x.lastMove ? x.round + ':' + x.lastMove.n : ''; };
-      if (k(v) && k(v) !== k(prev)) out.push(v.lastMove.captured || v.lastMove.again ? 'point' : 'drop');
+      // On the round's last move the TV already chimes for the score, so just the sow.
+      if (k(v) && k(v) !== k(prev)) out.push((v.lastMove.captured || v.lastMove.again) && v.phase === 'play' ? 'point' : 'drop');
       if (v.phase === 'roundEnd' && prev.phase !== 'roundEnd' && v.result.draw) out.push('wrong');
       return out;
     },
@@ -71,7 +74,11 @@
       if (v.phase !== 'play' || v.turn !== slot) return null;
       const c = colOf(slot, v);
       if (btn === 'LEFT' || btn === 'RIGHT') {
-        cols[slot] = Math.min(5, Math.max(0, c + (btn === 'LEFT' ? -1 : 1)));
+        // Jump to the next bowl with stones that way (empty ones can't be sown).
+        const d = btn === 'LEFT' ? -1 : 1;
+        for (let n = c + d; n >= 0 && n <= 5; n += d) {
+          if (v.legal.indexOf(pitAt(slot, n)) !== -1) { cols[slot] = n; break; }
+        }
         render();
         return null;
       }
