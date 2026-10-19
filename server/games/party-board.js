@@ -38,7 +38,7 @@ export class PartyBoard {
     this.rng = rng;
     this.mapChoice = map || settingOf(ctx, 'map', 'random');
     this.map = MAPS.island;
-    this.pool = poolFor(pool, settingOf(ctx, 'style', 'mix'));
+    this.pool = poolFor(pool, settingOf(ctx, 'style', 'mix'), ctx.players);
     this.turns = settingOf(ctx, 'turns', 10);
     this.bonusOn = settingOf(ctx, 'bonus', 1) === 1;
     this.harsh = settingOf(ctx, 'harsh', 0) === 1;
