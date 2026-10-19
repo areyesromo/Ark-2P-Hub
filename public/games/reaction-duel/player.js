@@ -69,9 +69,8 @@
       el.appendChild(pad);
     },
     update: function (v) {
-      const changedPhase = !view || view.phase !== v.phase;
+      // No buzz on GO: it would be a head start for phones that can vibrate (iPhones can't).
       view = v;
-      if (v.phase === 'go' && changedPhase) api.vibrate(80);
       const c = content(v);
       pad.className = 'rd-pad ' + c.cls;
       pad.innerHTML =

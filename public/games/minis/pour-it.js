@@ -38,7 +38,7 @@
     phone: {
       mount: function (el, mctx) {
         el.innerHTML = '<div class="mi-phone-stage mi-pour-phone"><div class="msg"></div><div class="bottle"><span>🥛</span></div><div class="g"></div><button class="primary mi-big-btn">🫗 Hold to POUR</button><div class="how">Hold the phone upright like a bottle and tip it sideways to pour; stand it up to stop · or hold the button</div></div>';
-        const p = { el: el, slot: mctx.slot, mctx: mctx, tiltV: 0, holdV: 0, sent: -1, lastSend: 0, timer: null, stop: null, lastBuzz: 0, was: null };
+        const p = { el: el, slot: mctx.slot, mctx: mctx, tiltV: 0, holdV: 0, sent: -1, lastSend: 0, timer: null, stop: null, was: null };
         phone = p;
         const send = function () {
           const v = Math.round(Math.max(p.tiltV, p.holdV) * 20) / 20;
@@ -76,9 +76,7 @@
         p.playing = v.phase === 'play';
         const g = s.glasses[p.slot];
         const them = s.glasses[1 - p.slot];
-        // Buzz: a tick as you near the line, a long one if you spill.
-        const now = performance.now();
-        if (!g.done && g.fill > s.line - 0.06 && g.fill < s.line && now - p.lastBuzz > 250) { p.lastBuzz = now; p.mctx.vibrate(12); }
+        // Buzz if you spill (no tick near the line: that would help phones that can vibrate).
         if (g.spilled && !(p.was && p.was.spilled)) p.mctx.vibrate(500);
         p.was = g;
         p.el.querySelector('.msg').textContent = g.done ? (g.spilled ? 'Spilled! 💦' : 'Done: ' + off(g.fill, s.line)) : 'Fill to the line · them ' + (them.spilled ? '💦' : them.done ? '✅' : '…');
