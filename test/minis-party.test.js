@@ -30,9 +30,9 @@ function run(def, seed = 1) {
   return { inst, ctx, ended: () => ended };
 }
 
-test('there are 10 party minigames', () => {
-  assert.equal(PARTIES.length, 10);
-  assert.equal(new Set(PARTIES.map((m) => m.id)).size, 10);
+test('there are 14 party minigames', () => {
+  assert.equal(PARTIES.length, 14);
+  assert.equal(new Set(PARTIES.map((m) => m.id)).size, 14);
   for (const m of PARTIES) assert.equal(m.kind, 'party');
 });
 

@@ -54,7 +54,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (18)
+## Minigames (22)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -79,6 +79,10 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Tower Stack | `tower-stack` | party | 3D | Tap (or A) to drop the swinging block on your tower | `server/games/minis/tower-stack.js`, `public/games/minis/tower-stack.js`, `test/minis-party2.test.js` |
 | Bowling Bash | `bowling` | party | 3D | Tap (or A) to aim, tap again for power: two rolls | `server/games/minis/bowling.js`, `public/games/minis/bowling.js`, `test/minis-party2.test.js` |
 | Penalty Shootout | `penalty` | party | 3D | Kicker: pick a corner. Keeper: pick where to dive | `server/games/minis/penalty.js`, `public/games/minis/penalty.js`, `test/minis-party2.test.js` |
+| Whack-a-Mole | `whack-a-mole` | party | 2D | Whack the moles in your colour (gold: +2), not theirs | `server/games/minis/whack-a-mole.js`, `public/games/minis/whack-a-mole.js`, `test/minis-party3.test.js` |
+| Fishing | `fishing` | party | 2D | Wait for the bite, HOOK it, then REEL without snapping the line | `server/games/minis/fishing.js`, `public/games/minis/fishing.js`, `test/minis-party3.test.js` |
+| Glass Bridge | `glass-bridge` | party | 3D | Pick ◀ left or right ▶ glass, row by row: one of each pair breaks | `server/games/minis/glass-bridge.js`, `public/games/minis/glass-bridge.js`, `test/minis-party3.test.js` |
+| Ice Rink Sumo | `ice-sumo` | party | 3D | Steer (joystick / stick) on the slippery ice and bump your rival off | `server/games/minis/ice-sumo.js`, `public/games/minis/ice-sumo.js`, `test/minis-party3.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->
@@ -97,10 +101,6 @@ here (the test fails while an idea has the same name as a game or minigame in th
 
 ### Minigames
 
-- **Whack-a-Mole** (party, 2D): moles pop up in your colour; whack yours first, don't hit theirs. _(being built)_
-- **Fishing** (party, 2D): wait for the bite, then reel by mashing without letting the tension snap the line. _(being built)_
-- **Glass Bridge** (party, 3D): pick the left or right panel, row by row; one of each pair cracks. Memory and luck. _(being built)_
-- **Ice Rink Sumo** (party, 3D): slide on ice and shove your rival off the edge. _(being built)_
 - **Simon Says** (micro or party, 2D): repeat a growing colour sequence; the first slip loses.
 - **Hurdle Dash** (party, 2D): side-view race: tap to run, swipe up to jump the hurdles.
 - **Pop the Most** (party, 2D): balloons float up; pop the ones in your colour before they escape.

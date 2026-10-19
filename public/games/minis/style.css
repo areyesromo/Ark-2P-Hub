@@ -204,3 +204,53 @@
 .mi-pk-phone .sides button { font-size: 1.2rem; padding: 26px 4px; }
 .mi-pk-phone .sides button.on { border-color: var(--warn); background: rgba(250, 204, 21, 0.18); }
 .mi-pk-phone .last { font-size: 1.5rem; font-weight: 900; }
+/* whack-a-mole */
+.mi-whack { flex: 1; display: grid; grid-template-columns: 9rem 1fr 9rem; gap: 1.2rem; align-items: center; }
+.mi-whack .side { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; font-size: 1.3rem; }
+.mi-whack .score { font-size: 3.4rem; font-weight: 900; }
+.mi-whack .score.p1 { color: var(--p1); }
+.mi-whack .score.p2 { color: var(--p2); }
+.mi-whack .side .mole { font-size: 2.6rem; width: 4rem; height: 4rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.mi-whack .side .mole.p1 { background: var(--p1); }
+.mi-whack .side .mole.p2 { background: var(--p2); }
+.mi-moles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; width: min(100%, 62vh); margin: 0 auto; }
+.mi-moles .hole { position: relative; aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; background: radial-gradient(circle at 50% 60%, #1c1917 45%, #57534e 47%, #78350f 70%); display: flex; align-items: center; justify-content: center; overflow: hidden; box-shadow: inset 0 0.5rem 1rem rgba(0, 0, 0, 0.6); }
+.mi-moles .mole { font-size: 3.4rem; width: 62%; height: 62%; border-radius: 50%; display: flex; align-items: center; justify-content: center; }
+.mi-moles .mole.new { animation: mi-mole-pop 0.12s ease-out; }
+.mi-moles .hole.p1 .mole { background: var(--p1); }
+.mi-moles .hole.p2 .mole { background: var(--p2); }
+.mi-moles .hole.gold .mole { background: #facc15; box-shadow: 0 0 1.2rem #facc15; }
+.mi-moles .hole.whacked::after { content: '💥'; position: absolute; font-size: 2.6rem; animation: mi-mole-pop 0.2s ease-out; }
+.mi-moles .hole.cur1 { outline: 0.35rem solid var(--p1); outline-offset: 0.2rem; }
+.mi-moles .hole.cur2 { box-shadow: 0 0 0 0.35rem var(--p2), inset 0 0.5rem 1rem rgba(0, 0, 0, 0.6); }
+@keyframes mi-mole-pop { from { transform: translateY(40%) scale(0.6); } to { transform: none; } }
+.mi-whack-phone { justify-content: flex-start; }
+.mi-whack-phone .msg { font-size: 1.2rem; }
+.mi-whack-phone .g { width: 100%; }
+.mi-whack-phone .mi-moles { width: min(100%, 26rem); }
+.mi-whack-phone .mole { font-size: 2.4rem; }
+/* fishing */
+.mi-fish { flex: 1; width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+.mi-fish .mi-side { justify-content: flex-start; padding-top: 3rem; }
+.mi-fish .catch { position: absolute; top: 0.5rem; right: 0.8rem; font-size: 1.6rem; font-weight: 900; }
+.mi-fish .body { width: 100%; display: flex; flex-direction: column; gap: 0.8rem; }
+.mi-fish .stage { font-size: 1.6rem; font-weight: 900; }
+.mi-fish .pond { height: 11rem; border-radius: 50% / 40%; background: radial-gradient(ellipse at 50% 40%, #38bdf8, #0369a1 70%); position: relative; }
+.mi-fish .pond .float { position: absolute; left: 50%; top: 45%; transform: translate(-50%, -50%); font-size: 2.4rem; animation: mi-bob 1.4s ease-in-out infinite alternate; }
+.mi-fish .pond.bite .float { font-size: 3.4rem; animation: mi-wiggle 0.12s infinite alternate; }
+.mi-fish .pond.reel .float { animation: mi-wiggle 0.3s infinite alternate; }
+.mi-fish .pond.snapped .float, .mi-fish .pond.scared .float { opacity: 0.3; }
+@keyframes mi-bob { from { margin-top: -0.3rem; } to { margin-top: 0.3rem; } }
+.mi-fish .bar, .mi-fish-phone .bar { display: flex; align-items: center; gap: 0.6rem; font-size: 1.4rem; width: 100%; }
+.mi-fish .bar > i, .mi-fish-phone .bar > i { flex: 1; height: 1.1rem; border-radius: 1rem; background: rgba(255, 255, 255, 0.12); overflow: hidden; display: block; }
+.mi-fish .bar > i > b, .mi-fish-phone .bar > i > b { display: block; height: 100%; transition: width 0.1s linear; }
+.mi-fish .bar .prog, .mi-fish-phone .bar .prog { background: #4ade80; }
+.mi-fish .bar .tension, .mi-fish-phone .bar .tension { background: #facc15; }
+.mi-fish .bar .tension.hot, .mi-fish-phone .bar .tension.hot { background: #ef4444; }
+.mi-fish-phone .bars { width: 100%; min-height: 4.5rem; display: flex; flex-direction: column; justify-content: center; gap: 0.6rem; }
+.mi-fish-phone .stage { font-size: 1.3rem; font-weight: 800; }
+.mi-big-btn.mi-bite { background: #f59e0b; animation: mi-wiggle 0.12s infinite alternate; }
+@keyframes mi-wiggle { from { margin-left: -0.4rem; } to { margin-left: 0.4rem; } }
+/* glass-bridge */
+.mi-bridge-phone .lr { display: flex; gap: 1rem; width: 100%; flex: 1; }
+.mi-bridge-phone .lr button { font-size: 2.6rem; }
