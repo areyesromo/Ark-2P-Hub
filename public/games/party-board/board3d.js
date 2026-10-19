@@ -41,6 +41,30 @@
     return sp;
   }
 
+  /** A round numbered badge (a fork's path number), always facing the camera. */
+  function numberSprite(T, n, color) {
+    const tex = canvasTexture(T, function (g, w, h) {
+      g.beginPath();
+      g.arc(w / 2, h / 2, w * 0.44, 0, Math.PI * 2);
+      g.fillStyle = color;
+      g.fill();
+      g.lineWidth = w * 0.06;
+      g.strokeStyle = '#fff';
+      g.stroke();
+      g.font = 'bold ' + Math.round(h * 0.6) + 'px sans-serif';
+      g.textAlign = 'center';
+      g.textBaseline = 'middle';
+      g.fillStyle = '#0b1020';
+      g.fillText(String(n), w / 2, h / 2 + h * 0.04);
+    });
+    const sp = new T.Sprite(new T.SpriteMaterial({ map: tex, depthTest: false, depthWrite: false }));
+    sp.renderOrder = 10;
+    return sp;
+  }
+
+  // A fork's two branches: path 1 amber, path 2 violet (as on the 2D board and the phone).
+  const ROUTE_COLORS = ['#f59e0b', '#a78bfa'];
+
   function nameSprite(T, name, color) {
     const tex = canvasTexture(T, function (g, w, h) {
       g.font = 'bold 44px sans-serif';
@@ -554,7 +578,7 @@
       const scene = gl.scene;
       const s = {
         built: false, tiles: [], star: null, starAt: null, starTarget: null, starFocusUntil: 0,
-        art: false, faces: {}, steel: null, top: 0.32, apart: 0.42, model: null, props: {}, pops: [], figs: [], sparks: [], victory: null, pedestal: null, confetti: null, tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
+        fork: null, forkKey: '', art: false, faces: {}, steel: null, top: 0.32, apart: 0.42, model: null, props: {}, pops: [], figs: [], sparks: [], victory: null, pedestal: null, confetti: null, tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
       function build(v) {
@@ -790,8 +814,44 @@
         return m;
       }
 
-      function update(v) {
+      /**
+       * At a fork: a big number over each branch's first space and a ring on each of its spaces;
+       * the branch a controller points at (`sel`, or -1) glows brighter.
+       */
+      function forkMarks(v, sel) {
+        const p = v.prompt;
+        const routes = p && p.kind === 'path' && p.extra.routes;
+        const key = routes ? JSON.stringify(routes) + ':' + sel : '';
+        if (key === s.forkKey) return;
+        s.forkKey = key;
+        if (s.fork) { scene.remove(s.fork); s.fork = null; }
+        if (!routes) return;
+        s.fork = new T.Group();
+        const ring = new T.TorusGeometry(0.78, 0.07, 8, 40);
+        routes.forEach(function (r, k) {
+          const on = sel === k;
+          const color = new T.Color(ROUTE_COLORS[k]);
+          const m = new T.MeshStandardMaterial({ color: color, emissive: color, emissiveIntensity: on ? 1.4 : 0.5 });
+          r.forEach(function (i) {
+            const ringMesh = new T.Mesh(ring, m);
+            const p2 = at(T, v.board.spaces[i]);
+            ringMesh.rotation.x = Math.PI / 2;
+            ringMesh.position.set(p2.x, s.top + 0.06, p2.z);
+            if (on) ringMesh.scale.setScalar(1.12);
+            s.fork.add(ringMesh);
+          });
+          const badge = numberSprite(T, k + 1, ROUTE_COLORS[k]);
+          const first = at(T, v.board.spaces[r[0]]);
+          badge.position.set(first.x, s.top + 2.1, first.z);
+          badge.scale.setScalar(on ? 1.5 : 1.15);
+          s.fork.add(badge);
+        });
+        scene.add(s.fork);
+      }
+
+      function update(v, opts) {
         if (!s.built) build(v);
+        forkMarks(v, opts && opts.forkSel !== undefined ? opts.forkSel : -1);
         const now = performance.now();
         const prev = s.last;
         // The star: glides to its new spot (and the camera looks there for a moment).
@@ -1012,7 +1072,8 @@
         } else if (v.phase === 'board') {
           target = s.figs[v.turn].f.group.position.clone();
           target.y = 0.5;
-          offset = new T.Vector3(0, 8, 8.5);
+          // At a fork, step back a little so both numbered branches are in view.
+          offset = v.prompt && v.prompt.kind === 'path' ? new T.Vector3(0, 11, 10) : new T.Vector3(0, 8, 8.5);
         } else {
           target = new T.Vector3(0, 0, 0);
           offset = new T.Vector3(0, 17, 13);

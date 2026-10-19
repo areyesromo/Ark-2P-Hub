@@ -276,8 +276,18 @@ export class PartyBoard {
     return out;
   }
 
+  /** The first `n` spaces along a branch from space `i`, for the boards to mark at a fork. */
+  route(i, n = 5) {
+    const out = [];
+    for (let k = 0; k < n && !out.includes(i); k++) {
+      out.push(i);
+      i = this.spaces[i].next[0];
+    }
+    return out;
+  }
+
   forkPrompt(ways, go) {
-    this.ask('path', ['0', '1'], (v) => go(ways[Number(v)]), '0', { previews: ways.map((i) => this.preview(i)) });
+    this.ask('path', ['0', '1'], (v) => go(ways[Number(v)]), '0', { previews: ways.map((i) => this.preview(i)), routes: ways.map((i) => this.route(i)) });
   }
 
   /** On a space while walking past it: the star and the shop can stop you; then `next`. */

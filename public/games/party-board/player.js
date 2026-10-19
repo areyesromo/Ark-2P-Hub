@@ -98,7 +98,8 @@
       if (v.message) h += '<div class="pb-msg small">' + esc(v.message) + '</div>';
       if (p && p.slot === me) {
         h += '<div class="pb-ask">' + ASK[p.kind] + (p.kind === 'slot' ? ' <b>' + p.extra.reels.concat(['?', '?', '?']).slice(0, 3).join(' ') + '</b>' : '') + '</div><div class="pb-choices">' +
-          p.options.map(function (o) { return '<button class="' + (o === 'none' || o === 'no' ? 'ghost' : 'primary') + '" data-v="' + esc(o) + '">' + option(v, p.kind, o) + '</button>'; }).join('') + '</div>' +
+          p.options.map(function (o, i) { return '<button class="' + (o === 'none' || o === 'no' ? 'ghost' : 'primary') + (p.kind === 'path' ? ' route r' + i : '') + '" data-v="' + esc(o) + '">' + option(v, p.kind, o) + '</button>'; }).join('') + '</div>' +
+          (p.kind === 'path' ? '<div class="pb-sub">The TV numbers each path ① ② on the board.</div>' : '') +
           '<div class="pb-time" data-end="' + (receivedAt + p.msLeft) + '">' + Math.ceil(p.msLeft / 1000) + ' s</div>';
       } else if (v.turn !== me || !p) {
         h += '<div class="pb-wait">' + (v.turn === me ? '…' : 'Their turn…') + '</div>';

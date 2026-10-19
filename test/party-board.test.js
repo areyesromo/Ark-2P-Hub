@@ -501,6 +501,13 @@ test('fork: the walk stops and asks, with a preview of each path', () => {
   assert.deepEqual(v.prompt.options, ['0', '1']);
   assert.equal(f.p(0).space, 1);
   assert.deepEqual(v.prompt.extra.previews, [['star', 'shop', 'event', 'blue'], ['red', 'warp', 'bonus', 'event']]);
+  // The spaces along each branch, so the boards can number them: each starts at the fork's exit.
+  const routes = v.prompt.extra.routes;
+  assert.deepEqual(routes.map((r) => r[0]), v.board.spaces[1].next);
+  routes.forEach((r) => {
+    assert.ok(r.length > 1 && r.length <= 5);
+    r.slice(1).forEach((sp, k) => assert.equal(sp, v.board.spaces[r[k]].next[0]));
+  });
 });
 
 test('fork: path 2 then a warp: it sends you to a random space, no effect there', () => {
