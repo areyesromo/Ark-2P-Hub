@@ -50,7 +50,7 @@
 .bs-overlay .muted { color: var(--muted); }
 .bs-overlay table { margin: 0.8rem auto; border-collapse: collapse; font-size: 1.3rem; }
 .bs-overlay td { padding: 0.3rem 0.9rem; text-align: left; }
-.bs-host.phase-needPhones .bs-case, .bs-host.phase-over .bs-case { visibility: hidden; }
+.bs-host.phase-over .bs-case { visibility: hidden; }
 
 /* ---- phone ---- */
 

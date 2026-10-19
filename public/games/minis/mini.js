@@ -392,6 +392,9 @@
       renderer.shadowMap.enabled = !!opts.shadows;
       el.appendChild(renderer.domElement);
       renderer.domElement.className = 'mi-3d';
+      // setSize(.., false) leaves the CSS size alone, so fill the box here: otherwise the canvas
+      // shows at its pixel size (bigger than the box on a scaled screen) and covers what's below.
+      renderer.domElement.style.cssText = 'display:block;width:100%;height:100%';
       const scene = new THREE.Scene();
       const camera = new THREE.PerspectiveCamera(opts.fov || 40, 16 / 9, 0.1, 200);
       scene.add(new THREE.HemisphereLight(0xdbeafe, 0x1e1b16, 1.1));

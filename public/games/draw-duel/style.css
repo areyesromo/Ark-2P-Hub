@@ -41,20 +41,6 @@
 .dd-side.p1 .dd-board.done canvas { border-color: var(--p1); }
 .dd-side.p2 .dd-board.done canvas { border-color: var(--p2); }
 
-/* The cursor is positioned in canvas fractions, so it lives in a wrapper the size of the canvas. */
-.dd-paper { position: relative; line-height: 0; }
-.dd-cursor {
-  position: absolute;
-  width: 1.6rem;
-  height: 1.6rem;
-  margin: -0.8rem 0 0 -0.8rem;
-  border: 3px solid #fff;
-  border-radius: 50%;
-  pointer-events: none;
-  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.5);
-}
-.dd-cursor.down { background: #fff; transform: scale(0.6); }
-
 .dd-status { text-align: center; font-size: 1.4rem; font-weight: 800; color: var(--muted); min-height: 2.6rem; }
 .dd-status .pct { font-size: 2.2rem; color: var(--text); }
 .dd-status .pct.best { color: var(--good); }

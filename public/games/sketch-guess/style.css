@@ -1,10 +1,3 @@
-/* Answer colours match controller face buttons: A green, B red, X blue, Y yellow. */
-.sg-host, .sg-phone { --qa: #22c55e; --qb: #ef4444; --qx: #3b82f6; --qy: #eab308; }
-.sg-host .c0, .sg-phone .c0 { --qc: var(--qa); }
-.sg-host .c1, .sg-phone .c1 { --qc: var(--qb); }
-.sg-host .c2, .sg-phone .c2 { --qc: var(--qx); }
-.sg-host .c3, .sg-phone .c3 { --qc: var(--qy); }
-
 .lvl { display: inline-block; font-size: 0.7em; font-weight: 800; padding: 2px 8px; border-radius: 999px; vertical-align: middle; text-transform: uppercase; letter-spacing: 0.05em; color: #0b0d17; }
 .lvl.easy { background: #4ade80; }
 .lvl.medium { background: #facc15; }
@@ -18,10 +11,10 @@
 .sg-top .stars { color: var(--warn); }
 
 .sg-main { flex: 1; display: grid; grid-template-columns: 1fr 26rem; gap: 2rem; min-height: 0; }
-.sg-host.phase-over .sg-main, .sg-host.phase-needPhone .sg-main, .sg-host.phase-choose .sg-main { grid-template-columns: 1fr 0; gap: 0; }
+.sg-host.phase-over .sg-main, .sg-host.phase-choose .sg-main { grid-template-columns: 1fr 0; gap: 0; }
 .sg-paper { position: relative; display: flex; align-items: center; justify-content: center; min-height: 0; min-width: 0; overflow: hidden; }
 .sg-paper canvas { border-radius: var(--radius); box-shadow: 0 0 0 4px var(--line); }
-.sg-host.phase-over .sg-paper canvas, .sg-host.phase-needPhone .sg-paper canvas, .sg-host.phase-choose .sg-paper canvas { visibility: hidden; }
+.sg-host.phase-over .sg-paper canvas, .sg-host.phase-choose .sg-paper canvas { visibility: hidden; }
 .sg-overlay {
   position: absolute;
   inset: 0;
@@ -34,7 +27,7 @@
   pointer-events: none;
 }
 .sg-overlay:empty { display: none; }
-.sg-host.phase-reveal .sg-overlay, .sg-host.phase-over .sg-overlay, .sg-host.phase-needPhone .sg-overlay, .sg-host.phase-choose .sg-overlay {
+.sg-host.phase-reveal .sg-overlay, .sg-host.phase-over .sg-overlay, .sg-host.phase-choose .sg-overlay {
   background: rgba(11, 13, 23, 0.82);
   border-radius: var(--radius);
 }
@@ -55,12 +48,6 @@
 .sg-bar { height: 12px; border-radius: 6px; background: var(--bg-2); overflow: hidden; }
 .sg-bar .fill { height: 100%; width: 0; background: var(--good); border-radius: 6px; }
 .sg-bar .fill.low { background: var(--bad); }
-
-.sg-options { display: grid; grid-template-columns: 1fr 1fr; gap: 0.6rem; }
-.sg-options .opt { display: flex; align-items: center; gap: 0.6rem; padding: 0.6rem; border-radius: 12px; background: var(--panel); border: 3px solid var(--qc); font-weight: 800; text-transform: capitalize; }
-.sg-options .opt.out { opacity: 0.3; text-decoration: line-through; }
-.sg-options .badge, .sg-picks .badge { flex: none; width: 1.8em; height: 1.8em; border-radius: 50%; display: grid; place-items: center; background: var(--qc); color: #0b0d17; font-weight: 900; }
-.sg-wait { color: var(--bad); font-weight: 800; }
 
 .sg-guesses { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 0.4rem; overflow: hidden; }
 .sg-guesses li { padding: 0.4rem 0.8rem; border-radius: 10px; background: var(--panel); color: var(--muted); font-weight: 700; text-decoration: line-through; text-decoration-color: rgba(248, 113, 113, 0.6); }
@@ -94,8 +81,5 @@
 .sg-form { display: flex; gap: 8px; }
 .sg-form input { flex: 1; min-width: 0; font-size: 1.1rem; padding: 12px; border-radius: 12px; border: 2px solid var(--line); background: var(--bg-2); color: var(--text); }
 .sg-form button { padding: 12px 18px; }
-.sg-picks { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-.sg-picks button { display: flex; align-items: center; gap: 8px; padding: 12px 8px; background: var(--panel); border: 3px solid var(--qc); text-transform: capitalize; }
-.sg-picks button.out { opacity: 0.3; text-decoration: line-through; }
 .sg-phone .sg-guesses { max-height: 6.5em; overflow-y: auto; font-size: 0.95rem; }
 .sg-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 12px; }

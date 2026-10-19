@@ -82,6 +82,7 @@ body.slot-1 { --me: var(--p2); }
 .phone-lobby .board-link { display: block; text-align: center; margin-top: 16px; }
 .phone-games button.random { border-style: dashed; }
 .phone-games .tag { font-style: normal; font-size: 0.75rem; color: var(--warn); }
+.phone-games button.phone-only { opacity: 0.4; filter: grayscale(0.8); }
 
 /* The hub's setup screen and the "change settings" button at the end of a match */
 #hub-setup { padding: 12px 16px 20px; font-size: 1rem; }

@@ -2,9 +2,7 @@
 // phone; the other watches the drawing appear and guesses. You play as a team:
 // every guessed word earns stars (faster and harder words earn more).
 //
-// The drawer needs a private screen, so only phone players draw. A controller
-// player always guesses, picking from four options with A/B/X/Y instead of
-// typing. With two controllers there's nobody to draw, so the game says so.
+// The drawer needs a private screen, so the game is phone-only.
 
 import { WORDS, STARS } from './sketch-words.js';
 import { settingOf, usedIn } from './options.js';
@@ -16,7 +14,6 @@ export const LIMITS = { strokes: 200, points: 5000, batch: 200, guessLength: 40,
 // Ink colours on white paper; the last one (white) works as an eraser.
 export const COLORS = ['#1f2937', '#ef4444', '#f59e0b', '#22c55e', '#3b82f6', '#a855f7', '#92400e', '#ffffff'];
 export const HINT_AT = [0.5, 0.75]; // reveal a letter when this much of the drawing time has passed
-export const GUESS_COOLDOWN_MS = 1500; // controller players: pause after a wrong pick
 export const LEVELS = ['easy', 'medium', 'hard'];
 
 const round3 = (v) => Math.round(v * 1000) / 1000;
@@ -61,17 +58,10 @@ export class SketchGuess {
   }
 
   start() {
-    const phones = this.ctx.players.filter((p) => !p.local).map((p) => p.slot);
-    this.drawers = phones;
     this.history = []; // { word, level, drawer, guessed, ms, stars }
     this.stars = 0;
     this.round = 0;
     this.firstDrawer = this.matches++ % 2;
-    if (!phones.length) {
-      this.phase = 'needPhone';
-      this.ctx.update();
-      return;
-    }
     this.nextRound();
   }
 
@@ -120,15 +110,9 @@ export class SketchGuess {
     }, DRAW_PUSH_MS);
   }
 
-  /** Whose turn to draw: phone players take turns (a lone phone draws every round). */
-  drawerFor(round) {
-    if (this.drawers.length === 1) return this.drawers[0];
-    return (this.firstDrawer + round) % 2;
-  }
-
   nextRound() {
     this.round++;
-    this.drawer = this.drawerFor(this.round - 1);
+    this.drawer = (this.firstDrawer + this.round - 1) % 2; // players take turns
     this.guesser = 1 - this.drawer;
     this.choices = LEVELS.map((level) => ({ level, word: this.pickWord(level) }));
     this.word = null;
@@ -137,9 +121,6 @@ export class SketchGuess {
     this.points = 0;
     this.guesses = []; // the guesser's wrong guesses, newest last: { text, close }
     this.revealed = new Set(); // hinted letter positions
-    this.options = null; // multiple choice for controller guessers
-    this.ruledOut = [];
-    this.lockedUntil = 0;
     this.result = null;
     this.runPhase('choose', TIMING.chooseMs, () => this.choose(Math.floor(this.rng() * LEVELS.length)));
   }
@@ -161,20 +142,7 @@ export class SketchGuess {
     this.level = c.level;
     // Free the words that weren't picked so they can come up again.
     this.choices.forEach((other, i) => i !== index && this.used.delete(other.word));
-    if (this.ctx.players[this.guesser].local) this.options = this.makeOptions();
     this.runPhase('draw', TIMING.drawMs, () => this.finishRound(false));
-  }
-
-  /** The word plus three others of the same difficulty, shuffled. */
-  makeOptions() {
-    const others = this.words[this.level].filter((w) => w !== this.word);
-    const opts = [this.word];
-    while (opts.length < 4 && others.length) opts.push(others.splice(Math.floor(this.rng() * others.length), 1)[0]);
-    for (let i = opts.length - 1; i > 0; i--) {
-      const j = Math.floor(this.rng() * (i + 1));
-      [opts[i], opts[j]] = [opts[j], opts[i]];
-    }
-    return opts;
   }
 
   maybeHint() {
@@ -212,7 +180,7 @@ export class SketchGuess {
   // ---- input ----------------------------------------------------------------
 
   onInput(slot, input) {
-    if (input.type === 'rematch' && (this.phase === 'over' || this.phase === 'needPhone')) return this.start();
+    if (input.type === 'rematch' && this.phase === 'over') return this.start();
     if (this.phase === 'choose' && slot === this.drawer && input.type === 'choose') {
       if (Number.isInteger(input.index) && input.index >= 0 && input.index < LEVELS.length) this.choose(input.index);
       return;
@@ -256,23 +224,14 @@ export class SketchGuess {
   }
 
   guesserInput(input) {
-    if (input.type === 'guess' && typeof input.text === 'string') {
-      const text = input.text.trim().slice(0, LIMITS.guessLength);
-      if (!text) return;
-      const verdict = judge(text, this.word);
-      if (verdict === 'right') return this.finishRound(true);
-      this.guesses.push({ text, close: verdict === 'close' });
-      if (this.guesses.length > LIMITS.guesses) this.guesses.shift();
-      return this.push();
-    }
-    if (input.type === 'pick' && this.options && Number.isInteger(input.index) && this.options[input.index] !== undefined) {
-      if (this.ctx.now() < this.lockedUntil || this.ruledOut.includes(input.index)) return;
-      if (this.options[input.index] === this.word) return this.finishRound(true);
-      this.ruledOut.push(input.index);
-      this.lockedUntil = this.ctx.now() + GUESS_COOLDOWN_MS;
-      this.guesses.push({ text: this.options[input.index], close: false });
-      this.push();
-    }
+    if (input.type !== 'guess' || typeof input.text !== 'string') return;
+    const text = input.text.trim().slice(0, LIMITS.guessLength);
+    if (!text) return;
+    const verdict = judge(text, this.word);
+    if (verdict === 'right') return this.finishRound(true);
+    this.guesses.push({ text, close: verdict === 'close' });
+    if (this.guesses.length > LIMITS.guesses) this.guesses.shift();
+    this.push();
   }
 
   // ---- views ----------------------------------------------------------------
@@ -301,9 +260,6 @@ export class SketchGuess {
       strokes: this.strokes || [],
       colors: COLORS,
       guesses: this.guesses || [],
-      options: this.options,
-      ruledOut: this.ruledOut || [],
-      lockedMs: Math.max(0, (this.lockedUntil || 0) - this.ctx.now()),
       timeLeftMs: this.timeLeftMs(),
       phaseMs: this.phaseMs || 0,
       result: this.result,
@@ -332,7 +288,7 @@ export default {
   id: 'sketch-guess',
   name: 'Sketch & Guess',
   category: 'casual',
-  needsPhone: true, // someone has to draw in secret
+  phoneOnly: true, // someone has to draw in secret
   tagline: 'One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds.',
   create: (ctx) => new SketchGuess(ctx),
 };

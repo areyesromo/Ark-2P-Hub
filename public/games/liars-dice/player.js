@@ -37,10 +37,6 @@
     if (k === key) return;
     key = k;
     let html = '';
-    if (v.phase === 'needPhones') {
-      root.innerHTML = '<p class="ld-msg">Liar\'s Dice needs two phones: your dice are secret.</p>';
-      return;
-    }
     html += '<div class="ld-mine">' + (v.mine || []).map(function (d) { return ArkDice.html(d, v.wild && d === 1 ? 'wild' : ''); }).join('') + '</div>';
     html += '<p class="ld-info">Your dice · rival has ' + v.counts[1 - mine] + ' · ' + v.total + ' dice in play' + (v.wild ? ' · ones are wild' : '') + '</p>';
     if (v.phase === 'bidding') {

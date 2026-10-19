@@ -220,7 +220,8 @@
     if (btn === 'LEFT' || btn === 'RIGHT') {
       const key = rows[state.row || 0].key;
       const list = setupChoices(v, key);
-      const i = Math.min(list.length - 1, Math.max(0, list.indexOf(v.settings[key]) + (btn === 'LEFT' ? -1 : 1)));
+      // Wraps round, so the far end of a long list is one press away.
+      const i = (list.indexOf(v.settings[key]) + (btn === 'LEFT' ? -1 : 1) + list.length) % list.length;
       return { type: 'setting', key: key, value: list[i] };
     }
     return null;
@@ -285,12 +286,18 @@
     socket.on('connect', check);
   }
 
+  /** True when a controller (plugged into the TV) holds a seat: phone-only games are off then. */
+  function controllerSeated(state) {
+    return Boolean(state && state.players && state.players.some(function (p) { return p && p.local; }));
+  }
+
   window.Ark = {
     watchVersion: watchVersion,
     h2hHtml: h2hHtml,
     tournamentHtml: tournamentHtml,
     bindTournament: bindTournament,
     escapeHtml: escapeHtml,
+    controllerSeated: controllerSeated,
     register: register,
     loadRenderer: loadRenderer,
     loadCss: loadCss,

@@ -5,7 +5,6 @@
   const MIN_STEP = 0.004;
   const MAX_POINTS = 5000; // matches the server's limits
   const MAX_STROKES = 200;
-  const LABELS = ['A', 'B', 'X', 'Y'];
   const LEVEL_NAMES = { easy: 'Easy', medium: 'Medium', hard: 'Hard' };
 
   let root = null;
@@ -142,7 +141,6 @@
       renderPalette();
       return;
     }
-    if (b.hasAttribute('data-pick')) return api.send({ type: 'pick', index: Number(b.getAttribute('data-pick')) });
     if (b.classList.contains('rematch')) return api.send({ type: 'rematch' });
     if (!canDraw()) return;
     send();
@@ -185,7 +183,6 @@
 
   function promptHtml(v) {
     const drawer = isDrawer();
-    if (v.phase === 'needPhone') return 'This game needs a phone player to draw.';
     if (v.phase === 'choose') return drawer ? '<strong>Your turn to draw!</strong> Pick a word:' : 'Your partner is picking a word…';
     if (v.phase === 'draw') {
       if (drawer) return 'Draw: <strong class="secret">' + esc(v.word) + '</strong> <span class="lvl ' + v.level + '">' + LEVEL_NAMES[v.level] + '</span>';
@@ -212,10 +209,10 @@
     }
     view = v;
     const drawer = isDrawer();
-    const key = JSON.stringify([v.phase, v.round, v.blanks, v.guesses, v.ruledOut, v.lockedMs > 0, v.stars, drawer, v.word]);
+    const key = JSON.stringify([v.phase, v.round, v.blanks, v.guesses, v.stars, drawer, v.word]);
     if (key !== textKey) {
       textKey = key;
-      els.score.textContent = '⭐ ' + v.stars + (v.phase === 'over' || v.phase === 'needPhone' ? '' : ' · Round ' + v.round + '/' + v.rounds);
+      els.score.textContent = '⭐ ' + v.stars + (v.phase === 'over' ? '' : ' · Round ' + v.round + '/' + v.rounds);
       els.prompt.innerHTML = promptHtml(v);
 
       const choosing = v.phase === 'choose' && drawer && v.choices;
@@ -233,19 +230,12 @@
       if (v.phase === 'draw' && drawer) renderPalette();
 
       const guessing = v.phase === 'draw' && !drawer;
-      show(els.form, guessing && !v.options);
-      show(els.picks, guessing && Boolean(v.options));
-      if (guessing && v.options) {
-        els.picks.innerHTML = v.options.map(function (o, i) {
-          const out = v.ruledOut.indexOf(i) !== -1;
-          return '<button data-pick="' + i + '" class="c' + i + (out ? ' out' : '') + '"' + (out || v.lockedMs > 0 ? ' disabled' : '') + '><span class="badge">' + LABELS[i] + '</span>' + esc(o) + '</button>';
-        }).join('');
-      }
+      show(els.form, guessing);
       show(els.log, v.phase === 'draw');
       els.log.innerHTML = v.guesses.slice().reverse().map(function (g) {
         return '<li class="' + (g.close ? 'close' : '') + '">' + esc(g.text) + (g.close ? ' <em>so close!</em>' : '') + '</li>';
       }).join('');
-      show(els.rematch, v.phase === 'over' || v.phase === 'needPhone');
+      show(els.rematch, v.phase === 'over');
       if (v.phase !== 'draw') drawing = false;
     }
     redraw();
@@ -268,7 +258,6 @@
         '<div class="sg-tools hidden"><div class="palette"></div>' +
         '<div class="row"><button class="undo">↶ Undo</button><button class="clear">Clear</button><button class="skip">Skip word</button></div></div>' +
         '<form class="sg-form hidden" autocomplete="off"><input type="text" maxlength="40" placeholder="Type your guess…" autocapitalize="off" autocorrect="off" spellcheck="false" enterkeyhint="send"><button class="primary" type="submit">Guess</button></form>' +
-        '<div class="sg-picks hidden"></div>' +
         '<ul class="sg-guesses hidden"></ul>' +
         '<button class="primary rematch hidden">Play again</button>';
       el.appendChild(root);
@@ -282,7 +271,6 @@
         palette: root.querySelector('.palette'),
         form: root.querySelector('.sg-form'),
         input: root.querySelector('.sg-form input'),
-        picks: root.querySelector('.sg-picks'),
         log: root.querySelector('.sg-guesses'),
         rematch: root.querySelector('.rematch'),
       };

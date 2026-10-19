@@ -12,7 +12,7 @@
 .pb-hud .items { display: flex; gap: 0.3rem; font-size: 1.8rem; flex-wrap: wrap; justify-content: center; }
 .pb-hud .muted, .pb-centre .muted { color: var(--muted); font-size: 1rem; }
 .pb-mid { display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
-.pb-boardbox { flex: 1; position: relative; min-height: 0; border-radius: 22px; background: radial-gradient(ellipse at center, #14532d, #0c2a18 75%); border: 3px solid #166534; }
+.pb-boardbox { flex: 1; position: relative; min-height: 0; overflow: hidden; border-radius: 22px; background: radial-gradient(ellipse at center, #14532d, #0c2a18 75%); border: 3px solid #166534; }
 .pb-board { position: absolute; inset: 0; }
 .pb-space { position: absolute; width: 3rem; height: 3rem; margin: -1.5rem 0 0 -1.5rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; border: 3px solid rgba(255, 255, 255, 0.85); box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.45); }
 .pb-space.blue, .pb-space.start { background: #2563eb; }
@@ -25,7 +25,7 @@
 .pb-token.p1 { background: var(--p1); }
 .pb-token.p2 { background: var(--p2); }
 /* Under the board: whose turn, the dice, messages and the open choice. */
-.pb-centre { min-height: 7.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.4rem 1.2rem; text-align: center; padding: 0.5rem 1rem; border-radius: 18px; background: var(--panel); border: 3px solid var(--line); }
+.pb-centre { position: relative; z-index: 1; min-height: 7.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.4rem 1.2rem; text-align: center; padding: 0.5rem 1rem; border-radius: 18px; background: var(--panel); border: 3px solid var(--line); }
 .pb-centre .pb-opts, .pb-centre .pb-ask { flex-basis: 100%; justify-content: center; }
 .pb-turn { font-size: 1.4rem; font-weight: 800; color: #e2e8f0; }
 .pb-dice { display: flex; gap: 0.6rem; align-items: center; }

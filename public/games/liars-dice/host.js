@@ -34,7 +34,6 @@
   }
 
   function middle(v) {
-    if (v.phase === 'needPhones') return '<div class="title">📱 Liar\'s Dice needs two phones</div><p>Your dice are secret, so each of you needs a phone.</p>';
     if (v.phase === 'bidding') {
       return (v.bid ? '<div class="sub">' + nameOf(v, v.bid.by) + ' bids</div><div class="bid">' + bidHtml(v.bid) + '</div>' : '<div class="sub">Round ' + v.round + ': opening bid</div>') +
         '<div class="sub">' + nameOf(v, v.turn) + (v.bid ? ': raise, or call <strong>Liar!</strong>' : ' bids first') + '</div>';
@@ -55,10 +54,9 @@
     const k = JSON.stringify([v.phase, v.counts, v.bid, v.result, v.turn]);
     if (k === key) return;
     key = k;
-    root.innerHTML = v.phase === 'needPhones' ? '<div class="ld-mid">' + middle(v) + '</div>'
-      : side(v, 0) + '<div class="ld-mid">' + middle(v) + '<div class="ld-bids">' + v.bids.map(function (b) {
-        return '<span class="p' + (b.by + 1) + '">' + bidHtml(b) + '</span>';
-      }).join('') + '</div></div>' + side(v, 1);
+    root.innerHTML = side(v, 0) + '<div class="ld-mid">' + middle(v) + '<div class="ld-bids">' + v.bids.map(function (b) {
+      return '<span class="p' + (b.by + 1) + '">' + bidHtml(b) + '</span>';
+    }).join('') + '</div></div>' + side(v, 1);
   }
 
   Ark.register('host', 'liars-dice', {

@@ -117,6 +117,7 @@
     const cards = lobbyCards();
     if (focus >= cards.length) focus = 0;
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
+    const pads = Ark.controllerSeated(state);
     $('game-list').innerHTML = cards.map(function (g, i) {
       const heading = i > 0 && (i === 1 || cards[i - 1].category !== g.category)
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
@@ -124,8 +125,8 @@
       const tag = newest && g.lastPlayed === newest ? '<em class="tag">⏱ Last played</em>' : '';
       return (
         heading +
-        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + tag + '</strong>' +
+        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (pads && g.phoneOnly ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !(pads && g.phoneOnly) ? '' : ' disabled') + '>' +
+        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : '') + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
@@ -137,7 +138,10 @@
 
   $('game-list').addEventListener('click', function (e) {
     const btn = e.target.closest('[data-game]');
-    if (btn && !btn.disabled) socket.emit('lobby:start', { gameId: btn.getAttribute('data-game') });
+    if (!btn || btn.disabled) return;
+    socket.emit('lobby:start', { gameId: btn.getAttribute('data-game') }, function (res) {
+      if (res && res.error) flashPad('⚠️ ' + res.error);
+    });
   });
 
   $('to-lobby').addEventListener('click', function () { socket.emit('lobby:return'); });
@@ -420,16 +424,19 @@
     if (show) el.textContent = '🎮 ' + (setup ? '↑↓ pick a row · ←→ change it · A start' : r.padHint) + ' · Back: lobby';
   }
 
+  // Ready-made names for controller players, after the leaderboard's.
+  const PAD_NAMES = ['Ace', 'Blaze', 'Comet', 'Dash', 'Echo', 'Flash', 'Ghost', 'Hero', 'Jet', 'Nova', 'Pixel', 'Rocket', 'Turbo', 'Zap'];
+
   /**
    * Controllers can't type, so Y cycles a controller player's name through
-   * the names on the leaderboard (and back to "Controller N"). That way
-   * their wins count for them.
+   * the names on the leaderboard (so their wins count for them), then some
+   * ready-made ones, and back to "Controller N".
    */
   function renamePad(idx, seat) {
     const other = state.players[1 - seat.slot];
     const taken = other ? other.name.toLowerCase() : null;
     const names = [];
-    [padName(Number(idx))].concat(state.knownNames || []).forEach(function (n) {
+    [padName(Number(idx))].concat(state.knownNames || [], PAD_NAMES).forEach(function (n) {
       const k = n.toLowerCase();
       if (k !== taken && !names.some(function (m) { return m.toLowerCase() === k; })) names.push(n);
     });
@@ -441,7 +448,7 @@
       seat.name = res.name;
       savePads();
       flashPad('🎮 Controller ' + (Number(idx) + 1) + ' is now playing as ' + res.name +
-        (names.length > 1 ? ' · press Y again for another name' : ' · finish a game with a phone name to add more'));
+        ' · press Y again for another name');
     });
   }
 
@@ -541,8 +548,11 @@
     } else if (btn === 'RIGHT' || btn === 'DOWN') {
       focus = (focus + 1) % n;
     } else if (btn === 'A' || btn === 'START') {
-      if (state.readyToPlay) socket.emit('lobby:start', { gameId: cards[focus].id });
-      else flashPad('🎮 Waiting for a second player.');
+      if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
+      else if (cards[focus].phoneOnly) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');
+      else socket.emit('lobby:start', { gameId: cards[focus].id }, function (res) {
+        if (res && res.error) flashPad('⚠️ ' + res.error);
+      });
       return;
     } else {
       return;

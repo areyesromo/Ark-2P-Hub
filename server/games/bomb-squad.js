@@ -41,11 +41,6 @@ export class BombSquad {
     this.history = []; // { defuser, defused, reason, timeLeftMs, strikes, stars }
     this.result = null;
     this.bomb = null;
-    // Both screens must stay private: no controller players here.
-    if (this.ctx.players.some((p) => p.local)) {
-      this.phase = 'needPhones';
-      return this.ctx.update();
-    }
     this.nextBomb();
   }
 
@@ -282,7 +277,7 @@ export default {
   id: 'bomb-squad',
   name: 'Bomb Squad',
   category: 'casual',
-  needsPhone: true, // the bomb and the manual are both secret
+  phoneOnly: true, // the bomb and the manual are both secret
   music: 'thinking',
   tagline: 'Co-op: one of you has a bomb on your phone, the other has the manual (new rules every bomb). Talk it through and defuse it before the timer runs out. Swap every bomb.',
   create: (ctx) => new BombSquad(ctx),

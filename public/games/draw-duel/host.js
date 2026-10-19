@@ -1,10 +1,6 @@
 (function () {
   Ark.loadCss('/games/draw-duel/style.css');
   const esc = Ark.escapeHtml;
-  const DEADZONE = 0.2;
-  const CURSOR_SPEED = 0.8; // canvas widths per second at full stick
-  const PEN_BUTTONS = ['A', 'RT', 'RB'];
-  const PAD_SEND_MS = 50;
 
   let root = null;
   let els = null;
@@ -13,7 +9,6 @@
   let viewAt = 0;
   let textKey = '';
   let colors = null;
-  const cursors = {}; // slot -> controller cursor { x, y, down, pending, lastSend, lastPoll, round }
 
   /** Paths of [x, y, ...] in 0..1 units onto a square canvas. */
   function paint(canvas, paths, color, widthFrac, alpha) {
@@ -106,7 +101,7 @@
         ? '🤝 It\'s a draw!'
         : '🏆 ' + nameOf(v, v.winner) + ' wins!';
       return '<div class="result">' + result + '</div><table class="dd-history">' + rows + '</table>' +
-        '<div class="sub">Rematch or head back to the lobby from your phones or controllers.</div>';
+        '<div class="sub">Rematch or head back to the lobby from your phones.</div>';
     }
     return '';
   }
@@ -139,7 +134,7 @@
     if (v.outline) paint(t, v.outline, outlineColor, 0.02);
   }
 
-  // Smooth timer bar and controller cursors between server views.
+  // Smooth timer bar between server views.
   function tick() {
     raf = requestAnimationFrame(tick);
     if (!els || !view) return;
@@ -149,65 +144,6 @@
     }
     els.bar.style.width = (frac * 100).toFixed(2) + '%';
     els.bar.classList.toggle('low', view.phase === 'draw' && frac < 0.25);
-    const now = performance.now();
-    [0, 1].forEach(function (slot) {
-      const c = cursors[slot];
-      const el = els.cursors[slot];
-      const show = c && now - c.lastPoll < 500 && view.phase === 'draw' && !view.done[slot];
-      el.classList.toggle('hidden', !show);
-      if (show) {
-        el.style.left = c.x * 100 + '%';
-        el.style.top = c.y * 100 + '%';
-        el.classList.toggle('down', c.down);
-      }
-    });
-  }
-
-  function dz(a) {
-    return Math.abs(a) < DEADZONE ? 0 : (a - Math.sign(a) * DEADZONE) / (1 - DEADZONE);
-  }
-
-  // Controller drawing: the left stick (or D-pad) moves a cursor; hold A / RT
-  // / RB to draw. Points go to the server in small batches, like a phone's.
-  function padPoll(pad, v, slot) {
-    const now = performance.now();
-    let c = cursors[slot];
-    if (!c || c.round !== v.round) {
-      c = cursors[slot] = { x: 0.5, y: 0.5, down: false, pending: null, lastSend: 0, lastPoll: now, round: v.round };
-    }
-    const dt = Math.min(0.05, (now - c.lastPoll) / 1000);
-    c.lastPoll = now;
-    if (v.phase !== 'draw' || v.done[slot]) {
-      c.down = false;
-      c.pending = null;
-      return null;
-    }
-    let x = dz(pad.stick.x);
-    let y = dz(pad.stick.y);
-    if (pad.held.indexOf('LEFT') !== -1) x = -1;
-    if (pad.held.indexOf('RIGHT') !== -1) x = 1;
-    if (pad.held.indexOf('UP') !== -1) y = -1;
-    if (pad.held.indexOf('DOWN') !== -1) y = 1;
-    c.x = Math.min(1, Math.max(0, c.x + x * CURSOR_SPEED * dt));
-    c.y = Math.min(1, Math.max(0, c.y + y * CURSOR_SPEED * dt));
-    const pen = PEN_BUTTONS.some(function (b) { return pad.held.indexOf(b) !== -1; });
-    const px = Math.round(c.x * 1000) / 1000;
-    const py = Math.round(c.y * 1000) / 1000;
-    if (pen && !c.down) {
-      c.pending = { type: 'draw', newStroke: true, pts: [px, py] };
-    } else if (pen && (x || y)) {
-      if (!c.pending) c.pending = { type: 'draw', newStroke: false, pts: [] };
-      c.pending.pts.push(px, py);
-    }
-    const lifted = c.down && !pen;
-    c.down = pen;
-    if (c.pending && c.pending.pts.length && (lifted || now - c.lastSend >= PAD_SEND_MS || c.pending.pts.length >= 100)) {
-      const out = c.pending;
-      c.pending = null;
-      c.lastSend = now;
-      return out;
-    }
-    return null;
   }
 
   Ark.register('host', 'draw-duel', {
@@ -219,16 +155,6 @@
       if (v.phase === 'reveal' && prev.phase !== 'reveal') out.push('reveal');
       return out;
     },
-    padHint: 'Stick or D-pad moves · hold A to draw · B undo · X clear · Y done',
-    padPoll: padPoll,
-    pad: function (btn, v) {
-      if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
-      if (v.phase !== 'draw') return null;
-      if (btn === 'B') return { type: 'undo' };
-      if (btn === 'X') return { type: 'clear' };
-      if (btn === 'Y' || btn === 'START') return { type: 'done' };
-      return null;
-    },
     mount: function (el) {
       const css = getComputedStyle(document.documentElement);
       colors = { p1: css.getPropertyValue('--p1').trim() || '#22d3ee', p2: css.getPropertyValue('--p2').trim() || '#f472b6' };
@@ -237,7 +163,7 @@
       function board(slot) {
         return '<div class="dd-side p' + (slot + 1) + '">' +
           '<div class="dd-head p' + (slot + 1) + '-text"><span class="name"></span><span class="score"></span></div>' +
-          '<div class="dd-board"><div class="dd-paper"><canvas></canvas><div class="dd-cursor hidden"></div></div></div>' +
+          '<div class="dd-board"><canvas></canvas></div>' +
           '<div class="dd-status"></div></div>';
       }
       root.innerHTML =
@@ -256,7 +182,6 @@
         target: root.querySelector('.dd-target canvas'),
         boards: [sides[0].querySelector('.dd-board'), sides[1].querySelector('.dd-board')],
         canvases: [sides[0].querySelector('canvas'), sides[1].querySelector('canvas')],
-        cursors: [sides[0].querySelector('.dd-cursor'), sides[1].querySelector('.dd-cursor')],
         names: [sides[0].querySelector('.name'), sides[1].querySelector('.name')],
         scores: [sides[0].querySelector('.score'), sides[1].querySelector('.score')],
         status: [sides[0].querySelector('.dd-status'), sides[1].querySelector('.dd-status')],
@@ -273,7 +198,6 @@
       cancelAnimationFrame(raf);
       root = els = view = null;
       textKey = '';
-      Object.keys(cursors).forEach(function (k) { delete cursors[k]; });
     },
   });
 })();

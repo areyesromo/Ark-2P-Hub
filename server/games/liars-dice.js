@@ -44,10 +44,6 @@ export class LiarsDice {
     this.winner = null;
     this.result = null;
     this.roundNo = 0;
-    if (this.ctx.players.some((p) => p.local)) {
-      this.phase = 'needPhones';
-      return this.ctx.update();
-    }
     this.turn = this.firstStarter;
     this.firstStarter = 1 - this.firstStarter;
     this.newRound();
@@ -131,7 +127,7 @@ export class LiarsDice {
 
   playerView(slot) {
     const v = Object.assign(this.view(), { you: slot });
-    if (this.hands && this.phase !== 'needPhones') v.mine = this.hands[slot];
+    if (this.hands) v.mine = this.hands[slot];
     return v;
   }
 }
@@ -140,7 +136,7 @@ export default {
   id: 'liars-dice',
   name: "Liar's Dice",
   category: 'board',
-  needsPhone: true, // your dice are secret
+  phoneOnly: true, // your dice are secret
   music: 'thinking',
   tagline: 'Your dice are hidden on your phone. Bid how many of a face there are between you both, or call "Liar!". Lose a die each time you\'re wrong; last one with dice wins.',
   create: (ctx) => new LiarsDice(ctx),
