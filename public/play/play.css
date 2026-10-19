@@ -93,3 +93,5 @@ body.slot-1 { --me: var(--p2); }
 .phone-lobby .tourney { font-size: 0.95rem; }
 .phone-lobby .tourney:empty { display: none; }
 .tourney-bar { display: flex; justify-content: center; margin: 0 12px 12px; font-size: 0.95rem; }
+
+.menu .buzz-msg { margin: 0; font-size: 0.9rem; color: var(--muted); max-width: 18rem; }

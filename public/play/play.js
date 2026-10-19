@@ -148,6 +148,17 @@
     socket.emit('lobby:return');
     $('menu').classList.add('hidden');
   });
+  // Does this phone buzz? Games vibrate for bites, hits and wins; some phones can't, or won't.
+  $('buzz-btn').addEventListener('click', function () {
+    const ok = navigator.vibrate ? navigator.vibrate([120, 60, 120]) : null;
+    const msg = $('buzz-msg');
+    msg.classList.remove('hidden');
+    msg.textContent = ok === null
+      ? "This browser can't vibrate (iPhones don't let web pages buzz, and Firefox doesn't either)."
+      : ok
+        ? 'Felt a buzz? Then games can vibrate. Nothing? Check that vibration / haptics is on in the phone\'s settings, and that it isn\'t in battery-saver or silent mode.'
+        : 'The phone refused to vibrate: try again after tapping the screen, and check battery saver and vibration settings.';
+  });
   $('leave-btn').addEventListener('click', function () {
     socket.emit('player:leave', null, function () {
       saveSession({ code: '', token: null, name: me ? me.name : '' });

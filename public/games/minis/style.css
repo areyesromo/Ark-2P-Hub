@@ -318,3 +318,7 @@
 .mi-pour-phone .mi-big-btn { min-height: 110px; touch-action: none; }
 .mi-pour-phone .how, .mi-pour-phone .msg { font-size: 1rem; }
 .mi-pour-phone .msg { font-size: 1.2rem; font-weight: 800; }
+
+.mi-pour-phone .bottle { height: 4.5rem; display: flex; align-items: center; justify-content: center; font-size: 3.6rem; }
+.mi-pour-phone .bottle span { display: inline-block; transition: transform 0.08s linear; }
+.mi-pour-phone .bottle.pouring span { filter: drop-shadow(0 0 0.6rem #fbbf24); }

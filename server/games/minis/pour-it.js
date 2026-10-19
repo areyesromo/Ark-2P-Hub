@@ -1,5 +1,5 @@
-// Pour It (phones only): tilt your phone to pour into your glass (or hold the POUR button),
-// and level it to stop. Get the drink as close to the line as you can: overfill it and you
+// Pour It (phones only): hold your phone upright like a bottle and tip it sideways to pour into
+// your glass (or hold the POUR button); stand it back up to stop. Get the drink as close to the line as you can: overfill it and you
 // spill, which loses. When you've poured and held still for a moment, your glass is done.
 export const TICK_MS = 100;
 export const FLOW = 0.32; // of a glass per second, at full tilt
@@ -9,7 +9,7 @@ export const LINE = { min: 0.55, max: 0.85 };
 const DURATION_MS = 25000;
 
 export default {
-  id: 'pour-it', kind: 'party', look: '2d', phoneOnly: true, name: 'Pour It', order: 'POUR!', howTo: 'Tilt to pour (or hold POUR), level the phone to stop. Closest to the line wins; spill and you lose', durationMs: DURATION_MS,
+  id: 'pour-it', kind: 'party', look: '2d', phoneOnly: true, name: 'Pour It', order: 'POUR!', howTo: 'Hold the phone up like a bottle and tip it sideways to pour (or hold POUR); stand it up to stop. Closest to the line wins; spill and you lose', durationMs: DURATION_MS,
   create(api) {
     const line = Math.round((LINE.min + api.rng() * (LINE.max - LINE.min)) * 100) / 100;
     // Each glass: fill 0..1+, the pour now (0..1), when it last poured, done / spilled.
