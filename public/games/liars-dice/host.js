@@ -1,13 +1,15 @@
 (function () {
   Ark.loadCss('/games/liars-dice/style.css');
   Ark.loadCss('/shared/dice.css');
-  const diceReady = Ark.loadScript('/shared/dice.js');
+  const diceReady = Ark.loadScript('/shared/dice.js').then(function () { return Ark.loadScript('/games/liars-dice/howto.js'); });
+  const DEMO_MS = 6500; // each step of the how-to-play example
   const esc = Ark.escapeHtml;
   const WORDS = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
 
   let root = null;
   let view = null;
   let key = '';
+  let demo = { step: 0, timer: null };
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -48,15 +50,31 @@
       (v.phase === 'over' ? '<p class="muted">Rematch on a phone (or ⚙ change the settings).</p>' : '');
   }
 
+  /** Before the first round: the example round plays on the TV, step by step, until both are ready. */
+  function howto(v) {
+    const names = [nameOf(v, 0), nameOf(v, 1)];
+    const waiting = [0, 1].map(function (s) { return v.ready[s] ? nameOf(v, s) + ' ✅' : nameOf(v, s) + ' …'; }).join(' · ');
+    root.innerHTML = '<div class="ld-howto">' + ArkLD.demoHtml(demo.step, names) +
+      '<div class="ld-demo-ready">📖 How to play · press <b>Got it</b> on your phone to start · ' + waiting + '</div></div>';
+  }
+
   function render(v) {
     view = v;
-    if (!window.ArkDice || !root) return;
+    if (!window.ArkLD || !root) return;
+    if (v.phase === 'howto') {
+      if (!demo.timer) demo.timer = setInterval(function () { demo.step++; if (view && view.phase === 'howto') howto(view); }, DEMO_MS);
+      key = '';
+      return howto(v);
+    }
+    if (demo.timer) { clearInterval(demo.timer); demo.timer = null; }
     const k = JSON.stringify([v.phase, v.counts, v.bid, v.result, v.turn]);
     if (k === key) return;
     key = k;
     root.innerHTML = side(v, 0) + '<div class="ld-mid">' + middle(v) + '<div class="ld-bids">' + v.bids.map(function (b) {
       return '<span class="p' + (b.by + 1) + '">' + bidHtml(b) + '</span>';
-    }).join('') + '</div></div>' + side(v, 1);
+    }).join('') + '</div>' +
+      (v.phase === 'bidding' ? '<div class="ld-rules">A bid counts <b>all</b> the dice, both cups · raise with more dice, or the same number of a higher face · call <b>Liar!</b> if it\'s too high' + (v.wild ? ' · 1s are wild' : '') + '</div>' : '') +
+      '</div>' + side(v, 1);
   }
 
   Ark.register('host', 'liars-dice', {
@@ -72,6 +90,11 @@
       diceReady.then(function () { if (view) { key = ''; render(view); } });
     },
     update: render,
-    unmount: function () { root = view = null; key = ''; },
+    unmount: function () {
+      if (demo.timer) clearInterval(demo.timer);
+      demo = { step: 0, timer: null };
+      root = view = null;
+      key = '';
+    },
   });
 })();

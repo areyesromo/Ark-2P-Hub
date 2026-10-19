@@ -92,8 +92,8 @@
         const p = phone;
         const me = p.slot;
         p.playing = v.phase === 'play';
-        // Buzz: the arrow is up; the point is yours / theirs.
-        if (s.stage === 'go' && p.stage !== 'go') p.mctx.vibrate(60);
+        // Buzz the result only: a buzz when the arrow appears would be a head start for phones
+        // that can vibrate (iPhones can't).
         if (s.stage === 'point' && p.stage !== 'point' && s.last) p.mctx.vibrate(s.last.winner === me ? [50, 30, 50] : s.last.winner === null ? 0 : 220);
         p.stage = s.stage;
         p.s = s;
