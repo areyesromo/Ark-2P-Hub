@@ -19,7 +19,11 @@
       emoji = '🔒';
       caption = 'Locked in';
     }
-    return '<div class="' + cls + '"><div class="emoji">' + emoji + '</div><div class="caption">' + caption + '</div></div>';
+    // A controller player still choosing gets the buttons right in their block, big.
+    const keys = !pick && !view.locked[slot] && view.phase === 'choose' && view.players[slot].local
+      ? '<div class="keys"><span><b>X</b>✊</span><span><b>Y</b>✋</span><span><b>B</b>✌️</span></div>'
+      : '';
+    return '<div class="' + cls + '"><div class="emoji">' + emoji + '</div><div class="caption">' + caption + '</div>' + keys + '</div>';
   }
 
   function banner(view) {

@@ -421,16 +421,19 @@
     if (show) el.textContent = '🎮 ' + (setup ? '↑↓ pick a row · ←→ change it · A start' : r.padHint) + ' · Back: lobby';
   }
 
+  // Ready-made names for controller players, after the leaderboard's.
+  const PAD_NAMES = ['Ace', 'Blaze', 'Comet', 'Dash', 'Echo', 'Flash', 'Ghost', 'Hero', 'Jet', 'Nova', 'Pixel', 'Rocket', 'Turbo', 'Zap'];
+
   /**
    * Controllers can't type, so Y cycles a controller player's name through
-   * the names on the leaderboard (and back to "Controller N"). That way
-   * their wins count for them.
+   * the names on the leaderboard (so their wins count for them), then some
+   * ready-made ones, and back to "Controller N".
    */
   function renamePad(idx, seat) {
     const other = state.players[1 - seat.slot];
     const taken = other ? other.name.toLowerCase() : null;
     const names = [];
-    [padName(Number(idx))].concat(state.knownNames || []).forEach(function (n) {
+    [padName(Number(idx))].concat(state.knownNames || [], PAD_NAMES).forEach(function (n) {
       const k = n.toLowerCase();
       if (k !== taken && !names.some(function (m) { return m.toLowerCase() === k; })) names.push(n);
     });
@@ -442,7 +445,7 @@
       seat.name = res.name;
       savePads();
       flashPad('🎮 Controller ' + (Number(idx) + 1) + ' is now playing as ' + res.name +
-        (names.length > 1 ? ' · press Y again for another name' : ' · finish a game with a phone name to add more'));
+        ' · press Y again for another name');
     });
   }
 

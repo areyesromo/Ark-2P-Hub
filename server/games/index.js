@@ -25,6 +25,7 @@ import partyMinis from './party-minis.js';
 import partyBoard from './party-board.js';
 import diceParty from './dice-party.js';
 import checkers from './checkers.js';
+import { PARTIES } from './minis/index.js';
 import mancala from './mancala.js';
 import dotsBoxes from './dots-boxes.js';
 import { withSetup } from './options.js';
@@ -83,7 +84,12 @@ const GAMES = [
   }),
   withSetup(partyMinis, {
     ...firstTo('Wins needed', [3, 4, 5]),
-    style: { title: 'Minigames', values: ['mix', '2d', '3d'], label: (s) => ({ mix: 'Mix of 2D and 3D', '2d': '2D only', '3d': '3D only' })[s] },
+    // A mix, or just one minigame over and over (to practise it, or a favourite).
+    style: {
+      title: 'Minigames',
+      values: ['mix', '2d', '3d', ...PARTIES.map((m) => m.id)],
+      label: (s) => ({ mix: '🎲 Random mix', '2d': '🎲 Random 2D', '3d': '🎲 Random 3D' })[s] || `🎯 ${PARTIES.find((m) => m.id === s).name}`,
+    },
   }),
   withSetup(microMayhem, {
     lives: { title: 'Lives', values: [3, 5], label: (n) => `${n} lives` },

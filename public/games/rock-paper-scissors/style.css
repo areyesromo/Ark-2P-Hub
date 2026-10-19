@@ -30,6 +30,9 @@
 }
 .rps-hand .emoji { font-size: 10rem; line-height: 1; }
 .rps-hand .caption { font-size: 1.6rem; font-weight: 800; color: var(--muted); }
+.rps-hand .keys { display: flex; gap: 1.6rem; font-size: 3.6rem; }
+.rps-hand .keys span { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
+.rps-hand .keys b { font-size: 1.4rem; width: 2.4rem; height: 2.4rem; border-radius: 50%; display: grid; place-items: center; background: #0b1020; border: 2px solid var(--line); }
 .rps-hand.p1.locked { border-color: var(--p1); }
 .rps-hand.p2.locked { border-color: var(--p2); }
 .rps-hand.win { box-shadow: 0 0 4rem -0.5rem var(--good); border-color: var(--good); }
