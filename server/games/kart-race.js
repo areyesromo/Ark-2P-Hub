@@ -15,8 +15,10 @@
 
 import { loadSettings, applySetting } from './options.js';
 import '../../public/games/kart-race/track.js';
+import '../../public/games/kart-race/racers.js';
 
 const Road = globalThis.ArkKartTrack;
+const Racers = globalThis.ArkKartRacers;
 
 export const FIELD = { w: 32, h: 18 };
 export const TRACK_WIDTH = 3.4;
@@ -143,6 +145,8 @@ export class KartRace {
     this.rng = rng;
     this.timer = null;
     this.settings = loadSettings(ctx, OPTIONS);
+    // Each player's racer and tyres (kept from match to match; changed on the setup and end screens).
+    this.picks = Racers.DEFAULT_RACERS.map((racer) => ({ racer, tyre: Racers.DEFAULT_TYRE }));
   }
 
   /** The setup screen. */
@@ -196,7 +200,11 @@ export class KartRace {
     this.karts = [0, 1].map((slot) => {
       const p = pointAt(this.track, 0.012, slot === 0 ? -0.75 : 0.75);
       const was = before ? before[slot] : null;
+      const pick = this.picks[slot];
       return {
+        racer: pick.racer,
+        tyre: pick.tyre,
+        car: Racers.physics(pick.racer, pick.tyre), // this racer's driving numbers
         x: p.x,
         y: p.y,
         angle: p.angle,
@@ -276,7 +284,8 @@ export class KartRace {
     const where = locate(this.track, k.x, k.y);
     k.offTrack = where.d > TRACK_WIDTH / 2;
     const boosting = now < k.boostUntil;
-    const top = boosting ? KART.boostSpeed : k.offTrack ? KART.grassSpeed : KART.maxSpeed;
+    const car = k.car;
+    const top = boosting ? car.boostSpeed : k.offTrack ? car.grassSpeed : car.maxSpeed;
     const toward = (v, target, rate) => (v > target ? Math.max(target, v - rate * dt) : Math.min(target, v + rate * dt));
     if (k.finishedAt !== null) {
       k.speed = toward(k.speed, 0, KART.brake * 0.4); // coast to a stop after the line
@@ -289,7 +298,7 @@ export class KartRace {
       k.speed = Math.max(-KART.reverseSpeed, k.speed - KART.reverseAccel * dt);
     } else if (k.gas) {
       if (k.speed < 0) k.speed = Math.min(0, k.speed + KART.brake * dt); // stop reversing first
-      else if (k.speed < top) k.speed = Math.min(top, k.speed + KART.accel * dt);
+      else if (k.speed < top) k.speed = Math.min(top, k.speed + car.accel * dt);
     } else {
       k.speed = toward(k.speed, 0, KART.coast);
     }
@@ -301,9 +310,9 @@ export class KartRace {
     // other way, like a car.
     if (now >= k.spinUntil) {
       const pedal = k.gas || k.brake;
-      const grip = Math.min(1, Math.max(Math.abs(k.speed) / KART.grip, pedal ? 0.45 : 0));
+      const grip = Math.min(1, Math.max(Math.abs(k.speed) / car.grip, pedal ? 0.45 : 0));
       const dir = k.speed < -0.01 || (Math.abs(k.speed) <= 0.01 && k.brake) ? -1 : 1;
-      const rate = KART.turnRate * (k.drifting ? KART.driftTurn : 1);
+      const rate = car.turnRate * (k.drifting ? KART.driftTurn : 1);
       k.angle += k.steer * rate * grip * dir * dt;
     }
     k.x += Math.cos(k.angle) * k.speed * dt;
@@ -317,7 +326,7 @@ export class KartRace {
         if (k.speed >= 0 && Math.hypot(k.x - pad.x, k.y - pad.y) < 0.9 && now >= k.boostUntil - KART.boostMs + 300) {
           if (now >= k.boostUntil) this.events.boosts++;
           k.boostUntil = now + KART.boostMs;
-          k.speed = Math.max(k.speed, KART.boostSpeed);
+          k.speed = Math.max(k.speed, k.car.boostSpeed);
         }
       }
     }
@@ -337,7 +346,7 @@ export class KartRace {
     }
     if (k.drifting && k.driftMs >= KART.driftChargeMs && !k.drift && now >= k.spinUntil && k.finishedAt === null) {
       k.boostUntil = Math.max(k.boostUntil, now + KART.miniBoostMs);
-      k.speed = Math.max(k.speed, KART.maxSpeed + 1.5);
+      k.speed = Math.max(k.speed, k.car.maxSpeed + 1.5);
       this.events.miniBoosts++;
     }
     k.drifting = false;
@@ -430,7 +439,7 @@ export class KartRace {
     const now = this.ctx.now();
     if (k.item === 'turbo') {
       k.boostUntil = now + ITEMS.turboMs;
-      k.speed = Math.max(k.speed, KART.boostSpeed);
+      k.speed = Math.max(k.speed, k.car.boostSpeed);
     } else if (k.item === 'shield') {
       k.shieldUntil = now + ITEMS.shieldMs;
     } else if (k.item === 'banana') {
@@ -453,11 +462,15 @@ export class KartRace {
     if (d >= min || d === 0) return;
     const nx = dx / d;
     const ny = dy / d;
-    const push = (min - d) / 2;
-    a.x -= nx * push;
-    a.y -= ny * push;
-    b.x += nx * push;
-    b.y += ny * push;
+    // The heavier kart gives way less: each moves by the other's share of the total weight.
+    const overlap = min - d;
+    const total = a.car.weight + b.car.weight;
+    const pushA = (overlap * b.car.weight) / total;
+    const pushB = (overlap * a.car.weight) / total;
+    a.x -= nx * pushA;
+    a.y -= ny * pushA;
+    b.x += nx * pushB;
+    b.y += ny * pushB;
     a.speed *= 0.85;
     b.speed *= 0.85;
     this.events.bumps++;
@@ -530,7 +543,19 @@ export class KartRace {
     this.newRace();
   }
 
+  /** A player picks their racer or tyres (setup and end screens only); unknown ids are ignored. */
+  pick(slot, input) {
+    const known = input.type === 'racer' ? Racers.RACERS : Racers.TYRES;
+    if (!known.some((x) => x.id === input.id)) return;
+    this.picks[slot] = { ...this.picks[slot], [input.type]: input.id };
+    this.ctx.update();
+  }
+
   onInput(slot, input) {
+    if ((this.phase === 'setup' || this.phase === 'over') && (input.type === 'racer' || input.type === 'tyre')) {
+      this.pick(slot, input);
+      return;
+    }
     if (this.phase === 'setup') {
       if (input.type === 'setting' && applySetting(this.ctx, OPTIONS, this.settings, input.key, input.value)) this.ctx.update();
       if (input.type === 'go') this.begin();
@@ -578,6 +603,7 @@ export class KartRace {
       wallOut: WALL.out,
       maxSpeed: KART.maxSpeed,
       boostSpeed: KART.boostSpeed,
+      picks: this.picks,
       race: this.race,
       races: this.settings.races,
       laps: this.settings.laps,
@@ -593,6 +619,8 @@ export class KartRace {
             angle: Math.round(k.angle * 1000) / 1000,
             speed: Math.round(k.speed * 100) / 100,
             laps: k.laps,
+            racer: k.racer,
+            tyre: k.tyre,
             drifting: k.drifting,
             driftCharge: k.drifting ? Math.min(1, k.driftMs / KART.driftChargeMs) : 0,
             lapMs: this.raceStart && k.finishedAt === null ? Math.max(0, now - this.raceStart - k.lapStart) : null,

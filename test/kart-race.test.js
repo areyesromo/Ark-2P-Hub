@@ -376,3 +376,96 @@ test('items: the kart behind gets more turbos; items off means no boxes', () => 
   assert.equal(off.boxes.length, 0);
   assert.equal(off.hostView().boxes.length, 0);
 });
+
+/** A one-race game on track 1 with these racer / tyre picks, past the countdown. */
+function picked(picks) {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'setting', key: 'track', value: 1 });
+  picks.forEach(([racer, tyre], slot) => {
+    if (racer) game.onInput(slot, { type: 'racer', id: racer });
+    if (tyre) game.onInput(slot, { type: 'tyre', id: tyre });
+  });
+  game.onInput(0, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  return { ctx, game };
+}
+
+test('racer and tyre picks: own slot, setup/over only, bad ids ignored, kept across rematch', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  assert.deepEqual(game.picks, [{ racer: 'dash', tyre: 'standard' }, { racer: 'daisy', tyre: 'standard' }]);
+  game.onInput(1, { type: 'racer', id: 'rex' });
+  game.onInput(1, { type: 'tyre', id: 'slicks' });
+  game.onInput(1, { type: 'racer', id: 'nope' });
+  game.onInput(1, { type: 'tyre', id: 42 });
+  assert.deepEqual(game.picks, [{ racer: 'dash', tyre: 'standard' }, { racer: 'rex', tyre: 'slicks' }]);
+  game.onInput(0, { type: 'racer', id: 'rex' });
+  assert.equal(game.picks[0].racer, 'rex', 'both may race as the same racer');
+  assert.deepEqual(game.hostView().picks, game.picks);
+  game.onInput(0, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.ok(Math.abs(game.karts[1].car.maxSpeed - 9.85) < 1e-9, 'Rex on Slicks: speed 6');
+  assert.equal(game.hostView().karts[1].racer, 'rex');
+  assert.equal(game.hostView().karts[1].tyre, 'slicks');
+  game.onInput(1, { type: 'racer', id: 'zip' });
+  assert.equal(game.picks[1].racer, 'rex', 'no changing racer mid-race');
+  game.finishLine(1, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  assert.equal(game.phase, 'over');
+  game.onInput(1, { type: 'racer', id: 'zip' });
+  assert.equal(game.picks[1].racer, 'zip', 'the end screen can change it');
+  game.onInput(0, { type: 'rematch' });
+  assert.equal(game.picks[0].racer, 'rex', 'picks kept for the rematch');
+  assert.ok(Math.abs(game.karts[1].car.accel - 11.5) < 1e-9, 'rebuilt from the new pick (Zip: acceleration 5)');
+  assert.equal(game.karts[1].racer, 'zip');
+  game.onInput(0, { type: 'setup' });
+  assert.equal(game.picks[1].racer, 'zip', 'and kept back at the setup screen');
+});
+
+test('racers drive differently: top speed, acceleration, turning', () => {
+  const { ctx, game } = picked([['rex'], ['zip']]);
+  const [rex, zip] = game.karts;
+  // Acceleration: from a standstill, half a second of gas.
+  onRoad(game, rex, 0.05);
+  onRoad(game, zip, 0.55);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(500);
+  assert.ok(zip.speed > rex.speed + 0.5, `Zip gets going quicker (${zip.speed} vs ${rex.speed})`);
+  // Top speed: hold it (back on the straight each time so nothing slows them).
+  for (let i = 0; i < 30; i++) {
+    onRoad(game, rex, 0.05, rex.speed);
+    onRoad(game, zip, 0.55, zip.speed);
+    ctx.advance(100); // short hops: never far enough to reach a bend
+  }
+  assert.ok(Math.abs(rex.speed - 9.4) < 0.05, `Rex tops out at 9.4 (${rex.speed})`);
+  assert.ok(Math.abs(zip.speed - 8.05) < 0.05, `Zip tops out at 8.05 (${zip.speed})`);
+});
+
+test('handling: Swift turns further than Boulder', () => {
+  const { ctx, game } = picked([['swift'], ['boulder']]);
+  const [swift, boulder] = game.karts;
+  onRoad(game, swift, 0.05, 4);
+  onRoad(game, boulder, 0.55, 4);
+  const a0 = swift.angle;
+  const b0 = boulder.angle;
+  game.onInput(0, { type: 'drive', steer: 1, gas: true });
+  game.onInput(1, { type: 'drive', steer: 1, gas: true });
+  ctx.advance(300);
+  assert.ok(swift.angle - a0 > boulder.angle - b0 + 0.05, `${swift.angle - a0} vs ${boulder.angle - b0}`);
+});
+
+test('heavier karts win bumps', () => {
+  const { ctx, game } = picked([['bella'], ['ruby']]);
+  const [bella, ruby] = game.karts;
+  onRoad(game, bella, 0.3);
+  Object.assign(ruby, { x: bella.x + 0.3, y: bella.y, speed: 0, angle: bella.angle, progress: bella.progress });
+  const b0 = { x: bella.x, y: bella.y };
+  const r0 = { x: ruby.x, y: ruby.y };
+  ctx.advance(TICK);
+  const moved = (k, p) => Math.hypot(k.x - p.x, k.y - p.y);
+  assert.ok(moved(ruby, r0) > moved(bella, b0) * 2, `Ruby ${moved(ruby, r0)} vs Bella ${moved(bella, b0)}`);
+});
