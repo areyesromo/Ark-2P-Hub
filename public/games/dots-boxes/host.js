@@ -85,6 +85,7 @@
       boardReady.then(function () { loaded = true; render(); });
     },
     update: function (v) {
+      if (view && (v.turn !== view.turn || v.round !== view.round)) armed[0] = armed[1] = false;
       view = v;
       render();
     },

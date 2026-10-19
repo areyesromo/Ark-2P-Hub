@@ -167,15 +167,18 @@ export function validateMap(map) {
   // 3D layouts: one level per stair, bridges only on real links, no paths crossing.
   if (s.some((sp) => sp.h !== undefined)) {
     s.forEach((sp, i) => {
-      if (![0, 1, 2].includes(sp.h)) out.push(`space ${i}: height level must be 0, 1 or 2`);
-      sp.next.forEach((n) => { if (Math.abs(sp.h - s[n].h) > 1) out.push(`space ${i}: too steep to ${n}`); });
+      if (![0, 1, 2].includes(sp.h)) return out.push(`space ${i}: height level must be 0, 1 or 2`);
+      sp.next.forEach((n) => { if ([0, 1, 2].includes(s[n].h) && Math.abs(sp.h - s[n].h) > 1) out.push(`space ${i}: too steep to ${n}`); });
       (sp.bridge || []).forEach((n) => { if (!sp.next.includes(n)) out.push(`space ${i}: bridge to ${n} isn't a link`); });
     });
     const links = s.flatMap((sp, i) => sp.next.map((n) => [i, n]));
+    // A bridge may pass over a path that's wholly below it.
+    const isBridge = (a, b) => (s[a].bridge || []).includes(b);
+    const over = (a, b, c, d) => isBridge(a, b) && Math.min(s[a].h, s[b].h) > Math.max(s[c].h, s[d].h);
     const P = (i) => ({ X: s[i].x * WORLD.w, Z: s[i].y * WORLD.d });
     const side = (a, b, c) => Math.sign((b.X - a.X) * (c.Z - a.Z) - (b.Z - a.Z) * (c.X - a.X));
     links.forEach(([a, b], k) => links.slice(k + 1).forEach(([c, d]) => {
-      if (new Set([a, b, c, d]).size < 4) return;
+      if (new Set([a, b, c, d]).size < 4 || over(a, b, c, d) || over(c, d, a, b)) return;
       const [A, B, C, D] = [P(a), P(b), P(c), P(d)];
       if (side(C, D, A) !== side(C, D, B) && side(A, B, C) !== side(A, B, D)) out.push(`paths ${a}-${b} and ${c}-${d} cross`);
     }));

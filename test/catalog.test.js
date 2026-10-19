@@ -5,7 +5,7 @@ import { catalog, CATALOG, IDEAS_MARK } from '../tools/games-catalog.mjs';
 import { listGames } from '../server/games/index.js';
 import { MICROS, PARTIES } from '../server/games/minis/index.js';
 
-const text = fs.readFileSync(CATALOG, 'utf8');
+const text = fs.readFileSync(CATALOG, 'utf8').replace(/\r\n/g, '\n'); // a Windows checkout may add CRs
 
 test('docs/GAMES.md lists every game and minigame (run `node tools/games-catalog.mjs` after adding one)', () => {
   assert.equal(text, catalog(text));

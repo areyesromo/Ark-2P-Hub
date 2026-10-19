@@ -30,8 +30,10 @@ function testsFor(module) {
   return ls('test').filter((f) => f.endsWith('.test.js') && fs.readFileSync(path.join(ROOT, 'test', f), 'utf8').includes(module)).map((f) => 'test/' + f);
 }
 
-function gameFiles(id) {
-  const server = ls('server/games').filter((f) => f === id + '.js' || (f.startsWith(id + '-') && f.endsWith('.js'))).map((f) => 'server/games/' + f);
+function gameFiles(id, ids) {
+  // `<id>.js` and `<id>-*.js`, unless the file is another game's (`party-board` isn't `party`'s).
+  const mine = (f, g) => f === g + '.js' || (f.startsWith(g + '-') && f.endsWith('.js'));
+  const server = ls('server/games').filter((f) => mine(f, id) && !ids.some((g) => g.length > id.length && mine(f, g))).map((f) => 'server/games/' + f);
   const pub = exists('public/games/' + id) ? ['public/games/' + id + '/'] : [];
   return server.concat(EXTRA[id] || [], pub, testsFor('games/' + id + '.js'));
 }
@@ -64,7 +66,7 @@ export function generated() {
   for (const cat of Object.keys(CATEGORY)) {
     const list = games.filter((g) => g.category === cat);
     lines.push('', `### ${CATEGORY[cat]} (${list.length})`, '', '| Game | id | What it is | Files |', '| --- | --- | --- | --- |');
-    for (const g of list) lines.push(`| ${cell(g.name)} | \`${g.id}\` | ${cell(g.tagline)} | ${code(gameFiles(g.id))} |`);
+    for (const g of list) lines.push(`| ${cell(g.name)} | \`${g.id}\` | ${cell(g.tagline)} | ${code(gameFiles(g.id, games.map((x) => x.id)))} |`);
   }
   const minis = [...MICROS.map((m) => ['micro', m]), ...PARTIES.map((m) => ['party', m])];
   lines.push(

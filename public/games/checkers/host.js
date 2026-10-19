@@ -65,9 +65,8 @@
       const cur = cursorOf(slot, v);
       const d = { LEFT: [-1, 0], RIGHT: [1, 0], UP: [0, -1], DOWN: [0, 1] }[btn];
       if (d) {
-        // Player 2 sits at the top: their "up" is towards row 7.
-        const s = slot ? -1 : 1;
-        cursors[slot] = [Math.min(v.size - 1, Math.max(0, cur[0] + d[0] * s)), Math.min(v.size - 1, Math.max(0, cur[1] + d[1] * s))];
+        // Both players watch the same (unflipped) TV board, so arrows move the cursor as seen there.
+        cursors[slot] = [Math.min(v.size - 1, Math.max(0, cur[0] + d[0])), Math.min(v.size - 1, Math.max(0, cur[1] + d[1]))];
         render();
         return null;
       }
@@ -89,7 +88,7 @@
       boardReady.then(function () { loaded = true; render(); });
     },
     update: function (v) {
-      if (view && v.turn !== view.turn) { picked[0] = picked[1] = null; }
+      if (view && (v.turn !== view.turn || v.round !== view.round)) { picked[0] = picked[1] = null; }
       view = v;
       render();
     },
