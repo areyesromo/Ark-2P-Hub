@@ -470,3 +470,58 @@ test('heavier karts win bumps', () => {
   const moved = (k, p) => Math.hypot(k.x - p.x, k.y - p.y);
   assert.ok(moved(ruby, r0) > moved(bella, b0) * 2, `Ruby ${moved(ruby, r0)} vs Bella ${moved(bella, b0)}`);
 });
+
+/** The way to a track's right (+1) or left (-1) at centre-line sample i (as Road.outline). */
+function sideAt(track, i, side) {
+  const L = track.line;
+  const n = L.length;
+  const a = L[(i - 1 + n) % n];
+  const b = L[(i + 1) % n];
+  const len = Math.hypot(b[0] - a[0], b[1] - a[1]);
+  return { x: (-(b[1] - a[1]) / len) * side, y: ((b[0] - a[0]) / len) * side };
+}
+
+test('barriers: every road keeps its full width; close stretches share a barrier between them', () => {
+  const full = TRACK_WIDTH / 2 + WALL.out;
+  let shared = 0;
+  TRACKS.forEach((t, i) => {
+    const track = buildTrack(i);
+    for (const side of ['left', 'right']) {
+      const e = track.edge[side];
+      assert.equal(e.length, track.line.length);
+      e.forEach((d) => {
+        assert.ok(d >= TRACK_WIDTH / 2 + 0.3, `${t.name}: barrier at ${d} pinches the road`);
+        assert.ok(d <= full + 1e-9);
+      });
+      if (e.some((d) => d < full - 0.3)) shared++;
+    }
+  });
+  assert.ok(shared >= 3, 'close stretches (Hairpins, Serpent, ...) have a barrier between them');
+});
+
+test('crashing into the barrier between two stretches bounces you off: no shortcut, no reset', () => {
+  TRACKS.forEach((t, ti) => {
+    const { ctx, game } = racing({ track: ti + 1 });
+    const k = game.karts[0];
+    game.karts[1].x = -50; // out of the way
+    const track = game.track;
+    // The tightest shared barrier on this track (if any): drive straight at it, flat out.
+    let best = null;
+    for (const [side, sign] of [['left', -1], ['right', 1]]) {
+      track.edge[side].forEach((d, i) => { if (!best || d < best.d) best = { d, i, sign }; });
+    }
+    if (best.d > TRACK_WIDTH / 2 + WALL.out - 0.3) return; // no stretches close together here
+    const c = track.line[best.i];
+    const n = sideAt(track, best.i, best.sign);
+    const p = best.i / track.line.length;
+    Object.assign(k, { x: c[0], y: c[1], angle: Math.atan2(n.y, n.x), speed: KART.maxSpeed, progress: p, seg: best.i });
+    game.onInput(0, { type: 'drive', steer: 0, gas: true });
+    const cuts = game.events.cuts;
+    for (let i = 0; i < 90; i++) ctx.advance(TICK);
+    assert.equal(game.events.cuts, cuts, `${t.name}: hitting the barrier is not a shortcut`);
+    assert.ok(game.events.walls > 0, `${t.name}: it hit the barrier`);
+    // It may slide along the barrier, but never crosses to the other stretch (a jump in progress).
+    const d = Math.abs(((k.progress - p + 1.5) % 1) - 0.5);
+    assert.ok(d < 0.15, `${t.name}: still on the same stretch (${k.progress} vs ${p})`);
+  });
+});

@@ -57,7 +57,8 @@
   let colors = null;
   let lineKey = '';
   let line = null; // the track's centre line, in field units
-  let walls = null; // [left, right] wall lines
+  let barrier = null; // { road, edge }: the road and its barriers (see track.js)
+  let barrierPic = null; // the barriers drawn once, at the canvas's size: { key, canvas }
   let previews = {}; // track index -> SVG path of its centre line (setup screen)
   let hudKey = '';
   let overlayKey = '';
@@ -250,58 +251,71 @@
     g.stroke();
   }
 
-  /** Stroke runs of a loop, skipping null points (gaps). */
-  function strokeRuns(g, pts) {
-    g.beginPath();
-    let pen = false;
-    pts.concat([pts[0]]).forEach(function (p) {
-      if (!p) pen = false;
-      else if (pen) g.lineTo(p[0], p[1]);
-      else {
-        g.moveTo(p[0], p[1]);
-        pen = true;
-      }
-    });
-    g.stroke();
-  }
-
   /**
-   * A wall, drawn `out` from the centre line (side: -1 left, +1 right), exactly where the server
-   * has one: it keeps a kart's centre within `limit` of the NEAREST road, so where another
-   * stretch of road is nearer than that (two roads side by side, as on Hairpins) there's no
-   * wall between them, just grass (and the shortcut check).
+   * The barriers as one picture: the area a kart can reach, widened by the barrier's thickness
+   * and filled with red and white stripes, then the reachable area itself cut back out. Drawn as
+   * areas, not lines, so a barrier shared by two stretches is drawn once and the inside of a
+   * tight bend doesn't tie itself in knots.
    */
-  function wallLine(side, limit, out) {
-    const stop = Road.outline(line, side * limit); // where a kart's centre is held
-    return Road.outline(line, side * out).map(function (p, j) {
-      const q = stop[j];
-      let near = Infinity;
-      for (let i = 0; i < line.length; i++) near = Math.min(near, Math.hypot(line[i][0] - q[0], line[i][1] - q[1]));
-      return near < limit - 0.05 ? null : p;
-    });
+  function barrierImage(v) {
+    const key = v.track.index + ':' + canvas.width + 'x' + canvas.height;
+    if (barrierPic && barrierPic.key === key) return barrierPic.canvas;
+    const c = document.createElement('canvas');
+    c.width = canvas.width;
+    c.height = canvas.height;
+    const g = c.getContext('2d');
+    const k = canvas.width / v.field.w;
+    const stripes = document.createElement('canvas');
+    stripes.width = stripes.height = 12;
+    const sg = stripes.getContext('2d');
+    sg.fillStyle = '#f1f5f9';
+    sg.fillRect(0, 0, 12, 12);
+    sg.fillStyle = '#ef4444';
+    sg.beginPath();
+    sg.moveTo(0, 0); sg.lineTo(6, 0); sg.lineTo(12, 6); sg.lineTo(12, 12); sg.lineTo(0, 0);
+    sg.moveTo(0, 6); sg.lineTo(6, 12); sg.lineTo(0, 12);
+    sg.fill();
+    // Fill one shape (built in field units) in pixels, so the stripes keep their size.
+    const fill = function (build, style) {
+      g.setTransform(k, 0, 0, k, 0, 0);
+      g.beginPath();
+      build();
+      g.setTransform(1, 0, 0, 1, 0, 0);
+      g.fillStyle = style;
+      g.fill();
+    };
+    const area = function (extra, style) {
+      const L = Road.edgeLines(barrier.road, barrier.edge, extra);
+      const line = barrier.road.line;
+      const n = line.length;
+      for (let i = 0; i < n; i++) {
+        const j = (i + 1) % n;
+        fill(function () {
+          g.moveTo(L.left[i][0], L.left[i][1]);
+          g.lineTo(L.left[j][0], L.left[j][1]);
+          g.lineTo(L.right[j][0], L.right[j][1]);
+          g.lineTo(L.right[i][0], L.right[i][1]);
+          g.closePath();
+        }, style);
+        // A disc too, so the inside of a tight bend (where the strip folds over) has no gaps.
+        const r = Math.min(barrier.edge.left[i], barrier.edge.right[i]) + extra;
+        fill(function () { g.arc(line[i][0], line[i][1], r, 0, Math.PI * 2); }, style);
+      }
+    };
+    area(Road.BARRIER + 0.06, '#1f2937'); // a dark rim outside
+    area(Road.BARRIER, g.createPattern(stripes, 'repeat'));
+    g.globalCompositeOperation = 'destination-out';
+    area(0, '#000');
+    barrierPic = { key: key, canvas: c };
+    return c;
   }
 
   function drawTrack(g, v) {
     const W = v.trackWidth;
     g.lineJoin = 'round';
     g.lineCap = 'round';
-    // Walls (tyre barriers) beyond the grass verge: red and white, like the kerbs but chunkier.
-    walls.forEach(function (wall) {
-      g.strokeStyle = '#1f2937';
-      g.lineWidth = 0.42;
-      strokeRuns(g, wall);
-      g.lineCap = 'butt';
-      g.strokeStyle = '#ef4444';
-      g.lineWidth = 0.3;
-      g.setLineDash([0.45, 0.45]);
-      strokeRuns(g, wall);
-      g.strokeStyle = '#f1f5f9';
-      g.lineDashOffset = 0.45;
-      strokeRuns(g, wall);
-      g.lineDashOffset = 0;
-      g.setLineDash([]);
-      g.lineCap = 'round';
-    });
+    // Tyre barriers round the grass verge (drawn once per track and size, then reused).
+    g.drawImage(barrierImage(v), 0, 0, v.field.w, v.field.h);
     // Kerbs: red with white dashes, a little wider than the road.
     g.strokeStyle = '#dc2626';
     g.lineWidth = W + 0.5;
@@ -507,10 +521,12 @@
     const key = v.track.index + ':' + v.track.points.length;
     if (key !== lineKey) {
       lineKey = key;
-      line = Road.centreLine(v.track.points);
-      const limit = v.trackWidth / 2 + v.wallOut - v.kartR;
-      const out = limit + v.kartR + 0.2; // just past where a kart's edge stops
-      walls = [wallLine(-1, limit, out), wallLine(1, limit, out)];
+      // The same road and barriers the server drives on (shared down the middle where two
+      // stretches run close together).
+      const road = Road.build(v.track.points);
+      line = road.line;
+      barrier = { road: road, edge: Road.barriers(road, v.trackWidth / 2, v.wallOut) };
+      barrierPic = null;
     }
     const f = v.field;
     const box = arena.getBoundingClientRect();
@@ -625,7 +641,7 @@
     },
     unmount: function () {
       cancelAnimationFrame(raf);
-      root = hud = arena = canvas = overlay = view = shown = line = walls = null;
+      root = hud = arena = canvas = overlay = view = shown = line = barrier = barrierPic = null;
       lineKey = hudKey = overlayKey = '';
       Object.keys(pads).forEach(function (k) { delete pads[k]; });
     },
