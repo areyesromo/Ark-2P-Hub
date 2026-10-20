@@ -370,7 +370,6 @@
     });
   }
 
-  /** ? boxes, spinning gently in rainbow colours, and the bananas on the road. */
   /** Coins: gold discs, squashed side to side so they look like they're spinning. */
   function drawCoins(g, v, now) {
     (v.coins || []).forEach(function (c, i) {
@@ -392,6 +391,7 @@
     });
   }
 
+  /** ? boxes, spinning gently in rainbow colours, and the bananas on the road. */
   function drawBoxes(g, v, now) {
     v.boxes.forEach(function (b, i) {
       g.save();

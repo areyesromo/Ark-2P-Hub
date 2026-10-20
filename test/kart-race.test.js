@@ -644,3 +644,30 @@ test('coins: a spin-out costs 3 (never below 0), a head-on wall hit costs 1', ()
   ctx.advance(TICK * 4);
   assert.equal(k.coins, 3, 'head-on wall hit: -1');
 });
+
+test('coins: pressing into a wall costs one coin, not the whole purse; finished karts take none', () => {
+  const { ctx, game } = racing();
+  const [k, other] = game.karts;
+  other.x = -50;
+  k.coins = 10;
+  const p = pointAt(game.track, 0.1);
+  const nx = -Math.sin(p.angle);
+  const ny = Math.cos(p.angle);
+  const limit = TRACK_WIDTH / 2 + WALL.out - KART.r;
+  Object.assign(k, { x: p.x + nx * (limit - 0.3), y: p.y + ny * (limit - 0.3), angle: Math.atan2(ny, nx), speed: KART.maxSpeed, progress: 0.1, seg: Math.round(0.1 * SAMPLES) });
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(1000); // nose against the wall, foot down
+  assert.ok(k.coins >= 9, `one hard hit, not a drain (${k.coins} left)`);
+  game.onInput(0, { type: 'drive', steer: 0, brake: true });
+  ctx.advance(1500); // and reversing back into it
+  assert.ok(k.coins >= 8, `reversing into it, then nudging (${k.coins} left)`);
+  // The view's red line includes the coin bonus.
+  assert.ok(Math.abs(game.hostView().karts[0].top - (8.5 + k.coins * COINS.perCoin)) < 1e-9);
+  // Over the line: no more coins (they're left for the kart still racing).
+  game.finishLine(0, ctx.now());
+  const c = game.coins.find((x) => x.backAt <= ctx.now());
+  const had = k.coins;
+  Object.assign(k, { x: c.x, y: c.y, speed: 0 });
+  ctx.advance(TICK);
+  assert.equal(k.coins, had);
+});

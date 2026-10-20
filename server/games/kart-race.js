@@ -100,9 +100,10 @@ export const TRACKS = [
 
 /**
  * Coins: each one you hold (up to `max`) adds `perCoin` to your top speed. A spin-out costs
- * `spinLoss` of them, a head-on hit on a wall `wallLoss`. A collected coin comes back later.
+ * `spinLoss` of them, a hard head-on hit on a wall (at `wallHitSpeed` or more) `wallLoss`, at most
+ * once every `wallLossMs` (nudging along a wall costs nothing). A collected coin comes back later.
  */
-export const COINS = { max: 15, perCoin: 0.05, r: 0.35, respawnMs: 8000, spinLoss: 3, wallLoss: 1, spacing: 0.6 };
+export const COINS = { max: 15, perCoin: 0.05, r: 0.35, respawnMs: 8000, spinLoss: 3, wallLoss: 1, spacing: 0.6, wallHitSpeed: 3, wallLossMs: 1500 };
 
 /**
  * Items. Rows of ? boxes at these points of every lap; a box gives you an
@@ -312,7 +313,7 @@ export class KartRace {
     k.offTrack = where.d > TRACK_WIDTH / 2;
     const boosting = now < k.boostUntil;
     const car = k.car;
-    const bonus = k.coins * COINS.perCoin; // every coin held: a little faster
+    const bonus = this.coinBonus(k);
     const top = boosting ? car.boostSpeed + bonus : k.offTrack ? car.grassSpeed : car.maxSpeed + bonus;
     const toward = (v, target, rate) => (v > target ? Math.max(target, v - rate * dt) : Math.min(target, v + rate * dt));
     if (k.finishedAt !== null) {
@@ -354,7 +355,7 @@ export class KartRace {
         if (k.speed >= 0 && Math.hypot(k.x - pad.x, k.y - pad.y) < 0.9 && now >= k.boostUntil - KART.boostMs + 300) {
           if (now >= k.boostUntil) this.events.boosts++;
           k.boostUntil = now + KART.boostMs;
-          k.speed = Math.max(k.speed, k.car.boostSpeed);
+          k.speed = Math.max(k.speed, k.car.boostSpeed + this.coinBonus(k));
         }
       }
     }
@@ -374,7 +375,7 @@ export class KartRace {
     }
     if (k.drifting && k.driftMs >= KART.driftChargeMs && !k.drift && now >= k.spinUntil && k.finishedAt === null) {
       k.boostUntil = Math.max(k.boostUntil, now + KART.miniBoostMs);
-      k.speed = Math.max(k.speed, k.car.maxSpeed + 1.5);
+      k.speed = Math.max(k.speed, k.car.maxSpeed + this.coinBonus(k) + 1.5);
       this.events.miniBoosts++;
     }
     k.drifting = false;
@@ -429,8 +430,13 @@ export class KartRace {
     if (into <= 0) return; // already moving away
     this.events.walls++;
     if (into > WALL.headOn) {
+      const hard = Math.abs(k.speed) >= COINS.wallHitSpeed;
       k.speed = -k.speed * WALL.bounce; // bounce back off it
-      this.loseCoins(k, COINS.wallLoss);
+      const now = this.ctx.now();
+      if (hard && now >= (k.wallLossAt || 0) + COINS.wallLossMs) {
+        k.wallLossAt = now;
+        this.loseCoins(k, COINS.wallLoss);
+      }
       k.drifting = false;
       return;
     }
@@ -480,8 +486,14 @@ export class KartRace {
     return 'turbo';
   }
 
+  /** How much faster a kart's coins make it. */
+  coinBonus(k) {
+    return k.coins * COINS.perCoin;
+  }
+
   /** Pick up any coins the kart is touching (if it has room). */
   coinCheck(k, now) {
+    if (k.finishedAt !== null) return; // over the line: leave them for the kart still racing
     for (const c of this.coins) {
       if (k.coins >= COINS.max) return;
       if (now < c.backAt || Math.hypot(k.x - c.x, k.y - c.y) > COINS.r + KART.r) continue;
@@ -504,7 +516,7 @@ export class KartRace {
     const now = this.ctx.now();
     if (k.item === 'turbo') {
       k.boostUntil = now + ITEMS.turboMs;
-      k.speed = Math.max(k.speed, k.car.boostSpeed);
+      k.speed = Math.max(k.speed, k.car.boostSpeed + this.coinBonus(k));
     } else if (k.item === 'shield') {
       k.shieldUntil = now + ITEMS.shieldMs;
     } else if (k.item === 'banana') {
@@ -690,7 +702,7 @@ export class KartRace {
             racer: k.racer,
             tyre: k.tyre,
             coins: k.coins,
-            top: k.car.maxSpeed, // this kart's top speed (its speedometer's red line)
+            top: k.car.maxSpeed + k.coins * COINS.perCoin, // this kart's top speed (its speedometer's red line)
             drifting: k.drifting,
             driftCharge: k.drifting ? Math.min(1, k.driftMs / KART.driftChargeMs) : 0,
             lapMs: this.raceStart && k.finishedAt === null ? Math.max(0, now - this.raceStart - k.lapStart) : null,
