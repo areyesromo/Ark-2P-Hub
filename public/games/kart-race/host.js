@@ -395,7 +395,6 @@
     });
   }
 
-  /** ? boxes, spinning gently in rainbow colours, and the bananas on the road. */
   /** Webs and oil on the road, the Bouncers, Seekers and Bombs, and bombs going off. */
   function drawTrackItems(g, v, now) {
     (v.oils || []).forEach(function (o) {
@@ -481,6 +480,7 @@
     });
   }
 
+  /** ? boxes, spinning gently in rainbow colours, and the bananas on the road. */
   function drawBoxes(g, v, now) {
     v.boxes.forEach(function (b, i) {
       g.save();

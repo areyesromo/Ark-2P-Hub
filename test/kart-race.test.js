@@ -1089,3 +1089,67 @@ test('items: shots and hazards are cleared each race; 6 webs at most; a Bouncer 
   game.newRace();
   assert.deepEqual([game.webs.length, game.oils.length, game.shots.length, game.bananas.length], [0, 0, 0, 0]);
 });
+
+test('items: firing a Bouncer while boosting never hits you; a Bomb floats past a hovering kart; a Web bites at once', () => {
+  // Turbo, then Bouncer: the kart is faster than a normal Bouncer, but it never catches its own.
+  const { ctx, game, a, b } = solo(0.05);
+  b.x = -50;
+  a.coins = 15;
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  useNow(game, 0, 'turbo');
+  useNow(game, 0, 'bouncer');
+  for (let i = 0; i < 60; i++) ctx.advance(TICK);
+  assert.equal(game.hostView().karts[0].spin, false, 'no self-hit');
+  // Hover over a Bomb's blast.
+  const g = solo(0.55);
+  g.game.onInput(0, { type: 'drive', steer: 0 });
+  g.a.speed = 0;
+  useNow(g.game, 0, 'bomb');
+  useNow(g.game, 1, 'hover');
+  const bomb = g.game.shots[0];
+  place(g.game, g.b, bomb.x, bomb.y);
+  Object.assign(g.b, { speed: 0, seg: locate(g.game.track, bomb.x, bomb.y).i });
+  g.ctx.advance(ITEMS.bombFuseMs + 50);
+  assert.equal(g.game.hostView().karts[1].spin, false, 'floated over the blast');
+  // A Web slows you right away, not a second later.
+  const w = solo(0.55);
+  useNow(w.game, 0, 'web');
+  const web = w.game.webs[0];
+  onRoad(w.game, w.b, 0.2);
+  Object.assign(w.b, { x: web.x, y: web.y, speed: 12 });
+  w.ctx.advance(TICK);
+  assert.ok(w.b.speed <= 8.5 * ITEMS.webSlow + 0.1, `straight down to half speed: ${w.b.speed}`);
+});
+
+test('items: a Bomb lands on your own road ahead; a Seeker ignores a rival across a barrier', () => {
+  const hairpins = TRACKS.findIndex((t) => t.name === 'Hairpins') + 1;
+  for (let p = 0.05; p < 1; p += 0.05) {
+    const { game, a } = solo(p, { track: hairpins });
+    game.onInput(0, { type: 'drive', steer: 0 });
+    useNow(game, 0, 'bomb');
+    const bomb = game.shots[0];
+    const seg = locate(game.track, bomb.x, bomb.y).i;
+    const gap = Math.abs(seg - Math.round(a.progress * SAMPLES));
+    assert.ok(Math.min(gap, SAMPLES - gap) < 20, `at ${p.toFixed(2)}: the bomb landed on another stretch`);
+  }
+  // A rival parked just across the barrier from the Seeker's stretch: it doesn't dive at them.
+  const { ctx, game, a, b } = solo(0.02, { track: hairpins });
+  let best = null;
+  for (let i = 0; i < SAMPLES; i++) {
+    const gap = Math.min(Math.abs(i - 10), SAMPLES - Math.abs(i - 10));
+    if (gap < 30) continue;
+    const d = Math.hypot(game.track.line[i][0] - game.track.line[10][0], game.track.line[i][1] - game.track.line[10][1]);
+    if (!best || d < best.d) best = { i, d };
+  }
+  onRoad(game, b, best.i / SAMPLES);
+  // ...nudged toward the barrier (still on its own road), well within a Seeker's homing reach.
+  const toward = game.track.line[10];
+  const d = Math.hypot(toward[0] - b.x, toward[1] - b.y);
+  Object.assign(b, { x: b.x + ((toward[0] - b.x) / d) * 1.2, y: b.y + ((toward[1] - b.y) / d) * 1.2, seg: best.i });
+  useNow(game, 0, 'seeker');
+  ctx.advance(1000);
+  const s = game.shots[0];
+  assert.ok(s, 'still flying');
+  const gap = Math.min(Math.abs(s.seg - a.seg), SAMPLES - Math.abs(s.seg - a.seg));
+  assert.ok(gap > 10, `it kept going along the road (stuck at seg ${s.seg})`);
+});

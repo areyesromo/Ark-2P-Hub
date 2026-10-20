@@ -165,15 +165,16 @@ export function useItem(game, slot, now) {
   } else if (kind === 'bouncer' || kind === 'seeker') {
     const ahead = game.kartR + ITEMS.shotR + 0.1;
     const life = kind === 'bouncer' ? ITEMS.bouncerMs : ITEMS.seekerMs;
-    game.shots.push({ kind, x: k.x + Math.cos(k.angle) * ahead, y: k.y + Math.sin(k.angle) * ahead, angle: k.angle, owner: slot, bornAt: now, until: now + life, seg: k.seg });
+    // Always faster than the kart that fired it (a boosting kart would run into its own Bouncer).
+    const speed = Math.max(kind === 'bouncer' ? ITEMS.bouncerSpeed : ITEMS.seekerSpeed, Math.max(0, k.speed) + 3);
+    game.shots.push({ kind, x: k.x + Math.cos(k.angle) * ahead, y: k.y + Math.sin(k.angle) * ahead, angle: k.angle, speed, owner: slot, bornAt: now, until: now + life, seg: k.seg });
     game.events.fired++;
   } else if (kind === 'bomb') {
-    // Lobbed ahead, landing on the road (pulled back inside the verge if it would land beyond).
-    const x = k.x + Math.cos(k.angle) * ITEMS.bombThrow;
-    const y = k.y + Math.sin(k.angle) * ITEMS.bombThrow;
-    const w = Road.locate(game.track, x, y);
-    const keep = Math.min(1, game.roadHalf / Math.max(w.d, 1e-9));
-    game.shots.push({ kind, x: w.px + (x - w.px) * keep, y: w.py + (y - w.py) * keep, angle: 0, owner: slot, bornAt: now, until: now + ITEMS.bombFuseMs });
+    // Lobbed ahead along your own road (the way you're facing along it), landing on the tarmac.
+    const here = Road.pointAt(game.track, k.progress);
+    const forward = Math.cos(k.angle - here.angle) >= 0 ? 1 : -1;
+    const at = Road.pointAt(game.track, k.progress + (forward * ITEMS.bombThrow) / game.track.length);
+    game.shots.push({ kind, x: at.x, y: at.y, angle: 0, owner: slot, bornAt: now, until: now + ITEMS.bombFuseMs });
   }
 }
 
@@ -208,8 +209,10 @@ export function hazardCheck(game, k, slot, now) {
       if (h.owner === slot && now < h.safeUntil) continue;
       list.splice(list.indexOf(h), 1);
       if (!snag(game, k, now)) continue;
-      if (kind === 'web') k.webUntil = now + ITEMS.webMs;
-      else k.oilUntil = now + ITEMS.oilMs;
+      if (kind === 'web') {
+        k.webUntil = now + ITEMS.webMs;
+        k.speed = Math.min(k.speed, k.car.maxSpeed * ITEMS.webSlow); // caught: straight down to half speed
+      } else k.oilUntil = now + ITEMS.oilMs;
       game.events.snagged++;
     }
   }
@@ -226,7 +229,8 @@ export function stepShots(game, dt, now) {
       game.events.exploded++;
       game.blasts.push({ x: s.x, y: s.y, at: now });
       game.karts.forEach((k) => {
-        if (k.finishedAt === null && Math.hypot(k.x - s.x, k.y - s.y) < ITEMS.bombR + game.kartR) game.hitKart(k, now);
+        // (A hovering kart floats over the blast.)
+        if (k.finishedAt === null && !effects(k, now).floating && Math.hypot(k.x - s.x, k.y - s.y) < ITEMS.bombR + game.kartR) game.hitKart(k, now);
       });
       continue;
     }
@@ -234,13 +238,17 @@ export function stepShots(game, dt, now) {
       gone.add(s);
       continue;
     }
-    const speed = s.kind === 'bouncer' ? ITEMS.bouncerSpeed : ITEMS.seekerSpeed;
+    const speed = s.speed || (s.kind === 'bouncer' ? ITEMS.bouncerSpeed : ITEMS.seekerSpeed);
     if (s.kind === 'seeker') {
       // Follow the road; close to the rival, straight at them.
       const rival = game.karts[1 - s.owner];
       const w = Road.locateNear(game.track, s.x, s.y, s.seg, 8, game.roadHalf * 3);
       s.seg = w.i;
-      const target = rival.finishedAt === null && Math.hypot(rival.x - s.x, rival.y - s.y) < ITEMS.seekerHome ? rival : Road.pointAt(game.track, w.s + ITEMS.seekerAhead);
+      // (Only a rival on the same stretch: not one just across a barrier.)
+      const n = game.track.line.length;
+      const apart = Math.abs(rival.seg - s.seg);
+      const sameStretch = Math.min(apart, n - apart) < 20;
+      const target = rival.finishedAt === null && sameStretch && Math.hypot(rival.x - s.x, rival.y - s.y) < ITEMS.seekerHome ? rival : Road.pointAt(game.track, w.s + ITEMS.seekerAhead);
       s.angle = Math.atan2(target.y - s.y, target.x - s.x);
     }
     s.x += Math.cos(s.angle) * speed * dt;
