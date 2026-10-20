@@ -556,22 +556,27 @@ test('crashing into the barrier between two stretches bounces you off: never ont
   });
 });
 
-test('coins: rows on every track, inside the barriers, clear of boost pads, box rows and the start', () => {
+test('coins: single coins spread round every track, alternating sides, clear of pads, boxes and the start', () => {
   TRACKS.forEach((t, ti) => {
-    assert.ok(t.coins.length >= 5, t.name);
     const track = buildTrack(ti);
-    const near = (a, b) => Math.abs(((a - b + 1.5) % 1) - 0.5) < 0.05;
-    for (const [p, off, n] of t.coins) {
-      assert.ok(!t.boosts.some(([b]) => near(p, b)), `${t.name}: coins at ${p} on a boost pad`);
-      assert.ok(!ITEMS.rows.some((r) => near(p, r)), `${t.name}: coins at ${p} on a box row`);
-      assert.ok(!near(p, 0), `${t.name}: coins at ${p} on the start line`);
-      assert.ok(n >= 3 && Math.abs(off) < TRACK_WIDTH / 2, `${t.name}: coins on the road`);
-    }
+    const spots = track.coins; // [progress, offset] for each coin
+    assert.ok(spots.length >= 14 && spots.length <= 20, `${t.name}: ${spots.length} coins`);
+    const near = (a, b) => Math.abs(((a - b + 1.5) % 1) - 0.5) < 0.035;
+    spots.forEach(([p, off], i) => {
+      assert.ok(!t.boosts.some(([b]) => near(p, b)), `${t.name}: a coin at ${p} on a boost pad`);
+      assert.ok(!ITEMS.rows.some((r) => near(p, r)), `${t.name}: a coin at ${p} on a box row`);
+      assert.ok(!near(p, 0), `${t.name}: a coin at ${p} on the start line`);
+      assert.ok(Math.abs(off) > 0.5 && Math.abs(off) < TRACK_WIDTH / 2, `${t.name}: off the racing line, on the road`);
+      if (i) assert.ok(Math.sign(off) !== Math.sign(spots[i - 1][1]), `${t.name}: sides alternate`);
+    });
+    // One at a time: no two coins within reach of a kart at once.
     const { game } = racing({ track: ti + 1 });
-    assert.equal(game.coins.length, t.coins.reduce((a, [, , n]) => a + n, 0));
-    for (const c of game.coins) {
-      const w = locate(track, c.x, c.y);
-      assert.ok(w.d < TRACK_WIDTH / 2, `${t.name}: a coin at (${c.x}, ${c.y}) is off the road`);
+    assert.equal(game.coins.length, spots.length);
+    for (const a of game.coins) {
+      for (const b of game.coins) {
+        if (a !== b) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > 2 * (COINS.r + KART.r), `${t.name}: two coins in one grab`);
+      }
+      assert.ok(locate(track, a.x, a.y).d < TRACK_WIDTH / 2, `${t.name}: a coin off the road`);
     }
   });
 });
@@ -584,14 +589,13 @@ test('coins: pick up (max 15), top speed rises, respawn after 8 s, reset each ra
   Object.assign(a, { x: c.x, y: c.y, speed: 0 });
   Object.assign(b, { x: c.x + 0.05, y: c.y, speed: 0 });
   ctx.advance(TICK);
-  // (A kart can reach the next coin in the row too.) Every coin is taken once: what the karts
-  // hold is what's gone from the track; the one both sat on went to the first kart.
-  const gone = game.coins.length - game.hostView().coins.length;
-  assert.ok(gone >= 1);
-  assert.equal(a.coins + b.coins, gone, 'each coin counted once');
-  assert.ok(a.coins >= 1 && game.coins[0].backAt > 0);
+  assert.deepEqual([a.coins, b.coins], [1, 0], 'one coin, one taker (the first kart)');
+  assert.equal(game.hostView().coins.length, game.coins.length - 1, 'gone from the track');
   assert.equal(game.hostView().karts[0].coins, a.coins);
-  // Back after 8 s.
+  // Back after 8 s (the karts moved off it, or they'd take it again straight away).
+  onRoad(game, a, 0.75);
+  onRoad(game, b, 0.75, 0);
+  b.x += 1.2;
   ctx.advance(COINS.respawnMs + 50);
   assert.equal(game.hostView().coins.length, game.coins.length);
   // Max 15: a full purse leaves the coin for the other kart.
