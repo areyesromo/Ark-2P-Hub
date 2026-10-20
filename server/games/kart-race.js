@@ -51,24 +51,28 @@ export const CUT_JUMP = 0.05; // progress (fraction of a lap) gained in one tick
 
 /**
  * The tracks: control points (clockwise on screen), boost pads as
- * [where along the lap 0..1, offset from the centre line].
+ * [where along the lap 0..1, offset from the centre line], and rows of coins as
+ * [where along the lap, offset, how many].
  */
 export const TRACKS = [
   {
     name: 'Speedway',
     points: [[5, 9], [7, 4], [16, 3], [25, 4], [27, 9], [25, 14], [16, 15], [7, 14]],
     boosts: [[0.24, 0], [0.74, 0]],
+    coins: [[0.1, 0.9, 4], [0.4, -0.9, 4], [0.55, 0.9, 4], [0.65, -0.9, 4], [0.9, 0.9, 4]],
   },
   {
     name: 'Kidney',
     // The dip at the bottom used to be a spike no kart could turn: now a bend you can drive.
     points: [[5, 8], [8, 3.5], [15, 3], [22, 3.5], [27, 6], [27, 11], [23, 15], [18.5, 14.8], [16, 12.4], [13.5, 14.8], [9, 15], [5, 12.5]],
     boosts: [[0.18, 0.6], [0.5, -0.6]],
+    coins: [[0.1, 0.9, 4], [0.38, -0.9, 4], [0.6, 0.9, 4], [0.68, -0.9, 4], [0.9, 0.9, 4]],
   },
   {
     name: 'Serpent',
     points: [[4, 5], [9, 3], [14, 5], [18, 3], [24, 3], [28, 6], [27, 12], [22, 15], [17, 13], [12, 15], [6, 14], [3, 10]],
     boosts: [[0.33, 0], [0.83, 0]],
+    coins: [[0.1, 0.9, 4], [0.2, -0.9, 4], [0.45, 0.9, 4], [0.6, -0.9, 4], [0.7, 0.9, 4]],
   },
   {
     name: 'Grand Prix',
@@ -76,20 +80,29 @@ export const TRACKS = [
     // Starts on the top straight (the grid used to sit on a bend: you'd launch into the grass).
     points: [[13.5, 3.7], [17, 4.5], [22, 3], [28, 4], [28.5, 9], [25, 10.2], [28, 14.5], [20, 15], [14, 13], [8, 15], [3.5, 13], [4.5, 8.5], [3.5, 4], [10, 3]],
     boosts: [[0.95, 0], [0.48, 0]],
+    coins: [[0.1, 0.9, 4], [0.2, -0.9, 4], [0.4, 0.9, 4], [0.6, -0.9, 4], [0.7, 0.9, 4]],
   },
   {
     name: 'Hairpins',
     // Four long straights joined by tight hairpins: brake hard!
     points: [[9.5, 2.9], [15, 2.9], [25.5, 2.9], [27.9, 3.4], [28.9, 4.98], [27.9, 6.55], [25.5, 7.05], [19.5, 7.05], [13.5, 7.05], [11.5, 7.55], [10.5, 9.2], [11.5, 10.85], [13.5, 11.35], [19.5, 11.35], [25.5, 11.35], [27.9, 11.85], [28.9, 13.43], [27.9, 15.0], [25.5, 15.5], [15, 15.5], [4, 15.5], [2.6, 9.2], [4, 2.9]],
     boosts: [[0.03, 0], [0.4, 0], [0.77, 0]],
+    coins: [[0.12, 0.9, 4], [0.2, -0.9, 4], [0.5, 0.9, 4], [0.6, -0.9, 4], [0.9, 0.9, 4]],
   },
   {
     name: 'Zigzag',
     // Saw teeth along the top, a dip along the bottom.
     points: [[3.5, 9], [3.5, 3.5], [9, 3], [12, 8], [15, 3.5], [19, 3.5], [22, 8], [25, 3.5], [28.5, 4], [28.5, 14.5], [22, 15], [16, 12.6], [10, 15], [3.5, 14.5]],
     boosts: [[0.67, 0], [0.95, 0]],
+    coins: [[0.1, 0.9, 4], [0.2, -0.9, 4], [0.45, 0.9, 4], [0.55, -0.9, 4], [0.88, 0.9, 4]],
   },
 ];
+
+/**
+ * Coins: each one you hold (up to `max`) adds `perCoin` to your top speed. A spin-out costs
+ * `spinLoss` of them, a head-on hit on a wall `wallLoss`. A collected coin comes back later.
+ */
+export const COINS = { max: 15, perCoin: 0.05, r: 0.35, respawnMs: 8000, spinLoss: 3, wallLoss: 1, spacing: 0.6 };
 
 /**
  * Items. Rows of ? boxes at these points of every lap; a box gives you an
@@ -127,7 +140,7 @@ export function buildTrack(index) {
   const def = TRACKS[index];
   const road = Road.build(def.points);
   // The barriers either side of the road (shared down the middle where two stretches run close).
-  return { index, name: def.name, boosts: def.boosts, ...road, edge: Road.barriers(road, TRACK_WIDTH / 2, WALL.out) };
+  return { index, name: def.name, boosts: def.boosts, coins: def.coins, ...road, edge: Road.barriers(road, TRACK_WIDTH / 2, WALL.out) };
 }
 
 /** Where a point is relative to the track: progress 0..1 along the lap, distance from the centre line, the nearest point on it. */
@@ -170,7 +183,7 @@ export class KartRace {
     this.scores = [0, 0];
     this.race = 0;
     this.winner = null;
-    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0 };
+    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0 };
     this.lastTrack = -1;
     this.newRace();
     this.loop();
@@ -197,6 +210,14 @@ export class KartRace {
       for (const p of ITEMS.rows) for (const off of ITEMS.offsets) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0 });
     }
     this.bananas = [];
+    // Coins: each row a few in a line along the road.
+    this.coins = [];
+    for (const [p, off, n] of this.track.coins) {
+      for (let j = 0; j < n; j++) {
+        const at = pointAt(this.track, p + (j * COINS.spacing) / this.track.length, off);
+        this.coins.push({ x: at.x, y: at.y, backAt: 0 });
+      }
+    }
     // Side by side just past the start line, facing along the track. The controls carry over
     // (phones and controllers only send changes: GAS held through to the next race stays held).
     const before = this.karts;
@@ -218,6 +239,7 @@ export class KartRace {
         drift: was ? was.drift : false, // holding the drift button
         drifting: false,
         driftMs: 0,
+        coins: 0,
         lapStart: 0, // when this lap began (race time)
         prevLapStart: 0, // …and the one before (reversing back over the line goes back to it)
         lastLap: null,
@@ -276,6 +298,7 @@ export class KartRace {
     if (this.phase === 'race' || this.phase === 'finish') {
       this.karts.forEach((k) => this.drive(k, dt, now));
       this.bump();
+      this.karts.forEach((k) => this.coinCheck(k, now));
       this.karts.forEach((k, slot) => this.itemCheck(k, slot, now));
       this.karts.forEach((k, slot) => this.lapCheck(k, slot, now));
       if (this.phase === 'finish' && now >= this.phaseEnds) this.endRace();
@@ -289,7 +312,8 @@ export class KartRace {
     k.offTrack = where.d > TRACK_WIDTH / 2;
     const boosting = now < k.boostUntil;
     const car = k.car;
-    const top = boosting ? car.boostSpeed : k.offTrack ? car.grassSpeed : car.maxSpeed;
+    const bonus = k.coins * COINS.perCoin; // every coin held: a little faster
+    const top = boosting ? car.boostSpeed + bonus : k.offTrack ? car.grassSpeed : car.maxSpeed + bonus;
     const toward = (v, target, rate) => (v > target ? Math.max(target, v - rate * dt) : Math.min(target, v + rate * dt));
     if (k.finishedAt !== null) {
       k.speed = toward(k.speed, 0, KART.brake * 0.4); // coast to a stop after the line
@@ -406,6 +430,7 @@ export class KartRace {
     this.events.walls++;
     if (into > WALL.headOn) {
       k.speed = -k.speed * WALL.bounce; // bounce back off it
+      this.loseCoins(k, COINS.wallLoss);
       k.drifting = false;
       return;
     }
@@ -439,6 +464,7 @@ export class KartRace {
         k.spinUntil = now + ITEMS.spinMs;
         k.boostUntil = 0;
         this.events.spins++;
+        this.loseCoins(k, COINS.spinLoss);
       }
     }
   }
@@ -452,6 +478,24 @@ export class KartRace {
       if ((r -= weights[kind]) < 0) return kind;
     }
     return 'turbo';
+  }
+
+  /** Pick up any coins the kart is touching (if it has room). */
+  coinCheck(k, now) {
+    for (const c of this.coins) {
+      if (k.coins >= COINS.max) return;
+      if (now < c.backAt || Math.hypot(k.x - c.x, k.y - c.y) > COINS.r + KART.r) continue;
+      c.backAt = now + COINS.respawnMs;
+      k.coins++;
+      this.events.coins++;
+    }
+  }
+
+  loseCoins(k, n) {
+    const lost = Math.min(k.coins, n);
+    if (!lost) return;
+    k.coins -= lost;
+    this.events.coinsLost += lost;
   }
 
   useItem(slot) {
@@ -645,6 +689,7 @@ export class KartRace {
             laps: k.laps,
             racer: k.racer,
             tyre: k.tyre,
+            coins: k.coins,
             top: k.car.maxSpeed, // this kart's top speed (its speedometer's red line)
             drifting: k.drifting,
             driftCharge: k.drifting ? Math.min(1, k.driftMs / KART.driftChargeMs) : 0,
@@ -662,6 +707,7 @@ export class KartRace {
         : null,
       positions: racing ? this.positions() : null,
       boxes: racing ? this.boxes.filter((b) => now >= b.backAt).map((b) => ({ x: b.x, y: b.y, angle: b.angle })) : [],
+      coins: racing ? this.coins.filter((c) => now >= c.backAt).map((c) => ({ x: Math.round(c.x * 100) / 100, y: Math.round(c.y * 100) / 100 })) : [],
       bananas: racing ? this.bananas.map((b) => ({ x: Math.round(b.x * 100) / 100, y: Math.round(b.y * 100) / 100 })) : [],
       raceMs: this.raceStart ? (this.result ? this.result.time : now - this.raceStart) : 0,
       events: this.events || null,
