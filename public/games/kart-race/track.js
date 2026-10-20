@@ -144,6 +144,106 @@
     return { x: a[0] + (b[0] - a[0]) * t - dy * offset, y: a[1] + (b[1] - a[1]) * t + dx * offset, angle: Math.atan2(dy, dx) };
   }
 
+  /** Where (x, y) is relative to centre-line segment i (from sample i to i + 1). */
+  function onSegment(road, x, y, i) {
+    const line = road.line;
+    const a = line[i];
+    const b = line[(i + 1) % line.length];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const len2 = dx * dx + dy * dy;
+    const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / len2));
+    const px = a[0] + t * dx;
+    const py = a[1] + t * dy;
+    return { d: Math.hypot(x - px, y - py), s: (road.cum[i] + t * Math.sqrt(len2)) / road.length, i: i, px: px, py: py };
+  }
+
+  /**
+   * Like locate, but following the kart's own stretch of road from segment i0: step along the
+   * road (up to `span` segments) only while the next one is nearer. It can't jump over to
+   * another stretch running close by, as that means first getting further away. Falls back to
+   * the whole road if the result is further than `far` (the kart was moved: a reset, a new race).
+   */
+  function locateNear(road, x, y, i0, span, far) {
+    const n = road.line.length;
+    let best = onSegment(road, x, y, (((i0 % n) + n) % n));
+    [1, -1].forEach(function (dir) {
+      let at = best;
+      for (let k = 0; k < span; k++) {
+        const next = onSegment(road, x, y, (at.i + dir + n) % n);
+        if (next.d > at.d + 1e-9) break;
+        at = next;
+      }
+      if (at.d < best.d) best = at;
+    });
+    return best.d > far ? locate(road, x, y) : best;
+  }
+
+  /** The unit vector to the right (+1) or left (-1) of the direction of travel at sample i. */
+  function sideAt(line, i, side) {
+    const n = line.length;
+    const a = line[(i - 1 + n) % n];
+    const b = line[(i + 1) % n];
+    const len = Math.hypot(b[0] - a[0], b[1] - a[1]) || 1;
+    return [(-(b[1] - a[1]) / len) * side, ((b[0] - a[0]) / len) * side];
+  }
+
+  // Stretches of road this many samples apart (or more) count as different stretches: a
+  // barrier goes between them. (Closer than that is the same bend, e.g. a hairpin's two sides.)
+  const OTHER = 20;
+  const BARRIER = 0.3; // a barrier's thickness
+
+  /**
+   * The barriers either side of the road: for each centre-line sample, how far out (from the
+   * centre) the inside face of the barrier is, on the left and on the right. Normally
+   * `half + out` (the road plus a grass verge); where another stretch of road runs close, the
+   * barrier is down the middle of the grass between them, shared by both.
+   */
+  function barriers(road, half, out) {
+    const line = road.line;
+    const n = line.length;
+    const reach = half + out;
+    const edge = { left: [], right: [] };
+    for (let i = 0; i < n; i++) {
+      const c = line[i];
+      // Other stretches that could come within reach of this sample.
+      const near = [];
+      for (let j = 0; j < n; j++) {
+        const gap = Math.abs(i - j);
+        if (Math.min(gap, n - gap) < OTHER) continue;
+        if (Math.hypot(line[j][0] - c[0], line[j][1] - c[1]) < 2 * reach + 1) near.push(line[j]);
+      }
+      [['left', -1], ['right', 1]].forEach(function (side) {
+        const v = sideAt(line, i, side[1]);
+        let e = reach;
+        // Walk out from the road's edge until another stretch is nearer than this one: the midline.
+        for (let t = half; t <= reach && near.length; t += 0.05) {
+          const qx = c[0] + v[0] * t;
+          const qy = c[1] + v[1] * t;
+          if (near.some(function (p) { return Math.hypot(p[0] - qx, p[1] - qy) < t; })) {
+            e = Math.max(half + 0.3, t - BARRIER / 2); // the shared barrier straddles the midline
+            break;
+          }
+        }
+        edge[side[0]].push(e);
+      });
+    }
+    return edge;
+  }
+  /** The lines `extra` beyond each barrier's inside face, { left, right } (extra 0: where a kart's edge stops). */
+  function edgeLines(road, edge, extra) {
+    const line = road.line;
+    const out = {};
+    [['left', -1], ['right', 1]].forEach(function (side) {
+      out[side[0]] = line.map(function (c, i) {
+        const v = sideAt(line, i, side[1]);
+        const t = edge[side[0]][i] + extra;
+        return [c[0] + v[0] * t, c[1] + v[1] * t];
+      });
+    });
+    return out;
+  }
+
   /** The centre line shifted sideways by `offset` (+ right of the direction of travel): a road edge or wall. */
   function outline(line, offset) {
     const n = line.length;
@@ -160,5 +260,5 @@
     return line.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(2) + ' ' + p[1].toFixed(2); }).join('') + 'Z';
   }
 
-  globalThis.ArkKartTrack = { SAMPLES: SAMPLES, MIN_RADIUS: MIN_RADIUS, centreLine: centreLine, tightest: tightest, build: build, locate: locate, pointAt: pointAt, outline: outline, svgPath: svgPath };
+  globalThis.ArkKartTrack = { SAMPLES: SAMPLES, MIN_RADIUS: MIN_RADIUS, centreLine: centreLine, tightest: tightest, build: build, locate: locate, pointAt: pointAt, outline: outline, svgPath: svgPath, locateNear: locateNear, sideAt: sideAt, barriers: barriers, edgeLines: edgeLines, BARRIER: BARRIER };
 })();

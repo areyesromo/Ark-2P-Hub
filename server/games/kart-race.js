@@ -46,6 +46,7 @@ export const WALL = { out: 1.25, headOn: 0.72, bounce: 0.35 };
 export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
 export const TIMING = { countdownMs: 3500, finishMs: 3500 };
 export const SAMPLES = Road.SAMPLES; // points on each track's centre line
+const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare
 export const CUT_JUMP = 0.05; // progress (fraction of a lap) gained in one tick that can only be a shortcut
 
 /**
@@ -124,7 +125,9 @@ export function centreLine(points, n = SAMPLES) {
 /** Everything the game and the screens need about a track. */
 export function buildTrack(index) {
   const def = TRACKS[index];
-  return { index, name: def.name, boosts: def.boosts, ...Road.build(def.points) };
+  const road = Road.build(def.points);
+  // The barriers either side of the road (shared down the middle where two stretches run close).
+  return { index, name: def.name, boosts: def.boosts, ...road, edge: Road.barriers(road, TRACK_WIDTH / 2, WALL.out) };
 }
 
 /** Where a point is relative to the track: progress 0..1 along the lap, distance from the centre line, the nearest point on it. */
@@ -221,6 +224,7 @@ export class KartRace {
         bestLap: null,
         laps: 0,
         progress: 0.012,
+        seg: Math.round(0.012 * SAMPLES), // the centre-line sample it is nearest (see near())
         halfway: false,
         boostUntil: 0,
         offTrack: false,
@@ -281,7 +285,7 @@ export class KartRace {
   }
 
   drive(k, dt, now) {
-    const where = locate(this.track, k.x, k.y);
+    const where = this.near(k);
     k.offTrack = where.d > TRACK_WIDTH / 2;
     const boosting = now < k.boostUntil;
     const car = k.car;
@@ -354,13 +358,30 @@ export class KartRace {
   }
 
   /**
-   * The walls (WALL.out outside the road's edge) and the edge of the field. A glancing hit turns
-   * the kart along the wall and slides it on, a little slower; a head-on hit bounces it back.
+   * Where a kart is on the road: along its own stretch only (see Road.locateNear), so a stretch
+   * running close by never claims it. Remembers the stretch for next time.
+   */
+  near(k) {
+    const w = Road.locateNear(this.track, k.x, k.y, k.seg, NEAR_SPAN, TRACK_WIDTH / 2 + WALL.out + 1);
+    k.seg = w.i;
+    return w;
+  }
+
+  /**
+   * The barriers either side of the road (see Road.barriers) and the edge of the field. A
+   * glancing hit turns the kart along the wall and slides it on, a little slower; a head-on hit
+   * bounces it back.
    */
   walls(k) {
     const r = KART.r;
-    const limit = TRACK_WIDTH / 2 + WALL.out - r;
-    const w = locate(this.track, k.x, k.y);
+    const w = this.near(k);
+    // Which side of the road the kart is on, and how far out that side's barrier is here.
+    const line = this.track.line;
+    const a = line[w.i];
+    const b = line[(w.i + 1) % line.length];
+    const right = (b[0] - a[0]) * (k.y - a[1]) - (b[1] - a[1]) * (k.x - a[0]) > 0;
+    const edge = this.track.edge[right ? 'right' : 'left'];
+    const limit = Math.min(edge[w.i], edge[(w.i + 1) % line.length]) - r;
     if (w.d > limit) {
       const nx = (k.x - w.px) / w.d;
       const ny = (k.y - w.py) / w.d;
@@ -484,7 +505,7 @@ export class KartRace {
    * road, stopped.
    */
   lapCheck(k, slot, now) {
-    const where = locate(this.track, k.x, k.y);
+    const where = this.near(k);
     const p = where.s;
     const was = k.progress;
     const jump = ((p - was + 1.5) % 1) - 0.5; // forwards, across the line or not
@@ -494,7 +515,7 @@ export class KartRace {
       // rejoins further on is it a shortcut.
       if (where.d > TRACK_WIDTH / 2) return;
       const back = pointAt(this.track, was);
-      Object.assign(k, { x: back.x, y: back.y, angle: back.angle, speed: 0, cutAt: now });
+      Object.assign(k, { x: back.x, y: back.y, angle: back.angle, speed: 0, cutAt: now, seg: Math.round(was * SAMPLES) % SAMPLES });
       this.events.cuts++;
       return;
     }
