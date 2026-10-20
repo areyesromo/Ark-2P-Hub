@@ -656,6 +656,7 @@
       if (b.cuts > (a.cuts || 0)) out.push('wrong');
       if (b.items > (a.items || 0)) out.push('eat');
       if (b.zapped > (a.zapped || 0)) out.push('boom');
+      if (b.frozen > (a.frozen || 0)) out.push('splash');
       if (b.swapped > (a.swapped || 0)) out.push('lock');
       if (b.starHits > (a.starHits || 0)) out.push('fanfare');
       if (b.coins > (a.coins || 0)) out.push('tick');

@@ -726,6 +726,7 @@ test('items: shield blocks one hit then pops; Star is immune and spins out whoev
   game.bananas.push({ x: b.x, y: b.y, owner: 0, safeUntil: 0 });
   ctx.advance(TICK);
   assert.equal(game.hostView().karts[1].spin, false);
+  ctx.advance(ITEMS.graceMs + 50); // (a moment's grace after the shield pops)
   game.bananas.push({ x: b.x, y: b.y, owner: 0, safeUntil: 0 });
   ctx.advance(TICK);
   assert.equal(game.hostView().karts[1].spin, true, 'the shield only blocks one hit');
@@ -855,4 +856,75 @@ test('items: Swap trades queues (the Swap itself is spent)', () => {
   useNow(game, 0, 'swap');
   assert.deepEqual(a.items, []);
   assert.deepEqual(b.items, []);
+});
+
+test('items: a Star ram spins the rival once (not every tick), and a shield still blocks one ram', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  onRoad(game, b, 0.55);
+  onRoad(game, a, 0.55 - 0.5 / game.track.length);
+  b.coins = 15;
+  useNow(game, 1, 'shield');
+  useNow(game, 0, 'star');
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  const spins = game.events.spins;
+  for (let i = 0; i < 60; i++) {
+    Object.assign(a, { x: b.x - Math.cos(b.angle) * 0.6, y: b.y - Math.sin(b.angle) * 0.6, angle: b.angle }); // pressed against b
+    ctx.advance(TICK);
+  }
+  assert.ok(game.events.spins - spins <= 1, `spun ${game.events.spins - spins} times`);
+  assert.ok(b.coins >= 12, `coins ${b.coins}`);
+});
+
+test('items: Thunder and Freeze miss a Star kart; Freeze is blocked by a shield; nothing hits a finished kart', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  onRoad(game, a, 0.55);
+  onRoad(game, b, 0.2);
+  useNow(game, 1, 'star');
+  useNow(game, 0, 'thunder');
+  useNow(game, 0, 'freeze');
+  assert.equal(game.hostView().karts[1].shrunk, false);
+  assert.equal(game.hostView().karts[1].frozen, false);
+  ctx.advance(ITEMS.starMs + 50);
+  useNow(game, 1, 'shield');
+  useNow(game, 0, 'freeze');
+  assert.equal(game.hostView().karts[1].frozen, false, 'shield took it');
+  // Over the line (the other kart still racing): no zaps or swaps on it.
+  b.finishedAt = ctx.now();
+  b.items = ['banana'];
+  useNow(game, 0, 'thunder');
+  assert.equal(game.hostView().karts[1].shrunk, false);
+  useNow(game, 0, 'swap', 'turbo');
+  assert.deepEqual(b.items, ['banana']);
+  assert.deepEqual(a.items, ['turbo']);
+});
+
+test('items: ITEM does nothing with an empty queue, while spinning or after finishing; a Magnet pulls in a box', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  b.x = -50;
+  onRoad(game, a, 0.55);
+  const used = game.events.used;
+  useNow(game, 0);
+  a.items = ['turbo'];
+  a.spinUntil = ctx.now() + 500;
+  game.onInput(0, { type: 'item' });
+  assert.deepEqual(a.items, ['turbo'], 'not while spinning');
+  ctx.advance(600);
+  game.finishLine(0, ctx.now());
+  game.onInput(0, { type: 'item' });
+  assert.deepEqual(a.items, ['turbo'], 'not after finishing');
+  assert.equal(game.events.used, used);
+  // Magnet: a box 2.5 away comes to you.
+  const g2 = racing().game;
+  const k = g2.karts[0];
+  g2.karts[1].x = -50;
+  useNow(g2, 0, 'magnet');
+  const box = g2.boxes[0];
+  Object.assign(k, { x: box.x, y: box.y + 2.5, speed: 0 });
+  k.seg = locate(g2.track, k.x, k.y).i;
+  g2.itemCheck(k, 0, g2.ctx.now());
+  assert.ok(k.items.length >= 1, 'pulled in from 2.5 away');
 });

@@ -181,7 +181,7 @@ export class KartRace {
     this.scores = [0, 0];
     this.race = 0;
     this.winner = null;
-    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, swapped: 0, starHits: 0 };
+    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, frozen: 0, swapped: 0, starHits: 0 };
     this.lastTrack = -1;
     this.newRace();
     this.loop();
@@ -476,9 +476,12 @@ export class KartRace {
    * a Star (nothing touches it) or a shield (which takes the hit and pops). True if it spun.
    */
   hitKart(k, now) {
-    if (effects(k, now).immune) return false;
+    // Already spinning, a Star, or just saved by a shield: nothing more happens (a Star pressed
+    // against you would otherwise hit you every tick).
+    if (effects(k, now).immune || now < k.spinUntil || now < (k.graceUntil || 0)) return false;
     if (now < k.shieldUntil) {
       k.shieldUntil = 0;
+      k.graceUntil = now + ITEMS.graceMs;
       this.events.blocked++;
       return false;
     }
@@ -556,8 +559,8 @@ export class KartRace {
     // The heavier kart gives way less: each moves by the other's share of the total weight.
     const overlap = min - d;
     const now = this.ctx.now();
-    const wa = a.car.weight + effects(a, now).weightBonus;
-    const wb = b.car.weight + effects(b, now).weightBonus;
+    const wa = Math.max(0.1, a.car.weight + effects(a, now).weightBonus);
+    const wb = Math.max(0.1, b.car.weight + effects(b, now).weightBonus);
     const pushA = (overlap * wb) / (wa + wb);
     const pushB = (overlap * wa) / (wa + wb);
     a.x -= nx * pushA;
@@ -570,7 +573,8 @@ export class KartRace {
     // A Star rams the other kart into a spin (two Stars just bounce).
     const starA = effects(a, now).star;
     const starB = effects(b, now).star;
-    if (starA !== starB && this.hitKart(starA ? b : a, now)) this.events.starHits++;
+    const rammed = starA ? b : a;
+    if (starA !== starB && rammed.finishedAt === null && this.hitKart(rammed, now)) this.events.starHits++;
   }
 
   /**

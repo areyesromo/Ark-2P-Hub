@@ -18,6 +18,7 @@ export const ITEMS = {
   turboMs: 1600,
   shieldMs: 5000, // blocks one hit in this time, then pops
   spinMs: 1200, // hit a banana (or a Star): spin out
+  graceMs: 600, // after a shield pops, a moment before anything can hit you
   bananaR: 0.45,
   maxBananas: 6,
   goldMs: 5000, // Gold Turbo: every ITEM press in this time boosts
@@ -73,20 +74,24 @@ export function effects(k, now) {
   };
 }
 
-/** A boost, like a turbo. */
-function boost(game, k, now) {
+/** A boost, like a turbo (`whoosh`: counted with the boost pads, for its sound). */
+function boost(game, k, now, whoosh) {
   k.boostUntil = now + ITEMS.turboMs;
   k.speed = Math.max(k.speed, k.car.boostSpeed + game.coinBonus(k));
+  if (whoosh) game.events.boosts++;
 }
 
-/** Something aimed at the rival (Thunder, Freeze): a shield takes it instead. */
+/**
+ * Something aimed at the rival (Thunder, Freeze): it misses a Star or a kart that has finished,
+ * and a shield takes it instead (and pops).
+ */
 function zap(game, rival, now) {
+  if (rival.finishedAt !== null || effects(rival, now).immune) return false;
   if (now < rival.shieldUntil) {
     rival.shieldUntil = 0;
     game.events.blocked++;
     return false;
   }
-  game.events.zapped++;
   return true;
 }
 
@@ -97,7 +102,7 @@ export function useItem(game, slot, now) {
   if (game.phase !== 'race' || k.finishedAt !== null || now < k.spinUntil) return;
   // Gold Turbo: every press boosts while it lasts, and the rest of the queue waits.
   if (now < k.goldUntil) {
-    boost(game, k, now);
+    boost(game, k, now, true);
     game.events.used++;
     return;
   }
@@ -113,16 +118,22 @@ export function useItem(game, slot, now) {
     if (game.bananas.length > ITEMS.maxBananas) game.bananas.shift();
   } else if (kind === 'goldturbo') {
     k.goldUntil = now + ITEMS.goldMs;
-    boost(game, k, now);
+    boost(game, k, now, true);
   } else if (kind === 'star') k.starUntil = now + ITEMS.starMs;
   else if (kind === 'coinbag') game.addCoins(k, ITEMS.coinBag);
   else if (kind === 'magnet') k.magnetUntil = now + ITEMS.magnetMs;
   else if (kind === 'hover') k.hoverUntil = now + ITEMS.hoverMs;
   else if (kind === 'thunder') {
-    if (zap(game, rival, now)) rival.shrinkUntil = now + ITEMS.thunderMs;
+    if (zap(game, rival, now)) {
+      rival.shrinkUntil = now + ITEMS.thunderMs;
+      game.events.zapped++;
+    }
   } else if (kind === 'freeze') {
-    if (zap(game, rival, now)) rival.freezeUntil = now + ITEMS.freezeMs;
-  } else if (kind === 'swap') {
+    if (zap(game, rival, now)) {
+      rival.freezeUntil = now + ITEMS.freezeMs;
+      game.events.frozen++;
+    }
+  } else if (kind === 'swap' && rival.finishedAt === null) {
     [k.items, rival.items] = [rival.items, k.items];
     game.events.swapped++;
   }
