@@ -324,7 +324,11 @@
     if (restored || !R || v.phase !== 'setup') return;
     restored = true;
     const mine = v.picks[v.you];
-    const racer = remembered(RACER_KEY);
+    let racer = remembered(RACER_KEY);
+    if (racer && Object.prototype.hasOwnProperty.call(R.RENAMED, racer)) {
+      racer = R.RENAMED[racer]; // renamed since (Daisy is Dot now)
+      store(RACER_KEY, racer);
+    }
     const tyre = remembered(TYRE_KEY);
     if (racer && R.racer(racer).id === racer && racer !== mine.racer) api.send({ type: 'racer', id: racer });
     if (tyre && R.tyre(tyre).id === tyre && tyre !== mine.tyre) api.send({ type: 'tyre', id: tyre });
@@ -360,7 +364,7 @@
     els.speed.classList.toggle('boost', k.boosting);
     els.speed.classList.toggle('reverse', k.speed < -0.05);
     els.speed.classList.toggle('charged', k.driftCharge >= 1);
-    els.kmh.textContent = (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH) + ' km/h';
+    els.kmh.textContent = '🟡 ' + (k.coins || 0) + ' · ' + (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH) + ' km/h';
     els.lap.textContent = (k.lapMs !== null ? '⏱ ' + clock(k.lapMs) : '') + (k.lastLap ? ' · last ' + clock(k.lastLap) : '') + (k.bestLap ? ' · best ' + clock(k.bestLap) : '');
   }
 

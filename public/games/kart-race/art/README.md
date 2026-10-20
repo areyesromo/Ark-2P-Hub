@@ -9,7 +9,7 @@ version of the same name and size and it shows up as is.
   Only racers listed in `SPRITES` in `../racers.js` use a picture; the rest are drawn as shapes.
   To add one, add the file and the racer's id to `SPRITES`.
 
-Racer ids: rex, roxy, zip, zara, swift, sky, boulder, bella, dash, daisy, rascal, ruby.
+Racer ids: rex, roxy, zip, zara, swift, sky, boulder, bella, dash, dot, rascal, ruby.
 
-Notes on the placeholders: Roxy, Zara, Sky, Bella, Daisy and Ruby's karts are recolours of
+Notes on the placeholders: Roxy, Zara, Sky, Bella, Dot and Ruby's karts are recolours of
 their partner's kart (Zara's still says ZIP on the nose and Sky's says SWIFT on the rear wing).

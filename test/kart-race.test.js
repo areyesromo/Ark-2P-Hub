@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, ITEMS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
+import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, ITEMS, COINS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
 import { fakeCtx } from './helpers.js';
 
 const TICK = 1000 / 60;
@@ -398,7 +398,10 @@ test('racer and tyre picks: own slot, setup/over only, bad ids ignored, kept acr
   const ctx = fakeCtx();
   const game = new KartRace(ctx, () => 0);
   game.start();
-  assert.deepEqual(game.picks, [{ racer: 'dash', tyre: 'standard' }, { racer: 'daisy', tyre: 'standard' }]);
+  assert.deepEqual(game.picks, [{ racer: 'dash', tyre: 'standard' }, { racer: 'dot', tyre: 'standard' }]);
+  game.onInput(0, { type: 'racer', id: 'daisy' });
+  assert.equal(game.picks[0].racer, 'dot', 'the old name still picks her');
+  game.onInput(0, { type: 'racer', id: 'dash' });
   game.onInput(1, { type: 'racer', id: 'rex' });
   game.onInput(1, { type: 'tyre', id: 'slicks' });
   game.onInput(1, { type: 'racer', id: 'nope' });
@@ -551,4 +554,120 @@ test('crashing into the barrier between two stretches bounces you off: never ont
     assert.ok(game.events.walls > walls, `${t.name}: it hit the barrier`);
     assert.equal(game.events.cuts, cuts, `${t.name}: hitting the barrier is not a shortcut`);
   });
+});
+
+test('coins: rows on every track, inside the barriers, clear of boost pads, box rows and the start', () => {
+  TRACKS.forEach((t, ti) => {
+    assert.ok(t.coins.length >= 5, t.name);
+    const track = buildTrack(ti);
+    const near = (a, b) => Math.abs(((a - b + 1.5) % 1) - 0.5) < 0.05;
+    for (const [p, off, n] of t.coins) {
+      assert.ok(!t.boosts.some(([b]) => near(p, b)), `${t.name}: coins at ${p} on a boost pad`);
+      assert.ok(!ITEMS.rows.some((r) => near(p, r)), `${t.name}: coins at ${p} on a box row`);
+      assert.ok(!near(p, 0), `${t.name}: coins at ${p} on the start line`);
+      assert.ok(n >= 3 && Math.abs(off) < TRACK_WIDTH / 2, `${t.name}: coins on the road`);
+    }
+    const { game } = racing({ track: ti + 1 });
+    assert.equal(game.coins.length, t.coins.reduce((a, [, , n]) => a + n, 0));
+    for (const c of game.coins) {
+      const w = locate(track, c.x, c.y);
+      assert.ok(w.d < TRACK_WIDTH / 2, `${t.name}: a coin at (${c.x}, ${c.y}) is off the road`);
+    }
+  });
+});
+
+test('coins: pick up (max 15), top speed rises, respawn after 8 s, reset each race', () => {
+  const { ctx, game } = racing({ races: 3 });
+  const [a, b] = game.karts;
+  const c = game.coins[0];
+  // Both karts on the same coin, same tick: only the first (slot order) takes it.
+  Object.assign(a, { x: c.x, y: c.y, speed: 0 });
+  Object.assign(b, { x: c.x + 0.05, y: c.y, speed: 0 });
+  ctx.advance(TICK);
+  // (A kart can reach the next coin in the row too.) Every coin is taken once: what the karts
+  // hold is what's gone from the track; the one both sat on went to the first kart.
+  const gone = game.coins.length - game.hostView().coins.length;
+  assert.ok(gone >= 1);
+  assert.equal(a.coins + b.coins, gone, 'each coin counted once');
+  assert.ok(a.coins >= 1 && game.coins[0].backAt > 0);
+  assert.equal(game.hostView().karts[0].coins, a.coins);
+  // Back after 8 s.
+  ctx.advance(COINS.respawnMs + 50);
+  assert.equal(game.hostView().coins.length, game.coins.length);
+  // Max 15: a full purse leaves the coin for the other kart.
+  b.x = -50;
+  Object.assign(a, { coins: COINS.max, x: c.x, y: c.y, speed: 0 });
+  ctx.advance(TICK);
+  assert.equal(a.coins, COINS.max);
+  assert.equal(game.hostView().coins.length, game.coins.length, 'still there');
+  // Each coin adds to top speed (Dash: 8.5 + 15 x 0.05).
+  onRoad(game, a, 0.05);
+  a.coins = COINS.max;
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  for (let i = 0; i < 40; i++) {
+    onRoad(game, a, 0.05, a.speed);
+    a.coins = COINS.max;
+    ctx.advance(100);
+  }
+  assert.ok(Math.abs(a.speed - (8.5 + COINS.max * COINS.perCoin)) < 0.05, `top speed with 15 coins: ${a.speed}`);
+  // The next race: no coins, every coin back.
+  game.coins[0].backAt = ctx.now() + 99999;
+  game.newRace();
+  assert.deepEqual(game.karts.map((k) => k.coins), [0, 0]);
+  assert.ok(game.coins.every((x) => x.backAt === 0));
+});
+
+test('coins: a spin-out costs 3 (never below 0), a head-on wall hit costs 1', () => {
+  const { ctx, game } = racing();
+  const k = game.karts[0];
+  game.karts[1].x = -50;
+  onRoad(game, k, 0.6);
+  k.coins = 5;
+  const lost = game.events.coinsLost;
+  game.bananas.push({ x: k.x, y: k.y, owner: 1, safeUntil: 0 });
+  ctx.advance(TICK);
+  assert.equal(k.coins, 2, 'banana: -3');
+  assert.ok(game.events.coinsLost > lost);
+  ctx.advance(ITEMS.spinMs + 100);
+  game.bananas.push({ x: k.x, y: k.y, owner: 1, safeUntil: 0 });
+  ctx.advance(TICK);
+  assert.equal(k.coins, 0, 'never below 0');
+  // Head-on into the wall.
+  ctx.advance(ITEMS.spinMs + 100);
+  k.coins = 4;
+  const p = pointAt(game.track, 0.1);
+  const nx = -Math.sin(p.angle);
+  const ny = Math.cos(p.angle);
+  const limit = TRACK_WIDTH / 2 + WALL.out - KART.r;
+  Object.assign(k, { x: p.x + nx * (limit - 0.3), y: p.y + ny * (limit - 0.3), angle: Math.atan2(ny, nx), speed: KART.maxSpeed, progress: 0.1, seg: Math.round(0.1 * SAMPLES) });
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(TICK * 4);
+  assert.equal(k.coins, 3, 'head-on wall hit: -1');
+});
+
+test('coins: pressing into a wall costs one coin, not the whole purse; finished karts take none', () => {
+  const { ctx, game } = racing();
+  const [k, other] = game.karts;
+  other.x = -50;
+  k.coins = 10;
+  const p = pointAt(game.track, 0.1);
+  const nx = -Math.sin(p.angle);
+  const ny = Math.cos(p.angle);
+  const limit = TRACK_WIDTH / 2 + WALL.out - KART.r;
+  Object.assign(k, { x: p.x + nx * (limit - 0.3), y: p.y + ny * (limit - 0.3), angle: Math.atan2(ny, nx), speed: KART.maxSpeed, progress: 0.1, seg: Math.round(0.1 * SAMPLES) });
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(1000); // nose against the wall, foot down
+  assert.ok(k.coins >= 9, `one hard hit, not a drain (${k.coins} left)`);
+  game.onInput(0, { type: 'drive', steer: 0, brake: true });
+  ctx.advance(1500); // and reversing back into it
+  assert.ok(k.coins >= 8, `reversing into it, then nudging (${k.coins} left)`);
+  // The view's red line includes the coin bonus.
+  assert.ok(Math.abs(game.hostView().karts[0].top - (8.5 + k.coins * COINS.perCoin)) < 1e-9);
+  // Over the line: no more coins (they're left for the kart still racing).
+  game.finishLine(0, ctx.now());
+  const c = game.coins.find((x) => x.backAt <= ctx.now());
+  const had = k.coins;
+  Object.assign(k, { x: c.x, y: c.y, speed: 0 });
+  ctx.advance(TICK);
+  assert.equal(k.coins, had);
 });
