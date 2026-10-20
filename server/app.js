@@ -89,7 +89,9 @@ export function createApp({
     const src = fs.readFileSync(file, 'utf8').replace(/from 'three'/g, "from '/vendor/three/three.module.min.js'");
     res.type('text/javascript').set('Cache-Control', 'public, max-age=604800').send(src);
   });
-  app.use(express.static(PUBLIC_DIR, { extensions: ['html'] }));
+  // no-cache: browsers check for a newer copy each time (a quick 304 when unchanged), so an
+  // update's new art and code show straight away instead of an old cached copy.
+  app.use(express.static(PUBLIC_DIR, { extensions: ['html'], setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
 
   registerSocketHandlers(io, rooms, { refreshJoin });
 
