@@ -22,7 +22,9 @@ test('tyres: five, standard first; unknown ids fall back to the defaults', () =>
   assert.equal(R.TYRES[0].id, 'standard');
   assert.equal(R.racer('nope').id, 'dash');
   assert.equal(R.tyre('nope').id, 'standard');
-  assert.deepEqual(R.DEFAULT_RACERS, ['dash', 'daisy']);
+  assert.deepEqual(R.DEFAULT_RACERS, ['dash', 'dot']);
+  assert.equal(R.racer('daisy').id, 'dot', "Daisy's new name (phones may still remember the old one)");
+  assert.equal(R.racer('dot').name, 'Dot');
   assert.equal(R.DEFAULT_TYRE, 'standard');
 });
 

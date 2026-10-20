@@ -398,7 +398,10 @@ test('racer and tyre picks: own slot, setup/over only, bad ids ignored, kept acr
   const ctx = fakeCtx();
   const game = new KartRace(ctx, () => 0);
   game.start();
-  assert.deepEqual(game.picks, [{ racer: 'dash', tyre: 'standard' }, { racer: 'daisy', tyre: 'standard' }]);
+  assert.deepEqual(game.picks, [{ racer: 'dash', tyre: 'standard' }, { racer: 'dot', tyre: 'standard' }]);
+  game.onInput(0, { type: 'racer', id: 'daisy' });
+  assert.equal(game.picks[0].racer, 'dot', 'the old name still picks her');
+  game.onInput(0, { type: 'racer', id: 'dash' });
   game.onInput(1, { type: 'racer', id: 'rex' });
   game.onInput(1, { type: 'tyre', id: 'slicks' });
   game.onInput(1, { type: 'racer', id: 'nope' });

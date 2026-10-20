@@ -324,7 +324,11 @@
     if (restored || !R || v.phase !== 'setup') return;
     restored = true;
     const mine = v.picks[v.you];
-    const racer = remembered(RACER_KEY);
+    let racer = remembered(RACER_KEY);
+    if (racer && Object.prototype.hasOwnProperty.call(R.RENAMED, racer)) {
+      racer = R.RENAMED[racer]; // renamed since (Daisy is Dot now)
+      store(RACER_KEY, racer);
+    }
     const tyre = remembered(TYRE_KEY);
     if (racer && R.racer(racer).id === racer && racer !== mine.racer) api.send({ type: 'racer', id: racer });
     if (tyre && R.tyre(tyre).id === tyre && tyre !== mine.tyre) api.send({ type: 'tyre', id: tyre });

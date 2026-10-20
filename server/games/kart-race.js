@@ -567,8 +567,11 @@ export class KartRace {
   /** A player picks their racer or tyres (setup and end screens only); unknown ids are ignored. */
   pick(slot, input) {
     const known = input.type === 'racer' ? Racers.RACERS : Racers.TYRES;
-    if (!known.some((x) => x.id === input.id)) return;
-    this.picks[slot] = { ...this.picks[slot], [input.type]: input.id };
+    // A racer's old name (a phone may still remember it) picks them by their new one.
+    const renamed = input.type === 'racer' && typeof input.id === 'string' && Object.hasOwn(Racers.RENAMED, input.id);
+    const id = renamed ? Racers.RENAMED[input.id] : input.id;
+    if (!known.some((x) => x.id === id)) return;
+    this.picks[slot] = { ...this.picks[slot], [input.type]: id };
     this.ctx.update();
   }
 
