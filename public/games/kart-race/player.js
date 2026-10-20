@@ -307,12 +307,12 @@
     const racer = R.racer(mine.racer);
     const tyre = R.tyre(mine.tyre);
     return '<div class="title">Your racer</div><div class="kr-racers">' + R.RACERS.map(function (r) {
-      return '<button type="button" class="kr-racer' + (r.id === racer.id ? ' on' : '') + '" data-racer="' + r.id + '"><span>' + r.emoji + '</span>' + r.name + '</button>';
+      return '<button type="button" class="kr-racer' + (r.id === racer.id ? ' on' : '') + '" data-racer="' + r.id + '"><img src="' + r.portrait + '" alt="">' + r.name + '</button>';
     }).join('') + '</div>' +
       '<div class="title">Tyres</div><div class="kr-tyres">' + R.TYRES.map(function (t) {
         return '<button type="button" class="kr-tyre' + (t.id === tyre.id ? ' on' : '') + '" data-tyre="' + t.id + '"><span>' + t.emoji + '</span>' + t.name + '</button>';
       }).join('') + '</div>' +
-      '<div class="kr-stats"><div class="who">' + racer.emoji + ' ' + racer.name + ' · ' + R.TYPES[racer.type].label + ' · ' + tyre.emoji + ' ' + tyre.name + '</div>' +
+      '<div class="kr-stats"><div class="who"><img src="' + racer.portrait + '" alt=""> ' + racer.name + ' · ' + R.TYPES[racer.type].label + ' · ' + tyre.emoji + ' ' + tyre.name + '</div>' +
       STAT_ROWS.map(function (row) {
         return '<div class="stat"><span>' + row[1] + '</span><div class="bar">' + statBar(racer.stats[row[0]], tyre.mod[row[0]] || 0) + '</div></div>';
       }).join('') + '</div>';

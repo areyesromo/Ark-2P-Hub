@@ -20,6 +20,10 @@
     ['allround', ['dash', 'Dash'], ['daisy', 'Daisy'], [3, 3, 3, 3], 'classic', '#4ade80'],
     ['tricky', ['rascal', 'Rascal'], ['ruby', 'Ruby'], [2, 4, 5, 1], 'pointed', '#fb923c'],
   ];
+  // Art (paths from the site root): every racer has a portrait; top-down kart sprites (nose up)
+  // exist for these racers so far; the others are drawn as shapes.
+  const ART = '/games/kart-race/art/';
+  const SPRITES = ['rex', 'roxy', 'zip', 'zara', 'swift', 'sky', 'boulder', 'bella', 'rascal', 'ruby'];
   const RACERS = [];
   KINDS.forEach(function (k) {
     [[k[1], 'm'], [k[2], 'f']].forEach(function (who) {
@@ -32,6 +36,8 @@
         stats: { speed: k[3][0], accel: k[3][1], handling: k[3][2], weight: k[3][3] },
         shape: k[4],
         stripe: k[5],
+        portrait: ART + 'portraits/' + who[0][0] + '.webp',
+        sprite: SPRITES.indexOf(who[0][0]) !== -1 ? ART + 'karts/' + who[0][0] + '.webp' : null,
       });
     });
   });
