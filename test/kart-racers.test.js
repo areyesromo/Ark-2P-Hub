@@ -59,10 +59,13 @@ test('art: kart pictures are 256 px tall with a see-through background; each has
   const { readFileSync, existsSync } = await import('node:fs');
   const file = (p) => new URL('../public' + p, import.meta.url);
   for (const r of R.RACERS) {
-    const b = readFileSync(file(r.sprite));
-    assert.equal(b.toString('ascii', 12, 16), 'VP8X', `${r.id}: extended WebP`);
-    assert.ok(b[20] & 0x10, `${r.id}: has alpha`);
-    assert.equal(b.readUIntLE(27, 3) + 1, 256, `${r.id}: 256 tall`);
-    assert.ok(existsSync(file(r.sprite.replace('/karts/', '/karts/empty/'))), `${r.id}: empty kart`);
+    const empty = r.sprite.replace('/karts/', '/karts/empty/');
+    assert.ok(existsSync(file(empty)), `${r.id}: empty kart`);
+    for (const p of [r.sprite, empty]) {
+      const b = readFileSync(file(p));
+      assert.equal(b.toString('ascii', 12, 16), 'VP8X', `${p}: extended WebP`);
+      assert.ok(b[20] & 0x10, `${p}: has alpha`);
+      assert.equal(b.readUIntLE(27, 3) + 1, 256, `${p}: 256 tall`);
+    }
   }
 });
