@@ -369,12 +369,14 @@ test('items: odds by place; 1st never draws the catch-up items; items off means 
   };
   const leader = count(0);
   const chaser = count(1);
-  for (const kind of ['star', 'goldturbo', 'thunder', 'freeze', 'swap', 'hover']) {
+  for (const kind of ['star', 'goldturbo', 'thunder', 'freeze', 'swap', 'hover', 'seeker']) {
     assert.ok(!leader[kind], `1st drew ${kind}`);
     assert.ok(chaser[kind] > 0, `2nd never drew ${kind}`);
   }
   assert.ok(leader.banana > (chaser.banana || 0));
   assert.ok(Object.keys(leader).concat(Object.keys(chaser)).every((k) => ITEMS.kinds.includes(k)));
+  for (const kind of ITEMS.kinds) assert.ok(leader[kind] || chaser[kind], `nobody ever draws ${kind}`);
+  assert.equal(ITEMS.kinds.length, 16);
   const off = racing({ items: 0 }).game;
   assert.equal(off.boxes.length, 0);
   assert.equal(off.hostView().boxes.length, 0);
@@ -927,4 +929,227 @@ test('items: ITEM does nothing with an empty queue, while spinning or after fini
   k.seg = locate(g2.track, k.x, k.y).i;
   g2.itemCheck(k, 0, g2.ctx.now());
   assert.ok(k.items.length >= 1, 'pulled in from 2.5 away');
+});
+
+/** A race with kart 1 parked well out of the way (unless needed) and kart 0 on the road at p. */
+function solo(p = 0.55, opts) {
+  const { ctx, game } = racing(opts);
+  const [a, b] = game.karts;
+  onRoad(game, a, p);
+  onRoad(game, b, (p + 0.5) % 1);
+  return { ctx, game, a, b };
+}
+
+test('items: a Web holds you to half speed for 1.5 s (no coins lost); Hover floats over; a shield blocks it', () => {
+  const { ctx, game, a, b } = solo(0.55);
+  useNow(game, 0, 'web');
+  assert.equal(game.webs.length, 1);
+  const w = game.webs[0];
+  b.coins = 5;
+  onRoad(game, b, 0.2);
+  Object.assign(b, { x: w.x, y: w.y, speed: 8 });
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].webbed, true);
+  assert.equal(game.webs.length, 0, 'used up');
+  assert.equal(b.coins, 5, 'no coins lost');
+  for (let i = 0; i < 10; i++) { onRoad(game, b, 0.2, b.speed); ctx.advance(100); }
+  assert.ok(b.speed <= (8.5 + b.coins * COINS.perCoin) * ITEMS.webSlow + 0.05, `held back: ${b.speed}`);
+  ctx.advance(ITEMS.webMs);
+  assert.equal(game.hostView().karts[1].webbed, false);
+  // Hover floats over it; a shield takes it.
+  useNow(game, 0, 'web');
+  useNow(game, 1, 'hover');
+  Object.assign(b, { x: game.webs[0].x, y: game.webs[0].y });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].webbed, false);
+  assert.equal(game.webs.length, 1, 'still there');
+  ctx.advance(ITEMS.hoverMs);
+  useNow(game, 1, 'shield');
+  Object.assign(b, { x: game.webs[0].x, y: game.webs[0].y });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].webbed, false, 'blocked');
+  assert.equal(game.hostView().karts[1].shield, false);
+});
+
+test('items: Oil takes your steering and brakes for 1 s', () => {
+  const { ctx, game, a, b } = solo(0.55);
+  useNow(game, 0, 'oil');
+  const o = game.oils[0];
+  onRoad(game, b, 0.2, 6);
+  Object.assign(b, { x: o.x, y: o.y });
+  game.onInput(1, { type: 'drive', steer: 1, brake: true });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].oiled, true);
+  const angle = b.angle;
+  const speed = b.speed;
+  ctx.advance(300);
+  assert.ok(Math.abs(b.angle - angle) < 1e-9, 'no steering');
+  assert.ok(b.speed > speed - 1.5, 'no braking (it only coasts)');
+  ctx.advance(ITEMS.oilMs);
+  assert.equal(game.hostView().karts[1].oiled, false);
+});
+
+test('items: a Bouncer flies straight, bounces off barriers and stays in, spins whoever it hits, and is gone after 4 s', () => {
+  const hairpins = TRACKS.findIndex((t) => t.name === 'Hairpins') + 1;
+  const { ctx, game, a, b } = solo(0.2, { track: hairpins });
+  b.x = -50;
+  // Fired sideways at the barrier: it bounces and stays inside, the whole time.
+  a.angle += Math.PI / 2;
+  useNow(game, 0, 'bouncer');
+  assert.equal(game.shots.length, 1);
+  const limit = TRACK_WIDTH / 2 + WALL.out + 0.3;
+  let bounced = false;
+  const first = game.shots[0].angle;
+  for (let i = 0; i < 200 && game.shots.length; i++) {
+    ctx.advance(TICK);
+    const s = game.shots[0];
+    if (!s) break;
+    if (Math.abs(Math.atan2(Math.sin(s.angle - first), Math.cos(s.angle - first))) > 0.5) bounced = true;
+    assert.ok(s.x > 0 && s.x < FIELD.w && s.y > 0 && s.y < FIELD.h, 'on the field');
+    assert.ok(locate(game.track, s.x, s.y).d < limit, 'inside the barriers');
+  }
+  assert.ok(bounced, 'it bounced');
+  // Its thrower is safe at first; a kart in its path spins.
+  ctx.advance(ITEMS.bouncerMs);
+  assert.equal(game.shots.length, 0, 'gone after 4 s');
+  onRoad(game, a, 0.2);
+  onRoad(game, b, 0.2 + 3 / game.track.length);
+  b.coins = 5;
+  useNow(game, 0, 'bouncer');
+  for (let i = 0; i < 40; i++) ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].spin, true, 'hit');
+  assert.equal(b.coins, 2);
+  assert.equal(game.hostView().karts[0].spin, false, 'the thrower is safe at first');
+  assert.equal(game.shots.length, 0, 'used up');
+});
+
+test('items: a Seeker chases the rival round the road and spins them; a banana in its way stops it; never a finished kart', () => {
+  const { ctx, game, a, b } = solo(0.1);
+  onRoad(game, b, 0.4);
+  useNow(game, 0, 'seeker');
+  assert.equal(game.shots[0].kind, 'seeker');
+  for (let i = 0; i < 60 * 4 && game.shots.length; i++) ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].spin, true, 'caught them');
+  // A banana in its way stops it.
+  ctx.advance(ITEMS.spinMs + 100);
+  onRoad(game, a, 0.1);
+  onRoad(game, b, 0.4);
+  const p = pointAt(game.track, 0.2);
+  game.bananas.push({ x: p.x, y: p.y, owner: 1, safeUntil: 0 });
+  useNow(game, 0, 'seeker');
+  for (let i = 0; i < 60 * 4 && game.shots.length; i++) ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].spin, false, 'stopped by the banana');
+  assert.equal(game.bananas.length, 0, 'which goes too');
+  // A finished kart: it gives up (6 s) and never hits it.
+  b.finishedAt = ctx.now();
+  useNow(game, 0, 'seeker');
+  ctx.advance(ITEMS.seekerMs + 100);
+  assert.equal(game.shots.length, 0);
+  assert.equal(game.hostView().karts[1].spin, false);
+});
+
+test('items: a Bomb lands ahead and goes off after 1.5 s, spinning everyone within 2 (the thrower too)', () => {
+  const { ctx, game, a, b } = solo(0.55);
+  game.onInput(0, { type: 'drive', steer: 0 });
+  a.speed = 0;
+  useNow(game, 0, 'bomb');
+  const bomb = game.shots[0];
+  assert.equal(bomb.kind, 'bomb');
+  assert.ok(Math.abs(Math.hypot(bomb.x - a.x, bomb.y - a.y) - ITEMS.bombThrow) < 0.6, 'about 5 ahead');
+  // b just past it, a (the thrower) just short of it, both on the road.
+  const along = (d) => ({ x: bomb.x + Math.cos(a.angle) * d, y: bomb.y + Math.sin(a.angle) * d });
+  for (const [k, d] of [[b, 1.5], [a, -1.2]]) {
+    const at = along(d);
+    place(game, k, at.x, at.y); // (with its progress, or it'd look like a shortcut)
+    Object.assign(k, { speed: 0, seg: locate(game.track, at.x, at.y).i });
+  }
+  ctx.advance(ITEMS.bombFuseMs - 100);
+  assert.equal(game.hostView().karts[1].spin, false, 'not yet');
+  ctx.advance(200);
+  assert.equal(game.hostView().karts[1].spin, true, 'boom');
+  assert.equal(game.hostView().karts[0].spin, true, 'the thrower too, standing that close');
+  assert.equal(game.shots.length, 0);
+  assert.ok(game.events.exploded >= 1);
+});
+
+test('items: shots and hazards are cleared each race; 6 webs at most; a Bouncer and a Seeker destroy each other', () => {
+  const { ctx, game, a, b } = solo(0.55, { races: 3 });
+  for (let i = 0; i < 8; i++) {
+    useNow(game, 0, 'web');
+    a.x += 0.01;
+  }
+  assert.equal(game.webs.length, ITEMS.maxHazards);
+  useNow(game, 0, 'bouncer');
+  game.shots.push({ kind: 'seeker', x: game.shots[0].x, y: game.shots[0].y, angle: 0, owner: 1, bornAt: ctx.now(), until: ctx.now() + 5000, seg: game.shots[0].seg });
+  ctx.advance(TICK);
+  assert.equal(game.shots.length, 0, 'both gone');
+  useNow(game, 0, 'oil');
+  useNow(game, 0, 'bomb');
+  game.newRace();
+  assert.deepEqual([game.webs.length, game.oils.length, game.shots.length, game.bananas.length], [0, 0, 0, 0]);
+});
+
+test('items: firing a Bouncer while boosting never hits you; a Bomb floats past a hovering kart; a Web bites at once', () => {
+  // Turbo, then Bouncer: the kart is faster than a normal Bouncer, but it never catches its own.
+  const { ctx, game, a, b } = solo(0.05);
+  b.x = -50;
+  a.coins = 15;
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  useNow(game, 0, 'turbo');
+  useNow(game, 0, 'bouncer');
+  for (let i = 0; i < 60; i++) ctx.advance(TICK);
+  assert.equal(game.hostView().karts[0].spin, false, 'no self-hit');
+  // Hover over a Bomb's blast.
+  const g = solo(0.55);
+  g.game.onInput(0, { type: 'drive', steer: 0 });
+  g.a.speed = 0;
+  useNow(g.game, 0, 'bomb');
+  useNow(g.game, 1, 'hover');
+  const bomb = g.game.shots[0];
+  place(g.game, g.b, bomb.x, bomb.y);
+  Object.assign(g.b, { speed: 0, seg: locate(g.game.track, bomb.x, bomb.y).i });
+  g.ctx.advance(ITEMS.bombFuseMs + 50);
+  assert.equal(g.game.hostView().karts[1].spin, false, 'floated over the blast');
+  // A Web slows you right away, not a second later.
+  const w = solo(0.55);
+  useNow(w.game, 0, 'web');
+  const web = w.game.webs[0];
+  onRoad(w.game, w.b, 0.2);
+  Object.assign(w.b, { x: web.x, y: web.y, speed: 12 });
+  w.ctx.advance(TICK);
+  assert.ok(w.b.speed <= 8.5 * ITEMS.webSlow + 0.1, `straight down to half speed: ${w.b.speed}`);
+});
+
+test('items: a Bomb lands on your own road ahead; a Seeker ignores a rival across a barrier', () => {
+  const hairpins = TRACKS.findIndex((t) => t.name === 'Hairpins') + 1;
+  for (let p = 0.05; p < 1; p += 0.05) {
+    const { game, a } = solo(p, { track: hairpins });
+    game.onInput(0, { type: 'drive', steer: 0 });
+    useNow(game, 0, 'bomb');
+    const bomb = game.shots[0];
+    const seg = locate(game.track, bomb.x, bomb.y).i;
+    const gap = Math.abs(seg - Math.round(a.progress * SAMPLES));
+    assert.ok(Math.min(gap, SAMPLES - gap) < 20, `at ${p.toFixed(2)}: the bomb landed on another stretch`);
+  }
+  // A rival parked just across the barrier from the Seeker's stretch: it doesn't dive at them.
+  const { ctx, game, a, b } = solo(0.02, { track: hairpins });
+  let best = null;
+  for (let i = 0; i < SAMPLES; i++) {
+    const gap = Math.min(Math.abs(i - 10), SAMPLES - Math.abs(i - 10));
+    if (gap < 30) continue;
+    const d = Math.hypot(game.track.line[i][0] - game.track.line[10][0], game.track.line[i][1] - game.track.line[10][1]);
+    if (!best || d < best.d) best = { i, d };
+  }
+  onRoad(game, b, best.i / SAMPLES);
+  // ...nudged toward the barrier (still on its own road), well within a Seeker's homing reach.
+  const toward = game.track.line[10];
+  const d = Math.hypot(toward[0] - b.x, toward[1] - b.y);
+  Object.assign(b, { x: b.x + ((toward[0] - b.x) / d) * 1.2, y: b.y + ((toward[1] - b.y) / d) * 1.2, seg: best.i });
+  useNow(game, 0, 'seeker');
+  ctx.advance(1000);
+  const s = game.shots[0];
+  assert.ok(s, 'still flying');
+  const gap = Math.min(Math.abs(s.seg - a.seg), SAMPLES - Math.abs(s.seg - a.seg));
+  assert.ok(gap > 10, `it kept going along the road (stuck at seg ${s.seg})`);
 });

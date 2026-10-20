@@ -16,7 +16,7 @@
 import { loadSettings, applySetting } from './options.js';
 import '../../public/games/kart-race/track.js';
 import '../../public/games/kart-race/racers.js';
-import { ITEMS, rollItem, useItem, effects } from './kart-items.js';
+import { ITEMS, rollItem, useItem, effects, hazardCheck, stepShots } from './kart-items.js';
 
 export { ITEMS };
 
@@ -181,7 +181,7 @@ export class KartRace {
     this.scores = [0, 0];
     this.race = 0;
     this.winner = null;
-    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, frozen: 0, swapped: 0, starHits: 0 };
+    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, frozen: 0, swapped: 0, starHits: 0, fired: 0, exploded: 0, snagged: 0 };
     this.lastTrack = -1;
     this.newRace();
     this.loop();
@@ -209,6 +209,10 @@ export class KartRace {
       for (const p of ITEMS.rows) for (const off of ITEMS.offsets) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0, double: off === 0 });
     }
     this.bananas = [];
+    this.webs = [];
+    this.oils = [];
+    this.shots = []; // Bouncers, Seekers and Bombs (see kart-items.js)
+    this.blasts = []; // bombs that just went off (for the screens)
     // Coins, one at a time round the lap.
     this.coins = this.track.coins.map(([p, off]) => ({ ...pointAt(this.track, p, off), backAt: 0 }));
     // Side by side just past the start line, facing along the track. The controls carry over
@@ -252,6 +256,8 @@ export class KartRace {
         hoverUntil: 0,
         shrinkUntil: 0,
         freezeUntil: 0,
+        webUntil: 0,
+        oilUntil: 0,
         spinUntil: 0,
         finishedAt: null,
       };
@@ -298,7 +304,9 @@ export class KartRace {
       this.karts.forEach((k) => this.drive(k, dt, now));
       this.bump();
       this.karts.forEach((k) => this.coinCheck(k, now));
+      stepShots(this, dt, now);
       this.karts.forEach((k, slot) => this.itemCheck(k, slot, now));
+      this.karts.forEach((k, slot) => hazardCheck(this, k, slot, now));
       this.karts.forEach((k, slot) => this.lapCheck(k, slot, now));
       if (this.phase === 'finish' && now >= this.phaseEnds) this.endRace();
     }
@@ -313,15 +321,19 @@ export class KartRace {
     const car = k.car;
     const fx = effects(k, now);
     const bonus = this.coinBonus(k) + fx.topBonus + this.slipstream(k, now);
-    const top = boosting ? car.boostSpeed + bonus : k.offTrack && !fx.noGrass ? car.grassSpeed : car.maxSpeed + bonus;
+    const top = (boosting ? car.boostSpeed + bonus : k.offTrack && !fx.noGrass ? car.grassSpeed : car.maxSpeed + bonus) * (now < k.webUntil ? ITEMS.webSlow : 1);
+    // Oil: no steering and no brakes for a moment.
+    const oiled = now < k.oilUntil;
+    const steer = oiled ? 0 : k.steer;
+    const brake = !oiled && k.brake;
     const toward = (v, target, rate) => (v > target ? Math.max(target, v - rate * dt) : Math.min(target, v + rate * dt));
     if (k.finishedAt !== null) {
       k.speed = toward(k.speed, 0, KART.brake * 0.4); // coast to a stop after the line
     } else if (now < k.spinUntil) {
       k.speed = toward(k.speed, 0, KART.brake * 1.5); // spinning out: no grip
-    } else if (k.brake && k.speed > 0.05) {
+    } else if (brake && k.speed > 0.05) {
       k.speed = Math.max(0, k.speed - KART.brake * dt);
-    } else if (k.brake) {
+    } else if (brake) {
       // Stopped and still braking: back up.
       k.speed = Math.max(-KART.reverseSpeed, k.speed - KART.reverseAccel * dt);
     } else if (k.gas) {
@@ -337,11 +349,11 @@ export class KartRace {
     // turns some (so a kart nose-first against a wall can turn away). Backwards it turns the
     // other way, like a car.
     if (now >= k.spinUntil) {
-      const pedal = k.gas || k.brake;
+      const pedal = k.gas || brake;
       const grip = Math.min(1, Math.max(Math.abs(k.speed) / car.grip, pedal ? 0.45 : 0));
-      const dir = k.speed < -0.01 || (Math.abs(k.speed) <= 0.01 && k.brake) ? -1 : 1;
+      const dir = k.speed < -0.01 || (Math.abs(k.speed) <= 0.01 && brake) ? -1 : 1;
       const rate = car.turnRate * (k.drifting ? KART.driftTurn : 1) * fx.turnScale;
-      k.angle += k.steer * rate * grip * dir * dt;
+      k.angle += steer * rate * grip * dir * dt;
     }
     k.x += Math.cos(k.angle) * k.speed * dt;
     k.y += Math.sin(k.angle) * k.speed * dt;
@@ -365,7 +377,7 @@ export class KartRace {
    * speed. Let go after a long enough drift for a mini-boost.
    */
   driftCheck(k, now, dt) {
-    const can = k.drift && k.steer !== 0 && k.speed > KART.driftMinSpeed && now >= k.spinUntil && k.finishedAt === null;
+    const can = k.drift && k.steer !== 0 && k.speed > KART.driftMinSpeed && now >= k.spinUntil && now >= k.oilUntil && k.finishedAt === null;
     if (can) {
       k.drifting = true;
       k.driftMs += dt * 1000;
@@ -509,6 +521,14 @@ export class KartRace {
 
   get kartR() {
     return KART.r;
+  }
+
+  get roadHalf() {
+    return TRACK_WIDTH / 2;
+  }
+
+  get field() {
+    return FIELD;
   }
 
   /** How much faster a kart's coins make it. */
@@ -743,6 +763,8 @@ export class KartRace {
             hover: now < k.hoverUntil,
             shrunk: now < k.shrinkUntil,
             frozen: now < k.freezeUntil,
+            webbed: now < k.webUntil,
+            oiled: now < k.oilUntil,
             spin: now < k.spinUntil,
             finished: k.finishedAt !== null,
           }))
@@ -750,6 +772,10 @@ export class KartRace {
       positions: racing ? this.positions() : null,
       boxes: racing ? this.boxes.filter((b) => now >= b.backAt).map((b) => ({ x: b.x, y: b.y, angle: b.angle, double: b.double })) : [],
       coins: racing ? this.coins.filter((c) => now >= c.backAt).map((c) => ({ x: Math.round(c.x * 100) / 100, y: Math.round(c.y * 100) / 100 })) : [],
+      webs: racing ? this.webs.map((h) => ({ x: Math.round(h.x * 100) / 100, y: Math.round(h.y * 100) / 100 })) : [],
+      oils: racing ? this.oils.map((h) => ({ x: Math.round(h.x * 100) / 100, y: Math.round(h.y * 100) / 100 })) : [],
+      shots: racing ? this.shots.map((s) => ({ kind: s.kind, x: Math.round(s.x * 100) / 100, y: Math.round(s.y * 100) / 100, angle: Math.round(s.angle * 100) / 100, fuse: s.kind === 'bomb' ? Math.max(0, s.until - now) : undefined })) : [],
+      blasts: racing ? this.blasts.map((b) => ({ x: b.x, y: b.y, age: now - b.at })) : [],
       bananas: racing ? this.bananas.map((b) => ({ x: Math.round(b.x * 100) / 100, y: Math.round(b.y * 100) / 100 })) : [],
       raceMs: this.raceStart ? (this.result ? this.result.time : now - this.raceStart) : 0,
       events: this.events || null,
