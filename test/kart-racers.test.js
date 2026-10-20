@@ -54,3 +54,15 @@ test('art: every racer has a portrait file; sprites, where listed, exist too', a
   }
   assert.ok(R.RACERS.every((r) => r.sprite), 'every racer has a kart picture');
 });
+
+test('art: kart pictures are 256 px tall with a see-through background; each has an empty twin for 3D', async () => {
+  const { readFileSync, existsSync } = await import('node:fs');
+  const file = (p) => new URL('../public' + p, import.meta.url);
+  for (const r of R.RACERS) {
+    const b = readFileSync(file(r.sprite));
+    assert.equal(b.toString('ascii', 12, 16), 'VP8X', `${r.id}: extended WebP`);
+    assert.ok(b[20] & 0x10, `${r.id}: has alpha`);
+    assert.equal(b.readUIntLE(27, 3) + 1, 256, `${r.id}: 256 tall`);
+    assert.ok(existsSync(file(r.sprite.replace('/karts/', '/karts/empty/'))), `${r.id}: empty kart`);
+  }
+});
