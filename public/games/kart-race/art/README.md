@@ -11,6 +11,5 @@ version of the same name and size and it shows up as is.
 
 Racer ids: rex, roxy, zip, zara, swift, sky, boulder, bella, dash, daisy, rascal, ruby.
 
-Notes on the placeholders: Roxy, Zara, Sky, Bella and Ruby's karts are recolours of their
-partner's kart (Zara's still says ZIP on the nose and Sky's says SWIFT on the rear wing); Dash and Daisy have no
-kart picture yet.
+Notes on the placeholders: Roxy, Zara, Sky, Bella, Daisy and Ruby's karts are recolours of
+their partner's kart (Zara's still says ZIP on the nose and Sky's says SWIFT on the rear wing).

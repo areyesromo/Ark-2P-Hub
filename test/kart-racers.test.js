@@ -50,5 +50,5 @@ test('art: every racer has a portrait file; sprites, where listed, exist too', a
     assert.ok(existsSync(file(r.portrait)), r.portrait);
     if (r.sprite) assert.ok(existsSync(file(r.sprite)), r.sprite);
   }
-  assert.ok(R.RACERS.filter((r) => r.sprite).length >= 10);
+  assert.ok(R.RACERS.every((r) => r.sprite), 'every racer has a kart picture');
 });
