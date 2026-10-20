@@ -42,3 +42,13 @@ test('monster tyres halve the grass slowdown', () => {
   const p = R.physics('dash', 'monster');
   near(p.maxSpeed - p.grassSpeed, (8.5 - 3.35) / 2, 'grass loss');
 });
+
+test('art: every racer has a portrait file; sprites, where listed, exist too', async () => {
+  const { existsSync } = await import('node:fs');
+  const file = (p) => new URL('../public' + p, import.meta.url);
+  for (const r of R.RACERS) {
+    assert.ok(existsSync(file(r.portrait)), r.portrait);
+    if (r.sprite) assert.ok(existsSync(file(r.sprite)), r.sprite);
+  }
+  assert.ok(R.RACERS.filter((r) => r.sprite).length >= 10);
+});

@@ -15,6 +15,7 @@
   loadRoad(0);
   // The racers and tyres (shared with the server): pick panel and kart shapes once loaded.
   Ark.loadScript('/games/kart-race/racers.js').then(function () {
+    window.ArkKartRacers.RACERS.forEach(spriteFor); // start loading the kart pictures before the race
     overlayKey = hudKey = '';
     if (view && overlay) {
       renderOverlay(view);
@@ -136,7 +137,7 @@
     const R = window.ArkKartRacers;
     if (!R || !k.racer) return '';
     const r = R.racer(k.racer);
-    return '<div class="racer">' + r.emoji + ' ' + r.name + ' · ' + R.tyre(k.tyre).emoji + '</div>';
+    return '<div class="racer"><img src="' + r.portrait + '" alt=""> ' + r.name + ' · ' + R.tyre(k.tyre).emoji + '</div>';
   }
 
   /** One stat as 6 cells: the racer's own, plus (green) or minus (red) for the tyres. */
@@ -160,7 +161,7 @@
       const row = v.players[slot].local && pads[slot] ? PICK_ROWS[(pads[slot].row || 0) - ROWS.length] : null;
       const f = function (key) { return row === key ? ' focus p' + (slot + 1) : ''; };
       return '<div class="pick p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div>' +
-        '<div class="line' + f('racer') + '"><span class="em">' + r.emoji + '</span> <b>' + r.name + '</b> <span class="muted">' + R.TYPES[r.type].label + '</span></div>' +
+        '<div class="line' + f('racer') + '"><img src="' + r.portrait + '" alt=""> <b>' + r.name + '</b> <span class="muted">' + R.TYPES[r.type].label + '</span></div>' +
         '<div class="line' + f('tyre') + '"><span class="em">' + t.emoji + '</span> ' + t.name + ' tyres</div>' +
         STAT_ROWS.map(function (s) {
           return '<div class="stat"><span>' + s[1] + '</span><div class="bar">' + statBar(r.stats[s[0]], t.mod[s[0]] || 0) + '</div></div>';
@@ -396,6 +397,21 @@
     });
   }
 
+  // Top-down kart pictures (nose up), loaded on first use: src -> Image.
+  const sprites = {};
+  const KART_LEN = 1.25; // how long a kart picture is drawn, in field units
+
+  /** A racer's kart picture, once it has loaded (null until then, or if they have none yet). */
+  function spriteFor(racer) {
+    if (!racer || !racer.sprite) return null;
+    let img = sprites[racer.sprite];
+    if (!img) {
+      img = sprites[racer.sprite] = new Image();
+      img.src = racer.sprite;
+    }
+    return img.complete && img.naturalWidth ? img : null;
+  }
+
   function drawKart(g, k, s, slot, now) {
     const R = window.ArkKartRacers;
     const racer = R && k.racer ? R.racer(k.racer) : null;
@@ -404,13 +420,61 @@
     g.save();
     g.translate(s.x, s.y);
     g.rotate(s.angle + (k.spin ? now / 60 : 0)); // spinning out after a banana
+    const pic = spriteFor(racer);
+    if (pic) {
+      // The racer's kart picture over a ring in the player's colour (both may race the same racer).
+      g.fillStyle = colors[slot];
+      g.globalAlpha = 0.55;
+      g.beginPath();
+      g.ellipse(0, 0, KART_LEN * 0.6, KART_LEN * 0.42, 0, 0, Math.PI * 2);
+      g.fill();
+      g.globalAlpha = 1;
+      g.strokeStyle = colors[slot];
+      g.lineWidth = 0.08;
+      g.stroke();
+      const w = (KART_LEN * pic.naturalWidth) / pic.naturalHeight;
+      g.save();
+      g.rotate(Math.PI / 2); // the picture's nose points up; the kart's points along +x
+      g.shadowColor = 'rgba(0,0,0,0.5)';
+      g.shadowBlur = 8;
+      g.drawImage(pic, -w / 2, -KART_LEN / 2, w, KART_LEN);
+      g.restore();
+    } else {
+      g.shadowColor = 'rgba(0,0,0,0.5)';
+      g.shadowBlur = 8;
+      // Wheels.
+      g.fillStyle = '#111827';
+      const wy = shape.half + 0.06; // wheels just outside the body
+      [[-0.32, -wy], [0.28, -wy], [-0.32, wy], [0.28, wy]].forEach(function (w) { g.fillRect(w[0] - wheel.len / 2, w[1] - wheel.wide / 2, wheel.len, wheel.wide); });
+      // Body: the racer's shape in the player's colour, with a stripe in the racer's type colour.
+      g.fillStyle = colors[slot];
+      g.beginPath();
+      shape.pts.forEach(function (p, i) { if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); });
+      g.closePath();
+      g.fill();
+      g.shadowBlur = 0;
+      g.strokeStyle = '#fff';
+      g.lineWidth = 0.05;
+      g.stroke();
+      if (racer) {
+        g.fillStyle = racer.stripe;
+        g.fillRect(-0.45, -0.05, shape.nose - 0.1 + 0.45, 0.1);
+      }
+      // Driver's helmet.
+      g.fillStyle = '#f8fafc';
+      g.beginPath();
+      g.arc(-0.1, 0, 0.14, 0, Math.PI * 2);
+      g.fill();
+    }
+    const tail = pic ? KART_LEN / 2 - 0.5 : 0; // a kart picture reaches further back
+    // Boost flame and drift sparks, over the kart so they always show.
     if (k.boosting) {
       // Exhaust flame.
       g.fillStyle = Math.floor(now / 60) % 2 ? '#f97316' : '#facc15';
       g.beginPath();
-      g.moveTo(-0.5, -0.16);
-      g.lineTo(-0.95 - Math.random() * 0.25, 0);
-      g.lineTo(-0.5, 0.16);
+      g.moveTo(-0.5 - tail, -0.16);
+      g.lineTo(-0.95 - tail - Math.random() * 0.25, 0);
+      g.lineTo(-0.5 - tail, 0.16);
       g.fill();
     }
     if (k.drifting) {
@@ -419,40 +483,15 @@
       for (let i = 0; i < 6; i++) {
         const side = i % 2 ? 1 : -1;
         g.beginPath();
-        g.arc(-0.45 - Math.random() * 0.35, side * (0.34 + Math.random() * 0.15), 0.05 + Math.random() * 0.05, 0, Math.PI * 2);
+        g.arc(-0.45 - tail - Math.random() * 0.35, side * (0.34 + Math.random() * 0.15), 0.05 + Math.random() * 0.05, 0, Math.PI * 2);
         g.fill();
       }
     }
-    g.shadowColor = 'rgba(0,0,0,0.5)';
-    g.shadowBlur = 8;
-    // Wheels.
-    g.fillStyle = '#111827';
-    const wy = shape.half + 0.06; // wheels just outside the body
-    [[-0.32, -wy], [0.28, -wy], [-0.32, wy], [0.28, wy]].forEach(function (w) { g.fillRect(w[0] - wheel.len / 2, w[1] - wheel.wide / 2, wheel.len, wheel.wide); });
-    // Body: the racer's shape in the player's colour, with a stripe in the racer's type colour.
-    g.fillStyle = colors[slot];
-    g.beginPath();
-    shape.pts.forEach(function (p, i) { if (i) g.lineTo(p[0], p[1]); else g.moveTo(p[0], p[1]); });
-    g.closePath();
-    g.fill();
-    g.shadowBlur = 0;
-    g.strokeStyle = '#fff';
-    g.lineWidth = 0.05;
-    g.stroke();
-    if (racer) {
-      g.fillStyle = racer.stripe;
-      g.fillRect(-0.45, -0.05, shape.nose - 0.1 + 0.45, 0.1);
-    }
-    // Driver's helmet.
-    g.fillStyle = '#f8fafc';
-    g.beginPath();
-    g.arc(-0.1, 0, 0.14, 0, Math.PI * 2);
-    g.fill();
     if (k.shield) {
       g.strokeStyle = 'rgba(125, 211, 252, ' + (0.6 + 0.3 * Math.sin(now / 120)) + ')';
       g.lineWidth = 0.1;
       g.beginPath();
-      g.arc(0, 0, 0.75, 0, Math.PI * 2);
+      g.arc(0, 0, pic ? 0.9 : 0.75, 0, Math.PI * 2);
       g.stroke();
     }
     g.restore();
