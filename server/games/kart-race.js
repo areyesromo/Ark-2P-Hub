@@ -765,6 +765,6 @@ export class KartRace {
 export default {
   id: 'kart-race',
   name: 'Kart Race',
-  tagline: 'Top-down racing: pick one of 12 racers and your tyres, hold GAS, steer, brake for the bends (hold it to reverse), drift for a mini-boost, collect coins to go faster, hit the boost pads and bump your rival off the line. Six tracks.',
+  tagline: 'Top-down racing: pick one of 12 racers and your tyres, hold GAS, steer, brake for the bends (hold it to reverse), drift for a mini-boost, collect coins to go faster, use items (hold up to 3), hit the boost pads and bump your rival off the line. Six tracks.',
   create: (ctx) => new KartRace(ctx),
 };

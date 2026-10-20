@@ -16,7 +16,14 @@
     { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : 'Best of ' + n; } },
     { key: 'items', title: 'Items (? boxes)', fmt: function (n) { return n ? 'On' : 'Off'; } },
   ];
-  const ITEM_ICON = { banana: '🍌', turbo: '⚡', shield: '🛡️' };
+  Ark.loadScript('/games/kart-race/items.js').then(function () {
+    textKey = '';
+    if (view && els) render(view);
+  });
+  /** An item's emoji (from items.js, once it's here). */
+  function itemIcon(kind) {
+    return window.ArkKartItems && ArkKartItems[kind] ? ArkKartItems[kind].emoji : '🎁';
+  }
 
   // Each phone picks its own controller on the setup screen (remembered on the phone):
   //   buttons   hold ◀ / ▶
@@ -393,7 +400,7 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.item, k.spin, k.shield], v.result]);
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';
@@ -409,9 +416,12 @@
     els.controls.classList.toggle('hidden', between);
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
     // The item button shows what you're holding.
-    const item = k && k.item;
-    els.item.textContent = item ? ITEM_ICON[item] : '—';
-    els.item.classList.toggle('ready', Boolean(item));
+    // The item button: the next item big, the two after it small (or 🌟 while Gold Turbo lasts).
+    const items = (k && k.items) || [];
+    const gold = Boolean(k && k.gold);
+    els.item.innerHTML = gold ? '<span class="now">🌟</span>' : items.length ? '<span class="now">' + itemIcon(items[0]) + '</span><span class="next">' + items.slice(1).map(itemIcon).join('') + '</span>' : '—';
+    els.item.classList.toggle('ready', gold || items.length > 0);
+    els.item.classList.toggle('gold', gold);
     els.item.classList.toggle('hidden', !v.settings.items);
     els.bottom.classList.toggle('noitem', !v.settings.items);
     els.change.classList.toggle('hidden', v.phase !== 'over');
@@ -488,7 +498,8 @@
       holdButton(els.drift, 'drift');
       els.item.addEventListener('pointerdown', function (e) {
         e.preventDefault();
-        if (!view || !view.karts || !view.karts[view.you].item) return;
+        const mine = view && view.karts && view.karts[view.you];
+        if (!mine || !(mine.gold || (mine.items && mine.items.length))) return;
         api.send({ type: 'item' });
         api.vibrate(30);
       });

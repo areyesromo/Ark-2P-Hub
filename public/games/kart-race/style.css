@@ -193,3 +193,10 @@
 .kr-picks-tv .line img { width: 2.2em; height: 2.2em; border-radius: 50%; vertical-align: middle; }
 .kr-side .racer img { width: 1.6em; height: 1.6em; border-radius: 50%; vertical-align: middle; }
 .kr-side .coins { font-size: 1rem; font-weight: 800; color: #facc15; }
+
+/* The item queue: the next item big, the two after it small. */
+.kr-btn.item .now { display: block; line-height: 1; }
+.kr-btn.item .next { display: block; font-size: 0.45em; line-height: 1.2; opacity: 0.85; }
+.kr-btn.item.gold { border-color: #facc15; animation: kr-gold 0.5s ease-in-out infinite alternate; }
+@keyframes kr-gold { from { box-shadow: 0 0 0.4rem rgba(250, 204, 21, 0.4); } to { box-shadow: 0 0 1.4rem rgba(250, 204, 21, 0.9); } }
+.kr-side .pos .item b { font-size: 1.3em; }
