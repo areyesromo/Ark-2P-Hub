@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, ITEMS, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
+import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, ITEMS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
 import { fakeCtx } from './helpers.js';
 
 const TICK = 1000 / 60;
@@ -290,6 +290,8 @@ test('no cutting across the grass: a jump ahead puts the kart back where it left
   assert.ok(Math.abs(k.progress - before) < 0.01, 'progress kept from before the cut');
   const back = pointAt(game.track, before);
   assert.ok(Math.hypot(k.x - back.x, k.y - back.y) < 0.6, 'back on the road');
+  const off = Math.abs(k.seg - Math.round(before * SAMPLES));
+  assert.ok(Math.min(off, SAMPLES - off) <= 2, `and on its own stretch again (seg ${k.seg})`);
   assert.equal(game.events.cuts, 1);
   assert.equal(game.hostView().karts[0].cut, true);
   // Normal driving never trips it (the autopilot test drives every track at full speed).
@@ -499,11 +501,29 @@ test('barriers: every road keeps its full width; close stretches share a barrier
   assert.ok(shared >= 3, 'close stretches (Hairpins, Serpent, ...) have a barrier between them');
 });
 
-test('crashing into the barrier between two stretches bounces you off: no shortcut, no reset', () => {
+test('stretches of road never run so close that the wrong one could claim a kart', () => {
+  // A kart's own stretch is found by searching near where it was; if it's further than this from
+  // that, it was moved (a reset) and the whole road is searched. Two different stretches (20+
+  // samples apart) must be further apart than that, or a reset could leave it on the wrong one.
+  const far = TRACK_WIDTH / 2 + WALL.out + 1;
+  TRACKS.forEach((t, ti) => {
+    const L = buildTrack(ti).line;
+    const n = L.length;
+    let min = Infinity;
+    for (let i = 0; i < n; i++) {
+      for (let j = i + 20; j <= i + n - 20; j++) {
+        const q = L[j % n];
+        min = Math.min(min, Math.hypot(L[i][0] - q[0], L[i][1] - q[1]));
+      }
+    }
+    assert.ok(min > far, `${t.name}: stretches ${min.toFixed(2)} apart (need over ${far})`);
+  });
+});
+
+test('crashing into the barrier between two stretches bounces you off: never onto the other stretch', () => {
   TRACKS.forEach((t, ti) => {
     const { ctx, game } = racing({ track: ti + 1 });
-    const k = game.karts[0];
-    game.karts[1].x = -50; // out of the way
+    const [k, other] = game.karts;
     const track = game.track;
     // The tightest shared barrier on this track (if any): drive straight at it, flat out.
     let best = null;
@@ -513,15 +533,22 @@ test('crashing into the barrier between two stretches bounces you off: no shortc
     if (best.d > TRACK_WIDTH / 2 + WALL.out - 0.3) return; // no stretches close together here
     const c = track.line[best.i];
     const n = sideAt(track, best.i, best.sign);
-    const p = best.i / track.line.length;
+    const p = best.i / SAMPLES;
+    onRoad(game, other, (p + 0.5) % 1); // parked well away, so its walls don't count
+    other.seg = Math.round(((p + 0.5) % 1) * SAMPLES) % SAMPLES;
     Object.assign(k, { x: c[0], y: c[1], angle: Math.atan2(n.y, n.x), speed: KART.maxSpeed, progress: p, seg: best.i });
     game.onInput(0, { type: 'drive', steer: 0, gas: true });
+    const walls = game.events.walls;
     const cuts = game.events.cuts;
-    for (let i = 0; i < 90; i++) ctx.advance(TICK);
+    for (let tick = 0; tick < 90; tick++) {
+      ctx.advance(TICK);
+      // Every tick, the stretch it's held to is the road it's really nearest (it may slide along
+      // the barrier, even round the end of it, but never through it).
+      const nearest = locate(track, k.x, k.y).i;
+      const gap = Math.abs(nearest - k.seg);
+      assert.ok(Math.min(gap, SAMPLES - gap) < 20, `${t.name}: crossed onto another stretch (sample ${nearest}, own ${k.seg})`);
+    }
+    assert.ok(game.events.walls > walls, `${t.name}: it hit the barrier`);
     assert.equal(game.events.cuts, cuts, `${t.name}: hitting the barrier is not a shortcut`);
-    assert.ok(game.events.walls > 0, `${t.name}: it hit the barrier`);
-    // It may slide along the barrier, but never crosses to the other stretch (a jump in progress).
-    const d = Math.abs(((k.progress - p + 1.5) % 1) - 0.5);
-    assert.ok(d < 0.15, `${t.name}: still on the same stretch (${k.progress} vs ${p})`);
   });
 });

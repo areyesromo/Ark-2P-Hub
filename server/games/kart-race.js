@@ -45,8 +45,8 @@ export const KART = {
 export const WALL = { out: 1.25, headOn: 0.72, bounce: 0.35 };
 export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
 export const TIMING = { countdownMs: 3500, finishMs: 3500 };
-export const SAMPLES = Road.SAMPLES;
-const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare // points on each track's centre line
+export const SAMPLES = Road.SAMPLES; // points on each track's centre line
+const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare
 export const CUT_JUMP = 0.05; // progress (fraction of a lap) gained in one tick that can only be a shortcut
 
 /**
@@ -358,10 +358,6 @@ export class KartRace {
   }
 
   /**
-   * The walls (WALL.out outside the road's edge) and the edge of the field. A glancing hit turns
-   * the kart along the wall and slides it on, a little slower; a head-on hit bounces it back.
-   */
-  /**
    * Where a kart is on the road: along its own stretch only (see Road.locateNear), so a stretch
    * running close by never claims it. Remembers the stretch for next time.
    */
@@ -371,6 +367,11 @@ export class KartRace {
     return w;
   }
 
+  /**
+   * The barriers either side of the road (see Road.barriers) and the edge of the field. A
+   * glancing hit turns the kart along the wall and slides it on, a little slower; a head-on hit
+   * bounces it back.
+   */
   walls(k) {
     const r = KART.r;
     const w = this.near(k);
@@ -514,7 +515,7 @@ export class KartRace {
       // rejoins further on is it a shortcut.
       if (where.d > TRACK_WIDTH / 2) return;
       const back = pointAt(this.track, was);
-      Object.assign(k, { x: back.x, y: back.y, angle: back.angle, speed: 0, cutAt: now });
+      Object.assign(k, { x: back.x, y: back.y, angle: back.angle, speed: 0, cutAt: now, seg: Math.round(was * SAMPLES) % SAMPLES });
       this.events.cuts++;
       return;
     }

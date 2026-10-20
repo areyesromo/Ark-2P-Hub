@@ -144,28 +144,38 @@
     return { x: a[0] + (b[0] - a[0]) * t - dy * offset, y: a[1] + (b[1] - a[1]) * t + dx * offset, angle: Math.atan2(dy, dx) };
   }
 
+  /** Where (x, y) is relative to centre-line segment i (from sample i to i + 1). */
+  function onSegment(road, x, y, i) {
+    const line = road.line;
+    const a = line[i];
+    const b = line[(i + 1) % line.length];
+    const dx = b[0] - a[0];
+    const dy = b[1] - a[1];
+    const len2 = dx * dx + dy * dy;
+    const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / len2));
+    const px = a[0] + t * dx;
+    const py = a[1] + t * dy;
+    return { d: Math.hypot(x - px, y - py), s: (road.cum[i] + t * Math.sqrt(len2)) / road.length, i: i, px: px, py: py };
+  }
+
   /**
-   * Like locate, but only along the stretch of road near sample i0 (within `span` samples):
-   * a kart stays on its own stretch even where another one runs close by. Falls back to the
-   * whole road if the kart isn't near that stretch at all (it was moved: a reset, a new race).
+   * Like locate, but following the kart's own stretch of road from segment i0: step along the
+   * road (up to `span` segments) only while the next one is nearer. It can't jump over to
+   * another stretch running close by, as that means first getting further away. Falls back to
+   * the whole road if the result is further than `far` (the kart was moved: a reset, a new race).
    */
   function locateNear(road, x, y, i0, span, far) {
-    const line = road.line;
-    const n = line.length;
-    let best = { d: Infinity, s: 0, i: 0, px: 0, py: 0 };
-    for (let k = -span; k <= span; k++) {
-      const i = (((i0 + k) % n) + n) % n;
-      const a = line[i];
-      const b = line[(i + 1) % n];
-      const dx = b[0] - a[0];
-      const dy = b[1] - a[1];
-      const len2 = dx * dx + dy * dy;
-      const t = Math.max(0, Math.min(1, ((x - a[0]) * dx + (y - a[1]) * dy) / len2));
-      const px = a[0] + t * dx;
-      const py = a[1] + t * dy;
-      const d = Math.hypot(x - px, y - py);
-      if (d < best.d) best = { d: d, s: (road.cum[i] + t * Math.sqrt(len2)) / road.length, i: i, px: px, py: py };
-    }
+    const n = road.line.length;
+    let best = onSegment(road, x, y, (((i0 % n) + n) % n));
+    [1, -1].forEach(function (dir) {
+      let at = best;
+      for (let k = 0; k < span; k++) {
+        const next = onSegment(road, x, y, (at.i + dir + n) % n);
+        if (next.d > at.d + 1e-9) break;
+        at = next;
+      }
+      if (at.d < best.d) best = at;
+    });
     return best.d > far ? locate(road, x, y) : best;
   }
 
