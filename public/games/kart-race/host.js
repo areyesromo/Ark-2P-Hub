@@ -198,7 +198,7 @@
         return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
           '<div class="pos">' + ordinal(v.positions[slot]) + (k.item ? ' <span class="item">' + ITEM_ICON[k.item] + '</span>' : '') + '</div>' +
           '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
-          racerLine(k) + '<div class="laptime"></div></div>' + gaugeHtml(v, k) + '</div>';
+          racerLine(k) + '<div class="coins">🟡 ' + (k.coins || 0) + ' / 15</div><div class="laptime"></div></div>' + gaugeHtml(v, k) + '</div>';
       };
       html = side(0) +
         '<div class="kr-mid"><div class="track">' + esc(v.track.name) + (v.races > 1 ? ' · Race ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
@@ -371,6 +371,27 @@
   }
 
   /** ? boxes, spinning gently in rainbow colours, and the bananas on the road. */
+  /** Coins: gold discs, squashed side to side so they look like they're spinning. */
+  function drawCoins(g, v, now) {
+    (v.coins || []).forEach(function (c, i) {
+      const w = Math.abs(Math.cos(now / 300 + i * 0.7));
+      g.save();
+      g.translate(c.x, c.y);
+      g.scale(0.25 + 0.75 * w, 1);
+      g.fillStyle = '#a16207';
+      g.beginPath();
+      g.arc(0, 0, 0.3, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = '#facc15';
+      g.beginPath();
+      g.arc(0, 0, 0.24, 0, Math.PI * 2);
+      g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.7)';
+      g.fillRect(-0.04, -0.15, 0.08, 0.3);
+      g.restore();
+    });
+  }
+
   function drawBoxes(g, v, now) {
     v.boxes.forEach(function (b, i) {
       g.save();
@@ -549,6 +570,7 @@
     g.fillStyle = 'rgba(255,255,255,0.04)';
     for (let x = 0; x < f.w; x += 2) g.fillRect(x, 0, 1, f.h);
     drawTrack(g, v);
+    drawCoins(g, v, now);
     drawBoxes(g, v, now);
     // Karts: eased towards the newest positions, nudged along their heading.
     const dt = v.phase === 'race' || v.phase === 'finish' ? Math.min(performance.now() - viewAt, 60) / 1000 : 0;
@@ -589,6 +611,8 @@
       if (b.laps > a.laps) out.push('correct');
       if (b.cuts > (a.cuts || 0)) out.push('wrong');
       if (b.items > (a.items || 0)) out.push('eat');
+      if (b.coins > (a.coins || 0)) out.push('tick');
+      if (b.coinsLost > (a.coinsLost || 0)) out.push('drop');
       if (b.spins > (a.spins || 0)) out.push('crash');
       if (b.blocked > (a.blocked || 0)) out.push('lock');
       if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');

@@ -192,3 +192,4 @@
 .kr-stats .who img { width: 1.6em; height: 1.6em; border-radius: 50%; vertical-align: middle; box-shadow: 0 0 0 2px #eab308; }
 .kr-picks-tv .line img { width: 2.2em; height: 2.2em; border-radius: 50%; vertical-align: middle; box-shadow: 0 0 0 2px #eab308; }
 .kr-side .racer img { width: 1.6em; height: 1.6em; border-radius: 50%; vertical-align: middle; box-shadow: 0 0 0 2px #eab308; }
+.kr-side .coins { font-size: 1rem; font-weight: 800; color: #facc15; }

@@ -364,7 +364,7 @@
     els.speed.classList.toggle('boost', k.boosting);
     els.speed.classList.toggle('reverse', k.speed < -0.05);
     els.speed.classList.toggle('charged', k.driftCharge >= 1);
-    els.kmh.textContent = (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH) + ' km/h';
+    els.kmh.textContent = '🟡 ' + (k.coins || 0) + ' · ' + (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH) + ' km/h';
     els.lap.textContent = (k.lapMs !== null ? '⏱ ' + clock(k.lapMs) : '') + (k.lastLap ? ' · last ' + clock(k.lastLap) : '') + (k.bestLap ? ' · best ' + clock(k.bestLap) : '');
   }
 
