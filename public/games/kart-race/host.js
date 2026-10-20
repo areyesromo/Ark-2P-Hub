@@ -15,6 +15,7 @@
   loadRoad(0);
   // The racers and tyres (shared with the server): pick panel and kart shapes once loaded.
   Ark.loadScript('/games/kart-race/racers.js').then(function () {
+    window.ArkKartRacers.RACERS.forEach(spriteFor); // start loading the kart pictures before the race
     overlayKey = hudKey = '';
     if (view && overlay) {
       renderOverlay(view);
@@ -419,25 +420,6 @@
     g.save();
     g.translate(s.x, s.y);
     g.rotate(s.angle + (k.spin ? now / 60 : 0)); // spinning out after a banana
-    if (k.boosting) {
-      // Exhaust flame.
-      g.fillStyle = Math.floor(now / 60) % 2 ? '#f97316' : '#facc15';
-      g.beginPath();
-      g.moveTo(-0.5, -0.16);
-      g.lineTo(-0.95 - Math.random() * 0.25, 0);
-      g.lineTo(-0.5, 0.16);
-      g.fill();
-    }
-    if (k.drifting) {
-      // Sparks off the back wheels: blue while charging, orange once a mini-boost is ready.
-      g.fillStyle = k.driftCharge >= 1 ? '#fb923c' : '#60a5fa';
-      for (let i = 0; i < 6; i++) {
-        const side = i % 2 ? 1 : -1;
-        g.beginPath();
-        g.arc(-0.45 - Math.random() * 0.35, side * (0.34 + Math.random() * 0.15), 0.05 + Math.random() * 0.05, 0, Math.PI * 2);
-        g.fill();
-      }
-    }
     const pic = spriteFor(racer);
     if (pic) {
       // The racer's kart picture over a ring in the player's colour (both may race the same racer).
@@ -484,11 +466,32 @@
       g.arc(-0.1, 0, 0.14, 0, Math.PI * 2);
       g.fill();
     }
+    const tail = pic ? KART_LEN / 2 - 0.5 : 0; // a kart picture reaches further back
+    // Boost flame and drift sparks, over the kart so they always show.
+    if (k.boosting) {
+      // Exhaust flame.
+      g.fillStyle = Math.floor(now / 60) % 2 ? '#f97316' : '#facc15';
+      g.beginPath();
+      g.moveTo(-0.5 - tail, -0.16);
+      g.lineTo(-0.95 - tail - Math.random() * 0.25, 0);
+      g.lineTo(-0.5 - tail, 0.16);
+      g.fill();
+    }
+    if (k.drifting) {
+      // Sparks off the back wheels: blue while charging, orange once a mini-boost is ready.
+      g.fillStyle = k.driftCharge >= 1 ? '#fb923c' : '#60a5fa';
+      for (let i = 0; i < 6; i++) {
+        const side = i % 2 ? 1 : -1;
+        g.beginPath();
+        g.arc(-0.45 - tail - Math.random() * 0.35, side * (0.34 + Math.random() * 0.15), 0.05 + Math.random() * 0.05, 0, Math.PI * 2);
+        g.fill();
+      }
+    }
     if (k.shield) {
       g.strokeStyle = 'rgba(125, 211, 252, ' + (0.6 + 0.3 * Math.sin(now / 120)) + ')';
       g.lineWidth = 0.1;
       g.beginPath();
-      g.arc(0, 0, 0.75, 0, Math.PI * 2);
+      g.arc(0, 0, pic ? 0.9 : 0.75, 0, Math.PI * 2);
       g.stroke();
     }
     g.restore();
