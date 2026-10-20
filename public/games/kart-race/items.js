@@ -14,5 +14,10 @@
     thunder: { name: 'Thunder', emoji: '🌩️', about: 'Your rival shrinks for 4 s: slower and lighter.' },
     freeze: { name: 'Freeze', emoji: '🧊', about: "Your rival's tyres ice up for 3 s: hard to turn." },
     swap: { name: 'Swap', emoji: '🔄', about: 'Trade your items with your rival.' },
+    web: { name: 'Web', emoji: '🕸️', about: 'Drop it: whoever drives in is held to half speed for 1.5 s.' },
+    oil: { name: 'Oil Slick', emoji: '🛢️', about: "Drop it: whoever crosses it can't steer or brake for 1 s." },
+    bouncer: { name: 'Bouncer', emoji: '🥏', about: 'Fires straight ahead and bounces off the walls: it spins out anyone it hits (you too!).' },
+    seeker: { name: 'Seeker', emoji: '🎯', about: 'Chases your rival round the road; a banana or web in its way stops it.' },
+    bomb: { name: 'Bomb', emoji: '💣', about: 'Lobbed ahead: it goes off after 1.5 s and spins out anyone close.' },
   };
 })();

@@ -396,6 +396,91 @@
   }
 
   /** ? boxes, spinning gently in rainbow colours, and the bananas on the road. */
+  /** Webs and oil on the road, the Bouncers, Seekers and Bombs, and bombs going off. */
+  function drawTrackItems(g, v, now) {
+    (v.oils || []).forEach(function (o) {
+      g.fillStyle = 'rgba(15, 23, 42, 0.85)';
+      g.beginPath();
+      g.ellipse(o.x, o.y, 0.62, 0.48, 0.4, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = 'rgba(167, 139, 250, 0.6)'; // the sheen
+      g.lineWidth = 0.06;
+      g.beginPath();
+      g.arc(o.x - 0.1, o.y - 0.08, 0.28, 3.6, 5.2);
+      g.stroke();
+    });
+    (v.webs || []).forEach(function (w) {
+      g.strokeStyle = 'rgba(241, 245, 249, 0.85)';
+      g.lineWidth = 0.04;
+      for (let i = 0; i < 4; i++) {
+        const a = (i * Math.PI) / 4;
+        g.beginPath();
+        g.moveTo(w.x - Math.cos(a) * 0.55, w.y - Math.sin(a) * 0.55);
+        g.lineTo(w.x + Math.cos(a) * 0.55, w.y + Math.sin(a) * 0.55);
+        g.stroke();
+      }
+      [0.2, 0.38, 0.55].forEach(function (r) {
+        g.beginPath();
+        g.arc(w.x, w.y, r, 0, Math.PI * 2);
+        g.stroke();
+      });
+    });
+    (v.shots || []).forEach(function (s) {
+      g.save();
+      g.translate(s.x, s.y);
+      if (s.kind === 'bouncer') {
+        g.rotate(now / 80);
+        g.fillStyle = '#2dd4bf';
+        g.beginPath();
+        g.arc(0, 0, 0.3, 0, Math.PI * 2);
+        g.fill();
+        g.strokeStyle = '#f0fdfa';
+        g.lineWidth = 0.06;
+        g.beginPath();
+        g.arc(0, 0, 0.18, 0, Math.PI * 1.3);
+        g.stroke();
+      } else if (s.kind === 'seeker') {
+        g.rotate(s.angle);
+        g.fillStyle = '#ef4444';
+        g.beginPath();
+        g.moveTo(0.4, 0);
+        g.lineTo(-0.3, -0.24);
+        g.lineTo(-0.18, 0);
+        g.lineTo(-0.3, 0.24);
+        g.closePath();
+        g.fill();
+        g.strokeStyle = '#fff';
+        g.lineWidth = 0.05;
+        g.stroke();
+      } else if (s.kind === 'bomb') {
+        g.fillStyle = '#111827';
+        g.beginPath();
+        g.arc(0, 0, 0.34, 0, Math.PI * 2);
+        g.fill();
+        g.strokeStyle = '#6b7280';
+        g.lineWidth = 0.05;
+        g.stroke();
+        // The fuse blinks faster as it burns down.
+        const blink = Math.floor(now / Math.max(60, (s.fuse || 0) / 6)) % 2;
+        g.fillStyle = blink ? '#f97316' : '#facc15';
+        g.beginPath();
+        g.arc(0.2, -0.28, 0.09, 0, Math.PI * 2);
+        g.fill();
+      }
+      g.restore();
+    });
+    (v.blasts || []).forEach(function (b) {
+      const t = Math.min(1, b.age / 600);
+      g.strokeStyle = 'rgba(249, 115, 22, ' + (1 - t) + ')';
+      g.fillStyle = 'rgba(250, 204, 21, ' + 0.4 * (1 - t) + ')';
+      g.lineWidth = 0.2;
+      g.beginPath();
+      g.arc(b.x, b.y, 0.5 + 2 * t, 0, Math.PI * 2);
+      g.fill();
+      g.stroke();
+    });
+  }
+
   function drawBoxes(g, v, now) {
     v.boxes.forEach(function (b, i) {
       g.save();
@@ -555,6 +640,24 @@
       g.stroke();
       g.setLineDash([]);
     }
+    if (k.webbed) {
+      // Caught in a web: strands over the kart.
+      g.strokeStyle = 'rgba(241, 245, 249, 0.9)';
+      g.lineWidth = 0.04;
+      for (let i = 0; i < 3; i++) {
+        g.beginPath();
+        g.moveTo(-0.6, -0.4 + i * 0.4);
+        g.lineTo(0.6, 0.4 - i * 0.4);
+        g.stroke();
+      }
+    }
+    if (k.oiled) {
+      // Oily: a dark slick sheen.
+      g.fillStyle = 'rgba(30, 27, 75, 0.45)';
+      g.beginPath();
+      g.ellipse(0, 0, 0.7, 0.5, 0, 0, Math.PI * 2);
+      g.fill();
+    }
     if (k.magnet) {
       // Magnet: arcs pulsing out in front.
       g.strokeStyle = 'rgba(248, 113, 113, 0.8)';
@@ -616,6 +719,7 @@
     drawTrack(g, v);
     drawCoins(g, v, now);
     drawBoxes(g, v, now);
+    drawTrackItems(g, v, now);
     // Karts: eased towards the newest positions, nudged along their heading.
     const dt = v.phase === 'race' || v.phase === 'finish' ? Math.min(performance.now() - viewAt, 60) / 1000 : 0;
     if (!shown) shown = v.karts.map(function (c) { return { x: c.x, y: c.y, angle: c.angle }; });
@@ -657,6 +761,9 @@
       if (b.items > (a.items || 0)) out.push('eat');
       if (b.zapped > (a.zapped || 0)) out.push('boom');
       if (b.frozen > (a.frozen || 0)) out.push('splash');
+      if (b.fired > (a.fired || 0)) out.push('shoot');
+      if (b.exploded > (a.exploded || 0)) out.push('boom');
+      if (b.snagged > (a.snagged || 0)) out.push('drop');
       if (b.swapped > (a.swapped || 0)) out.push('lock');
       if (b.starHits > (a.starHits || 0)) out.push('fanfare');
       if (b.coins > (a.coins || 0)) out.push('tick');
