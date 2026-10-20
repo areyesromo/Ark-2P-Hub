@@ -42,7 +42,11 @@
     { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : 'Best of ' + n; } },
     { key: 'items', title: 'Items (? boxes)', fmt: function (n) { return n ? 'On' : 'Off'; } },
   ];
-  const ITEM_ICON = { banana: '🍌', turbo: '⚡', shield: '🛡️' };
+  Ark.loadScript('/games/kart-race/items.js').then(function () { hudKey = ''; });
+  /** An item's emoji (from items.js, once it's here). */
+  function itemIcon(kind) {
+    return window.ArkKartItems && ArkKartItems[kind] ? ArkKartItems[kind].emoji : '🎁';
+  }
   const DEADZONE = 0.15;
 
   let root = null;
@@ -196,7 +200,7 @@
       const side = function (slot) {
         const k = v.karts[slot];
         return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
-          '<div class="pos">' + ordinal(v.positions[slot]) + (k.item ? ' <span class="item">' + ITEM_ICON[k.item] + '</span>' : '') + '</div>' +
+          '<div class="pos">' + ordinal(v.positions[slot]) + (k.items && k.items.length ? ' <span class="item"><b>' + itemIcon(k.items[0]) + '</b>' + k.items.slice(1).map(itemIcon).join('') + '</span>' : '') + (k.gold ? ' <span class="item">🌟</span>' : '') + '</div>' +
           '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
           racerLine(k) + '<div class="coins">🟡 ' + (k.coins || 0) + ' / 15</div><div class="laptime"></div></div>' + gaugeHtml(v, k) + '</div>';
       };
@@ -397,7 +401,8 @@
       g.save();
       g.translate(b.x, b.y);
       g.rotate(now / 700 + i);
-      g.fillStyle = 'hsl(' + ((now / 8 + i * 40) % 360) + ', 85%, 60%)';
+      // A gold double box (two items) or a rainbow one.
+      g.fillStyle = b.double ? '#eab308' : 'hsl(' + ((now / 8 + i * 40) % 360) + ', 85%, 60%)';
       g.globalAlpha = 0.9;
       g.fillRect(-0.4, -0.4, 0.8, 0.8);
       g.globalAlpha = 1;
@@ -409,7 +414,7 @@
       g.font = 'bold 0.6px sans-serif';
       g.textAlign = 'center';
       g.textBaseline = 'middle';
-      g.fillText('?', 0, 0.04);
+      g.fillText(b.double ? '2' : '?', 0, 0.04);
       g.restore();
     });
     // Bananas: drawn, not emoji (a kiosk browser may have no colour emoji font).
@@ -455,6 +460,22 @@
     g.save();
     g.translate(s.x, s.y);
     g.rotate(s.angle + (k.spin ? now / 60 : 0)); // spinning out after a banana
+    if (k.hover) {
+      // Hovering: a shadow on the ground below, the kart lifted a little bigger above it.
+      g.fillStyle = 'rgba(0,0,0,0.35)';
+      g.beginPath();
+      g.ellipse(-0.15, 0.2, 0.7, 0.45, 0, 0, Math.PI * 2);
+      g.fill();
+      g.scale(1.12, 1.12);
+    }
+    if (k.shrunk) g.scale(0.7, 0.7); // Thunder
+    if (k.star) {
+      // Star: a pulsing rainbow glow.
+      g.fillStyle = 'hsla(' + Math.floor(now / 4) % 360 + ', 95%, 60%, 0.45)';
+      g.beginPath();
+      g.arc(0, 0, 0.95 + 0.1 * Math.sin(now / 80), 0, Math.PI * 2);
+      g.fill();
+    }
     const pic = spriteFor(racer);
     if (pic) {
       // The racer's kart picture over a ring in the player's colour (both may race the same racer).
@@ -520,6 +541,29 @@
         g.beginPath();
         g.arc(-0.45 - tail - Math.random() * 0.35, side * (0.34 + Math.random() * 0.15), 0.05 + Math.random() * 0.05, 0, Math.PI * 2);
         g.fill();
+      }
+    }
+    if (k.frozen) {
+      // Freeze: an icy tint and a frosty ring.
+      g.fillStyle = 'rgba(186, 230, 253, 0.35)';
+      g.beginPath();
+      g.arc(0, 0, 0.7, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = '#e0f2fe';
+      g.lineWidth = 0.06;
+      g.setLineDash([0.12, 0.1]);
+      g.stroke();
+      g.setLineDash([]);
+    }
+    if (k.magnet) {
+      // Magnet: arcs pulsing out in front.
+      g.strokeStyle = 'rgba(248, 113, 113, 0.8)';
+      g.lineWidth = 0.06;
+      for (let i = 0; i < 2; i++) {
+        const r = 0.8 + i * 0.35 + ((now / 400) % 1) * 0.3;
+        g.beginPath();
+        g.arc(0, 0, r, -0.6, 0.6);
+        g.stroke();
       }
     }
     if (k.shield) {
@@ -611,6 +655,10 @@
       if (b.laps > a.laps) out.push('correct');
       if (b.cuts > (a.cuts || 0)) out.push('wrong');
       if (b.items > (a.items || 0)) out.push('eat');
+      if (b.zapped > (a.zapped || 0)) out.push('boom');
+      if (b.frozen > (a.frozen || 0)) out.push('splash');
+      if (b.swapped > (a.swapped || 0)) out.push('lock');
+      if (b.starHits > (a.starHits || 0)) out.push('fanfare');
       if (b.coins > (a.coins || 0)) out.push('tick');
       if (b.coinsLost > (a.coinsLost || 0)) out.push('drop');
       if (b.spins > (a.spins || 0)) out.push('crash');

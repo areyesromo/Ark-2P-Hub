@@ -297,22 +297,18 @@ test('no cutting across the grass: a jump ahead puts the kart back where it left
   // Normal driving never trips it (the autopilot test drives every track at full speed).
 });
 
-test('items: drive through a ? box to get one; it comes back later; one item at a time', () => {
+test('items: drive through a ? box to get one; it comes back later', () => {
   const { ctx, game } = racing();
   const k = game.karts[0];
-  const box = game.boxes[1];
+  const box = game.boxes[0];
   assert.equal(game.boxes.length, ITEMS.rows.length * ITEMS.offsets.length);
   place(game, k, box.x, box.y);
   k.speed = 0;
   ctx.advance(TICK);
-  assert.ok(ITEMS.kinds.includes(k.item), `got ${k.item}`);
+  assert.equal(k.items.length, 1);
+  assert.ok(ITEMS.kinds.includes(k.items[0]), `got ${k.items[0]}`);
   assert.equal(game.hostView().boxes.length, game.boxes.length - 1, 'the box is gone for now');
-  const held = k.item;
-  const other = game.boxes[0];
-  place(game, k, other.x, other.y);
-  ctx.advance(TICK);
-  assert.equal(k.item, held, 'still the same item');
-  assert.equal(game.hostView().boxes.length, game.boxes.length - 1, "the other box wasn't used up");
+  assert.deepEqual(game.hostView().karts[0].items, k.items);
   ctx.advance(ITEMS.respawnMs);
   assert.equal(game.hostView().boxes.length, game.boxes.length, 'back again');
 });
@@ -322,12 +318,12 @@ test('items: turbo boosts; a banana spins out whoever hits it (not you, just aft
   const [a, b] = game.karts;
   ctx.advance(1000);
   // Turbo.
-  a.item = 'turbo';
+  a.items = ['turbo'];
   game.onInput(0, { type: 'item' });
-  assert.equal(a.item, null);
+  assert.deepEqual(a.items, []);
   assert.ok(a.speed >= KART.boostSpeed && game.hostView().karts[0].boosting);
   // Banana: dropped behind a, which drives on safely.
-  a.item = 'banana';
+  a.items = ['banana'];
   game.onInput(0, { type: 'item' });
   assert.equal(game.bananas.length, 1);
   const banana = game.bananas[0];
@@ -347,33 +343,38 @@ test('items: turbo boosts; a banana spins out whoever hits it (not you, just aft
   assert.equal(b.angle, angle, 'no steering while spinning');
   // Shield: a fresh banana is blocked.
   ctx.advance(ITEMS.spinMs);
-  b.item = 'shield';
+  b.items = ['shield'];
   game.onInput(1, { type: 'item' });
   game.bananas.push({ x: b.x, y: b.y, owner: 0, safeUntil: 0 });
   ctx.advance(TICK);
   assert.equal(game.hostView().karts[1].spin, false);
   assert.equal(game.events.blocked, 1);
-  assert.equal(game.hostView().karts[1].shield, true);
+  assert.equal(game.hostView().karts[1].shield, false, 'one hit and the shield pops');
   // Using nothing does nothing.
   game.onInput(1, { type: 'item' });
   assert.equal(game.events.used, 3);
 });
 
-test('items: the kart behind gets more turbos; items off means no boxes', () => {
+test('items: odds by place; 1st never draws the catch-up items; items off means no boxes', () => {
   const { game } = racing();
   game.karts[0].laps = 1; // kart 1 leads
   const count = (slot) => {
-    const n = { banana: 0, turbo: 0, shield: 0 };
-    for (let i = 0; i < 600; i++) {
-      game.rng = () => (i + 0.5) / 600;
-      n[game.rollItem(slot)]++;
+    const n = {};
+    for (let i = 0; i < 2000; i++) {
+      game.rng = () => (i + 0.5) / 2000;
+      const kind = game.rollItem(slot);
+      n[kind] = (n[kind] || 0) + 1;
     }
     return n;
   };
   const leader = count(0);
   const chaser = count(1);
-  assert.ok(chaser.turbo > leader.turbo * 2, JSON.stringify({ leader, chaser }));
-  assert.ok(leader.banana > chaser.banana);
+  for (const kind of ['star', 'goldturbo', 'thunder', 'freeze', 'swap', 'hover']) {
+    assert.ok(!leader[kind], `1st drew ${kind}`);
+    assert.ok(chaser[kind] > 0, `2nd never drew ${kind}`);
+  }
+  assert.ok(leader.banana > (chaser.banana || 0));
+  assert.ok(Object.keys(leader).concat(Object.keys(chaser)).every((k) => ITEMS.kinds.includes(k)));
   const off = racing({ items: 0 }).game;
   assert.equal(off.boxes.length, 0);
   assert.equal(off.hostView().boxes.length, 0);
@@ -674,4 +675,256 @@ test('coins: pressing into a wall costs one coin, not the whole purse; finished 
   Object.assign(k, { x: c.x, y: c.y, speed: 0 });
   ctx.advance(TICK);
   assert.equal(k.coins, had);
+});
+
+/** Use kart `slot`'s next item, having given it these. */
+function useNow(game, slot, ...items) {
+  game.karts[slot].items = items;
+  game.onInput(slot, { type: 'item' });
+}
+
+test('items: hold up to 3, used oldest first; a double box gives two; a full queue leaves the box', () => {
+  const { ctx, game } = racing();
+  const k = game.karts[0];
+  game.karts[1].x = -50;
+  const double = game.boxes.find((b) => b.double);
+  assert.ok(double, 'each row has a double box');
+  assert.equal(game.boxes.filter((b) => b.double).length, ITEMS.rows.length);
+  assert.equal(game.hostView().boxes.filter((b) => b.double).length, ITEMS.rows.length);
+  place(game, k, double.x, double.y);
+  k.speed = 0;
+  ctx.advance(TICK);
+  assert.equal(k.items.length, 2, 'two from a double box');
+  // One slot left: a double box gives one, and is spent.
+  onRoad(game, k, 0.55); // (off the boxes while they come back)
+  ctx.advance(ITEMS.respawnMs + 50);
+  k.items = ['turbo', 'shield'];
+  place(game, k, double.x, double.y);
+  ctx.advance(TICK);
+  assert.equal(k.items.length, 3);
+  assert.deepEqual(k.items.slice(0, 2), ['turbo', 'shield'], 'new ones join the back');
+  // Full: the box stays for the other kart.
+  ctx.advance(ITEMS.respawnMs + 50);
+  place(game, k, double.x, double.y);
+  ctx.advance(TICK);
+  assert.equal(k.items.length, ITEMS.maxHeld);
+  assert.ok(ctx.now() >= double.backAt, 'still there');
+  onRoad(game, k, 0.55);
+  // Oldest first.
+  k.items = ['turbo', 'shield', 'banana'];
+  game.onInput(0, { type: 'item' });
+  assert.deepEqual(k.items, ['shield', 'banana']);
+  assert.ok(game.hostView().karts[0].boosting);
+});
+
+test('items: shield blocks one hit then pops; Star is immune and spins out whoever it rams', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  onRoad(game, a, 0.3);
+  onRoad(game, b, 0.6);
+  useNow(game, 1, 'shield');
+  game.bananas.push({ x: b.x, y: b.y, owner: 0, safeUntil: 0 });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].spin, false);
+  ctx.advance(ITEMS.graceMs + 50); // (a moment's grace after the shield pops)
+  game.bananas.push({ x: b.x, y: b.y, owner: 0, safeUntil: 0 });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].spin, true, 'the shield only blocks one hit');
+  ctx.advance(ITEMS.spinMs + 100);
+  // Star: bananas don't touch you, and a ram spins the rival out.
+  useNow(game, 0, 'star');
+  assert.equal(game.hostView().karts[0].star, true);
+  game.bananas.push({ x: a.x, y: a.y, owner: 1, safeUntil: 0 });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[0].spin, false, 'immune');
+  assert.equal(game.bananas.length, 0, 'and it clears the banana away');
+  b.coins = 5;
+  Object.assign(b, { x: a.x + 0.4, y: a.y, speed: 0 });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[1].spin, true, 'rammed');
+  assert.equal(b.coins, 2);
+  // Two stars: neither spins.
+  ctx.advance(ITEMS.spinMs + 100);
+  useNow(game, 1, 'star');
+  Object.assign(b, { x: a.x + 0.4, y: a.y, speed: 0 });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[0].spin, false);
+  assert.equal(game.hostView().karts[1].spin, false);
+  // A Star's top speed is higher.
+  onRoad(game, a, 0.05);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  for (let i = 0; i < 20; i++) { onRoad(game, a, 0.05, a.speed); ctx.advance(100); }
+  assert.ok(Math.abs(a.speed - (8.5 + ITEMS.starSpeed)) < 0.05, `star speed ${a.speed}`);
+  ctx.advance(ITEMS.starMs);
+  assert.equal(game.hostView().karts[0].star, false, 'wears off');
+});
+
+test('items: Gold Turbo boosts on every press for 5 s without using the queue; Coin Bag +5 (max 15)', () => {
+  const { ctx, game } = racing();
+  const k = game.karts[0];
+  game.karts[1].x = -50;
+  onRoad(game, k, 0.55); // well away from the ? boxes
+  useNow(game, 0, 'goldturbo', 'banana');
+  assert.deepEqual(k.items, ['banana']);
+  assert.equal(game.hostView().karts[0].gold, true);
+  const boosts = game.events.used;
+  ctx.advance(2000);
+  game.onInput(0, { type: 'item' });
+  assert.deepEqual(k.items, ['banana'], 'the banana is kept for later');
+  assert.ok(game.hostView().karts[0].boosting);
+  assert.equal(game.events.used, boosts + 1);
+  ctx.advance(ITEMS.goldMs);
+  game.onInput(0, { type: 'item' });
+  assert.deepEqual(k.items, [], 'window over: the queue again');
+  k.coins = 12;
+  useNow(game, 0, 'coinbag');
+  assert.equal(k.coins, 15);
+});
+
+test('items: Thunder shrinks the rival (slower, lighter) unless shielded; Freeze cuts their turning', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  onRoad(game, a, 0.3);
+  useNow(game, 1, 'shield');
+  useNow(game, 0, 'thunder');
+  assert.equal(game.hostView().karts[1].shrunk, false, 'blocked by the shield');
+  assert.equal(game.hostView().karts[1].shield, false, 'which pops');
+  useNow(game, 0, 'thunder');
+  assert.equal(game.hostView().karts[1].shrunk, true);
+  onRoad(game, b, 0.05);
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  for (let i = 0; i < 20; i++) { onRoad(game, b, 0.05, b.speed); ctx.advance(100); }
+  assert.ok(Math.abs(b.speed - (8.5 - ITEMS.thunderSpeed)) < 0.05, `shrunk top speed ${b.speed}`);
+  ctx.advance(ITEMS.thunderMs);
+  assert.equal(game.hostView().karts[1].shrunk, false);
+  // Freeze: the same turn covers less angle.
+  onRoad(game, b, 0.05, 4);
+  let a0 = b.angle;
+  game.onInput(1, { type: 'drive', steer: 1, gas: true });
+  ctx.advance(200);
+  const normal = b.angle - a0;
+  useNow(game, 0, 'freeze');
+  assert.equal(game.hostView().karts[1].frozen, true);
+  onRoad(game, b, 0.05, 4);
+  a0 = b.angle;
+  ctx.advance(200);
+  assert.ok(b.angle - a0 < normal * 0.75, `frozen ${b.angle - a0} vs ${normal}`);
+});
+
+test('items: Magnet collects nearby coins and slipstreams you; Hover skips the grass slowdown and rides over bananas', () => {
+  const { ctx, game } = racing({ items: 1 });
+  const [a, b] = game.karts;
+  b.x = -50;
+  const c = game.coins[0];
+  useNow(game, 0, 'magnet');
+  assert.equal(game.hostView().karts[0].magnet, true);
+  Object.assign(a, { x: c.x + 2.5, y: c.y, speed: 0 });
+  a.seg = locate(game.track, a.x, a.y).i;
+  ctx.advance(TICK);
+  assert.ok(a.coins >= 1, 'pulled in from 2.5 away');
+  // Slipstream: right behind the rival (ahead, within 6), a little faster; not when they're behind.
+  onRoad(game, a, 0.55);
+  onRoad(game, b, 0.55 + 3 / game.track.length);
+  assert.equal(game.slipstream(a, ctx.now()), ITEMS.slipSpeed);
+  assert.equal(game.slipstream(b, ctx.now()), 0, 'no magnet, no slipstream');
+  onRoad(game, b, 0.55 - 3 / game.track.length);
+  assert.equal(game.slipstream(a, ctx.now()), 0, 'rival behind: nothing to pull you');
+  b.x = -50;
+  ctx.advance(ITEMS.magnetMs);
+  // Hover: no grass slowdown, bananas pass under.
+  useNow(game, 0, 'hover');
+  assert.equal(game.hostView().karts[0].hover, true);
+  place(game, a, 16, 9);
+  Object.assign(a, { angle: 0, speed: KART.maxSpeed });
+  ctx.advance(300);
+  assert.ok(a.speed > KART.grassSpeed + 2, `hovering over the grass at ${a.speed}`);
+  onRoad(game, a, 0.6);
+  game.bananas.push({ x: a.x, y: a.y, owner: 1, safeUntil: 0 });
+  ctx.advance(TICK);
+  assert.equal(game.hostView().karts[0].spin, false);
+  assert.equal(game.bananas.length, 1, 'still there for the next kart');
+});
+
+test('items: Swap trades queues (the Swap itself is spent)', () => {
+  const { game } = racing();
+  const [a, b] = game.karts;
+  b.items = ['star', 'turbo'];
+  useNow(game, 0, 'swap', 'banana');
+  assert.deepEqual(a.items, ['star', 'turbo']);
+  assert.deepEqual(b.items, ['banana']);
+  b.items = [];
+  useNow(game, 0, 'swap');
+  assert.deepEqual(a.items, []);
+  assert.deepEqual(b.items, []);
+});
+
+test('items: a Star ram spins the rival once (not every tick), and a shield still blocks one ram', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  onRoad(game, b, 0.55);
+  onRoad(game, a, 0.55 - 0.5 / game.track.length);
+  b.coins = 15;
+  useNow(game, 1, 'shield');
+  useNow(game, 0, 'star');
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  const spins = game.events.spins;
+  for (let i = 0; i < 60; i++) {
+    Object.assign(a, { x: b.x - Math.cos(b.angle) * 0.6, y: b.y - Math.sin(b.angle) * 0.6, angle: b.angle }); // pressed against b
+    ctx.advance(TICK);
+  }
+  assert.ok(game.events.spins - spins <= 1, `spun ${game.events.spins - spins} times`);
+  assert.ok(b.coins >= 12, `coins ${b.coins}`);
+});
+
+test('items: Thunder and Freeze miss a Star kart; Freeze is blocked by a shield; nothing hits a finished kart', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  onRoad(game, a, 0.55);
+  onRoad(game, b, 0.2);
+  useNow(game, 1, 'star');
+  useNow(game, 0, 'thunder');
+  useNow(game, 0, 'freeze');
+  assert.equal(game.hostView().karts[1].shrunk, false);
+  assert.equal(game.hostView().karts[1].frozen, false);
+  ctx.advance(ITEMS.starMs + 50);
+  useNow(game, 1, 'shield');
+  useNow(game, 0, 'freeze');
+  assert.equal(game.hostView().karts[1].frozen, false, 'shield took it');
+  // Over the line (the other kart still racing): no zaps or swaps on it.
+  b.finishedAt = ctx.now();
+  b.items = ['banana'];
+  useNow(game, 0, 'thunder');
+  assert.equal(game.hostView().karts[1].shrunk, false);
+  useNow(game, 0, 'swap', 'turbo');
+  assert.deepEqual(b.items, ['banana']);
+  assert.deepEqual(a.items, ['turbo']);
+});
+
+test('items: ITEM does nothing with an empty queue, while spinning or after finishing; a Magnet pulls in a box', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  b.x = -50;
+  onRoad(game, a, 0.55);
+  const used = game.events.used;
+  useNow(game, 0);
+  a.items = ['turbo'];
+  a.spinUntil = ctx.now() + 500;
+  game.onInput(0, { type: 'item' });
+  assert.deepEqual(a.items, ['turbo'], 'not while spinning');
+  ctx.advance(600);
+  game.finishLine(0, ctx.now());
+  game.onInput(0, { type: 'item' });
+  assert.deepEqual(a.items, ['turbo'], 'not after finishing');
+  assert.equal(game.events.used, used);
+  // Magnet: a box 2.5 away comes to you.
+  const g2 = racing().game;
+  const k = g2.karts[0];
+  g2.karts[1].x = -50;
+  useNow(g2, 0, 'magnet');
+  const box = g2.boxes[0];
+  Object.assign(k, { x: box.x, y: box.y + 2.5, speed: 0 });
+  k.seg = locate(g2.track, k.x, k.y).i;
+  g2.itemCheck(k, 0, g2.ctx.now());
+  assert.ok(k.items.length >= 1, 'pulled in from 2.5 away');
 });
