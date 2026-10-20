@@ -16,6 +16,9 @@
 import { loadSettings, applySetting } from './options.js';
 import '../../public/games/kart-race/track.js';
 import '../../public/games/kart-race/racers.js';
+import { ITEMS, rollItem, useItem, effects } from './kart-items.js';
+
+export { ITEMS };
 
 const Road = globalThis.ArkKartTrack;
 const Racers = globalThis.ArkKartRacers;
@@ -115,22 +118,6 @@ export function coinSpots(def) {
   return spots;
 }
 
-/**
- * Items. Rows of ? boxes at these points of every lap; a box gives you an
- * item if you're not holding one, then comes back after a while.
- */
-export const ITEMS = {
-  rows: [0.3, 0.8], // where along the lap
-  offsets: [-1.05, 0, 1.05], // three boxes across the road
-  boxR: 0.55,
-  respawnMs: 4000,
-  kinds: ['banana', 'turbo', 'shield'],
-  turboMs: 1600,
-  shieldMs: 5000,
-  spinMs: 1200, // hit a banana: spin out
-  bananaR: 0.45,
-  maxBananas: 6,
-};
 
 export const OPTIONS = {
   track: [0, 1, 2, 3, 4, 5, 6], // 0: a different track each race
@@ -194,7 +181,7 @@ export class KartRace {
     this.scores = [0, 0];
     this.race = 0;
     this.winner = null;
-    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0 };
+    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, swapped: 0, starHits: 0 };
     this.lastTrack = -1;
     this.newRace();
     this.loop();
@@ -218,7 +205,8 @@ export class KartRace {
     // Item boxes (none if items are off) and the bananas lying on the road.
     this.boxes = [];
     if (this.settings.items) {
-      for (const p of ITEMS.rows) for (const off of ITEMS.offsets) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0 });
+      // The middle box of each row is a gold double box (two items).
+      for (const p of ITEMS.rows) for (const off of ITEMS.offsets) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0, double: off === 0 });
     }
     this.bananas = [];
     // Coins, one at a time round the lap.
@@ -256,8 +244,14 @@ export class KartRace {
         boostUntil: 0,
         offTrack: false,
         cutAt: -Infinity,
-        item: null, // 'banana' | 'turbo' | 'shield'
+        items: [], // held items, oldest (used next) first; see kart-items.js
         shieldUntil: 0,
+        goldUntil: 0,
+        starUntil: 0,
+        magnetUntil: 0,
+        hoverUntil: 0,
+        shrinkUntil: 0,
+        freezeUntil: 0,
         spinUntil: 0,
         finishedAt: null,
       };
@@ -317,8 +311,9 @@ export class KartRace {
     k.offTrack = where.d > TRACK_WIDTH / 2;
     const boosting = now < k.boostUntil;
     const car = k.car;
-    const bonus = this.coinBonus(k);
-    const top = boosting ? car.boostSpeed + bonus : k.offTrack ? car.grassSpeed : car.maxSpeed + bonus;
+    const fx = effects(k, now);
+    const bonus = this.coinBonus(k) + fx.topBonus + this.slipstream(k, now);
+    const top = boosting ? car.boostSpeed + bonus : k.offTrack && !fx.noGrass ? car.grassSpeed : car.maxSpeed + bonus;
     const toward = (v, target, rate) => (v > target ? Math.max(target, v - rate * dt) : Math.min(target, v + rate * dt));
     if (k.finishedAt !== null) {
       k.speed = toward(k.speed, 0, KART.brake * 0.4); // coast to a stop after the line
@@ -345,7 +340,7 @@ export class KartRace {
       const pedal = k.gas || k.brake;
       const grip = Math.min(1, Math.max(Math.abs(k.speed) / car.grip, pedal ? 0.45 : 0));
       const dir = k.speed < -0.01 || (Math.abs(k.speed) <= 0.01 && k.brake) ? -1 : 1;
-      const rate = car.turnRate * (k.drifting ? KART.driftTurn : 1);
+      const rate = car.turnRate * (k.drifting ? KART.driftTurn : 1) * fx.turnScale;
       k.angle += k.steer * rate * grip * dir * dt;
     }
     k.x += Math.cos(k.angle) * k.speed * dt;
@@ -455,39 +450,62 @@ export class KartRace {
     k.speed *= 1 - 0.45 * into;
   }
 
-  /** ? boxes and bananas. */
+  /** ? boxes (a Magnet reaches further) and bananas. */
   itemCheck(k, slot, now) {
     if (k.finishedAt !== null) return;
+    const reach = now < k.magnetUntil ? ITEMS.magnetR : ITEMS.boxR + KART.r;
     for (const box of this.boxes) {
-      if (now < box.backAt || k.item || Math.hypot(k.x - box.x, k.y - box.y) > ITEMS.boxR + KART.r) continue;
+      const room = ITEMS.maxHeld - k.items.length;
+      if (now < box.backAt || room <= 0 || Math.hypot(k.x - box.x, k.y - box.y) > reach) continue;
       box.backAt = now + ITEMS.respawnMs;
-      k.item = this.rollItem(slot);
+      for (let n = Math.min(box.double ? 2 : 1, room); n > 0; n--) k.items.push(this.rollItem(slot));
       this.events.items++;
     }
+    const fx = effects(k, now);
     for (const b of this.bananas.slice()) {
+      if (fx.floating) break; // hovering: they pass underneath
       if (Math.hypot(k.x - b.x, k.y - b.y) > ITEMS.bananaR + KART.r) continue;
       if (b.owner === slot && now < b.safeUntil) continue; // just dropped it
       this.bananas.splice(this.bananas.indexOf(b), 1);
-      if (now < k.shieldUntil) {
-        this.events.blocked++;
-      } else {
-        k.spinUntil = now + ITEMS.spinMs;
-        k.boostUntil = 0;
-        this.events.spins++;
-        this.loseCoins(k, COINS.spinLoss);
-      }
+      this.hitKart(k, now);
     }
   }
 
-  /** A random item, weighted so the kart behind gets more turbos and the leader more bananas and shields. */
-  rollItem(slot) {
-    const behind = this.positions()[slot] === 2;
-    const weights = behind ? { banana: 1, turbo: 3, shield: 1 } : { banana: 3, turbo: 1, shield: 2 };
-    let r = this.rng() * (weights.banana + weights.turbo + weights.shield);
-    for (const kind of ITEMS.kinds) {
-      if ((r -= weights[kind]) < 0) return kind;
+  /**
+   * Something hit the kart (a banana, a Star's ram): it spins out and drops coins, unless it has
+   * a Star (nothing touches it) or a shield (which takes the hit and pops). True if it spun.
+   */
+  hitKart(k, now) {
+    if (effects(k, now).immune) return false;
+    if (now < k.shieldUntil) {
+      k.shieldUntil = 0;
+      this.events.blocked++;
+      return false;
     }
-    return 'turbo';
+    k.spinUntil = now + ITEMS.spinMs;
+    k.boostUntil = 0;
+    this.events.spins++;
+    this.loseCoins(k, COINS.spinLoss);
+    return true;
+  }
+
+  /** A random item for this slot, by its place (see kart-items.js). */
+  rollItem(slot) {
+    return rollItem(this, slot);
+  }
+
+  /** With a Magnet, close behind the rival: their slipstream pulls you along. */
+  slipstream(k, now) {
+    if (now >= k.magnetUntil) return 0;
+    const rival = this.karts.find((o) => o !== k);
+    const dx = rival.x - k.x;
+    const dy = rival.y - k.y;
+    const ahead = dx * Math.cos(k.angle) + dy * Math.sin(k.angle) > 0;
+    return ahead && Math.hypot(dx, dy) < ITEMS.slipR ? ITEMS.slipSpeed : 0;
+  }
+
+  get kartR() {
+    return KART.r;
   }
 
   /** How much faster a kart's coins make it. */
@@ -495,16 +513,23 @@ export class KartRace {
     return k.coins * COINS.perCoin;
   }
 
-  /** Pick up any coins the kart is touching (if it has room). */
+  /** Pick up any coins the kart is touching (if it has room; a Magnet reaches further). */
   coinCheck(k, now) {
     if (k.finishedAt !== null) return; // over the line: leave them for the kart still racing
+    const reach = now < k.magnetUntil ? ITEMS.magnetR : COINS.r + KART.r;
     for (const c of this.coins) {
       if (k.coins >= COINS.max) return;
-      if (now < c.backAt || Math.hypot(k.x - c.x, k.y - c.y) > COINS.r + KART.r) continue;
+      if (now < c.backAt || Math.hypot(k.x - c.x, k.y - c.y) > reach) continue;
       c.backAt = now + COINS.respawnMs;
       k.coins++;
       this.events.coins++;
     }
+  }
+
+  addCoins(k, n) {
+    const added = Math.min(COINS.max - k.coins, n);
+    k.coins += added;
+    this.events.coins += added;
   }
 
   loseCoins(k, n) {
@@ -515,22 +540,7 @@ export class KartRace {
   }
 
   useItem(slot) {
-    const k = this.karts[slot];
-    if (!k.item || this.phase !== 'race' || k.finishedAt !== null || this.ctx.now() < k.spinUntil) return;
-    const now = this.ctx.now();
-    if (k.item === 'turbo') {
-      k.boostUntil = now + ITEMS.turboMs;
-      k.speed = Math.max(k.speed, k.car.boostSpeed + this.coinBonus(k));
-    } else if (k.item === 'shield') {
-      k.shieldUntil = now + ITEMS.shieldMs;
-    } else if (k.item === 'banana') {
-      // Dropped just behind the kart.
-      const back = KART.r + ITEMS.bananaR + 0.15;
-      this.bananas.push({ x: k.x - Math.cos(k.angle) * back, y: k.y - Math.sin(k.angle) * back, owner: slot, safeUntil: now + 700 });
-      if (this.bananas.length > ITEMS.maxBananas) this.bananas.shift();
-    }
-    k.item = null;
-    this.events.used++;
+    useItem(this, slot, this.ctx.now());
   }
 
   /** The karts bump off each other. */
@@ -545,9 +555,11 @@ export class KartRace {
     const ny = dy / d;
     // The heavier kart gives way less: each moves by the other's share of the total weight.
     const overlap = min - d;
-    const total = a.car.weight + b.car.weight;
-    const pushA = (overlap * b.car.weight) / total;
-    const pushB = (overlap * a.car.weight) / total;
+    const now = this.ctx.now();
+    const wa = a.car.weight + effects(a, now).weightBonus;
+    const wb = b.car.weight + effects(b, now).weightBonus;
+    const pushA = (overlap * wb) / (wa + wb);
+    const pushB = (overlap * wa) / (wa + wb);
     a.x -= nx * pushA;
     a.y -= ny * pushA;
     b.x += nx * pushB;
@@ -555,6 +567,10 @@ export class KartRace {
     a.speed *= 0.85;
     b.speed *= 0.85;
     this.events.bumps++;
+    // A Star rams the other kart into a spin (two Stars just bounce).
+    const starA = effects(a, now).star;
+    const starB = effects(b, now).star;
+    if (starA !== starB && this.hitKart(starA ? b : a, now)) this.events.starHits++;
   }
 
   /**
@@ -715,14 +731,20 @@ export class KartRace {
             boosting: now < k.boostUntil,
             offTrack: k.offTrack,
             cut: now - k.cutAt < 1500, // "Shortcut!" for a moment
-            item: k.item,
+            items: k.items,
             shield: now < k.shieldUntil,
+            gold: now < k.goldUntil,
+            star: now < k.starUntil,
+            magnet: now < k.magnetUntil,
+            hover: now < k.hoverUntil,
+            shrunk: now < k.shrinkUntil,
+            frozen: now < k.freezeUntil,
             spin: now < k.spinUntil,
             finished: k.finishedAt !== null,
           }))
         : null,
       positions: racing ? this.positions() : null,
-      boxes: racing ? this.boxes.filter((b) => now >= b.backAt).map((b) => ({ x: b.x, y: b.y, angle: b.angle })) : [],
+      boxes: racing ? this.boxes.filter((b) => now >= b.backAt).map((b) => ({ x: b.x, y: b.y, angle: b.angle, double: b.double })) : [],
       coins: racing ? this.coins.filter((c) => now >= c.backAt).map((c) => ({ x: Math.round(c.x * 100) / 100, y: Math.round(c.y * 100) / 100 })) : [],
       bananas: racing ? this.bananas.map((b) => ({ x: Math.round(b.x * 100) / 100, y: Math.round(b.y * 100) / 100 })) : [],
       raceMs: this.raceStart ? (this.result ? this.result.time : now - this.raceStart) : 0,
