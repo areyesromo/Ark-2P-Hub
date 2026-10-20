@@ -47,3 +47,12 @@ test('the Party Board models are served (and kept small for the TV)', async () =
     assert.ok(buf.length < 400 * 1024, `${name}: ${buf.length} bytes`);
   }
 });
+
+test('game files are re-checked on every load, so an update shows at once (no stale art or code)', async () => {
+  for (const file of ['/games/kart-race/art/portraits/rex.webp', '/games/kart-race/host.js', '/shared/common.js']) {
+    const res = await fetch(url + file);
+    assert.equal(res.status, 200, file);
+    assert.match(res.headers.get('cache-control') || '', /no-cache/, file);
+    assert.ok(res.headers.get('etag'), `${file}: an ETag, so unchanged files come back as a quick 304`);
+  }
+});
