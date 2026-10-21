@@ -372,7 +372,8 @@
       return '<span class="big kr-lights">' + dots + '</span><br>' + (k.jumped ? '<span class="lost">Jump start! 1 s penalty</span>' : 'Wait for the lights to go out, then GAS') + '<br>' + esc(v.track.name) + ' · ' + v.laps + ' laps';
     }
     if (v.phase === 'finish' && v.result) {
-      return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>';
+      return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>' +
+        (v.newRecord && v.newRecord.slot === me ? '<br><span class="won">⏱️ New lap record!</span>' : '');
     }
     return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : v.newRecord && v.newRecord.slot === me ? ' · <span class="won">⏱️ New lap record!</span>' : k.reaction !== null && k.reaction !== undefined ? ' · <span class="won">⚡ Reaction ' + (k.reaction / 1000).toFixed(2) + ' s</span>' : k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
   }

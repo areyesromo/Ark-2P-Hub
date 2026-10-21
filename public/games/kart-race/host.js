@@ -260,7 +260,8 @@
     } else if (v.phase === 'race' && v.newRecord) {
       html = '<div class="banner">⏱️ New lap record! ' + nameOf(v, v.newRecord.slot) + ' <span class="muted">' + clock(v.newRecord.ms) + '</span></div>';
     } else if (v.phase === 'finish' && v.result) {
-      html = '<div class="banner">🏁 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' race ' + v.race : '') + '! <span class="muted">' + clock(v.result.time) + '</span></div>';
+      html = '<div class="banner">🏁 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' race ' + v.race : '') + '! <span class="muted">' + clock(v.result.time) + '</span>' +
+        (v.newRecord ? '<br>⏱️ New lap record! ' + nameOf(v, v.newRecord.slot) + ' <span class="muted">' + clock(v.newRecord.ms) + '</span>' : '') + '</div>';
     } else if (v.phase === 'standings') {
       html = '<div class="panel"><div class="title">' + (v.cup ? '🏆 Cup standings' : 'Standings') + '</div>' + boardHtml(v) +
         '<div class="sub">Next: ' + (v.next.suddenDeath ? '<strong>Sudden death</strong> on ' : 'race ' + v.next.race + ' on ') + esc(v.next.track) + '</div>' + readyHtml(v) +

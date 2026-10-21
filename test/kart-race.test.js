@@ -1689,3 +1689,42 @@ test('best starts: each race keeps both reaction times, and the end view lists t
   assert.equal(r[0].slot, 0);
   assert.ok(Math.abs(r[0].ms - 300) <= 20);
 });
+
+test('lap record: a record set earlier in the series still stands in the next race (not the older saved one)', () => {
+  const ctx = fakeCtx();
+  ctx.lapRecord = () => ({ name: 'Cat', ms: 42000 }); // the saved record: laps are only saved at the end
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'setting', key: 'track', value: 1 });
+  game.onInput(0, { type: 'setting', key: 'races', value: 3 });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  ctx.advance(45000);
+  lapIn(game, ctx, 0, 40000);
+  assert.equal(game.events.records, 1);
+  game.finishLine(0, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.deepEqual(game.hostView().record, { name: 'Ana', ms: 40000 }, "race 1's record, not the older saved one");
+  ctx.advance(45000);
+  lapIn(game, ctx, 1, 41000);
+  assert.equal(game.events.records, 1, 'slower than race 1: no new record');
+});
+
+test('lap record: a record on the last lap is still announced during the finish', () => {
+  const ctx = fakeCtx();
+  ctx.lapRecord = () => ({ name: 'Cat', ms: 42000 });
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  ctx.advance(45000);
+  game.karts[0].laps = game.settings.laps - 1;
+  lapIn(game, ctx, 0, 40000);
+  assert.equal(game.phase, 'finish');
+  assert.deepEqual(game.hostView().newRecord, { slot: 0, name: 'Ana', ms: 40000 });
+});

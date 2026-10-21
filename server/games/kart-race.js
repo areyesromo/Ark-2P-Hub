@@ -245,6 +245,7 @@ export class KartRace {
     this.events = { records: 0, jumpStarts: 0, bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, frozen: 0, swapped: 0, starHits: 0, fired: 0, exploded: 0, snagged: 0 };
     this.lastTrack = -1;
     this.history = []; // each race: { race, track, winner, times }
+    this.seriesRecords = {}; // track name -> { name, ms }: records set in this series
     this.nextIndex = null;
     this.ready = [false, false];
     // A cup's tracks: five different ones (four races and a sudden death), shuffled.
@@ -284,7 +285,10 @@ export class KartRace {
     this.result = null;
     // This track's lap record (from the stats, if the room keeps any): shown on the TV, and
     // beating it is news.
-    const rec = this.ctx.lapRecord ? this.ctx.lapRecord(this.track.name) : null;
+    // Laps are saved only when the series ends, so a record set earlier in it counts too.
+    const saved = this.ctx.lapRecord ? this.ctx.lapRecord(this.track.name) : null;
+    const series = this.seriesRecords[this.track.name];
+    const rec = saved && (!series || saved.ms <= series.ms) ? saved : series;
     this.record = rec ? { name: rec.name, ms: rec.ms } : null;
     this.newRecord = null; // { slot, name, ms, at } for a moment after it's beaten
     // Item boxes (none if items are off) and the bananas lying on the road.
@@ -776,11 +780,11 @@ export class KartRace {
   recordCheck(slot, ms, now) {
     const name = this.ctx.players[slot].name;
     if (!this.record) {
-      this.record = { name, ms };
+      this.record = this.seriesRecords[this.track.name] = { name, ms };
       return;
     }
     if (ms >= this.record.ms) return;
-    this.record = { name, ms };
+    this.record = this.seriesRecords[this.track.name] = { name, ms };
     this.newRecord = { slot, name, ms, at: now };
     this.events.records++;
   }

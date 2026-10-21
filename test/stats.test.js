@@ -218,3 +218,12 @@ test('best starts: each player\'s fastest reaction, fastest first; the room save
   assert.deepEqual(stats.matches[0].reactions, [{ player: 0, ms: 250 }]);
   room.dispose();
 });
+
+test('best starts: a reaction under 0.1 s is a guess, not saved', () => {
+  const stats = new Stats(null);
+  const room = roomWithPlayers(stats);
+  room.gameId = 'kart-race';
+  room.recordResult({ phase: 'over', winner: 0, scores: [1, 0], reactionTimes: [{ slot: 0, ms: 40 }, { slot: 1, ms: 180 }] });
+  assert.deepEqual(stats.matches[0].reactions, [{ player: 1, ms: 180 }]);
+  room.dispose();
+});
