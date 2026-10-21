@@ -294,6 +294,11 @@ export class Room {
       match.draw = match.winner === null;
       match.scores = Array.isArray(view.scores) && view.scores.length === 2 ? view.scores.slice() : null;
       if (view.cup === true) match.cup = true; // a Kart Race cup
+      // Best laps (Kart Race), for the lap records.
+      const laps = Array.isArray(view.lapTimes)
+        ? view.lapTimes.filter((l) => l && typeof l.track === 'string' && (l.slot === 0 || l.slot === 1) && Number.isFinite(l.ms) && l.ms > 0).map((l) => ({ track: l.track, player: l.slot, ms: l.ms }))
+        : [];
+      if (laps.length) match.laps = laps;
     }
     this.stats.record(match);
   }

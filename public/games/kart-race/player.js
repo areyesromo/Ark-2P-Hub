@@ -374,7 +374,7 @@
     if (v.phase === 'finish' && v.result) {
       return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>';
     }
-    return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
+    return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : k.reaction !== null && k.reaction !== undefined ? ' · <span class="won">⚡ Reaction ' + (k.reaction / 1000).toFixed(2) + ' s</span>' : k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
   }
 
   function clock(ms) {
@@ -420,7 +420,7 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.history && v.history.length, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result]);
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.history && v.history.length, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';

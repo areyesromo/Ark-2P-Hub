@@ -76,6 +76,15 @@
     }).join('') + '</tbody></table>';
   }
 
+  /** The fastest lap ever on each track. */
+  function lapsTable(list) {
+    return '<table><thead><tr><th>Track</th><th>Holder</th><th class="num">Lap</th><th></th></tr></thead><tbody>' + list.map(function (r) {
+      const s = r.ms / 1000;
+      const time = Math.floor(s / 60) + ':' + ('0' + (s % 60).toFixed(2)).slice(-5);
+      return '<tr><td>' + esc(r.track) + '</td><td><strong>' + esc(r.name) + '</strong></td><td class="num">' + time + '</td><td class="when num">' + ago(r.at) + '</td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+
   function recentTable(recent) {
     if (!recent.length) return '<p class="muted">No matches yet.</p>';
     return '<table><tbody>' + recent.map(function (m) {
@@ -104,6 +113,7 @@
       '<section class="panel"><h2>⚔️ Rivalries</h2>' + rivalriesTable(d.rivalries) + '</section>' +
       '<section class="panel"><h2>🎮 Games</h2>' + gamesTable(d.games) + '</section>' +
       (d.tournaments && d.tournaments.length ? '<section class="panel"><h2>🏆 Tournaments</h2>' + tournamentsTable(d.tournaments) + '</section>' : '') +
+      (d.lapRecords && d.lapRecords.length ? '<section class="panel"><h2>⏱️ Kart lap records</h2>' + lapsTable(d.lapRecords) + '</section>' : '') +
       (d.cups && d.cups.length ? '<section class="panel"><h2>🏅 Kart cups</h2>' + cupsTable(d.cups) + '</section>' : '') +
       '<section class="panel wide"><h2>🕑 Recent matches</h2>' + recentTable(d.recent) + '</section>' +
       '</div>' +
