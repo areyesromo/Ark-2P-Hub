@@ -53,6 +53,14 @@
 
   const DEFAULT_RACERS = ['dash', 'dot']; // by slot
   const KART_LEN = 1.75; // how long a kart is drawn on the TV, in field units (looks only: not its bump size)
+  // Effect sizes around a kart, laid out for a 1.25-long picture (scaled up with the kart).
+  const KART_FX = {
+    starGlow: 0.72, // Star glow radius
+    starPulse: 0.06, // how much it pulses
+    magnetArc: 0.68, // Magnet: the first arc, at the nose
+    magnetGap: 0.22, // between the two arcs
+    magnetSweep: 0.18, // how far they pulse out
+  };
   const RENAMED = { daisy: 'dot' }; // old ids phones may remember -> the racer's id now
   const DEFAULT_TYRE = 'standard';
 
@@ -94,5 +102,5 @@
     };
   }
 
-  globalThis.ArkKartRacers = { TYPES: TYPES, RACERS: RACERS, TYRES: TYRES, DEFAULT_RACERS: DEFAULT_RACERS, RENAMED: RENAMED, KART_LEN: KART_LEN, DEFAULT_TYRE: DEFAULT_TYRE, racer: racer, tyre: tyre, stats: stats, physics: physics };
+  globalThis.ArkKartRacers = { TYPES: TYPES, RACERS: RACERS, TYRES: TYRES, DEFAULT_RACERS: DEFAULT_RACERS, RENAMED: RENAMED, KART_LEN: KART_LEN, KART_FX: KART_FX, DEFAULT_TYRE: DEFAULT_TYRE, racer: racer, tyre: tyre, stats: stats, physics: physics };
 })();

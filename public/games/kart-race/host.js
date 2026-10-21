@@ -548,6 +548,7 @@
     g.translate(s.x, s.y);
     g.rotate(s.angle + (k.spin ? now / 60 : 0)); // spinning out after a banana
     const big = (R && R.KART_LEN ? R.KART_LEN : KART_LEN) / KART_LEN;
+    const FX = R && R.KART_FX ? R.KART_FX : { starGlow: 0.72, starPulse: 0.06, magnetArc: 0.68, magnetGap: 0.22, magnetSweep: 0.18 };
     g.scale(big, big);
     if (k.hover) {
       // Hovering: a shadow on the ground below, the kart lifted a little bigger above it.
@@ -562,7 +563,7 @@
       // Star: a pulsing rainbow glow.
       g.fillStyle = 'hsla(' + Math.floor(now / 4) % 360 + ', 95%, 60%, 0.45)';
       g.beginPath();
-      g.arc(0, 0, 0.95 + 0.1 * Math.sin(now / 80), 0, Math.PI * 2);
+      g.arc(0, 0, FX.starGlow + FX.starPulse * Math.sin(now / 80), 0, Math.PI * 2);
       g.fill();
     }
     const pic = spriteFor(racer);
@@ -667,7 +668,7 @@
       g.strokeStyle = 'rgba(248, 113, 113, 0.8)';
       g.lineWidth = 0.06;
       for (let i = 0; i < 2; i++) {
-        const r = 0.8 + i * 0.35 + ((now / 400) % 1) * 0.3;
+        const r = FX.magnetArc + i * FX.magnetGap + ((now / 400) % 1) * FX.magnetSweep;
         g.beginPath();
         g.arc(0, 0, r, -0.6, 0.6);
         g.stroke();
