@@ -208,7 +208,8 @@
       };
       html = side(0) +
         '<div class="kr-mid"><div class="track">' + esc(v.track.name) + (v.cup ? (v.suddenDeath ? ' · Sudden death!' : ' · Cup race ' + v.race + ' / 4') + ' · ' + v.scores[0] + ' – ' + v.scores[1] : v.races > 1 ? ' · Race ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
-        '<div class="clock">' + clock(v.raceMs) + '</div></div>' + side(1);
+        '<div class="clock">' + clock(v.raceMs) + '</div>' +
+        (v.record ? '<div class="record">⏱️ Record ' + clock(v.record.ms) + ' · ' + esc(v.record.name) + '</div>' : '') + '</div>' + side(1);
     }
     if (html !== hudKey) {
       hudKey = html;
@@ -256,8 +257,11 @@
       let lights = '';
       for (let i = 1; i <= 5; i++) lights += '<span class="light' + (v.lights >= i ? ' on' : '') + '"></span>';
       html = '<div class="panel small"><div class="lights gantry">' + lights + '</div><div class="sub">' + esc(v.track.name) + ' · ' + v.laps + ' laps · wait for the lights to go out, then GAS (too soon: a jump start)</div></div>';
+    } else if (v.phase === 'race' && v.newRecord) {
+      html = '<div class="banner">⏱️ New lap record! ' + nameOf(v, v.newRecord.slot) + ' <span class="muted">' + clock(v.newRecord.ms) + '</span></div>';
     } else if (v.phase === 'finish' && v.result) {
-      html = '<div class="banner">🏁 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' race ' + v.race : '') + '! <span class="muted">' + clock(v.result.time) + '</span></div>';
+      html = '<div class="banner">🏁 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' race ' + v.race : '') + '! <span class="muted">' + clock(v.result.time) + '</span>' +
+        (v.newRecord ? '<br>⏱️ New lap record! ' + nameOf(v, v.newRecord.slot) + ' <span class="muted">' + clock(v.newRecord.ms) + '</span>' : '') + '</div>';
     } else if (v.phase === 'standings') {
       html = '<div class="panel"><div class="title">' + (v.cup ? '🏆 Cup standings' : 'Standings') + '</div>' + boardHtml(v) +
         '<div class="sub">Next: ' + (v.next.suddenDeath ? '<strong>Sudden death</strong> on ' : 'race ' + v.next.race + ' on ') + esc(v.next.track) + '</div>' + readyHtml(v) +
@@ -792,6 +796,7 @@
       if (v.phase === prev.phase && v.ready && prev.ready && v.ready.some(function (r, i) { return r && !prev.ready[i]; })) out.push('lock');
       if (!a || !b) return out;
       if (b.jumpStarts > (a.jumpStarts || 0)) out.push('wrong');
+      if (b.records > (a.records || 0)) out.push('fanfare');
       if (b.boosts > a.boosts) out.push('whoosh');
       if (b.bumps > a.bumps + 2) out.push('puck');
       if (b.laps > a.laps) out.push('correct');

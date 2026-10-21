@@ -201,3 +201,29 @@ test('lap records: the room saves the lap times from the end screen (bad entries
   assert.equal(stats.matches[1].laps, undefined);
   room.dispose();
 });
+
+test('best starts: each player\'s fastest reaction, fastest first; the room saves them; lapRecord looks one up', () => {
+  const s = new Stats(null);
+  s.record({ ...win('kart-race', ['Abe', 'Sam'], 0), reactions: [{ player: 0, ms: 420 }, { player: 1, ms: 310 }], laps: [{ track: 'Kidney', player: 1, ms: 21000 }] });
+  s.record({ ...win('kart-race', ['Sam', 'Abe'], 0), reactions: [{ player: 1, ms: 280 }] });
+  const b = s.leaderboard().bestStarts;
+  assert.deepEqual(b.map((x) => [x.name, x.ms]), [['Abe', 280], ['Sam', 310]]);
+  assert.deepEqual(s.lapRecord('kart-race', 'Kidney'), { name: 'Sam', ms: 21000 });
+  assert.equal(s.lapRecord('kart-race', 'Zigzag'), null);
+
+  const stats = new Stats(null);
+  const room = roomWithPlayers(stats);
+  room.gameId = 'kart-race';
+  room.recordResult({ phase: 'over', winner: 0, scores: [1, 0], reactionTimes: [{ slot: 0, ms: 250 }, { slot: 1, ms: 9000 }, { slot: 3, ms: 100 }] });
+  assert.deepEqual(stats.matches[0].reactions, [{ player: 0, ms: 250 }]);
+  room.dispose();
+});
+
+test('best starts: a reaction under 0.1 s is a guess, not saved', () => {
+  const stats = new Stats(null);
+  const room = roomWithPlayers(stats);
+  room.gameId = 'kart-race';
+  room.recordResult({ phase: 'over', winner: 0, scores: [1, 0], reactionTimes: [{ slot: 0, ms: 40 }, { slot: 1, ms: 180 }] });
+  assert.deepEqual(stats.matches[0].reactions, [{ player: 1, ms: 180 }]);
+  room.dispose();
+});

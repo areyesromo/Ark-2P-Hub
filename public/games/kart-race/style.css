@@ -229,3 +229,4 @@
 .kr-ready b { color: var(--good); }
 .kr-ready i { color: var(--muted); }
 .kr-side .react { color: #facc15; font-weight: 800; }
+.kr-mid .record { font-size: 0.9rem; color: #facc15; font-weight: 700; }
