@@ -31,7 +31,7 @@
     boxy: { nose: 0.45, half: 0.33, pts: [[0.45, -0.33], [-0.5, -0.33], [-0.5, 0.33], [0.45, 0.33]] },
     pointed: { nose: 0.6, half: 0.22, pts: [[0.6, 0], [0.1, -0.22], [-0.5, -0.22], [-0.5, 0.22], [0.1, 0.22]] },
   };
-  const STAT_ROWS = [['speed', 'Speed'], ['accel', 'Acceleration'], ['handling', 'Handling'], ['weight', 'Weight']];
+  const STAT_ROWS = [['speed', 'Speed'], ['accel', 'Accel.'], ['handling', 'Handling'], ['weight', 'Weight']];
   // Controllers on the setup screen: the settings rows, then their own racer and tyres.
   const PICK_ROWS = ['racer', 'tyre'];
   const esc = Ark.escapeHtml;
@@ -168,9 +168,10 @@
       return '<div class="pick p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div>' +
         '<div class="line' + f('racer') + '"><img src="' + r.portrait + '" alt=""> <b>' + r.name + '</b> <span class="muted">' + R.TYPES[r.type].label + '</span></div>' +
         '<div class="line' + f('tyre') + '"><span class="em">' + t.emoji + '</span> ' + t.name + ' tyres</div>' +
+        '<div class="kr-car">' + (r.sprite ? '<img class="kr-kart" src="' + r.sprite + '" alt="">' : '') + '<div class="rows">' +
         STAT_ROWS.map(function (s) {
           return '<div class="stat"><span>' + s[1] + '</span><div class="bar">' + statBar(r.stats[s[0]], t.mod[s[0]] || 0) + '</div></div>';
-        }).join('') + '</div>';
+        }).join('') + '</div></div></div>';
     }).join('') + '</div>';
   }
 
