@@ -153,3 +153,30 @@ test('/api/stats serves the leaderboard; the admin can wipe it', async () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('kart cups: a cup win is saved with the match, counted per player and head to head, and listed', () => {
+  const s = new Stats(null);
+  s.record({ ...win('kart-race', ['Abe', 'Sam'], 1, [1, 3]), cup: true });
+  s.record({ ...win('kart-race', ['Sam', 'Abe'], 0, [3, 2]), cup: true });
+  s.record(win('kart-race', ['Abe', 'Sam'], 0, [2, 1])); // a best of 3: not a cup
+  const lb = s.leaderboard();
+  const p = Object.fromEntries(lb.players.map((x) => [x.name, x.cups]));
+  assert.deepEqual(p, { Abe: 0, Sam: 2 });
+  assert.equal(lb.cups.length, 2);
+  assert.deepEqual(lb.cups[0].players, ['Sam', 'Abe'], 'newest first');
+  assert.deepEqual(lb.cups[0].scores, [3, 2]);
+  assert.equal(lb.cups[0].winner, 0);
+  assert.deepEqual(s.headToHead('Abe', 'Sam').cups, [0, 2]);
+  assert.deepEqual(s.headToHead('Sam', 'Abe').cups, [2, 0]);
+});
+
+test('kart cups: the room saves the cup flag from the end screen', () => {
+  const stats = new Stats(null);
+  const room = roomWithPlayers(stats);
+  room.gameId = 'kart-race';
+  room.recordResult({ phase: 'over', winner: 1, scores: [1, 3], cup: true });
+  room.recordResult({ phase: 'over', winner: 0, scores: [2, 0] });
+  assert.equal(stats.matches[0].cup, true);
+  assert.equal(stats.matches[1].cup, undefined, 'only cups are marked');
+  room.dispose();
+});

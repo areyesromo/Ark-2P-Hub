@@ -24,11 +24,13 @@
     const ranked = players.filter(function (p) { return p.played; });
     if (!ranked.length) return '<p class="muted">No head-to-head games yet.</p>';
     const titles = ranked.some(function (p) { return p.titles; });
-    return '<table><thead><tr><th></th><th>Player</th>' + (titles ? head('Tournaments', '🏆') : '') + head('Won', 'W') + head('Lost', 'L') + head('Drawn', 'D') + head('Win rate', '%') + '</tr></thead><tbody>' +
+    const cups = ranked.some(function (p) { return p.cups; });
+    return '<table><thead><tr><th></th><th>Player</th>' + (titles ? head('Tournaments', '🏆') : '') + (cups ? head('Kart cups', '🏅') : '') + head('Won', 'W') + head('Lost', 'L') + head('Drawn', 'D') + head('Win rate', '%') + '</tr></thead><tbody>' +
       ranked.map(function (p, i) {
         return '<tr><td class="rank' + (i === 0 ? ' gold' : '') + '">' + (i === 0 ? '👑' : i + 1) + '</td>' +
           '<td><strong>' + esc(p.name) + '</strong></td>' +
           (titles ? '<td class="num">' + (p.titles ? '🏆 ' + p.titles : '<span class="muted">0</span>') + '</td>' : '') +
+          (cups ? '<td class="num">' + (p.cups ? '🏅 ' + p.cups : '<span class="muted">0</span>') + '</td>' : '') +
           '<td class="num">' + p.wins + '</td><td class="num">' + p.losses + '</td><td class="num">' + p.draws + '</td>' +
           '<td class="num">' + p.winPct + '%<span class="bar" style="width:' + Math.round(p.winPct * 0.6) + 'px"></span></td></tr>';
       }).join('') + '</tbody></table>';
@@ -64,6 +66,16 @@
     }).join('') + '</tbody></table>';
   }
 
+  /** The latest Kart Race cups: who won, and the score in races. */
+  function cupsTable(list) {
+    return '<table><tbody>' + list.map(function (c) {
+      const name = function (i) { return '<span class="' + (c.winner === i ? 'win' : '') + '">' + (c.winner === i ? '🏅 ' : '') + esc(c.players[i]) + '</span>'; };
+      return '<tr><td>' + name(0) + ' <span class="vs">vs</span> ' + name(1) + '</td>' +
+        '<td class="num">' + (c.scores ? '<strong>' + c.scores[0] + ' – ' + c.scores[1] + '</strong> <span class="muted">races</span>' : '') + '</td>' +
+        '<td class="when num">' + ago(c.at) + '</td></tr>';
+    }).join('') + '</tbody></table>';
+  }
+
   function recentTable(recent) {
     if (!recent.length) return '<p class="muted">No matches yet.</p>';
     return '<table><tbody>' + recent.map(function (m) {
@@ -74,7 +86,8 @@
         const name = function (i) { return '<span class="' + (m.winner === i ? 'win' : '') + '">' + esc(m.players[i]) + '</span>'; };
         result = name(0) + ' <span class="vs">vs</span> ' + name(1) +
           (m.scores ? ' <strong>' + m.scores[0] + ' – ' + m.scores[1] + '</strong>' : '') +
-          (m.winner === null ? ' <span class="tag">draw</span>' : '');
+          (m.winner === null ? ' <span class="tag">draw</span>' : '') +
+          (m.cup ? ' <span class="tag">🏅 cup</span>' : '');
       }
       return '<tr><td>' + esc(m.gameName) + '</td><td>' + result + '</td><td class="when num">' + ago(m.at) + '</td></tr>';
     }).join('') + '</tbody></table>';
@@ -91,6 +104,7 @@
       '<section class="panel"><h2>⚔️ Rivalries</h2>' + rivalriesTable(d.rivalries) + '</section>' +
       '<section class="panel"><h2>🎮 Games</h2>' + gamesTable(d.games) + '</section>' +
       (d.tournaments && d.tournaments.length ? '<section class="panel"><h2>🏆 Tournaments</h2>' + tournamentsTable(d.tournaments) + '</section>' : '') +
+      (d.cups && d.cups.length ? '<section class="panel"><h2>🏅 Kart cups</h2>' + cupsTable(d.cups) + '</section>' : '') +
       '<section class="panel wide"><h2>🕑 Recent matches</h2>' + recentTable(d.recent) + '</section>' +
       '</div>' +
       '<p class="muted" style="margin-top:16px">' + d.total + ' match' + (d.total === 1 ? '' : 'es') + ' recorded. Players are matched by name. ' +

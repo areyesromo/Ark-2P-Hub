@@ -293,6 +293,7 @@ export class Room {
       match.winner = view.winner === 0 || view.winner === 1 ? view.winner : null;
       match.draw = match.winner === null;
       match.scores = Array.isArray(view.scores) && view.scores.length === 2 ? view.scores.slice() : null;
+      if (view.cup === true) match.cup = true; // a Kart Race cup
     }
     this.stats.record(match);
   }
