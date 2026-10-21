@@ -55,7 +55,9 @@
   const KART_LEN = 1.75; // how long a kart is drawn on the TV, in field units (looks only: not its bump size)
   // Effect sizes around a kart, laid out for a 1.25-long picture (scaled up with the kart).
   const KART_FX = {
-    starGlow: 0.72, // Star glow radius
+    ringLong: 0.75, // the colour ring under a kart picture: half its length
+    ringWide: 0.525, // and half its width
+    starGlow: 0.72, // Star glow radius (drawn over the ring, under the picture)
     starPulse: 0.06, // how much it pulses
     magnetArc: 0.68, // Magnet: the first arc, at the nose
     magnetGap: 0.22, // between the two arcs

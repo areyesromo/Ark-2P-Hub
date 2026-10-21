@@ -548,7 +548,7 @@
     g.translate(s.x, s.y);
     g.rotate(s.angle + (k.spin ? now / 60 : 0)); // spinning out after a banana
     const big = (R && R.KART_LEN ? R.KART_LEN : KART_LEN) / KART_LEN;
-    const FX = R && R.KART_FX ? R.KART_FX : { starGlow: 0.72, starPulse: 0.06, magnetArc: 0.68, magnetGap: 0.22, magnetSweep: 0.18 };
+    const FX = R && R.KART_FX ? R.KART_FX : { ringLong: 0.75, ringWide: 0.525, starGlow: 0.72, starPulse: 0.06, magnetArc: 0.68, magnetGap: 0.22, magnetSweep: 0.18 };
     g.scale(big, big);
     if (k.hover) {
       // Hovering: a shadow on the ground below, the kart lifted a little bigger above it.
@@ -559,7 +559,7 @@
       g.scale(1.12, 1.12);
     }
     if (k.shrunk) g.scale(0.7, 0.7); // Thunder
-    if (k.star) {
+    function starGlow() {
       // Star: a pulsing rainbow glow.
       g.fillStyle = 'hsla(' + Math.floor(now / 4) % 360 + ', 95%, 60%, 0.45)';
       g.beginPath();
@@ -567,17 +567,19 @@
       g.fill();
     }
     const pic = spriteFor(racer);
+    if (k.star && !pic) starGlow();
     if (pic) {
       // The racer's kart picture over a ring in the player's colour (both may race the same racer).
       g.fillStyle = colors[slot];
       g.globalAlpha = 0.55;
       g.beginPath();
-      g.ellipse(0, 0, KART_LEN * 0.6, KART_LEN * 0.42, 0, 0, Math.PI * 2);
+      g.ellipse(0, 0, FX.ringLong, FX.ringWide, 0, 0, Math.PI * 2);
       g.fill();
       g.globalAlpha = 1;
       g.strokeStyle = colors[slot];
       g.lineWidth = 0.08;
       g.stroke();
+      if (k.star) starGlow(); // over the ring, so it shows all round
       const w = (KART_LEN * pic.naturalWidth) / pic.naturalHeight;
       g.save();
       g.rotate(Math.PI / 2); // the picture's nose points up; the kart's points along +x
