@@ -180,3 +180,24 @@ test('kart cups: the room saves the cup flag from the end screen', () => {
   assert.equal(stats.matches[1].cup, undefined, 'only cups are marked');
   room.dispose();
 });
+
+test('lap records: the fastest lap on each track, by whoever set it, across matches and seats', () => {
+  const s = new Stats(null);
+  s.record({ ...win('kart-race', ['Abe', 'Sam'], 0), laps: [{ track: 'Speedway', player: 0, ms: 20000 }, { track: 'Speedway', player: 1, ms: 19000 }, { track: 'Kidney', player: 0, ms: 25000 }] });
+  s.record({ ...win('kart-race', ['Sam', 'Abe'], 1), laps: [{ track: 'Speedway', player: 1, ms: 18500 }] });
+  s.record(win('pong', ['Abe', 'Sam'], 0));
+  const r = s.leaderboard().lapRecords;
+  assert.deepEqual(r.map((x) => [x.track, x.name, x.ms]), [['Kidney', 'Abe', 25000], ['Speedway', 'Abe', 18500]]);
+  assert.equal(r[0].game, 'kart-race');
+});
+
+test('lap records: the room saves the lap times from the end screen (bad entries dropped)', () => {
+  const stats = new Stats(null);
+  const room = roomWithPlayers(stats);
+  room.gameId = 'kart-race';
+  room.recordResult({ phase: 'over', winner: 0, scores: [1, 0], lapTimes: [{ track: 'Kidney', slot: 1, ms: 22000 }, { track: 'Kidney', slot: 2, ms: 1 }, { track: 5, slot: 0, ms: 3 }, { track: 'Zigzag', slot: 0, ms: -4 }] });
+  assert.deepEqual(stats.matches[0].laps, [{ track: 'Kidney', player: 1, ms: 22000 }]);
+  room.recordResult({ phase: 'over', winner: 0, scores: [1, 0] });
+  assert.equal(stats.matches[1].laps, undefined);
+  room.dispose();
+});

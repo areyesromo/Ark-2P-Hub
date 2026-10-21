@@ -228,3 +228,4 @@
 .kr-ready .p2 { color: var(--p2); }
 .kr-ready b { color: var(--good); }
 .kr-ready i { color: var(--muted); }
+.kr-side .react { color: #facc15; font-weight: 800; }

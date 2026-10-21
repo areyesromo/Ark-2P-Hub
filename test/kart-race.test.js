@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, LIGHTS, JUMP, ITEMS, COINS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
+import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, LIGHTS, JUMP, REACTION_SHOW_MS, ITEMS, COINS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
 import { fakeCtx } from './helpers.js';
 
 const TICK = 1000 / 60;
@@ -1539,4 +1539,65 @@ test('jump start: the A press that readies a controller player (GAS too) is not 
   ctx.advance(LIGHTS.stepMs);
   game.onInput(1, { type: 'drive', steer: 0, gas: true });
   assert.equal(game.events.jumpStarts, 1);
+});
+
+test('reaction: the time from lights out to your first GAS press shows for 3 s; none after a jump start or with GAS already held', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(LIGHTS.stepMs * 2);
+  game.onInput(1, { type: 'drive', steer: 0, gas: true }); // jumped
+  game.onInput(1, { type: 'drive', steer: 0, gas: false });
+  while (game.phase === 'countdown') ctx.advance(10);
+  ctx.advance(320);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  const v = game.hostView();
+  assert.ok(Math.abs(v.karts[0].reaction - 320) <= 20, `reaction ${v.karts[0].reaction}`);
+  assert.equal(v.karts[1].reaction, null, 'a jump start has no reaction time');
+  // A later press doesn't change it; it hides after 3 s.
+  game.onInput(0, { type: 'drive', steer: 0, gas: false });
+  ctx.advance(200);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  assert.ok(Math.abs(game.hostView().karts[0].reaction - 320) <= 20);
+  ctx.advance(REACTION_SHOW_MS);
+  assert.equal(game.hostView().karts[0].reaction, null, 'shown for a moment only');
+});
+
+test('reaction: GAS already held when the lights go out gives no reaction time', () => {
+  const { ctx, game } = series(3, () => 0);
+  ctx.advance(TIMING.countdownMs + 50);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  game.finishLine(0, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  while (game.phase === 'countdown') ctx.advance(10);
+  ctx.advance(300);
+  assert.equal(game.hostView().karts[0].reaction, null);
+});
+
+test('lap records: each race keeps both best laps, and the end view lists them by track', () => {
+  const { ctx, game } = series(3, () => 0);
+  ctx.advance(TIMING.countdownMs + 50);
+  game.karts[0].bestLap = 21000;
+  game.karts[1].bestLap = 19500;
+  game.finishLine(1, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  const first = game.track.name;
+  assert.deepEqual(game.hostView().history[0].best, [21000, 19500]);
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  game.karts[1].bestLap = 18000; // kart 1 never set a lap
+  game.finishLine(1, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  assert.equal(game.phase, 'over');
+  assert.deepEqual(game.hostView().lapTimes, [
+    { track: first, slot: 0, ms: 21000 },
+    { track: first, slot: 1, ms: 19500 },
+    { track: game.track.name, slot: 1, ms: 18000 },
+  ]);
 });

@@ -16,6 +16,7 @@ export const nameKey = (name) => String(name || '').trim().toLowerCase();
  *   { at, game, gameName, category, players: [name0, name1],
  *     winner: 0 | 1 | null, draw, scores: [a, b] | null,   // competitive
  *     cup: true,                                            // a Kart Race cup (won by winner)
+ *     laps: [{ track, player: 0 | 1, ms }],                 // Kart Race best laps
  *     stars, maxStars }                                     // casual (team) games
  *
  * A won tournament (best of N games, see tournament.js):
@@ -126,6 +127,19 @@ export class Stats {
     return [...seen.values()];
   }
 
+  /** The fastest lap ever on each track (Kart Race), by track name. */
+  lapRecords() {
+    const best = new Map();
+    for (const m of this.matches) {
+      for (const l of m.laps || []) {
+        const key = m.game + '\u0000' + l.track;
+        const cur = best.get(key);
+        if (!cur || l.ms < cur.ms) best.set(key, { game: m.game, track: l.track, name: m.players[l.player], ms: l.ms, at: m.at });
+      }
+    }
+    return [...best.values()].sort((a, b) => a.track.localeCompare(b.track));
+  }
+
   /** Everything the leaderboard page shows. */
   leaderboard() {
     const players = new Map();
@@ -191,6 +205,7 @@ export class Stats {
         .sort((x, y) => y.played - x.played),
       recent: this.matches.slice(-RECENT).reverse(),
       tournaments: this.tournaments.slice(-10).reverse(),
+      lapRecords: this.lapRecords(),
       // The latest Kart Race cups, newest first.
       cups: this.matches
         .filter((m) => m.cup && (m.winner === 0 || m.winner === 1))

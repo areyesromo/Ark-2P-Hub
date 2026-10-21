@@ -203,7 +203,7 @@
         const k = v.karts[slot];
         return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
           '<div class="pos">' + ordinal(v.positions[slot]) + (k.items && k.items.length ? ' <span class="item"><b>' + itemIcon(k.items[0]) + '</b>' + k.items.slice(1).map(itemIcon).join('') + '</span>' : '') + (k.gold ? ' <span class="item">🌟</span>' : '') + '</div>' +
-          '<div class="lap">' + (k.jumped ? '<span class="cut">Jump start! 1 s penalty</span>' : k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
+          '<div class="lap">' + (k.jumped ? '<span class="cut">Jump start! 1 s penalty</span>' : k.reaction !== null && k.reaction !== undefined ? '<span class="react">⚡ Reaction ' + (k.reaction / 1000).toFixed(2) + ' s</span>' : k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
           racerLine(k) + '<div class="coins">🟡 ' + (k.coins || 0) + ' / 15</div><div class="laptime"></div></div>' + gaugeHtml(v, k) + '</div>';
       };
       html = side(0) +

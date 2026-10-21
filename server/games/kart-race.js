@@ -56,6 +56,8 @@ export const LIGHTS = { count: 5, stepMs: 700, holdMin: 300, holdMax: 1200 };
 // Pressing GAS while the lights are on: a stall when they go out. Not in the first moment of the
 // lights, before any is lit (a controller's A is GAS too, and may still be down from Ready).
 export const JUMP = { stallMs: 1000, graceMs: 600 };
+// How long a kart's reaction time (lights out to GAS) shows on the screens.
+export const REACTION_SHOW_MS = 3000;
 export const TIMING = { countdownMs: LIGHTS.count * LIGHTS.stepMs + LIGHTS.holdMax, finishMs: 3500 };
 export const SAMPLES = Road.SAMPLES; // points on each track's centre line
 const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare
@@ -337,6 +339,8 @@ export class KartRace {
         spinUntil: 0,
         jumpStart: false, // pressed GAS during the lights
         stallUntil: 0, // ...so it can't go until then
+        reactionOpen: false, // waiting for the first GAS after lights out
+        reactionMs: null, // lights out to that GAS press
         finishedAt: null,
       };
     });
@@ -378,7 +382,11 @@ export class KartRace {
     const before = this.phase;
     if (this.phase === 'countdown' && now >= this.phaseEnds) {
       this.raceStart = now;
-      for (const k of this.karts) if (k.jumpStart) k.stallUntil = now + JUMP.stallMs;
+      for (const k of this.karts) {
+        if (k.jumpStart) k.stallUntil = now + JUMP.stallMs;
+        // A reaction time only from a clean start with GAS up as the lights go out.
+        k.reactionOpen = !k.jumpStart && !k.gas;
+      }
       this.enter('race', 0);
     }
     if (this.phase === 'race' || this.phase === 'finish') {
@@ -773,6 +781,7 @@ export class KartRace {
       track: this.track.name,
       winner: this.result.winner,
       times: this.karts.map((k) => (k.finishedAt !== null ? k.finishedAt - this.raceStart : null)),
+      best: this.karts.map((k) => k.bestLap), // each kart's best lap (for the lap records)
     });
     this.stopLoop();
     this.phaseEnds = null;
@@ -858,6 +867,10 @@ export class KartRace {
       k.jumpStart = true;
       this.events.jumpStarts++;
     }
+    if (k.reactionOpen && this.phase === 'race' && input.gas && !k.gas) {
+      k.reactionOpen = false;
+      k.reactionMs = this.ctx.now() - this.raceStart;
+    }
     const steer = Number(input.steer);
     k.steer = Number.isFinite(steer) ? Math.max(-1, Math.min(1, steer)) : 0;
     k.gas = Boolean(input.gas);
@@ -928,6 +941,7 @@ export class KartRace {
             webbed: now < k.webUntil,
             oiled: now < k.oilUntil,
             spin: now < k.spinUntil,
+            reaction: k.reactionMs !== null && now - this.raceStart - k.reactionMs < REACTION_SHOW_MS ? k.reactionMs : null,
             jumped: k.jumpStart && (this.phase === 'countdown' || now < k.stallUntil), // "JUMP START"
             finished: k.finishedAt !== null,
           }))
@@ -945,6 +959,8 @@ export class KartRace {
       // No countdown number: the lights are the countdown (and the hub would beep its own seconds).
       countdown: 0,
       history: this.history || [],
+      // Every best lap of the series, for the lap records on the stats page.
+      lapTimes: (this.history || []).flatMap((h) => (h.best || []).map((ms, slot) => ({ track: h.track, slot, ms })).filter((l) => l.ms !== null)),
       cup: this.cup,
       suddenDeath: this.cup && this.race > 4 && this.phase !== 'standings',
       // On the leaderboard between races: what's next.
