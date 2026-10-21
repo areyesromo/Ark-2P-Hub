@@ -39,7 +39,7 @@
   const ROWS = [
     { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
     { key: 'laps', title: 'Laps', fmt: function (n) { return n + ' laps'; } },
-    { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : 'Best of ' + n; } },
+    { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : n === 4 ? '🏆 Cup (4 tracks)' : 'Best of ' + n; } },
     { key: 'items', title: 'Items (? boxes)', fmt: function (n) { return n ? 'On' : 'Off'; } },
   ];
   Ark.loadScript('/games/kart-race/items.js').then(function () { hudKey = ''; });
@@ -203,11 +203,11 @@
         const k = v.karts[slot];
         return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
           '<div class="pos">' + ordinal(v.positions[slot]) + (k.items && k.items.length ? ' <span class="item"><b>' + itemIcon(k.items[0]) + '</b>' + k.items.slice(1).map(itemIcon).join('') + '</span>' : '') + (k.gold ? ' <span class="item">🌟</span>' : '') + '</div>' +
-          '<div class="lap">' + (k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
+          '<div class="lap">' + (k.jumped ? '<span class="cut">Jump start! 1 s penalty</span>' : k.finished ? '🏁 Finished' : k.cut ? '<span class="cut">⛔ Shortcut!</span>' : 'Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps) + '</div>' +
           racerLine(k) + '<div class="coins">🟡 ' + (k.coins || 0) + ' / 15</div><div class="laptime"></div></div>' + gaugeHtml(v, k) + '</div>';
       };
       html = side(0) +
-        '<div class="kr-mid"><div class="track">' + esc(v.track.name) + (v.races > 1 ? ' · Race ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
+        '<div class="kr-mid"><div class="track">' + esc(v.track.name) + (v.cup ? (v.suddenDeath ? ' · Sudden death!' : ' · Cup race ' + v.race + ' / 4') + ' · ' + v.scores[0] + ' – ' + v.scores[1] : v.races > 1 ? ' · Race ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
         '<div class="clock">' + clock(v.raceMs) + '</div></div>' + side(1);
     }
     if (html !== hudKey) {
@@ -228,6 +228,24 @@
       '<path class="road" d="' + previews[n] + '" stroke-width="' + v.trackWidth + '"/></svg><div>' + esc(trackNames[n - 1] || '') + '</div></div>';
   }
 
+  /** The leaderboard: one row per race (track, winner, both times), then the wins. */
+  function boardHtml(v) {
+    const time = function (ms) { return ms === null ? '–' : clock(ms); };
+    return '<table class="kr-board"><tr><th>Race</th><th>Track</th><th>Winner</th><th class="p1">' + nameOf(v, 0) + '</th><th class="p2">' + nameOf(v, 1) + '</th></tr>' +
+      v.history.map(function (h) {
+        return '<tr><td>' + (v.cup && h.race > 4 ? 'Sudden death' : h.race) + '</td><td>' + esc(h.track) + '</td><td class="p' + (h.winner + 1) + '">' + nameOf(v, h.winner) + '</td>' +
+          '<td' + (h.winner === 0 ? ' class="won"' : '') + '>' + time(h.times[0]) + '</td><td' + (h.winner === 1 ? ' class="won"' : '') + '>' + time(h.times[1]) + '</td></tr>';
+      }).join('') +
+      '<tr class="total"><td colspan="3">Wins</td><td class="p1">' + v.scores[0] + '</td><td class="p2">' + v.scores[1] + '</td></tr></table>';
+  }
+
+  /** Who's ready for what comes next (a ✓ each). */
+  function readyHtml(v) {
+    return '<div class="kr-ready">' + [0, 1].map(function (slot) {
+      return '<span class="p' + (slot + 1) + '">' + nameOf(v, slot) + (v.ready && v.ready[slot] ? ' <b>✓ Ready</b>' : ' <i>…</i>') + '</span>';
+    }).join('') + '</div>';
+  }
+
   function renderOverlay(v) {
     let html = '';
     if (v.phase === 'setup') {
@@ -237,12 +255,17 @@
       // Start lights: five come on one by one, then all go out together.
       let lights = '';
       for (let i = 1; i <= 5; i++) lights += '<span class="light' + (v.lights >= i ? ' on' : '') + '"></span>';
-      html = '<div class="panel small"><div class="lights gantry">' + lights + '</div><div class="sub">' + esc(v.track.name) + ' · ' + v.laps + ' laps · hold GAS to go, let go to coast, hold BRAKE to stop and reverse</div></div>';
+      html = '<div class="panel small"><div class="lights gantry">' + lights + '</div><div class="sub">' + esc(v.track.name) + ' · ' + v.laps + ' laps · wait for the lights to go out, then GAS (too soon: a jump start)</div></div>';
     } else if (v.phase === 'finish' && v.result) {
       html = '<div class="banner">🏁 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' race ' + v.race : '') + '! <span class="muted">' + clock(v.result.time) + '</span></div>';
+    } else if (v.phase === 'standings') {
+      html = '<div class="panel"><div class="title">' + (v.cup ? '🏆 Cup standings' : 'Standings') + '</div>' + boardHtml(v) +
+        '<div class="sub">Next: ' + (v.next.suddenDeath ? '<strong>Sudden death</strong> on ' : 'race ' + v.next.race + ' on ') + esc(v.next.track) + '</div>' + readyHtml(v) +
+        '<div class="sub">Ready (or <strong>A</strong>) when you are: the lights come on when you both are.</div></div>';
     } else if (v.phase === 'over') {
-      html = '<div class="panel"><div class="title">🏆 ' + nameOf(v, v.winner) + ' wins' + (v.races > 1 ? ' ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] : ' the race') + '!</div>' +
-        '<div class="sub">Rematch, change the settings (🎮 Y) or head back to the lobby from your phones or controllers.</div></div>';
+      const title = v.cup ? nameOf(v, v.winner) + ' wins the cup!' : nameOf(v, v.winner) + ' wins' + (v.races > 1 ? ' ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] : ' the race') + '!';
+      html = '<div class="panel"><div class="title">🏆 ' + title + '</div>' + (v.races > 1 ? boardHtml(v) : '') + readyHtml(v) +
+        '<div class="sub">Rematch when you both press it (🎮 A), change the settings (🎮 Y) or head back to the lobby.</div></div>';
     }
     if (html === overlayKey) return;
     overlayKey = html;
@@ -766,8 +789,9 @@
       // The start: a tick per light, a higher note when they all go out; a click for each ready.
       if (v.phase === 'countdown' && v.lights > (prev.phase === 'countdown' ? prev.lights || 0 : 0)) out.push('tick');
       if (prev.phase === 'countdown' && v.phase === 'race') out.push('go');
-      if (v.phase === 'setup' && v.ready && prev.ready && v.ready.some(function (r, i) { return r && !prev.ready[i]; })) out.push('lock');
+      if (v.phase === prev.phase && v.ready && prev.ready && v.ready.some(function (r, i) { return r && !prev.ready[i]; })) out.push('lock');
       if (!a || !b) return out;
+      if (b.jumpStarts > (a.jumpStarts || 0)) out.push('wrong');
       if (b.boosts > a.boosts) out.push('whoosh');
       if (b.bumps > a.bumps + 2) out.push('puck');
       if (b.laps > a.laps) out.push('correct');
@@ -787,7 +811,7 @@
       if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
       return out;
     },
-    padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · End: A rematch, Y settings',
+    padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
     padPoll: padPoll,
     pad: function (btn, v, slot) {
       if (v.phase === 'setup') {
@@ -804,6 +828,7 @@
         }
         return input;
       }
+      if (v.phase === 'standings') return btn === 'A' || btn === 'START' ? { type: 'go' } : null;
       if (v.phase === 'over') {
         if (btn === 'A' || btn === 'START') return { type: 'rematch' };
         return btn === 'Y' ? { type: 'setup' } : null;

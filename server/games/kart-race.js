@@ -53,6 +53,9 @@ export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
 // The start: five red lights come on one by one, hold for a moment nobody can guess, then all
 // go out and the race is on (like a Formula 1 start).
 export const LIGHTS = { count: 5, stepMs: 700, holdMin: 300, holdMax: 1200 };
+// Pressing GAS while the lights are on: a stall when they go out. Not in the first moment of the
+// lights, before any is lit (a controller's A is GAS too, and may still be down from Ready).
+export const JUMP = { stallMs: 1000, graceMs: 600 };
 export const TIMING = { countdownMs: LIGHTS.count * LIGHTS.stepMs + LIGHTS.holdMax, finishMs: 3500 };
 export const SAMPLES = Road.SAMPLES; // points on each track's centre line
 const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare
@@ -128,7 +131,7 @@ export function coinSpots(def) {
 export const OPTIONS = {
   track: [0, 1, 2, 3, 4, 5, 6], // 0: a different track each race
   laps: [5, 3, 8],
-  races: [1, 3], // one race, or best of 3
+  races: [1, 3, 4], // one race, best of 3, or a cup (4: four tracks, most wins)
   items: [1, 0], // ? boxes on the track: on / off
 };
 
@@ -235,24 +238,43 @@ export class KartRace {
     this.scores = [0, 0];
     this.race = 0;
     this.winner = null;
-    this.events = { bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, frozen: 0, swapped: 0, starHits: 0, fired: 0, exploded: 0, snagged: 0 };
+    this.events = { jumpStarts: 0, bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, frozen: 0, swapped: 0, starHits: 0, fired: 0, exploded: 0, snagged: 0 };
     this.lastTrack = -1;
+    this.history = []; // each race: { race, track, winner, times }
+    this.nextIndex = null;
+    this.ready = [false, false];
+    // A cup's tracks: five different ones (four races and a sudden death), shuffled.
+    this.cupTracks = TRACKS.map((_, i) => i);
+    for (let i = this.cupTracks.length - 1; i > 0; i--) {
+      const j = Math.floor(this.rng() * (i + 1));
+      [this.cupTracks[i], this.cupTracks[j]] = [this.cupTracks[j], this.cupTracks[i]];
+    }
     this.newRace();
     this.loop();
   }
 
   get winScore() {
-    return Math.ceil(this.settings.races / 2);
+    return this.cup ? 3 : Math.ceil(this.settings.races / 2);
+  }
+
+  /** A cup: four races on four different tracks, the most wins takes it (2-2: sudden death). */
+  get cup() {
+    return this.settings.races === 4;
+  }
+
+  /** The track for race number `race` (a cup's own list; Mixed: random, not the last one). */
+  pickTrack(race) {
+    if (this.cup) return this.cupTracks[race - 1];
+    if (this.settings.track > 0) return this.settings.track - 1;
+    const others = TRACKS.map((_, i) => i).filter((i) => i !== this.lastTrack);
+    return others[Math.floor(this.rng() * others.length)];
   }
 
   newRace() {
     this.race++;
-    let index = this.settings.track - 1;
-    if (index < 0) {
-      // Mixed: a random track, not the last one.
-      const others = TRACKS.map((_, i) => i).filter((i) => i !== this.lastTrack);
-      index = others[Math.floor(this.rng() * others.length)];
-    }
+    // Picked already if the leaderboard showed it as next.
+    const index = this.nextIndex ?? this.pickTrack(this.race);
+    this.nextIndex = null;
     this.lastTrack = index;
     this.track = buildTrack(index);
     this.result = null;
@@ -313,6 +335,8 @@ export class KartRace {
         webUntil: 0,
         oilUntil: 0,
         spinUntil: 0,
+        jumpStart: false, // pressed GAS during the lights
+        stallUntil: 0, // ...so it can't go until then
         finishedAt: null,
       };
     });
@@ -336,7 +360,7 @@ export class KartRace {
       this.timer = this.ctx.setTimeout(() => {
         this.timer = null;
         this.tick();
-        if (this.phase !== 'over' && this.phase !== 'setup') step();
+        if (this.phase !== 'over' && this.phase !== 'setup' && this.phase !== 'standings') step();
       }, PHYSICS.tickMs);
     };
     step();
@@ -354,6 +378,7 @@ export class KartRace {
     const before = this.phase;
     if (this.phase === 'countdown' && now >= this.phaseEnds) {
       this.raceStart = now;
+      for (const k of this.karts) if (k.jumpStart) k.stallUntil = now + JUMP.stallMs;
       this.enter('race', 0);
     }
     if (this.phase === 'race' || this.phase === 'finish') {
@@ -371,6 +396,10 @@ export class KartRace {
   }
 
   drive(k, dt, now) {
+    if (now < k.stallUntil) {
+      k.speed = 0; // a jump start: stalled on the grid
+      return;
+    }
     const where = this.near(k);
     k.offTrack = where.d > TRACK_WIDTH / 2;
     const boosting = now < k.boostUntil;
@@ -739,15 +768,39 @@ export class KartRace {
   }
 
   endRace() {
-    if (this.scores[this.result.winner] >= this.winScore) {
+    this.history.push({
+      race: this.race,
+      track: this.track.name,
+      winner: this.result.winner,
+      times: this.karts.map((k) => (k.finishedAt !== null ? k.finishedAt - this.raceStart : null)),
+    });
+    this.stopLoop();
+    this.phaseEnds = null;
+    this.ready = [false, false];
+    if (this.seriesOver()) {
       this.winner = this.result.winner;
-      this.stopLoop();
       this.phase = 'over';
-      this.phaseEnds = null;
-      this.ctx.update();
-      return;
+    } else {
+      this.phase = 'standings'; // the leaderboard, until you're both ready for the next race
+      this.nextIndex = this.pickTrack(this.race + 1);
     }
-    this.newRace();
+    this.ctx.update();
+  }
+
+  /** Has the series been won? (The last race's winner takes it.) */
+  seriesOver() {
+    if (!this.cup) return this.scores[this.result.winner] >= this.winScore;
+    if (this.race < 4) return false;
+    return this.race > 4 || this.scores[0] !== this.scores[1]; // 2-2 after four: sudden death
+  }
+
+  /** Ready (or not) for what comes next; when both are (a dropped player counts), `go` runs. */
+  readyUp(slot, go) {
+    this.ready[slot] = !this.ready[slot];
+    // A player whose phone dropped out counts as ready, so the other isn't stuck waiting.
+    const away = (i) => this.ctx.players && this.ctx.players[i] && this.ctx.players[i].connected === false;
+    if (this.ready.every((r, i) => r || away(i))) go();
+    else this.ctx.update();
   }
 
   /** A player picks their racer or tyres (setup and end screens only); unknown ids are ignored. */
@@ -772,31 +825,44 @@ export class KartRace {
         this.ready = [false, false]; // you both agreed to the old settings
         this.ctx.update();
       }
-      if (input.type === 'go') {
-        this.ready[slot] = !this.ready[slot];
-        // A player whose phone dropped out counts as ready, so the other isn't stuck waiting.
-        const away = (i) => this.ctx.players && this.ctx.players[i] && this.ctx.players[i].connected === false;
-        if (this.ready.every((r, i) => r || away(i))) this.begin();
-        else this.ctx.update();
-      }
+      if (input.type === 'go') this.readyUp(slot, () => this.begin());
       return;
     }
     if (this.phase === 'over') {
-      if (input.type === 'rematch') this.begin();
+      if (input.type === 'rematch') this.readyUp(slot, () => this.begin());
       if (input.type === 'setup') this.start();
       return;
     }
-    if (!this.karts) return;
-    if (input.type === 'drive') {
-      // The whole driving state: steering, and which pedals / buttons are held.
-      const k = this.karts[slot];
-      const steer = Number(input.steer);
-      k.steer = Number.isFinite(steer) ? Math.max(-1, Math.min(1, steer)) : 0;
-      k.gas = Boolean(input.gas);
-      k.brake = Boolean(input.brake);
-      k.drift = Boolean(input.drift);
+    if (this.phase === 'standings') {
+      if (input.type === 'go') {
+        this.readyUp(slot, () => {
+          this.ready = [false, false];
+          this.newRace();
+          this.loop();
+        });
+      }
+      if (input.type === 'drive') this.onDrive(slot, input);
+      return;
     }
+    if (!this.karts) return;
+    if (input.type === 'drive') this.onDrive(slot, input);
     if (input.type === 'item') this.useItem(slot);
+  }
+
+  /** The whole driving state: steering, and which pedals / buttons are held. */
+  onDrive(slot, input) {
+    const k = this.karts[slot];
+    // GAS pressed while the lights are on (held from before doesn't count): a jump start.
+    const lit = this.phase === 'countdown' && this.ctx.now() - this.lightsFrom >= JUMP.graceMs;
+    if (lit && input.gas && !k.gas && !k.jumpStart) {
+      k.jumpStart = true;
+      this.events.jumpStarts++;
+    }
+    const steer = Number(input.steer);
+    k.steer = Number.isFinite(steer) ? Math.max(-1, Math.min(1, steer)) : 0;
+    k.gas = Boolean(input.gas);
+    k.brake = Boolean(input.brake);
+    k.drift = Boolean(input.drift);
   }
 
   // ---- views ----
@@ -862,6 +928,7 @@ export class KartRace {
             webbed: now < k.webUntil,
             oiled: now < k.oilUntil,
             spin: now < k.spinUntil,
+            jumped: k.jumpStart && (this.phase === 'countdown' || now < k.stallUntil), // "JUMP START"
             finished: k.finishedAt !== null,
           }))
         : null,
@@ -877,6 +944,11 @@ export class KartRace {
       events: this.events || null,
       // No countdown number: the lights are the countdown (and the hub would beep its own seconds).
       countdown: 0,
+      history: this.history || [],
+      cup: this.cup,
+      suddenDeath: this.cup && this.race > 4 && this.phase !== 'standings',
+      // On the leaderboard between races: what's next.
+      next: this.phase === 'standings' ? { race: this.race + 1, track: TRACKS[this.nextIndex].name, suddenDeath: this.cup && this.race >= 4 } : null,
       lights: this.phase === 'countdown' ? Math.min(LIGHTS.count, Math.floor((now - this.lightsFrom) / LIGHTS.stepMs)) : 0,
       ready: this.ready || [false, false],
     };

@@ -69,7 +69,7 @@
 .kr-overlay .light { width: 4rem; height: 4rem; border-radius: 50%; background: #3f1d1d; border: 3px solid #111; }
 .kr-overlay .light.on { background: radial-gradient(circle at 35% 35%, #fca5a5, #ef4444 45%, #b91c1c); box-shadow: 0 0 2rem #ef4444; }
 .kr-picks-tv .ready { margin-left: 0.4em; padding: 0 0.4em; border-radius: 6px; background: var(--good); color: #052e16; font-size: 0.8em; font-weight: 900; }
-.kr-phone .go.on { background: var(--good); color: #052e16; }
+.kr-phone .rematch.on, .kr-phone .go.on { background: var(--good); color: #052e16; }
 .kr-lights { display: inline-flex; gap: 8px; }
 .kr-lights i { width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #3f1d1d; border: 2px solid #111; }
 .kr-lights i.on { background: #ef4444; box-shadow: 0 0 0.8rem #ef4444; }
@@ -214,3 +214,17 @@
 .kr-btn.item.gold { border-color: #facc15; animation: kr-gold 0.5s ease-in-out infinite alternate; }
 @keyframes kr-gold { from { box-shadow: 0 0 0.4rem rgba(250, 204, 21, 0.4); } to { box-shadow: 0 0 1.4rem rgba(250, 204, 21, 0.9); } }
 .kr-side .pos .item b { font-size: 1.3em; }
+
+/* The leaderboard between races and at the end (best of 3, cup). */
+.kr-board { margin: 0.6rem auto; border-collapse: collapse; font-size: 1rem; }
+.kr-board th, .kr-board td { padding: 0.25em 0.8em; text-align: left; }
+.kr-board th { color: var(--muted); font-weight: 700; border-bottom: 1px solid var(--line); }
+.kr-board .p1 { color: var(--p1); }
+.kr-board .p2 { color: var(--p2); }
+.kr-board td.won { color: var(--good); font-weight: 800; }
+.kr-board tr.total td { border-top: 1px solid var(--line); font-weight: 900; font-size: 1.1em; }
+.kr-ready { display: flex; gap: 2rem; justify-content: center; margin: 0.4rem 0; font-weight: 800; }
+.kr-ready .p1 { color: var(--p1); }
+.kr-ready .p2 { color: var(--p2); }
+.kr-ready b { color: var(--good); }
+.kr-ready i { color: var(--muted); }

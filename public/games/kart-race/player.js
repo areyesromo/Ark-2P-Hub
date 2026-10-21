@@ -8,12 +8,13 @@
   });
   const RACER_KEY = 'ark.kart.racer';
   const TYRE_KEY = 'ark.kart.tyre';
+  const esc = Ark.escapeHtml;
   const STAT_ROWS = [['speed', 'Speed'], ['accel', 'Acceleration'], ['handling', 'Handling'], ['weight', 'Weight']];
   let trackNames = []; // from the server's views
   const ROWS = [
     { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
     { key: 'laps', title: 'Laps', fmt: function (n) { return n + ' laps'; } },
-    { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : 'Best of ' + n; } },
+    { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : n === 4 ? '🏆 Cup (4 tracks)' : 'Best of ' + n; } },
     { key: 'items', title: 'Items (? boxes)', fmt: function (n) { return n ? 'On' : 'Off'; } },
   ];
   Ark.loadScript('/games/kart-race/items.js').then(function () {
@@ -349,21 +350,31 @@
       const wait = ready[me] ? 'Ready ✓ Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: press Ready when you are.' : 'Pick the settings (either of you can), then press Ready.';
       return '<span class="big">🏎️ Kart Race</span><br>' + wait;
     }
+    const ready = v.ready || [false, false];
+    const waiting = function (what) {
+      return ready[me] ? 'Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: ' + what : what;
+    };
+    if (v.phase === 'standings') {
+      const last = v.history[v.history.length - 1];
+      return '<span class="big ' + (last.winner === me ? 'won">You won race ' : 'lost">They won race ') + last.race + '</span>' +
+        '<br>You ' + v.scores[me] + ' – ' + v.scores[1 - me] + ' them · next: ' + (v.next.suddenDeath ? 'sudden death on ' : '') + esc(v.next.track) +
+        '<br>' + waiting('press Ready for the next race.');
+    }
     if (v.phase === 'over') {
-      return '<span class="big ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span>' +
-        (v.races > 1 ? '<br>You ' + v.scores[me] + ' – ' + v.scores[1 - me] + ' them' : '');
+      return '<span class="big ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? (v.cup ? 'You win the cup! 🏆' : 'You win! 🏆') : 'You lose') + '</span>' +
+        (v.races > 1 ? '<br>You ' + v.scores[me] + ' – ' + v.scores[1 - me] + ' them' : '') + '<br>' + waiting('press Rematch to race again.');
     }
     const k = v.karts[me];
     const pos = v.positions[me] === 1 ? '1st' : '2nd';
     if (v.phase === 'countdown') {
       let dots = '';
       for (let i = 1; i <= 5; i++) dots += '<i class="' + (v.lights >= i ? 'on' : '') + '"></i>';
-      return '<span class="big kr-lights">' + dots + '</span><br>' + v.track.name + ' · ' + v.laps + ' laps';
+      return '<span class="big kr-lights">' + dots + '</span><br>' + (k.jumped ? '<span class="lost">Jump start! 1 s penalty</span>' : 'Wait for the lights to go out, then GAS') + '<br>' + esc(v.track.name) + ' · ' + v.laps + ' laps';
     }
     if (v.phase === 'finish' && v.result) {
       return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>';
     }
-    return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
+    return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
   }
 
   function clock(ms) {
@@ -409,7 +420,7 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result]);
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.history && v.history.length, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';
@@ -421,12 +432,15 @@
     if (setup) restorePicks(v);
     else restored = false; // ask again next time we're back at setup
     els.prefs.classList.toggle('hidden', !between);
-    els.go.classList.toggle('hidden', !setup);
-    const ready = setup && v.ready && v.ready[v.you];
-    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : 'Ready';
-    els.go.classList.toggle('on', Boolean(ready));
-    els.controls.classList.toggle('hidden', between);
+    const standings = v.phase === 'standings';
+    els.go.classList.toggle('hidden', !setup && !standings);
+    const ready = Boolean(v.ready && v.ready[v.you]);
+    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : standings ? 'Ready for the next race' : 'Ready';
+    els.go.classList.toggle('on', ready && (setup || standings));
+    els.controls.classList.toggle('hidden', between || standings);
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
+    els.rematch.textContent = v.phase === 'over' && ready ? 'Rematch ✓ (tap to cancel)' : 'Rematch';
+    els.rematch.classList.toggle('on', v.phase === 'over' && ready);
     // The item button shows what you're holding.
     // The item button: the next item big, the two after it small (or 🌟 while Gold Turbo lasts).
     const items = (k && k.items) || [];
