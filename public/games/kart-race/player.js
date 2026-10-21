@@ -320,9 +320,10 @@
         return '<button type="button" class="kr-tyre' + (t.id === tyre.id ? ' on' : '') + '" data-tyre="' + t.id + '"><span>' + t.emoji + '</span>' + t.name + '</button>';
       }).join('') + '</div>' +
       '<div class="kr-stats"><div class="who"><img src="' + racer.portrait + '" alt=""> ' + racer.name + ' · ' + R.TYPES[racer.type].label + ' · ' + tyre.emoji + ' ' + tyre.name + '</div>' +
+      '<div class="kr-car">' + (racer.sprite ? '<img class="kr-kart" src="' + racer.sprite + '" alt="">' : '') + '<div class="rows">' +
       STAT_ROWS.map(function (row) {
         return '<div class="stat"><span>' + row[1] + '</span><div class="bar">' + statBar(racer.stats[row[0]], tyre.mod[row[0]] || 0) + '</div></div>';
-      }).join('') + '</div>';
+      }).join('') + '</div></div></div>';
   }
 
   /** Once per visit to the setup screen: ask for this phone's remembered racer and tyres. */
