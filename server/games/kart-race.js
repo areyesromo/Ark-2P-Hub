@@ -242,7 +242,7 @@ export class KartRace {
     this.scores = [0, 0];
     this.race = 0;
     this.winner = null;
-    this.events = { jumpStarts: 0, bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, frozen: 0, swapped: 0, starHits: 0, fired: 0, exploded: 0, snagged: 0 };
+    this.events = { records: 0, jumpStarts: 0, bumps: 0, boosts: 0, laps: 0, cuts: 0, items: 0, used: 0, spins: 0, blocked: 0, walls: 0, miniBoosts: 0, coins: 0, coinsLost: 0, zapped: 0, frozen: 0, swapped: 0, starHits: 0, fired: 0, exploded: 0, snagged: 0 };
     this.lastTrack = -1;
     this.history = []; // each race: { race, track, winner, times }
     this.nextIndex = null;
@@ -282,6 +282,11 @@ export class KartRace {
     this.lastTrack = index;
     this.track = buildTrack(index);
     this.result = null;
+    // This track's lap record (from the stats, if the room keeps any): shown on the TV, and
+    // beating it is news.
+    const rec = this.ctx.lapRecord ? this.ctx.lapRecord(this.track.name) : null;
+    this.record = rec ? { name: rec.name, ms: rec.ms } : null;
+    this.newRecord = null; // { slot, name, ms, at } for a moment after it's beaten
     // Item boxes (none if items are off) and the bananas lying on the road.
     this.boxes = [];
     if (this.settings.items) {
@@ -755,6 +760,7 @@ export class KartRace {
         const t = now - this.raceStart;
         k.lastLap = t - k.lapStart;
         k.bestLap = k.bestLap === null ? k.lastLap : Math.min(k.bestLap, k.lastLap);
+        this.recordCheck(slot, k.lastLap, now);
         k.prevLapStart = k.lapStart;
         k.lapStart = t;
         if (k.laps >= this.settings.laps) this.finishLine(slot, now);
@@ -764,6 +770,19 @@ export class KartRace {
       k.halfway = true;
       k.lapStart = k.prevLapStart; // still on that lap: no 2-second "best lap" when you cross again
     }
+  }
+
+  /** A lap of `ms`: a new track record? (The first lap on a track with none just sets it.) */
+  recordCheck(slot, ms, now) {
+    const name = this.ctx.players[slot].name;
+    if (!this.record) {
+      this.record = { name, ms };
+      return;
+    }
+    if (ms >= this.record.ms) return;
+    this.record = { name, ms };
+    this.newRecord = { slot, name, ms, at: now };
+    this.events.records++;
   }
 
   finishLine(slot, now) {
@@ -784,6 +803,7 @@ export class KartRace {
       winner: this.result.winner,
       times: this.karts.map((k) => (k.finishedAt !== null ? k.finishedAt - this.raceStart : null)),
       best: this.karts.map((k) => k.bestLap), // each kart's best lap (for the lap records)
+      react: this.karts.map((k) => (k.reactionMs !== null && k.reactionMs <= REACTION_MAX_MS ? k.reactionMs : null)), // starts
     });
     this.stopLoop();
     this.phaseEnds = null;
@@ -965,6 +985,9 @@ export class KartRace {
       countdown: 0,
       history: this.history || [],
       // Every best lap of the series, for the lap records on the stats page.
+      reactionTimes: (this.history || []).flatMap((h) => (h.react || []).map((ms, slot) => ({ slot, ms })).filter((r) => r.ms !== null)),
+      record: racing && this.record ? { name: this.record.name, ms: this.record.ms } : null,
+      newRecord: racing && this.newRecord && now - this.newRecord.at < REACTION_SHOW_MS ? { slot: this.newRecord.slot, name: this.newRecord.name, ms: this.newRecord.ms } : null,
       lapTimes: (this.history || []).flatMap((h) => (h.best || []).map((ms, slot) => ({ track: h.track, slot, ms })).filter((l) => l.ms !== null)),
       cup: this.cup,
       suddenDeath: this.cup && this.race > 4 && this.phase !== 'standings',

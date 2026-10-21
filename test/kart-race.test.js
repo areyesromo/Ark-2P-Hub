@@ -1627,3 +1627,65 @@ test('reaction: a very late first press is not shown as a reaction time', () => 
   game.onInput(0, { type: 'drive', steer: 0, gas: true });
   assert.equal(game.hostView().karts[0].reaction, null);
 });
+
+/** Count a lap for kart `slot` that took `ms` (as lapCheck would). */
+function lapIn(game, ctx, slot, ms) {
+  const k = game.karts[slot];
+  k.lapStart = ctx.now() - game.raceStart - ms;
+  onRoad(game, k, 0.005); // just over the line...
+  k.progress = 0.995; // ...from just before it
+  k.halfway = true;
+  game.lapCheck(k, slot, ctx.now());
+}
+
+test('lap record: the track record shows during the race; beating it shows a "new record" for 3 s', () => {
+  const ctx = fakeCtx();
+  ctx.lapRecord = (track) => (track === 'Speedway' ? { name: 'Cat', ms: 20000 } : null);
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'setting', key: 'track', value: 1 });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.equal(game.track.name, 'Speedway');
+  assert.deepEqual(game.hostView().record, { name: 'Cat', ms: 20000 });
+  ctx.advance(25000);
+  lapIn(game, ctx, 1, 21000);
+  assert.equal(game.hostView().newRecord, null, 'slower than the record');
+  lapIn(game, ctx, 0, 19000);
+  assert.deepEqual(game.hostView().record, { name: 'Ana', ms: 19000 });
+  assert.deepEqual(game.hostView().newRecord, { slot: 0, name: 'Ana', ms: 19000 });
+  assert.equal(game.events.records, 1);
+  ctx.advance(3100);
+  assert.equal(game.hostView().newRecord, null);
+});
+
+test('lap record: on a track with no record the first lap quietly becomes it (no banner)', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.equal(game.hostView().record, null);
+  ctx.advance(25000);
+  lapIn(game, ctx, 1, 22000);
+  assert.deepEqual(game.hostView().record, { name: 'Ben', ms: 22000 });
+  assert.equal(game.hostView().newRecord, null);
+  assert.equal(game.events.records, 0);
+});
+
+test('best starts: each race keeps both reaction times, and the end view lists them', () => {
+  const { ctx, game } = series(1, () => 0);
+  while (game.phase === 'countdown') ctx.advance(10);
+  ctx.advance(300);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(2500);
+  game.onInput(1, { type: 'drive', steer: 0, gas: true }); // too slow to count
+  game.finishLine(0, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  const r = game.hostView().reactionTimes;
+  assert.equal(r.length, 1);
+  assert.equal(r[0].slot, 0);
+  assert.ok(Math.abs(r[0].ms - 300) <= 20);
+});

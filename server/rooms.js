@@ -173,6 +173,8 @@ export class Room {
         return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}`, local: Boolean(p && p.local) }));
       },
       now: () => Date.now(),
+      // The fastest lap on a track in this game's history (Kart Race), or null.
+      lapRecord: (track) => (room.stats ? room.stats.lapRecord(def.id, track) : null),
       // Kept by the room between launches of this game, e.g. the settings picked last time.
       saved: (this.saved[def.id] = this.saved[def.id] || {}),
       setTimeout(fn, ms) {
@@ -299,6 +301,11 @@ export class Room {
         ? view.lapTimes.filter((l) => l && typeof l.track === 'string' && (l.slot === 0 || l.slot === 1) && Number.isFinite(l.ms) && l.ms > 0).map((l) => ({ track: l.track, player: l.slot, ms: l.ms }))
         : [];
       if (laps.length) match.laps = laps;
+      // Reaction times at the start (Kart Race), for the best starts.
+      const reactions = Array.isArray(view.reactionTimes)
+        ? view.reactionTimes.filter((r) => r && (r.slot === 0 || r.slot === 1) && Number.isFinite(r.ms) && r.ms >= 0 && r.ms <= 2000).map((r) => ({ player: r.slot, ms: r.ms }))
+        : [];
+      if (reactions.length) match.reactions = reactions;
     }
     this.stats.record(match);
   }
