@@ -15,6 +15,7 @@ export const nameKey = (name) => String(name || '').trim().toLowerCase();
  * A match record:
  *   { at, game, gameName, category, players: [name0, name1],
  *     winner: 0 | 1 | null, draw, scores: [a, b] | null,   // competitive
+ *     cup: true,                                            // a Kart Race cup (won by winner)
  *     stars, maxStars }                                     // casual (team) games
  *
  * A won tournament (best of N games, see tournament.js):
@@ -71,7 +72,7 @@ export class Stats {
   headToHead(a, b) {
     const ka = nameKey(a);
     const kb = nameKey(b);
-    const out = { played: 0, wins: [0, 0], draws: 0, byGame: [], recent: [], team: { played: 0, stars: 0, maxStars: 0 }, titles: [0, 0] };
+    const out = { played: 0, wins: [0, 0], draws: 0, byGame: [], recent: [], team: { played: 0, stars: 0, maxStars: 0 }, titles: [0, 0], cups: [0, 0] };
     if (!ka || !kb || ka === kb) return out;
     for (const t of this.tournaments) {
       const keys = t.players.map(nameKey);
@@ -94,6 +95,7 @@ export class Stats {
       out.played++;
       if (winner === null) out.draws++;
       else out.wins[winner]++;
+      if (m.cup && winner !== null) out.cups[winner]++;
       if (!games.has(m.game)) games.set(m.game, { game: m.game, name: m.gameName, played: 0, wins: [0, 0], draws: 0 });
       const g = games.get(m.game);
       g.played++;
@@ -131,7 +133,7 @@ export class Stats {
     const pairs = new Map();
     const player = (name) => {
       const k = nameKey(name);
-      if (!players.has(k)) players.set(k, { name, played: 0, wins: 0, losses: 0, draws: 0, teamGames: 0, stars: 0, titles: 0 });
+      if (!players.has(k)) players.set(k, { name, played: 0, wins: 0, losses: 0, draws: 0, teamGames: 0, stars: 0, titles: 0, cups: 0 });
       const p = players.get(k);
       p.name = name; // latest spelling wins
       return p;
@@ -147,8 +149,10 @@ export class Stats {
         ps.forEach((p, i) => {
           p.played++;
           if (m.winner === null || m.winner === undefined) p.draws++;
-          else if (m.winner === i) p.wins++;
-          else p.losses++;
+          else if (m.winner === i) {
+            p.wins++;
+            if (m.cup) p.cups++;
+          } else p.losses++;
         });
       }
       if (!games.has(m.game)) games.set(m.game, { game: m.game, name: m.gameName, category: m.category, played: 0, wins: new Map(), bestStars: 0 });
@@ -187,6 +191,12 @@ export class Stats {
         .sort((x, y) => y.played - x.played),
       recent: this.matches.slice(-RECENT).reverse(),
       tournaments: this.tournaments.slice(-10).reverse(),
+      // The latest Kart Race cups, newest first.
+      cups: this.matches
+        .filter((m) => m.cup && (m.winner === 0 || m.winner === 1))
+        .slice(-10)
+        .reverse()
+        .map((m) => ({ at: m.at, players: m.players, winner: m.winner, scores: m.scores })),
       total: this.matches.length,
     };
   }

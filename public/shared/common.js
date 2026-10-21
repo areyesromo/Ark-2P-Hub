@@ -118,6 +118,7 @@
       }
     }
     if (h.titles && (h.titles[0] || h.titles[1])) parts.push('🏆 tournaments ' + a + ' <strong>' + h.titles[0] + ' – ' + h.titles[1] + '</strong> ' + b);
+    if (h.cups && (h.cups[0] || h.cups[1])) parts.push('🏅 kart cups ' + a + ' <strong>' + h.cups[0] + ' – ' + h.cups[1] + '</strong> ' + b);
     if (h.team.played) parts.push('🎨 ' + h.team.stars + '⭐ together');
     return parts.join(' · ');
   }
