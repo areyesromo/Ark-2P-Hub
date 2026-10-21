@@ -63,9 +63,16 @@
 .kr-overlay .sub strong { color: var(--warn); }
 .kr-overlay .ark-setup { font-size: 1.4rem; }
 .kr-overlay .banner { align-self: flex-start; margin-top: 1rem; padding: 0.6rem 1.6rem; border-radius: 14px; background: rgba(11, 13, 23, 0.85); font-size: 2rem; font-weight: 900; }
+/* Start lights: five on a dark gantry, lit red one by one, then all out. */
 .kr-overlay .lights { display: flex; gap: 1.2rem; justify-content: center; margin-bottom: 0.6rem; }
+.kr-overlay .lights.gantry { width: fit-content; margin: 0 auto 0.6rem; gap: 0.9rem; padding: 0.8rem 1.1rem; border-radius: 14px; background: #0b0f17; border: 3px solid #1f2937; box-shadow: inset 0 0 1rem rgba(0, 0, 0, 0.8); }
 .kr-overlay .light { width: 4rem; height: 4rem; border-radius: 50%; background: #3f1d1d; border: 3px solid #111; }
-.kr-overlay .light.on { background: #ef4444; box-shadow: 0 0 2rem #ef4444; }
+.kr-overlay .light.on { background: radial-gradient(circle at 35% 35%, #fca5a5, #ef4444 45%, #b91c1c); box-shadow: 0 0 2rem #ef4444; }
+.kr-picks-tv .ready { margin-left: 0.4em; padding: 0 0.4em; border-radius: 6px; background: var(--good); color: #052e16; font-size: 0.8em; font-weight: 900; }
+.kr-phone .go.on { background: var(--good); color: #052e16; }
+.kr-lights { display: inline-flex; gap: 8px; }
+.kr-lights i { width: 1.6rem; height: 1.6rem; border-radius: 50%; background: #3f1d1d; border: 2px solid #111; }
+.kr-lights i.on { background: #ef4444; box-shadow: 0 0 0.8rem #ef4444; }
 
 /* ---- phone ---- */
 

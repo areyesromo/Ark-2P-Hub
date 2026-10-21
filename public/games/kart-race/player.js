@@ -344,14 +344,22 @@
 
   function status(v) {
     const me = v.you;
-    if (v.phase === 'setup') return '<span class="big">🏎️ Kart Race</span><br>Pick the settings (either of you can), then start.';
+    if (v.phase === 'setup') {
+      const ready = v.ready || [false, false];
+      const wait = ready[me] ? 'Ready ✓ Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: press Ready when you are.' : 'Pick the settings (either of you can), then press Ready.';
+      return '<span class="big">🏎️ Kart Race</span><br>' + wait;
+    }
     if (v.phase === 'over') {
       return '<span class="big ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span>' +
         (v.races > 1 ? '<br>You ' + v.scores[me] + ' – ' + v.scores[1 - me] + ' them' : '');
     }
     const k = v.karts[me];
     const pos = v.positions[me] === 1 ? '1st' : '2nd';
-    if (v.phase === 'countdown') return '<span class="big">' + (v.countdown > 3 ? 'Get ready' : v.countdown) + '</span><br>' + v.track.name + ' · ' + v.laps + ' laps';
+    if (v.phase === 'countdown') {
+      let dots = '';
+      for (let i = 1; i <= 5; i++) dots += '<i class="' + (v.lights >= i ? 'on' : '') + '"></i>';
+      return '<span class="big kr-lights">' + dots + '</span><br>' + v.track.name + ' · ' + v.laps + ' laps';
+    }
     if (v.phase === 'finish' && v.result) {
       return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>';
     }
@@ -401,7 +409,7 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result]);
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.phase, v.race, v.countdown, v.scores, v.settings, v.positions && v.positions[me], k && [k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';
@@ -414,6 +422,9 @@
     else restored = false; // ask again next time we're back at setup
     els.prefs.classList.toggle('hidden', !between);
     els.go.classList.toggle('hidden', !setup);
+    const ready = setup && v.ready && v.ready[v.you];
+    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : 'Ready';
+    els.go.classList.toggle('on', Boolean(ready));
     els.controls.classList.toggle('hidden', between);
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
     // The item button shows what you're holding.
@@ -440,7 +451,7 @@
         '<div class="kr-setup-box"></div>' +
 
         '<div class="ark-setup kr-prefs hidden"></div>' +
-        '<button class="primary go hidden">Start</button>' +
+        '<button class="primary go hidden">Ready</button>' +
         '<div class="ark-setup kr-picks hidden"></div>' +
         '<div class="kr-controls">' +
         '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
