@@ -56,8 +56,10 @@ export const LIGHTS = { count: 5, stepMs: 700, holdMin: 300, holdMax: 1200 };
 // Pressing GAS while the lights are on: a stall when they go out. Not in the first moment of the
 // lights, before any is lit (a controller's A is GAS too, and may still be down from Ready).
 export const JUMP = { stallMs: 1000, graceMs: 600 };
-// How long a kart's reaction time (lights out to GAS) shows on the screens.
+// How long a kart's reaction time (lights out to GAS) shows on the screens; slower than
+// REACTION_MAX_MS isn't a reaction any more, so it isn't shown.
 export const REACTION_SHOW_MS = 3000;
+export const REACTION_MAX_MS = 2000;
 export const TIMING = { countdownMs: LIGHTS.count * LIGHTS.stepMs + LIGHTS.holdMax, finishMs: 3500 };
 export const SAMPLES = Road.SAMPLES; // points on each track's centre line
 const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare
@@ -385,7 +387,7 @@ export class KartRace {
       for (const k of this.karts) {
         if (k.jumpStart) k.stallUntil = now + JUMP.stallMs;
         // A reaction time only from a clean start with GAS up as the lights go out.
-        k.reactionOpen = !k.jumpStart && !k.gas;
+        k.reactionOpen = !k.jumpStart && !k.gas && k.reactionMs === null;
       }
       this.enter('race', 0);
     }
@@ -862,7 +864,10 @@ export class KartRace {
   onDrive(slot, input) {
     const k = this.karts[slot];
     // GAS pressed while the lights are on (held from before doesn't count): a jump start.
-    const lit = this.phase === 'countdown' && this.ctx.now() - this.lightsFrom >= JUMP.graceMs;
+    const now = this.ctx.now();
+    const lit = this.phase === 'countdown' && now - this.lightsFrom >= JUMP.graceMs && now < this.phaseEnds;
+    // The lights are out but the tick that starts the race hasn't run yet: a perfect start.
+    if (this.phase === 'countdown' && now >= this.phaseEnds && input.gas && !k.gas && !k.jumpStart) k.reactionMs = now - this.phaseEnds;
     if (lit && input.gas && !k.gas && !k.jumpStart) {
       k.jumpStart = true;
       this.events.jumpStarts++;
@@ -941,7 +946,7 @@ export class KartRace {
             webbed: now < k.webUntil,
             oiled: now < k.oilUntil,
             spin: now < k.spinUntil,
-            reaction: k.reactionMs !== null && now - this.raceStart - k.reactionMs < REACTION_SHOW_MS ? k.reactionMs : null,
+            reaction: k.reactionMs !== null && k.reactionMs <= REACTION_MAX_MS && now - this.raceStart - k.reactionMs < REACTION_SHOW_MS ? k.reactionMs : null,
             jumped: k.jumpStart && (this.phase === 'countdown' || now < k.stallUntil), // "JUMP START"
             finished: k.finishedAt !== null,
           }))

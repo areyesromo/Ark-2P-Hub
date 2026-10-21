@@ -1601,3 +1601,29 @@ test('lap records: each race keeps both best laps, and the end view lists them b
     { track: game.track.name, slot: 1, ms: 18000 },
   ]);
 });
+
+test('jump start: GAS pressed the instant the lights go out (before the next tick) is not a jump start', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  // Step to the last tick of the countdown, then just past the lights-out time without a tick.
+  while (ctx.now() + TICK < game.phaseEnds) ctx.advance(TICK / 4);
+  const lightsOut = game.phaseEnds;
+  ctx.advance(lightsOut - ctx.now()); // exactly lights out; the tick that starts the race may not have run
+  if (game.phase === 'countdown') game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  assert.equal(game.events.jumpStarts, 0);
+});
+
+test('reaction: a very late first press is not shown as a reaction time', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  while (game.phase === 'countdown') ctx.advance(10);
+  ctx.advance(2500);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  assert.equal(game.hostView().karts[0].reaction, null);
+});
