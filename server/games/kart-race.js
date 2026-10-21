@@ -181,8 +181,13 @@ export function touch(k, x, y) {
 function spinesClosest(a, b) {
   const sa = spine(a);
   const sb = spine(b);
-  // Try each end against the other spine and keep the nearest pair; if the spines cross, that's
-  // the crossing (close enough: they are short and nearly parallel or well apart in practice).
+  // Crossing spines (after a reset onto the rival, say): distance 0, apart along their middles.
+  const turn = (ax, ay, bx, by, cx, cy) => Math.sign((bx - ax) * (cy - ay) - (by - ay) * (cx - ax));
+  if (turn(sa[0], sa[1], sa[2], sa[3], sb[0], sb[1]) * turn(sa[0], sa[1], sa[2], sa[3], sb[2], sb[3]) < 0 &&
+      turn(sb[0], sb[1], sb[2], sb[3], sa[0], sa[1]) * turn(sb[0], sb[1], sb[2], sb[3], sa[2], sa[3]) < 0) {
+    return [a.x, a.y, b.x, b.y, 0];
+  }
+  // Otherwise the nearest pair is an end of one spine against the other spine.
   let best = null;
   const tryPair = (px, py, qx, qy) => {
     const d = Math.hypot(px - qx, py - qy);
@@ -566,7 +571,7 @@ export class KartRace {
   }
 
   /** Half a kart's length: how far behind it things are dropped, and ahead of it shots start. */
-  get kartR() {
+  get kartHalf() {
     return KART.reach + KART.r;
   }
 
@@ -626,9 +631,11 @@ export class KartRace {
     const [ax, ay, bx, by, d] = spinesClosest(a, b);
     const min = KART.r * 2;
     if (d >= min) return;
-    let nx = d ? (bx - ax) / d : Math.cos(a.angle + Math.PI / 2);
-    let ny = d ? (by - ay) / d : Math.sin(a.angle + Math.PI / 2);
-    if (!d && (b.x - a.x) * nx + (b.y - a.y) * ny < 0) { nx = -nx; ny = -ny; }
+    // Apart along the closest points; crossing (or on top of each other): along the middles, or
+    // sideways if even those meet.
+    const mid = Math.hypot(b.x - a.x, b.y - a.y);
+    let nx = d ? (bx - ax) / d : mid ? (b.x - a.x) / mid : -Math.sin(a.angle);
+    let ny = d ? (by - ay) / d : mid ? (b.y - a.y) / mid : Math.cos(a.angle);
     // The heavier kart gives way less: each moves by the other's share of the total weight.
     const overlap = min - d;
     const now = this.ctx.now();

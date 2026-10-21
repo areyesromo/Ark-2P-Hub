@@ -1220,3 +1220,23 @@ test('hit size: driving straight over one ? box of a row touches only that box',
     }
   }
 });
+
+test('hit size: karts whose middles cross (a T-bone, an X) are pushed apart, not through each other', () => {
+  const { game } = racing();
+  const [a, b] = game.karts;
+  const at = (d, side) => ({ x: a.x + Math.cos(a.angle) * d - Math.sin(a.angle) * side, y: a.y + Math.sin(a.angle) * d + Math.cos(a.angle) * side });
+  const sideOf = () => -(b.x - a.x) * Math.sin(a.angle) + (b.y - a.y) * Math.cos(a.angle);
+  const aheadOf = () => (b.x - a.x) * Math.cos(a.angle) + (b.y - a.y) * Math.sin(a.angle);
+  // T-bone: b across a's front half.
+  onRoad(game, a, 0.62);
+  Object.assign(b, { ...at(0.3, 0), angle: a.angle + Math.PI / 2, speed: 0 });
+  game.bump();
+  game.bump();
+  assert.ok(aheadOf() > 0.3, `T-bone: pushed further ahead, not back through (${aheadOf().toFixed(2)})`);
+  // X: crossing at the middles, b a touch to one side.
+  onRoad(game, a, 0.62);
+  Object.assign(b, { ...at(0, 0.05), angle: a.angle + Math.PI / 2, speed: 0 });
+  game.bump();
+  game.bump();
+  assert.ok(sideOf() > 0.05, `X: pushed out on its own side (${sideOf().toFixed(2)})`);
+});

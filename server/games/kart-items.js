@@ -137,7 +137,7 @@ export function useItem(game, slot, now) {
   else if (kind === 'shield') k.shieldUntil = now + ITEMS.shieldMs;
   else if (kind === 'banana') {
     // Dropped just behind the kart.
-    const back = game.kartR + ITEMS.bananaR + 0.15;
+    const back = game.kartHalf + ITEMS.bananaR + 0.15;
     game.bananas.push({ x: k.x - Math.cos(k.angle) * back, y: k.y - Math.sin(k.angle) * back, owner: slot, safeUntil: now + 700 });
     if (game.bananas.length > ITEMS.maxBananas) game.bananas.shift();
   } else if (kind === 'goldturbo') {
@@ -163,7 +163,7 @@ export function useItem(game, slot, now) {
   } else if (kind === 'web' || kind === 'oil') {
     drop(game, kind === 'web' ? game.webs : game.oils, k, slot, now);
   } else if (kind === 'bouncer' || kind === 'seeker') {
-    const ahead = game.kartR + ITEMS.shotR + 0.1;
+    const ahead = game.kartHalf + ITEMS.shotR + 0.1;
     const life = kind === 'bouncer' ? ITEMS.bouncerMs : ITEMS.seekerMs;
     // Always faster than the kart that fired it (a boosting kart would run into its own Bouncer).
     const speed = Math.max(kind === 'bouncer' ? ITEMS.bouncerSpeed : ITEMS.seekerSpeed, Math.max(0, k.speed) + 3);
@@ -180,7 +180,7 @@ export function useItem(game, slot, now) {
 
 /** Drop a web or oil just behind the kart (it can't hit you straight away). */
 function drop(game, list, k, slot, now) {
-  const back = game.kartR + ITEMS.hazardR + 0.15;
+  const back = game.kartHalf + ITEMS.hazardR + 0.15;
   list.push({ x: k.x - Math.cos(k.angle) * back, y: k.y - Math.sin(k.angle) * back, owner: slot, safeUntil: now + 700 });
   if (list.length > ITEMS.maxHazards) list.shift();
 }
