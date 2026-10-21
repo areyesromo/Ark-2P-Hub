@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, LIGHTS, ITEMS, COINS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
+import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, LIGHTS, JUMP, ITEMS, COINS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
 import { fakeCtx } from './helpers.js';
 
 const TICK = 1000 / 60;
@@ -281,7 +281,11 @@ test('setup: track, laps and races; best of 3 is first to 2; Mixed varies the tr
     ctx.advance(TIMING.countdownMs + 50); // lights out
     game.finishLine(1, ctx.now()); // (as if kart 2 just crossed the line on its last lap)
     ctx.advance(TIMING.finishMs + 100);
-    if (game.phase !== 'over') tracks.push(game.track.index);
+    if (game.phase === 'standings') {
+      game.onInput(0, { type: 'go' });
+      game.onInput(1, { type: 'go' }); // both ready for the next race
+      tracks.push(game.track.index);
+    }
   }
   assert.equal(game.phase, 'over');
   assert.equal(game.winner, 1);
@@ -443,6 +447,8 @@ test('racer and tyre picks: own slot, setup/over only, bad ids ignored, kept acr
   game.onInput(1, { type: 'racer', id: 'zip' });
   assert.equal(game.picks[1].racer, 'zip', 'the end screen can change it');
   game.onInput(0, { type: 'rematch' });
+  game.onInput(1, { type: 'rematch' }); // both want it
+  assert.equal(game.phase, 'countdown');
   assert.equal(game.picks[0].racer, 'rex', 'picks kept for the rematch');
   assert.ok(Math.abs(game.karts[1].car.accel - 11.5) < 1e-9, 'rebuilt from the new pick (Zip: acceleration 5)');
   assert.equal(game.karts[1].racer, 'zip');
@@ -1368,4 +1374,140 @@ test('ready: a player whose phone dropped out counts as ready (the other can sti
   ctx.players[1].connected = false;
   game.onInput(0, { type: 'go' });
   assert.equal(game.phase, 'countdown');
+});
+
+/** A series (races: 1, 3, or 4 for a cup) past setup, both players ready. */
+function series(races, rng = () => 0.5) {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, rng);
+  game.start();
+  game.onInput(0, { type: 'setting', key: 'races', value: races });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  return { ctx, game };
+}
+
+/** Run the current race: lights out, `slot` crosses the line first, the race closes. */
+function winRace(ctx, game, slot) {
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.equal(game.phase, 'race');
+  game.finishLine(slot, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+}
+
+test('cup: four races on four different tracks, a leaderboard between them, most wins takes the cup', () => {
+  const { ctx, game } = series(4);
+  assert.equal(game.hostView().races, 4);
+  const tracks = [];
+  for (const [r, slot] of [[1, 0], [2, 1], [3, 0], [4, 0]].entries()) {
+    tracks.push(game.track.index);
+    assert.equal(game.race, r + 1);
+    winRace(ctx, game, slot[1]);
+    if (r < 3) {
+      // Standings: the leaderboard, waiting for both.
+      assert.equal(game.phase, 'standings');
+      const v = game.hostView();
+      assert.equal(v.history.length, r + 1);
+      assert.equal(v.history[r].winner, slot[1]);
+      assert.equal(v.history[r].track, game.track.name);
+      assert.ok(v.history[r].times[slot[1]] > 0);
+      assert.ok(v.next && v.next.track, 'shows the next track');
+      game.onInput(0, { type: 'go' });
+      assert.equal(game.phase, 'standings', 'one ready: still waiting');
+      game.onInput(1, { type: 'go' });
+      assert.equal(game.phase, 'countdown');
+    }
+  }
+  assert.equal(new Set(tracks).size, 4, 'four different tracks');
+  assert.equal(game.phase, 'over');
+  assert.equal(game.winner, 0, '3 wins to 1');
+  assert.equal(game.hostView().history.length, 4);
+});
+
+test('cup: two wins each goes to a sudden-death race on a fifth track', () => {
+  const { ctx, game } = series(4);
+  const tracks = [];
+  for (const slot of [0, 1, 0, 1]) {
+    tracks.push(game.track.index);
+    winRace(ctx, game, slot);
+    assert.equal(game.phase, 'standings');
+    game.onInput(0, { type: 'go' });
+    game.onInput(1, { type: 'go' });
+  }
+  assert.equal(game.race, 5);
+  assert.equal(game.hostView().suddenDeath, true);
+  assert.ok(!tracks.includes(game.track.index), 'a track not raced yet');
+  winRace(ctx, game, 1);
+  assert.equal(game.phase, 'over');
+  assert.equal(game.winner, 1);
+});
+
+test('best of 3: the leaderboard between races, and the next race waits for both', () => {
+  const { ctx, game } = series(3);
+  winRace(ctx, game, 1);
+  assert.equal(game.phase, 'standings');
+  ctx.advance(10000);
+  assert.equal(game.phase, 'standings', 'no rush: it waits');
+  game.onInput(1, { type: 'go' });
+  game.onInput(0, { type: 'go' });
+  winRace(ctx, game, 1);
+  assert.equal(game.phase, 'over');
+  assert.equal(game.winner, 1);
+});
+
+test('rematch: waits for both players; ready is cleared on the end screen', () => {
+  const { ctx, game } = series(1);
+  winRace(ctx, game, 0);
+  assert.equal(game.phase, 'over');
+  assert.deepEqual(game.hostView().ready, [false, false]);
+  game.onInput(0, { type: 'rematch' });
+  assert.equal(game.phase, 'over', 'one wants a rematch: still waiting');
+  assert.deepEqual(game.hostView().ready, [true, false]);
+  game.onInput(0, { type: 'rematch' });
+  assert.deepEqual(game.hostView().ready, [false, false], 'pressed again: cancelled');
+  game.onInput(0, { type: 'rematch' });
+  game.onInput(1, { type: 'rematch' });
+  assert.equal(game.phase, 'countdown');
+  assert.deepEqual(game.scores, [0, 0], 'a fresh series');
+});
+
+test('jump start: pressing GAS during the lights stalls you for 1 s after lights out; holding it from before, or pressing after, does not', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'setting', key: 'track', value: 1 });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  const jumped = game.events.jumpStarts;
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  // That was during the lights: a jump start. Player 1 waits, then presses at lights out.
+  while (game.phase === 'countdown') ctx.advance(10);
+  assert.equal(game.phase, 'race');
+  game.onInput(0, { type: 'drive', steer: 0, gas: true });
+  assert.equal(game.events.jumpStarts, jumped + 1);
+  const [a, b] = game.karts;
+  assert.equal(game.hostView().karts[1].jumped, true);
+  assert.equal(game.hostView().karts[0].jumped, false);
+  ctx.advance(JUMP.stallMs - 200);
+  assert.equal(b.speed, 0, 'stalled');
+  assert.ok(a.speed > 3, `the other is away (${a.speed})`);
+  ctx.advance(600);
+  assert.equal(game.hostView().karts[1].jumped, false);
+  assert.ok(b.speed > 0, 'going after the stall');
+  assert.equal(JUMP.stallMs, 1000);
+});
+
+test('jump start: GAS still held from the last race (between races) is not a jump start', () => {
+  const { ctx, game } = series(3, () => 0);
+  ctx.advance(TIMING.countdownMs + 50);
+  game.onInput(0, { type: 'drive', steer: 0, gas: true }); // after lights out: fine
+  game.finishLine(0, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  assert.equal(game.phase, 'standings');
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  assert.equal(game.karts[0].gas, true, 'still held from the last race');
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.equal(game.events.jumpStarts, 0);
+  assert.equal(game.hostView().karts[0].jumped, false);
 });
