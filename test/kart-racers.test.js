@@ -69,3 +69,14 @@ test('art: kart pictures are 256 px tall with a see-through background; each has
     }
   }
 });
+
+test('art: karts are drawn 1.75 long on the TV, and two side by side still fit across the road', async () => {
+  const { TRACK_WIDTH } = await import('../server/games/kart-race.js');
+  const { readFileSync } = await import('node:fs');
+  assert.equal(R.KART_LEN, 1.75);
+  for (const r of R.RACERS) {
+    const b = readFileSync(new URL('../public' + r.sprite, import.meta.url));
+    const wide = (R.KART_LEN * (b.readUIntLE(24, 3) + 1)) / (b.readUIntLE(27, 3) + 1);
+    assert.ok(2 * wide < TRACK_WIDTH, `${r.id}: ${wide.toFixed(2)} wide`);
+  }
+});

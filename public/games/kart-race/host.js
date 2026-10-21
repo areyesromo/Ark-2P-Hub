@@ -524,7 +524,9 @@
 
   // Top-down kart pictures (nose up), loaded on first use: src -> Image.
   const sprites = {};
-  const KART_LEN = 1.25; // how long a kart picture is drawn, in field units
+  // Karts (and their effects) are laid out for a picture 1.25 long, then scaled up to the size
+  // racers.js asks for.
+  const KART_LEN = 1.25;
 
   /** A racer's kart picture, once it has loaded (null until then, or if they have none yet). */
   function spriteFor(racer) {
@@ -545,6 +547,8 @@
     g.save();
     g.translate(s.x, s.y);
     g.rotate(s.angle + (k.spin ? now / 60 : 0)); // spinning out after a banana
+    const big = (R && R.KART_LEN ? R.KART_LEN : KART_LEN) / KART_LEN;
+    g.scale(big, big);
     if (k.hover) {
       // Hovering: a shadow on the ground below, the kart lifted a little bigger above it.
       g.fillStyle = 'rgba(0,0,0,0.35)';
