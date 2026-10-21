@@ -774,7 +774,9 @@ export class KartRace {
       }
       if (input.type === 'go') {
         this.ready[slot] = !this.ready[slot];
-        if (this.ready.every(Boolean)) this.begin();
+        // A player whose phone dropped out counts as ready, so the other isn't stuck waiting.
+        const away = (i) => this.ctx.players && this.ctx.players[i] && this.ctx.players[i].connected === false;
+        if (this.ready.every((r, i) => r || away(i))) this.begin();
         else this.ctx.update();
       }
       return;
@@ -873,7 +875,8 @@ export class KartRace {
       bananas: racing ? this.bananas.map((b) => ({ x: Math.round(b.x * 100) / 100, y: Math.round(b.y * 100) / 100 })) : [],
       raceMs: this.raceStart ? (this.result ? this.result.time : now - this.raceStart) : 0,
       events: this.events || null,
-      countdown: this.phase === 'countdown' ? Math.ceil(Math.max(0, this.phaseEnds - now) / 1000) : 0,
+      // No countdown number: the lights are the countdown (and the hub would beep its own seconds).
+      countdown: 0,
       lights: this.phase === 'countdown' ? Math.min(LIGHTS.count, Math.floor((now - this.lightsFrom) / LIGHTS.stepMs)) : 0,
       ready: this.ready || [false, false],
     };

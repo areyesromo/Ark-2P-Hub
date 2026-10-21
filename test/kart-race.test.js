@@ -1347,3 +1347,25 @@ test('lights: five red lights come on one by one, hold, then all go out and the 
     assert.ok(TIMING.countdownMs >= 5 * LIGHTS.stepMs + LIGHTS.holdMax, 'countdownMs covers the longest start');
   }
 });
+
+test('lights: the view sends no countdown number (the hub would beep its own seconds over the lights)', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  for (let t = 0; t < TIMING.countdownMs && game.phase === 'countdown'; t += 100) {
+    assert.equal(game.hostView().countdown, 0);
+    assert.equal(game.playerView(0).countdown, 0);
+    ctx.advance(100);
+  }
+});
+
+test('ready: a player whose phone dropped out counts as ready (the other can still start)', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  ctx.players[1].connected = false;
+  game.onInput(0, { type: 'go' });
+  assert.equal(game.phase, 'countdown');
+});
