@@ -52,6 +52,7 @@
   ];
 
   const DEFAULT_RACERS = ['dash', 'dot']; // by slot
+  const KART_LEN = 1.75; // how long a kart is drawn on the TV, in field units (looks only: not its bump size)
   const RENAMED = { daisy: 'dot' }; // old ids phones may remember -> the racer's id now
   const DEFAULT_TYRE = 'standard';
 
@@ -93,5 +94,5 @@
     };
   }
 
-  globalThis.ArkKartRacers = { TYPES: TYPES, RACERS: RACERS, TYRES: TYRES, DEFAULT_RACERS: DEFAULT_RACERS, RENAMED: RENAMED, DEFAULT_TYRE: DEFAULT_TYRE, racer: racer, tyre: tyre, stats: stats, physics: physics };
+  globalThis.ArkKartRacers = { TYPES: TYPES, RACERS: RACERS, TYRES: TYRES, DEFAULT_RACERS: DEFAULT_RACERS, RENAMED: RENAMED, KART_LEN: KART_LEN, DEFAULT_TYRE: DEFAULT_TYRE, racer: racer, tyre: tyre, stats: stats, physics: physics };
 })();
