@@ -14,7 +14,7 @@ const Road = globalThis.ArkKartTrack; // (loaded by kart-race.js)
  */
 export const ITEMS = {
   rows: [0.3, 0.8], // where along the lap
-  offsets: [-1.05, 0, 1.05], // three boxes across the road (the middle one: a double box)
+  offsets: [-1.2, 0, 1.2], // three boxes across the road (the middle one: a double box)
   boxR: 0.55,
   respawnMs: 4000,
   maxHeld: 3,
@@ -205,7 +205,7 @@ export function hazardCheck(game, k, slot, now) {
   if (k.finishedAt !== null || effects(k, now).floating) return;
   for (const [list, kind] of [[game.webs, 'web'], [game.oils, 'oil']]) {
     for (const h of list.slice()) {
-      if (Math.hypot(k.x - h.x, k.y - h.y) > ITEMS.hazardR + game.kartR) continue;
+      if (game.gap(k, h.x, h.y) > ITEMS.hazardR) continue;
       if (h.owner === slot && now < h.safeUntil) continue;
       list.splice(list.indexOf(h), 1);
       if (!snag(game, k, now)) continue;
@@ -230,7 +230,7 @@ export function stepShots(game, dt, now) {
       game.blasts.push({ x: s.x, y: s.y, at: now });
       game.karts.forEach((k) => {
         // (A hovering kart floats over the blast.)
-        if (k.finishedAt === null && !effects(k, now).floating && Math.hypot(k.x - s.x, k.y - s.y) < ITEMS.bombR + game.kartR) game.hitKart(k, now);
+        if (k.finishedAt === null && !effects(k, now).floating && game.gap(k, s.x, s.y) < ITEMS.bombR) game.hitKart(k, now);
       });
       continue;
     }
@@ -274,7 +274,7 @@ export function stepShots(game, dt, now) {
     game.karts.forEach((k, slot) => {
       if (gone.has(s) || k.finishedAt !== null) return;
       if (slot === s.owner && (s.kind === 'seeker' || now < s.bornAt + ITEMS.bouncerSafeMs)) return;
-      if (Math.hypot(k.x - s.x, k.y - s.y) > ITEMS.shotR + game.kartR) return;
+      if (game.gap(k, s.x, s.y) > ITEMS.shotR) return;
       gone.add(s);
       game.hitKart(k, now);
     });

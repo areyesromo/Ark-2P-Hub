@@ -25,8 +25,11 @@ const Racers = globalThis.ArkKartRacers;
 
 export const FIELD = { w: 32, h: 18 };
 export const TRACK_WIDTH = 3.4;
+// A kart is a capsule as big as its picture on the TV (1.75 long, 1 wide): a circle of radius r
+// swept along a spine `reach` either side of its middle, the way it faces.
 export const KART = {
-  r: 0.42,
+  r: 0.5,
+  reach: 0.375,
   accel: 9, // holding GAS
   maxSpeed: 8.5,
   coast: 2.4, // slowing down with no pedal held
@@ -149,6 +152,48 @@ export function locate(track, x, y) {
 /** A point on the centre line at progress p (0..1), with the direction of travel there, shifted sideways by `offset`. */
 export function pointAt(track, p, offset = 0) {
   return Road.pointAt(track, p, offset);
+}
+
+/** The ends of a kart's spine (see KART). */
+function spine(k) {
+  const dx = Math.cos(k.angle) * KART.reach;
+  const dy = Math.sin(k.angle) * KART.reach;
+  return [k.x - dx, k.y - dy, k.x + dx, k.y + dy];
+}
+
+/** The closest point to (x, y) on the segment (ax, ay)-(bx, by). */
+function closest(ax, ay, bx, by, x, y) {
+  const vx = bx - ax;
+  const vy = by - ay;
+  const len = vx * vx + vy * vy;
+  const t = len ? Math.max(0, Math.min(1, ((x - ax) * vx + (y - ay) * vy) / len)) : 0;
+  return [ax + vx * t, ay + vy * t];
+}
+
+/** How far (x, y) is from a kart's spine: it touches anything within its radius plus KART.r. */
+export function touch(k, x, y) {
+  const [ax, ay, bx, by] = spine(k);
+  const [cx, cy] = closest(ax, ay, bx, by, x, y);
+  return Math.hypot(x - cx, y - cy);
+}
+
+/** The closest points of two karts' spines: [ax, ay, bx, by]. */
+function spinesClosest(a, b) {
+  const sa = spine(a);
+  const sb = spine(b);
+  // Try each end against the other spine and keep the nearest pair; if the spines cross, that's
+  // the crossing (close enough: they are short and nearly parallel or well apart in practice).
+  let best = null;
+  const tryPair = (px, py, qx, qy) => {
+    const d = Math.hypot(px - qx, py - qy);
+    if (!best || d < best[4]) best = [px, py, qx, qy, d];
+  };
+  for (const [x, y] of [[sa[0], sa[1]], [sa[2], sa[3]]]) tryPair(x, y, ...closest(sb[0], sb[1], sb[2], sb[3], x, y));
+  for (const [x, y] of [[sb[0], sb[1]], [sb[2], sb[3]]]) {
+    const [cx, cy] = closest(sa[0], sa[1], sa[2], sa[3], x, y);
+    tryPair(cx, cy, x, y);
+  }
+  return best;
 }
 
 // ---- game ---------------------------------------------------------------------------
@@ -465,10 +510,11 @@ export class KartRace {
   /** ? boxes (a Magnet reaches further) and bananas. */
   itemCheck(k, slot, now) {
     if (k.finishedAt !== null) return;
-    const reach = now < k.magnetUntil ? ITEMS.magnetR : ITEMS.boxR + KART.r;
+    const magnet = now < k.magnetUntil;
     for (const box of this.boxes) {
       const room = ITEMS.maxHeld - k.items.length;
-      if (now < box.backAt || room <= 0 || Math.hypot(k.x - box.x, k.y - box.y) > reach) continue;
+      const far = magnet ? Math.hypot(k.x - box.x, k.y - box.y) > ITEMS.magnetR : touch(k, box.x, box.y) > ITEMS.boxR + KART.r;
+      if (now < box.backAt || room <= 0 || far) continue;
       box.backAt = now + ITEMS.respawnMs;
       for (let n = Math.min(box.double ? 2 : 1, room); n > 0; n--) k.items.push(this.rollItem(slot));
       this.events.items++;
@@ -476,7 +522,7 @@ export class KartRace {
     const fx = effects(k, now);
     for (const b of this.bananas.slice()) {
       if (fx.floating) break; // hovering: they pass underneath
-      if (Math.hypot(k.x - b.x, k.y - b.y) > ITEMS.bananaR + KART.r) continue;
+      if (touch(k, b.x, b.y) > ITEMS.bananaR + KART.r) continue;
       if (b.owner === slot && now < b.safeUntil) continue; // just dropped it
       this.bananas.splice(this.bananas.indexOf(b), 1);
       this.hitKart(k, now);
@@ -519,8 +565,14 @@ export class KartRace {
     return ahead && Math.hypot(dx, dy) < ITEMS.slipR ? ITEMS.slipSpeed : 0;
   }
 
+  /** Half a kart's length: how far behind it things are dropped, and ahead of it shots start. */
   get kartR() {
-    return KART.r;
+    return KART.reach + KART.r;
+  }
+
+  /** How far (x, y) is from kart k's edge (negative: inside it). */
+  gap(k, x, y) {
+    return touch(k, x, y) - KART.r;
   }
 
   get roadHalf() {
@@ -539,10 +591,11 @@ export class KartRace {
   /** Pick up any coins the kart is touching (if it has room; a Magnet reaches further). */
   coinCheck(k, now) {
     if (k.finishedAt !== null) return; // over the line: leave them for the kart still racing
-    const reach = now < k.magnetUntil ? ITEMS.magnetR : COINS.r + KART.r;
+    const magnet = now < k.magnetUntil;
     for (const c of this.coins) {
       if (k.coins >= COINS.max) return;
-      if (now < c.backAt || Math.hypot(k.x - c.x, k.y - c.y) > reach) continue;
+      const far = magnet ? Math.hypot(k.x - c.x, k.y - c.y) > ITEMS.magnetR : touch(k, c.x, c.y) > COINS.r + KART.r;
+      if (now < c.backAt || far) continue;
       c.backAt = now + COINS.respawnMs;
       k.coins++;
       this.events.coins++;
@@ -569,13 +622,13 @@ export class KartRace {
   /** The karts bump off each other. */
   bump() {
     const [a, b] = this.karts;
-    const dx = b.x - a.x;
-    const dy = b.y - a.y;
-    const d = Math.hypot(dx, dy);
+    // Where the two capsules come closest; they push apart along that line.
+    const [ax, ay, bx, by, d] = spinesClosest(a, b);
     const min = KART.r * 2;
-    if (d >= min || d === 0) return;
-    const nx = dx / d;
-    const ny = dy / d;
+    if (d >= min) return;
+    let nx = d ? (bx - ax) / d : Math.cos(a.angle + Math.PI / 2);
+    let ny = d ? (by - ay) / d : Math.sin(a.angle + Math.PI / 2);
+    if (!d && (b.x - a.x) * nx + (b.y - a.y) * ny < 0) { nx = -nx; ny = -ny; }
     // The heavier kart gives way less: each moves by the other's share of the total weight.
     const overlap = min - d;
     const now = this.ctx.now();

@@ -10,6 +10,12 @@ function place(game, k, x, y) {
   Object.assign(k, { x, y, progress: locate(game.track, x, y).s });
 }
 
+/** place(), facing along the road there (as if driving through). */
+function placeAlong(game, k, x, y) {
+  place(game, k, x, y);
+  k.angle = pointAt(game.track, k.progress).angle;
+}
+
 /** Drive a kart along the centre line to progress p, a small step per tick (no shortcut). */
 function driveTo(ctx, game, k, p, dir = 1) {
   let at = k.progress;
@@ -147,9 +153,15 @@ test('grass slows you down, boost pads speed you up, karts bump apart', () => {
   assert.equal(game.hostView().karts[1].boosting, true);
   // Overlapping karts get pushed apart.
   onRoad(game, a, 0.3);
-  Object.assign(b, { x: a.x + 0.3, y: a.y, speed: 0, progress: a.progress });
+  Object.assign(b, { x: a.x + 0.3, y: a.y, angle: a.angle, speed: 0, progress: a.progress });
   ctx.advance(TICK);
-  assert.ok(Math.hypot(a.x - b.x, a.y - b.y) >= KART.r * 2 - 1e-9);
+  // The closest the two capsules come (sampling a's spine against b's edge): no longer overlapping.
+  let edge = Infinity;
+  for (let i = 0; i <= 40; i++) {
+    const t = (i / 20 - 1) * KART.reach;
+    edge = Math.min(edge, game.gap(b, a.x + Math.cos(a.angle) * t, a.y + Math.sin(a.angle) * t));
+  }
+  assert.ok(edge >= KART.r - 1e-6, `pushed apart (gap ${edge})`);
   assert.ok(game.events.bumps > 0);
 });
 
@@ -302,7 +314,7 @@ test('items: drive through a ? box to get one; it comes back later', () => {
   const k = game.karts[0];
   const box = game.boxes[0];
   assert.equal(game.boxes.length, ITEMS.rows.length * ITEMS.offsets.length);
-  place(game, k, box.x, box.y);
+  placeAlong(game, k, box.x, box.y);
   k.speed = 0;
   ctx.advance(TICK);
   assert.equal(k.items.length, 1);
@@ -577,7 +589,7 @@ test('coins: single coins spread round every track, alternating sides, clear of 
     assert.equal(game.coins.length, spots.length);
     for (const a of game.coins) {
       for (const b of game.coins) {
-        if (a !== b) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > 2 * (COINS.r + KART.r), `${t.name}: two coins in one grab`);
+        if (a !== b) assert.ok(Math.hypot(a.x - b.x, a.y - b.y) > 2 * (COINS.r + KART.r) + 2 * KART.reach, `${t.name}: two coins in one grab`);
       }
       assert.ok(locate(track, a.x, a.y).d < TRACK_WIDTH / 2, `${t.name}: a coin off the road`);
     }
@@ -693,7 +705,7 @@ test('items: hold up to 3, used oldest first; a double box gives two; a full que
   assert.ok(double, 'each row has a double box');
   assert.equal(game.boxes.filter((b) => b.double).length, ITEMS.rows.length);
   assert.equal(game.hostView().boxes.filter((b) => b.double).length, ITEMS.rows.length);
-  place(game, k, double.x, double.y);
+  placeAlong(game, k, double.x, double.y);
   k.speed = 0;
   ctx.advance(TICK);
   assert.equal(k.items.length, 2, 'two from a double box');
@@ -1152,4 +1164,59 @@ test('items: a Bomb lands on your own road ahead; a Seeker ignores a rival acros
   assert.ok(s, 'still flying');
   const gap = Math.min(Math.abs(s.seg - a.seg), SAMPLES - Math.abs(s.seg - a.seg));
   assert.ok(gap > 10, `it kept going along the road (stuck at seg ${s.seg})`);
+});
+
+test('hit size: a kart is a capsule as long and wide as its picture', async () => {
+  await import('../public/games/kart-race/racers.js');
+  const R = globalThis.ArkKartRacers;
+  assert.equal((KART.reach + KART.r) * 2, R.KART_LEN, 'as long as the picture');
+  assert.equal(KART.r * 2, 1, 'about as wide as the picture');
+});
+
+test('hit size: coins at the nose and bananas at the tail count; karts bump nose to tail at the picture length', () => {
+  const { ctx, game } = racing();
+  const [a, b] = game.karts;
+  b.x = -50;
+  onRoad(game, a, 0.62);
+  const ahead = (d, side = 0) => ({ x: a.x + Math.cos(a.angle) * d - Math.sin(a.angle) * side, y: a.y + Math.sin(a.angle) * d + Math.cos(a.angle) * side });
+  // A coin just off the nose (past the old 0.42 circle's reach).
+  game.coins = [{ ...ahead(1.1), backAt: 0 }];
+  ctx.advance(TICK);
+  assert.equal(a.coins, 1, 'coin at the nose');
+  // The same distance off the side: out of reach.
+  onRoad(game, a, 0.62);
+  game.coins = [{ ...ahead(0, 1.1), backAt: 0 }];
+  ctx.advance(TICK);
+  assert.equal(a.coins, 1, 'coin beside the kart, out of reach');
+  // A banana just behind the tail.
+  onRoad(game, a, 0.62);
+  game.bananas = [{ ...ahead(-1.2), owner: 1, safeUntil: 0 }];
+  ctx.advance(TICK);
+  assert.ok(a.spinUntil > ctx.now(), 'banana at the tail');
+  // Nose to tail, 1.6 apart (the pictures overlap): a bump. Side by side 1.1 apart: none.
+  const bumps = game.events.bumps;
+  onRoad(game, a, 0.62);
+  Object.assign(b, { ...ahead(1.6), angle: a.angle, speed: 0, progress: a.progress });
+  game.bump();
+  assert.equal(game.events.bumps, bumps + 1, 'nose to tail');
+  onRoad(game, a, 0.62);
+  Object.assign(b, { ...ahead(0, 1.1), angle: a.angle, speed: 0 });
+  game.bump();
+  assert.equal(game.events.bumps, bumps + 1, 'side by side, apart');
+});
+
+test('hit size: driving straight over one ? box of a row touches only that box', () => {
+  for (let t = 1; t <= TRACKS.length; t++) {
+    const { game } = racing({ track: t });
+    for (const p of ITEMS.rows) {
+      const along = pointAt(game.track, p).angle;
+      const row = game.boxes.filter((b) => Math.abs(locate(game.track, b.x, b.y).s - p) < 0.01);
+      assert.equal(row.length, ITEMS.offsets.length);
+      for (const box of row) {
+        const k = { x: box.x, y: box.y, angle: along };
+        const touched = row.filter((o) => game.gap(k, o.x, o.y) <= ITEMS.boxR);
+        assert.equal(touched.length, 1, `track ${t}, row ${p}`);
+      }
+    }
+  }
 });
