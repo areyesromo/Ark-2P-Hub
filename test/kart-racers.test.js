@@ -80,3 +80,17 @@ test('art: karts are drawn 1.75 long on the TV, and two side by side still fit a
     assert.ok(2 * wide < TRACK_WIDTH, `${r.id}: ${wide.toFixed(2)} wide`);
   }
 });
+
+test('art: the Star glow hugs the kart (even hovering) and the Magnet arcs stay just ahead of its nose', async () => {
+  const { TRACK_WIDTH } = await import('../server/games/kart-race.js');
+  const fx = R.KART_FX;
+  const big = R.KART_LEN / 1.25; // effects are laid out for a 1.25 picture, then scaled up
+  const nose = R.KART_LEN / 2;
+  const star = (fx.starGlow + fx.starPulse) * big * 1.12; // widest pulse, hovering
+  // The glow sits over the colour ring (under the picture) and always reaches past its sides.
+  assert.ok(fx.starGlow - fx.starPulse > fx.ringWide + 0.04, 'glow wider than the ring');
+  assert.ok(2 * star < 0.75 * TRACK_WIDTH, `glow ${(2 * star).toFixed(2)} across leaves road showing`);
+  const reach = (fx.magnetArc + fx.magnetGap + fx.magnetSweep) * big;
+  assert.ok(fx.magnetArc * big > nose * 0.9, 'first arc starts at the nose');
+  assert.ok(reach < nose + 0.75, `arcs reach ${reach.toFixed(2)}, under 0.75 past the nose`);
+});
