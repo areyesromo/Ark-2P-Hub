@@ -1240,3 +1240,49 @@ test('hit size: karts whose middles cross (a T-bone, an X) are pushed apart, not
   game.bump();
   assert.ok(sideOf() > 0.05, `X: pushed out on its own side (${sideOf().toFixed(2)})`);
 });
+
+test('walls: the whole kart stays inside the barrier, nose first or reversing tail first', () => {
+  const { ctx, game } = racing();
+  const k = game.karts[0];
+  game.karts[1].x = -50;
+  const wall = TRACK_WIDTH / 2 + WALL.out;
+  const p = pointAt(game.track, 0.1);
+  const nx = -Math.sin(p.angle);
+  const ny = Math.cos(p.angle); // to the right of the road
+  const tips = () => [1, -1].map((s) => locate(game.track, k.x + Math.cos(k.angle) * s * (KART.reach + KART.r), k.y + Math.sin(k.angle) * s * (KART.reach + KART.r)).d);
+  const run = (angle, input) => {
+    place(game, k, p.x + nx * 0.5, p.y + ny * 0.5);
+    Object.assign(k, { angle, speed: 0 });
+    game.onInput(0, { type: 'drive', steer: 0, ...input });
+    let worst = 0;
+    for (let i = 0; i < 90; i++) {
+      ctx.advance(TICK);
+      worst = Math.max(worst, ...tips());
+    }
+    game.onInput(0, { type: 'drive', steer: 0, gas: false, brake: false });
+    return worst;
+  };
+  const nose = run(Math.atan2(ny, nx), { gas: true });
+  assert.ok(nose <= wall + 0.02, `nose first: a tip reached ${nose.toFixed(2)} (wall at ${wall})`);
+  assert.ok(game.events.walls > 0, 'it did reach the wall');
+  const tail = run(Math.atan2(-ny, -nx), { brake: true });
+  assert.ok(tail <= wall + 0.02, `tail first: a tip reached ${tail.toFixed(2)} (wall at ${wall})`);
+});
+
+test('walls: scraping along a wall with nose and middle both touching counts one hit a tick', () => {
+  const { ctx, game } = racing();
+  const k = game.karts[0];
+  game.karts[1].x = -50;
+  const wall = TRACK_WIDTH / 2 + WALL.out;
+  const p = pointAt(game.track, 0.1);
+  const nx = -Math.sin(p.angle);
+  const ny = Math.cos(p.angle);
+  // Angled 25° into the wall, the middle and the nose both just over it.
+  const off = wall - KART.r + 0.05;
+  place(game, k, p.x + nx * off, p.y + ny * off);
+  Object.assign(k, { angle: p.angle + 0.45, speed: KART.maxSpeed });
+  const walls = game.events.walls;
+  ctx.advance(TICK);
+  assert.equal(game.events.walls, walls + 1);
+  assert.ok(k.speed > KART.maxSpeed * 0.6, `slid on (${k.speed.toFixed(2)})`);
+});
