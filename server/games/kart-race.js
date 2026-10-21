@@ -53,8 +53,9 @@ export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
 // The start: five red lights come on one by one, hold for a moment nobody can guess, then all
 // go out and the race is on (like a Formula 1 start).
 export const LIGHTS = { count: 5, stepMs: 700, holdMin: 300, holdMax: 1200 };
-// Pressing GAS while the lights are on: a stall when they go out.
-export const JUMP = { stallMs: 1000 };
+// Pressing GAS while the lights are on: a stall when they go out. Not in the first moment of the
+// lights, before any is lit (a controller's A is GAS too, and may still be down from Ready).
+export const JUMP = { stallMs: 1000, graceMs: 600 };
 export const TIMING = { countdownMs: LIGHTS.count * LIGHTS.stepMs + LIGHTS.holdMax, finishMs: 3500 };
 export const SAMPLES = Road.SAMPLES; // points on each track's centre line
 const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare
@@ -359,7 +360,7 @@ export class KartRace {
       this.timer = this.ctx.setTimeout(() => {
         this.timer = null;
         this.tick();
-        if (this.phase !== 'over' && this.phase !== 'setup') step();
+        if (this.phase !== 'over' && this.phase !== 'setup' && this.phase !== 'standings') step();
       }, PHYSICS.tickMs);
     };
     step();
@@ -852,7 +853,8 @@ export class KartRace {
   onDrive(slot, input) {
     const k = this.karts[slot];
     // GAS pressed while the lights are on (held from before doesn't count): a jump start.
-    if (this.phase === 'countdown' && input.gas && !k.gas && !k.jumpStart) {
+    const lit = this.phase === 'countdown' && this.ctx.now() - this.lightsFrom >= JUMP.graceMs;
+    if (lit && input.gas && !k.gas && !k.jumpStart) {
       k.jumpStart = true;
       this.events.jumpStarts++;
     }

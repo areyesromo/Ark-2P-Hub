@@ -1479,6 +1479,7 @@ test('jump start: pressing GAS during the lights stalls you for 1 s after lights
   game.onInput(0, { type: 'go' });
   game.onInput(1, { type: 'go' });
   const jumped = game.events.jumpStarts;
+  ctx.advance(LIGHTS.stepMs * 2); // two lights on
   game.onInput(1, { type: 'drive', steer: 0, gas: true });
   // That was during the lights: a jump start. Player 1 waits, then presses at lights out.
   while (game.phase === 'countdown') ctx.advance(10);
@@ -1510,4 +1511,32 @@ test('jump start: GAS still held from the last race (between races) is not a jum
   ctx.advance(TIMING.countdownMs + 50);
   assert.equal(game.events.jumpStarts, 0);
   assert.equal(game.hostView().karts[0].jumped, false);
+});
+
+test('standings: the race loop stops while the leaderboard is up (no views sent while you sit there)', () => {
+  const { ctx, game } = series(3);
+  winRace(ctx, game, 1);
+  assert.equal(game.phase, 'standings');
+  const before = ctx.updates;
+  ctx.advance(10000);
+  assert.equal(ctx.updates, before, 'nothing to send');
+  assert.equal(ctx.pendingTimers(), 0, 'no timers left running');
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.equal(game.phase, 'race', 'and it runs again for the next race');
+});
+
+test('jump start: the A press that readies a controller player (GAS too) is not a jump start', () => {
+  const { ctx, game } = series(3, () => 0);
+  // Both just pressed Ready; the controller's A (also GAS) is still down as the lights begin.
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  ctx.advance(JUMP.graceMs - 100);
+  game.onInput(1, { type: 'drive', steer: 0, gas: false });
+  assert.equal(game.events.jumpStarts, 0);
+  assert.ok(JUMP.graceMs < LIGHTS.stepMs, 'over before the first light');
+  // A real press once the lights are on still counts.
+  ctx.advance(LIGHTS.stepMs);
+  game.onInput(1, { type: 'drive', steer: 0, gas: true });
+  assert.equal(game.events.jumpStarts, 1);
 });
