@@ -165,7 +165,8 @@
       const t = R.tyre(pick.tyre);
       const row = v.players[slot].local && pads[slot] ? PICK_ROWS[(pads[slot].row || 0) - ROWS.length] : null;
       const f = function (key) { return row === key ? ' focus p' + (slot + 1) : ''; };
-      return '<div class="pick p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div>' +
+      const ready = v.ready && v.ready[slot] ? ' <span class="ready">✓ Ready</span>' : '';
+      return '<div class="pick p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + ready + '</div>' +
         '<div class="line' + f('racer') + '"><img src="' + r.portrait + '" alt=""> <b>' + r.name + '</b> <span class="muted">' + R.TYPES[r.type].label + '</span></div>' +
         '<div class="line' + f('tyre') + '"><span class="em">' + t.emoji + '</span> ' + t.name + ' tyres</div>' +
         '<div class="kr-car">' + (r.sprite ? '<img class="kr-kart" src="' + r.sprite + '" alt="">' : '') + '<div class="rows">' +
@@ -231,11 +232,12 @@
     let html = '';
     if (v.phase === 'setup') {
       html = '<div class="panel kr-setup"><div class="title">🏎️ Kart Race</div><div class="kr-setup-row">' + Ark.setup.html(v, ROWS, settingsFocus(v)) + '<div class="kr-setup-col">' + previewHtml(v, v.settings.track) + picksHtml(v) + '</div></div>' +
-        '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</div></div>';
+        '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re ready: the lights come on when you both are.</div></div>';
     } else if (v.phase === 'countdown') {
-      const n = v.countdown;
-      const lights = [3, 2, 1].map(function (i) { return '<span class="light' + (n <= i ? ' on' : '') + '"></span>'; }).join('');
-      html = '<div class="panel small"><div class="lights">' + lights + '</div><div class="sub">' + esc(v.track.name) + ' · ' + v.laps + ' laps · hold GAS to go, let go to coast, hold BRAKE to stop and reverse</div></div>';
+      // Start lights: five come on one by one, then all go out together.
+      let lights = '';
+      for (let i = 1; i <= 5; i++) lights += '<span class="light' + (v.lights >= i ? ' on' : '') + '"></span>';
+      html = '<div class="panel small"><div class="lights gantry">' + lights + '</div><div class="sub">' + esc(v.track.name) + ' · ' + v.laps + ' laps · hold GAS to go, let go to coast, hold BRAKE to stop and reverse</div></div>';
     } else if (v.phase === 'finish' && v.result) {
       html = '<div class="banner">🏁 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' race ' + v.race : '') + '! <span class="muted">' + clock(v.result.time) + '</span></div>';
     } else if (v.phase === 'over') {
@@ -761,6 +763,10 @@
       const out = [];
       const a = prev.events;
       const b = v.events;
+      // The start: a tick per light, a higher note when they all go out; a click for each ready.
+      if (v.phase === 'countdown' && v.lights > (prev.phase === 'countdown' ? prev.lights || 0 : 0)) out.push('tick');
+      if (prev.phase === 'countdown' && v.phase === 'race') out.push('go');
+      if (v.phase === 'setup' && v.ready && prev.ready && v.ready.some(function (r, i) { return r && !prev.ready[i]; })) out.push('lock');
       if (!a || !b) return out;
       if (b.boosts > a.boosts) out.push('whoosh');
       if (b.bumps > a.bumps + 2) out.push('puck');
@@ -781,7 +787,7 @@
       if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
       return out;
     },
-    padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A start · End: A rematch, Y settings',
+    padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · End: A rematch, Y settings',
     padPoll: padPoll,
     pad: function (btn, v, slot) {
       if (v.phase === 'setup') {

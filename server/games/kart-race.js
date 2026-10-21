@@ -50,7 +50,10 @@ export const KART = {
 /** Walls run this far outside the road's edge (past a strip of grass). */
 export const WALL = { out: 1.25, headOn: 0.72, bounce: 0.35 };
 export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
-export const TIMING = { countdownMs: 3500, finishMs: 3500 };
+// The start: five red lights come on one by one, hold for a moment nobody can guess, then all
+// go out and the race is on (like a Formula 1 start).
+export const LIGHTS = { count: 5, stepMs: 700, holdMin: 300, holdMax: 1200 };
+export const TIMING = { countdownMs: LIGHTS.count * LIGHTS.stepMs + LIGHTS.holdMax, finishMs: 3500 };
 export const SAMPLES = Road.SAMPLES; // points on each track's centre line
 const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare
 export const CUT_JUMP = 0.05; // progress (fraction of a lap) gained in one tick that can only be a shortcut
@@ -224,6 +227,7 @@ export class KartRace {
     this.result = null;
     this.karts = null;
     this.track = null;
+    this.ready = [false, false]; // both say so (Start / A) and the race begins
     this.ctx.update();
   }
 
@@ -313,7 +317,9 @@ export class KartRace {
       };
     });
     this.raceStart = null;
-    this.enter('countdown', TIMING.countdownMs);
+    const hold = LIGHTS.holdMin + this.rng() * (LIGHTS.holdMax - LIGHTS.holdMin);
+    this.lightsFrom = this.ctx.now();
+    this.enter('countdown', LIGHTS.count * LIGHTS.stepMs + hold);
   }
 
   enter(phase, ms) {
@@ -752,6 +758,7 @@ export class KartRace {
     const id = renamed ? Racers.RENAMED[input.id] : input.id;
     if (!known.some((x) => x.id === id)) return;
     this.picks[slot] = { ...this.picks[slot], [input.type]: id };
+    if (this.ready) this.ready[slot] = false; // a new pick: ready again when you say so
     this.ctx.update();
   }
 
@@ -761,8 +768,17 @@ export class KartRace {
       return;
     }
     if (this.phase === 'setup') {
-      if (input.type === 'setting' && applySetting(this.ctx, OPTIONS, this.settings, input.key, input.value)) this.ctx.update();
-      if (input.type === 'go') this.begin();
+      if (input.type === 'setting' && applySetting(this.ctx, OPTIONS, this.settings, input.key, input.value)) {
+        this.ready = [false, false]; // you both agreed to the old settings
+        this.ctx.update();
+      }
+      if (input.type === 'go') {
+        this.ready[slot] = !this.ready[slot];
+        // A player whose phone dropped out counts as ready, so the other isn't stuck waiting.
+        const away = (i) => this.ctx.players && this.ctx.players[i] && this.ctx.players[i].connected === false;
+        if (this.ready.every((r, i) => r || away(i))) this.begin();
+        else this.ctx.update();
+      }
       return;
     }
     if (this.phase === 'over') {
@@ -859,7 +875,10 @@ export class KartRace {
       bananas: racing ? this.bananas.map((b) => ({ x: Math.round(b.x * 100) / 100, y: Math.round(b.y * 100) / 100 })) : [],
       raceMs: this.raceStart ? (this.result ? this.result.time : now - this.raceStart) : 0,
       events: this.events || null,
-      countdown: this.phase === 'countdown' ? Math.ceil(Math.max(0, this.phaseEnds - now) / 1000) : 0,
+      // No countdown number: the lights are the countdown (and the hub would beep its own seconds).
+      countdown: 0,
+      lights: this.phase === 'countdown' ? Math.min(LIGHTS.count, Math.floor((now - this.lightsFrom) / LIGHTS.stepMs)) : 0,
+      ready: this.ready || [false, false],
     };
   }
 

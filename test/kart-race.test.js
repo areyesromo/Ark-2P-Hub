@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, ITEMS, COINS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
+import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, LIGHTS, ITEMS, COINS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
 import { fakeCtx } from './helpers.js';
 
 const TICK = 1000 / 60;
@@ -45,6 +45,7 @@ function racing({ track = 1, laps = 3, races = 1, items = 1 } = {}) {
   game.start();
   for (const [key, value] of Object.entries({ track, laps, races, items })) game.onInput(0, { type: 'setting', key, value });
   game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' }); // both ready
   ctx.advance(TIMING.countdownMs + 50);
   assert.equal(game.phase, 'race');
   return { ctx, game };
@@ -273,6 +274,7 @@ test('setup: track, laps and races; best of 3 is first to 2; Mixed varies the tr
   game.onInput(1, { type: 'setting', key: 'laps', value: 4 }); // not a choice
   assert.deepEqual(ctx.saved.settings, { track: 0, laps: 5, races: 3, items: 1 });
   game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' }); // both ready
   assert.equal(game.hostView().winScore, 2);
   const tracks = [game.track.index];
   for (let r = 0; r < 2; r++) {
@@ -405,6 +407,7 @@ function picked(picks) {
     if (tyre) game.onInput(slot, { type: 'tyre', id: tyre });
   });
   game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' }); // both ready
   ctx.advance(TIMING.countdownMs + 50);
   return { ctx, game };
 }
@@ -426,6 +429,7 @@ test('racer and tyre picks: own slot, setup/over only, bad ids ignored, kept acr
   assert.equal(game.picks[0].racer, 'rex', 'both may race as the same racer');
   assert.deepEqual(game.hostView().picks, game.picks);
   game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' }); // both ready
   ctx.advance(TIMING.countdownMs + 50);
   assert.ok(Math.abs(game.karts[1].car.maxSpeed - 9.85) < 1e-9, 'Rex on Slicks: speed 6');
   assert.equal(game.hostView().karts[1].racer, 'rex');
@@ -1285,4 +1289,83 @@ test('walls: scraping along a wall with nose and middle both touching counts one
   ctx.advance(TICK);
   assert.equal(game.events.walls, walls + 1);
   assert.ok(k.speed > KART.maxSpeed * 0.6, `slid on (${k.speed.toFixed(2)})`);
+});
+
+test('ready: the race starts when both players are ready; go again un-readies; picks and settings clear ticks', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  assert.deepEqual(game.hostView().ready, [false, false]);
+  game.onInput(0, { type: 'go' });
+  assert.equal(game.phase, 'setup', 'one ready player: still setting up');
+  assert.deepEqual(game.hostView().ready, [true, false]);
+  game.onInput(0, { type: 'go' });
+  assert.deepEqual(game.hostView().ready, [false, false], 'pressed again: not ready');
+  // Your own pick clears your own tick only.
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'racer', id: 'rex' });
+  assert.deepEqual(game.hostView().ready, [true, false]);
+  game.onInput(0, { type: 'racer', id: 'zip' });
+  assert.deepEqual(game.hostView().ready, [false, false], 'changed your racer: ready again when you are');
+  // A setting change clears both (you agreed to the old one).
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'setting', key: 'laps', value: game.settings.laps === 3 ? 5 : 3 });
+  assert.deepEqual(game.hostView().ready, [false, false]);
+  // Both ready: the lights.
+  game.onInput(1, { type: 'go' });
+  game.onInput(0, { type: 'go' });
+  assert.equal(game.phase, 'countdown');
+  // Back to setup later: nobody is ready.
+  ctx.advance(TIMING.countdownMs + 50);
+  game.finishLine(0, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  game.onInput(0, { type: 'setup' });
+  assert.equal(game.phase, 'setup');
+  assert.deepEqual(game.hostView().ready, [false, false]);
+});
+
+test('lights: five red lights come on one by one, hold, then all go out and the race starts', () => {
+  for (const [roll, hold] of [[0, LIGHTS.holdMin], [0.999, LIGHTS.holdMax]]) {
+    const ctx = fakeCtx();
+    const game = new KartRace(ctx, () => roll);
+    game.start();
+    game.onInput(0, { type: 'go' });
+    game.onInput(1, { type: 'go' });
+    assert.equal(LIGHTS.count, 5);
+    const seen = [];
+    let t = 0;
+    while (game.phase === 'countdown' && t < 10000) {
+      seen.push([t, game.hostView().lights]);
+      ctx.advance(50);
+      t += 50;
+    }
+    assert.equal(game.phase, 'race');
+    const lit = (n) => seen.find(([, l]) => l >= n)[0];
+    for (let n = 1; n <= 5; n++) assert.ok(Math.abs(lit(n) - n * LIGHTS.stepMs) <= 50, `light ${n} at ${lit(n)} ms`);
+    const out = 5 * LIGHTS.stepMs + hold;
+    assert.ok(Math.abs(t - out) <= 60, `lights out at ${t} ms, expected ${out}`);
+    assert.ok(TIMING.countdownMs >= 5 * LIGHTS.stepMs + LIGHTS.holdMax, 'countdownMs covers the longest start');
+  }
+});
+
+test('lights: the view sends no countdown number (the hub would beep its own seconds over the lights)', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  for (let t = 0; t < TIMING.countdownMs && game.phase === 'countdown'; t += 100) {
+    assert.equal(game.hostView().countdown, 0);
+    assert.equal(game.playerView(0).countdown, 0);
+    ctx.advance(100);
+  }
+});
+
+test('ready: a player whose phone dropped out counts as ready (the other can still start)', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0);
+  game.start();
+  ctx.players[1].connected = false;
+  game.onInput(0, { type: 'go' });
+  assert.equal(game.phase, 'countdown');
 });
