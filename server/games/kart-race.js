@@ -459,27 +459,47 @@ export class KartRace {
    * bounces it back.
    */
   walls(k) {
+    this.near(k); // the kart's stretch of road, for its middle and both ends
+    // Its middle, then circles at the nose and tail ends of its spine (see KART): whichever is
+    // over the barrier pushes the whole kart back in.
+    // One hit a tick, however many of them touched (or a slide would slow it twice over).
+    let hit = null;
+    for (const end of [0, 1, -1]) hit = this.wallAt(k, end * KART.reach) || hit;
+    if (hit) this.hit(k, hit[0], hit[1]);
+  }
+
+  /**
+   * Keep the circle `along` ahead of kart k's middle inside the barrier and the field. Gives the
+   * wall's outward normal if it pushed the kart back in.
+   */
+  wallAt(k, along) {
     const r = KART.r;
-    const w = this.near(k);
-    // Which side of the road the kart is on, and how far out that side's barrier is here.
+    const ox = Math.cos(k.angle) * along;
+    const oy = Math.sin(k.angle) * along;
+    const x = k.x + ox;
+    const y = k.y + oy;
+    const w = Road.locateNear(this.track, x, y, k.seg, NEAR_SPAN, TRACK_WIDTH / 2 + WALL.out + 1);
+    // Which side of the road it is on, and how far out that side's barrier is here.
     const line = this.track.line;
     const a = line[w.i];
     const b = line[(w.i + 1) % line.length];
-    const right = (b[0] - a[0]) * (k.y - a[1]) - (b[1] - a[1]) * (k.x - a[0]) > 0;
+    const right = (b[0] - a[0]) * (y - a[1]) - (b[1] - a[1]) * (x - a[0]) > 0;
     const edge = this.track.edge[right ? 'right' : 'left'];
     const limit = Math.min(edge[w.i], edge[(w.i + 1) % line.length]) - r;
+    let hit = null;
     if (w.d > limit) {
-      const nx = (k.x - w.px) / w.d;
-      const ny = (k.y - w.py) / w.d;
-      k.x = w.px + nx * limit;
-      k.y = w.py + ny * limit;
-      this.hit(k, nx, ny);
+      const nx = (x - w.px) / w.d;
+      const ny = (y - w.py) / w.d;
+      k.x = w.px + nx * limit - ox;
+      k.y = w.py + ny * limit - oy;
+      hit = [nx, ny];
     }
     // The edge of the field, in case a track runs close to it.
-    if (k.x < r) { k.x = r; this.hit(k, -1, 0); }
-    if (k.x > FIELD.w - r) { k.x = FIELD.w - r; this.hit(k, 1, 0); }
-    if (k.y < r) { k.y = r; this.hit(k, 0, -1); }
-    if (k.y > FIELD.h - r) { k.y = FIELD.h - r; this.hit(k, 0, 1); }
+    if (k.x + ox < r) { k.x = r - ox; hit = [-1, 0]; }
+    if (k.x + ox > FIELD.w - r) { k.x = FIELD.w - r - ox; hit = [1, 0]; }
+    if (k.y + oy < r) { k.y = r - oy; hit = [0, -1]; }
+    if (k.y + oy > FIELD.h - r) { k.y = FIELD.h - r - oy; hit = [0, 1]; }
+    return hit;
   }
 
   /** A wall with outward normal (nx, ny) was hit. */
