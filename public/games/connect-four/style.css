@@ -8,11 +8,11 @@
   gap: 0;
   padding: 2%;
   background: #1e3a8a;
-  border-radius: 18px;
+  border-radius: var(--radius);
   box-shadow: inset 0 0 0 4px #2b4fb3, 0 12px 30px -10px rgba(0, 0, 0, 0.7);
   overflow: hidden;
 }
-.c4-col { display: flex; flex-direction: column; border-radius: 12px; }
+.c4-col { display: flex; flex-direction: column; border-radius: var(--r-md); }
 .c4-board.tappable .c4-col { cursor: pointer; }
 .c4-board.tappable .c4-col:active { background: rgba(255, 255, 255, 0.12); }
 .c4-col .cell { aspect-ratio: 1; position: relative; display: grid; place-items: center; }
@@ -63,4 +63,4 @@
 .c4-phone .lost { color: var(--bad); font-weight: 900; }
 .c4-phone .big { font-size: 1.8rem; }
 .c4-phone .c4-board { width: 100%; }
-.c4-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 8px; }
+.c4-phone .rematch { margin-top: 8px; }

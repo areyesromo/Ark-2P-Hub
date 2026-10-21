@@ -23,7 +23,7 @@ body { overflow: hidden; }
 .room-chip {
   background: var(--panel);
   border: 1px solid var(--line);
-  border-radius: 999px;
+  border-radius: var(--r-pill);
   padding: 0.4rem 1rem;
   color: var(--muted);
 }
@@ -67,7 +67,7 @@ body { overflow: hidden; }
   font-size: 0.95rem;
   line-height: 1.4;
   border: 1px solid var(--warn);
-  border-radius: 12px;
+  border-radius: var(--r-md);
   padding: 0.7rem 0.9rem;
 }
 .join-warn strong { color: var(--text); }

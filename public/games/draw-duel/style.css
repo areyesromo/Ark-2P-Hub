@@ -95,4 +95,3 @@
 
 .dd-tools { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 10px; }
 .dd-tools button { padding: 14px 8px; font-size: 1.05rem; }
-.dd-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }

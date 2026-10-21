@@ -3,7 +3,7 @@
 .pb-host[data-phase="minigame"] > :not(.pb-mini) { display: none; }
 .pb-host:not([data-phase="minigame"]) .pb-mini { display: none; }
 .pb-mini { grid-column: 1 / -1; display: flex; min-height: 0; }
-.pb-hud { display: flex; flex-direction: column; gap: 0.5rem; align-items: center; padding: 1rem 0.6rem; border-radius: 18px; border: 3px solid var(--line); background: var(--panel); height: 100%; box-sizing: border-box; }
+.pb-hud { display: flex; flex-direction: column; gap: 0.5rem; align-items: center; padding: 1rem 0.6rem; border-radius: var(--radius); border: 3px solid var(--line); background: var(--panel); height: 100%; box-sizing: border-box; }
 .pb-hud.active.p1 { border-color: var(--p1); box-shadow: 0 0 1.5rem rgba(34, 211, 238, 0.35); }
 .pb-hud.active.p2 { border-color: var(--p2); box-shadow: 0 0 1.5rem rgba(244, 114, 182, 0.35); }
 .pb-hud .name { font-size: 1.5rem; font-weight: 900; }
@@ -25,7 +25,7 @@
 .pb-token.p1 { background: var(--p1); }
 .pb-token.p2 { background: var(--p2); }
 /* Under the board: whose turn, the dice, messages and the open choice. */
-.pb-centre { position: relative; z-index: 1; min-height: 7.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.4rem 1.2rem; text-align: center; padding: 0.5rem 1rem; border-radius: 18px; background: var(--panel); border: 3px solid var(--line); }
+.pb-centre { position: relative; z-index: 1; min-height: 7.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.4rem 1.2rem; text-align: center; padding: 0.5rem 1rem; border-radius: var(--radius); background: var(--panel); border: 3px solid var(--line); }
 .pb-centre .pb-opts, .pb-centre .pb-ask { flex-basis: 100%; justify-content: center; }
 .pb-turn { font-size: 1.4rem; font-weight: 800; color: #e2e8f0; }
 .pb-dice { display: flex; gap: 0.6rem; align-items: center; }
@@ -60,15 +60,15 @@
 .pb-links line { stroke: rgba(255, 255, 255, 0.35); stroke-width: 0.9; vector-effect: non-scaling-stroke; stroke-width: 5px; stroke-linecap: round; }
 .pb-links line.fork { stroke: rgba(250, 204, 21, 0.75); }
 .pb-arrow { position: absolute; width: 0; height: 0; border-top: 7px solid transparent; border-bottom: 7px solid transparent; border-left: 12px solid rgba(255, 255, 255, 0.7); pointer-events: none; }
-.pb-arrow.fork { border-left-color: #facc15; border-top-width: 9px; border-bottom-width: 9px; border-left-width: 15px; }
+.pb-arrow.fork { border-left-color: var(--warn); border-top-width: 9px; border-bottom-width: 9px; border-left-width: 15px; }
 .pb-space.warp { background: #0891b2; }
 .pb-space.thunder { background: #a16207; }
 .pb-space.skull { background: #3f0d12; }
 .pb-space.tornado { background: #6b21a8; }
-.pb-mapname { padding: 0.2rem 0.9rem; border-radius: 999px; font-weight: 900; font-size: 1.1rem; background: rgba(15, 23, 42, 0.85); border: 2px solid var(--line); white-space: nowrap; }
+.pb-mapname { padding: 0.2rem 0.9rem; border-radius: var(--r-pill); font-weight: 900; font-size: 1.1rem; background: rgba(15, 23, 42, 0.85); border: 2px solid var(--line); white-space: nowrap; }
 .pb-mapname.easy { border-color: #22c55e; }
-.pb-mapname.medium { border-color: #facc15; }
-.pb-mapname.hard { border-color: #ef4444; }
+.pb-mapname.medium { border-color: var(--warn); }
+.pb-mapname.hard { border-color: var(--bad-strong); }
 .pb-mapname.expert { border-color: #a855f7; }
 
 /* The end-of-match recap: a card over the board (TV), a you-vs-them table (phone). */
@@ -81,7 +81,7 @@
 .pb-recap-card th, .pb-recap-card td { padding: 0.04rem 0.9rem; line-height: 1.25; }
 .pb-recap-card th { text-align: left; font-weight: 700; color: var(--muted); }
 .pb-recap-card tr:first-child th { text-align: center; font-size: 1.1em; }
-.pb-recap-card td { text-align: center; font-weight: 900; font-variant-numeric: tabular-nums; border-radius: 8px; }
+.pb-recap-card td { text-align: center; font-weight: 900; font-variant-numeric: tabular-nums; border-radius: var(--r-sm); }
 .pb-recap-card td.bonus { font-weight: 700; font-size: 0.9em; }
 .pb-recap-card td.best.p1 { background: rgba(34, 211, 238, 0.22); color: var(--p1); }
 .pb-recap-card td.best.p2 { background: rgba(244, 114, 182, 0.22); color: var(--p2); }
@@ -106,7 +106,7 @@
 
 /* Picking a character (phone). */
 .pb-pick { display: flex; gap: 0.8rem; justify-content: center; margin: 0.6rem 0; }
-.pb-char { flex: 1; max-width: 11rem; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.6rem; border-radius: 18px; background: var(--panel); border: 3px solid var(--line); color: inherit; font-weight: 800; font-size: 1.05rem; }
+.pb-char { flex: 1; max-width: 11rem; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 0.6rem; border-radius: var(--radius); background: var(--panel); border: 3px solid var(--line); color: inherit; font-weight: 800; font-size: 1.05rem; }
 .pb-char img { width: 100%; aspect-ratio: 1; object-fit: contain; }
 .pb-char.picked { border-color: var(--warn); box-shadow: 0 0 1rem rgba(250, 204, 21, 0.5); }
 .pb-char.ghost { opacity: 0.4; }

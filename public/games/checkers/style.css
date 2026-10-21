@@ -52,4 +52,4 @@
 .ck-phone .lost { color: var(--bad); font-weight: 900; }
 .ck-phone .big { font-size: 1.8rem; }
 .ck-phone .ck-board { width: 100%; font-size: 1.6rem; }
-.ck-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 8px; }
+.ck-phone .rematch { margin-top: 8px; }

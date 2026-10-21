@@ -16,13 +16,13 @@
   text-align: center;
 }
 .mg-overlay.playing { align-items: flex-start; }
-.mg-overlay .panel { background: rgba(11, 13, 23, 0.86); border: 1px solid var(--line); border-radius: 18px; padding: 1.4rem 2.2rem; max-width: 46rem; }
+.mg-overlay .panel { background: rgba(11, 13, 23, 0.86); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.4rem 2.2rem; max-width: 46rem; }
 .mg-overlay .panel.small { padding: 1rem 2rem; }
 .mg-overlay .big { font-size: 6rem; font-weight: 900; line-height: 1; }
 .mg-overlay .big-title { font-size: 2.6rem; font-weight: 900; }
 .mg-overlay .sub { font-size: 1.5rem; line-height: 1.5; }
 .mg-overlay .sub strong { color: var(--warn); }
-.mg-overlay .hurry { margin-top: 0.4rem; padding: 0.3rem 1rem; border-radius: 10px; background: rgba(0, 0, 0, 0.6); color: #fca5a5; font-weight: 800; }
+.mg-overlay .hurry { margin-top: 0.4rem; padding: 0.3rem 1rem; border-radius: 10px; background: rgba(0, 0, 0, 0.6); color: var(--bad-soft); font-weight: 800; }
 .mg-overlay .ark-setup { font-size: 1.4rem; }
 
 .mg-card { border-collapse: collapse; font-size: 1.05rem; }
@@ -31,7 +31,7 @@
 .mg-card tr.par td { color: var(--muted); }
 .mg-card td { font-weight: 800; min-width: 2rem; }
 .mg-card td.under { color: var(--good); }
-.mg-card td.over { color: #fca5a5; }
+.mg-card td.over { color: var(--bad-soft); }
 .mg-card td.up { color: var(--bad); }
 .mg-card td.now { background: rgba(255, 255, 255, 0.07); }
 .mg-card td.total small { color: var(--muted); font-weight: 600; }
@@ -48,6 +48,6 @@
 .mg-pad canvas { display: block; border-radius: 10px; }
 .mg-power { height: 10px; border-radius: 5px; background: var(--bg-2); overflow: hidden; }
 .mg-power .fill { height: 100%; width: 0; background: linear-gradient(90deg, var(--good), var(--warn), var(--bad)); }
-.mg-phone .go, .mg-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.mg-phone .go { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
 .mg-phone .change { align-self: center; }
 .mg-phone .ark-setup { margin: 0; }

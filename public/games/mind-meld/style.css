@@ -46,4 +46,3 @@
 .md-controls { display: grid; grid-template-columns: 1fr 2fr 1fr; gap: 8px; }
 .md-controls button { padding: 14px 0; font-size: 1.2rem; }
 .md-over { font-size: 2.4rem; font-weight: 900; color: var(--warn); margin-top: 20px; }
-.md-rematch { align-self: center; padding: 16px 32px; font-size: 1.1rem; }

@@ -57,10 +57,10 @@
 .rd-pad .score { font-size: 1rem; color: var(--muted); }
 
 .rd-pad.wait { background: #7f1d1d; border-color: #b91c1c; }
-.rd-pad.go { background: #16a34a; border-color: #4ade80; }
+.rd-pad.go { background: #16a34a; border-color: var(--good); }
 .rd-pad.go .big { font-size: 5rem; color: #fff; }
 .rd-pad.won { border-color: var(--good); }
 .rd-pad.lost { border-color: var(--bad); }
 .rd-pad.pressed { transform: scale(0.98); }
 
-.rd-pad .rematch { margin-top: 12px; font-size: 1.1rem; padding: 16px 32px; }
+.rd-pad .rematch { align-self: auto; margin-top: 12px; }
