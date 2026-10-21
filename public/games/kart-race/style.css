@@ -194,10 +194,10 @@
 /* The chosen racer's top-down kart (nose up) beside their stat bars. */
 .kr-car { display: flex; align-items: center; gap: 10px; }
 .kr-car .rows { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-.kr-kart { flex-shrink: 0; height: 6.5rem; width: auto; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5)); }
+.kr-kart { flex-shrink: 0; height: 6.5rem; width: 4.5rem; object-fit: contain; filter: drop-shadow(0 3px 4px rgba(0, 0, 0, 0.5)); }
 .kr-picks-tv .kr-car { gap: 6px; }
 .kr-picks-tv .kr-car .rows { gap: 2px; }
-.kr-picks-tv .kr-kart { height: 4.2em; }
+.kr-picks-tv .kr-kart { height: 4.2em; width: 2.95em; }
 .kr-side .racer img { width: 1.6em; height: 1.6em; border-radius: 50%; vertical-align: middle; }
 .kr-side .coins { font-size: 1rem; font-weight: 800; color: #facc15; }
 
