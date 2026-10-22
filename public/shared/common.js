@@ -308,6 +308,32 @@
    * No animation while the lobby is hidden, the first time, or for players
    * who ask their device for less motion.
    */
+  /**
+   * Up / down through a grid of cards as it looks on screen: the index of the
+   * card above (dir -1) or below (dir 1) els[i], the nearest in the next row,
+   * or i when there's none. Rows can be uneven (headings, short groups).
+   */
+  function stepVertical(els, i, dir) {
+    const from = els[i] && els[i].getBoundingClientRect();
+    if (!from) return i;
+    const cx = from.left + from.width / 2;
+    const cy = from.top + from.height / 2;
+    let best = i;
+    let bestScore = Infinity;
+    for (let k = 0; k < els.length; k++) {
+      const r = els[k].getBoundingClientRect();
+      const dy = (r.top + r.height / 2 - cy) * dir;
+      if (k === i || dy < from.height / 2) continue; // not in a row further that way
+      // Nearer rows first, then the card most in line with this one.
+      const score = dy + 3 * Math.abs(r.left + r.width / 2 - cx);
+      if (score < bestScore) {
+        bestScore = score;
+        best = k;
+      }
+    }
+    return best;
+  }
+
   function lobbyLayout(lobby, cls, on, leaving, moving, animate) {
     const busy = switching.has(lobby);
     if (busy) switching.set(lobby, on);
@@ -346,6 +372,7 @@
 
   window.Ark = {
     lobbyLayout: lobbyLayout,
+    stepVertical: stepVertical,
     watchVersion: watchVersion,
     h2hHtml: h2hHtml,
     tournamentHtml: tournamentHtml,
