@@ -68,7 +68,7 @@
 .mm-phone .won { color: var(--good); font-weight: 900; }
 .mm-phone .lost { color: var(--bad); font-weight: 900; }
 .mm-phone .ark-setup { margin: 0; }
-.mm-phone .go, .mm-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.mm-phone .go { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
 .mm-phone .change { align-self: center; }
 .mm-board { display: flex; justify-content: center; font-size: 1rem; opacity: 0.75; }
 .mm-board.mine { opacity: 1; }

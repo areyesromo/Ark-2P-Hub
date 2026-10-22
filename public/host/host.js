@@ -21,6 +21,7 @@
   let pendingView = null;
   let lastView = null; // newest view of the current game (controllers map buttons against it)
   let roomCode = null;
+  let lobbyDrawn = false; // the lobby's first layout appears as it is, later changes animate
   let kickArmed = null; // a seat's ✕ tapped once: { slot, timer } (see kick below)
   const lastPolled = {}; // pad index -> last analog input sent (see padPoll below)
 
@@ -39,6 +40,7 @@
     restorePads(res.code);
     $('room-code').textContent = res.code;
     $('join-code').textContent = res.code;
+    $('room-note-code').textContent = res.code;
     if (res.qr) $('qr').src = res.qr;
   }
 
@@ -83,7 +85,7 @@
     el.innerHTML =
       '<button class="kick' + (confirming ? ' armed' : '') + '" data-kick="' + slot + '" title="Remove this player">' + (confirming ? 'Remove?' : '✕') + '</button>' +
       label +
-      '<span class="who">' + Ark.escapeHtml(p.name) + '</span>' +
+      '<span class="who"><button class="seat-avatar" data-profile="' + slot + '" title="Change avatar and colour">' + Ark.avatarHtml(p.profile) + '</button><span class="nm">' + Ark.escapeHtml(p.name) + '</span></span>' +
       '<span class="status">' + (p.local ? '🎮 Controller · ' : '') + (p.connected ? 'Ready' : 'Reconnecting…') + '</span>';
   }
 
@@ -102,6 +104,10 @@
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
     $('join-warn').classList.toggle('hidden', !state.joinGuess);
+    // Both seats taken: the QR code steps aside and the game list gets the room.
+    Ark.lobbyLayout($('lobby'), 'full', state.players.every(Boolean), document.querySelector('.join'),
+      [document.querySelector('.players-col'), document.querySelector('.games')], lobbyDrawn);
+    lobbyDrawn = true;
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
     $('games-hint').textContent = state.readyToPlay
@@ -152,7 +158,26 @@
     kickArmed = null;
     socket.emit('host:kick', { slot: slot });
   }
+  // A player's avatar and colour, picked here: click their avatar, or LB / RB on their controller.
+  let picker = null; // { slot, pad (the controller using it, or null), sheet }
+  function openPicker(slot, pad) {
+    const p = state && state.players[slot];
+    if (!p || picker) return;
+    picker = { slot: slot, pad: pad === undefined ? null : pad };
+    picker.sheet = Ark.profilePicker({
+      profile: p.profile,
+      title: p.name + '\'s avatar and colour',
+      onPick: function (fields) {
+        socket.emit('profile:set', Object.assign({ slot: slot }, fields), function (res) {
+          if (res && res.error) flashPad('⚠️ ' + res.error);
+        });
+      },
+      onClose: function () { picker = null; },
+    });
+  }
   document.querySelector('.seats').addEventListener('click', function (e) {
+    const av = e.target.closest('[data-profile]');
+    if (av) return openPicker(Number(av.getAttribute('data-profile')));
     const btn = e.target.closest('[data-kick]');
     if (!btn) return;
     const slot = Number(btn.getAttribute('data-kick'));
@@ -288,6 +313,12 @@
     }
     state = s;
     reconcilePads();
+    // The picker follows its seat: closed when that player leaves or a game starts.
+    if (picker) {
+      const p = s.players[picker.slot];
+      if (!p || s.phase === 'playing') picker.sheet.close();
+      else picker.sheet.update(p.profile);
+    }
     const playing = s.phase === 'playing';
     $('lobby').classList.toggle('hidden', playing);
     $('stage').classList.toggle('hidden', !playing);
@@ -409,7 +440,7 @@
     let text;
     if (padMessage) text = padMessage;
     else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
-    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · X tournament · D-pad + A pick a game' +
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · D-pad + A pick a game' +
       (awayPhones().length ? ' · Back: free the seat of a phone that left' : '');
     $('pad-hint').textContent = text;
   }
@@ -518,6 +549,7 @@
       return;
     }
 
+    if (picker && btn === 'BACK') return picker.sheet.close();
     // Lobby. Back (on any controller) frees the seats of phones that have gone.
     if (btn === 'BACK') {
       const away = awayPhones();
@@ -528,6 +560,13 @@
       if (btn === 'A' || btn === 'START') joinPad(idx);
       return;
     }
+    // The picker takes the controller that opened it (another controller's B closes it too).
+    if (picker) {
+      if (picker.pad === null || picker.pad === Number(idx)) picker.sheet.press(btn);
+      else if (btn === 'B') picker.sheet.close();
+      return;
+    }
+    if (btn === 'LB' || btn === 'RB') return openPicker(seat.slot, Number(idx));
     const cards = lobbyCards();
     const n = cards.length;
     if (btn === 'Y') return renamePad(idx, seat);
@@ -543,10 +582,13 @@
       socket.emit('pad:leave', { slot: seat.slot });
       delete padSeats[idx];
       savePads();
-    } else if (btn === 'LEFT' || btn === 'UP') {
+    } else if (btn === 'LEFT') {
       focus = (focus + n - 1) % n;
-    } else if (btn === 'RIGHT' || btn === 'DOWN') {
+    } else if (btn === 'RIGHT') {
       focus = (focus + 1) % n;
+    } else if (btn === 'UP' || btn === 'DOWN') {
+      // Up and down go to the card above or below on screen, not the next in the list.
+      focus = Ark.stepVertical($('game-list').querySelectorAll('.game-card'), focus, btn === 'UP' ? -1 : 1);
     } else if (btn === 'A' || btn === 'START') {
       if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
       else if (cards[focus].phoneOnly) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');

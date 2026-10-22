@@ -96,6 +96,8 @@
   }
 
   Ark.register('player', 'bomb-duel', {
+    // Setup and the end screen are menus: pinch zoom stays on.
+    zoomable: function (v) { return v.phase === 'setup' || v.phase === 'over'; },
     mount: function (el, a) {
       api = a;
       root = document.createElement('div');

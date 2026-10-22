@@ -8,11 +8,11 @@
   gap: 0;
   padding: 2%;
   background: #1e3a8a;
-  border-radius: 18px;
+  border-radius: var(--radius);
   box-shadow: inset 0 0 0 4px #2b4fb3, 0 12px 30px -10px rgba(0, 0, 0, 0.7);
   overflow: hidden;
 }
-.c4-col { display: flex; flex-direction: column; border-radius: 12px; }
+.c4-col { display: flex; flex-direction: column; border-radius: var(--r-md); }
 .c4-board.tappable .c4-col { cursor: pointer; }
 .c4-board.tappable .c4-col:active { background: rgba(255, 255, 255, 0.12); }
 .c4-col .cell { aspect-ratio: 1; position: relative; display: grid; place-items: center; }
@@ -36,7 +36,9 @@
 .disc.p1 { background: var(--p1); }
 .disc.p2 { background: var(--p2); }
 .disc.drop { animation: c4-drop 0.45s cubic-bezier(0.5, 0, 1, 1) both, c4-land 0.2s 0.45s ease-out; }
-.disc.win { animation: c4-win 0.8s ease-in-out infinite alternate; }
+/* The winning four: a white ring under the glow (the animation draws over it), so it still shows when the
+   device asks for less motion. */
+.disc.win { box-shadow: 0 0 0 4px #fff, 0 0 14px 4px rgba(255, 255, 255, 0.6); animation: c4-win 0.8s ease-in-out infinite alternate; }
 .disc.drop.win { animation: c4-drop 0.45s cubic-bezier(0.5, 0, 1, 1) both, c4-win 0.8s 0.45s ease-in-out infinite alternate; }
 
 @keyframes c4-drop { from { transform: translateY(calc(var(--fall) * -128%)); } to { transform: translateY(0); } }
@@ -63,4 +65,4 @@
 .c4-phone .lost { color: var(--bad); font-weight: 900; }
 .c4-phone .big { font-size: 1.8rem; }
 .c4-phone .c4-board { width: 100%; }
-.c4-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 8px; }
+.c4-phone .rematch { margin-top: 8px; }

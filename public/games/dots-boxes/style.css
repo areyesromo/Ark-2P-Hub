@@ -3,7 +3,8 @@
 .db-board { aspect-ratio: 1; background: #0f172a; border-radius: 16px; box-shadow: 0 0 0 4px var(--line), 0 14px 30px -10px rgba(0, 0, 0, 0.7); }
 .db-board .dot { fill: #e2e8f0; }
 .db-board .dot.cur { stroke: #fff; stroke-width: 0.03; }
-.db-board .dot.armed { animation: db-pulse 0.6s ease-in-out infinite alternate; }
+/* Armed: a thick ring as well as the pulse, so it still shows when the device asks for less motion. */
+.db-board .dot.armed { stroke-width: 0.07; animation: db-pulse 0.6s ease-in-out infinite alternate; }
 .db-board line { stroke-linecap: round; }
 .db-board .open { stroke: rgba(148, 163, 184, 0.28); stroke-width: 0.04; stroke-dasharray: 0.08 0.08; }
 .db-board .drawn { stroke-width: 0.1; }
@@ -41,4 +42,9 @@
 .db-phone .lost { color: var(--bad); font-weight: 900; }
 .db-phone .big { font-size: 1.8rem; }
 .db-phone .db-board { width: 100%; }
-.db-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 8px; }
+.db-phone .rematch { margin-top: 8px; }
+
+/* The line just drawn only flashes; with less motion it stays thicker until the next move instead. */
+@media (prefers-reduced-motion: reduce) {
+  .db-board .drawn.last { stroke-width: 0.17; }
+}

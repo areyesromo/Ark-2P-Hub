@@ -27,7 +27,7 @@
   display: grid;
   place-items: center;
 }
-.mc-board .store { border-radius: 999px; }
+.mc-board .store { border-radius: var(--r-pill); }
 .mc-board .pebbles { display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: 0.08em; width: 70%; }
 .mc-board .pebbles i { width: 0.32em; height: 0.32em; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #e0f2fe, #38bdf8 60%, #0369a1); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5); }
 .mc-board .pebbles.pile i { margin: -0.06em; }
@@ -66,4 +66,4 @@
 .mc-phone .lost { color: var(--bad); font-weight: 900; }
 .mc-phone .big { font-size: 1.8rem; }
 .mc-phone .mc-board { width: 100%; font-size: 1.45rem; aspect-ratio: 8 / 3.2; }
-.mc-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 8px; }
+.mc-phone .rematch { margin-top: 8px; }

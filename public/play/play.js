@@ -131,8 +131,10 @@
 
   function showJoin() {
     unmountGame();
+    if (picker) picker.close();
     $('controller').classList.add('hidden');
     $('join-screen').classList.remove('hidden');
+    syncZoom();
   }
 
   function showController() {
@@ -258,6 +260,7 @@
       mounting.renderer = renderer;
       renderer.mount($('phone-stage'), api);
       if (lastView && lastView.gameId === gameId && !Ark.setup.isHub(lastView.view)) renderer.update(lastView.view);
+      syncZoom();
     }).catch(function (err) {
       $('phone-stage').textContent = err.message;
     });
@@ -268,8 +271,35 @@
     if (me) applyState();
   });
 
+  // Your avatar and colour, in the header (your P1 / P2 colour stays the phone's, as in the games).
+  let picker = null;
+  function renderMe() {
+    const p = state && me && state.players[me.slot];
+    const profile = p && p.name === me.name ? p.profile : null;
+    if (!profile) return;
+    $('me-avatar').innerHTML = Ark.avatarHtml(profile);
+    if (picker) picker.update(profile);
+  }
+  function openPicker() {
+    const p = state && me && state.players[me.slot];
+    $('menu').classList.add('hidden');
+    if (!p || picker) return;
+    picker = Ark.profilePicker({
+      profile: p.profile,
+      onPick: function (fields) {
+        socket.emit('profile:set', fields, function (res) {
+          if (res && res.error) alert(res.error);
+        });
+      },
+      onClose: function () { picker = null; },
+    });
+  }
+  $('me-avatar').addEventListener('click', openPicker);
+  $('profile-btn').addEventListener('click', openPicker);
+
   function applyState() {
     const s = state;
+    renderMe();
     const playing = s.phase === 'playing';
     $('phone-lobby').classList.toggle('hidden', playing);
     $('phone-stage').classList.toggle('hidden', !playing);
@@ -282,6 +312,21 @@
       unmountGame();
       renderLobby();
     }
+    syncZoom();
+  }
+
+  // Pinch zoom stays on for the join form, the lobby and setup screens (low vision), and is
+  // switched off only while a game's own screen is up, where a stray pinch mid-race would wreck it.
+  // A game that draws its own setup screen says so with its renderer's zoomable(view).
+  const viewport = document.querySelector('meta[name="viewport"]');
+  const zoomable = viewport.getAttribute('content');
+  function syncZoom() {
+    const r = current && current.renderer;
+    const menu = Boolean(r && r.zoomable && lastView && lastView.gameId === current.gameId && r.zoomable(lastView.view));
+    // The stage keeps its old state while the whole controller is hidden (back on the join form).
+    const locked = !menu && !$('controller').classList.contains('hidden') && !$('phone-stage').classList.contains('hidden');
+    const content = locked ? zoomable + ', maximum-scale=1, user-scalable=no' : zoomable;
+    if (viewport.getAttribute('content') !== content) viewport.setAttribute('content', content); // views come many times a second
   }
 
   socket.on('game:view', function (msg) {
@@ -292,6 +337,7 @@
     renderTourneyBar();
     if (Ark.setup.isHub(v)) return; // the game hasn't started: the hub shows its setup screen
     if (current && current.renderer && current.gameId === msg.gameId) current.renderer.update(v);
+    syncZoom();
   });
 
   // The setup screen for games that don't draw their own (see withSetup on the server).
@@ -299,6 +345,7 @@
   function showHubSetup(v) {
     $('hub-setup').classList.toggle('hidden', !v);
     if (state && state.phase === 'playing') $('phone-stage').classList.toggle('hidden', Boolean(v));
+    syncZoom();
     if (!v) {
       hubSetupKey = '';
       $('hub-change').classList.add('hidden');

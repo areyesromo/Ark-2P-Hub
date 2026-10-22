@@ -15,6 +15,7 @@ import { loadOrCreateCert } from './tls.js';
 import { Settings } from './settings.js';
 import { adminRouter } from './admin.js';
 import { Stats } from './stats.js';
+import { Profiles, AVATARS, COLOURS } from './profiles.js';
 
 const ROOT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
@@ -44,7 +45,8 @@ export function createApp({
   });
   const settings = new Settings(dataDir, { envPassword: adminPassword });
   const stats = new Stats(dataDir);
-  const rooms = new RoomManager(io, { stats });
+  const profiles = new Profiles(dataDir);
+  const rooms = new RoomManager(io, { stats, profiles });
 
   /** (Re)compute a room's join link + QR from the current settings. */
   async function refreshJoin(room) {
@@ -62,7 +64,13 @@ export function createApp({
 
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
   app.get('/version', (_req, res) => res.json(VERSION));
-  app.get('/api/stats', (_req, res) => res.json(stats.leaderboard()));
+  // The tables, with each player's avatar and colour (nameKey -> profile).
+  app.get('/api/stats', (_req, res) => {
+    const board = stats.leaderboard();
+    res.json({ ...board, profiles: profiles.forNames(board.players.map((p) => p.name)) });
+  });
+  // What a profile can be: the avatars and colours to pick from.
+  app.get('/api/profile-choices', (_req, res) => res.json({ avatars: AVATARS, colours: COLOURS }));
   app.use(
     '/api/admin',
     adminRouter({

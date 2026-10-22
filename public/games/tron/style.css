@@ -52,5 +52,3 @@
 .tron-phone .status { font-size: 1.15rem; min-height: 1.4em; }
 .tron-phone .status.won { color: var(--good); font-weight: 900; font-size: 1.8rem; }
 .tron-phone .status.lost { color: var(--bad); font-weight: 900; font-size: 1.8rem; }
-
-.tron-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }

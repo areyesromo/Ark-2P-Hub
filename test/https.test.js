@@ -83,3 +83,8 @@ test('HTTPS=off (https: false) serves plain http only', async () => {
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('every certificate made is well formed (the random serial never starts with a padding zero)', () => {
+  // A serial whose first byte came out 0 broke about 1 certificate in 400; this many would show it.
+  for (let i = 0; i < 1500; i++) new crypto.X509Certificate(makeSelfSigned().cert);
+});

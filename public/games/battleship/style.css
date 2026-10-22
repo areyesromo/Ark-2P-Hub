@@ -109,4 +109,9 @@
 .bs-phone .outcome { font-size: 2.2rem; font-weight: 900; margin: 8px 0; }
 .bs-phone .outcome.won { color: var(--good); }
 .bs-phone .outcome.lost { color: var(--bad); }
-.bs-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 8px; }
+.bs-phone .rematch { margin-top: 8px; }
+
+/* The last shot only pulses; with less motion it gets a steady outline instead. */
+@media (prefers-reduced-motion: reduce) {
+  .bs-grid .cell.last { outline: 3px solid rgba(255, 220, 120, 0.9); outline-offset: -3px; }
+}

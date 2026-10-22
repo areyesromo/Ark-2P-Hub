@@ -121,7 +121,7 @@
         '<div class="md-dial-box"></div>' +
         '<form class="md-form hidden"><input class="md-input" autocomplete="off" placeholder="Your clue"><button class="primary" type="submit">Send</button></form>' +
         '<div class="md-controls hidden"><button class="ghost" data-nudge="-1">◀</button><button class="primary md-lock">Lock in</button><button class="ghost" data-nudge="1">▶</button></div>' +
-        '<button class="primary md-rematch hidden">Play again</button>';
+        '<button class="primary rematch md-rematch hidden">Play again</button>';
       el.appendChild(root);
       els = {
         head: root.querySelector('.md-head'),

@@ -20,7 +20,8 @@
    *     mount(el, api) { ... },   // build the DOM once
    *     update(view) { ... },     // called with every new view from the server
    *     unmount() { ... },        // optional cleanup
-   *   });
+   *     zoomable(view) { ... },   // optional, phones: true on menu screens the game draws itself
+   *   });                         // (its own setup), so pinch zoom stays on there
    */
   function register(kind, gameId, renderer) {
     renderers[kind][gameId] = renderer;
@@ -196,7 +197,8 @@
       const f = focus && focus[row.key] ? ' focus ' + focus[row.key] : '';
       return '<div class="row' + f + '"><div class="title">' + row.title + '</div><div class="seg">' +
         setupChoices(v, row.key).map(function (value) {
-          return '<button type="button" class="opt' + (v.settings[row.key] === value ? ' on' : '') + '" data-key="' + row.key + '" data-value="' + value + '">' +
+          const on = v.settings[row.key] === value;
+          return '<button type="button" class="opt' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-key="' + row.key + '" data-value="' + value + '">' +
             row.fmt(value) + '</button>';
         }).join('') + '</div></div>';
     }).join('') + '</div>';
@@ -292,7 +294,193 @@
     return Boolean(state && state.players && state.players.some(function (p) { return p && p.local; }));
   }
 
+  // ---- the TV lobby's layout change (QR code panel on / off) ----
+
+  const switching = new WeakMap(); // lobby -> the layout it's on its way to, while the panel fades out
+  const reducedMotion = function () { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; };
+
+  /**
+   * Turn the lobby's `cls` layout on or off, animated: going on, `leaving`
+   * (the QR panel) fades out to the left, then the `moving` blocks (the
+   * players, the game list) glide from where they were to their new place:
+   * a block that grows unfolds from its old size, a smaller one slides
+   * across. Going off, the blocks glide back and the panel fades in.
+   * No animation while the lobby is hidden, the first time, or for players
+   * who ask their device for less motion.
+   */
+  /**
+   * Up / down through a grid of cards as it looks on screen: the index of the
+   * card above (dir -1) or below (dir 1) els[i], the nearest in the next row,
+   * or i when there's none. Rows can be uneven (headings, short groups).
+   */
+  function stepVertical(els, i, dir) {
+    const from = els[i] && els[i].getBoundingClientRect();
+    if (!from) return i;
+    const cx = from.left + from.width / 2;
+    const cy = from.top + from.height / 2;
+    let best = i;
+    let bestScore = Infinity;
+    for (let k = 0; k < els.length; k++) {
+      const r = els[k].getBoundingClientRect();
+      const dy = (r.top + r.height / 2 - cy) * dir;
+      if (k === i || dy < from.height / 2) continue; // not in a row further that way
+      // Nearer rows first, then the card most in line with this one.
+      const score = dy + 3 * Math.abs(r.left + r.width / 2 - cx);
+      if (score < bestScore) {
+        bestScore = score;
+        best = k;
+      }
+    }
+    return best;
+  }
+
+  function lobbyLayout(lobby, cls, on, leaving, moving, animate) {
+    const busy = switching.has(lobby);
+    if (busy) switching.set(lobby, on);
+    if (busy || lobby.classList.contains(cls) === on) return;
+    if (!animate || reducedMotion() || !lobby.getClientRects().length || !leaving.animate) {
+      lobby.classList.toggle(cls, on);
+      return;
+    }
+    const ease = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+    function glide(target) {
+      const before = moving.map(function (el) { return el.getBoundingClientRect(); });
+      lobby.classList.toggle(cls, target);
+      moving.forEach(function (el, i) {
+        const a = before[i];
+        const b = el.getBoundingClientRect();
+        const from = { transform: 'translate(' + (a.left - b.left) + 'px, ' + (a.top - b.top) + 'px)' };
+        const to = { transform: 'none' };
+        if (a.width < b.width - 1 || a.height < b.height - 1) {
+          // Growing: show only its old size at first, then open it up (no stretched text).
+          const r = getComputedStyle(el).borderTopLeftRadius || '0px';
+          from.clipPath = 'inset(0 ' + Math.max(0, b.width - a.width) + 'px ' + Math.max(0, b.height - a.height) + 'px 0 round ' + r + ')';
+          to.clipPath = 'inset(0 0 0 0 round ' + r + ')';
+        }
+        el.animate([from, to], { duration: 520, easing: ease });
+      });
+      if (!target) leaving.animate([{ opacity: 0, transform: 'translateX(-3rem)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 120, easing: 'ease-out', fill: 'backwards' });
+    }
+    if (!on) return glide(false);
+    switching.set(lobby, true);
+    leaving.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateX(-3rem) scale(0.96)' }], { duration: 260, easing: 'ease-in' }).onfinish = function () {
+      const target = switching.get(lobby);
+      switching.delete(lobby);
+      if (target) glide(true);
+    };
+  }
+
+  // ---- profiles: an avatar and a colour per player (see server/profiles.js) ----
+
+  /** A player's avatar in a coloured circle. profile: { avatar, colour }. */
+  function avatarHtml(profile, cls) {
+    if (!profile) return '';
+    return '<span class="avatar' + (cls ? ' ' + cls : '') + '" style="--av:' + escapeHtml(profile.colour) + '">' + escapeHtml(profile.avatar) + '</span>';
+  }
+
+  let profileChoices = null;
+  /** The avatars and colours to pick from (fetched once). */
+  function loadProfileChoices() {
+    if (!profileChoices) {
+      profileChoices = fetch('/api/profile-choices').then(function (r) { return r.json(); }).catch(function () {
+        profileChoices = null;
+        return { avatars: [], colours: [] };
+      });
+    }
+    return profileChoices;
+  }
+
+  /**
+   * The avatar and colour picker, as a sheet over the page. Works with taps
+   * and clicks, and with a controller (press(btn): the D-pad moves, A picks,
+   * B or Back closes). Each pick goes straight to onPick({ avatar } | { colour }).
+   *
+   *   const picker = Ark.profilePicker({ profile, title, onPick, onClose });
+   *   picker.update(profile); picker.press('LEFT'); picker.close();
+   */
+  function profilePicker(opts) {
+    const sheet = document.createElement('div');
+    sheet.className = 'pf-overlay';
+    sheet.innerHTML = '<div class="pf-sheet panel" role="dialog" aria-label="Avatar and colour"><div class="pf-head"></div>' +
+      '<div class="pf-avatars"></div><div class="pf-colours"></div><button type="button" class="primary pf-done">Done</button></div>';
+    document.body.appendChild(sheet);
+    let profile = opts.profile;
+    let focus = -1; // the option a controller has selected; -1 until one is used
+    let open = true;
+
+    function options() { return Array.prototype.slice.call(sheet.querySelectorAll('.pf-opt, .pf-done')); }
+
+    function draw() {
+      sheet.querySelector('.pf-head').innerHTML = avatarHtml(profile, 'big') + '<span><strong>' + escapeHtml(opts.title || 'Your avatar and colour') + '</strong>' +
+        '<span class="muted">Shown on the TV, the phone and the high scores.</span></span>';
+      options().forEach(function (b, i) {
+        const on = b.getAttribute('data-avatar') === profile.avatar || b.getAttribute('data-colour') === profile.colour;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.classList.toggle('pad-focus', i === focus);
+      });
+      sheet.style.setProperty('--av', profile.colour);
+    }
+
+    loadProfileChoices().then(function (c) {
+      if (!open) return;
+      sheet.querySelector('.pf-avatars').innerHTML = c.avatars.map(function (a) {
+        return '<button type="button" class="pf-opt" data-avatar="' + escapeHtml(a) + '">' + escapeHtml(a) + '</button>';
+      }).join('');
+      sheet.querySelector('.pf-colours').innerHTML = c.colours.map(function (col) {
+        return '<button type="button" class="pf-opt swatch" data-colour="' + escapeHtml(col) + '" style="--sw:' + escapeHtml(col) + '" aria-label="Colour ' + escapeHtml(col) + '"></button>';
+      }).join('');
+      draw();
+    });
+
+    function pick(b) {
+      if (b.classList.contains('pf-done')) return close();
+      const avatar = b.getAttribute('data-avatar');
+      const colour = b.getAttribute('data-colour');
+      // Shown straight away; the server's answer comes back with the room state.
+      profile = { avatar: avatar || profile.avatar, colour: colour || profile.colour };
+      draw();
+      opts.onPick(avatar ? { avatar: avatar } : { colour: colour });
+    }
+
+    sheet.addEventListener('click', function (e) {
+      if (e.target === sheet) return close(); // a tap outside the sheet
+      const b = e.target.closest('.pf-opt, .pf-done');
+      if (b) pick(b);
+    });
+
+    function close() {
+      if (!open) return;
+      open = false;
+      sheet.remove();
+      if (opts.onClose) opts.onClose();
+    }
+
+    function press(btn) {
+      const list = options();
+      if (!list.length) return;
+      if (btn === 'B' || btn === 'BACK' || btn === 'X') return close();
+      if (focus < 0) focus = Math.max(0, list.findIndex(function (b) { return b.classList.contains('on'); }));
+      else if (btn === 'LEFT') focus = (focus + list.length - 1) % list.length;
+      else if (btn === 'RIGHT') focus = (focus + 1) % list.length;
+      else if (btn === 'UP' || btn === 'DOWN') focus = stepVertical(list, focus, btn === 'UP' ? -1 : 1);
+      else if (btn === 'A' || btn === 'START') return pick(list[focus]);
+      draw();
+    }
+
+    return {
+      update: function (p) { if (p && open) { profile = p; draw(); } },
+      press: press,
+      close: close,
+      get open() { return open; },
+    };
+  }
+
   window.Ark = {
+    lobbyLayout: lobbyLayout,
+    avatarHtml: avatarHtml,
+    profilePicker: profilePicker,
+    stepVertical: stepVertical,
     watchVersion: watchVersion,
     h2hHtml: h2hHtml,
     tournamentHtml: tournamentHtml,

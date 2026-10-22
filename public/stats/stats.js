@@ -15,6 +15,12 @@
     return d === 1 ? 'yesterday' : d < 30 ? d + ' days ago' : new Date(at).toLocaleDateString();
   }
 
+  let profiles = {}; // nameKey -> { avatar, colour }, from /api/stats
+  /** A player's avatar, before their name. */
+  function av(name) {
+    return Ark.avatarHtml(profiles[String(name).trim().toLowerCase()], 'small');
+  }
+
   /** Column heading with a short form for narrow (phone) screens. */
   function head(long, short) {
     return '<th class="num" title="' + long + '"><span class="long">' + long + '</span><span class="short">' + short + '</span></th>';
@@ -28,7 +34,7 @@
     return '<table><thead><tr><th></th><th>Player</th>' + (titles ? head('Tournaments', '🏆') : '') + (cups ? head('Kart cups', '🏅') : '') + head('Won', 'W') + head('Lost', 'L') + head('Drawn', 'D') + head('Win rate', '%') + '</tr></thead><tbody>' +
       ranked.map(function (p, i) {
         return '<tr><td class="rank' + (i === 0 ? ' gold' : '') + '">' + (i === 0 ? '👑' : i + 1) + '</td>' +
-          '<td><strong>' + esc(p.name) + '</strong></td>' +
+          '<td>' + av(p.name) + '<strong>' + esc(p.name) + '</strong></td>' +
           (titles ? '<td class="num">' + (p.titles ? '🏆 ' + p.titles : '<span class="muted">0</span>') + '</td>' : '') +
           (cups ? '<td class="num">' + (p.cups ? '🏅 ' + p.cups : '<span class="muted">0</span>') + '</td>' : '') +
           '<td class="num">' + p.wins + '</td><td class="num">' + p.losses + '</td><td class="num">' + p.draws + '</td>' +
@@ -40,7 +46,7 @@
     if (!rivalries.length) return '<p class="muted">Play a few games to start a rivalry.</p>';
     return '<table><tbody>' + rivalries.map(function (r) {
       const lead = r.wins[0] === r.wins[1] ? -1 : r.wins[0] > r.wins[1] ? 0 : 1;
-      const name = function (i) { return '<span class="' + (lead === i ? 'win' : '') + '">' + esc(r.names[i]) + '</span>'; };
+      const name = function (i) { return '<span class="' + (lead === i ? 'win' : '') + '">' + av(r.names[i]) + esc(r.names[i]) + '</span>'; };
       return '<tr><td>' + name(0) + ' <span class="vs">vs</span> ' + name(1) + '</td>' +
         '<td class="num"><strong>' + r.wins[0] + ' – ' + r.wins[1] + '</strong>' + (r.draws ? ' <span class="muted">(' + r.draws + ' drawn)</span>' : '') + '</td></tr>';
     }).join('') + '</tbody></table>';
@@ -111,6 +117,7 @@
   }
 
   function render(d) {
+    profiles = d.profiles || {};
     if (!d.total) {
       $('content').innerHTML = '<div class="panel empty">🏆 No matches yet.<br>Finish a game and it shows up here.</div>';
       return;
