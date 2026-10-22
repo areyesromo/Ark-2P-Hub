@@ -1,0 +1,28 @@
+# Builds the desktop app: `npm run dist:linux` (AppImage, for the Steam Deck) and
+# `npm run dist:win` (installer; on Windows or in CI). See desktop/README.md.
+appId: com.arkhub.ark2p
+productName: Ark 2P Hub
+artifactName: Ark-2P-Hub-${version}-${arch}.${ext}
+directories:
+  output: dist
+extraMetadata:
+  main: desktop/main.js # the app starts here (the Docker image still runs server/index.js)
+files:
+  - package.json
+  - desktop/**
+  - server/**
+  - public/**
+  - "!**/*.test.js"
+linux:
+  target:
+    - target: AppImage
+      arch: [x64]
+  category: Game
+win:
+  target:
+    - target: nsis
+      arch: [x64]
+nsis:
+  oneClick: false
+  allowToChangeInstallationDirectory: true
+  createDesktopShortcut: true

@@ -207,6 +207,13 @@ history.
 
 ## Quick start
 
+### Desktop app (Steam Deck, Linux, Windows)
+
+One app runs the hub and opens the TV screen full screen: an **AppImage** for the Steam Deck and
+Linux (add it to Steam as a non-Steam game to launch it from Game Mode) and an **installer** for
+Windows. No Docker needed. Build it with `npm run dist:linux` / `npm run dist:win`; see
+[desktop/README.md](desktop/README.md).
+
 ### Docker (any machine on your network)
 
 ```bash
