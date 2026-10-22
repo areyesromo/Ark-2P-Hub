@@ -549,10 +549,13 @@
       socket.emit('pad:leave', { slot: seat.slot });
       delete padSeats[idx];
       savePads();
-    } else if (btn === 'LEFT' || btn === 'UP') {
+    } else if (btn === 'LEFT') {
       focus = (focus + n - 1) % n;
-    } else if (btn === 'RIGHT' || btn === 'DOWN') {
+    } else if (btn === 'RIGHT') {
       focus = (focus + 1) % n;
+    } else if (btn === 'UP' || btn === 'DOWN') {
+      // Up and down go to the card above or below on screen, not the next in the list.
+      focus = Ark.stepVertical($('game-list').querySelectorAll('.game-card'), focus, btn === 'UP' ? -1 : 1);
     } else if (btn === 'A' || btn === 'START') {
       if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
       else if (cards[focus].phoneOnly) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');
