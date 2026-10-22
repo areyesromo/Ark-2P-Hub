@@ -39,6 +39,7 @@
     restorePads(res.code);
     $('room-code').textContent = res.code;
     $('join-code').textContent = res.code;
+    $('room-note-code').textContent = res.code;
     if (res.qr) $('qr').src = res.qr;
   }
 
@@ -102,6 +103,8 @@
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
     $('join-warn').classList.toggle('hidden', !state.joinGuess);
+    // Both seats taken: the QR code steps aside and the game list gets the room.
+    $('lobby').classList.toggle('full', state.players.every(Boolean));
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
     $('games-hint').textContent = state.readyToPlay
