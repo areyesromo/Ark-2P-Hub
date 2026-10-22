@@ -133,6 +133,7 @@
     unmountGame();
     $('controller').classList.add('hidden');
     $('join-screen').classList.remove('hidden');
+    syncZoom();
   }
 
   function showController() {
@@ -290,7 +291,8 @@
   const viewport = document.querySelector('meta[name="viewport"]');
   const zoomable = viewport.getAttribute('content');
   function syncZoom() {
-    const locked = !$('phone-stage').classList.contains('hidden');
+    // The stage keeps its old state while the whole controller is hidden (back on the join form).
+    const locked = !$('controller').classList.contains('hidden') && !$('phone-stage').classList.contains('hidden');
     viewport.setAttribute('content', locked ? zoomable + ', maximum-scale=1, user-scalable=no' : zoomable);
   }
 
