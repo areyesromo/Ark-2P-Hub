@@ -36,7 +36,9 @@
 .disc.p1 { background: var(--p1); }
 .disc.p2 { background: var(--p2); }
 .disc.drop { animation: c4-drop 0.45s cubic-bezier(0.5, 0, 1, 1) both, c4-land 0.2s 0.45s ease-out; }
-.disc.win { animation: c4-win 0.8s ease-in-out infinite alternate; }
+/* The winning four: a white ring under the glow (the animation draws over it), so it still shows when the
+   device asks for less motion. */
+.disc.win { box-shadow: 0 0 0 4px #fff, 0 0 14px 4px rgba(255, 255, 255, 0.6); animation: c4-win 0.8s ease-in-out infinite alternate; }
 .disc.drop.win { animation: c4-drop 0.45s cubic-bezier(0.5, 0, 1, 1) both, c4-win 0.8s 0.45s ease-in-out infinite alternate; }
 
 @keyframes c4-drop { from { transform: translateY(calc(var(--fall) * -128%)); } to { transform: translateY(0); } }

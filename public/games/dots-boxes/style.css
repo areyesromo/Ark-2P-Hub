@@ -43,3 +43,8 @@
 .db-phone .big { font-size: 1.8rem; }
 .db-phone .db-board { width: 100%; }
 .db-phone .rematch { margin-top: 8px; }
+
+/* The line just drawn only flashes; with less motion it stays thicker until the next move instead. */
+@media (prefers-reduced-motion: reduce) {
+  .db-board .drawn.last { stroke-width: 0.17; }
+}
