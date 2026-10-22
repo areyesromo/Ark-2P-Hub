@@ -19,6 +19,8 @@ jobs:
           node-version: 22
           cache: npm
       - run: npm ci
+        env:
+          ELECTRON_SKIP_BINARY_DOWNLOAD: '1' # the desktop app's Electron isn't needed to run the tests
       - run: npm test
 
   image:

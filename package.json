@@ -11,7 +11,10 @@
   "scripts": {
     "start": "node server/index.js",
     "dev": "node --watch server/index.js",
-    "test": "node --test test/*.test.js"
+    "test": "node --test test/*.test.js",
+    "desktop": "electron desktop/main.js",
+    "dist:linux": "electron-builder --config desktop/electron-builder.yml --linux",
+    "dist:win": "electron-builder --config desktop/electron-builder.yml --win"
   },
   "license": "MIT",
   "dependencies": {
@@ -22,6 +25,9 @@
     "word-list": "^4.1.0"
   },
   "devDependencies": {
+    "electron": "37.10.3",
+    "electron-builder": "26.15.3",
     "socket.io-client": "^4.8.4"
-  }
+  },
+  "author": "Ark 2P Hub"
 }
