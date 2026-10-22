@@ -21,13 +21,13 @@
 .pb-space.bonus { background: #9333ea; }
 .pb-space.shop { background: #f59e0b; }
 .pb-space.star { background: #facc15; font-size: 1.9rem; box-shadow: 0 0 1.2rem #facc15; animation: mi-pulse 0.8s infinite alternate; }
-.pb-token { position: absolute; width: 2.2rem; height: 2.2rem; margin-left: -1.1rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; color: #0b1020; border: 3px solid #fff; box-shadow: 0 0.4rem 0.6rem rgba(0, 0, 0, 0.6); transition: left 0.22s ease-out, top 0.22s ease-out; z-index: 2; }
+.pb-token { position: absolute; width: 2.2rem; height: 2.2rem; margin-left: -1.1rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 900; color: var(--on-bright); border: 3px solid #fff; box-shadow: 0 0.4rem 0.6rem rgba(0, 0, 0, 0.6); transition: left 0.22s ease-out, top 0.22s ease-out; z-index: 2; }
 .pb-token.p1 { background: var(--p1); }
 .pb-token.p2 { background: var(--p2); }
 /* Under the board: whose turn, the dice, messages and the open choice. */
 .pb-centre { position: relative; z-index: 1; min-height: 7.5rem; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.4rem 1.2rem; text-align: center; padding: 0.5rem 1rem; border-radius: var(--radius); background: var(--panel); border: 3px solid var(--line); }
 .pb-centre .pb-opts, .pb-centre .pb-ask { flex-basis: 100%; justify-content: center; }
-.pb-turn { font-size: 1.4rem; font-weight: 800; color: #e2e8f0; }
+.pb-turn { font-size: 1.4rem; font-weight: 800; color: var(--text); }
 .pb-dice { display: flex; gap: 0.6rem; align-items: center; }
 .pb-dice span { width: 3rem; height: 3rem; border-radius: 0.7rem; background: #f8fafc; color: #111827; display: flex; align-items: center; justify-content: center; font-size: 1.9rem; font-weight: 900; box-shadow: 0 0.3rem 0 rgba(0, 0, 0, 0.3); animation: mi-pop 0.25s ease-out; }
 .pb-dice em { font-style: normal; font-size: 1.8rem; font-weight: 900; color: var(--warn); }
@@ -117,11 +117,11 @@
 .pb-space.route.r1 { box-shadow: 0 0 0 0.3rem #a78bfa; }
 .pb-space.route.sel.r0 { box-shadow: 0 0 0 0.35rem #f59e0b, 0 0 1.4rem 0.5rem #f59e0b; }
 .pb-space.route.sel.r1 { box-shadow: 0 0 0 0.35rem #a78bfa, 0 0 1.4rem 0.5rem #a78bfa; }
-.pb-fork-num { position: absolute; top: -2.3rem; left: 50%; transform: translateX(-50%); width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; font-size: 1.3rem; font-weight: 900; color: #0b1020; border: 3px solid #fff; box-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.6); animation: mi-pulse 0.6s infinite alternate; }
+.pb-fork-num { position: absolute; top: -2.3rem; left: 50%; transform: translateX(-50%); width: 2rem; height: 2rem; border-radius: 50%; display: grid; place-items: center; font-size: 1.3rem; font-weight: 900; color: var(--on-bright); border: 3px solid #fff; box-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.6); animation: mi-pulse 0.6s infinite alternate; }
 .pb-fork-num.r0 { background: #f59e0b; }
 .pb-fork-num.r1 { background: #a78bfa; }
 .pb-opts > span.route.r0 { border-color: #f59e0b; color: #fcd34d; }
 .pb-opts > span.route.r1 { border-color: #a78bfa; color: #ddd6fe; }
 .pb-opts > span.route.cur { background: rgba(255, 255, 255, 0.12); border-width: 4px; }
-.pb-choices button.route.r0 { background: #f59e0b; color: #0b1020; }
-.pb-choices button.route.r1 { background: #a78bfa; color: #0b1020; }
+.pb-choices button.route.r0 { background: #f59e0b; color: var(--on-bright); }
+.pb-choices button.route.r1 { background: #a78bfa; color: var(--on-bright); }
