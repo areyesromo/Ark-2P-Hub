@@ -76,7 +76,7 @@ body { overflow: hidden; }
 .icon-btn { padding: 0.5rem 1rem; }
 
 .join { grid-area: join; }
-.players-col { grid-area: players; display: flex; flex-direction: column; gap: 2rem; min-width: 0; }
+.players-col { grid-area: players; display: flex; flex-direction: column; gap: 2rem; min-width: 0; position: relative; z-index: 1; } /* above the game list as it slides across */
 .games { grid-area: games; }
 
 /* Both seats taken: the QR code makes way, the players stack in a narrow column on the left

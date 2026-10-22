@@ -294,7 +294,58 @@
     return Boolean(state && state.players && state.players.some(function (p) { return p && p.local; }));
   }
 
+  // ---- the TV lobby's layout change (QR code panel on / off) ----
+
+  const switching = new WeakMap(); // lobby -> the layout it's on its way to, while the panel fades out
+  const reducedMotion = function () { return window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches; };
+
+  /**
+   * Turn the lobby's `cls` layout on or off, animated: going on, `leaving`
+   * (the QR panel) fades out to the left, then the `moving` blocks (the
+   * players, the game list) glide from where they were to their new place:
+   * a block that grows unfolds from its old size, a smaller one slides
+   * across. Going off, the blocks glide back and the panel fades in.
+   * No animation while the lobby is hidden, the first time, or for players
+   * who ask their device for less motion.
+   */
+  function lobbyLayout(lobby, cls, on, leaving, moving, animate) {
+    const busy = switching.has(lobby);
+    if (busy) switching.set(lobby, on);
+    if (busy || lobby.classList.contains(cls) === on) return;
+    if (!animate || reducedMotion() || !lobby.getClientRects().length || !leaving.animate) {
+      lobby.classList.toggle(cls, on);
+      return;
+    }
+    const ease = 'cubic-bezier(0.2, 0.8, 0.2, 1)';
+    function glide(target) {
+      const before = moving.map(function (el) { return el.getBoundingClientRect(); });
+      lobby.classList.toggle(cls, target);
+      moving.forEach(function (el, i) {
+        const a = before[i];
+        const b = el.getBoundingClientRect();
+        const from = { transform: 'translate(' + (a.left - b.left) + 'px, ' + (a.top - b.top) + 'px)' };
+        const to = { transform: 'none' };
+        if (a.width < b.width - 1 || a.height < b.height - 1) {
+          // Growing: show only its old size at first, then open it up (no stretched text).
+          const r = getComputedStyle(el).borderTopLeftRadius || '0px';
+          from.clipPath = 'inset(0 ' + Math.max(0, b.width - a.width) + 'px ' + Math.max(0, b.height - a.height) + 'px 0 round ' + r + ')';
+          to.clipPath = 'inset(0 0 0 0 round ' + r + ')';
+        }
+        el.animate([from, to], { duration: 520, easing: ease });
+      });
+      if (!target) leaving.animate([{ opacity: 0, transform: 'translateX(-3rem)' }, { opacity: 1, transform: 'none' }], { duration: 420, delay: 120, easing: 'ease-out', fill: 'backwards' });
+    }
+    if (!on) return glide(false);
+    switching.set(lobby, true);
+    leaving.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateX(-3rem) scale(0.96)' }], { duration: 260, easing: 'ease-in' }).onfinish = function () {
+      const target = switching.get(lobby);
+      switching.delete(lobby);
+      if (target) glide(true);
+    };
+  }
+
   window.Ark = {
+    lobbyLayout: lobbyLayout,
     watchVersion: watchVersion,
     h2hHtml: h2hHtml,
     tournamentHtml: tournamentHtml,
