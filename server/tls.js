@@ -62,7 +62,8 @@ export function makeSelfSigned({ names = ['localhost'], days = 3650, now = new D
   ));
   const tbs = seq(
     der(0xa0, int(Buffer.from([2]))), // version 3
-    int(crypto.randomBytes(16).map((b, i) => (i === 0 ? b & 0x7f : b))), // positive serial
+    // A positive serial with no leading zero byte: DER integers must be as short as they can be.
+    int(crypto.randomBytes(16).map((b, i) => (i === 0 ? (b & 0x7f) || 1 : b))),
     sigAlg,
     name,
     seq(time(new Date(now.getTime() - 86400000)), time(new Date(now.getTime() + days * 86400000))),

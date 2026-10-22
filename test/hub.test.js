@@ -166,7 +166,9 @@ test('controller players: seated by the TV, present with the TV, driven only by 
   const pad = await call(host, 'pad:join', { name: 'Controller 1' });
   assert.equal(pad.slot, 1);
   const state = await ready;
-  assert.deepEqual(state.players[1], { slot: 1, name: 'Controller 1', connected: true, local: true });
+  const { profile, ...seat } = state.players[1];
+  assert.deepEqual(seat, { slot: 1, name: 'Controller 1', connected: true, local: true });
+  assert.ok(profile.avatar && profile.colour, 'every seat has an avatar and colour');
   assert.equal(state.players[0].local, false);
 
   // The controller plays through the TV; a phone can't send input for it.

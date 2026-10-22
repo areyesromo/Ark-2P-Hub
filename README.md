@@ -115,6 +115,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Lobby | **D-pad**, then **A** | Pick a game and start it (the first card, 🎲 Random, lets the hub choose) |
 | Lobby | **Y** | Change your name: cycles through names on the leaderboard (so your wins count for you), then ready-made ones (Ace, Blaze, Comet…) |
 | Lobby | **X** | Tournament: off, best of 3, 5 or 7 games |
+| Lobby | **LB** / **RB** | Pick your avatar and colour (D-pad to move, **A** to pick, **B** to close) |
 | Mind Meld | **Left stick** or **D-pad ← →** turns the dial, **A** locks in | Controller players always guess; the clue-giver needs a phone to type |
 | Marble Maze | **Left stick** or **D-pad** tilts the board | In split mode only your axis counts: player 1 left/right, player 2 forwards/back. **A** plays again at the end |
 | Dice Party | **X** rolls · **← →** picks a die, **A** holds it · **↑ ↓** picks a box, **Y** scores it | The TV highlights your die and box; Liar's Dice needs phones (the dice are secret) |
@@ -150,6 +151,16 @@ input where the browser supports it.
 
 Word Race, Draw Duel, Liar's Dice, Bomb Squad and Sketch & Guess need two
 phones, so they're greyed out in the lobby while a controller is seated.
+
+## Profiles
+
+Every player has an **avatar** (a fox, a robot, a rocket…) and a **colour**. The avatar shows on the
+TV's player cards, in the phone's header and next to your name in the standings and rivalries; the
+colour is the circle around it (the seats and games keep their Player 1 / Player 2 colours, so you
+can always tell who's who). Pick them on your phone (tap your avatar at the top, or ⋯ → 🎨 Avatar
+and colour), or on the TV: click a player's avatar, or press **LB** / **RB** on your controller.
+Until you pick, your name gives you one of its own, the same every time. They're kept per name in
+`profiles.json` in the data folder, so they survive updates.
 
 ## Sound
 
