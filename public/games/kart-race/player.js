@@ -463,6 +463,8 @@
   }
 
   Ark.register('player', 'kart-race', {
+    // Setup, the leaderboard between races and the end screen are menus: pinch zoom stays on.
+    zoomable: function (v) { return v.phase === 'setup' || v.phase === 'standings' || v.phase === 'over'; },
     mount: function (el, a) {
       api = a;
       host = el;

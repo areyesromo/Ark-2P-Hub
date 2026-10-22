@@ -259,6 +259,7 @@
       mounting.renderer = renderer;
       renderer.mount($('phone-stage'), api);
       if (lastView && lastView.gameId === gameId && !Ark.setup.isHub(lastView.view)) renderer.update(lastView.view);
+      syncZoom();
     }).catch(function (err) {
       $('phone-stage').textContent = err.message;
     });
@@ -288,12 +289,16 @@
 
   // Pinch zoom stays on for the join form, the lobby and setup screens (low vision), and is
   // switched off only while a game's own screen is up, where a stray pinch mid-race would wreck it.
+  // A game that draws its own setup screen says so with its renderer's zoomable(view).
   const viewport = document.querySelector('meta[name="viewport"]');
   const zoomable = viewport.getAttribute('content');
   function syncZoom() {
+    const r = current && current.renderer;
+    const menu = Boolean(r && r.zoomable && lastView && lastView.gameId === current.gameId && r.zoomable(lastView.view));
     // The stage keeps its old state while the whole controller is hidden (back on the join form).
-    const locked = !$('controller').classList.contains('hidden') && !$('phone-stage').classList.contains('hidden');
-    viewport.setAttribute('content', locked ? zoomable + ', maximum-scale=1, user-scalable=no' : zoomable);
+    const locked = !menu && !$('controller').classList.contains('hidden') && !$('phone-stage').classList.contains('hidden');
+    const content = locked ? zoomable + ', maximum-scale=1, user-scalable=no' : zoomable;
+    if (viewport.getAttribute('content') !== content) viewport.setAttribute('content', content); // views come many times a second
   }
 
   socket.on('game:view', function (msg) {
@@ -304,6 +309,7 @@
     renderTourneyBar();
     if (Ark.setup.isHub(v)) return; // the game hasn't started: the hub shows its setup screen
     if (current && current.renderer && current.gameId === msg.gameId) current.renderer.update(v);
+    syncZoom();
   });
 
   // The setup screen for games that don't draw their own (see withSetup on the server).
