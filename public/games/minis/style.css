@@ -159,7 +159,8 @@
 .mi-field2 { position: relative; align-self: stretch; border-radius: var(--radius); background: linear-gradient(#166534, #14532d); border: 3px solid var(--line); overflow: hidden; }
 .mi-field2 .item, .mi-field2 .runner { position: absolute; transform: translate(-50%, -50%); line-height: 1; }
 .mi-field2 .item { font-size: 2.2rem; }
-.mi-field2 .item.fading { animation: mi-pulse 0.25s infinite alternate; }
+/* About to vanish: a red glow as well as the blink, so it still shows when the device asks for less motion. */
+.mi-field2 .item.fading { opacity: 0.7; filter: drop-shadow(0 0 0.35rem var(--bad)); animation: mi-pulse 0.25s infinite alternate; }
 .mi-field2 .runner { width: 2.6rem; height: 2.6rem; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; transition: left 0.05s linear, top 0.05s linear; box-shadow: 0 0.3rem 0.6rem rgba(0, 0, 0, 0.5); }
 .mi-field2 .runner.p1 { background: var(--p1); }
 .mi-field2 .runner.p2 { background: var(--p2); }

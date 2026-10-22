@@ -125,7 +125,7 @@
       return {
         mount: function (el, mctx) {
           el.innerHTML = '<div class="mi-phone-stage mi-bowl-phone"><div class="msg"></div>' +
-            '<div class="lane"><span class="pins">🎳</span><span class="pocket"></span><span class="ball p' + (mctx.slot + 1) + '"></span><span class="hint">⬆️ Swipe up</span></div>' +
+            '<div class="lane"><span class="pins">🎳</span><span class="pocket"></span><span class="ball keep-motion p' + (mctx.slot + 1) + '"></span><span class="hint">⬆️ Swipe up</span></div>' +
             '<div class="last"></div></div>';
           const lane = el.querySelector('.lane');
           const ball = el.querySelector('.ball');
