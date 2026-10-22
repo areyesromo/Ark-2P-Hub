@@ -282,6 +282,16 @@
       unmountGame();
       renderLobby();
     }
+    syncZoom();
+  }
+
+  // Pinch zoom stays on for the join form, the lobby and setup screens (low vision), and is
+  // switched off only while a game's own screen is up, where a stray pinch mid-race would wreck it.
+  const viewport = document.querySelector('meta[name="viewport"]');
+  const zoomable = viewport.getAttribute('content');
+  function syncZoom() {
+    const locked = !$('phone-stage').classList.contains('hidden');
+    viewport.setAttribute('content', locked ? zoomable + ', maximum-scale=1, user-scalable=no' : zoomable);
   }
 
   socket.on('game:view', function (msg) {
@@ -299,6 +309,7 @@
   function showHubSetup(v) {
     $('hub-setup').classList.toggle('hidden', !v);
     if (state && state.phase === 'playing') $('phone-stage').classList.toggle('hidden', Boolean(v));
+    syncZoom();
     if (!v) {
       hubSetupKey = '';
       $('hub-change').classList.add('hidden');

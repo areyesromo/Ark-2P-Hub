@@ -3,6 +3,7 @@
   --bg-2: #141829;
   --panel: #1b2036;
   --line: #2c3354;
+  --line-strong: #5f699c; /* the edge of a control you have to find by eye: 3:1 on --bg, --bg-2 and --panel */
   --text: #eef0ff;
   --muted: #9aa1c7;
   --p1: #22d3ee;

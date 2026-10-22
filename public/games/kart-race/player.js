@@ -25,6 +25,9 @@
   function itemIcon(kind) {
     return window.ArkKartItems && ArkKartItems[kind] ? ArkKartItems[kind].emoji : '🎁';
   }
+  function itemName(kind) {
+    return window.ArkKartItems && ArkKartItems[kind] ? ArkKartItems[kind].name : 'Item';
+  }
 
   // Each phone picks its own controller on the setup screen (remembered on the phone):
   //   buttons   hold ◀ / ▶
@@ -163,7 +166,7 @@
     const pad = els.steer;
     pad.className = 'kr-steer ' + style;
     if (style === 'buttons') {
-      pad.innerHTML = '<button class="kr-btn left">◀</button><button class="kr-btn right">▶</button>';
+      pad.innerHTML = '<button class="kr-btn left" aria-label="Steer left">◀</button><button class="kr-btn right" aria-label="Steer right">▶</button>';
       els.left = pad.querySelector('.left');
       els.right = pad.querySelector('.right');
       holdButton(els.left, 'left');
@@ -279,7 +282,7 @@
     if (!els) return;
     const seg = function (list, labels, on, attr) {
       return '<div class="seg">' + list.map(function (v) {
-        return '<button class="opt' + (v === on ? ' on' : '') + '" ' + attr + '="' + v + '">' + labels[v] + '</button>';
+        return '<button class="opt' + (v === on ? ' on' : '') + '" aria-pressed="' + (v === on) + '" ' + attr + '="' + v + '">' + labels[v] + '</button>';
       }).join('') + '</div>';
     };
     els.prefs.innerHTML =
@@ -315,10 +318,10 @@
     const racer = R.racer(mine.racer);
     const tyre = R.tyre(mine.tyre);
     return '<div class="title">Your racer</div><div class="kr-racers">' + R.RACERS.map(function (r) {
-      return '<button type="button" class="kr-racer' + (r.id === racer.id ? ' on' : '') + '" data-racer="' + r.id + '"><img src="' + r.portrait + '" alt="">' + r.name + '</button>';
+      return '<button type="button" class="kr-racer' + (r.id === racer.id ? ' on' : '') + '" aria-pressed="' + (r.id === racer.id) + '" data-racer="' + r.id + '"><img src="' + r.portrait + '" alt="">' + r.name + '</button>';
     }).join('') + '</div>' +
       '<div class="title">Tyres</div><div class="kr-tyres">' + R.TYRES.map(function (t) {
-        return '<button type="button" class="kr-tyre' + (t.id === tyre.id ? ' on' : '') + '" data-tyre="' + t.id + '"><span>' + t.emoji + '</span>' + t.name + '</button>';
+        return '<button type="button" class="kr-tyre' + (t.id === tyre.id ? ' on' : '') + '" aria-pressed="' + (t.id === tyre.id) + '" data-tyre="' + t.id + '"><span>' + t.emoji + '</span>' + t.name + '</button>';
       }).join('') + '</div>' +
       '<div class="kr-stats"><div class="who"><img src="' + racer.portrait + '" alt=""> ' + racer.name + ' · ' + R.TYPES[racer.type].label + ' · ' + tyre.emoji + ' ' + tyre.name + '</div>' +
       '<div class="kr-car">' + (racer.sprite ? '<img class="kr-kart" src="' + racer.sprite + '" alt="">' : '') + '<div class="rows">' +
@@ -447,6 +450,10 @@
     const items = (k && k.items) || [];
     const gold = Boolean(k && k.gold);
     els.item.innerHTML = gold ? '<span class="now">🌟</span>' : items.length ? '<span class="now">' + itemIcon(items[0]) + '</span><span class="next">' + items.slice(1).map(itemIcon).join('') + '</span>' : '—';
+    // A screen reader would only read out the emoji (or "dash" for —): say what the button does.
+    els.item.setAttribute('aria-label', gold ? 'Boost (Gold Turbo)'
+      : items.length ? 'Use ' + itemName(items[0]) + (items.length > 1 ? ', then ' + items.slice(1).map(itemName).join(', ') : '')
+      : 'No item');
     els.item.classList.toggle('ready', gold || items.length > 0);
     els.item.classList.toggle('gold', gold);
     els.item.classList.toggle('hidden', !v.settings.items);

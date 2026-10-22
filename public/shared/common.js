@@ -196,7 +196,8 @@
       const f = focus && focus[row.key] ? ' focus ' + focus[row.key] : '';
       return '<div class="row' + f + '"><div class="title">' + row.title + '</div><div class="seg">' +
         setupChoices(v, row.key).map(function (value) {
-          return '<button type="button" class="opt' + (v.settings[row.key] === value ? ' on' : '') + '" data-key="' + row.key + '" data-value="' + value + '">' +
+          const on = v.settings[row.key] === value;
+          return '<button type="button" class="opt' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-key="' + row.key + '" data-value="' + value + '">' +
             row.fmt(value) + '</button>';
         }).join('') + '</div></div>';
     }).join('') + '</div>';
