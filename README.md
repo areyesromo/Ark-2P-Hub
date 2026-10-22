@@ -18,6 +18,9 @@ The lobby groups games into **⚔️ Competitive** (head to head, one of you win
 the games you played most recently come first (the last one is tagged
 ⏱ Last played), and **🎲 Random game** at the top picks one for you (never the
 one you just played).
+Once both seats are taken, the TV's lobby stacks the two players (with your
+head to head and the tournament) in a narrow column on the left and gives the
+rest of the screen to the games; the QR code comes back when a seat is free.
 
 ### ⚔️ Competitive
 

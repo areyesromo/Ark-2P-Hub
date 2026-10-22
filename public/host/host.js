@@ -21,6 +21,7 @@
   let pendingView = null;
   let lastView = null; // newest view of the current game (controllers map buttons against it)
   let roomCode = null;
+  let lobbyDrawn = false; // the lobby's first layout appears as it is, later changes animate
   let kickArmed = null; // a seat's ✕ tapped once: { slot, timer } (see kick below)
   const lastPolled = {}; // pad index -> last analog input sent (see padPoll below)
 
@@ -39,6 +40,7 @@
     restorePads(res.code);
     $('room-code').textContent = res.code;
     $('join-code').textContent = res.code;
+    $('room-note-code').textContent = res.code;
     if (res.qr) $('qr').src = res.qr;
   }
 
@@ -102,6 +104,10 @@
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
     $('join-warn').classList.toggle('hidden', !state.joinGuess);
+    // Both seats taken: the QR code steps aside and the game list gets the room.
+    Ark.lobbyLayout($('lobby'), 'full', state.players.every(Boolean), document.querySelector('.join'),
+      [document.querySelector('.players-col'), document.querySelector('.games')], lobbyDrawn);
+    lobbyDrawn = true;
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
     $('games-hint').textContent = state.readyToPlay

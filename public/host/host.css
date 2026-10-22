@@ -38,6 +38,8 @@ body { overflow: hidden; }
   flex: 1;
   display: grid;
   grid-template-columns: minmax(0, 2fr) minmax(0, 3fr);
+  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-areas: "join players" "join games";
   gap: 2rem;
   min-height: 0;
 }
@@ -73,7 +75,25 @@ body { overflow: hidden; }
 .join-warn strong { color: var(--text); }
 .icon-btn { padding: 0.5rem 1rem; }
 
-.side-col { display: flex; flex-direction: column; gap: 2rem; min-height: 0; }
+.join { grid-area: join; }
+.players-col { grid-area: players; display: flex; flex-direction: column; gap: 2rem; min-width: 0; position: relative; z-index: 1; } /* above the game list as it slides across */
+.games { grid-area: games; }
+
+/* Both seats taken: the QR code makes way, the players stack in a narrow column on the left
+   (with the head to head and the tournament) and the game list takes the rest of the screen. */
+.lobby.full { grid-template-columns: minmax(13rem, 19rem) minmax(0, 1fr); grid-template-rows: minmax(0, 1fr); grid-template-areas: "players games"; }
+.lobby.full .join { display: none; }
+.lobby.full .players-col { gap: 1rem; overflow: auto; padding: 0.6rem; margin: -0.6rem; } /* room for the seats' glow inside the scroll box */
+.lobby.full .seats { grid-template-columns: 1fr; gap: 0.5rem; }
+.lobby.full .vs { font-size: 1.2rem; text-align: center; }
+.lobby.full .seat { min-height: 0; padding: 1rem 1.2rem; }
+.lobby.full .seat .who { font-size: 1.5rem; }
+.lobby.full .pad-hint { margin: 0; font-size: 0.9rem; text-align: left; }
+.lobby.full .h2h { margin: 0; font-size: 1rem; text-align: left; }
+.lobby.full .tourney { font-size: 0.95rem; }
+.lobby.full .room-note { display: block; }
+.room-note { display: none; margin: 0; color: var(--muted); font-size: 0.95rem; line-height: 1.4; }
+.room-note strong { color: var(--text); letter-spacing: 0.15em; }
 
 .seats {
   display: grid;
