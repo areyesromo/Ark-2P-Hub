@@ -14,6 +14,10 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', '..');
 const TEST = path.join(ROOT, 'test');
 const MAX_FILES = 8; // a shared helper used everywhere: leave it to `npm test`
+// Modules whose tests don't share their name or import them directly.
+const ALSO = {
+  'server/games/options.js': ['setup.test.js'], // withSetup / settingOf, exercised through the game registry
+};
 
 let input = '';
 for await (const chunk of process.stdin) input += chunk;
@@ -41,7 +45,7 @@ function related() {
   if (!found.length) found = byPrefix(id.split('-')[0]); // kart-items -> kart-race, kart-racers
   // Plus any test that imports this module directly.
   const importers = tests.filter((f) => fs.readFileSync(path.join(TEST, f), 'utf8').includes(`/${file.replace(/^server\//, '')}'`));
-  return [...new Set([...found, ...importers])];
+  return [...new Set([...found, ...importers, ...(ALSO[file] || [])])];
 }
 
 const files = related();
