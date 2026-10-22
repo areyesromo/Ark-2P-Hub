@@ -39,7 +39,7 @@ body.slot-1 { --me: var(--p2); }
   display: flex;
   align-items: center;
   gap: 10px;
-  padding: 12px 16px;
+  padding: 4px 16px;
   border-bottom: 3px solid var(--me);
   background: var(--bg-2);
 }
@@ -47,7 +47,8 @@ body.slot-1 { --me: var(--p2); }
 .me-name { font-weight: 800; font-size: 1.1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .me-tag { color: var(--me); font-weight: 800; font-size: 0.85rem; }
 .me-conn { margin-left: auto; font-size: 0.8rem; color: var(--warn); }
-.menu-btn { padding: 4px 14px; font-size: 1.2rem; line-height: 1; }
+/* A full 44px tap target; .me's slim padding keeps the bar the same height as before. */
+.menu-btn { min-width: 44px; min-height: 44px; padding: 4px 14px; font-size: 1.2rem; line-height: 1; }
 
 .menu {
   display: flex;

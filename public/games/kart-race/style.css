@@ -17,10 +17,10 @@
 .kr-gauge .ticks path { stroke: rgba(255, 255, 255, 0.5); stroke-width: 1.5; }
 .kr-gauge .needle { stroke: #f8fafc; stroke-width: 2.6; stroke-linecap: round; transform-origin: 50px 50px; transform: rotate(-120deg); transition: transform 80ms linear; }
 .kr-gauge circle { fill: #f8fafc; }
-.kr-gauge .read { position: absolute; left: 0; right: 0; top: 62%; text-align: center; line-height: 1; }
+.kr-gauge .read { position: absolute; left: 0; right: 0; top: 4.4rem; text-align: center; line-height: 1; }
 .kr-gauge .read b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
-.kr-gauge .read span { font-size: 0.7rem; color: var(--muted); }
-.kr-gauge .drift { height: 6px; margin: 0.25rem 1rem 0; border-radius: 3px; background: rgba(255, 255, 255, 0.1); visibility: hidden; overflow: hidden; }
+.kr-gauge .read span { font-size: 1.1rem; color: var(--muted); }
+.kr-gauge .drift { height: 6px; margin: 1rem 1rem 0; border-radius: 3px; background: rgba(255, 255, 255, 0.1); visibility: hidden; overflow: hidden; }
 .kr-gauge .drift.on { visibility: visible; }
 .kr-gauge .drift i { display: block; height: 100%; width: 0; background: #60a5fa; }
 .kr-gauge .drift.ready i { background: #fb923c; }
@@ -41,7 +41,7 @@
 .kr-side .info { display: flex; flex-direction: column; }
 .kr-side.p2 { flex-direction: row-reverse; text-align: right; }
 .kr-side.p2 .info { align-items: flex-end; }
-.kr-side .laptime { color: var(--muted); font-size: 1rem; font-variant-numeric: tabular-nums; min-height: 1.2em; }
+.kr-side .laptime { color: var(--muted); font-size: 1.1rem; font-variant-numeric: tabular-nums; min-height: 1.2em; }
 .kr-side .name { font-size: 1.5rem; font-weight: 900; }
 .kr-side .pos { font-size: 2rem; font-weight: 900; line-height: 1; }
 .kr-side.p1 .pos { color: var(--p1); }
@@ -176,7 +176,7 @@
 .kr-stats .bar i.minus { background: transparent; box-shadow: inset 0 0 0 2px var(--bad); }
 
 /* TV: racer under each name, and both players' picks on the setup screen. */
-.kr-side .racer { font-size: 1rem; font-weight: 700; }
+.kr-side .racer { font-size: 1.1rem; font-weight: 700; }
 .kr-setup-col { display: flex; flex-direction: column; gap: 0.8rem; flex: none; width: 19rem; }
 .kr-setup-col .kr-preview { width: 100%; }
 .kr-picks-tv { display: grid; grid-template-columns: 1fr 1fr; gap: 0.8rem; text-align: left; font-size: 0.95rem; }
@@ -206,7 +206,7 @@
 .kr-picks-tv .kr-car .rows { gap: 2px; }
 .kr-picks-tv .kr-kart { height: 4.2em; width: 2.95em; }
 .kr-side .racer img { width: 1.6em; height: 1.6em; border-radius: 50%; vertical-align: middle; }
-.kr-side .coins { font-size: 1rem; font-weight: 800; color: #facc15; }
+.kr-side .coins { font-size: 1.1rem; font-weight: 800; color: #facc15; }
 
 /* The item queue: the next item big, the two after it small. */
 .kr-btn.item .now { display: block; line-height: 1; }

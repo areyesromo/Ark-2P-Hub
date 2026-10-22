@@ -126,7 +126,7 @@ input {
 .ark-setup .row.focus.p1.p2 { border-color: var(--p1) var(--p2) var(--p2) var(--p1); }
 .ark-setup .title { font-weight: 800; color: var(--muted); margin-bottom: 0.4em; }
 .ark-setup .seg { display: flex; flex-wrap: wrap; gap: 0.4em; }
-.ark-setup .opt { flex: 1 1 auto; min-width: 4.5em; padding: 0.6em 0.5em; background: var(--panel); color: inherit; font-weight: 800; }
+.ark-setup .opt { flex: 1 1 auto; min-width: 4.5em; min-height: 44px; padding: 0.6em 0.5em; background: var(--panel); color: inherit; font-weight: 800; }
 .ark-setup .opt.on { background: var(--good); color: var(--on-good); }
 
 /* Tournament (best of N games) in the lobby, and one line on the TV during games: Ark.tournamentHtml */
@@ -153,3 +153,14 @@ input {
 .ark-tourney.compact, .ark-tourney.compact .t-score { flex-wrap: nowrap; white-space: nowrap; }
 .ark-tourney.compact .t-champ { font-size: 1em; }
 .ark-tourney:not(.on):not(.compact) { flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 0.4em 1em; }
+
+/* Players who ask their device for less motion get it everywhere: pulses, pops and slides end at once
+   (nothing waits for an animation to finish). Canvas and 3D games move by script and aren't affected. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
