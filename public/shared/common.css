@@ -155,9 +155,10 @@ input {
 .ark-tourney:not(.on):not(.compact) { flex-direction: row; flex-wrap: wrap; justify-content: center; padding: 0.4em 1em; }
 
 /* Players who ask their device for less motion get it everywhere: pulses, pops and slides end at once
-   (nothing waits for an animation to finish). Canvas and 3D games move by script and aren't affected. */
+   (nothing waits for an animation to finish). Canvas and 3D games move by script and aren't affected.
+   .keep-motion opts out where the movement is the information (where a thrown ball went). */
 @media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
+  *:not(.keep-motion), *::before, *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
