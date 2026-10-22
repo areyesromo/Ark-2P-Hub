@@ -9,6 +9,9 @@ import path from 'node:path';
 
 const PI = path.resolve('deploy/pi');
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'ark-pi-'));
+// The installer asks `id -nG` for the user's groups, which Git Bash on Windows can't name for a Windows
+// account. It only ever runs on the Pi (Linux), so its tests run on Linux and macOS (CI included).
+const LINUX_ONLY = { skip: process.platform === 'win32' && 'the Pi installer needs a Unix `id` (runs on Linux CI)' };
 
 function install(home, env = {}) {
   return execFileSync('bash', [path.join(PI, 'install.sh')], {
@@ -17,7 +20,7 @@ function install(home, env = {}) {
   });
 }
 
-test('installer (dry run): installs, starts, auto-updates and sets up the kiosk once', () => {
+test('installer (dry run): installs, starts, auto-updates and sets up the kiosk once', LINUX_ONLY, () => {
   const home = tmp();
   const out = install(home);
   for (const expected of ['sudo mkdir -p /opt/ark', 'docker pull ghcr.io/areyesromo/ark-2p-hub:latest', 'compose up -d', 'enable --now ark-update.timer', 'apt-get install -y fonts-noto-color-emoji']) {
@@ -30,7 +33,7 @@ test('installer (dry run): installs, starts, auto-updates and sets up the kiosk 
   fs.rmSync(home, { recursive: true, force: true });
 });
 
-test('installer: adds the kiosk to an existing wayfire.ini once, inside [autostart]', () => {
+test('installer: adds the kiosk to an existing wayfire.ini once, inside [autostart]', LINUX_ONLY, () => {
   const home = tmp();
   fs.mkdirSync(path.join(home, '.config'), { recursive: true });
   const ini = path.join(home, '.config/wayfire.ini');
@@ -43,7 +46,7 @@ test('installer: adds the kiosk to an existing wayfire.ini once, inside [autosta
   fs.rmSync(home, { recursive: true, force: true });
 });
 
-test('installer: source mode clones the repo; no-kiosk mode leaves the desktop alone', () => {
+test('installer: source mode clones the repo; no-kiosk mode leaves the desktop alone', LINUX_ONLY, () => {
   const home = tmp();
   const out = install(home, { ARK_SOURCE: '1', ARK_NO_KIOSK: '1' });
   assert.ok(out.includes('git clone --depth 50 https://github.com/areyesromo/Ark-2P-Hub.git /opt/ark/repo'));
