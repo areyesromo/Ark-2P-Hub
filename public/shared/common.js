@@ -20,7 +20,8 @@
    *     mount(el, api) { ... },   // build the DOM once
    *     update(view) { ... },     // called with every new view from the server
    *     unmount() { ... },        // optional cleanup
-   *   });
+   *     zoomable(view) { ... },   // optional, phones: true on menu screens the game draws itself
+   *   });                         // (its own setup), so pinch zoom stays on there
    */
   function register(kind, gameId, renderer) {
     renderers[kind][gameId] = renderer;
