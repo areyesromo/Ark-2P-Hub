@@ -13,6 +13,11 @@ files:
   - server/**
   - public/**
   - "!**/*.test.js"
+extraResources:
+  # electron-builder drops node_modules/*/examples, but three.js keeps the add-ons the 3D party
+  # board loads there (served at /vendor/three-addons): ship them beside the app instead.
+  - from: node_modules/three/examples/jsm
+    to: three-addons
 linux:
   target:
     - target: AppImage

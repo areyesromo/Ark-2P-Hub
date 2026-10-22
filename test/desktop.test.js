@@ -4,7 +4,7 @@ import fs from 'node:fs';
 import net from 'node:net';
 import os from 'node:os';
 import path from 'node:path';
-import { findPort, startHub } from '../desktop/hub.js';
+import { findPort, startHub, isOwnUrl } from '../desktop/hub.js';
 
 const tmp = () => fs.mkdtempSync(path.join(os.tmpdir(), 'ark-desktop-'));
 
@@ -48,4 +48,39 @@ test('desktop: the hub starts on the next free port, keeps its data in the given
     await busy.release();
   }
   assert.equal(await findPort(41741), 41741, 'the port is free again');
+});
+
+test('desktop: the server fails cleanly when its port is taken (no hang)', async () => {
+  const busy = await occupy(41750);
+  try {
+    const { createApp } = await import('../server/app.js'); // (loaded late: startHub sets its version first)
+    const server = createApp({ port: 41750, dataDir: tmp() });
+    await assert.rejects(server.listen(), /EADDRINUSE/);
+  } finally {
+    await busy.release();
+  }
+});
+
+test('desktop: if the port is grabbed just after it was found free, the hub moves on to the next', async () => {
+  const dataDir = tmp();
+  let grabbed = null;
+  // Grab the port the moment it has been found free (as another program might).
+  const hub = await startHub({ dataDir, port: 41760, commit: 'app-test', onPortFound: async (p) => { if (!grabbed) grabbed = await occupy(p); } });
+  try {
+    assert.equal(hub.port, 41761);
+    assert.equal((await fetch(hub.url + '/healthz')).status, 200);
+  } finally {
+    await hub.close();
+    await grabbed.release();
+  }
+});
+
+test("desktop: only the hub's own pages stay in the app window", () => {
+  const base = 'http://localhost:3000';
+  assert.equal(isOwnUrl('http://localhost:3000/host/', base), true);
+  assert.equal(isOwnUrl('http://localhost:3000/stats/', base), true);
+  assert.equal(isOwnUrl('http://localhost:3000.evil.com/', base), false);
+  assert.equal(isOwnUrl('http://localhost:30001/', base), false);
+  assert.equal(isOwnUrl('https://example.com/', base), false);
+  assert.equal(isOwnUrl('not a url', base), false);
 });

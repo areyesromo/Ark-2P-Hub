@@ -2,7 +2,7 @@
 // server inside the app and shows the TV screen full screen in its own window.
 import path from 'node:path';
 import { app, BrowserWindow, shell, dialog } from 'electron';
-import { startHub } from './hub.js';
+import { startHub, isOwnUrl } from './hub.js';
 
 let hub = null;
 let win = null;
@@ -25,6 +25,8 @@ if (!app.requestSingleInstanceLock()) {
 async function start() {
   // Settings, stats and the https certificate live here, so they survive updates.
   const dataDir = path.join(app.getPath('userData'), 'data');
+  // Packaged, three.js's add-ons sit beside the app (see electron-builder.yml).
+  if (app.isPackaged) process.env.ARK_THREE_ADDONS = path.join(process.resourcesPath, 'three-addons');
   hub = await startHub({ dataDir, port: Number(process.env.PORT) || 3000, commit: 'app-' + app.getVersion() });
   console.log(`Ark 2P Hub running: ${hub.url}/host/`);
   win = new BrowserWindow({
@@ -46,16 +48,20 @@ async function start() {
       event.preventDefault();
     }
   });
-  // Links to other sites open in the system browser; the hub's own pages stay in the app.
-  const own = (url) => url.startsWith(hub.url);
+  // Links to other sites open in the system browser (web links only); the hub's own pages stay
+  // in the app.
+  const own = (url) => isOwnUrl(url, hub.url);
+  const outside = (url) => {
+    if (/^https?:/i.test(url)) shell.openExternal(url);
+  };
   win.webContents.setWindowOpenHandler(({ url }) => {
-    if (!own(url)) shell.openExternal(url);
+    if (!own(url)) outside(url);
     return { action: own(url) ? 'allow' : 'deny' };
   });
   win.webContents.on('will-navigate', (event, url) => {
     if (!own(url)) {
       event.preventDefault();
-      shell.openExternal(url);
+      outside(url);
     }
   });
   win.on('closed', () => {
@@ -70,5 +76,6 @@ app.on('will-quit', (event) => {
   event.preventDefault();
   const closing = hub;
   hub = null;
+  setTimeout(() => app.exit(0), 2000).unref(); // in case closing ever stalls
   closing.close().finally(() => app.exit(0));
 });

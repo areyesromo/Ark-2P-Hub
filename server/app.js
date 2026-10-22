@@ -19,7 +19,8 @@ import { Stats } from './stats.js';
 const ROOT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const THREE_DIR = path.dirname(createRequire(import.meta.url).resolve('three')); // node_modules/three/build
-const THREE_ADDONS_DIR = path.join(THREE_DIR, '..', 'examples', 'jsm'); // GLTFLoader and friends
+// GLTFLoader and friends (the desktop app ships them elsewhere: ARK_THREE_ADDONS, see desktop/).
+const THREE_ADDONS_DIR = process.env.ARK_THREE_ADDONS || path.join(THREE_DIR, '..', 'examples', 'jsm');
 const VERSION = {
   version: JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf8')).version,
   commit: process.env.ARK_COMMIT || 'dev',
@@ -104,7 +105,16 @@ export function createApp({
     io,
     rooms,
     https,
-    listen: () => new Promise((resolve) => listener.listen(port, () => resolve(listener.address()))),
+    // Fails (e.g. EADDRINUSE: the port is taken) instead of hanging.
+    listen: () =>
+      new Promise((resolve, reject) => {
+        const failed = (err) => reject(err);
+        listener.once('error', failed);
+        listener.listen(port, () => {
+          listener.off('error', failed);
+          resolve(listener.address());
+        });
+      }),
     close: () =>
       new Promise((resolve) => {
         clearInterval(sweeper);
