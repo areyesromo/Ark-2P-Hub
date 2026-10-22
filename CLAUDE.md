@@ -37,6 +37,20 @@ container, built for amd64 and arm64 (Raspberry Pi), so keep things light on the
 - Every phone control should work with a gamepad on the TV too (`padHint`, cursors for local players).
   Motion/tilt needs the https page, so always offer a button or swipe fallback.
 
+## Design tokens
+
+The palette, radii and type sizes live as CSS custom properties at the top of `public/shared/common.css`.
+In UI styles, use them instead of literal values:
+
+- Surfaces and text: `--bg`, `--bg-2`, `--panel`, `--line`, `--text`, `--muted`, `--btn`.
+- Players: `--p1`, `--p2`, and on phones `--me` (that phone's own colour, set in `public/play/play.css`).
+- Meaning: `--good`, `--bad` (`--bad-strong`, `--bad-soft`), `--warn`. Dark text on a bright fill: `--on-bright`, `--on-good`, `--on-warn`.
+- Radii: `--r-sm` 8px, `--r-md` 12px, `--radius` 18px, `--r-pill`. Type: `--fs-sm` … `--fs-2xl`.
+
+Keep literal colours for game objects whose colour is the thing itself (a red wire, a Simon pad, a traffic
+light, a gold coin), so a palette change doesn't repaint the game. Phones get the shared `.rematch` button
+style from `play.css`: give your Rematch button `class="primary rematch"` and only add a margin if it needs one.
+
 ## When you change a game
 
 1. Server module + its test (`npm test` must pass).

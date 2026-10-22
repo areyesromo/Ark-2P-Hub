@@ -5,13 +5,13 @@
 .bd-stat.p1 { color: var(--p1); }
 .bd-stat.p2 { color: var(--p2); }
 .bd-clock { font-variant-numeric: tabular-nums; color: var(--muted); }
-.bd-clock.danger { color: #fca5a5; animation: bd-blink 0.8s steps(2) infinite; }
+.bd-clock.danger { color: var(--bad-soft); animation: bd-blink 0.8s steps(2) infinite; }
 @keyframes bd-blink { 50% { opacity: 0.45; } }
 .bd-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
-.bd-arena canvas { display: block; border-radius: 8px; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5); }
+.bd-arena canvas { display: block; border-radius: var(--r-sm); box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5); }
 .bd-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; text-align: center; }
 .bd-overlay:empty { display: none; }
-.bd-overlay .panel { background: rgba(11, 13, 23, 0.88); border: 1px solid var(--line); border-radius: 18px; padding: 1.4rem 2.2rem; max-width: 46rem; }
+.bd-overlay .panel { background: rgba(11, 13, 23, 0.88); border: 1px solid var(--line); border-radius: var(--radius); padding: 1.4rem 2.2rem; max-width: 46rem; }
 .bd-overlay .panel.small { padding: 1rem 2rem; }
 .bd-overlay .big { font-size: 6rem; font-weight: 900; line-height: 1; }
 .bd-overlay .title { font-size: 2.6rem; font-weight: 900; }
@@ -29,7 +29,7 @@
 .bd-phone .lost { color: var(--bad); font-weight: 900; }
 .bd-phone .power { font-size: 1.3rem; font-weight: 800; min-height: 1.4em; }
 .bd-phone .ark-setup { margin: 0; }
-.bd-phone .go, .bd-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.bd-phone .go { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
 .bd-phone .change { align-self: center; }
 
 .bd-controls { flex: 1; min-height: 0; display: flex; align-items: center; gap: 14px; }

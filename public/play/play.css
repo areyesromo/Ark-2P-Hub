@@ -88,6 +88,8 @@ body.slot-1 { --me: var(--p2); }
 #hub-setup { padding: 12px 16px 20px; font-size: 1rem; }
 #hub-setup .hub-go { font-size: 1.1rem; padding: 16px 40px; }
 .hub-change { align-self: center; margin: 6px auto 12px; }
+/* The big Rematch button at the end of a match, the same in every game (a game can add a margin) */
+.rematch { font-size: var(--fs-md); padding: 16px 32px; align-self: center; }
 
 /* Tournament: in the lobby, and at the end of each match. */
 .phone-lobby .tourney { font-size: 0.95rem; }

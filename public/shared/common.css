@@ -9,8 +9,25 @@
   --p2: #f472b6;
   --good: #4ade80;
   --bad: #f87171;
+  --bad-strong: #ef4444; /* bars and borders that must shout: "hard", a line about to snap */
+  --bad-soft: #fca5a5;   /* warning text on a dark background: a clock running out, a missed cut */
   --warn: #facc15;
+  --btn: #3b4370;        /* a plain button */
+  /* Dark text on a bright fill: --on-bright for player colours (--me, --p1, --p2) and blues */
+  --on-bright: #06121c;
+  --on-good: #052e16;
+  --on-warn: #1c1402;
+  /* --me (the phone's own player colour) is set in play/play.css */
+  --r-sm: 8px;
+  --r-md: 12px;
   --radius: 18px;
+  --r-pill: 999px;
+  /* Type sizes for new screens (older ones still have their own) */
+  --fs-sm: 0.9rem;
+  --fs-md: 1.1rem;
+  --fs-lg: 1.4rem;
+  --fs-xl: 1.8rem;
+  --fs-2xl: 2.6rem;
   color-scheme: dark;
 }
 
@@ -54,7 +71,7 @@ button, .btn {
   border: 0;
   border-radius: 14px;
   padding: 14px 22px;
-  background: #3b4370;
+  background: var(--btn);
   color: var(--text);
   cursor: pointer;
   text-decoration: none;
@@ -63,14 +80,14 @@ button, .btn {
   touch-action: manipulation;
 }
 button:disabled { opacity: 0.4; cursor: default; }
-button.primary, .btn.primary { background: linear-gradient(135deg, var(--p1), #6366f1); color: #06121c; }
+button.primary, .btn.primary { background: linear-gradient(135deg, var(--p1), #6366f1); color: var(--on-bright); }
 button.ghost, .btn.ghost { background: transparent; border: 1px solid var(--line); color: var(--muted); }
 
 input {
   font: inherit;
   width: 100%;
   padding: 14px 16px;
-  border-radius: 12px;
+  border-radius: var(--r-md);
   border: 1px solid var(--line);
   background: var(--bg-2);
   color: var(--text);
@@ -102,14 +119,14 @@ input {
 
 /* Shared setup screen (match settings before a game starts): Ark.setup.html */
 .ark-setup { display: flex; flex-direction: column; gap: 0.9em; margin: 1em 0; text-align: left; }
-.ark-setup .row { padding: 0.5em 0.7em; border-radius: 12px; border: 3px solid transparent; }
+.ark-setup .row { padding: 0.5em 0.7em; border-radius: var(--r-md); border: 3px solid transparent; }
 .ark-setup .row.focus.p1 { border-color: var(--p1); }
 .ark-setup .row.focus.p2 { border-color: var(--p2); }
 .ark-setup .row.focus.p1.p2 { border-color: var(--p1) var(--p2) var(--p2) var(--p1); }
 .ark-setup .title { font-weight: 800; color: var(--muted); margin-bottom: 0.4em; }
 .ark-setup .seg { display: flex; flex-wrap: wrap; gap: 0.4em; }
 .ark-setup .opt { flex: 1 1 auto; min-width: 4.5em; padding: 0.6em 0.5em; background: var(--panel); color: inherit; font-weight: 800; }
-.ark-setup .opt.on { background: var(--good); color: #052e16; }
+.ark-setup .opt.on { background: var(--good); color: var(--on-good); }
 
 /* Tournament (best of N games) in the lobby, and one line on the TV during games: Ark.tournamentHtml */
 .ark-tourney { display: flex; flex-direction: column; align-items: center; gap: 0.5em; padding: 0.7em 1em; border-radius: 14px; border: 1px solid var(--line); background: var(--panel); text-align: center; }
@@ -118,7 +135,7 @@ input {
 .ark-tourney .muted { color: var(--muted); font-weight: 400; }
 .ark-tourney .t-lengths { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.4em; }
 .ark-tourney .t-lengths button { padding: 0.35em 0.8em; font-size: 0.9em; }
-.ark-tourney .t-lengths button.on { background: var(--warn); color: #1c1402; border-color: var(--warn); }
+.ark-tourney .t-lengths button.on { background: var(--warn); color: var(--on-warn); border-color: var(--warn); }
 .ark-tourney .t-score { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.4em; font-weight: 800; }
 .ark-tourney .t-score strong { font-size: 1.3em; }
 .ark-tourney .pips { display: inline-flex; gap: 0.25em; }
@@ -127,7 +144,7 @@ input {
 .ark-tourney .pip.p2 { background: var(--p2); border-color: var(--p2); opacity: 1; }
 .ark-tourney .t-champ { font-size: 1.3em; font-weight: 900; color: var(--warn); }
 .ark-tourney .t-games { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.3em; font-size: 0.85em; }
-.ark-tourney .chip { padding: 0.15em 0.6em; border-radius: 999px; border: 1px solid var(--line); color: var(--muted); }
+.ark-tourney .chip { padding: 0.15em 0.6em; border-radius: var(--r-pill); border: 1px solid var(--line); color: var(--muted); }
 .ark-tourney .chip.p1 { border-color: var(--p1); color: var(--p1); }
 .ark-tourney .chip.p2 { border-color: var(--p2); color: var(--p2); }
 .ark-tourney .t-reset { padding: 0.3em 0.9em; font-size: 0.85em; }

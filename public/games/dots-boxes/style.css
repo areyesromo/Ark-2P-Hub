@@ -41,4 +41,4 @@
 .db-phone .lost { color: var(--bad); font-weight: 900; }
 .db-phone .big { font-size: 1.8rem; }
 .db-phone .db-board { width: 100%; }
-.db-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; margin-top: 8px; }
+.db-phone .rematch { margin-top: 8px; }

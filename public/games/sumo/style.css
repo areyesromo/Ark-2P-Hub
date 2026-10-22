@@ -17,7 +17,7 @@
 .sm-overlay .big { font-size: 7rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.9); }
 .sm-overlay .sub { font-size: 1.7rem; color: var(--text); text-shadow: 0 0 1rem #000, 0 0 1rem #000, 0 0 2rem #000; }
 .sm-overlay .sub strong { color: var(--warn); }
-.sm-overlay .shrink { position: absolute; top: 0.5rem; left: 0; right: 0; color: #fca5a5; font-weight: 800; }
+.sm-overlay .shrink { position: absolute; top: 0.5rem; left: 0; right: 0; color: var(--bad-soft); font-weight: 800; }
 
 /* ---- phone ---- */
 
@@ -49,7 +49,6 @@
 }
 .sm-dash:active { transform: scale(0.98); }
 .sm-dash.cooling { color: rgba(255, 255, 255, 0.6); }
-.sm-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
 
 /* The movement pad (joystick, D-pad or tilt) fills this: see shared/move-pad.css. */
 .sm-phone .sm-stick { flex: 1; min-height: 0; display: flex; border: 0; background: none; border-radius: 0; overflow: visible; }

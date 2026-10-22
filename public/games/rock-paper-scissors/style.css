@@ -74,4 +74,3 @@
 .rps-outcome { font-size: 2.2rem; font-weight: 900; margin-bottom: auto; }
 .rps-outcome.won { color: var(--good); }
 .rps-outcome.lost { color: var(--bad); }
-.rps-phone .rematch { font-size: 1.1rem; padding: 16px 32px; align-self: center; }

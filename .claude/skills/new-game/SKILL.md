@@ -64,7 +64,11 @@ players (`players[slot].local`) play from the TV, so `pad` must map buttons to t
 ## 5. Phone: `public/games/<id>/player.js`
 
 IIFE, `Ark.register('player', '<id>', { mount(el, api), update(view), unmount() })`, inputs with
-`api.send({...})`, light `api.vibrate` feedback. Thumb-sized targets; works in portrait.
+`api.send({...})`, light `api.vibrate` feedback. Thumb-sized targets; works in portrait. The end-of-match
+button is `<button class="primary rematch">Rematch</button>` (styled once in `play.css`).
+
+For both screens, style with the tokens in `public/shared/common.css` (see "Design tokens" in `CLAUDE.md`), not
+literal colours or radii, except for game objects whose colour is the point (a red wire, a gold coin).
 
 ## 6. Docs
 
