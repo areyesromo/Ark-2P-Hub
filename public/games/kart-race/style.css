@@ -87,7 +87,7 @@
 .kr-phone .change { align-self: center; }
 .kr-controls { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; }
 .kr-steer { flex: 1; min-height: 0; display: flex; gap: 12px; }
-.kr-btn { flex: 1; border-radius: 22px; font-size: 3rem; font-weight: 900; background: var(--panel); border: 2px solid var(--line); color: var(--text); touch-action: none; user-select: none; -webkit-user-select: none; }
+.kr-btn { flex: 1; border-radius: 22px; font-size: 3rem; font-weight: 900; background: var(--panel); border: 2px solid var(--line-strong); color: var(--text); touch-action: none; user-select: none; -webkit-user-select: none; }
 .kr-btn.on { background: var(--me); color: var(--on-bright); border-color: #fff; }
 .kr-bottom { flex: 0 0 36%; display: grid; grid-template-columns: 1fr 1.5fr; grid-template-rows: 0.7fr 1fr; gap: 10px; }
 .kr-bottom.noitem .drift { grid-column: 1 / -1; }
