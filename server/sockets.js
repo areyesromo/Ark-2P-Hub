@@ -19,6 +19,7 @@ const reply = (ack, payload) => {
  *   pad:leave     { slot }
  *   pad:input     { slot, input }            (only for seats taken with pad:join)
  *   pad:rename    { slot, name }             -> ack { ok, name } | { error }
+ *   profile:set   { avatar?, colour?, slot? } -> ack { ok, profile } | { error }  (a phone: its own seat; the TV: slot)
  *   host:kick     { slot }                   -> ack { ok } | { error }  (the TV removes a player)
  *
  * Server -> client:
@@ -210,6 +211,14 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
     socket.on('pad:input', (data) => {
       const { slot: seat, input } = asObject(data);
       if (role === 'host' && room.players[seat] && room.players[seat].local) room.handleInput(seat, input);
+    });
+
+    // A player's avatar and colour: from their own phone, or from the TV ({ slot }).
+    socket.on('profile:set', (data, ack) => {
+      const { avatar, colour } = asObject(data);
+      if (role === 'player' && room) return reply(ack, room.setProfile(slot, { avatar, colour }));
+      if (role === 'host') return reply(ack, room.setProfile(asObject(data).slot, { avatar, colour }));
+      reply(ack, { error: 'Join first.' });
     });
 
     socket.on('pad:rename', (data, ack) => {

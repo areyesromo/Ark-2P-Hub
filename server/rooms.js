@@ -1,6 +1,7 @@
 import { randomBytes, randomInt } from 'node:crypto';
 import { getGame, listGames } from './games/index.js';
 import { Tournament } from './tournament.js';
+import { defaultProfile } from './profiles.js';
 
 export const MAX_PLAYERS = 2;
 const NAME_MAX = 16;
@@ -30,10 +31,11 @@ const isValidToken = (t) => typeof t === 'string' && /^[0-9a-f]{32}$/.test(t);
  * views, the room pushes them out.
  */
 export class Room {
-  constructor(code, io, { stats = null, hostToken = null } = {}) {
+  constructor(code, io, { stats = null, profiles = null, hostToken = null } = {}) {
     this.code = code;
     this.io = io;
     this.stats = stats; // match history (see stats.js), optional
+    this.profiles = profiles; // avatars and colours (see profiles.js), optional
     this.hostToken = hostToken || newToken();
     this.hostSockets = new Set();
     this.players = Array(MAX_PLAYERS).fill(null);
@@ -241,13 +243,28 @@ export class Room {
       hostConnected: this.hostSockets.size > 0,
       readyToPlay: this.readyToPlay,
       players: this.players.map((p, slot) =>
-        p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local) } : null,
+        p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local), profile: this.profileOf(p.name) } : null,
       ),
       games: this.lobbyGames(),
       h2h: this.headToHead(),
       tournament: this.tournament.view(),
       knownNames: this.stats ? this.stats.knownNames() : [],
     };
+  }
+
+  /** A name's avatar and colour (a default from the name when there's no profile store). */
+  profileOf(name) {
+    return this.profiles ? this.profiles.get(name) : defaultProfile(name);
+  }
+
+  /** A seated player's avatar and colour (set from their phone, or from the TV). */
+  setProfile(slot, fields) {
+    const p = Number.isInteger(slot) && slot >= 0 && slot < MAX_PLAYERS ? this.players[slot] : null;
+    if (!p || !this.profiles) return { error: 'Nobody in that seat.' };
+    const profile = this.profiles.set(p.name, fields);
+    if (!profile) return { error: 'Pick an avatar or a colour from the list.' };
+    this.broadcastState();
+    return { ok: true, profile };
   }
 
   broadcastState() {
@@ -343,9 +360,10 @@ export class Room {
 }
 
 export class RoomManager {
-  constructor(io, { stats = null } = {}) {
+  constructor(io, { stats = null, profiles = null } = {}) {
     this.io = io;
     this.stats = stats;
+    this.profiles = profiles;
     this.rooms = new Map();
   }
 
@@ -361,7 +379,7 @@ export class RoomManager {
       } while (this.rooms.has(code));
       hostToken = null;
     }
-    const room = new Room(code, this.io, { stats: this.stats, hostToken: isValidToken(hostToken) ? hostToken : null });
+    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, hostToken: isValidToken(hostToken) ? hostToken : null });
     this.rooms.set(code, room);
     return room;
   }

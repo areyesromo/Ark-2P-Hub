@@ -370,8 +370,116 @@
     };
   }
 
+  // ---- profiles: an avatar and a colour per player (see server/profiles.js) ----
+
+  /** A player's avatar in a coloured circle. profile: { avatar, colour }. */
+  function avatarHtml(profile, cls) {
+    if (!profile) return '';
+    return '<span class="avatar' + (cls ? ' ' + cls : '') + '" style="--av:' + escapeHtml(profile.colour) + '">' + escapeHtml(profile.avatar) + '</span>';
+  }
+
+  let profileChoices = null;
+  /** The avatars and colours to pick from (fetched once). */
+  function loadProfileChoices() {
+    if (!profileChoices) {
+      profileChoices = fetch('/api/profile-choices').then(function (r) { return r.json(); }).catch(function () {
+        profileChoices = null;
+        return { avatars: [], colours: [] };
+      });
+    }
+    return profileChoices;
+  }
+
+  /**
+   * The avatar and colour picker, as a sheet over the page. Works with taps
+   * and clicks, and with a controller (press(btn): the D-pad moves, A picks,
+   * B or Back closes). Each pick goes straight to onPick({ avatar } | { colour }).
+   *
+   *   const picker = Ark.profilePicker({ profile, title, onPick, onClose });
+   *   picker.update(profile); picker.press('LEFT'); picker.close();
+   */
+  function profilePicker(opts) {
+    const sheet = document.createElement('div');
+    sheet.className = 'pf-overlay';
+    sheet.innerHTML = '<div class="pf-sheet panel" role="dialog" aria-label="Avatar and colour"><div class="pf-head"></div>' +
+      '<div class="pf-avatars"></div><div class="pf-colours"></div><button type="button" class="primary pf-done">Done</button></div>';
+    document.body.appendChild(sheet);
+    let profile = opts.profile;
+    let focus = -1; // the option a controller has selected; -1 until one is used
+    let open = true;
+
+    function options() { return Array.prototype.slice.call(sheet.querySelectorAll('.pf-opt, .pf-done')); }
+
+    function draw() {
+      sheet.querySelector('.pf-head').innerHTML = avatarHtml(profile, 'big') + '<span><strong>' + escapeHtml(opts.title || 'Your avatar and colour') + '</strong>' +
+        '<span class="muted">Shown on the TV, the phone and the high scores.</span></span>';
+      options().forEach(function (b, i) {
+        const on = b.getAttribute('data-avatar') === profile.avatar || b.getAttribute('data-colour') === profile.colour;
+        b.classList.toggle('on', on);
+        b.setAttribute('aria-pressed', on ? 'true' : 'false');
+        b.classList.toggle('pad-focus', i === focus);
+      });
+      sheet.style.setProperty('--av', profile.colour);
+    }
+
+    loadProfileChoices().then(function (c) {
+      if (!open) return;
+      sheet.querySelector('.pf-avatars').innerHTML = c.avatars.map(function (a) {
+        return '<button type="button" class="pf-opt" data-avatar="' + escapeHtml(a) + '">' + escapeHtml(a) + '</button>';
+      }).join('');
+      sheet.querySelector('.pf-colours').innerHTML = c.colours.map(function (col) {
+        return '<button type="button" class="pf-opt swatch" data-colour="' + escapeHtml(col) + '" style="--sw:' + escapeHtml(col) + '" aria-label="Colour ' + escapeHtml(col) + '"></button>';
+      }).join('');
+      draw();
+    });
+
+    function pick(b) {
+      if (b.classList.contains('pf-done')) return close();
+      const avatar = b.getAttribute('data-avatar');
+      const colour = b.getAttribute('data-colour');
+      // Shown straight away; the server's answer comes back with the room state.
+      profile = { avatar: avatar || profile.avatar, colour: colour || profile.colour };
+      draw();
+      opts.onPick(avatar ? { avatar: avatar } : { colour: colour });
+    }
+
+    sheet.addEventListener('click', function (e) {
+      if (e.target === sheet) return close(); // a tap outside the sheet
+      const b = e.target.closest('.pf-opt, .pf-done');
+      if (b) pick(b);
+    });
+
+    function close() {
+      if (!open) return;
+      open = false;
+      sheet.remove();
+      if (opts.onClose) opts.onClose();
+    }
+
+    function press(btn) {
+      const list = options();
+      if (!list.length) return;
+      if (btn === 'B' || btn === 'BACK' || btn === 'X') return close();
+      if (focus < 0) focus = Math.max(0, list.findIndex(function (b) { return b.classList.contains('on'); }));
+      else if (btn === 'LEFT') focus = (focus + list.length - 1) % list.length;
+      else if (btn === 'RIGHT') focus = (focus + 1) % list.length;
+      else if (btn === 'UP' || btn === 'DOWN') focus = stepVertical(list, focus, btn === 'UP' ? -1 : 1);
+      else if (btn === 'A' || btn === 'START') return pick(list[focus]);
+      draw();
+    }
+
+    return {
+      update: function (p) { if (p && open) { profile = p; draw(); } },
+      press: press,
+      close: close,
+      get open() { return open; },
+    };
+  }
+
   window.Ark = {
     lobbyLayout: lobbyLayout,
+    avatarHtml: avatarHtml,
+    profilePicker: profilePicker,
     stepVertical: stepVertical,
     watchVersion: watchVersion,
     h2hHtml: h2hHtml,

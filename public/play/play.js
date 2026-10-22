@@ -131,6 +131,7 @@
 
   function showJoin() {
     unmountGame();
+    if (picker) picker.close();
     $('controller').classList.add('hidden');
     $('join-screen').classList.remove('hidden');
     syncZoom();
@@ -270,8 +271,35 @@
     if (me) applyState();
   });
 
+  // Your avatar and colour, in the header (your P1 / P2 colour stays the phone's, as in the games).
+  let picker = null;
+  function renderMe() {
+    const p = state && me && state.players[me.slot];
+    const profile = p && p.name === me.name ? p.profile : null;
+    if (!profile) return;
+    $('me-avatar').innerHTML = Ark.avatarHtml(profile);
+    if (picker) picker.update(profile);
+  }
+  function openPicker() {
+    const p = state && me && state.players[me.slot];
+    $('menu').classList.add('hidden');
+    if (!p || picker) return;
+    picker = Ark.profilePicker({
+      profile: p.profile,
+      onPick: function (fields) {
+        socket.emit('profile:set', fields, function (res) {
+          if (res && res.error) alert(res.error);
+        });
+      },
+      onClose: function () { picker = null; },
+    });
+  }
+  $('me-avatar').addEventListener('click', openPicker);
+  $('profile-btn').addEventListener('click', openPicker);
+
   function applyState() {
     const s = state;
+    renderMe();
     const playing = s.phase === 'playing';
     $('phone-lobby').classList.toggle('hidden', playing);
     $('phone-stage').classList.toggle('hidden', !playing);
