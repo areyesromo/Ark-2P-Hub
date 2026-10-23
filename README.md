@@ -228,7 +228,8 @@ Linux (add it to Steam as a non-Steam game to launch it from Game Mode) and an *
 Windows. No Docker needed. Download them from the repository's **Releases** page. GitHub builds
 them with **Actions → Desktop app → Run workflow**. The app updates itself: a new version shows an
 **Update** banner in the lobby. Each release also has Steam library artwork. See
-[desktop/README.md](desktop/README.md).
+[desktop/README.md](desktop/README.md), and for the Deck the step-by-step
+[Steam Deck guide](docs/STEAM-DECK.md).
 
 ### Docker (any machine on your network)
 
