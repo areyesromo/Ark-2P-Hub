@@ -117,7 +117,7 @@ the TV screen.
      specific Steam Play compatibility tool** must be **off**. Proton is for Windows games and
      can't run this Linux app.
   2. Still black? Start it once more from Game Mode (press Play just once), exit, then in Desktop
-     Mode open the log: `~/.config/Ark 2P Hub/logs/main.log` (in Dolphin, **Ctrl + H** shows
+     Mode open the log: `~/.config/ark-2p-hub/logs/main.log` (in Dolphin, **Ctrl + H** shows
      hidden folders like `.config`). It says how the app started and what went wrong; send it to
      whoever helps you.
   3. No `main.log`, or the times in it are older than your try? Then the app never started at all:
@@ -134,5 +134,5 @@ the TV screen.
 - **The B button drops the app out of full screen.** The layout is sending Esc instead of a gamepad
   button. Pick **Templates → Gamepad** (step 3), or press ⛶ on the TV screen to go back to full
   screen.
-- **Where's my data?** In `~/.config/Ark 2P Hub/data`: settings, stats and the https certificate.
+- **Where's my data?** In `~/.config/ark-2p-hub/data`: settings, stats and the https certificate.
   Back it up before wiping the Deck. The log of the last two runs is next to it, in `logs/`.

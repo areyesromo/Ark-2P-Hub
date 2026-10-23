@@ -1,5 +1,6 @@
 // The desktop app (AppImage on Linux / the Steam Deck, installer on Windows): starts the hub
 // server inside the app and shows the TV screen full screen in its own window.
+import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, shell, dialog, ipcMain, screen, crashReporter } from 'electron';
@@ -24,7 +25,7 @@ if (steamEnv) {
   }
 }
 
-// How each run went, in ~/.config/Ark 2P Hub/logs/main.log (Windows: %APPDATA%\Ark 2P Hub\logs):
+// How each run went, in ~/.config/ark-2p-hub/logs/main.log (Windows: %APPDATA%\ark-2p-hub\logs):
 // the place to look when the window shows nothing. It's opened once this copy has the
 // one-copy lock (see applog.js). A crash in Electron itself leaves a dump in Crashpad/ beside it.
 const log = createLog(path.join(app.getPath('userData'), 'logs'));
@@ -53,6 +54,21 @@ if (restartError) log('could not restart without Steam\'s overlay library', rest
 process.on('unhandledRejection', (err) => log('unhandled error', String((err && err.stack) || err)));
 // A helper process (the graphics one, say) stopping at launch is a likely cause of a black window.
 app.on('child-process-gone', (_e, details) => log('a helper process stopped', details));
+// Closing, step by step: Steam waits for every process the game started, so the log says which of
+// the app's helpers are still running when it exits (Linux).
+app.on('before-quit', () => log('quit requested'));
+process.on('exit', (code) => log('exiting', { code, helpersStillRunning: helpers(process.pid) }));
+function helpers(pid) {
+  try {
+    return fs.readdirSync(`/proc/${pid}/task`).flatMap((t) =>
+      fs.readFileSync(`/proc/${pid}/task/${t}/children`, 'utf8').split(' ').filter(Boolean).flatMap((child) => {
+        const type = (fs.readFileSync(`/proc/${child}/cmdline`, 'utf8').match(/--type=([\w-]+)/) || [])[1];
+        return [child + ' ' + (type || 'other'), ...helpers(child)];
+      }));
+  } catch {
+    return [];
+  }
+}
 
 let hub = null;
 let win = null;
@@ -222,11 +238,16 @@ app.on('window-all-closed', () => app.quit());
 app.on('will-quit', (event) => {
   if (!hub) return;
   event.preventDefault();
+  log('closing');
   const closing = hub;
   hub = null;
   // Quit again (hub is null now, so this time it goes through): a downloaded update installs on
   // quit. After 2 s quit anyway, in case closing ever stalls, and exit as a last resort.
   setTimeout(() => app.quit(), 2000).unref();
   setTimeout(() => app.exit(0), 6000).unref();
-  closing.close().finally(() => app.quit());
+  closing.close().finally(() => {
+    log('hub closed');
+    // Next turn: a quit asked for while Electron is still in the one cancelled above is ignored.
+    setTimeout(() => app.quit(), 0);
+  });
 });
