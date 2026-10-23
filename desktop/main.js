@@ -6,8 +6,23 @@ import { app, BrowserWindow, shell, dialog, ipcMain, screen, crashReporter } fro
 import { startHub, isOwnUrl } from './hub.js';
 import { createUpdates } from './updates.js';
 import { createLog } from './applog.js';
+import { withoutSteamOverlay } from './steam.js';
 
 const RELEASES = 'https://github.com/areyesromo/Ark-2P-Hub/releases/latest';
+
+// Started by Steam, Steam's overlay library would freeze the window (see steam.js): replace this
+// process with a fresh one without it. Same process, so Steam keeps tracking it as the game. It
+// must happen first, before Electron starts its helpers (the network one would hang, and be left
+// behind) or the crash reporter.
+let restartError = null;
+const steamEnv = process.platform === 'linux' ? withoutSteamOverlay(process.env) : null;
+if (steamEnv) {
+  try {
+    process.execve(process.execPath, [process.execPath, ...process.argv.slice(1)], steamEnv);
+  } catch (err) {
+    restartError = String(err); // carry on as before (logged below)
+  }
+}
 
 // How each run went, in ~/.config/Ark 2P Hub/logs/main.log (Windows: %APPDATA%\Ark 2P Hub\logs):
 // the place to look when the window shows nothing. It's opened once this copy has the
@@ -23,7 +38,7 @@ log('Ark 2P Hub ' + app.getVersion() + ' starting', {
     // LD_PRELOAD: Steam's overlay hooks into games through it, a known cause of blank windows.
     ['DISPLAY', 'WAYLAND_DISPLAY', 'XDG_SESSION_TYPE', 'XDG_CURRENT_DESKTOP', 'XDG_RUNTIME_DIR', 'SteamGameId',
       'SteamAppId', 'SteamOverlayGameId', 'SteamDeck', 'GAMESCOPE_WAYLAND_DISPLAY', 'STEAM_COMPAT_DATA_PATH',
-      'LD_PRELOAD', 'ELECTRON_OZONE_PLATFORM_HINT', 'LIBVA_DRIVER_NAME', 'APPIMAGE', 'PORT']
+      'LD_PRELOAD', 'ARK_STEAM_OVERLAY_REMOVED', 'ELECTRON_OZONE_PLATFORM_HINT', 'LIBVA_DRIVER_NAME', 'APPIMAGE', 'PORT']
       .filter((k) => process.env[k] !== undefined)
       .map((k) => [k, process.env[k]]),
   ),
@@ -34,6 +49,7 @@ process.on('uncaughtException', (err) => {
   log('uncaught error', text);
   dialog.showErrorBox('Ark 2P Hub hit an error', text);
 });
+if (restartError) log('could not restart without Steam\'s overlay library', restartError);
 process.on('unhandledRejection', (err) => log('unhandled error', String((err && err.stack) || err)));
 // A helper process (the graphics one, say) stopping at launch is a likely cause of a black window.
 app.on('child-process-gone', (_e, details) => log('a helper process stopped', details));
