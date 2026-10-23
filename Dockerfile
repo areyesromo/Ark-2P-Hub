@@ -7,7 +7,8 @@ ENV NODE_ENV=production \
 WORKDIR /app
 
 COPY package.json package-lock.json ./
-RUN npm ci --omit=dev && npm cache clean --force
+# (Optional dependencies are the desktop app's self-update: not needed here.)
+RUN npm ci --omit=dev --omit=optional && npm cache clean --force
 
 COPY server ./server
 COPY public ./public

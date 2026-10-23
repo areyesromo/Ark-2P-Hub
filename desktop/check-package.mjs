@@ -15,6 +15,9 @@ const list = new Set(asarPkg.listPackage(asar, { isPack: false }).map((l) => l.t
 const needed = [
   '/desktop/main.js',
   '/desktop/preload.cjs',
+  '/desktop/updates.js',
+  '/desktop/icons/icon.png',
+  '/node_modules/electron-updater/package.json',
   '/server/app.js',
   '/public/host/index.html',
   '/node_modules/three/build/three.module.js',
@@ -22,8 +25,8 @@ const needed = [
   '/node_modules/qrcode/package.json',
   '/node_modules/socket.io/package.json',
 ];
-// Beside the app (extraResources), not in it.
-const beside = ['three-addons/loaders/GLTFLoader.js', 'three-addons/modifiers/SimplifyModifier.js', 'three-addons/utils/BufferGeometryUtils.js'];
+// Beside the app (extraResources, and where self-update looks for releases), not in it.
+const beside = ['app-update.yml', 'three-addons/loaders/GLTFLoader.js', 'three-addons/modifiers/SimplifyModifier.js', 'three-addons/utils/BufferGeometryUtils.js'];
 const missing = needed.filter((f) => !list.has(f)).concat(beside.filter((f) => !fs.existsSync(path.join(resources, f))));
 if (missing.length) {
   console.error('Missing from the app:\n  ' + missing.join('\n  '));
