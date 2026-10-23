@@ -109,9 +109,12 @@ the TV screen.
   1. Game Mode, the game's page → ⚙ → **Properties** → **Compatibility**: **Force the use of a
      specific Steam Play compatibility tool** must be **off**. Proton is for Windows games and
      can't run this Linux app.
-  2. Still black? Start it once more from Game Mode, exit, then in Desktop Mode open the log:
-     `~/.config/Ark 2P Hub/logs/main.log` (in Dolphin, **Ctrl + H** shows hidden folders like
-     `.config`). It says how the app started and what went wrong; send it to whoever helps you.
+  2. Still black? Start it once more from Game Mode (press Play just once), exit, then in Desktop
+     Mode open the log: `~/.config/Ark 2P Hub/logs/main.log` (in Dolphin, **Ctrl + H** shows
+     hidden folders like `.config`). It says how the app started and what went wrong; send it to
+     whoever helps you.
+  3. No `main.log`, or the times in it are older than your try? Then the app never started at all:
+     check step 1 again, and that **Properties → Shortcut → Target** points at the AppImage.
 - **The app doesn't open from Steam.** Start the AppImage from Dolphin in Desktop Mode to see if it
   runs, and check the shortcut's **Properties → Shortcut → Target** points at the file.
 - **The Steam shortcut stopped working after an update.** If the old file had a version number in

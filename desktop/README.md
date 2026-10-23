@@ -18,8 +18,9 @@ Download both from the repository's **Releases** page. On a Steam Deck, follow t
   - Steam Deck / Linux: `~/.config/Ark 2P Hub/data`
   - Windows: `%APPDATA%\Ark 2P Hub\data`
 - **Log:** each run writes `logs/main.log` next to the data folder (the run before is
-  `main.old.log`): versions, how it was started, the graphics status, and any error. Look there
-  first when the window stays black.
+  `main.old.log`): versions, how it was started, the graphics status, the displays, and any error
+  (the page's too). Look there first when the window stays black. A crash in Electron itself
+  leaves a dump in `Crashpad/` next to it.
 - **Window:** ⛶ on the TV's top bar (or F11) switches between full screen and a window; Esc leaves
   full screen. **Quit** (tap it, then **Quit?**) closes the app. Closing the window stops the hub too.
 - **Updates** (from v0.1.2): a few seconds after it starts, the app checks the Releases page. When

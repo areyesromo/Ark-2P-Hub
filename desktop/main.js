@@ -2,7 +2,7 @@
 // server inside the app and shows the TV screen full screen in its own window.
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { app, BrowserWindow, shell, dialog, ipcMain } from 'electron';
+import { app, BrowserWindow, shell, dialog, ipcMain, screen, crashReporter } from 'electron';
 import { startHub, isOwnUrl } from './hub.js';
 import { createUpdates } from './updates.js';
 import { createLog } from './applog.js';
@@ -10,20 +10,33 @@ import { createLog } from './applog.js';
 const RELEASES = 'https://github.com/areyesromo/Ark-2P-Hub/releases/latest';
 
 // How each run went, in ~/.config/Ark 2P Hub/logs/main.log (Windows: %APPDATA%\Ark 2P Hub\logs):
-// the place to look when the window shows nothing.
+// the place to look when the window shows nothing. It's opened once this copy has the
+// one-copy lock (see applog.js). A crash in Electron itself leaves a dump in Crashpad/ beside it.
 const log = createLog(path.join(app.getPath('userData'), 'logs'));
+crashReporter.start({ uploadToServer: false });
 log('Ark 2P Hub ' + app.getVersion() + ' starting', {
   platform: process.platform,
   electron: process.versions.electron,
   args: process.argv.slice(1),
   // What Game Mode on the Deck sets, and how it runs the app.
   env: Object.fromEntries(
-    ['DISPLAY', 'WAYLAND_DISPLAY', 'XDG_SESSION_TYPE', 'XDG_CURRENT_DESKTOP', 'SteamGameId', 'SteamDeck', 'GAMESCOPE_WAYLAND_DISPLAY', 'STEAM_COMPAT_DATA_PATH', 'APPIMAGE', 'PORT']
+    // LD_PRELOAD: Steam's overlay hooks into games through it, a known cause of blank windows.
+    ['DISPLAY', 'WAYLAND_DISPLAY', 'XDG_SESSION_TYPE', 'XDG_CURRENT_DESKTOP', 'XDG_RUNTIME_DIR', 'SteamGameId',
+      'SteamAppId', 'SteamOverlayGameId', 'SteamDeck', 'GAMESCOPE_WAYLAND_DISPLAY', 'STEAM_COMPAT_DATA_PATH',
+      'LD_PRELOAD', 'ELECTRON_OZONE_PLATFORM_HINT', 'LIBVA_DRIVER_NAME', 'APPIMAGE', 'PORT']
       .filter((k) => process.env[k] !== undefined)
       .map((k) => [k, process.env[k]]),
   ),
 });
-process.on('uncaughtException', (err) => log('uncaught error', String(err && err.stack || err)));
+// Logged, and still shown: a listener here replaces Electron's own error box.
+process.on('uncaughtException', (err) => {
+  const text = String((err && err.stack) || err);
+  log('uncaught error', text);
+  dialog.showErrorBox('Ark 2P Hub hit an error', text);
+});
+process.on('unhandledRejection', (err) => log('unhandled error', String((err && err.stack) || err)));
+// A helper process (the graphics one, say) stopping at launch is a likely cause of a black window.
+app.on('child-process-gone', (_e, details) => log('a helper process stopped', details));
 
 let hub = null;
 let win = null;
@@ -32,18 +45,21 @@ let updates = null;
 // One hub per machine: a second launch brings the open window to the front. A version started
 // by an update waits for the old one to finish closing instead.
 if (app.requestSingleInstanceLock()) {
+  log.open();
   boot();
 } else if (process.env.ARK_AFTER_UPDATE === '1') {
   let tries = 0;
   const wait = setInterval(() => {
     if (app.requestSingleInstanceLock()) {
       clearInterval(wait);
+      log.open();
       boot();
     } else if (++tries >= 60) {
       app.quit();
     }
   }, 250);
 } else {
+  log.open({ rotate: false }); // add a line to the running copy's log, don't replace it
   log('another copy is already running: closing this one');
   app.quit();
 }
@@ -104,8 +120,13 @@ async function start() {
   const dataDir = path.join(app.getPath('userData'), 'data');
   // Packaged, three.js's add-ons sit beside the app (see electron-builder.yml).
   if (app.isPackaged) process.env.ARK_THREE_ADDONS = path.join(process.resourcesPath, 'three-addons');
-  log('graphics', app.getGPUFeatureStatus());
-  app.on('child-process-gone', (_e, details) => log('a helper process stopped', details));
+  log('graphics', {
+    features: app.getGPUFeatureStatus(),
+    ozonePlatform: app.commandLine.getSwitchValue('ozone-platform') || '(default)',
+    gpuOff: app.commandLine.hasSwitch('disable-gpu'),
+  });
+  app.getGPUInfo('basic').then((info) => log('graphics card', info.gpuDevice), (err) => log('no graphics card info', String(err)));
+  log('displays', screen.getAllDisplays().map((d) => ({ bounds: d.bounds, scaleFactor: d.scaleFactor })));
   hub = await startHub({ dataDir, port: Number(process.env.PORT) || 3000, commit: 'app-' + app.getVersion() });
   console.log(`Ark 2P Hub running: ${hub.url}/host/`);
   log('hub running', { url: hub.url });
@@ -151,7 +172,15 @@ async function start() {
   win.on('closed', () => {
     win = null;
   });
-  win.once('ready-to-show', () => log('window ready', { fullScreen: win.isFullScreen(), bounds: win.getBounds() }));
+  win.once('ready-to-show', () => log('window ready', { visible: win.isVisible(), fullScreen: win.isFullScreen(), bounds: win.getBounds() }));
+  win.once('show', () => log('window shown'));
+  win.on('enter-full-screen', () => log('full screen on'));
+  win.on('leave-full-screen', () => log('full screen off'));
+  // The page's own warnings and errors (a 3D game failing to get WebGL, say), the first 50.
+  let pageLines = 0;
+  win.webContents.on('console-message', (event) => {
+    if ((event.level === 'warning' || event.level === 'error') && pageLines++ < 50) log('page ' + event.level, event.message);
+  });
   win.on('unresponsive', () => log('the window stopped responding'));
   win.webContents.on('render-process-gone', (_e, details) => log('the page stopped', details));
   win.webContents.on('did-fail-load', (_e, code, desc, url) => log('the page failed to load', { code, desc, url }));
