@@ -163,6 +163,14 @@ body { overflow: hidden; }
 .game-card .tag { font-style: normal; font-size: 0.75rem; font-weight: 700; color: var(--warn); margin-left: 0.5rem; vertical-align: middle; }
 .game-card.random { grid-column: 1 / -1; flex-direction: row; align-items: center; gap: 1rem; padding-top: 0.8rem; padding-bottom: 0.8rem; border-style: dashed; }
 body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
+/* The desktop app's update banner: bottom-left, lobby only. */
+.update-banner { position: fixed; left: 12px; bottom: 10px; z-index: 5; padding: 0.5rem 0.9rem; border-radius: var(--r-pill);
+  background: var(--panel); border: 1px solid var(--good); color: var(--text); font-size: var(--fs-sm); }
+.update-banner strong { color: var(--good); }
+.update-banner.busy { border-color: var(--line); color: var(--muted); }
+.update-banner .pad-key { margin-left: 0.4em; padding: 0 0.4em; border-radius: var(--r-sm); background: var(--btn); font-size: 0.85em; }
+.lobby.hidden ~ .update-banner { display: none; }
+
 .version { position: fixed; right: 12px; bottom: 6px; font-size: 0.75rem; color: var(--muted); opacity: 0.5; pointer-events: none; }
 
 #hub-setup { font-size: 1.4rem; }

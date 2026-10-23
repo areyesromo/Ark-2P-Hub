@@ -226,7 +226,9 @@ history.
 One app runs the hub and opens the TV screen full screen: an **AppImage** for the Steam Deck and
 Linux (add it to Steam as a non-Steam game to launch it from Game Mode) and an **installer** for
 Windows. No Docker needed. Download them from the repository's **Releases** page. GitHub builds
-them with **Actions → Desktop app → Run workflow**. See [desktop/README.md](desktop/README.md).
+them with **Actions → Desktop app → Run workflow**. The app updates itself: a new version shows an
+**Update** banner in the lobby. Each release also has Steam library artwork. See
+[desktop/README.md](desktop/README.md).
 
 ### Docker (any machine on your network)
 

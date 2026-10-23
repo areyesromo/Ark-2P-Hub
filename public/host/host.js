@@ -415,6 +415,36 @@
   let padMessage = '';
   let padMessageTimer = null;
 
+  // Self-update (desktop app): a banner in the lobby. Tap it, or press RT on a controller.
+  let update = { state: 'idle' };
+  const UPDATE_TEXT = {
+    available: function (u) { return '⬆ Version ' + u.version + ' is ready · <strong>Update</strong>'; },
+    downloading: function (u) { return 'Downloading version ' + u.version + '… ' + u.percent + ' %'; },
+    ready: function (u) { return 'Version ' + u.version + ' is downloaded · <strong>Restart now</strong>'; },
+    error: function () { return 'Couldn\'t update · <strong>Download page</strong>'; },
+  };
+  function updateActionable() {
+    return update.state === 'available' || update.state === 'ready' || update.state === 'error';
+  }
+  function renderUpdate() {
+    const show = Boolean(UPDATE_TEXT[update.state]);
+    $('update').classList.toggle('hidden', !show);
+    if (!show) return;
+    $('update').innerHTML = UPDATE_TEXT[update.state](update) +
+      (updateActionable() && connectedPads.length ? ' <span class="pad-key">RT</span>' : '');
+    $('update').disabled = !updateActionable();
+    $('update').classList.toggle('busy', update.state === 'downloading');
+  }
+  if (desktop) {
+    desktop.onUpdate(function (u) {
+      update = u || { state: 'idle' };
+      renderUpdate();
+    });
+    $('update').addEventListener('click', function () {
+      if (updateActionable()) desktop.update();
+    });
+  }
+
   const padName = function (idx) { return 'Controller ' + (idx + 1); };
 
   /** Seats held by phones that have disconnected. */
@@ -470,6 +500,7 @@
     else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · D-pad + A pick a game' +
       (awayPhones().length ? ' · Back: free the seat of a phone that left' : '');
     $('pad-hint').textContent = text;
+    renderUpdate(); // its RT tag shows while a controller is connected
   }
 
   function renderPadFooter() {
@@ -577,6 +608,8 @@
     }
 
     if (picker && btn === 'BACK') return picker.sheet.close();
+    // RT (any controller) presses the update banner.
+    if (btn === 'RT' && desktop && updateActionable()) return desktop.update();
     // Lobby. Back (on any controller) frees the seats of phones that have gone.
     if (btn === 'BACK') {
       const away = awayPhones();

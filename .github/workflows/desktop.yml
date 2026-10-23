@@ -32,14 +32,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
+          # The app plus what self-update reads: latest*.yml (and the installer's blockmap).
           - os: ubuntu-latest
             script: dist:linux
             resources: dist/linux-unpacked/resources
-            files: dist/Ark-2P-Hub-*.AppImage
+            files: |
+              dist/Ark-2P-Hub-*.AppImage
+              dist/latest-linux.yml
           - os: windows-latest
             script: dist:win
             resources: dist/win-unpacked/resources
-            files: dist/Ark-2P-Hub-*.exe # (not the uninstaller electron-builder also leaves there)
+            files: | # (not the uninstaller electron-builder also leaves there)
+              dist/Ark-2P-Hub-*.exe
+              dist/Ark-2P-Hub-*.exe.blockmap
+              dist/latest.yml
     runs-on: ${{ matrix.os }}
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false' # no code-signing certificate (yet)
@@ -84,15 +90,22 @@ jobs:
       VERSION: ${{ inputs.version }}
       GH_TOKEN: ${{ github.token }}
     steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: desktop/steam
       - uses: actions/download-artifact@v4
         with:
           path: files
           merge-multiple: true
+      - name: Zip the Steam artwork
+        run: cd desktop/steam && zip -q ../../files/Ark-2P-Hub-steam-artwork.zip *.png
       - name: Publish the release
         run: |
           ls -la files
           cat > notes.md <<'EOF'
-          **Steam Deck / Linux:** download the `.AppImage`, make it executable (right-click → Properties → Permissions, or `chmod +x`), run it. On the Deck, add it to Steam as a non-Steam game to launch it from Game Mode.
+          **Steam Deck / Linux:** download the `.AppImage`, make it executable (right-click → Properties → Permissions, or `chmod +x`), run it. On the Deck, add it to Steam as a non-Steam game to launch it from Game Mode. For its library art, unzip `Ark-2P-Hub-steam-artwork.zip` and set each picture in Steam (right-click the game → Properties → Customization, or on the game's page).
+
+          **Updates:** from v0.1.2 on, the app finds new versions by itself: an **Update** banner appears in the lobby.
 
           **Windows:** download and run the `.exe` installer. It isn't signed yet, so Windows may say "Windows protected your PC": choose **More info → Run anyway**. Allow network access when asked (phones need it to join).
 

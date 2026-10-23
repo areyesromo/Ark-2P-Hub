@@ -30,5 +30,8 @@
     "electron-builder": "26.15.3",
     "socket.io-client": "^4.8.4"
   },
-  "author": "Ark 2P Hub"
+  "author": "Ark 2P Hub",
+  "optionalDependencies": {
+    "electron-updater": "6.8.9"
+  }
 }
