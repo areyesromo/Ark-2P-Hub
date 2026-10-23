@@ -1,7 +1,7 @@
 // Started by Steam, every process gets Steam's overlay library (gameoverlayrenderer.so) through
 // LD_PRELOAD, even with the overlay switched off. Inside Electron's sandboxed helper processes it
 // hangs, so the window never loads: a black screen in Game Mode (and from Steam in Desktop Mode).
-// The app restarts itself once without it (see main.js). Steam's own menus and controller layout
+// The app replaces itself (same process) with one without it, first thing (see main.js). Steam's own menus and controller layout
 // don't need it; only the in-game overlay (pop-ups, Steam screenshots) is lost.
 
 /**

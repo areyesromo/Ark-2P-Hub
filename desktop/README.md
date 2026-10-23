@@ -83,8 +83,8 @@ The app's code lives in this folder:
 - `preload.cjs` is the bridge the TV page gets (`window.arkDesktop`);
 - `updates.js` is self-update (around electron-updater);
 - `applog.js` is the log file;
-- `steam.js`: started by Steam, the app restarts itself without Steam's overlay library, which
-  freezes Electron's window (see main.js);
+- `steam.js`: started by Steam, the app replaces itself (same process) with one without Steam's
+  overlay library, which freezes Electron's window (see the top of main.js);
 - `hub.js` starts the server on a free port;
 - `electron-builder.yml` is the packaging config.
 

@@ -12,13 +12,19 @@ Desktop Mode too) the window stays black and can't be closed.
 - Reproduced here with a stand-in library that hangs Electron's utility (network) process: the
   same log, and the app ignores a stop signal.
 
-**Fix:** `desktop/steam.js` + `main.js`. Started with the overlay library, the app starts a copy
-of itself without it and waits. That copy runs the hub and window; the first one just waits (Steam
-still sees the game running), cancels its own quit (which would freeze), passes Exit Game on to the
-copy, and ends once the copy has closed (or after 5 s).
+**Fix:** `desktop/steam.js` + the top of `main.js`. Started with the overlay library, the app
+replaces itself (`process.execve`, same process) with a fresh one without it, before Electron
+starts any helper or the crash reporter. Steam keeps tracking the same process, so Exit Game and
+the app's own Quit work as usual, and nothing is left behind.
+
+A first version started a second copy and waited for it; review found the waiting process's own
+helpers (the hung network one, the crash reporter) were left running, so Steam would still show
+the game as running. Verified here: the in-place restart leaves no process behind.
 
 ## Tasks
 - [x] `withoutSteamOverlay(env)` + tests.
-- [x] Restart in main.js; reproduce (before: frozen, can't stop) and verify (after: loads, both close).
+- [x] Restart in main.js; reproduce (before: frozen, can't stop) and verify (after: loads, closes,
+  nothing left).
 - [x] Guide: the black-screen entry, the overlay note.
-- [ ] Review; PR; merge; release v0.1.5.
+- [x] Review (spawn-and-wait → in-place restart).
+- [ ] PR; merge; release v0.1.5.
