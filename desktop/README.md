@@ -3,7 +3,8 @@
 The hub as one app: the server runs inside it and the TV screen opens full screen in its own
 window. There's no Docker and no Node.js install.
 
-Download both from the repository's **Releases** page.
+Download both from the repository's **Releases** page. On a Steam Deck, follow the step-by-step
+[Steam Deck guide](../docs/STEAM-DECK.md): download, add to Steam, controller layout, artwork.
 
 | Platform | File | How to run |
 |---|---|---|
