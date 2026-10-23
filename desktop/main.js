@@ -1,7 +1,8 @@
 // The desktop app (AppImage on Linux / the Steam Deck, installer on Windows): starts the hub
 // server inside the app and shows the TV screen full screen in its own window.
 import path from 'node:path';
-import { app, BrowserWindow, shell, dialog } from 'electron';
+import { fileURLToPath } from 'node:url';
+import { app, BrowserWindow, shell, dialog, ipcMain } from 'electron';
 import { startHub, isOwnUrl } from './hub.js';
 
 let hub = null;
@@ -38,13 +39,16 @@ async function start() {
     title: 'Ark 2P Hub',
     webPreferences: {
       autoplayPolicy: 'no-user-gesture-required', // sound without "Tap for sound"
+      // window.arkDesktop for the TV page: the ⛶ and quit buttons (see preload.cjs).
+      preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.cjs'),
     },
   });
   win.setMenuBarVisibility(false);
-  // F11 toggles full screen.
+  // F11 toggles full screen; Esc leaves it.
   win.webContents.on('before-input-event', (event, input) => {
-    if (input.type === 'keyDown' && input.key === 'F11') {
-      win.setFullScreen(!win.isFullScreen());
+    if (input.type !== 'keyDown') return;
+    if (input.key === 'F11' || (input.key === 'Escape' && win.isFullScreen())) {
+      win.setFullScreen(input.key === 'F11' ? !win.isFullScreen() : false);
       event.preventDefault();
     }
   });
@@ -69,6 +73,17 @@ async function start() {
   });
   await win.loadURL(hub.url + '/host/');
 }
+
+// The TV page's ⛶ and quit buttons (only from the hub's own page in our window).
+const fromHub = (event) => win && hub && event.sender === win.webContents && isOwnUrl(event.senderFrame.url, hub.url);
+ipcMain.handle('ark:fullscreen', (event) => {
+  if (!fromHub(event)) return null;
+  win.setFullScreen(!win.isFullScreen());
+  return win.isFullScreen();
+});
+ipcMain.on('ark:quit', (event) => {
+  if (fromHub(event)) app.quit();
+});
 
 app.on('window-all-closed', () => app.quit());
 app.on('will-quit', (event) => {

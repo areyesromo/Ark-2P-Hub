@@ -196,11 +196,29 @@
     $('tourney-bar').innerHTML = show ? Ark.tournamentHtml(state.players, t, { compact: true }) : '';
   }
 
+  // In the desktop app (window.arkDesktop, see desktop/preload.cjs) ⛶ switches the app's window
+  // between full screen and windowed, and ⏻ quits: tap it, then "Quit?" again within 3 s.
+  const desktop = window.arkDesktop;
   $('fullscreen').addEventListener('click', function () {
+    if (desktop) return desktop.toggleFullScreen();
     const root = document.documentElement;
     if (document.fullscreenElement) document.exitFullscreen();
     else if (root.requestFullscreen) root.requestFullscreen();
   });
+  if (desktop) {
+    let armed = null;
+    $('quit').classList.remove('hidden');
+    $('quit').addEventListener('click', function () {
+      if (armed) return desktop.quit();
+      $('quit').textContent = 'Quit?';
+      $('quit').classList.add('armed');
+      armed = setTimeout(function () {
+        armed = null;
+        $('quit').textContent = '⏻';
+        $('quit').classList.remove('armed');
+      }, 3000);
+    });
+  }
 
   // ---- sound -------------------------------------------------------------
   // Effects come from two places: a few rules every game shares (countdowns,
