@@ -1,11 +1,13 @@
 // The desktop app (AppImage on Linux / the Steam Deck, installer on Windows): starts the hub
 // server inside the app and shows the TV screen full screen in its own window.
 import path from 'node:path';
+import { spawn } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, shell, dialog, ipcMain, screen, crashReporter } from 'electron';
 import { startHub, isOwnUrl } from './hub.js';
 import { createUpdates } from './updates.js';
 import { createLog } from './applog.js';
+import { withoutSteamOverlay } from './steam.js';
 
 const RELEASES = 'https://github.com/areyesromo/Ark-2P-Hub/releases/latest';
 
@@ -23,7 +25,7 @@ log('Ark 2P Hub ' + app.getVersion() + ' starting', {
     // LD_PRELOAD: Steam's overlay hooks into games through it, a known cause of blank windows.
     ['DISPLAY', 'WAYLAND_DISPLAY', 'XDG_SESSION_TYPE', 'XDG_CURRENT_DESKTOP', 'XDG_RUNTIME_DIR', 'SteamGameId',
       'SteamAppId', 'SteamOverlayGameId', 'SteamDeck', 'GAMESCOPE_WAYLAND_DISPLAY', 'STEAM_COMPAT_DATA_PATH',
-      'LD_PRELOAD', 'ELECTRON_OZONE_PLATFORM_HINT', 'LIBVA_DRIVER_NAME', 'APPIMAGE', 'PORT']
+      'LD_PRELOAD', 'ARK_STEAM_OVERLAY_REMOVED', 'ELECTRON_OZONE_PLATFORM_HINT', 'LIBVA_DRIVER_NAME', 'APPIMAGE', 'PORT']
       .filter((k) => process.env[k] !== undefined)
       .map((k) => [k, process.env[k]]),
   ),
@@ -42,9 +44,32 @@ let hub = null;
 let win = null;
 let updates = null;
 
-// One hub per machine: a second launch brings the open window to the front. A version started
-// by an update waits for the old one to finish closing instead.
-if (app.requestSingleInstanceLock()) {
+// Started by Steam, Steam's overlay library would freeze the window (see steam.js): start a copy
+// without it and wait for that copy, so Steam still sees the game running until it closes.
+// Otherwise, one hub per machine: a second launch brings the open window to the front. A version
+// started by an update waits for the old one to finish closing instead.
+const steamEnv = process.platform === 'linux' ? withoutSteamOverlay(process.env) : null;
+if (steamEnv) {
+  const copy = spawn(process.execPath, process.argv.slice(1), { env: steamEnv, stdio: 'inherit' });
+  // This copy has the overlay library too, so its own quitting can freeze on a stuck helper (no
+  // events or timers run after that). So it never quits the normal way: Steam's Exit Game (which
+  // Electron turns into a quit) is cancelled and passed on to the copy, and this one ends itself
+  // once the copy has closed (the AppImage's files stay there until then), or after 5 s.
+  const end = () => process.kill(process.pid, 'SIGKILL');
+  const stop = (event) => {
+    if (event && event.preventDefault) event.preventDefault();
+    if (copy.exitCode === null && copy.signalCode === null) copy.kill('SIGTERM');
+    setTimeout(end, 5000);
+  };
+  app.on('before-quit', stop);
+  for (const signal of ['SIGTERM', 'SIGINT', 'SIGHUP']) process.on(signal, () => stop());
+  copy.on('exit', end);
+  copy.on('error', (err) => {
+    log.open({ rotate: false });
+    log('could not restart without Steam\'s overlay library', String(err));
+    app.exit(1);
+  });
+} else if (app.requestSingleInstanceLock()) {
   log.open();
   boot();
 } else if (process.env.ARK_AFTER_UPDATE === '1') {

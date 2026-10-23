@@ -52,6 +52,10 @@ press the **controller** icon (or **Steam** button → **Controller settings** w
   back, and **R2** presses the update banner. In a game, **View** goes back to the lobby.
 - The touchscreen works too: tap any button on the TV screen, such as ⛶, **Quit** or a game card.
 
+The Steam overlay (pop-ups, Steam screenshots) doesn't show inside the app: Steam's overlay
+library freezes the window, so the app starts without it. The **Steam** and **⋯** buttons, the
+quick-access menu and your controller layout all still work.
+
 The Deck's controls count as one player. For the second player, use a phone (scan the QR code) or
 pair a Bluetooth controller (**Steam** button → **Settings** → **Bluetooth**).
 
@@ -104,8 +108,11 @@ the TV screen.
 
 - **Phones can't connect.** Check they're on the same Wi-Fi as the Deck (not mobile data or a
   guest network). Try the address shown under the QR code by hand.
-- **A black screen in Game Mode** (it works in Desktop Mode). Press the **Steam** button and choose
-  **Exit Game** to get out. Then check, in order:
+- **A black screen when started from Steam** (it works when you double-click it). Up to v0.1.4,
+  Steam's overlay library froze the window. From v0.1.5 the app works around it by itself, so
+  update in Desktop Mode (double-click it, then the banner's **Update** → **Restart now**). If you
+  put `LD_PRELOAD= %command%` in the game's **Launch Options** as a stopgap, you can delete it now.
+  Still black? Press the **Steam** button and choose **Exit Game** to get out. Then check, in order:
   1. Game Mode, the game's page → ⚙ → **Properties** → **Compatibility**: **Force the use of a
      specific Steam Play compatibility tool** must be **off**. Proton is for Windows games and
      can't run this Linux app.
