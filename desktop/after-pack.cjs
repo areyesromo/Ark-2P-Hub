@@ -11,6 +11,7 @@ const LAUNCHER = `#!/bin/sh
 case "$LD_PRELOAD" in
   *gameoverlayrenderer*)
     kept=""
+    set -f # no wildcard expansion of the list
     for lib in $(printf '%s' "$LD_PRELOAD" | tr ':' ' '); do
       case "$lib" in
         *gameoverlayrenderer*) ;;
@@ -32,5 +33,6 @@ exports.default = async function afterPack(context) {
   const exe = path.join(context.appOutDir, name);
   const bin = name + '.bin';
   fs.renameSync(exe, path.join(context.appOutDir, bin));
-  fs.writeFileSync(exe, LAUNCHER.replace('__BIN__', bin), { mode: 0o755 });
+  fs.writeFileSync(exe, LAUNCHER.replace('__BIN__', bin));
+  fs.chmodSync(exe, 0o755); // (writeFileSync's mode is cut by the build machine's umask)
 };

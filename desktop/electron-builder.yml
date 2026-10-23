@@ -6,6 +6,7 @@ artifactName: Ark-2P-Hub-${version}-${arch}.${ext}
 directories:
   output: dist
 # Linux: a launcher in front of the app binary that keeps Steam's overlay library out (see the file).
+# (Electron fuses, if ever added, are flipped on the binary after this: point them at <name>.bin.)
 afterPack: desktop/after-pack.cjs
 extraMetadata:
   main: desktop/main.js # the app starts here (the Docker image still runs server/index.js)

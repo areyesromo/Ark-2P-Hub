@@ -39,8 +39,8 @@ in-app Quit Steam doesn't seem to notice the game closed.
   an electron-builder afterPack hook) drops the library before Electron starts, so no process ever
   has it. The in-place restart stays as a fallback for other ways of starting it.
 - A real bug in Quit: the second `app.quit()` (after the hub closed) ran while Electron was still
-  in the cancelled quit, so it was ignored and only the 2 s fallback quit the app. Now deferred a
-  turn: 12 ms instead of 2 s.
+  in the cancelled quit, so it was ignored and only the 2 s fallback quit the app (closing the
+  window was already quick). Now deferred a turn: about 10 ms instead of 2 s.
 - The log now records the closing: quit requested, closing, hub closed, exiting (with the helpers
   still running then), so if Steam is still slow on the Deck the log shows what it waits for.
 - Docs: the data and log folder is `~/.config/ark-2p-hub` (the package name), not `Ark 2P Hub`.

@@ -54,20 +54,29 @@ if (restartError) log('could not restart without Steam\'s overlay library', rest
 process.on('unhandledRejection', (err) => log('unhandled error', String((err && err.stack) || err)));
 // A helper process (the graphics one, say) stopping at launch is a likely cause of a black window.
 app.on('child-process-gone', (_e, details) => log('a helper process stopped', details));
-// Closing, step by step: Steam waits for every process the game started, so the log says which of
-// the app's helpers are still running when it exits (Linux).
-app.on('before-quit', () => log('quit requested'));
-process.on('exit', (code) => log('exiting', { code, helpersStillRunning: helpers(process.pid) }));
+// Closing, step by step, with the time of each. The helpers listed at exit are normal (Chromium
+// stops its zygotes and utility helpers just after); compare with what's still running afterwards
+// to find one that keeps Steam waiting (Linux).
+app.on('before-quit', () => {
+  if (hub) log('quit requested'); // (not again for the second pass, see will-quit)
+});
+process.on('exit', (code) => log('exiting', { code, helpersAtExit: helpers(process.pid) }));
 function helpers(pid) {
+  let children = [];
   try {
-    return fs.readdirSync(`/proc/${pid}/task`).flatMap((t) =>
-      fs.readFileSync(`/proc/${pid}/task/${t}/children`, 'utf8').split(' ').filter(Boolean).flatMap((child) => {
-        const type = (fs.readFileSync(`/proc/${child}/cmdline`, 'utf8').match(/--type=([\w-]+)/) || [])[1];
-        return [child + ' ' + (type || 'other'), ...helpers(child)];
-      }));
+    children = fs.readdirSync(`/proc/${pid}/task`).flatMap((t) =>
+      fs.readFileSync(`/proc/${pid}/task/${t}/children`, 'utf8').split(' ').filter(Boolean));
   } catch {
     return [];
   }
+  return children.flatMap((child) => {
+    try {
+      const type = (fs.readFileSync(`/proc/${child}/cmdline`, 'utf8').match(/--type=([\w-]+)/) || [])[1];
+      return [child + ' ' + (type || 'other'), ...helpers(child)];
+    } catch {
+      return []; // it finished just now
+    }
+  });
 }
 
 let hub = null;
