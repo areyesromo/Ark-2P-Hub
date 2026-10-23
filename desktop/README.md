@@ -17,6 +17,10 @@ Download both from the repository's **Releases** page. On a Steam Deck, follow t
   survive updates.
   - Steam Deck / Linux: `~/.config/Ark 2P Hub/data`
   - Windows: `%APPDATA%\Ark 2P Hub\data`
+- **Log:** each run writes `logs/main.log` next to the data folder (the run before is
+  `main.old.log`): versions, how it was started, the graphics status, the displays, and any error
+  (the page's too). Look there first when the window stays black. A crash in Electron itself
+  leaves a dump in `Crashpad/` next to it.
 - **Window:** ⛶ on the TV's top bar (or F11) switches between full screen and a window; Esc leaves
   full screen. **Quit** (tap it, then **Quit?**) closes the app. Closing the window stops the hub too.
 - **Updates** (from v0.1.2): a few seconds after it starts, the app checks the Releases page. When
@@ -78,6 +82,7 @@ The app's code lives in this folder:
 - `main.js` is the Electron window;
 - `preload.cjs` is the bridge the TV page gets (`window.arkDesktop`);
 - `updates.js` is self-update (around electron-updater);
+- `applog.js` is the log file;
 - `hub.js` starts the server on a free port;
 - `electron-builder.yml` is the packaging config.
 

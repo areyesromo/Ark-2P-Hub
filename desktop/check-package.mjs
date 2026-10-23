@@ -16,6 +16,7 @@ const needed = [
   '/desktop/main.js',
   '/desktop/preload.cjs',
   '/desktop/updates.js',
+  '/desktop/applog.js',
   '/desktop/icons/icon.png',
   '/node_modules/electron-updater/package.json',
   '/server/app.js',
