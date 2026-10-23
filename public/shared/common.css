@@ -113,7 +113,11 @@ input {
 .scoreboard .round { color: var(--muted); font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; }
 
 /* The hub's setup screen for games that don't draw their own (TV and phones) */
-.hub-setup { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem; text-align: center; }
+/* Centred with auto margins (not justify-content), so a tall setup starts at the top and scrolls
+   instead of spilling off the top of the screen where it can't be reached. */
+.hub-setup { flex: 1; min-height: 0; overflow-y: auto; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; text-align: center; }
+.hub-setup > :first-child { margin-top: auto; }
+.hub-setup > :last-child { margin-bottom: auto; }
 .hub-setup .hub-title { font-size: 2em; font-weight: 900; }
 .hub-setup .ark-setup { width: min(40rem, 100%); }
 .hub-setup .muted { max-width: 40rem; }
