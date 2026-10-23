@@ -21,6 +21,11 @@ on:
 permissions:
   contents: read
 
+# A newer push to the same pull request cancels its older desktop builds.
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   build:
     strategy:
@@ -30,11 +35,11 @@ jobs:
           - os: ubuntu-latest
             script: dist:linux
             resources: dist/linux-unpacked/resources
-            files: dist/*.AppImage
+            files: dist/Ark-2P-Hub-*.AppImage
           - os: windows-latest
             script: dist:win
             resources: dist/win-unpacked/resources
-            files: dist/*.exe
+            files: dist/Ark-2P-Hub-*.exe # (not the uninstaller electron-builder also leaves there)
     runs-on: ${{ matrix.os }}
     env:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false' # no code-signing certificate (yet)
@@ -58,6 +63,7 @@ jobs:
         shell: bash
         run: npm version "$VERSION" --no-git-tag-version --allow-same-version
       - name: Build
+        shell: bash # so `--` reaches electron-builder on Windows too
         run: npm run ${{ matrix.script }} -- --publish never
       - name: Check the app has every file the hub serves
         run: node desktop/check-package.mjs ${{ matrix.resources }}
@@ -68,7 +74,8 @@ jobs:
           if-no-files-found: error
 
   release:
-    if: github.event_name == 'workflow_dispatch'
+    # Releases come from main only (Run workflow lets you pick another branch: that just builds).
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     needs: build
     runs-on: ubuntu-latest
     permissions:
