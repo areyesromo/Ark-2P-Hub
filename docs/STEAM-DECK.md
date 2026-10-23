@@ -104,6 +104,14 @@ the TV screen.
 
 - **Phones can't connect.** Check they're on the same Wi-Fi as the Deck (not mobile data or a
   guest network). Try the address shown under the QR code by hand.
+- **A black screen in Game Mode** (it works in Desktop Mode). Press the **Steam** button and choose
+  **Exit Game** to get out. Then check, in order:
+  1. Game Mode, the game's page → ⚙ → **Properties** → **Compatibility**: **Force the use of a
+     specific Steam Play compatibility tool** must be **off**. Proton is for Windows games and
+     can't run this Linux app.
+  2. Still black? Start it once more from Game Mode, exit, then in Desktop Mode open the log:
+     `~/.config/Ark 2P Hub/logs/main.log` (in Dolphin, **Ctrl + H** shows hidden folders like
+     `.config`). It says how the app started and what went wrong; send it to whoever helps you.
 - **The app doesn't open from Steam.** Start the AppImage from Dolphin in Desktop Mode to see if it
   runs, and check the shortcut's **Properties → Shortcut → Target** points at the file.
 - **The Steam shortcut stopped working after an update.** If the old file had a version number in
@@ -117,4 +125,4 @@ the TV screen.
   button. Pick **Templates → Gamepad** (step 3), or press ⛶ on the TV screen to go back to full
   screen.
 - **Where's my data?** In `~/.config/Ark 2P Hub/data`: settings, stats and the https certificate.
-  Back it up before wiping the Deck.
+  Back it up before wiping the Deck. The log of the last two runs is next to it, in `logs/`.

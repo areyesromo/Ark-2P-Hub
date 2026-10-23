@@ -5,8 +5,25 @@ import { fileURLToPath } from 'node:url';
 import { app, BrowserWindow, shell, dialog, ipcMain } from 'electron';
 import { startHub, isOwnUrl } from './hub.js';
 import { createUpdates } from './updates.js';
+import { createLog } from './applog.js';
 
 const RELEASES = 'https://github.com/areyesromo/Ark-2P-Hub/releases/latest';
+
+// How each run went, in ~/.config/Ark 2P Hub/logs/main.log (Windows: %APPDATA%\Ark 2P Hub\logs):
+// the place to look when the window shows nothing.
+const log = createLog(path.join(app.getPath('userData'), 'logs'));
+log('Ark 2P Hub ' + app.getVersion() + ' starting', {
+  platform: process.platform,
+  electron: process.versions.electron,
+  args: process.argv.slice(1),
+  // What Game Mode on the Deck sets, and how it runs the app.
+  env: Object.fromEntries(
+    ['DISPLAY', 'WAYLAND_DISPLAY', 'XDG_SESSION_TYPE', 'XDG_CURRENT_DESKTOP', 'SteamGameId', 'SteamDeck', 'GAMESCOPE_WAYLAND_DISPLAY', 'STEAM_COMPAT_DATA_PATH', 'APPIMAGE', 'PORT']
+      .filter((k) => process.env[k] !== undefined)
+      .map((k) => [k, process.env[k]]),
+  ),
+});
+process.on('uncaughtException', (err) => log('uncaught error', String(err && err.stack || err)));
 
 let hub = null;
 let win = null;
@@ -27,6 +44,7 @@ if (app.requestSingleInstanceLock()) {
     }
   }, 250);
 } else {
+  log('another copy is already running: closing this one');
   app.quit();
 }
 
@@ -38,6 +56,7 @@ function boot() {
     win.focus();
   });
   app.whenReady().then(start).catch((err) => {
+    log('could not start', String(err && err.stack || err));
     dialog.showErrorBox('Ark 2P Hub could not start', String((err && err.message) || err));
     app.quit();
   });
@@ -53,7 +72,7 @@ async function startUpdates() {
   try {
     ({ autoUpdater } = (await import('electron-updater')).default);
   } catch (err) {
-    console.error('Self-update is off:', err.message); // built without it
+    log('self-update is off', err.message); // built without it
     return;
   }
   if (process.env.ARK_UPDATE_URL) autoUpdater.setFeedURL({ provider: 'generic', url: process.env.ARK_UPDATE_URL });
@@ -85,8 +104,11 @@ async function start() {
   const dataDir = path.join(app.getPath('userData'), 'data');
   // Packaged, three.js's add-ons sit beside the app (see electron-builder.yml).
   if (app.isPackaged) process.env.ARK_THREE_ADDONS = path.join(process.resourcesPath, 'three-addons');
+  log('graphics', app.getGPUFeatureStatus());
+  app.on('child-process-gone', (_e, details) => log('a helper process stopped', details));
   hub = await startHub({ dataDir, port: Number(process.env.PORT) || 3000, commit: 'app-' + app.getVersion() });
   console.log(`Ark 2P Hub running: ${hub.url}/host/`);
+  log('hub running', { url: hub.url });
   win = new BrowserWindow({
     width: 1280,
     height: 800,
@@ -129,8 +151,13 @@ async function start() {
   win.on('closed', () => {
     win = null;
   });
+  win.once('ready-to-show', () => log('window ready', { fullScreen: win.isFullScreen(), bounds: win.getBounds() }));
+  win.on('unresponsive', () => log('the window stopped responding'));
+  win.webContents.on('render-process-gone', (_e, details) => log('the page stopped', details));
+  win.webContents.on('did-fail-load', (_e, code, desc, url) => log('the page failed to load', { code, desc, url }));
+  win.webContents.on('did-finish-load', () => log('page loaded'));
   await win.loadURL(hub.url + '/host/');
-  startUpdates().catch((err) => console.error('Self-update failed to start:', err));
+  startUpdates().catch((err) => log('self-update failed to start', String(err)));
 }
 
 // The TV page's ⛶ and Quit buttons (only from the hub's own page in our window).
