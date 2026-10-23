@@ -1,0 +1,105 @@
+name: Desktop app
+
+# Builds the desktop app: the AppImage (Steam Deck / Linux) and the Windows installer.
+#   - Run workflow (Actions tab) with a version, e.g. 0.2.0: builds both and publishes the
+#     GitHub Release v0.2.0 with the files attached.
+#   - Pull requests that change the desktop app: build both (downloadable from the run), no release.
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version to release, e.g. 0.2.0'
+        required: true
+  pull_request:
+    paths:
+      - 'desktop/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/desktop.yml'
+
+permissions:
+  contents: read
+
+# A newer push to the same pull request cancels its older desktop builds.
+concurrency:
+  group: desktop-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            script: dist:linux
+            resources: dist/linux-unpacked/resources
+            files: dist/Ark-2P-Hub-*.AppImage
+          - os: windows-latest
+            script: dist:win
+            resources: dist/win-unpacked/resources
+            files: dist/Ark-2P-Hub-*.exe # (not the uninstaller electron-builder also leaves there)
+    runs-on: ${{ matrix.os }}
+    env:
+      CSC_IDENTITY_AUTO_DISCOVERY: 'false' # no code-signing certificate (yet)
+      VERSION: ${{ inputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - name: Check the version
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "Version must look like 0.2.0, got '$VERSION'"; exit 1
+          fi
+      - run: npm ci
+      - name: Set the version
+        if: github.event_name == 'workflow_dispatch'
+        shell: bash
+        run: npm version "$VERSION" --no-git-tag-version --allow-same-version
+      - name: Build
+        shell: bash # so `--` reaches electron-builder on Windows too
+        run: npm run ${{ matrix.script }} -- --publish never
+      - name: Check the app has every file the hub serves
+        run: node desktop/check-package.mjs ${{ matrix.resources }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: desktop-${{ matrix.os }}
+          path: ${{ matrix.files }}
+          if-no-files-found: error
+
+  release:
+    # Releases come from main only (Run workflow lets you pick another branch: that just builds).
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    env:
+      VERSION: ${{ inputs.version }}
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          path: files
+          merge-multiple: true
+      - name: Publish the release
+        run: |
+          ls -la files
+          cat > notes.md <<'EOF'
+          **Steam Deck / Linux:** download the `.AppImage`, make it executable (right-click → Properties → Permissions, or `chmod +x`), run it. On the Deck, add it to Steam as a non-Steam game to launch it from Game Mode.
+
+          **Windows:** download and run the `.exe` installer. It isn't signed yet, so Windows may say "Windows protected your PC": choose **More info → Run anyway**. Allow network access when asked (phones need it to join).
+
+          The hub opens full screen on the TV; phones join by the QR code. Settings and stats are kept between updates.
+          EOF
+          gh release create "v$VERSION" files/* \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$GITHUB_SHA" \
+            --title "Ark 2P Hub v$VERSION" \
+            --notes-file notes.md

@@ -1,9 +1,9 @@
 // Checks a built app (dist/linux-unpacked/resources by default) has every file the hub serves at runtime:
 // electron-builder leaves some out by default (e.g. node_modules/*/examples, where three.js keeps
 // the add-ons the 3D party board loads). Run after `npm run dist:linux`.
-import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 import fs from 'node:fs';
+import asarPkg from '@electron/asar'; // read the archive directly (spawning npx fails on Windows)
 
 const resources = path.resolve(process.argv[2] || 'dist/linux-unpacked/resources');
 const asar = path.join(resources, 'app.asar');
@@ -11,11 +11,7 @@ if (!fs.existsSync(asar)) {
   console.error(`No built app at ${asar}: run npm run dist:linux first.`);
   process.exit(2);
 }
-const list = new Set(
-  execFileSync('npx', ['--yes', '@electron/asar', 'list', asar], { encoding: 'utf8', maxBuffer: 64 * 1024 * 1024 })
-    .split('\n')
-    .map((l) => l.trim().replace(/\\/g, '/')),
-);
+const list = new Set(asarPkg.listPackage(asar, { isPack: false }).map((l) => l.trim().replace(/\\/g, '/')));
 const needed = [
   '/desktop/main.js',
   '/server/app.js',
