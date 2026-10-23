@@ -14,6 +14,7 @@ if (!fs.existsSync(asar)) {
 const list = new Set(asarPkg.listPackage(asar, { isPack: false }).map((l) => l.trim().replace(/\\/g, '/')));
 const needed = [
   '/desktop/main.js',
+  '/desktop/preload.cjs',
   '/server/app.js',
   '/public/host/index.html',
   '/node_modules/three/build/three.module.js',
