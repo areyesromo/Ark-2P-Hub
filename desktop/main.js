@@ -39,7 +39,7 @@ async function start() {
     title: 'Ark 2P Hub',
     webPreferences: {
       autoplayPolicy: 'no-user-gesture-required', // sound without "Tap for sound"
-      // window.arkDesktop for the TV page: the ⛶ and quit buttons (see preload.cjs).
+      // window.arkDesktop for the TV page: the ⛶ and Quit buttons (see preload.cjs).
       preload: path.join(path.dirname(fileURLToPath(import.meta.url)), 'preload.cjs'),
     },
   });
@@ -74,12 +74,10 @@ async function start() {
   await win.loadURL(hub.url + '/host/');
 }
 
-// The TV page's ⛶ and quit buttons (only from the hub's own page in our window).
-const fromHub = (event) => win && hub && event.sender === win.webContents && isOwnUrl(event.senderFrame.url, hub.url);
+// The TV page's ⛶ and Quit buttons (only from the hub's own page in our window).
+const fromHub = (event) => win && hub && event.sender === win.webContents && isOwnUrl(event.senderFrame?.url, hub.url);
 ipcMain.handle('ark:fullscreen', (event) => {
-  if (!fromHub(event)) return null;
-  win.setFullScreen(!win.isFullScreen());
-  return win.isFullScreen();
+  if (fromHub(event)) win.setFullScreen(!win.isFullScreen());
 });
 ipcMain.on('ark:quit', (event) => {
   if (fromHub(event)) app.quit();

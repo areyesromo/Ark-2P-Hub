@@ -3,7 +3,7 @@
 const { contextBridge, ipcRenderer } = require('electron');
 
 contextBridge.exposeInMainWorld('arkDesktop', {
-  /** Full screen on / off; gives the new state. */
+  /** Full screen on / off. */
   toggleFullScreen: () => ipcRenderer.invoke('ark:fullscreen'),
   /** Close the app (and the hub with it). */
   quit: () => ipcRenderer.send('ark:quit'),

@@ -9,7 +9,7 @@ leave full screen. Party Board's setup ran off the top and bottom of the TV.
 with two calls only, `toggleFullScreen()` and `quit()`. The main process answers them only from the
 hub's own page in the app window.
 - ⛶ switches the app window between full screen and windowed. In a browser it works as before.
-- ⏻ (app only): the first tap shows "Quit?", a second tap within 3 s closes the app.
+- Quit (app only): the first tap shows "Quit?", a second tap within 3 s closes the app.
 - Esc leaves full screen; F11 still toggles it.
 
 **Long setups.** The cause was the shared `.hub-setup`, which centred with `justify-content`, so a
@@ -20,6 +20,9 @@ same problem.
   both. Its text scales with the screen height, so it fits 1080p and the Steam Deck's 800 px.
 
 ## Tasks
-- [x] Failing checks: an app e2e (bridge, ⛶, ⏻) and a setup fit e2e at 1280x800 and 1920x1080.
+- [x] Failing checks: an app e2e (bridge, ⛶, Quit) and a setup fit e2e at 1280x800 and 1920x1080.
 - [x] Bridge, buttons and Esc; CSS fix. Both e2e pass; short setups (Pong) still centred.
-- [ ] Package check includes the preload; rebuild; review; PR; merge on green.
+- [x] Package check includes the preload; rebuild (the packaged app passes the same e2e).
+- [x] Review fixes: scroll the controller's row into view, a quick double-click doesn't quit, "Quit"
+  label (⏻ may be missing from a font), px floor for the setup text.
+- [ ] PR; merge on green; release v0.1.1.

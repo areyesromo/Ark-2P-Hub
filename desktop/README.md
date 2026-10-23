@@ -16,7 +16,8 @@ Download both from the repository's **Releases** page.
   survive updates.
   - Steam Deck / Linux: `~/.config/Ark 2P Hub/data`
   - Windows: `%APPDATA%\Ark 2P Hub\data`
-- **Window:** F11 toggles full screen. Closing the window stops the hub.
+- **Window:** ⛶ on the TV's top bar (or F11) switches between full screen and a window; Esc leaves
+  full screen. **Quit** (tap it, then **Quit?**) closes the app. Closing the window stops the hub too.
 
 ## Making a release
 

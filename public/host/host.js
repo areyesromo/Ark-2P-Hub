@@ -197,7 +197,8 @@
   }
 
   // In the desktop app (window.arkDesktop, see desktop/preload.cjs) ⛶ switches the app's window
-  // between full screen and windowed, and ⏻ quits: tap it, then "Quit?" again within 3 s.
+  // between full screen and windowed, and Quit closes it: tap it, then "Quit?" again within 3 s
+  // (a quick double-click doesn't count as both taps).
   const desktop = window.arkDesktop;
   $('fullscreen').addEventListener('click', function () {
     if (desktop) return desktop.toggleFullScreen();
@@ -207,14 +208,19 @@
   });
   if (desktop) {
     let armed = null;
+    let armedAt = 0;
     $('quit').classList.remove('hidden');
     $('quit').addEventListener('click', function () {
-      if (armed) return desktop.quit();
+      if (armed) {
+        if (Date.now() - armedAt >= 400) desktop.quit();
+        return;
+      }
+      armedAt = Date.now();
       $('quit').textContent = 'Quit?';
       $('quit').classList.add('armed');
       armed = setTimeout(function () {
         armed = null;
-        $('quit').textContent = '⏻';
+        $('quit').textContent = 'Quit';
         $('quit').classList.remove('armed');
       }, 3000);
     });
@@ -394,6 +400,9 @@
       '<p class="muted">Set up the match on your phone, or with a controller: ↑↓ picks a row, ←→ changes it. ' +
       '<strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</p>' +
       Ark.setup.html(parts.view, parts.rows, focus);
+    // A tall setup scrolls: keep the controller's row in view.
+    const row = $('hub-setup').querySelector('.row.focus');
+    if (row && row.scrollIntoView) row.scrollIntoView({ block: 'nearest' });
   }
   // ---- controllers -----------------------------------------------------
   // Controllers are read on this page (see gamepads.js). Their players are

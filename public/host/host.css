@@ -172,7 +172,7 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
    choices (its map list) across both. */
 @media (min-width: 1000px) {
   /* Sized to the screen's height so it fits a 1080p TV and the Steam Deck's 800 px alike. */
-  #hub-setup:has(.ark-setup .row:nth-child(5)) { font-size: clamp(0.9rem, 1.75vh, 1.4rem); gap: 0.4em; }
+  #hub-setup:has(.ark-setup .row:nth-child(5)) { font-size: clamp(13px, 1.75vh, 1.4rem); gap: 0.4em; }
   #hub-setup:has(.ark-setup .row:nth-child(5)) .hub-title { font-size: 1.6em; }
   #hub-setup .ark-setup:has(.row:nth-child(5)) { display: grid; grid-template-columns: 1fr 1fr; width: min(76rem, 100%); column-gap: 1.2em; row-gap: 0.6em; }
   #hub-setup .ark-setup:has(.row:nth-child(5)) .row:has(.opt:nth-child(5)) { grid-column: 1 / -1; }
@@ -184,7 +184,7 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 .tourney-bar { flex: 1; display: flex; justify-content: center; min-width: 0; font-size: 1.15rem; }
 .tourney-bar .ark-tourney.compact { padding: 0.25em 1em; }
 
-/* The desktop app's quit button: tap, then "Quit?" to confirm. */
+/* The desktop app's Quit button: tap, then "Quit?" to confirm. */
 #quit.armed { background: var(--bad); border-color: var(--bad); color: #fff; }
 
 /* Removing a player: ✕ on the seat, then "Remove?" to confirm. */
