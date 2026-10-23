@@ -44,9 +44,7 @@ Steam doesn't take pictures from a non-Steam game, so set them once by hand. Eac
 | `logo-1280x720.png` | The logo over that header |
 | `icon-256.png` | The icon |
 
-In Desktop Mode, right-click the game in Steam → **Manage → Set custom artwork**. For the tiles,
-right-click the tile itself; on the game's page, right-click the header for the header and logo,
-and set the icon under **Properties → Shortcut**.
+Where each picture goes, step by step: [Steam Deck guide, step 4](../docs/STEAM-DECK.md#4-the-library-pictures-optional).
 
 The icon and artwork are drawn by `tools/desktop-art.mjs` (needs Playwright). Change the drawing
 there and run it again; it rewrites the PNGs and `public/shared/icon.svg`, the browser tab icon.

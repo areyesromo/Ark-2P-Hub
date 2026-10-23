@@ -22,7 +22,8 @@ Steam Deck (docked) ──HDMI──► TV
 4. Open **Dolphin** (the file manager) and go to **Downloads**. Make a folder for the app in your
    home folder, such as `Applications`, and move the AppImage into it. Steam remembers where the
    file is, so pick its home now: updates replace the file in the same place.
-5. Right-click the AppImage → **Properties** → **Permissions** → tick **Is executable** → **OK**.
+5. Right-click the AppImage → **Properties** → **Permissions** → tick **Is executable** (on newer
+   SteamOS it reads **Allow executing file as program**) → **OK**.
 6. Double-click it to check that it starts: the TV screen opens full screen with a QR code. Press
    **Quit**, then **Quit?**, to close it.
 
@@ -43,9 +44,12 @@ Steam Deck (docked) ──HDMI──► TV
 Back in Game Mode (the **Return to Gaming Mode** icon on the desktop), open the game's page and
 press the **controller** icon (or **Steam** button → **Controller settings** while it's running):
 
-- Pick **Templates → Gamepad**. The hub reads the Deck's controls as a normal gamepad (the same
-  as an Xbox controller), so all the button hints on the TV are right: **A** joins and picks,
-  **B** leaves, **Back** goes to the lobby, and **RT** presses the update banner.
+- Open the layout (its name at the top) → **Templates** → **Gamepad** → **Apply**. The hub reads
+  the Deck's controls as a normal gamepad (the same as an Xbox controller), and the hints on the TV
+  use Xbox names. On the Deck: **RT** = **R2**, **LB / RB** = **L1 / R1**, **Back** = **View** (⧉),
+  **Start** = **Menu** (☰).
+- In the lobby, **A** takes a seat and then picks the game under the cursor, **B** gives the seat
+  back, and **R2** presses the update banner. In a game, **View** goes back to the lobby.
 - The touchscreen works too: tap any button on the TV screen, such as ⛶, **Quit** or a game card.
 
 The Deck's controls count as one player. For the second player, use a phone (scan the QR code) or
@@ -73,23 +77,27 @@ the spot where the picture shows: Steam usually offers to change it there.
    full screen on the TV.
 2. Phones must be on the **same Wi-Fi** as the Deck. They scan the QR code, or open the address
    under it and type the room code.
-3. Pick a game on a phone, or with the controller (**D-pad** + **A**).
+3. Pick a game on a phone, or with the controller: press **A** to take a seat, then (once both
+   seats are taken) **D-pad** + **A** to pick a game.
 
 The hub uses port 3000, or the next free one, for both `http://` and `https://`. Tilt and motion
-controls need the https page: phones offer **🔒 Switch to the secure page** when a game needs it.
+controls need the https page: phones offer **🔒 Switch to the secure page** when a game needs it
+(see [Secure page (https)](../README.md#secure-page-https)).
 
 ## Updates
 
 A few seconds after it starts (and every 6 hours while it's open), the app checks for a new
 version:
 
-1. The lobby shows **⬆ Version x is out · Update** in the bottom-left corner. Tap it, or press **RT**.
-2. It downloads (**Downloading… 42 %**), then shows **Install and close**.
+1. The lobby shows **⬆ Version x is out · Update** in the bottom-left corner (only in the lobby,
+   not during a game). Tap it, or press **R2**.
+2. It downloads (**Downloading version x… 42 %**), then shows **Install and close**.
 3. Press it: the app installs the update and closes. Start **Ark 2P Hub** again from your library
-   and it opens on the new version.
+   and it opens on the new version. (Started from Dolphin instead of Steam, the button says
+   **Restart now** and the app comes back by itself.)
 
-Not now? Just quit when you're done playing: the update installs on the way out. Settings, stats
-and player names are kept. The version you're on is in the small grey text at the bottom right of
+Downloaded it but don't want to restart now? Just quit when you're done playing: it installs on
+the way out. Settings, stats and player names are kept. The version you're on is in the small grey text at the bottom right of
 the TV screen.
 
 ## If something's wrong
@@ -97,14 +105,14 @@ the TV screen.
 - **Phones can't connect.** Check they're on the same Wi-Fi as the Deck (not mobile data or a
   guest network). Try the address shown under the QR code by hand.
 - **The app doesn't open from Steam.** Start the AppImage from Dolphin in Desktop Mode to see if it
-  runs. If it starts there but not from Steam, add `--no-sandbox` to the game's **Properties →
-  Shortcut → Launch options**.
-- **The Steam shortcut stopped working after an update.** The file was probably renamed with a
-  version number in it (`…-0.1.1-…`). Rename it to `Ark-2P-Hub-x86_64.AppImage` and point the
-  shortcut at it: **Properties → Shortcut → Target**.
-- **No update banner.** The Deck was probably offline when the app started. Restart the app to check
-  again. If a download fails, the banner offers **Download page**: download the new AppImage there
-  and replace the old file (same name).
+  runs, and check the shortcut's **Properties → Shortcut → Target** points at the file.
+- **The Steam shortcut stopped working after an update.** If the old file had a version number in
+  its name (`…-0.1.2-…`), the update saved the new one as `Ark-2P-Hub-x86_64.AppImage` in the same
+  folder. Point the shortcut at it: **Properties → Shortcut → Target**.
+- **No update banner.** It only shows in the lobby. If the Deck was offline when the app started,
+  it looks again 6 hours later; restarting the app checks straight away. If a download fails, the
+  banner offers **Download page**: in Desktop Mode, download the new AppImage from the Releases
+  page and replace the old file (same name).
 - **The B button drops the app out of full screen.** The layout is sending Esc instead of a gamepad
   button. Pick **Templates → Gamepad** (step 3), or press ⛶ on the TV screen to go back to full
   screen.
