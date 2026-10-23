@@ -6,7 +6,7 @@ import { createUpdates } from '../desktop/updates.js';
 const PAGE = 'https://github.com/areyesromo/Ark-2P-Hub/releases/latest';
 
 /** A stand-in for electron-updater's autoUpdater, plus a manual timer. */
-function setup({ checkFails = false, downloadFails = false } = {}) {
+function setup({ checkFails = false, downloadFails = false, relaunch } = {}) {
   const updater = new EventEmitter();
   const calls = [];
   updater.checkForUpdates = () => {
@@ -24,9 +24,13 @@ function setup({ checkFails = false, downloadFails = false } = {}) {
   const updates = createUpdates({
     updater,
     page: PAGE,
+    relaunch,
     send: (s) => sent.push(s),
     openPage: (url) => opened.push(url),
-    setTimeout: (fn, ms) => (timer = { fn, ms }),
+    setTimeout: (fn, ms) => {
+      timer = { fn, ms };
+      return timer;
+    },
   });
   return { updater, calls, sent, opened, updates, fire: () => timer.fn(), timer: () => timer };
 }
@@ -66,7 +70,7 @@ test('Update downloads with progress, then Restart installs', async () => {
   t.updates.act();
   assert.deepEqual(t.calls, ['check', 'download']);
   t.updater.emit('update-downloaded', { version: '0.1.2' });
-  assert.deepEqual(t.updates.state(), { state: 'ready', version: '0.1.2' });
+  assert.deepEqual(t.updates.state(), { state: 'ready', version: '0.1.2', relaunch: true });
   t.updates.act();
   assert.deepEqual(t.calls, ['check', 'download', 'install']);
   await tick();
@@ -111,4 +115,28 @@ test('nothing to do before an update is found', () => {
   t.updates.act();
   assert.deepEqual(t.calls, []);
   assert.deepEqual(t.opened, []);
+});
+
+test('under Steam the update installs and closes instead of relaunching', () => {
+  const t = setup({ relaunch: false });
+  t.updates.start();
+  t.fire();
+  t.updater.emit('update-available', { version: '0.1.2' });
+  t.updates.act();
+  t.updater.emit('update-downloaded', { version: '0.1.2' });
+  assert.deepEqual(t.updates.state(), { state: 'ready', version: '0.1.2', relaunch: false });
+});
+
+test('a hub left running checks again every 6 hours until it finds one', () => {
+  const t = setup();
+  t.updates.start();
+  t.fire();
+  assert.equal(t.timer().ms, 6 * 60 * 60 * 1000);
+  t.fire();
+  assert.deepEqual(t.calls, ['check', 'check']);
+  t.updater.emit('update-available', { version: '0.1.2' });
+  const last = t.timer();
+  t.fire();
+  assert.deepEqual(t.calls, ['check', 'check'], 'no more checks once an update is offered');
+  assert.equal(t.timer(), last);
 });

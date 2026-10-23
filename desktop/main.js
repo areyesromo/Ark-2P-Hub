@@ -52,8 +52,9 @@ async function startUpdates() {
   let autoUpdater;
   try {
     ({ autoUpdater } = (await import('electron-updater')).default);
-  } catch {
-    return; // built without it
+  } catch (err) {
+    console.error('Self-update is off:', err.message); // built without it
+    return;
   }
   if (process.env.ARK_UPDATE_URL) autoUpdater.setFeedURL({ provider: 'generic', url: process.env.ARK_UPDATE_URL });
   updates = createUpdates({
@@ -63,13 +64,17 @@ async function startUpdates() {
       if (win) win.webContents.send('ark:update-state', state);
     },
     openPage: (url) => shell.openExternal(url),
+    // Started from Steam (Game Mode on the Deck), a relaunched app would run outside Steam, without
+    // its controller layout or focus: install and close, and it's started again from Steam.
+    relaunch: !process.env.SteamGameId,
     install: () => {
       // The new version starts with this one's environment: tell it to wait for this one to close,
       // and don't hand it this version's stamp for /version.
       process.env.ARK_AFTER_UPDATE = '1';
       delete process.env.ARK_COMMIT;
       delete process.env.ARK_BUILT;
-      autoUpdater.quitAndInstall();
+      // Silent: no installer wizard on Windows (a TV may have only a controller).
+      autoUpdater.quitAndInstall(true, !process.env.SteamGameId);
     },
   });
   updates.start();
@@ -125,7 +130,7 @@ async function start() {
     win = null;
   });
   await win.loadURL(hub.url + '/host/');
-  startUpdates();
+  startUpdates().catch((err) => console.error('Self-update failed to start:', err));
 }
 
 // The TV page's ⛶ and Quit buttons (only from the hub's own page in our window).
@@ -147,7 +152,9 @@ app.on('will-quit', (event) => {
   event.preventDefault();
   const closing = hub;
   hub = null;
-  setTimeout(() => app.exit(0), 2000).unref(); // in case closing ever stalls
-  // Quit again (hub is null now, so this time it goes through): a downloaded update installs on quit.
+  // Quit again (hub is null now, so this time it goes through): a downloaded update installs on
+  // quit. After 2 s quit anyway, in case closing ever stalls, and exit as a last resort.
+  setTimeout(() => app.quit(), 2000).unref();
+  setTimeout(() => app.exit(0), 6000).unref();
   closing.close().finally(() => app.quit());
 });

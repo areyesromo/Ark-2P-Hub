@@ -19,12 +19,14 @@ Download both from the repository's **Releases** page.
 - **Window:** ⛶ on the TV's top bar (or F11) switches between full screen and a window; Esc leaves
   full screen. **Quit** (tap it, then **Quit?**) closes the app. Closing the window stops the hub too.
 - **Updates** (from v0.1.2): a few seconds after it starts, the app checks the Releases page. When
-  there's a newer version, the lobby shows **Version x is ready · Update** at the bottom left. Tap
-  it, or press **RT** on a controller. It downloads, then **Restart now** installs it (or it installs
-  the next time you quit). Settings and stats are kept.
+  there's a newer version, the lobby shows **Version x is out · Update** at the bottom left. Tap
+  it, or press **RT** on a controller. It downloads, then **Restart now** installs it and brings the
+  app back (or it installs the next time you quit). Settings and stats are kept.
+  - Started from Steam (Game Mode), the button says **Install and close** instead: start the game
+    again from Steam, so it keeps Steam's controller layout.
   - The AppImage is replaced in place under the same name, so a Steam shortcut to it keeps working.
     Keep the name without a version (`Ark-2P-Hub-x86_64.AppImage`), or any name without one.
-  - Windows runs the new installer silently.
+  - Windows runs the new installer silently (no wizard), then starts the app again.
   - If a download fails, the banner offers the **Download page** instead. Offline, nothing shows.
   - `ARK_NO_UPDATE=1` turns the check off.
 

@@ -167,7 +167,7 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 .update-banner { position: fixed; left: 12px; bottom: 10px; z-index: 5; padding: 0.5rem 0.9rem; border-radius: var(--r-pill);
   background: var(--panel); border: 1px solid var(--good); color: var(--text); font-size: var(--fs-sm); }
 .update-banner strong { color: var(--good); }
-.update-banner.busy { border-color: var(--line); color: var(--muted); }
+.update-banner.busy, .update-banner.busy:disabled { border-color: var(--line); color: var(--muted); opacity: 1; }
 .update-banner .pad-key { margin-left: 0.4em; padding: 0 0.4em; border-radius: var(--r-sm); background: var(--btn); font-size: 0.85em; }
 .lobby.hidden ~ .update-banner { display: none; }
 

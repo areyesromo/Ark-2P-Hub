@@ -30,8 +30,8 @@ up to date from GitHub Releases, so a new version needs no re-download on the De
 - Only in the packaged app (and on Linux only when running as an AppImage). `ARK_NO_UPDATE=1` turns it
   off; `ARK_UPDATE_URL` points it at a generic feed (for testing).
 - Bridge: `arkDesktop.onUpdate(cb)` and `arkDesktop.update()`; main sends the state to the hub's page.
-- TV: a banner in the lobby, bottom-left: "Version 0.1.2 is ready: Update" → "Downloading 42 %" →
-  "Restart now" (or "Couldn't update: Download page"). Tap it, or press RT on a controller.
+- TV: a banner in the lobby, bottom-left: "Version 0.1.2 is out · Update" → "Downloading 42 %" →
+  "Restart now" ("Install and close" under Steam) (or "Couldn't update · Download page"). Tap it, or press RT on a controller.
 
 ## Tasks
 - [x] Failing tests: `test/desktop-updates.test.js` (states, quiet check errors, act()).

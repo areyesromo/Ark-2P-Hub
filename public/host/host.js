@@ -418,9 +418,11 @@
   // Self-update (desktop app): a banner in the lobby. Tap it, or press RT on a controller.
   let update = { state: 'idle' };
   const UPDATE_TEXT = {
-    available: function (u) { return '⬆ Version ' + u.version + ' is ready · <strong>Update</strong>'; },
+    available: function (u) { return '⬆ Version ' + u.version + ' is out · <strong>Update</strong>'; },
     downloading: function (u) { return 'Downloading version ' + u.version + '… ' + u.percent + ' %'; },
-    ready: function (u) { return 'Version ' + u.version + ' is downloaded · <strong>Restart now</strong>'; },
+    ready: function (u) {
+      return 'Version ' + u.version + ' is downloaded · <strong>' + (u.relaunch === false ? 'Install and close' : 'Restart now') + '</strong>';
+    },
     error: function () { return 'Couldn\'t update · <strong>Download page</strong>'; },
   };
   function updateActionable() {
