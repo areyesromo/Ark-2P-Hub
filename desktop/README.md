@@ -15,8 +15,8 @@ Download both from the repository's **Releases** page. On a Steam Deck, follow t
   Docker hub that's still running. Phones join by the QR code on the TV as usual.
 - **Your data:** settings, stats and the https certificate are kept in the app's data folder and
   survive updates.
-  - Steam Deck / Linux: `~/.config/Ark 2P Hub/data`
-  - Windows: `%APPDATA%\Ark 2P Hub\data`
+  - Steam Deck / Linux: `~/.config/ark-2p-hub/data`
+  - Windows: `%APPDATA%\ark-2p-hub\data`
 - **Log:** each run writes `logs/main.log` next to the data folder (the run before is
   `main.old.log`): versions, how it was started, the graphics status, the displays, and any error
   (the page's too). Look there first when the window stays black. A crash in Electron itself

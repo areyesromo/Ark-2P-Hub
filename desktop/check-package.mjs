@@ -30,6 +30,12 @@ const needed = [
 // Beside the app (extraResources, and where self-update looks for releases), not in it.
 const beside = ['app-update.yml', 'three-addons/loaders/GLTFLoader.js', 'three-addons/modifiers/SimplifyModifier.js', 'three-addons/utils/BufferGeometryUtils.js'];
 const missing = needed.filter((f) => !list.has(f)).concat(beside.filter((f) => !fs.existsSync(path.join(resources, f))));
+// Linux: the launcher that keeps Steam's overlay library out (desktop/after-pack.cjs), in front of the binary.
+const appDir = path.dirname(resources);
+const launcher = fs.readdirSync(appDir).find((f) => fs.existsSync(path.join(appDir, f + '.bin')));
+if (fs.existsSync(path.join(appDir, 'chrome-sandbox')) && !(launcher && fs.readFileSync(path.join(appDir, launcher), 'utf8').includes('gameoverlayrenderer'))) {
+  missing.push('the Linux launcher (desktop/after-pack.cjs) in front of the app binary');
+}
 if (missing.length) {
   console.error('Missing from the app:\n  ' + missing.join('\n  '));
   process.exit(1);
