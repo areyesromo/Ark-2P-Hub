@@ -4,13 +4,10 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
-## 0.1.7
+## 0.1.8
 
 - **What's new**: after an update, the TV shows what changed. Tap the version number (bottom
   right) to see it again.
-- New game: **Anagram Duel**: the same five letters for both of you; the first to make a word
-  takes the round.
-- New game: **Word Hunt**: a word search race; each word goes to whoever marks it first.
 - New Party Minigames: **Hurdle Dash** (jump the hurdles in time), **Laser Dodge** (jump the low
   beams, duck the high ones) and **Pop the Most** (pop the balloons in your colour).
 - New Party Minigames: **Safe Cracker** (turn the dial until it clicks), **Reflex Grid** (tap the
@@ -19,6 +16,12 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   wind) and **Stack Attack** (catch the falling crates and keep your stack from toppling).
 - New 3D Party Minigames: **Bumper Cars** (ram your rival in the side or from behind; head-on
   doesn't count) and **Paint Grab** (paint the most floor tiles your colour).
+
+## 0.1.7
+
+- New game: **Anagram Duel**: the same five letters for both of you; the first to make a word
+  takes the round.
+- New game: **Word Hunt**: a word search race; each word goes to whoever marks it first.
 
 ## 0.1.6
 

@@ -1,7 +1,7 @@
-# Release A (v0.1.7): What's new + the quick minigames
+# Release A (v0.1.8): What's new + the quick minigames
 
 One PR, one release, built one batch at a time (design → yes → build → review → commit), so
-the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade games.
+the AppImage / Steam builds don't pile up. Release B (v0.1.9) is the arcade games.
 
 ## Step 1: What's new card
 - `CHANGELOG.md` (repo root): player-friendly lines, one `## x.y.z` per desktop release.
@@ -49,4 +49,6 @@ the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade game
 - [x] Step 5 review: a ram is judged per car (nose first, outside their front, hard enough by
   closing speed, once per contact), so a gentle nudge, backing in or grinding don't score or
   spam; a splash never takes the tile your rival stands on.
-- [ ] PR ready, merge, release v0.1.7.
+- [x] PR ready, merged (#111). v0.1.7 had already gone out from #110 (Anagram Duel, Word Hunt),
+  so this ships as v0.1.8 and the arcade games as v0.1.9.
+- [ ] Release v0.1.8.
