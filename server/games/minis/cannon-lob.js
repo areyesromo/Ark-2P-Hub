@@ -3,7 +3,9 @@
 // knocks a block off. The wind (the flag on the TV) changes every few seconds and blows every shot
 // the same way. Knock off all three to win; at time up, more blocks knocked wins.
 // One shot in the air at a time each, then a short reload. Your own shots pass your own tower.
-// The charge counts from when FIRE was pressed and let go on the phone, not when they arrived.
+// The charge counts from when FIRE was pressed and let go on the phone, not when they arrived
+// (a press can't claim to be more than LAG_MS older than when it reached us). Hold FIRE through
+// the reload and the charge starts as soon as you're loaded.
 import { plausibleT } from './runner.js';
 
 export const TICK_MS = 50;
@@ -23,6 +25,7 @@ export const GRAVITY = 40;
 export const WIND_MAX = 8; // units a second², either way
 export const WIND_MS = 6000;
 export const RELOAD_MS = 1000; // after your shot lands
+const LAG_MS = 300; // the most a phone's press time may be older than its arrival
 const SHOT_R = 1.2;
 const STEPS = 5; // physics steps a tick, so a fast shot can't skip through the wall
 const SHOW_MS = 600; // how long the TV shows where the last shot landed
@@ -40,7 +43,7 @@ export default {
     let winds = [...Array(Math.ceil(DURATION_MS / WIND_MS) + 2)].map(() => Math.round((api.rng() * 2 - 1) * WIND_MAX));
     const towers = [0, 1].map(() => ({ blocks: BLOCKS }));
     const knocked = [0, 0];
-    const cannons = [0, 1].map(() => ({ angle: ANGLE.start, turn: 0, chargeAt: null, readyAt: 0 }));
+    const cannons = [0, 1].map(() => ({ angle: ANGLE.start, turn: 0, chargeAt: null, held: false, readyAt: 0 }));
     let shots = []; // { id, slot, x, y, vx, vy }
     let nextId = 1;
     let last = null; // where the latest shot ended: { n, slot, kind: 'hit' | 'wall' | 'ground', x, y, at }
@@ -85,7 +88,10 @@ export default {
       if (done) return;
       const now = api.elapsed();
       const dt = TICK_MS / 1000;
-      cannons.forEach((c) => { if (c.turn) c.angle = clamp(c.angle + c.turn * AIM_SPEED * dt, ANGLE.min, ANGLE.max); });
+      cannons.forEach((c, slot) => {
+        if (c.turn) c.angle = clamp(c.angle + c.turn * AIM_SPEED * dt, ANGLE.min, ANGLE.max);
+        if (c.held && c.chargeAt === null && ready(slot, now)) c.chargeAt = now; // held through the reload
+      });
       const w = wind(now);
       shots = shots.filter((s) => {
         for (let i = 0; i < STEPS; i++) {
@@ -103,7 +109,8 @@ export default {
       });
       if (knocked.some((k) => k >= BLOCKS)) {
         api.update();
-        return end(knocked[0] >= BLOCKS ? 0 : 1);
+        const [a, b] = knocked.map((k) => k >= BLOCKS);
+        return end(a && b ? null : a ? 0 : 1);
       }
       // Sent only when something on screen changed (a shot moving, an aim, the wind, a reload).
       const v = view();
@@ -141,14 +148,18 @@ export default {
         if (input.type === 'aim') {
           if (!Number.isInteger(input.angle) || input.angle < ANGLE.min || input.angle > ANGLE.max) return;
           c.angle = input.angle;
+          return; // the tick sends it, once
         } else if (input.type === 'turn') {
           if (typeof input.v !== 'number' || !Number.isFinite(input.v)) return;
           c.turn = clamp(input.v, -1, 1);
           return; // the tick moves it
         } else if (input.type === 'charge') {
-          if (!ready(slot, now) || c.chargeAt !== null) return;
-          c.chargeAt = plausibleT(input.t, now);
+          if (c.held) return;
+          c.held = true;
+          if (!ready(slot, now)) return; // starts when loaded, if still held
+          c.chargeAt = Math.max(plausibleT(input.t, now), now - LAG_MS, c.readyAt);
         } else if (input.type === 'fire') {
+          c.held = false;
           if (c.chargeAt === null) return;
           const held = plausibleT(input.t, now) - c.chargeAt;
           c.chargeAt = null;

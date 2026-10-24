@@ -94,6 +94,8 @@
         drawField(host.parts, s);
         host.el.querySelector('.wind').textContent = windText(s.wind);
         host.el.querySelectorAll('.score').forEach(function (e, i) {
+          if (e.dataset.n === String(s.knocked[i])) return;
+          e.dataset.n = s.knocked[i];
           e.innerHTML = ArkMini.nameOf({ players: host.players }, i) + ' · 💥 ' + s.knocked[i] + ' / ' + s.blocks; // the name comes escaped
         });
         host.el.querySelectorAll('.power').forEach(function (bar, i) { charge(bar, s.cannons[i].charging, s.chargeMs); });
@@ -198,7 +200,8 @@
   function showAim() {
     const p = phone;
     if (!p || p.angle === null) return;
-    const deg = p.slot === 0 ? -p.angle : 180 + p.angle;
+    // The right-hand barrel already points left from its corner, so it turns the other way.
+    const deg = p.slot === 0 ? -p.angle : p.angle;
     p.el.querySelector('.aim .barrel').style.transform = 'rotate(' + deg + 'deg)';
     p.el.querySelector('.aim .deg').textContent = p.angle + '°';
   }

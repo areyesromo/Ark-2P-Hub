@@ -14,7 +14,10 @@
       '<div class="mi-sa-lean"><i></i></div>';
   }
 
-  /** One player's half: the trays, the falling crates (the same for both), their stack. */
+  /**
+   * One player's half: the trays, the falling crates (the same for both), their stack. The first
+   * draw after mounting only notes the latest topple (a reconnect doesn't replay an old one).
+   */
   function drawField(box, s, slot) {
     const field = box.querySelector('.mi-sa-field');
     const st = s.stacks[slot];
@@ -45,6 +48,10 @@
     lean.style.setProperty('--lean', st.lean);
     lean.classList.toggle('danger', Math.abs(st.lean) > 0.6);
     const ev = s.events[slot];
+    if (!field.dataset.seen) {
+      field.dataset.seen = '1';
+      field.dataset.topple = ev ? ev.n : '';
+    }
     if (ev && ev.kind === 'topple' && field.dataset.topple !== String(ev.n)) {
       field.dataset.topple = ev.n;
       field.classList.remove('toppled');
@@ -77,7 +84,7 @@
     phone: {
       mount: function (el, mctx) {
         el.innerHTML = '<div class="mi-phone-stage mi-sa-phone"><div class="msg"></div><div class="mi-sa">' + fieldHtml() + '</div><div class="padbox"></div></div>';
-        phone = { el: el, slot: mctx.slot, pad: null, timer: null, last: 0, pending: null, was: null };
+        phone = { el: el, slot: mctx.slot, pad: null, timer: null, last: 0, pending: null, was: undefined };
         const p = phone;
         function send() {
           p.timer = null;
@@ -104,7 +111,8 @@
         if (!phone) return;
         const p = phone;
         const ev = s.events[p.slot];
-        if (ev && (!p.was || p.was.n !== ev.n)) p.vibrate(ev.kind === 'topple' ? 400 : 20);
+        // The first update after (re)joining only notes the latest event.
+        if (ev && p.was !== undefined && (!p.was || p.was.n !== ev.n)) p.vibrate(ev.kind === 'topple' ? 400 : 20);
         p.was = ev;
         drawField(p.el.querySelector('.mi-sa'), s, p.slot);
         p.el.querySelector('.msg').textContent = '📦 ' + s.stacks[p.slot].height + ' · them ' + s.stacks[1 - p.slot].height;

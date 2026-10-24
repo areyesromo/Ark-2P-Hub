@@ -446,7 +446,7 @@
 .mi-cl-field .cannon.p2 .base, .mi-cl-field .cannon.p2 .barrel { stroke: var(--p2); }
 .mi-cl-field .cannon .barrel { fill: #374151; stroke-width: 0.4; transition: transform 0.08s linear; }
 .mi-cl-field .cannon.reloading .base { fill: #4b5563; }
-.mi-cl-field .cannon .angle { fill: #fff; font-size: 3px; font-weight: 800; }
+.mi-cl-field .cannon .angle { fill: var(--text); font-size: 3px; font-weight: 800; }
 .mi-cl-field .shot { fill: #111827; stroke-width: 0.4; }
 .mi-cl-field .shot.p1 { stroke: var(--p1); }
 .mi-cl-field .shot.p2 { stroke: var(--p2); }
@@ -466,7 +466,7 @@
 .mi-cl-phone .aim.side1 .barrel { right: 1rem; transform-origin: 100% 50%; }
 .mi-cl-phone .aim .deg { position: absolute; top: 0.6rem; left: 50%; transform: translateX(-50%); font-size: var(--fs-xl); }
 .mi-cl-phone .aim .hint { position: absolute; bottom: 0.5rem; left: 50%; transform: translateX(-50%); color: var(--muted); }
-.mi-cl-phone .mi-big-btn { flex: 0 0 auto; min-height: 100px; }
+.mi-cl-phone .mi-big-btn { flex: 0 0 auto; min-height: 100px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
 .mi-cl-phone .mi-big-btn.waiting { opacity: 0.5; }
 
 /* Stack Attack: a 3:4 field per player. A crate is 10% of the width (stack-attack.js CRATE_HALF),
@@ -481,7 +481,7 @@
 .mi-sa-field .crate { position: absolute; top: -7.5%; width: 10%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 3px; background: #b45309; border: 2px solid #78350f; animation: mi-sa-fall linear forwards; }
 @keyframes mi-sa-fall { to { top: calc(94% - (var(--shown) + 1) * 7.5%); } }
 .mi-sa-field .tray { position: absolute; bottom: 2%; height: 4%; transform: translateX(-50%); transition: left 0.08s linear; }
-.mi-sa-field .tray > i { position: absolute; inset: 0; border-radius: var(--r-sm); background: #9ca3af; }
+.mi-sa-field .tray > i { position: absolute; inset: 0; border-radius: var(--r-sm); background: var(--muted); }
 .mi-side.p1 .mi-sa-field .tray > i { background: var(--p1); }
 .mi-side.p2 .mi-sa-field .tray > i { background: var(--p2); }
 .mi-sa-phone .mi-sa-field .tray > i { background: var(--me); }
@@ -489,7 +489,7 @@
 .mi-sa-field .stack b { display: block; width: 100%; aspect-ratio: 1; border-radius: 3px; background: #d97706; border: 2px solid #78350f; }
 .mi-sa-field .stack[data-more]:not([data-more=""])::after { content: attr(data-more); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: var(--fs-lg); }
 .mi-sa-field.toppled { animation: mi-sa-shake 0.5s; }
-@keyframes mi-sa-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-4%); background: rgba(239, 68, 68, 0.35); } 75% { transform: translateX(4%); } }
+@keyframes mi-sa-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-4%); background: color-mix(in srgb, var(--bad) 35%, transparent); } 75% { transform: translateX(4%); } }
 /* The lean meter: a needle from the middle, the way the stack leans; past 0.6 either way it turns red. */
 .mi-sa-lean { position: relative; width: min(70%, 16rem); height: 0.9rem; border-radius: var(--r-pill); background: var(--bg-2); }
 .mi-sa-lean i { position: absolute; top: -0.3rem; bottom: -0.3rem; width: 0.5rem; left: calc(50% - 0.25rem + var(--lean, 0) * 50%); border-radius: var(--r-pill); background: var(--good); transition: left 0.2s; }

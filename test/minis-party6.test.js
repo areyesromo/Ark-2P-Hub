@@ -108,6 +108,58 @@ test('cannon lob: the charge counts from the phone\'s own times, not when they a
   assert.ok(Math.hypot(a.vx, a.vy) < Math.hypot(b.vx, b.vy));
 });
 
+test('cannon lob: a charge can\'t claim to have started long before it arrived', () => {
+  const r = run(cannonLob);
+  r.inst.debugWind(0);
+  r.ctx.advance(5000);
+  // A forged press time from the start of the game, let go at once: still a soft shot.
+  r.inst.onInput(0, { type: 'charge', t: 0 });
+  r.inst.onInput(0, { type: 'fire', t: 5000 });
+  const s = r.inst.view(null).shots[0];
+  assert.ok(Math.hypot(s.vx, s.vy) < 40, String(Math.hypot(s.vx, s.vy)));
+});
+
+test('cannon lob: hold FIRE through the reload and the charge starts when it\'s loaded', () => {
+  const r = run(cannonLob);
+  shoot(r, 0, 100);
+  settle(r);
+  r.inst.onInput(0, { type: 'charge', t: r.ctx.now() }); // still reloading
+  assert.equal(r.inst.view(null).cannons[0].charging, false);
+  r.ctx.advance(RELOAD_MS + 100);
+  assert.equal(r.inst.view(null).cannons[0].charging, true);
+  r.inst.onInput(0, { type: 'fire', t: r.ctx.now() });
+  assert.equal(r.inst.view(null).shots.length, 1);
+  // Let go during the reload: nothing waits.
+  settle(r);
+  r.inst.onInput(0, { type: 'charge', t: r.ctx.now() });
+  r.inst.onInput(0, { type: 'fire', t: r.ctx.now() });
+  r.ctx.advance(RELOAD_MS + 100);
+  assert.equal(r.inst.view(null).cannons[0].charging, false);
+});
+
+test('cannon lob: aiming sends one update per change, through the tick', () => {
+  const r = run(cannonLob);
+  r.ctx.advance(200);
+  const before = r.updates();
+  r.inst.onInput(0, { type: 'aim', angle: 50 });
+  r.inst.onInput(0, { type: 'aim', angle: 50 });
+  r.ctx.advance(100);
+  assert.equal(r.updates() - before, 1);
+});
+
+test('cannon lob: both towers down in the same moment is a draw', () => {
+  const r = run(cannonLob);
+  for (let i = 0; i < BLOCKS - 1; i++) {
+    r.inst.debugShot(0, { x: TOWER_X[1], y: 19, vx: 0, vy: -10 });
+    r.inst.debugShot(1, { x: TOWER_X[0], y: 19, vx: 0, vy: -10 });
+    settle(r);
+  }
+  r.inst.debugShot(1, { x: TOWER_X[0], y: 19, vx: 0, vy: -10 });
+  r.inst.debugShot(0, { x: TOWER_X[1], y: 19, vx: 0, vy: -10 });
+  settle(r);
+  assert.deepEqual(r.ended(), { winner: null });
+});
+
 test('cannon lob: one shot at a time, then a short reload', () => {
   const r = run(cannonLob);
   shoot(r, 0, 500);
