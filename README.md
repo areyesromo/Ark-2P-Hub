@@ -134,7 +134,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Reaction Duel | any face button, bumper or trigger | Tap |
 | Rock Paper Scissors | **X** ✊ · **Y** ✋ · **B** ✌️ (or D-pad ← ↑ →) | Pick (stays secret, the TV only shows 🔒) |
 | Pong | **Left stick** or **D-pad ↑↓** | Move your paddle |
-| Volley Blobs | **Left stick** or **D-pad ← →**, **A** or **↑** | Slide, jump |
+| Volley Blobs | **Left stick** or **D-pad ← →**, **A** | Slide, jump |
 | Light Cycles | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |
 | Air Hockey | **Left stick** or **D-pad** | Move your mallet (in TV directions) |
 | Snake Battle | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |

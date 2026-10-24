@@ -1,5 +1,6 @@
 // Volley Blobs on the phone (server/games/volley-blobs.js): hold ◀ or ▶ to slide, tap JUMP.
-// Each button works with its own finger, so you can slide and jump at once.
+// Each button works with its own finger, so you can slide and jump at once. A button is held
+// while any finger is on it; everything lets go if the phone locks or switches app.
 (function () {
   Ark.loadCss('/games/volley-blobs/style.css');
 
@@ -7,11 +8,12 @@
   let info = null;
   let api = null;
   let lastKey = '';
-  let held = { left: false, right: false };
+  let held = { left: new Set(), right: new Set() }; // pointer ids on each button
   let sent = 0;
 
   function sendMove() {
-    const x = (held.right ? 1 : 0) - (held.left ? 1 : 0);
+    if (!api) return;
+    const x = (held.right.size ? 1 : 0) - (held.left.size ? 1 : 0);
     if (x === sent) return;
     sent = x;
     api.send({ type: 'move', x: x });
@@ -22,14 +24,24 @@
       return function (e) {
         e.preventDefault();
         if (on && btn.setPointerCapture) btn.setPointerCapture(e.pointerId);
-        held[side] = on;
-        btn.classList.toggle('on', on);
+        if (on) held[side].add(e.pointerId);
+        else held[side].delete(e.pointerId);
+        btn.classList.toggle('on', held[side].size > 0);
         sendMove();
       };
     };
     btn.addEventListener('pointerdown', set(true));
     ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) { btn.addEventListener(ev, set(false)); });
   }
+
+  /** Lets go of both directions (the page hid, the game ended). */
+  function releaseAll() {
+    held.left.clear();
+    held.right.clear();
+    if (root) root.querySelectorAll('.move').forEach(function (b) { b.classList.remove('on'); });
+    sendMove();
+  }
+  function onHide() { if (document.hidden) releaseAll(); }
 
   function render(v) {
     const you = v.you;
@@ -47,6 +59,7 @@
     if (key === lastKey) return; // views come ~30 times a second; only touch the page on a change
     lastKey = key;
     info.innerHTML = '<div class="score">' + score + '</div><div class="status ' + cls + '">' + status + '</div>';
+    if (v.phase === 'over') releaseAll();
     root.querySelector('.vb-pad').classList.toggle('hidden', v.phase === 'over');
     root.querySelector('.rematch').classList.toggle('hidden', v.phase !== 'over');
   }
@@ -54,8 +67,10 @@
   Ark.register('player', 'volley-blobs', {
     mount: function (el, a) {
       api = a;
-      held = { left: false, right: false };
+      held = { left: new Set(), right: new Set() };
       sent = 0;
+      document.addEventListener('visibilitychange', onHide);
+      window.addEventListener('blur', releaseAll);
       root = document.createElement('div');
       root.className = 'vb-phone';
       root.innerHTML =
@@ -76,6 +91,10 @@
     },
     update: render,
     unmount: function () {
+      document.removeEventListener('visibilitychange', onHide);
+      window.removeEventListener('blur', releaseAll);
+      api = null; // leaving: nothing more to send
+      releaseAll();
       root = info = null;
       lastKey = '';
     },

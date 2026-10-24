@@ -58,6 +58,28 @@ test('blobs slide at a fixed speed and can\'t cross the net or leave the court',
   assert.ok(game.blobs[1].x - FIELD.blobR >= NET_R - 1e-9, 'stops at the net on its side too');
 });
 
+test('holding a direction through a point keeps you moving (the phone doesn\'t resend it)', () => {
+  const { ctx, game } = setup();
+  game.onInput(0, { type: 'move', x: -1 });
+  launch(game, { x: FIELD.w * 0.75, y: FIELD.ballR + 0.1, vy: -5 });
+  game.blobs[1].x = FIELD.w - FIELD.blobR;
+  ctx.advance(50);
+  assert.equal(game.phase, 'point');
+  const x = game.blobs[0].x;
+  ctx.advance(300);
+  assert.ok(game.blobs[0].x < x - 1, 'still sliding left in the pause');
+});
+
+test('the serve drops over where the server\'s blob is, not its starting mark', () => {
+  const { ctx, game } = setup(() => 0.2); // player 1 serves
+  game.onInput(0, { type: 'move', x: 1 });
+  ctx.advance(1000);
+  game.onInput(0, { type: 'move', x: 0 });
+  ctx.advance(TIMING.countdownMs);
+  assert.equal(game.phase, 'play');
+  assert.ok(Math.abs(game.ball.x - game.blobs[0].x) < 0.01);
+});
+
 test('bad input is ignored', () => {
   const { ctx, game } = setup();
   const before = game.blobs.map((b) => b.x);
@@ -119,6 +141,51 @@ test('both sides play alike: a mirrored hit on blob 2 goes the mirrored way', ()
   assert.ok(Math.abs(a.game.ball.x - (FIELD.w - b.game.ball.x)) < 1e-6);
   assert.ok(Math.abs(a.game.ball.y - b.game.ball.y) < 1e-6);
   assert.ok(Math.abs(a.game.ball.vx + b.game.ball.vx) < 1e-6);
+});
+
+test('a blob jumping into a ball against the net can\'t push it through', () => {
+  const { ctx, game } = setup();
+  launch(game, { x: NET_L - FIELD.ballR, y: 1.6, vx: 0, vy: -1 });
+  Object.assign(game.blobs[0], { x: 6.9, y: 1, vy: 8, move: 1 });
+  for (let i = 0; i < 20 && game.phase === 'play'; i++) {
+    ctx.advance(PHYSICS.tickMs);
+    if (game.ball.y < FIELD.netH) assert.ok(game.ball.x <= NET_L - FIELD.ballR + 1e-6, 'tick ' + i + ': x ' + game.ball.x);
+  }
+});
+
+test('a ball rolling off a dome is one touch, not one every few ticks', () => {
+  const { ctx, game } = setup();
+  const b = game.blobs[0];
+  const reach = FIELD.blobR + FIELD.ballR;
+  const a = Math.PI / 3; // 60° up, towards the net
+  launch(game, { x: b.x + reach * Math.cos(a), y: reach * Math.sin(a), vx: 0, vy: 0 });
+  for (let i = 0; i < 30 && game.phase === 'play'; i++) {
+    ctx.advance(PHYSICS.tickMs);
+    assert.ok(game.touches[0] <= 1, 'tick ' + i + ': ' + game.touches[0] + ' touches');
+  }
+  assert.notEqual(game.fault, 'touches');
+});
+
+test('a ball passing under a jumping blob doesn\'t hit an invisible underside', () => {
+  const { ctx, game } = setup();
+  Object.assign(game.blobs[0], { y: 2, vy: 3 });
+  const b = game.blobs[0];
+  launch(game, { x: b.x + 0.5, y: 1, vx: -4, vy: 0 }); // under the dome's flat base
+  ctx.advance(150);
+  assert.equal(game.touches[0], 0);
+  assert.ok(game.ball.vx < -3, 'kept going: ' + game.ball.vx);
+});
+
+test('a ball dead on the net rolls over to the side away from the last one to touch it', () => {
+  for (const toucher of [0, 1]) {
+    const { ctx, game } = setup();
+    game.blobs[0].x = FIELD.blobR;
+    game.blobs[1].x = FIELD.w - FIELD.blobR;
+    launch(game, { x: FIELD.w / 2, y: FIELD.netH + 2, vx: 0, vy: 0 });
+    game.lastTouch = toucher;
+    ctx.advance(4000);
+    assert.equal(game.lastScorer, toucher, 'it went over, onto the rival\'s side');
+  }
 });
 
 test('the ball can\'t pass through the net, and bounces off the walls', () => {

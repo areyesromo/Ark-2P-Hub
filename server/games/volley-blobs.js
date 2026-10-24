@@ -25,6 +25,7 @@ export const PHYSICS = {
   netBounce: 0.8,
   serveY: 5,
   jumpBufferMs: 120, // a jump pressed just before landing still happens
+  contactGap: 0.15, // a touch ends once the ball is this far off the blob (a roll is one touch)
 };
 
 export const TIMING = { countdownMs: 3000, pointMs: 1200 };
@@ -62,14 +63,26 @@ export class VolleyBlobs {
     this.ctx.update();
   }
 
-  /** Blobs back at their marks, the ball waiting over the server's blob. */
+  /**
+   * Blobs back at their marks, the ball waiting over the server. A direction held through the
+   * point is kept (phones and controllers only send it when it changes).
+   */
   resetRally(server) {
     this.serveTo = server;
-    this.blobs = START_X.map((x) => ({ x, y: 0, vy: 0, move: 0, jumpUntil: -Infinity }));
+    const held = this.blobs ? this.blobs.map((b) => b.move) : [0, 0];
+    this.blobs = START_X.map((x, i) => ({ x, y: 0, vy: 0, move: held[i], jumpUntil: -Infinity }));
     this.ball = { x: START_X[server], y: PHYSICS.serveY, vx: 0, vy: 0 };
     this.touches = [0, 0];
     this.contact = [false, false];
+    this.lastTouch = null;
     this.side = server;
+  }
+
+  /** The serve: the ball drops over wherever the server's blob is now. */
+  serve() {
+    this.fault = null;
+    this.ball.x = this.blobs[this.serveTo].x;
+    this.enter('play');
   }
 
   loop() {
@@ -85,11 +98,7 @@ export class VolleyBlobs {
     this.last = now;
     const before = this.phase;
 
-    if (this.phase === 'countdown' && now >= this.phaseEnds) this.enter('play');
-    if (this.phase === 'point' && now >= this.phaseEnds) {
-      this.fault = null;
-      this.enter('play');
-    }
+    if ((this.phase === 'countdown' || this.phase === 'point') && now >= this.phaseEnds) this.serve();
 
     // Fixed small sub-steps keep collisions exact even if a tick runs late.
     const steps = Math.max(1, Math.ceil(dt / (PHYSICS.tickMs / 1000)));
@@ -119,11 +128,36 @@ export class VolleyBlobs {
   }
 
   step(dt) {
-
     const ball = this.ball;
+    const r = FIELD.ballR;
+    const from = ball.x < FIELD.w / 2 ? 0 : 1; // the side it starts this step on
     ball.vy -= PHYSICS.ballGravity * dt;
     ball.x += ball.vx * dt;
     ball.y += ball.vy * dt;
+    this.walls();
+    this.bounceOffNet(from);
+
+    // Over the net: a fresh set of touches.
+    const side = ball.x < FIELD.w / 2 ? 0 : 1;
+    if (side !== this.side) {
+      this.side = side;
+      this.touches = [0, 0];
+    }
+
+    for (let slot = 0; slot < 2 && this.phase === 'play'; slot++) this.hitBlob(slot);
+    if (this.phase !== 'play') return;
+    // A blob can shove the ball into the wall or the net: never through them.
+    this.walls();
+    if ((ball.x < FIELD.w / 2 ? 0 : 1) !== from && ball.y < FIELD.netH) {
+      ball.x = from === 0 ? NET_L - r : NET_R + r;
+      ball.vx = (from === 0 ? -1 : 1) * Math.abs(ball.vx) * PHYSICS.netBounce;
+    }
+    this.bounceOffNet(from);
+    if (ball.y - r <= 0) this.point(ball.x < FIELD.w / 2 ? 1 : 0, null);
+  }
+
+  walls() {
+    const ball = this.ball;
     const r = FIELD.ballR;
     if (ball.x < r) {
       ball.x = r;
@@ -136,30 +170,21 @@ export class VolleyBlobs {
       ball.y = FIELD.h - r;
       ball.vy = -Math.abs(ball.vy);
     }
-    this.bounceOffNet();
-
-    // Over the net: a fresh set of touches.
-    const side = ball.x < FIELD.w / 2 ? 0 : 1;
-    if (side !== this.side) {
-      this.side = side;
-      this.touches = [0, 0];
-    }
-
-    for (let slot = 0; slot < 2 && this.phase === 'play'; slot++) this.hitBlob(slot);
-    if (this.phase === 'play' && ball.y - r <= 0) this.point(ball.x < FIELD.w / 2 ? 1 : 0, null);
   }
 
-  bounceOffNet() {
+  /** The net post and its top; `from` is the side the ball was on before this step. */
+  bounceOffNet(from) {
     const ball = this.ball;
-    const cx = clamp(ball.x, NET_L, NET_R);
+    let cx = clamp(ball.x, NET_L, NET_R);
     const cy = clamp(ball.y, 0, FIELD.netH);
     let dx = ball.x - cx;
     let dy = ball.y - cy;
     let d = Math.hypot(dx, dy);
     if (d >= FIELD.ballR) return;
     if (d === 0) {
-      // Centre inside the post: push it out the side it's on.
-      dx = ball.x < FIELD.w / 2 ? -1 : 1;
+      // Centre inside the post: back out through the face on the side it came from.
+      cx = from === 0 ? NET_L : NET_R;
+      dx = from === 0 ? -1 : 1;
       dy = 0;
       d = 1;
     }
@@ -173,29 +198,37 @@ export class VolleyBlobs {
       ball.vy -= (1 + PHYSICS.netBounce) * vn * ny;
     }
     // On top of the net and barely moving sideways: it rolls off the way it leans (dead centre:
-    // over, away from the side it came from), so it never sits there.
+    // over, away from whoever touched it last), so it never sits there.
     if (ny > 0.7 && Math.abs(ball.vx) < 1) {
-      const dir = ball.x < FIELD.w / 2 ? -1 : ball.x > FIELD.w / 2 ? 1 : this.side === 0 ? 1 : -1;
-      ball.vx = dir;
+      const centre = this.lastTouch === null ? (this.rng() < 0.5 ? -1 : 1) : this.lastTouch === 0 ? 1 : -1;
+      ball.vx = ball.x < FIELD.w / 2 ? -1 : ball.x > FIELD.w / 2 ? 1 : centre;
     }
   }
 
-  /** The ball against a blob's dome: bounced off it the way the dome faces there. */
+  /**
+   * The ball against a blob: off the dome the way it faces there, or off its flat base from
+   * below (a blob is a half circle, as the TV draws it).
+   */
   hitBlob(slot) {
     const ball = this.ball;
     const b = this.blobs[slot];
-    const dx = ball.x - b.x;
-    const dy = ball.y - b.y;
+    const above = ball.y >= b.y;
+    // The point the ball is measured from, and how close it may get: the dome's centre, or
+    // the nearest point of the base.
+    const cx = above ? b.x : clamp(ball.x, b.x - FIELD.blobR, b.x + FIELD.blobR);
+    const cy = b.y;
+    const reach = above ? FIELD.blobR + FIELD.ballR : FIELD.ballR;
+    const dx = ball.x - cx;
+    const dy = ball.y - cy;
     const d = Math.hypot(dx, dy);
-    const reach = FIELD.blobR + FIELD.ballR;
-    if (d >= reach || d === 0) {
-      this.contact[slot] = false;
+    if (d >= reach) {
+      if (d >= reach + PHYSICS.contactGap) this.contact[slot] = false;
       return;
     }
-    const nx = dx / d;
-    const ny = dy / d;
-    ball.x = b.x + nx * reach;
-    ball.y = b.y + ny * reach;
+    const nx = d ? dx / d : 0;
+    const ny = d ? dy / d : above ? 1 : -1;
+    ball.x = cx + nx * reach;
+    ball.y = cy + ny * reach;
     // Bounce relative to the blob, then add the blob's own movement (a jump hits harder).
     const bvx = b.move * PHYSICS.moveSpeed;
     const bvy = b.vy;
@@ -215,6 +248,7 @@ export class VolleyBlobs {
     }
     if (this.contact[slot]) return; // still the same touch
     this.contact[slot] = true;
+    this.lastTouch = slot;
     this.touches[slot]++;
     this.touches[1 - slot] = 0;
     if (this.touches[slot] > MAX_TOUCHES) this.point(1 - slot, 'touches');

@@ -20,6 +20,7 @@
   let overlayKey = '';
   let boardKey = '';
   let colors = null;
+  let sky = null; // the sky gradient, made again only when the canvas changes size
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -54,6 +55,7 @@
     const w = Math.floor(f.w * scale);
     const h = Math.floor((f.h + SAND) * scale);
     if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+      sky = null;
       canvas.width = Math.floor(w * dpr);
       canvas.height = Math.floor(h * dpr);
       canvas.style.width = w + 'px';
@@ -72,9 +74,11 @@
     const Y = function (y) { return f.h - y; }; // court y (up) to canvas y (down)
 
     // Sky and sand.
-    const sky = g.createLinearGradient(0, 0, 0, f.h);
-    sky.addColorStop(0, '#0369a1');
-    sky.addColorStop(1, '#7dd3fc');
+    if (!sky) {
+      sky = g.createLinearGradient(0, 0, 0, f.h);
+      sky.addColorStop(0, '#0369a1');
+      sky.addColorStop(1, '#7dd3fc');
+    }
     g.fillStyle = sky;
     g.fillRect(0, 0, f.w, f.h);
     g.fillStyle = '#e7c98b';
@@ -155,10 +159,10 @@
       if (prev.phase === 'play' && v.phase !== 'play') out.push('point');
       return out;
     },
-    padHint: 'Left stick or D-pad ← → to move · A (or ↑) to jump · A: rematch at the end',
+    padHint: 'Left stick or D-pad ← → to move · A to jump · A: rematch at the end',
     pad: function (btn, v) {
       if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
-      return btn === 'A' || btn === 'UP' ? { type: 'jump' } : null;
+      return btn === 'A' || btn === 'B' ? { type: 'jump' } : null;
     },
     // Every frame for controller players (the hub only sends it when it changes).
     padPoll: function (pad) {
@@ -195,7 +199,7 @@
     },
     unmount: function () {
       cancelAnimationFrame(raf);
-      root = board = arena = canvas = overlay = view = shown = null;
+      root = board = arena = canvas = overlay = view = shown = sky = null;
       overlayKey = boardKey = '';
     },
   });
