@@ -41,5 +41,9 @@ the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade game
   row ends.
 - [x] Step 4: Cannon Lob, Stack Attack (tests incl. a real shot over the wall from both sides,
   the charge timed by the phone, the same crates for both, lean and topple).
-- [ ] Step 5.
+- [x] Step 4 review: Cannon Lob caps a charge's claimed press time, holds FIRE through the reload,
+  draws when both towers fall at once, sends one update per aim; player 2's phone barrel, FIRE
+  ignores pans; no replayed topple on reconnect.
+- [x] Step 5: Bumper Cars, Paint Grab (tests incl. side / rear / head-on rams scored once, the
+  rail, a shared tile staying put, bucket splashes clipped at the edges).
 - [ ] PR ready, merge, release v0.1.7.
