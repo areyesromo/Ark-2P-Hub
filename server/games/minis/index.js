@@ -24,6 +24,9 @@ import iceSumo from './ice-sumo.js';
 import simonSays from './simon-says.js';
 import swordDuel from './sword-duel.js';
 import pourIt from './pour-it.js';
+import hurdleDash from './hurdle-dash.js';
+import laserDodge from './laser-dodge.js';
+import popTheMost from './pop-the-most.js';
 
 export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath];
-export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt];
+export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost];

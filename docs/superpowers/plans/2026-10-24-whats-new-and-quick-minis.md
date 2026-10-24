@@ -26,5 +26,8 @@ the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade game
 - [x] Step 1 review: the update that brings the card now shows it (the app keeps the last
   version in its data folder, desktop/lastrun.js, not per-port page storage), and the card is
   lobby-only. Checked in the real app (new install, older install, update, reload) and in a game.
-- [ ] Steps 2-5.
+- [x] Step 2: Hurdle Dash, Laser Dodge, Pop the Most (tests with a real-match clock offset; played in a
+  browser from the lobby, phone + controller).
+- [ ] Step 2 review.
+- [ ] Steps 3-5.
 - [ ] PR ready, merge, release v0.1.7.

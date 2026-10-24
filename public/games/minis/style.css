@@ -323,3 +323,52 @@
 .mi-pour-phone .bottle { height: 4.5rem; display: flex; align-items: center; justify-content: center; font-size: 3.6rem; }
 .mi-pour-phone .bottle span { display: inline-block; transition: transform 0.08s linear; }
 .mi-pour-phone .bottle.pouring span { filter: drop-shadow(0 0 0.6rem #fbbf24); }
+
+/* Hurdle Dash: the whole track, one lane each; the runner faces right. */
+.mi-hd { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 1.5rem; padding: 0 2rem; }
+.mi-hd-lane { position: relative; height: 11rem; border-bottom: 4px solid var(--line); }
+.mi-hd-lane.p1 { border-bottom-color: var(--p1); }
+.mi-hd-lane.p2 { border-bottom-color: var(--p2); }
+.mi-hd-lane .who { position: absolute; top: 0; left: 0; font-weight: 800; font-size: var(--fs-lg); }
+.mi-hd-lane .hurdle { position: absolute; bottom: 0; width: 0.7rem; height: 2.6rem; transform: translateX(-50%); background: repeating-linear-gradient(#fff 0 0.4rem, #ef4444 0.4rem 0.8rem); border-radius: 2px; }
+.mi-hd-lane .finish { position: absolute; right: 0; bottom: 0; width: 0.6rem; height: 100%; background: repeating-linear-gradient(#fff 0 0.6rem, #111 0.6rem 1.2rem); }
+.mi-hd-lane .runner { position: absolute; font-size: 4.5rem; line-height: 1; transform: translateX(-50%) scaleX(-1); transition: left 0.05s linear, bottom 0.05s linear; }
+.mi-hd-lane .runner.stumbling { animation: mi-wiggle 0.12s infinite alternate; opacity: 0.7; }
+
+/* Laser Dodge: beams across each lane. The figure (9rem) is in the low one standing or ducked, out of
+   it jumping; in the high one standing or jumping, under it ducked: the picture matches the rules. */
+.mi-ld-lane { justify-content: flex-end; padding-bottom: 0; }
+.mi-ld-lane .lives { position: absolute; top: 0.4rem; right: 0.8rem; font-size: 1.4rem; }
+.mi-ld-lane .lives .lost { opacity: 0.35; }
+.mi-ld-lane .floor { align-self: stretch; height: 0.5rem; background: var(--line); margin: 0 -1rem; }
+.mi-ld-lane .body { font-size: 9rem; line-height: 1; transition: transform 0.08s; transform-origin: bottom center; }
+.mi-ld-lane .body.air { transform: translateY(-3.5rem); }
+.mi-ld-lane .body.duck { transform: scaleY(0.5); }
+.mi-ld-lane.hit .body { animation: mi-wiggle 0.1s infinite alternate; filter: drop-shadow(0 0 0.6rem var(--bad)); }
+.mi-ld-lane .beam { position: absolute; left: 0; right: 0; height: 0.8rem; border-radius: var(--r-pill); }
+.mi-ld-lane .beam.low { bottom: 2.2rem; }
+.mi-ld-lane .beam.high { bottom: 6.5rem; }
+.mi-ld-lane .beam:not(.live) { border: 2px dashed #ef4444; opacity: 0.7; animation: mi-pulse 0.2s infinite alternate; }
+.mi-ld-lane .beam.live { background: #ef4444; box-shadow: 0 0 1rem #ef4444, 0 0 2rem #f87171; }
+.mi-ld-phone .mi-big-btn { min-height: 120px; touch-action: none; }
+.mi-ld-phone .duck { background: var(--btn); }
+.mi-ld-phone .duck.held { background: var(--warn); color: var(--on-warn); }
+.mi-ld-next { font-size: 2rem; font-weight: 900; color: var(--warn); }
+
+/* Pop the Most: round balloons rising, crosshair rings in each player's colour. */
+.mi-pop-field { background: linear-gradient(#0c4a6e, #075985); }
+.mi-pop-field .balloon { position: absolute; width: 3.2rem; height: 3.8rem; border-radius: 50% 50% 46% 46%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; box-shadow: inset -0.5rem -0.6rem 0 rgba(0, 0, 0, 0.18); }
+.mi-pop-field .balloon.p1 { background: var(--p1); }
+.mi-pop-field .balloon.p2 { background: var(--p2); }
+.mi-pop-field .balloon.gold { background: #fbbf24; box-shadow: 0 0 1rem #fde68a, inset -0.5rem -0.6rem 0 rgba(0, 0, 0, 0.15); }
+.mi-pop-field .balloon.spike { background: #6b7280; }
+.mi-pop-field .cross { position: absolute; width: 4.2rem; height: 4.2rem; border-radius: 50%; border: 0.35rem solid; transform: translate(-50%, -50%); transition: left 0.05s linear, top 0.05s linear; }
+.mi-pop-field .cross.p1 { border-color: var(--p1); }
+.mi-pop-field .cross.p2 { border-color: var(--p2); }
+.mi-pop-field .cross b { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); font-size: 0.9rem; white-space: nowrap; }
+.mi-pop-field .pop { position: absolute; transform: translate(-50%, -50%); font-size: 2rem; font-weight: 900; animation: mi-pop-up 0.6s ease-out forwards; pointer-events: none; }
+.mi-pop-field .pop.own, .mi-pop-field .pop.gold { color: var(--good); }
+.mi-pop-field .pop.spike { color: var(--bad); }
+.mi-pop-field .pop.theirs { color: var(--muted); }
+@keyframes mi-pop-up { to { transform: translate(-50%, -150%); opacity: 0; } }
+.mi-coins-phone .mi-pop-btn { flex: 0 0 auto; min-height: 90px; }

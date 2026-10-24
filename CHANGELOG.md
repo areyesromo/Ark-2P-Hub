@@ -11,6 +11,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - New game: **Anagram Duel**: the same five letters for both of you; the first to make a word
   takes the round.
 - New game: **Word Hunt**: a word search race; each word goes to whoever marks it first.
+- New Party Minigames: **Hurdle Dash** (jump the hurdles in time), **Laser Dodge** (jump the low
+  beams, duck the high ones) and **Pop the Most** (pop the balloons in your colour).
 
 ## 0.1.6
 
