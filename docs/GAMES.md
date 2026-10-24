@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (29)
+## Games (31)
 
-### ⚔️ Competitive (20)
+### ⚔️ Competitive (22)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -29,7 +29,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Bomb Duel | `bomb-duel` | Bomberman-style: blast crates for power-ups and trap your rival in a cross of fire. Walls close in after 90 s. | `server/games/bomb-duel.js`, `public/games/bomb-duel/`, `test/bomb-duel.test.js` |
 | Kart Race | `kart-race` | Top-down racing: pick one of 12 racers and your tyres, hold GAS, steer, brake for the bends (hold it to reverse), drift for a mini-boost, collect coins to go faster, use items (hold up to 3), hit the boost pads and bump your rival off the line. Six tracks. | `server/games/kart-race.js`, `public/games/kart-race/`, `test/kart-race.test.js`, `test/kart-racers.test.js` |
 | Quiz Battle | `quiz` | 10 trivia questions. Answer on your phone or controller; right and fast scores more. Most points wins. | `server/games/quiz-questions.js`, `server/games/quiz.js`, `public/games/quiz/`, `test/quiz.test.js`, `test/setup.test.js`, `test/sounds.test.js` |
-| Word Race | `word-race` | Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Pick the grid size, time and rounds. | `server/games/word-race.js`, `public/games/word-race/`, `test/word-race.test.js` |
+| Word Race | `word-race` | Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Pick the grid size, time and rounds. | `server/games/word-race.js`, `public/games/word-race/`, `test/anagram-duel.test.js`, `test/word-race.test.js` |
+| Anagram Duel | `anagram-duel` | Same five mixed-up letters for both of you: the first to make a word with all of them takes the round. | `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js` |
+| Word Hunt | `word-hunt` | One word search, two hunters: mark a hidden word first and it's yours. Find more than half to take the grid. | `server/games/word-hunt-words.js`, `server/games/word-hunt.js`, `public/games/word-hunt/`, `test/word-hunt.test.js` |
 | Mini Golf | `mini-golf` | Same hole, same time: pull back and putt on your phone. Walls, bumpers, sand, water and a windmill. Fewest strokes wins. | `server/games/mini-golf.js`, `public/games/mini-golf/`, `test/mini-golf.test.js` |
 | Draw Duel | `draw-duel` | A shape flashes up, then vanishes. Redraw it from memory on your phone; the closest match scores the most. 5 rounds. | `server/games/draw-duel.js`, `server/games/draw-shapes.js`, `server/games/shape-library.js`, `public/games/draw-duel/`, `test/draw-duel.test.js`, `test/sounds.test.js` |
 | Battleship | `battleship` | Hide your fleet on your phone, then take turns firing at the enemy grid. Sink all 5 ships to win. | `server/games/battleship.js`, `public/games/battleship/`, `test/battleship.test.js`, `test/sounds.test.js` |
