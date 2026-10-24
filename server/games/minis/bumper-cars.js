@@ -1,7 +1,8 @@
 // Bumper Cars (3D on the TV): a car each in a round arena with a padded rail. Point the stick
 // where you want to go: the car turns that way and drives (it grips, unlike the ice). Ram your
-// rival in the side or from behind for a point and they spin out for a moment; a head-on crash
-// (into the front of their car) scores nothing. Most points at time up wins.
+// rival in the side or from behind, nose first and hard enough, for a point and they spin out
+// for a moment; a head-on crash (into the front of their car) or backing into them scores
+// nothing. Most points at time up wins.
 export const ARENA_R = 6;
 export const CAR_R = 0.6;
 export const TURN_RATE = 4; // radians a second
@@ -9,7 +10,7 @@ export const ACCEL = 9;
 export const MAX_SPEED = 5.5;
 export const DRAG = 1.5; // forward speed lost a second, as a share
 export const GRIP = 8; // sideways slide lost a second, as a share
-export const BUMP_SPEED = 1.2; // driving into them at least this fast is a ram
+export const BUMP_SPEED = 1.2; // meeting at least this fast (closing speed) is a bump
 export const FRONT_CONE = (50 * Math.PI) / 180; // hits this close to straight ahead are head-on
 export const SPIN_MS = 900;
 export const BOUNCE = 0.8;
@@ -27,8 +28,9 @@ export default {
     const cars = [{ x: -3, y: 0, h: 0 }, { x: 3, y: 0, h: Math.PI }].map((c) => ({ ...c, vx: 0, vy: 0, spinUntil: -Infinity }));
     const steer = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
     const points = [0, 0];
-    let bump = null; // the latest bump, for the screens: { n, by (the slot that scored, or null) }
+    let bump = null; // the latest bump, for the screens: { n, by (the slot that scored, 'both' or null) }
     let bumps = 0;
+    let touching = false;
     let done = false;
     let shown = '';
 
@@ -61,19 +63,34 @@ export default {
       if (Math.hypot(c.vx, c.vy) < 0.02) c.vx = c.vy = 0;
       c.x += c.vx * dt;
       c.y += c.vy * dt;
-      // The rail: back inside, bouncing off it.
+      rail(c);
+    }
+
+    /** Keeps a car inside the rail, bouncing off it. */
+    function rail(c) {
       const d = Math.hypot(c.x, c.y);
-      if (d > ARENA_R - CAR_R) {
-        const nx = c.x / d;
-        const ny = c.y / d;
-        c.x = nx * (ARENA_R - CAR_R);
-        c.y = ny * (ARENA_R - CAR_R);
-        const out = c.vx * nx + c.vy * ny;
-        if (out > 0) {
-          c.vx -= 1.5 * out * nx;
-          c.vy -= 1.5 * out * ny;
-        }
+      if (d <= ARENA_R - CAR_R) return;
+      const nx = c.x / d;
+      const ny = c.y / d;
+      c.x = nx * (ARENA_R - CAR_R);
+      c.y = ny * (ARENA_R - CAR_R);
+      const out = c.vx * nx + c.vy * ny;
+      if (out > 0) {
+        c.vx -= 1.5 * out * nx;
+        c.vy -= 1.5 * out * ny;
       }
+    }
+
+    /**
+     * Whether car i rams the other: its front does the hitting (no reversing into them), the hit
+     * lands outside the other car's front cone (not head-on), and that car isn't already spinning.
+     * (nx, ny) points from car i to the other.
+     */
+    function rams(i, nx, ny, now) {
+      const c = cars[i];
+      const o = cars[1 - i];
+      return Math.abs(turnTo(c.h, Math.atan2(ny, nx))) < Math.PI / 2 &&
+        Math.abs(turnTo(o.h, Math.atan2(-ny, -nx))) > FRONT_CONE && !spinning(o, now);
     }
 
     function collide(now) {
@@ -81,35 +98,35 @@ export default {
       const dx = b.x - a.x;
       const dy = b.y - a.y;
       const dist = Math.hypot(dx, dy);
-      if (dist >= CAR_R * 2 || dist === 0) return;
+      const was = touching;
+      touching = dist < CAR_R * 2;
+      if (!touching || dist === 0) return;
       const nx = dx / dist;
       const ny = dy / dist;
-      // How fast each was driving into the other: the faster one is doing the ramming.
-      const into = [a.vx * nx + a.vy * ny, -(b.vx * nx + b.vy * ny)];
       const push = (CAR_R * 2 - dist) / 2;
       a.x -= nx * push;
       a.y -= ny * push;
       b.x += nx * push;
       b.y += ny * push;
-      const closing = into[0] + into[1];
+      rail(a);
+      rail(b);
+      const closing = (a.vx - b.vx) * nx + (a.vy - b.vy) * ny;
       if (closing <= 0) return;
       const j = ((1 + BOUNCE) * closing) / 2;
       a.vx -= j * nx;
       a.vy -= j * ny;
       b.vx += j * nx;
       b.vy += j * ny;
-      const by = into[0] >= into[1] ? 0 : 1;
-      if (into[by] < BUMP_SPEED) return;
-      const victim = cars[1 - by];
-      // Where the hit landed on the victim: straight ahead of it is head-on. A car that's already
-      // spinning can't be scored on again (one ram, one point).
-      const toHitter = by === 0 ? Math.atan2(-ny, -nx) : Math.atan2(ny, nx);
-      const scored = !spinning(victim, now) && Math.abs(turnTo(victim.h, toHitter)) > FRONT_CONE;
-      if (scored) {
-        points[by]++;
-        victim.spinUntil = now + SPIN_MS;
-      }
-      bump = { n: ++bumps, by: scored ? by : null };
+      // A bump is when they meet hard enough, once per contact (grinding together isn't more).
+      // Each car is judged on its own, so both can score in a side-to-side clash.
+      if (was || closing < BUMP_SPEED) return;
+      const by = [rams(0, nx, ny, now), rams(1, -nx, -ny, now)];
+      by.forEach((ok, i) => {
+        if (!ok) return;
+        points[i]++;
+        cars[1 - i].spinUntil = now + SPIN_MS;
+      });
+      bump = { n: ++bumps, by: by[0] && by[1] ? 'both' : by[0] ? 0 : by[1] ? 1 : null };
     }
 
     function view() {

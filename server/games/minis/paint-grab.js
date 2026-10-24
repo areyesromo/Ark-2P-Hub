@@ -31,22 +31,22 @@ export default {
 
     function paint() {
       const [a, b] = players.map(tileOf);
-      const same = a[0] === b[0] && a[1] === b[1];
-      if (same) return; // both on it: it stays as it was, and nobody grabs a bucket there
+      if (a[0] === b[0] && a[1] === b[1]) return; // both on it: it stays as it was, and nobody grabs a bucket there
+      // A bucket's splash first, then the tile under each of you is yours (a splash never takes
+      // the tile your rival is standing on).
       [a, b].forEach(([c, r], slot) => {
-        tiles[r * COLS + c] = String(slot);
-        if (bucket && bucket.c === c && bucket.r === r) {
-          for (let dc = -1; dc <= 1; dc++) {
-            for (let dr = -1; dr <= 1; dr++) {
-              const cc = c + dc;
-              const rr = r + dr;
-              if (cc >= 0 && cc < COLS && rr >= 0 && rr < ROWS) tiles[rr * COLS + cc] = String(slot);
-            }
+        if (!bucket || bucket.c !== c || bucket.r !== r) return;
+        for (let dc = -1; dc <= 1; dc++) {
+          for (let dr = -1; dr <= 1; dr++) {
+            const cc = c + dc;
+            const rr = r + dr;
+            if (cc >= 0 && cc < COLS && rr >= 0 && rr < ROWS) tiles[rr * COLS + cc] = String(slot);
           }
-          splash = { n: bucket.id, slot, c, r };
-          bucket = null;
         }
+        splash = { n: bucket.id, slot, c, r };
+        bucket = null;
       });
+      [a, b].forEach(([c, r], slot) => { tiles[r * COLS + c] = String(slot); });
     }
 
     function spawnBucket(now) {

@@ -46,4 +46,7 @@ the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade game
   ignores pans; no replayed topple on reconnect.
 - [x] Step 5: Bumper Cars, Paint Grab (tests incl. side / rear / head-on rams scored once, the
   rail, a shared tile staying put, bucket splashes clipped at the edges).
+- [x] Step 5 review: a ram is judged per car (nose first, outside their front, hard enough by
+  closing speed, once per contact), so a gentle nudge, backing in or grinding don't score or
+  spam; a splash never takes the tile your rival stands on.
 - [ ] PR ready, merge, release v0.1.7.

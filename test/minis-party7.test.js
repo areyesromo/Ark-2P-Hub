@@ -5,7 +5,7 @@ import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
 import { PARTIES } from '../server/games/minis/index.js';
 import bumperCars, { ARENA_R, CAR_R, SPIN_MS, TICK_MS } from '../server/games/minis/bumper-cars.js';
-import paintGrab, { COLS, ROWS, BUCKET_MS, BUCKET_LIFE_MS } from '../server/games/minis/paint-grab.js';
+import paintGrab, { COLS, ROWS, BUCKET_MS, BUCKET_LIFE_MS, TICK_MS as PAINT_TICK } from '../server/games/minis/paint-grab.js';
 
 function seeded(seed) {
   let s = seed >>> 0;
@@ -107,6 +107,44 @@ test('bumper cars: one ram scores once, even pushing on', () => {
   inst.onInput(0, { type: 'move', x: 1, y: 0 });
   ctx.advance(400);
   assert.deepEqual(inst.view(null).points, [1, 0]);
+});
+
+test('bumper cars: rammed while sliding sideways into them, the rammer still scores (whoever was faster)', () => {
+  const { inst, ctx } = run(bumperCars);
+  // Car 0 faces up but is shoved sideways (right) fast; car 1 drives its front into car 0's side.
+  inst.debugPlace(0, { x: 0, y: 0, h: -Math.PI / 2, vx: 5, vy: 0 });
+  inst.debugPlace(1, { x: 2 * CAR_R + 0.05, y: 0, h: Math.PI, vx: -2, vy: 0 });
+  ctx.advance(TICK_MS);
+  assert.deepEqual(inst.view(null).points, [0, 1]);
+});
+
+test('bumper cars: a gentle nudge from behind isn\'t a ram', () => {
+  const { inst, ctx } = run(bumperCars);
+  inst.debugPlace(1, { x: 2 * CAR_R + 0.02, y: 0, h: 0, vx: 5.2, vy: 0 });
+  inst.debugPlace(0, { x: 0, y: 0, h: 0, vx: 5.5, vy: 0 });
+  ctx.advance(200);
+  assert.deepEqual(inst.view(null).points, [0, 0]);
+});
+
+test('bumper cars: reversing into them isn\'t a ram', () => {
+  const { inst, ctx } = run(bumperCars);
+  inst.debugPlace(0, { x: 0, y: 0, h: Math.PI, vx: 3, vy: 0 }); // backing up to the right
+  inst.debugPlace(1, { x: 2 * CAR_R + 0.1, y: 0, h: -Math.PI / 2, vx: 0, vy: 0 });
+  ctx.advance(200);
+  assert.deepEqual(inst.view(null).points, [0, 0]);
+});
+
+test('bumper cars: grinding against them is one bump, not one a tick; pushing on past the spin scores no more', () => {
+  const { inst, ctx } = run(bumperCars);
+  // Car 1 pinned against the rail, side on; car 0 keeps driving into it.
+  inst.debugPlace(1, { x: ARENA_R - CAR_R, y: 0, h: -Math.PI / 2, vx: 0, vy: 0 });
+  inst.debugPlace(0, { x: ARENA_R - 3 * CAR_R - 0.3, y: 0, h: 0, vx: 4, vy: 0 });
+  inst.onInput(0, { type: 'move', x: 1, y: 0 });
+  ctx.advance(SPIN_MS + 1500);
+  const v = inst.view(null);
+  assert.deepEqual(v.points, [1, 0]);
+  assert.ok(v.bump.n <= 2, 'bumps: ' + v.bump.n);
+  for (const c of v.cars) assert.ok(Math.hypot(c.x, c.y) <= ARENA_R - CAR_R + 0.01, 'inside the rail');
 });
 
 test('bumper cars: a spinning car can\'t steer until it stops', () => {
@@ -211,6 +249,31 @@ test('paint grab: grab a paint bucket and it splashes the tiles around you', () 
   for (let c = 4; c <= 6; c++) for (let r = 3; r <= 5; r++) assert.equal(tileAt(inst.view(null), c, r), '0', c + ',' + r);
 });
 
+test('paint grab: a splash leaves the tile your rival is standing on theirs', () => {
+  const { inst, ctx } = run(paintGrab);
+  inst.debugPlace(0, { x: 5.5, y: 4.5 });
+  inst.debugPlace(1, { x: 6.5, y: 4.5 });
+  ctx.advance(100);
+  // One tick each: the next tick would repaint the tile anyway.
+  inst.debugBucket({ c: 6, r: 4 });
+  ctx.advance(PAINT_TICK);
+  assert.equal(tileAt(inst.view(null), 5, 4), '0');
+  assert.equal(inst.view(null).counts[0], 1);
+  // And the other way round.
+  inst.debugBucket({ c: 5, r: 4 });
+  ctx.advance(PAINT_TICK);
+  assert.equal(tileAt(inst.view(null), 6, 4), '1');
+});
+
+test('paint grab: nobody grabs a bucket you\'re both standing on', () => {
+  const { inst, ctx } = run(paintGrab);
+  inst.debugPlace(0, { x: 5.5, y: 4.5 });
+  inst.debugPlace(1, { x: 5.4, y: 4.4 });
+  inst.debugBucket({ c: 5, r: 4 });
+  ctx.advance(200);
+  assert.ok(inst.view(null).bucket);
+});
+
 test('paint grab: buckets turn up now and then, one at a time, and go if nobody grabs them', () => {
   const { inst, ctx } = run(paintGrab, 5);
   inst.debugPlace(0, { x: 0.5, y: 0.5 });
@@ -218,6 +281,7 @@ test('paint grab: buckets turn up now and then, one at a time, and go if nobody 
   ctx.advance(BUCKET_MS + 100);
   const b = inst.view(null).bucket;
   assert.ok(b && Number.isInteger(b.c) && b.c >= 0 && b.c < COLS && b.r >= 0 && b.r < ROWS);
+  for (const p of inst.view(null).players) assert.ok(Math.max(Math.abs(Math.floor(p.x) - b.c), Math.abs(Math.floor(p.y) - b.r)) > 1, 'away from both');
   ctx.advance(BUCKET_LIFE_MS);
   const later = inst.view(null).bucket;
   assert.ok(!later || later.id !== b.id, 'the first one went');
