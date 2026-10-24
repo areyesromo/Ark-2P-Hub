@@ -355,14 +355,17 @@
 .mi-ld-phone .duck.held { background: var(--warn); color: var(--on-warn); }
 .mi-ld-next { font-size: 2rem; font-weight: 900; color: var(--warn); }
 
-/* Pop the Most: round balloons rising, crosshair rings in each player's colour. */
-.mi-pop-field { background: linear-gradient(#0c4a6e, #075985); }
-.mi-pop-field .balloon { position: absolute; width: 3.2rem; height: 3.8rem; border-radius: 50% 50% 46% 46%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; box-shadow: inset -0.5rem -0.6rem 0 rgba(0, 0, 0, 0.18); }
+/* Pop the Most: round balloons rising, crosshair rings in each player's colour. The field keeps the
+   server's 2:1 shape (pop-the-most.js ASPECT), and a ring is its hit area: 2 x GRAB_R (0.15) of the
+   height = 15% of the width. */
+.mi-pop-field { align-self: center; width: 100%; aspect-ratio: 2 / 1; max-height: 100%; background: linear-gradient(#0c4a6e, #075985); }
+.mi-pop-field .layer { position: absolute; inset: 0; }
+.mi-pop-field .balloon { position: absolute; width: 5.5%; aspect-ratio: 5 / 6; height: auto; border-radius: 50% 50% 46% 46%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; box-shadow: inset -0.5rem -0.6rem 0 rgba(0, 0, 0, 0.18); }
 .mi-pop-field .balloon.p1 { background: var(--p1); }
 .mi-pop-field .balloon.p2 { background: var(--p2); }
 .mi-pop-field .balloon.gold { background: #fbbf24; box-shadow: 0 0 1rem #fde68a, inset -0.5rem -0.6rem 0 rgba(0, 0, 0, 0.15); }
 .mi-pop-field .balloon.spike { background: #6b7280; }
-.mi-pop-field .cross { position: absolute; width: 4.2rem; height: 4.2rem; border-radius: 50%; border: 0.35rem solid; transform: translate(-50%, -50%); transition: left 0.05s linear, top 0.05s linear; }
+.mi-pop-field .cross { position: absolute; width: 15%; aspect-ratio: 1; border-radius: 50%; border: 0.3rem solid; transform: translate(-50%, -50%); transition: left 0.05s linear, top 0.05s linear; }
 .mi-pop-field .cross.p1 { border-color: var(--p1); }
 .mi-pop-field .cross.p2 { border-color: var(--p2); }
 .mi-pop-field .cross b { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); font-size: 0.9rem; white-space: nowrap; }

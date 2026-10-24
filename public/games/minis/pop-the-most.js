@@ -11,15 +11,28 @@
   const kindOf = function (who, by) { return who === by ? 'own' : who === 'gold' ? 'gold' : who === 'spike' ? 'spike' : 'theirs'; };
   const cls = function (who) { return who === 0 ? 'p1' : who === 1 ? 'p2' : who; };
 
-  function field(s, players) {
-    return s.balloons.map(function (b) {
-      return '<span class="balloon ' + cls(b.who) + '" style="left:' + b.x * 100 + '%;top:' + b.y * 100 + '%">' + (b.who === 'spike' ? '✸' : '') + '</span>';
-    }).join('') + s.pops.map(function (p) {
+  const at = function (el, x, y) { el.style.left = x * 100 + '%'; el.style.top = y * 100 + '%'; };
+  function span(cls, html) {
+    const el = document.createElement('span');
+    el.className = cls;
+    el.innerHTML = html;
+    return el;
+  }
+
+  /** Balloons, pop scores and crosshairs, each kept by id so they glide and the scores float up. */
+  function field(box, s, players) {
+    ArkMini.keyed(box.balloons, s.balloons, function (b) { return b.id; }, function (b) {
+      return span('balloon ' + cls(b.who), b.who === 'spike' ? '✸' : '');
+    }, function (el, b) { at(el, b.x, b.y); });
+    ArkMini.keyed(box.pops, s.pops, function (p) { return p.id; }, function (p) {
       const kind = kindOf(p.who, p.by);
-      return '<span class="pop ' + kind + '" style="left:' + p.x * 100 + '%;top:' + p.y * 100 + '%">' + SCORE[kind] + '</span>';
-    }).join('') + s.cursors.map(function (c, i) {
-      return '<span class="cross p' + (i + 1) + '" style="left:' + c.x * 100 + '%;top:' + c.y * 100 + '%"><b>' + ArkMini.nameOf({ players: players }, i) + '</b></span>';
-    }).join('');
+      const el = span('pop ' + kind, SCORE[kind]);
+      at(el, p.x, p.y);
+      return el;
+    });
+    ArkMini.keyed(box.cursors, s.cursors, function (c, i) { return i; }, function (c, i) {
+      return span('cross p' + (i + 1), '<b>' + ArkMini.nameOf({ players: players }, i) + '</b>');
+    }, function (el, c) { at(el, c.x, c.y); });
   }
 
   let host = null;
@@ -29,12 +42,15 @@
     host: {
       mount: function (el, mctx) {
         lastPad[0] = lastPad[1] = '';
-        el.innerHTML = '<div class="mi-coins"><div class="score p1"></div><div class="mi-field2 mi-pop-field"></div><div class="score p2"></div></div>';
-        host = { el: el, players: mctx.players };
+        el.innerHTML = '<div class="mi-coins"><div class="score p1"></div>' +
+          '<div class="mi-field2 mi-pop-field"><div class="layer"></div><div class="layer"></div><div class="layer"></div></div>' +
+          '<div class="score p2"></div></div>';
+        const layers = el.querySelectorAll('.mi-pop-field .layer');
+        host = { el: el, players: mctx.players, box: { balloons: layers[0], pops: layers[1], cursors: layers[2] } };
       },
       update: function (s) {
         if (!host) return;
-        host.el.querySelector('.mi-pop-field').innerHTML = field(s, host.players);
+        field(host.box, s, host.players);
         host.el.querySelector('.score.p1').textContent = '🎈 ' + s.points[0];
         host.el.querySelector('.score.p2').textContent = '🎈 ' + s.points[1];
       },

@@ -4,18 +4,14 @@
 (function () {
   const lastDuck = [null, null];
 
-  function side(s, slot, players) {
-    const p = s.players[slot];
-    const pose = p.air ? ' air' : p.duck ? ' duck' : '';
-    return '<div class="mi-side p' + (slot + 1) + ' mi-ld-lane' + (p.hit ? ' hit' : '') + '">' +
+  /** A lane, once per minigame; update() then changes classes and keeps the beams by id. */
+  function lane(slot, players) {
+    return '<div class="mi-side p' + (slot + 1) + ' mi-ld-lane">' +
       '<div class="who">' + ArkMini.nameOf({ players: players }, slot) + '</div>' +
-      '<div class="lives">' + (p.lives ? '❤️'.repeat(p.lives) : '💀') + '<span class="lost">' + '🖤'.repeat(s.lives - p.lives) + '</span></div>' +
-      s.beams.map(function (b) {
-        return '<span class="beam ' + b.kind + (b.inMs <= 0 ? ' live' : '') + '"></span>';
-      }).join('') +
-      '<span class="body' + pose + '">🧍</span>' +
-      '<span class="floor"></span>' +
-      '</div>';
+      '<div class="lives"></div><div class="beams"></div><span class="body">🧍</span><span class="floor"></span></div>';
+  }
+  function livesHtml(p, all) {
+    return (p.lives ? '❤️'.repeat(p.lives) : '💀') + '<span class="lost">' + '🖤'.repeat(all - p.lives) + '</span>';
   }
 
   let host = null;
@@ -25,11 +21,26 @@
     host: {
       mount: function (el, mctx) {
         lastDuck[0] = lastDuck[1] = null;
-        el.innerHTML = '<div class="mi-split"></div>';
-        host = { el: el.firstChild, players: mctx.players };
+        el.innerHTML = '<div class="mi-split">' + lane(0, mctx.players) + lane(1, mctx.players) + '</div>';
+        host = { lanes: el.querySelectorAll('.mi-ld-lane') };
       },
       update: function (s) {
-        if (host) host.el.innerHTML = side(s, 0, host.players) + side(s, 1, host.players);
+        if (!host) return;
+        host.lanes.forEach(function (laneEl, slot) {
+          const p = s.players[slot];
+          laneEl.classList.toggle('hit', p.hit);
+          const lives = livesHtml(p, s.lives);
+          const livesEl = laneEl.querySelector('.lives');
+          if (livesEl.innerHTML !== lives) livesEl.innerHTML = lives;
+          const body = laneEl.querySelector('.body');
+          body.classList.toggle('air', p.air);
+          body.classList.toggle('duck', p.duck && !p.air);
+          ArkMini.keyed(laneEl.querySelector('.beams'), s.beams, function (b) { return b.id; }, function (b) {
+            const el = document.createElement('span');
+            el.className = 'beam ' + b.kind;
+            return el;
+          }, function (el, b) { el.classList.toggle('live', b.inMs <= 0); });
+        });
       },
       unmount: function () { host = null; },
     },
@@ -41,6 +52,8 @@
         phone = { el: el, slot: mctx.slot };
         el.querySelector('.jump').addEventListener('pointerdown', function () { mctx.send({ type: 'jump' }); mctx.vibrate(10); });
         const duck = el.querySelector('.duck');
+        // Ducking while any finger is on DUCK (two fingers, then one lifted, still ducks).
+        const fingers = new Set();
         let down = false;
         function set(on) {
           if (on === down) return;
@@ -48,8 +61,12 @@
           duck.classList.toggle('held', on);
           mctx.send({ type: 'duck', on: on });
         }
-        duck.addEventListener('pointerdown', function (e) { duck.setPointerCapture(e.pointerId); set(true); });
-        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) { duck.addEventListener(ev, function () { set(false); }); });
+        // A reload or a new mount mid-game starts standing, whatever the server last heard.
+        mctx.send({ type: 'duck', on: false });
+        duck.addEventListener('pointerdown', function (e) { duck.setPointerCapture(e.pointerId); fingers.add(e.pointerId); set(true); });
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(function (ev) {
+          duck.addEventListener(ev, function (e) { fingers.delete(e.pointerId); set(fingers.size > 0); });
+        });
       },
       update: function (s) {
         if (!phone) return;

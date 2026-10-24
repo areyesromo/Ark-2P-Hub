@@ -4,8 +4,11 @@
 export const TICK_MS = 50;
 export const SPAWN_MS = 420;
 export const RISE = [0.16, 0.26]; // field heights per second
-export const CURSOR_SPEED = 0.85; // field widths per second
-export const GRAB_R = 0.075;
+// The field is twice as wide as tall (the TV keeps that shape): x runs 0-1 across, y 0-1 down, so a
+// step across is ASPECT times longer on screen. Distances and speeds are in field heights.
+export const ASPECT = 2;
+export const CURSOR_SPEED = 0.85; // field heights per second, in any direction
+export const GRAB_R = 0.15; // field heights: the crosshair ring's radius on the TV
 export const COOLDOWN_MS = 200;
 export const POINTS = { own: 1, gold: 3, spike: -2, theirs: 0 };
 
@@ -35,7 +38,7 @@ export default {
     function tick() {
       const dt = TICK_MS / 1000;
       cursors.forEach((c) => {
-        c.x = clamp(c.x + c.vx * CURSOR_SPEED * dt, 0, 1);
+        c.x = clamp(c.x + (c.vx * CURSOR_SPEED * dt) / ASPECT, 0, 1);
         c.y = clamp(c.y + c.vy * CURSOR_SPEED * dt, 0, 1);
       });
       balloons.forEach((b) => { b.y -= b.rise * dt; });
@@ -70,7 +73,7 @@ export default {
           // The nearest balloon under the crosshair.
           let best = null;
           for (const b of balloons) {
-            const d = Math.hypot(b.x - c.x, b.y - c.y);
+            const d = Math.hypot((b.x - c.x) * ASPECT, b.y - c.y);
             if (d <= GRAB_R && (!best || d < best.d)) best = { b, d };
           }
           if (!best) return;

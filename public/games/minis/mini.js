@@ -447,7 +447,31 @@
   /** Player colours for 3D: P1 cyan, P2 pink (as the CSS --p1 / --p2). */
   const P_COLORS = [0x22d3ee, 0xf472b6];
 
+  /**
+   * Keeps one element per item in `parent`, matched by key(item, i): new items get make(item, i)
+   * appended, existing ones are only updated with set(el, item, i), and items that are gone are removed. For
+   * fields redrawn many times a second: kept elements keep their CSS transitions and animations
+   * (rebuilding with innerHTML would restart them every update).
+   */
+  function keyed(parent, items, key, make, set) {
+    const old = parent._keyed || new Map();
+    const next = new Map();
+    items.forEach(function (item, i) {
+      const k = key(item, i);
+      let el = old.get(k);
+      if (!el) {
+        el = make(item, i);
+        parent.appendChild(el);
+      }
+      if (set) set(el, item, i);
+      next.set(k, el);
+    });
+    old.forEach(function (el, k) { if (!next.has(k)) el.remove(); });
+    parent._keyed = next;
+  }
+
   window.ArkMini = {
+    keyed: keyed,
     register: function (id, r) { regs[id] = r; },
     load: load,
     hostFrame: hostFrame,

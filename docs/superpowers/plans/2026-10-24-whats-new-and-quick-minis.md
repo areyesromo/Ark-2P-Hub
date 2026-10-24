@@ -28,6 +28,9 @@ the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade game
   lobby-only. Checked in the real app (new install, older install, update, reload) and in a game.
 - [x] Step 2: Hurdle Dash, Laser Dodge, Pop the Most (tests with a real-match clock offset; played in a
   browser from the lobby, phone + controller).
-- [ ] Step 2 review.
+- [x] Step 2 review: the TV keeps elements between updates (ArkMini.keyed) so animations play,
+  Laser Dodge only sends a view when the screen changes, Pop the Most measures on a 2:1 field
+  (round hit zone = the ring), Hurdle Dash clears mid-jump only with a short landing pause, and
+  two-finger / reload-safe ducking.
 - [ ] Steps 3-5.
 - [ ] PR ready, merge, release v0.1.7.

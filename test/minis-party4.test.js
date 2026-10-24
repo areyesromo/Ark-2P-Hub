@@ -4,9 +4,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
 import { PARTIES } from '../server/games/minis/index.js';
-import hurdleDash, { LENGTH, JUMP_MS as HURDLE_JUMP_MS, MIN_GAP } from '../server/games/minis/hurdle-dash.js';
+import hurdleDash, { LENGTH, JUMP_MS as HURDLE_JUMP_MS, MIN_GAP, LAND_MS } from '../server/games/minis/hurdle-dash.js';
 import laserDodge, { LIVES, JUMP_MS as LASER_JUMP_MS } from '../server/games/minis/laser-dodge.js';
-import popTheMost, { POINTS, COOLDOWN_MS, GRAB_R } from '../server/games/minis/pop-the-most.js';
+import popTheMost, { POINTS, COOLDOWN_MS, GRAB_R, ASPECT, CURSOR_SPEED } from '../server/games/minis/pop-the-most.js';
 
 function seeded(seed) {
   let s = seed >>> 0;
@@ -19,15 +19,17 @@ function seeded(seed) {
 function run(def, seed = 1) {
   const ctx = fakeCtx();
   let ended = null;
+  let ends = 0;
+  let updates = 0;
   // As in a real match: now() is the room's clock (long past 0), elapsed() is the minigame's own.
   const api = {
-    players: ctx.players, rng: seeded(seed), speed: 1, now: () => ctx.now() + 600000, elapsed: () => ctx.now(), update() {},
+    players: ctx.players, rng: seeded(seed), speed: 1, now: () => ctx.now() + 600000, elapsed: () => ctx.now(), update() { updates++; },
     setTimeout: ctx.setTimeout, clearTimeout: ctx.clearTimeout,
-    end(r) { if (!ended) ended = r; },
+    end(r) { ends++; if (!ended) ended = r; },
   };
   const inst = def.create(api);
   inst.start();
-  return { inst, ctx, ended: () => ended };
+  return { inst, ctx, ended: () => ended, ends: () => ends, updates: () => updates };
 }
 
 test('the fourth batch: party minigames in 2D, in the party list', () => {
@@ -260,4 +262,86 @@ test('pop the most: balloons float up and away; most points wins', () => {
   inst.onInput(1, { type: 'pop' });
   inst.onTimeUp();
   assert.deepEqual(ended(), { winner: 1 });
+});
+
+test('hurdle dash: a short pause after landing before the next jump (no tapping through)', () => {
+  const { inst, ctx } = run(hurdleDash, 3);
+  inst.onInput(0, { type: 'jump' });
+  ctx.advance(HURDLE_JUMP_MS + 50);
+  assert.equal(inst.view(0).runners[0].air, 0, 'landed');
+  inst.onInput(0, { type: 'jump' });
+  ctx.advance(50);
+  assert.equal(inst.view(0).runners[0].air, 0, 'too soon after landing');
+  ctx.advance(LAND_MS);
+  inst.onInput(0, { type: 'jump' });
+  ctx.advance(50);
+  assert.ok(inst.view(0).runners[0].air > 0, 'up again');
+});
+
+test('hurdle dash: a jump only clears a hurdle mid-air, not on the way down', () => {
+  const { inst, ctx } = run(hurdleDash, 3);
+  // Jump so the runner reaches the first hurdle right at the end of the jump.
+  for (let t = 0; t < 10000; t += 50) {
+    const v = inst.view(0);
+    if (nextHurdle(v, 0) < v.runners[0].speed * (HURDLE_JUMP_MS - 30) / 1000) {
+      inst.onInput(0, { type: 'jump' });
+      break;
+    }
+    ctx.advance(50);
+  }
+  const first = inst.view(0).hurdles[0];
+  for (let t = 0; t < 10000 && inst.view(0).runners[0].pos < first + 0.5; t += 50) ctx.advance(50);
+  assert.equal(inst.view(0).runners[0].clipped, 1, 'too late in the jump: clipped');
+});
+
+test('laser dodge: sends an update only when something on screen changes', () => {
+  const { inst, ctx, updates } = run(laserDodge, 2);
+  ctx.advance(5000);
+  assert.ok(updates() > 0);
+  assert.ok(updates() < 5000 / 25 / 2, `${updates()} updates in 5 s`);
+});
+
+test('laser dodge: both out on the same beam is a draw', () => {
+  const { inst, ctx, ended, ends } = run(laserDodge, 2);
+  for (let t = 0; t < 40000 && !ended(); t += 25) ctx.advance(25);
+  assert.deepEqual(ended(), { winner: null });
+  assert.deepEqual(inst.view(0).players.map((p) => p.lives), [0, 0]);
+  inst.onTimeUp();
+  assert.equal(ends(), 2, 'the runner ignores the second end; the minigame stops ticking after the first');
+});
+
+test('pop the most: the hit zone is round on the TV (the field is twice as wide as tall)', () => {
+  const { inst, ctx } = run(popTheMost, 4);
+  const { x, y } = inst.view(0).cursors[0];
+  const across = (GRAB_R / ASPECT) * 0.8; // inside, sideways
+  const down = GRAB_R * 0.8; // inside, up/down
+  inst.debugBalloon({ x: x + across, y, who: 0 });
+  inst.onInput(0, { type: 'pop' });
+  assert.equal(inst.view(0).points[0], 1, 'sideways, inside the ring');
+  ctx.advance(COOLDOWN_MS);
+  inst.debugBalloon({ x, y: y + down, who: 0 });
+  inst.onInput(0, { type: 'pop' });
+  assert.equal(inst.view(0).points[0], 2, 'below, inside the ring');
+  ctx.advance(COOLDOWN_MS);
+  inst.debugBalloon({ x: x + (GRAB_R / ASPECT) * 1.3, y, who: 0 });
+  inst.onInput(0, { type: 'pop' });
+  assert.equal(inst.view(0).points[0], 2, 'sideways, outside the ring');
+});
+
+test('pop the most: the crosshair moves as fast across as up and down', () => {
+  const { inst, ctx } = run(popTheMost, 4);
+  const start = inst.view(0).cursors[0];
+  inst.onInput(0, { type: 'move', x: 1, y: 1 });
+  ctx.advance(500);
+  const c = inst.view(0).cursors[0];
+  const dx = (c.x - start.x) * ASPECT; // in field heights
+  const dy = c.y - start.y;
+  assert.ok(Math.abs(dx - dy) < 0.02, `${dx} vs ${dy}`);
+  assert.ok(dy > 0.3 * CURSOR_SPEED * 0.5);
+});
+
+test('pop the most: a points tie is a draw', () => {
+  const { inst, ended } = run(popTheMost, 4);
+  inst.onTimeUp();
+  assert.deepEqual(ended(), { winner: null });
 });

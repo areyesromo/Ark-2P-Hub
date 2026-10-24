@@ -1,17 +1,16 @@
 // Hurdle Dash (server/games/minis/hurdle-dash.js): a race over the same hurdles; you only jump.
 // The TV shows the whole track, one lane each; phones have one big JUMP button.
 (function () {
-  const LIFT = 2.4; // rem at the top of a jump
+  const LIFT = 4.5; // rem at the top of a jump: well over a hurdle (2.6rem)
 
-  function lane(s, slot, players) {
-    const r = s.runners[slot];
-    const lift = r.air ? Math.sin(r.air * Math.PI) * LIFT : 0;
-    return '<div class="mi-hd-lane p' + (slot + 1) + '">' +
-      '<div class="who">' + ArkMini.nameOf({ players: players }, slot) + '</div>' +
-      s.hurdles.map(function (h) { return '<span class="hurdle" style="left:' + (h / s.length) * 100 + '%"></span>'; }).join('') +
-      '<span class="finish"></span>' +
-      '<span class="runner' + (r.stumbling ? ' stumbling' : '') + '" style="left:' + (r.pos / s.length) * 100 + '%;bottom:' + (0.4 + lift) + 'rem">🏃</span>' +
-      '</div>';
+  /** The lanes and hurdles, once per minigame (the course doesn't change). */
+  function lanes(s, players) {
+    return [0, 1].map(function (slot) {
+      return '<div class="mi-hd-lane p' + (slot + 1) + '">' +
+        '<div class="who">' + ArkMini.nameOf({ players: players }, slot) + '</div>' +
+        s.hurdles.map(function (h) { return '<span class="hurdle" style="left:' + (h / s.length) * 100 + '%"></span>'; }).join('') +
+        '<span class="finish"></span><span class="runner">🏃</span></div>';
+    }).join('');
   }
 
   let host = null;
@@ -24,7 +23,18 @@
         host = { el: el.firstChild, players: mctx.players };
       },
       update: function (s) {
-        if (host) host.el.innerHTML = lane(s, 0, host.players) + lane(s, 1, host.players);
+        if (!host) return;
+        if (!host.built) {
+          host.el.innerHTML = lanes(s, host.players);
+          host.built = true;
+        }
+        // Only the runners move, so their transitions and the stumble wiggle keep playing.
+        host.el.querySelectorAll('.runner').forEach(function (el, slot) {
+          const r = s.runners[slot];
+          el.style.left = (r.pos / s.length) * 100 + '%';
+          el.style.bottom = 0.4 + (r.air ? Math.sin(r.air * Math.PI) * LIFT : 0) + 'rem';
+          el.classList.toggle('stumbling', r.stumbling);
+        });
       },
       unmount: function () { host = null; },
     },

@@ -1,13 +1,16 @@
 // Hurdle Dash: a side-view race over the same hurdles for both. The runners run by themselves and
-// keep speeding up; you only jump. Clear a hurdle and you keep your speed; touch it (on the ground
-// as you reach it) and you stumble and slow right down. First to the finish wins; at time up,
-// whoever is further along.
+// keep speeding up; you only jump. Clear a hurdle and you keep your speed; touch it (on the ground,
+// or at the very start or end of a jump, as you reach it) and you stumble and slow right down. A
+// short pause after landing means tapping JUMP non-stop doesn't get you through. First to the
+// finish wins; at time up, whoever is further along.
 export const TICK_MS = 50;
 export const LENGTH = 100; // metres
 export const START_SPEED = 4; // m/s
 export const TOP_SPEED = 9;
 export const ACCEL = 0.35; // m/s gained each second
 export const JUMP_MS = 550; // time in the air (about 4-5 m at speed: a hurdle fits easily)
+export const CLEAR = [0.1, 0.9]; // the part of the jump that clears a hurdle (not take-off or landing)
+export const LAND_MS = 150; // after landing, before the next jump
 export const STUMBLE_SPEED = 2.5;
 export const STUMBLE_MS = 600;
 export const MIN_GAP = 7; // metres between hurdles
@@ -20,7 +23,7 @@ export default {
     // One course for both: hurdles from 10 m, 7-11 m apart, the last one before 94 m.
     const hurdles = [];
     for (let at = 10; at < 94; at += MIN_GAP + Math.floor(api.rng() * 5)) hurdles.push(at);
-    const runners = [0, 1].map(() => ({ pos: 0, speed: START_SPEED, airUntil: 0, stumbleUntil: 0, next: 0, clipped: 0 }));
+    const runners = [0, 1].map(() => ({ pos: 0, speed: START_SPEED, airAt: -Infinity, airUntil: -Infinity, stumbleUntil: 0, next: 0, clipped: 0 }));
     let done = false;
 
     function tick() {
@@ -32,7 +35,8 @@ export default {
         r.pos += r.speed * dt;
         // Each hurdle passed: cleared in the air, or clipped on the ground.
         while (r.next < hurdles.length && r.pos >= hurdles[r.next]) {
-          if (now >= r.airUntil) {
+          const k = (now - r.airAt) / JUMP_MS;
+          if (!(k >= CLEAR[0] && k <= CLEAR[1])) {
             r.clipped++;
             r.speed = STUMBLE_SPEED;
             r.stumbleUntil = now + STUMBLE_MS;
@@ -58,7 +62,8 @@ export default {
         if (done || input.type !== 'jump' || (slot !== 0 && slot !== 1)) return;
         const r = runners[slot];
         const now = api.now();
-        if (now < r.airUntil || now < r.stumbleUntil) return; // already up, or still stumbling
+        if (now < r.airUntil + LAND_MS || now < r.stumbleUntil) return; // up, just landed, or stumbling
+        r.airAt = now;
         r.airUntil = now + JUMP_MS;
         api.update();
       },

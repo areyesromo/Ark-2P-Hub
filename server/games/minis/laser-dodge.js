@@ -24,6 +24,12 @@ export default {
     }
     const players = [0, 1].map(() => ({ lives: LIVES, airUntil: 0, duck: false, hitBy: 0, hitAt: -Infinity }));
     let done = false;
+    let shown = ''; // what the screens last got: hits are checked every 25 ms, but sent only on a change
+
+    /** What's on screen, without the exact countdowns (the screens only show warned / live). */
+    function screenKey(v) {
+      return JSON.stringify([v.beams.map((b) => [b.id, b.inMs <= 0]), v.players]);
+    }
 
     function tick() {
       if (done) return;
@@ -45,8 +51,22 @@ export default {
         done = true;
         return api.end({ winner: out[0] && out[1] ? null : out[0] ? 1 : 0 });
       }
-      api.update();
+      const key = screenKey(view());
+      if (key !== shown) {
+        shown = key;
+        api.update();
+      }
       api.setTimeout(tick, TICK_MS);
+    }
+
+    function view() {
+      const now = api.elapsed();
+      return {
+        lives: LIVES,
+        // The beams being warned about or live: inMs counts down to the beam, then goes negative.
+        beams: beams.filter((b) => now >= b.at - b.warn && now < b.at + HIT_MS).map((b) => ({ id: b.id, kind: b.kind, inMs: b.at - now })),
+        players: players.map((p) => ({ lives: p.lives, air: now < p.airUntil, duck: p.duck, hit: now - p.hitAt < 600 })),
+      };
     }
 
     return {
@@ -71,15 +91,7 @@ export default {
         const [a, b] = players;
         api.end({ winner: a.lives === b.lives ? null : a.lives > b.lives ? 0 : 1 });
       },
-      view: () => {
-        const now = api.elapsed();
-        return {
-          lives: LIVES,
-          // The beams being warned about or live: inMs counts down to the beam, then goes negative.
-          beams: beams.filter((b) => now >= b.at - b.warn && now < b.at + HIT_MS).map((b) => ({ id: b.id, kind: b.kind, inMs: b.at - now })),
-          players: players.map((p) => ({ lives: p.lives, air: now < p.airUntil, duck: p.duck, hit: now - p.hitAt < 600 })),
-        };
-      },
+      view,
     };
   },
 };
