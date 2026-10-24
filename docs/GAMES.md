@@ -57,7 +57,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (28)
+## Minigames (31)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -92,6 +92,9 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Hurdle Dash | `hurdle-dash` | party | 2D | Tap JUMP (or A) just before each hurdle | `server/games/minis/hurdle-dash.js`, `public/games/minis/hurdle-dash.js`, `test/minis-party4.test.js` |
 | Laser Dodge | `laser-dodge` | party | 2D | Low beam: JUMP (A). High beam: hold DUCK (B) | `server/games/minis/laser-dodge.js`, `public/games/minis/laser-dodge.js`, `test/minis-party4.test.js` |
 | Pop the Most | `pop-the-most` | party | 2D | Steer (joystick / stick) and POP (A) your colour and the gold ones | `server/games/minis/pop-the-most.js`, `public/games/minis/pop-the-most.js`, `test/minis-party4.test.js` |
+| Safe Cracker | `safe-cracker` | party | 2D | Turn the dial (← → on a controller); when it clicks, TRY (A) | `server/games/minis/safe-cracker.js`, `public/games/minis/safe-cracker.js`, `test/minis-party5.test.js` |
+| Reflex Grid | `reflex-grid` | party | 2D | Tap the lit squares before they fade (D-pad + A on a controller) | `server/games/minis/reflex-grid.js`, `public/games/minis/reflex-grid.js`, `test/minis-party5.test.js` |
+| Mirror Me | `mirror-me` | party | 2D | Watch the shape, then join the dots to draw it from memory (D-pad + A on a controller) | `server/games/minis/mirror-me.js`, `public/games/minis/mirror-me.js`, `test/minis-party5.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->

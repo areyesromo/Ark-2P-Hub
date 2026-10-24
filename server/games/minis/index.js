@@ -27,6 +27,9 @@ import pourIt from './pour-it.js';
 import hurdleDash from './hurdle-dash.js';
 import laserDodge from './laser-dodge.js';
 import popTheMost from './pop-the-most.js';
+import safeCracker from './safe-cracker.js';
+import reflexGrid from './reflex-grid.js';
+import mirrorMe from './mirror-me.js';
 
 export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath];
-export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost];
+export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe];

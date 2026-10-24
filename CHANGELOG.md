@@ -13,6 +13,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - New game: **Word Hunt**: a word search race; each word goes to whoever marks it first.
 - New Party Minigames: **Hurdle Dash** (jump the hurdles in time), **Laser Dodge** (jump the low
   beams, duck the high ones) and **Pop the Most** (pop the balloons in your colour).
+- New Party Minigames: **Safe Cracker** (turn the dial until it clicks), **Reflex Grid** (tap the
+  lights before they fade) and **Mirror Me** (remember a shape and draw it from memory).
 
 ## 0.1.6
 

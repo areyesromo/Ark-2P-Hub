@@ -375,3 +375,53 @@
 .mi-pop-field .pop.theirs { color: var(--muted); }
 @keyframes mi-pop-up { to { transform: translate(-50%, -150%); opacity: 0; } }
 .mi-coins-phone .mi-pop-btn { flex: 0 0 auto; min-height: 90px; }
+
+/* Safe Cracker: a dial face that turns (the number stays upright), a lock light, three locks. */
+.mi-sc-dial { position: relative; width: min(16rem, 60vw); aspect-ratio: 1; border-radius: 50%; border: 0.6rem solid var(--line); background: radial-gradient(#334155, #0f172a); transition: box-shadow 0.15s, border-color 0.15s; touch-action: none; }
+.mi-sc-dial .face { position: absolute; inset: 0; border-radius: 50%; transition: transform 0.12s; }
+.mi-sc-dial .mark { position: absolute; top: 0.4rem; left: 50%; width: 0.5rem; height: 1.6rem; margin-left: -0.25rem; border-radius: var(--r-pill); background: #e5e7eb; }
+.mi-sc-dial .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3.4rem; font-weight: 900; transition: transform 0.12s; }
+.mi-sc-dial.click { border-color: #22c55e; box-shadow: 0 0 1.4rem #22c55e; animation: mi-pulse 0.12s infinite alternate; }
+.mi-sc-dial.locked { border-color: var(--bad); }
+.mi-sc-locks { display: flex; gap: 0.6rem; justify-content: center; }
+.mi-sc-locks span { width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 3px solid var(--line); }
+.mi-sc-locks span.open { background: #22c55e; border-color: #22c55e; }
+.mi-sc-phone .mi-big-btn { flex: 0 0 auto; min-height: 90px; }
+
+/* Reflex Grid: 3 x 3; a lit square shows a bar running out over its life. */
+.mi-rg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; width: min(100%, 22rem); aspect-ratio: 1; }
+.mi-rg-grid .cell { position: relative; border-radius: var(--r-md); background: var(--bg-2); border: 3px solid var(--line); overflow: hidden; padding: 0; }
+.mi-side.p1 .mi-rg-grid .cell.lit { background: var(--p1); }
+.mi-side.p2 .mi-rg-grid .cell.lit { background: var(--p2); }
+.mi-rg-phone .mi-rg-grid .cell.lit { background: var(--me); }
+.mi-rg-grid .cell.lit::after { content: ''; position: absolute; left: 0; bottom: 0; height: 0.4rem; width: 100%; background: rgba(255, 255, 255, 0.85); animation: mi-rg-fade var(--left) linear forwards; }
+.mi-rg-grid .cell.got { background: var(--bg-2); }
+.mi-rg-grid .cell.got::before { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--good); }
+.mi-rg-grid .cell.miss { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 35%, var(--bg-2)); }
+.mi-rg-grid .cell.cursor { outline: 0.3rem solid #fff; outline-offset: 0.15rem; }
+.mi-rg-score { position: absolute; top: 0.3rem; right: 0.8rem; font-size: 2rem; font-weight: 900; }
+.mi-rg-phone .mi-rg-grid { width: min(100%, 360px); }
+@keyframes mi-rg-fade { from { width: 100%; } to { width: 0; } }
+
+/* Mirror Me: dots and lines in an SVG; a time bar for each stage. */
+.mi-mm { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; }
+.mi-mm-title { text-align: center; font-size: var(--fs-xl); font-weight: 900; }
+.mi-mm-bar { height: 0.4rem; border-radius: var(--r-pill); background: var(--warn); align-self: stretch; transform-origin: left; }
+.mi-mm-bar.run { animation: mi-mm-time var(--ms) linear forwards; }
+@keyframes mi-mm-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.mi-mm .board, .mi-mm-phone .board { width: min(100%, 22rem); aspect-ratio: 1; }
+.mi-mm-phone .board { width: min(100%, 340px); touch-action: none; }
+.mi-mm-grid { width: 100%; height: 100%; }
+.mi-mm-grid .dot { fill: #94a3b8; }
+.mi-mm-grid .dot.picked { fill: var(--warn); r: 7; }
+.mi-mm-grid .dot.cur { stroke: #fff; stroke-width: 2.5; }
+.mi-mm-phone .mi-mm-grid .dot { r: 7; }
+.mi-mm-grid line { stroke-width: 5; stroke-linecap: round; }
+.mi-mm-grid line.shape { stroke: var(--warn); }
+.mi-mm-grid line.mine { stroke: var(--text); }
+.mi-mm-grid line.ghost { stroke: rgba(148, 163, 184, 0.35); stroke-width: 9; }
+.mi-mm-grid line.right { stroke: var(--good); }
+.mi-mm-grid line.wrong { stroke: var(--bad); stroke-dasharray: 4 4; }
+.mi-mm-phone .row { display: flex; gap: 0.8rem; width: 100%; }
+.mi-mm-phone .row button { flex: 1; min-height: 64px; font-size: 1.3rem; font-weight: 800; }
+.mi-side .info { font-weight: 800; color: var(--muted); }

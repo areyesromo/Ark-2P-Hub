@@ -32,5 +32,8 @@ the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade game
   Laser Dodge only sends a view when the screen changes, Pop the Most measures on a 2:1 field
   (round hit zone = the ring), Hurdle Dash clears mid-jump only with a short landing pause, and
   two-finger / reload-safe ducking.
-- [ ] Steps 3-5.
+- [x] Step 3: Safe Cracker, Reflex Grid, Mirror Me (tests incl. hidden drawings and a controller
+  player drawing on the TV; played in a browser, dial drag checked).
+- [ ] Step 3 review.
+- [ ] Steps 4-5.
 - [ ] PR ready, merge, release v0.1.7.
