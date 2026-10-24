@@ -19,6 +19,7 @@ const needed = [
   '/desktop/updates.js',
   '/desktop/applog.js',
   '/desktop/steam.js',
+  '/desktop/lastrun.js',
   '/desktop/icons/icon.png',
   '/node_modules/electron-updater/package.json',
   '/server/app.js',

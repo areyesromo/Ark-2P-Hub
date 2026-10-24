@@ -92,7 +92,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          sparse-checkout: desktop/steam
+          sparse-checkout: |
+            desktop/steam
+            CHANGELOG.md
       - uses: actions/download-artifact@v4
         with:
           path: files
@@ -103,7 +105,9 @@ jobs:
         run: |
           ls -la files
           # This version's lines from CHANGELOG.md (the same as the app's What's new card) go first.
-          awk -v v="$VERSION" '/^## /{on=($2==v)} on' CHANGELOG.md | sed 's/^## /### What'"'"'s new in v/' > notes.md
+          awk -v v="$VERSION" '/^## /{on=($2==v || $2=="v"v)} on' CHANGELOG.md | sed 's/^## v\{0,1\}/### What'"'"'s new in v/' > notes.md
+          grep -q . notes.md || { echo "CHANGELOG.md has no section for $VERSION: add one first"; exit 1; }
+          echo >> notes.md
           cat >> notes.md <<'EOF'
           **Steam Deck / Linux:** download the `.AppImage`, make it executable (right-click → Properties → Permissions → Is executable / Allow executing file as program, or `chmod +x`), run it. On the Deck, add it to Steam as a non-Steam game to launch it from Game Mode. For its library art, unzip `Ark-2P-Hub-steam-artwork.zip` and set each picture in Steam. Step by step: [Steam Deck guide](https://github.com/areyesromo/Ark-2P-Hub/blob/main/docs/STEAM-DECK.md).
 

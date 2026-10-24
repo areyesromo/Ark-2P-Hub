@@ -173,7 +173,7 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 
 .version { position: fixed; right: 12px; bottom: 6px; font-size: 0.75rem; color: var(--muted); opacity: 0.5; pointer-events: none; }
 /* In the desktop app the version opens What's new. */
-.version.tappable { pointer-events: auto; cursor: pointer; }
+.version.tappable { pointer-events: auto; cursor: pointer; padding: 6px 10px; margin: -6px -10px; }
 
 /* What's new: a card over the lobby after an update. */
 .whats-new { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 1rem;

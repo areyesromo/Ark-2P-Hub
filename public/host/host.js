@@ -337,6 +337,9 @@
     }
     state = s;
     reconcilePads();
+    // What's new is a lobby thing (see showNews).
+    if (s.phase === 'playing' && newsOpen) closeNews();
+    if (s.phase !== 'playing' && newsWaiting) showNews(newsWaiting);
     // The picker follows its seat: closed when that player leaves or a game starts.
     if (picker) {
       const p = s.players[picker.slot];
@@ -447,24 +450,31 @@
     });
   }
 
-  // What's new (desktop app): after an update, the notes since the version this TV last ran
-  // (CHANGELOG.md), once. Tapping the version number shows the current version's again. A, B or
-  // Start on a controller closes it.
-  const SEEN_KEY = 'ark.seenVersion';
+  // What's new (desktop app): after an update, the notes since the version the app last ran
+  // (CHANGELOG.md), once. Tapping the version number shows the current version's again. Lobby
+  // only: one that arrives during a game waits for the lobby, and a game starting closes it.
+  // A, B or Start on a controller closes it.
   let newsOpen = false;
+  let newsWaiting = null;
+  const inLobby = function () { return !state || state.phase !== 'playing'; };
   function newsLine(text) {
     return Ark.escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
   }
   function showNews(news) {
     if (!news || !news.entries.length) return;
+    if (!inLobby()) {
+      newsWaiting = news;
+      return;
+    }
+    newsWaiting = null;
     $('whats-new').innerHTML = '<div class="whats-new-card panel">' +
       '<h2>What\'s new in v' + Ark.escapeHtml(news.version) + '</h2>' +
-      news.entries.map(function (e, i) {
+      news.entries.map(function (e) {
         return (news.entries.length > 1 ? '<h3>v' + Ark.escapeHtml(e.version) + '</h3>' : '') +
           '<ul>' + e.items.map(function (item) { return '<li>' + newsLine(item) + '</li>'; }).join('') + '</ul>';
       }).join('') +
       '<button id="whats-new-ok" class="primary">Got it</button>' +
-      '<p class="muted">🎮 A to close</p></div>';
+      '<p class="muted">🎮 A or B to close</p></div>';
     $('whats-new').classList.remove('hidden');
     newsOpen = true;
     $('whats-new-ok').addEventListener('click', closeNews);
@@ -478,16 +488,17 @@
       .then(function (r) { return r.json(); });
   }
   if (desktop) {
-    let seen = null;
-    try { seen = localStorage.getItem(SEEN_KEY); } catch (e) { /* no storage: show nothing */ }
-    loadNews(seen || '').then(function (news) {
-      // A first run has nothing "new" to show: remember the version for next time.
-      if (seen && seen !== news.version) showNews(news);
-      try { localStorage.setItem(SEEN_KEY, news.version); } catch (e) { /* fine */ }
+    desktop.lastRun().then(function (run) {
+      if (!run) return null;
+      // The notes since the last version (none if it's the same one). An app from before the
+      // version was kept: this version's. A brand new install: nothing.
+      if (run.previous) return loadNews(run.previous).then(showNews);
+      if (run.ranBefore) return loadNews('').then(showNews);
+      return null;
     }).catch(function () {});
     $('version').classList.add('tappable');
     $('version').addEventListener('click', function () {
-      loadNews('').then(showNews).catch(function () {});
+      if (inLobby()) loadNews('').then(showNews).catch(function () {});
     });
   }
 
