@@ -10,9 +10,14 @@
   }
   /** Shows one safe in an element built with dialHtml(). */
   function showSafe(el, safe, size) {
-    // The face turns the way the finger goes (clockwise counts up); the number stays upright.
-    el.querySelector('.face').style.transform = 'rotate(' + (safe.dial * 360) / size + 'deg)';
-    el.querySelector('.num').style.transform = 'rotate(' + (-safe.dial * 360) / size + 'deg)';
+    // The face turns the way the finger goes (clockwise counts up), the short way round even past
+    // 0 (so it never spins back a whole turn); the number stays upright.
+    const target = (safe.dial * 360) / size;
+    const shown = el._angle === undefined ? target : el._angle;
+    const delta = ((((target - shown) % 360) + 540) % 360) - 180;
+    el._angle = shown + delta;
+    el.querySelector('.face').style.transform = 'rotate(' + el._angle + 'deg)';
+    el.querySelector('.num').style.transform = 'rotate(' + -el._angle + 'deg)';
     el.querySelector('.num').textContent = safe.dial;
     el.querySelector('.mi-sc-dial').classList.toggle('click', safe.click);
     el.querySelector('.mi-sc-dial').classList.toggle('locked', safe.locked);
@@ -58,10 +63,14 @@
           if (d < -180) d += 360;
           last = a;
           carry += d;
-          const steps = Math.trunc(carry / STEP_DEG);
-          if (!steps) return;
+          // A fast flick can be many steps: sent ten at a time (the most one input takes).
+          let steps = Math.trunc(carry / STEP_DEG);
           carry -= steps * STEP_DEG;
-          mctx.send({ type: 'turn', by: Math.max(-10, Math.min(10, steps)) });
+          while (steps) {
+            const by = Math.max(-10, Math.min(10, steps));
+            mctx.send({ type: 'turn', by: by });
+            steps -= by;
+          }
         });
         ['pointerup', 'pointercancel'].forEach(function (ev) { dial.addEventListener(ev, function () { last = null; }); });
         phone.vibrate = mctx.vibrate;

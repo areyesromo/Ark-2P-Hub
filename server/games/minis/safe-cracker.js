@@ -1,21 +1,30 @@
 // Safe Cracker: a dial of 40 numbers and a 3-number combination each. Turn the dial; on your next
 // number it clicks (the phone buzzes, the lock light flickers), then TRY locks it in. A wrong TRY
 // jams the dial for a moment. First to open their safe wins; at time up, more numbers opened.
-// The two combinations are different (so watching your rival's light tells you nothing) but
-// equally hard: the same turns apart.
+// The two safes are equally hard (your dial starts FIRST_AWAY from your first number, and the
+// three numbers take TRAVEL turns in all) but spaced their own way, so watching your rival's
+// lock light tells you nothing about yours.
 export const DIAL = 40;
 export const WRONG_MS = 800;
+export const FIRST_AWAY = 10;
+export const TRAVEL = 30; // turns from the first number to the second, plus the second to the third
 const MAX_TURN = 10; // one turn input: up to this many numbers either way
 
 export default {
   id: 'safe-cracker', kind: 'party', look: '2d', name: 'Safe Cracker', order: 'CRACK THE SAFE!', howTo: 'Turn the dial (← → on a controller); when it clicks, TRY (A)', durationMs: 40000,
   create(api) {
-    // Shared distances between the numbers, a different starting number each.
-    const gaps = [10 + Math.floor(api.rng() * 12), 10 + Math.floor(api.rng() * 12)];
-    const starts = [5 + Math.floor(api.rng() * 30)];
-    starts.push((starts[0] + 10 + Math.floor(api.rng() * 20)) % DIAL);
-    const combos = starts.map((s) => [s, (s + DIAL - gaps[0]) % DIAL, (s + DIAL - gaps[0] + gaps[1]) % DIAL]);
-    const safes = [0, 1].map(() => ({ dial: 0, opened: 0, jamUntil: -Infinity }));
+    const wrap = (n) => ((n % DIAL) + DIAL) % DIAL;
+    const side = () => (api.rng() < 0.5 ? -1 : 1);
+    // Each safe: a first number anywhere, the dial FIRST_AWAY from it, then two gaps (10-20 turns
+    // each, either way) that add up to TRAVEL.
+    const safes = [];
+    const combos = [0, 1].map(() => {
+      const first = Math.floor(api.rng() * DIAL);
+      const gap = 10 + Math.floor(api.rng() * 11);
+      const second = wrap(first + side() * gap);
+      safes.push({ dial: wrap(first + side() * FIRST_AWAY), opened: 0, jamUntil: -Infinity, timer: null });
+      return [first, second, wrap(second + side() * (TRAVEL - gap))];
+    });
     let done = false;
 
     const click = (slot) => safes[slot].opened < 3 && safes[slot].dial === combos[slot][safes[slot].opened];
@@ -41,6 +50,9 @@ export default {
             if (s.opened === 3) return end(slot);
           } else {
             s.jamUntil = now + WRONG_MS;
+            // Tell the screens when the jam is over.
+            api.clearTimeout(s.timer);
+            s.timer = api.setTimeout(api.update, WRONG_MS);
           }
         } else {
           return;

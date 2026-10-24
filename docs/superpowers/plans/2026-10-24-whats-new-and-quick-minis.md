@@ -34,6 +34,10 @@ the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade game
   two-finger / reload-safe ducking.
 - [x] Step 3: Safe Cracker, Reflex Grid, Mirror Me (tests incl. hidden drawings and a controller
   player drawing on the TV; played in a browser, dial drag checked).
-- [ ] Step 3 review.
+- [x] Step 3 review: Safe Cracker spaces each safe its own way (equal start distance and total
+  turning), clears "Jammed!" on time, turns the short way past 0; Reflex Grid judges taps by
+  when they were made, ignores a light you already got, never lights a square twice; Mirror Me
+  is phones only (a controller player would draw in plain sight); controller cursors stop at
+  row ends.
 - [ ] Steps 4-5.
 - [ ] PR ready, merge, release v0.1.7.

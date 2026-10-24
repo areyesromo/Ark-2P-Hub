@@ -78,7 +78,7 @@
       return null;
     },
     sounds: function (prev, s) {
-      if (!s.last || JSON.stringify(s.last) === JSON.stringify(prev.last)) return [];
+      if (!s.last || (prev.last && prev.last.n === s.last.n)) return [];
       return [s.last.good ? 'point' : 'wrong'];
     },
   });

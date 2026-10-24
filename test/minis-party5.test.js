@@ -4,8 +4,9 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
 import { PARTIES } from '../server/games/minis/index.js';
-import safeCracker, { DIAL, WRONG_MS } from '../server/games/minis/safe-cracker.js';
+import safeCracker, { DIAL, WRONG_MS, FIRST_AWAY, TRAVEL } from '../server/games/minis/safe-cracker.js';
 import reflexGrid, { CELLS } from '../server/games/minis/reflex-grid.js';
+import { poolFor } from '../server/games/party-minis.js';
 import mirrorMe, { DOTS, ROUNDS, SHOW_MS, DRAW_MS, REVEAL_MS, adjacent } from '../server/games/minis/mirror-me.js';
 
 function seeded(seed) {
@@ -51,13 +52,29 @@ function turnTo(inst, slot, n) {
   }
 }
 
-test('safe cracker: two different combinations, equally hard (the same turns apart)', () => {
-  const { inst } = run(safeCracker, 3);
-  const [a, b] = [inst.debugCombo(0), inst.debugCombo(1)];
-  assert.equal(a.length, 3);
-  assert.notDeepEqual(a, b, 'not the same numbers');
-  const gaps = (c) => [(c[1] - c[0] + DIAL) % DIAL, (c[2] - c[1] + DIAL) % DIAL];
-  assert.deepEqual(gaps(a), gaps(b), 'the same distances between numbers');
+/** Turns needed, the short way round, from one number to the next. */
+const dist = (a, b) => Math.min((a - b + DIAL) % DIAL, (b - a + DIAL) % DIAL);
+
+test('safe cracker: equally hard: the same distance to the first number and the same total turning', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const { inst } = run(safeCracker, seed);
+    const [a, b] = [inst.debugCombo(0), inst.debugCombo(1)];
+    assert.equal(dist(inst.view(0).dial, a[0]), FIRST_AWAY, 'from the start to the first number');
+    assert.equal(dist(inst.view(1).dial, b[0]), FIRST_AWAY);
+    const travel = (c) => dist(c[0], c[1]) + dist(c[1], c[2]);
+    assert.equal(travel(a), TRAVEL);
+    assert.equal(travel(b), TRAVEL);
+  }
+});
+
+test('safe cracker: your rival\'s numbers tell you nothing about yours (each safe spaced its own way)', () => {
+  let differ = 0;
+  for (let seed = 1; seed <= 20; seed++) {
+    const { inst } = run(safeCracker, seed);
+    const gap = (c) => dist(c[0], c[1]);
+    if (gap(inst.debugCombo(0)) !== gap(inst.debugCombo(1))) differ++;
+  }
+  assert.ok(differ >= 15, `${differ} of 20 differ`);
 });
 
 test('safe cracker: the dial clicks only on your next number; TRY there opens one lock', () => {
@@ -72,15 +89,18 @@ test('safe cracker: the dial clicks only on your next number; TRY there opens on
   assert.equal(inst.view(0).click, false, 'the next number is a different one');
 });
 
-test('safe cracker: a wrong TRY locks you out for a moment', () => {
-  const { inst, ctx } = run(safeCracker, 3);
+test('safe cracker: a wrong TRY locks you out for a moment, and the screens hear when it ends', () => {
+  const { inst, ctx, updates } = run(safeCracker, 3);
   const combo = inst.debugCombo(0);
   turnTo(inst, 0, (combo[0] + 5) % DIAL);
   inst.onInput(0, { type: 'try' });
   assert.equal(inst.view(0).locked, true);
   turnTo(inst, 0, combo[0]);
   assert.notEqual(inst.view(0).dial, combo[0], 'the dial is stuck while locked');
+  const before = updates();
   ctx.advance(WRONG_MS);
+  assert.ok(updates() > before, 'an update when the jam ends');
+  assert.equal(inst.view(0).locked, false);
   turnTo(inst, 0, combo[0]);
   inst.onInput(0, { type: 'try' });
   assert.equal(inst.view(0).opened, 1);
@@ -100,9 +120,10 @@ test('safe cracker: opening all three wins; the TV never sees a combination', ()
 
 test('safe cracker: at time up more locks opened wins; bad input is ignored', () => {
   const { inst, ended } = run(safeCracker, 3);
+  const start = inst.view(0).dial;
   for (const bad of [{ type: 'turn', by: 0 }, { type: 'turn', by: 99 }, { type: 'turn', by: 1.5 }, { type: 'turn' }, { type: 'spin' }]) inst.onInput(0, bad);
-  assert.equal(inst.view(0).dial, 0);
-  inst.onInput(0, { type: 'turn', by: -1 });
+  assert.equal(inst.view(0).dial, start);
+  for (let i = 0; i <= start; i++) inst.onInput(0, { type: 'turn', by: -1 });
   assert.equal(inst.view(0).dial, DIAL - 1, 'the dial wraps round');
   const combo = inst.debugCombo(0);
   turnTo(inst, 0, combo[0]);
@@ -126,7 +147,7 @@ test('reflex grid: the same lights for both; hitting a lit square +1, a dark one
   inst.onInput(1, { type: 'tap', cell: lit.cell });
   assert.deepEqual(inst.view(0).points, [1, 1], 'both can score the same light');
   inst.onInput(0, { type: 'tap', cell: lit.cell });
-  assert.equal(inst.view(0).points[0], 0, 'not twice: that counts as a miss');
+  assert.equal(inst.view(0).points[0], 1, 'a second tap on a light you got is ignored');
   const dark = [...Array(CELLS).keys()].find((c) => !inst.view(0).lights.some((l) => l.cell === c));
   inst.onInput(1, { type: 'tap', cell: dark });
   assert.equal(inst.view(0).points[1], 0);
@@ -235,12 +256,30 @@ test('mirror me: three rounds, then the most points wins (drawing ends with the 
   assert.ok(ROUNDS * (SHOW_MS + DRAW_MS + REVEAL_MS) <= mirrorMe.durationMs, 'fits in its time');
 });
 
-test('mirror me: a controller player draws on the TV, so only their lines show there', () => {
-  const { inst, ctx } = run(mirrorMe, 2);
-  ctx.players[1].local = true; // seat 2 plays with a controller, seat 1 with a phone
-  ctx.advance(SHOW_MS);
-  inst.onInput(0, { type: 'line', a: 0, b: 1 });
-  inst.onInput(1, { type: 'line', a: 5, b: 6 });
-  assert.deepEqual(inst.view(null).padLines, [null, [[5, 6]]]);
-  assert.equal(inst.view(0).padLines, undefined, 'phones never get them');
+test('reflex grid: a tap counts from when it was made on the phone (not when it arrived)', () => {
+  const { inst, ctx } = run(reflexGrid, 5);
+  let lit = null;
+  let litAt = 0;
+  for (let t = 0; t < 5000 && !lit; t += 50) {
+    ctx.advance(50);
+    lit = inst.view(0).lights[0];
+    litAt = ctx.now();
+  }
+  ctx.advance(lit.left + 100); // the light has gone out by the time the tap arrives
+  inst.onInput(0, { type: 'tap', cell: lit.cell, t: litAt + 50 });
+  assert.equal(inst.view(0).points[0], 1);
+});
+
+test('reflex grid: a square is never lit twice at once', () => {
+  const { inst, ctx } = run(reflexGrid, 9);
+  for (let t = 0; t < 30000; t += 50) {
+    ctx.advance(50);
+    const cells = inst.view(0).lights.map((l) => l.cell);
+    assert.equal(new Set(cells).size, cells.length, 'at ' + t);
+  }
+});
+
+test('mirror me is phones only (a controller player would draw in plain sight on the TV)', () => {
+  assert.equal(mirrorMe.phoneOnly, true);
+  assert.ok(!poolFor(PARTIES, 'mix', [{ local: false }, { local: true }]).includes(mirrorMe));
 });

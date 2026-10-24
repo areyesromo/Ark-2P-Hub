@@ -1,8 +1,8 @@
 // Mirror Me: the TV shows a shape drawn between dots on a 4 x 4 grid, then hides it; you both draw
 // it from memory by joining the dots on your phone. Three rounds, each shape a line longer. A
 // right line is +1, a wrong one -1 (a round never scores below 0). Most points after three wins.
-// While you draw, nobody sees the other's lines: the TV shows only how many each has drawn (except
-// for a controller player, who draws on the TV).
+// While you draw, nobody sees the other's lines: the TV shows only how many each has drawn. So it's
+// phones only: a controller player would draw on the TV, in plain sight.
 export const SIZE = 4;
 export const DOTS = SIZE * SIZE;
 export const ROUNDS = 3;
@@ -21,7 +21,7 @@ const line = (a, b) => (a < b ? [a, b] : [b, a]);
 const keyOf = ([a, b]) => a + '-' + b;
 
 export default {
-  id: 'mirror-me', kind: 'party', look: '2d', name: 'Mirror Me', order: 'REMEMBER THE SHAPE!', howTo: 'Watch the shape, then join the dots to draw it from memory (D-pad + A on a controller)', durationMs: 45000,
+  id: 'mirror-me', kind: 'party', look: '2d', phoneOnly: true, name: 'Mirror Me', order: 'REMEMBER THE SHAPE!', howTo: 'Watch the shape, then join the dots on your phone to draw it from memory', durationMs: 45000,
   create(api) {
     let round = 0; // 1-based once started
     let stage = 'show';
@@ -111,10 +111,7 @@ export default {
       view: (slot) => {
         const showing = stage === 'show' || stage === 'reveal';
         const you = slot === 0 || slot === 1;
-        const pad = (i) => Boolean(api.players[i] && api.players[i].local);
         return {
-          // The TV draws a controller player's lines as they go (they have no phone).
-          ...(you ? {} : { padLines: drawn.map((d, i) => (pad(i) ? d : null)) }),
           size: SIZE,
           round,
           rounds: ROUNDS,

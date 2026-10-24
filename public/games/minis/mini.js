@@ -297,6 +297,8 @@
   function moveCursor(i, btn, n, cols) {
     const d = { LEFT: -1, RIGHT: 1, UP: -cols, DOWN: cols }[btn];
     if (d === undefined) return i;
+    // Left and right stop at the ends of a row (not on to the next one).
+    if ((btn === 'LEFT' && i % cols === 0) || (btn === 'RIGHT' && i % cols === cols - 1)) return i;
     const j = i + d;
     return j < 0 || j >= n ? i : j;
   }
