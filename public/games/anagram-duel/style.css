@@ -1,0 +1,45 @@
+/* Letter tiles (TV and phone): tiles like a word game's, the colour is the tile itself. */
+.ad-tiles, .ad-word { display: flex; justify-content: center; gap: 0.35em; }
+.ad-tile, .ad-slot { width: 1.5em; height: 1.5em; display: flex; align-items: center; justify-content: center; border-radius: var(--r-md); font-weight: 900; line-height: 1; padding: 0; min-width: 0; font-size: inherit; }
+.ad-tile { background: #fef3c7; color: #422006; border: 0; box-shadow: 0 0.08em 0 #b45309; }
+.ad-tile.used { opacity: 0.2; }
+.ad-tiles.locked .ad-tile { opacity: 0.35; }
+.ad-slot { border: 0.08em dashed var(--line); }
+.ad-slot.full { border-style: solid; border-color: var(--me, var(--p1)); background: var(--panel); }
+.ad-word.shake { animation: ad-shake 0.35s; }
+@keyframes ad-shake { 25% { transform: translateX(-0.3em); } 75% { transform: translateX(0.3em); } }
+
+/* The time left: drawn at its width when the view came, then runs down to nothing by itself. */
+.ad-bar { width: min(60rem, 80%); height: 0.6rem; border-radius: var(--r-pill); background: var(--panel); overflow: hidden; align-self: center; }
+.ad-bar span { display: block; height: 100%; background: var(--good); animation: ad-drain linear forwards; }
+@keyframes ad-drain { to { width: 0; } }
+
+/* ---- TV ---- */
+
+.ad-host { flex: 1; display: flex; flex-direction: column; gap: 1.5rem; }
+.ad-main { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; text-align: center; }
+.ad-host .big { font-size: 6rem; font-weight: 900; letter-spacing: 0.06em; }
+.ad-host .sub { font-size: var(--fs-lg); color: var(--muted); }
+.ad-host .ad-tiles { font-size: 6rem; }
+.ad-lanes { display: flex; gap: 4rem; font-size: var(--fs-lg); font-weight: 800; }
+.ad-lane { display: flex; align-items: center; gap: 1rem; }
+.ad-lane .dots { display: flex; gap: 0.4rem; }
+.ad-lane .dot { width: 1.1rem; height: 1.1rem; border-radius: 50%; border: 2px solid currentColor; opacity: 0.5; }
+.ad-lane.p1 .dot { color: var(--p1); }
+.ad-lane.p2 .dot { color: var(--p2); }
+.ad-lane .dot.on { background: currentColor; opacity: 1; }
+.ad-over { font-size: var(--fs-2xl); font-weight: 900; display: flex; flex-direction: column; gap: 0.6rem; }
+.ad-over .sub { font-weight: 400; }
+
+/* ---- phone ---- */
+
+.ad-phone { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 12px; text-align: center; }
+.ad-phone .score { color: var(--muted); font-weight: 700; }
+.ad-phone .ad-main { gap: 16px; font-size: min(10vw, 3.2rem); }
+.ad-phone .ad-main > .sub, .ad-phone .msg { font-size: var(--fs-md); color: var(--muted); }
+.ad-phone .big { font-size: var(--fs-xl); font-weight: 900; }
+.ad-phone .big.won { color: var(--good); }
+.ad-phone .big.lost { color: var(--bad); }
+.ad-phone .msg .no { color: var(--bad); font-weight: 800; }
+.ad-phone .back { font-size: var(--fs-md); min-width: 10rem; }
+.ad-phone .ad-tiles { touch-action: manipulation; }
