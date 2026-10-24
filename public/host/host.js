@@ -447,6 +447,50 @@
     });
   }
 
+  // What's new (desktop app): after an update, the notes since the version this TV last ran
+  // (CHANGELOG.md), once. Tapping the version number shows the current version's again. A, B or
+  // Start on a controller closes it.
+  const SEEN_KEY = 'ark.seenVersion';
+  let newsOpen = false;
+  function newsLine(text) {
+    return Ark.escapeHtml(text).replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+  }
+  function showNews(news) {
+    if (!news || !news.entries.length) return;
+    $('whats-new').innerHTML = '<div class="whats-new-card panel">' +
+      '<h2>What\'s new in v' + Ark.escapeHtml(news.version) + '</h2>' +
+      news.entries.map(function (e, i) {
+        return (news.entries.length > 1 ? '<h3>v' + Ark.escapeHtml(e.version) + '</h3>' : '') +
+          '<ul>' + e.items.map(function (item) { return '<li>' + newsLine(item) + '</li>'; }).join('') + '</ul>';
+      }).join('') +
+      '<button id="whats-new-ok" class="primary">Got it</button>' +
+      '<p class="muted">🎮 A to close</p></div>';
+    $('whats-new').classList.remove('hidden');
+    newsOpen = true;
+    $('whats-new-ok').addEventListener('click', closeNews);
+  }
+  function closeNews() {
+    $('whats-new').classList.add('hidden');
+    newsOpen = false;
+  }
+  function loadNews(since) {
+    return fetch('/whats-new.json' + (since ? '?since=' + encodeURIComponent(since) : ''))
+      .then(function (r) { return r.json(); });
+  }
+  if (desktop) {
+    let seen = null;
+    try { seen = localStorage.getItem(SEEN_KEY); } catch (e) { /* no storage: show nothing */ }
+    loadNews(seen || '').then(function (news) {
+      // A first run has nothing "new" to show: remember the version for next time.
+      if (seen && seen !== news.version) showNews(news);
+      try { localStorage.setItem(SEEN_KEY, news.version); } catch (e) { /* fine */ }
+    }).catch(function () {});
+    $('version').classList.add('tappable');
+    $('version').addEventListener('click', function () {
+      loadNews('').then(showNews).catch(function () {});
+    });
+  }
+
   const padName = function (idx) { return 'Controller ' + (idx + 1); };
 
   /** Seats held by phones that have disconnected. */
@@ -583,6 +627,10 @@
   });
 
   ArkPads.onPress(function (idx, btn) {
+    if (newsOpen) {
+      if (btn === 'A' || btn === 'B' || btn === 'START') closeNews();
+      return;
+    }
     if (!state) return;
     const seat = padSeats[idx];
 

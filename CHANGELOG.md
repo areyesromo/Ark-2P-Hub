@@ -1,0 +1,43 @@
+# What's new
+
+What changed in each desktop app release, in plain words. The app shows the new lines on the TV
+after it updates (the What's new card), and each GitHub release uses its version's lines as its
+notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
+
+## 0.1.7
+
+- **What's new**: after an update, the TV shows what changed. Tap the version number (bottom
+  right) to see it again.
+- New game: **Anagram Duel**: the same five letters for both of you; the first to make a word
+  takes the round.
+- New game: **Word Hunt**: a word search race; each word goes to whoever marks it first.
+
+## 0.1.6
+
+- Closing the app is quick again, from Steam's Exit Game and from Quit.
+
+## 0.1.5
+
+- Started from Steam (Game Mode on the Deck), the app no longer opens to a black screen.
+
+## 0.1.4
+
+- The app keeps a log file, to help track down problems.
+
+## 0.1.3
+
+- A step-by-step Steam Deck guide.
+
+## 0.1.2
+
+- The app has its own icon, and each release comes with Steam library pictures.
+- The app updates itself: an **Update** banner appears in the lobby when a new version is out.
+
+## 0.1.1
+
+- **Quit** button, and the full screen button works in the app.
+- Long setups (Party Board's) fit on the TV.
+
+## 0.1.0
+
+- The first desktop app: an AppImage for the Steam Deck and Linux, and an installer for Windows.

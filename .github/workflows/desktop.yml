@@ -102,7 +102,9 @@ jobs:
       - name: Publish the release
         run: |
           ls -la files
-          cat > notes.md <<'EOF'
+          # This version's lines from CHANGELOG.md (the same as the app's What's new card) go first.
+          awk -v v="$VERSION" '/^## /{on=($2==v)} on' CHANGELOG.md | sed 's/^## /### What'"'"'s new in v/' > notes.md
+          cat >> notes.md <<'EOF'
           **Steam Deck / Linux:** download the `.AppImage`, make it executable (right-click → Properties → Permissions → Is executable / Allow executing file as program, or `chmod +x`), run it. On the Deck, add it to Steam as a non-Steam game to launch it from Game Mode. For its library art, unzip `Ark-2P-Hub-steam-artwork.zip` and set each picture in Steam. Step by step: [Steam Deck guide](https://github.com/areyesromo/Ark-2P-Hub/blob/main/docs/STEAM-DECK.md).
 
           **Updates:** from v0.1.2 on, the app finds new versions by itself: an **Update** banner appears in the lobby.

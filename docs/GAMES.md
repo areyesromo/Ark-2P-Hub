@@ -103,6 +103,10 @@ here (the test fails while an idea has the same name as a game or minigame in th
 - **Fake Out**: bluffing: both write a fake answer to an obscure question on the phone, then try to pick the real one (points for fooling the other).
 - **Crazy Eights**: card game with your secret hand on the phone; match suit or rank, eights are wild, first out wins.
 - **Desktop / Steam edition**: not a game, the big platform project (see the README's roadmap).
+- **Dungeon Duo**: co-op 3D dungeon crawl: each phone is a hero (fighter, healer), with keys, traps and a boss.
+- **Tower Defence Duel**: build towers on your phone and send waves at your rival's base on the TV.
+- **Party Board: new maps**: more boards for the 3D Party Board, each with its own twist (a moving bridge, a shop whose prices change).
+- **Kart Race: battle arenas**: no laps; balloons on your kart and items to pop your rival's.
 
 ### Minigames
 

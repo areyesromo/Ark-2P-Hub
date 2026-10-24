@@ -57,5 +57,7 @@ style from `play.css`: give your Rematch button `class="primary rematch"` and on
 2. TV and phone renderers under `public/games/<id>/`.
 3. The game's row in the **README.md** games table (keep the player-facing tone and detail level).
 4. New game or minigame: `node tools/games-catalog.mjs`, and add helper files that don't start with the id to `EXTRA` in that tool.
+5. A line for players in `CHANGELOG.md`, under the next desktop release's `## x.y.z` heading (add the heading if it
+   isn't there; one version above the last release on GitHub). It's the app's What's new card and the release notes.
 
 Commit messages: `Game Name: what changed, in plain words` (for example `Kart Race: smaller Star glow for the bigger karts`).

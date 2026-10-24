@@ -12,6 +12,7 @@ extraMetadata:
   main: desktop/main.js # the app starts here (the Docker image still runs server/index.js)
 files:
   - package.json
+  - CHANGELOG.md # What's new on the TV after an update
   - desktop/**
   - server/**
   - public/**

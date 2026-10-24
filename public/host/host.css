@@ -172,6 +172,19 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 .lobby.hidden ~ .update-banner { display: none; }
 
 .version { position: fixed; right: 12px; bottom: 6px; font-size: 0.75rem; color: var(--muted); opacity: 0.5; pointer-events: none; }
+/* In the desktop app the version opens What's new. */
+.version.tappable { pointer-events: auto; cursor: pointer; }
+
+/* What's new: a card over the lobby after an update. */
+.whats-new { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; padding: 1rem;
+  background: color-mix(in srgb, var(--bg) 75%, transparent); }
+.whats-new-card { width: min(40rem, 100%); max-height: 90vh; overflow-y: auto; text-align: left; }
+.whats-new-card h2 { margin: 0 0 0.6rem; }
+.whats-new-card h3 { margin: 0.8rem 0 0.2rem; font-size: var(--fs-sm); color: var(--muted); }
+.whats-new-card ul { margin: 0; padding-left: 1.2rem; line-height: 1.5; }
+.whats-new-card li + li { margin-top: 0.3rem; }
+.whats-new-card button { margin-top: 1rem; }
+.whats-new-card .muted { margin: 0.5rem 0 0; font-size: var(--fs-sm); }
 
 #hub-setup { font-size: 1.4rem; }
 #hub-setup .muted { font-size: 1.2rem; }

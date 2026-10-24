@@ -14,6 +14,7 @@ if (!fs.existsSync(asar)) {
 const list = new Set(asarPkg.listPackage(asar, { isPack: false }).map((l) => l.trim().replace(/\\/g, '/')));
 const needed = [
   '/desktop/main.js',
+  '/CHANGELOG.md',
   '/desktop/preload.cjs',
   '/desktop/updates.js',
   '/desktop/applog.js',
