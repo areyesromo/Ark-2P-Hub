@@ -425,3 +425,73 @@
 .mi-mm-phone .row { display: flex; gap: 0.8rem; width: 100%; }
 .mi-mm-phone .row button { flex: 1; min-height: 64px; font-size: 1.3rem; font-weight: 800; }
 .mi-side .info { font-weight: 800; color: var(--muted); }
+
+/* Cannon Lob: the field is an SVG in the server's units (cannon-lob.js FIELD, 100 x 60). */
+.mi-cl { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.mi-cl .top { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-lg); font-weight: 900; }
+.mi-cl .score.p1 { color: var(--p1); }
+.mi-cl .score.p2 { color: var(--p2); }
+.mi-cl .wind, .mi-cl-phone .wind { font-weight: 900; color: var(--warn); }
+.mi-cl .power-row { display: flex; justify-content: space-between; }
+.mi-cl .power-row .power { width: 30%; }
+.mi-cl-field { flex: 1; min-height: 0; width: 100%; border-radius: var(--radius); background: linear-gradient(#0c4a6e, #38bdf8); }
+.mi-cl-field .ground { fill: #3f6212; }
+.mi-cl-field .wall { fill: #78716c; stroke: #44403c; stroke-width: 0.4; }
+.mi-cl-field .tower.p1 .block { fill: var(--p1); }
+.mi-cl-field .tower.p2 .block { fill: var(--p2); }
+.mi-cl-field .block { stroke: rgba(0, 0, 0, 0.35); stroke-width: 0.3; transition: opacity 0.3s, transform 0.3s; }
+.mi-cl-field .block.gone { opacity: 0; transform: translateY(-3px); }
+.mi-cl-field .cannon .base { fill: #1f2937; stroke-width: 0.5; }
+.mi-cl-field .cannon.p1 .base, .mi-cl-field .cannon.p1 .barrel { stroke: var(--p1); }
+.mi-cl-field .cannon.p2 .base, .mi-cl-field .cannon.p2 .barrel { stroke: var(--p2); }
+.mi-cl-field .cannon .barrel { fill: #374151; stroke-width: 0.4; transition: transform 0.08s linear; }
+.mi-cl-field .cannon.reloading .base { fill: #4b5563; }
+.mi-cl-field .cannon .angle { fill: #fff; font-size: 3px; font-weight: 800; }
+.mi-cl-field .shot { fill: #111827; stroke-width: 0.4; }
+.mi-cl-field .shot.p1 { stroke: var(--p1); }
+.mi-cl-field .shot.p2 { stroke: var(--p2); }
+.mi-cl-field .puff { fill: rgba(255, 255, 255, 0.7); transform-box: fill-box; transform-origin: center; animation: mi-cl-puff 0.6s ease-out forwards; }
+.mi-cl-field .puff.hit { fill: #f97316; }
+@keyframes mi-cl-puff { from { transform: scale(0.3); } to { transform: scale(1.4); opacity: 0; } }
+/* A power bar fills over the charge time while charging. */
+.mi-cl .power, .mi-cl-phone .power { height: 0.8rem; border-radius: var(--r-pill); background: var(--bg-2); overflow: hidden; }
+.mi-cl .power i, .mi-cl-phone .power i { display: block; height: 100%; width: 0; background: var(--warn); }
+.mi-cl .power.on i, .mi-cl-phone .power.on i { width: 100%; transition: width var(--ms) linear; }
+.mi-cl .power.p1 i { background: var(--p1); }
+.mi-cl .power.p2 i { background: var(--p2); }
+.mi-cl-phone .power { width: 100%; height: 1.2rem; }
+.mi-cl-phone .aim { position: relative; width: 100%; flex: 1; min-height: 160px; border-radius: var(--radius); background: var(--bg-2); border: 3px solid var(--line); touch-action: none; overflow: hidden; }
+.mi-cl-phone .aim .barrel { position: absolute; bottom: 1rem; width: 45%; height: 1.2rem; margin-bottom: -0.6rem; border-radius: var(--r-pill); background: var(--me); transform-origin: 0 50%; }
+.mi-cl-phone .aim.side0 .barrel { left: 1rem; }
+.mi-cl-phone .aim.side1 .barrel { right: 1rem; transform-origin: 100% 50%; }
+.mi-cl-phone .aim .deg { position: absolute; top: 0.6rem; left: 50%; transform: translateX(-50%); font-size: var(--fs-xl); }
+.mi-cl-phone .aim .hint { position: absolute; bottom: 0.5rem; left: 50%; transform: translateX(-50%); color: var(--muted); }
+.mi-cl-phone .mi-big-btn { flex: 0 0 auto; min-height: 100px; }
+.mi-cl-phone .mi-big-btn.waiting { opacity: 0.5; }
+
+/* Stack Attack: a 3:4 field per player. A crate is 10% of the width (stack-attack.js CRATE_HALF),
+   so 7.5% of the height; the tray's top is at 94%, and a crate falls onto the stack as drawn. */
+.mi-sa { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; min-height: 0; }
+.mi-sa-field { position: relative; height: 100%; max-width: 100%; aspect-ratio: 3 / 4; border-radius: var(--r-md); background: linear-gradient(#1e293b, #0f172a); overflow: hidden; }
+.mi-side .mi-sa-field { height: 80%; }
+.mi-sa-phone { justify-content: flex-start; }
+.mi-sa-phone .mi-sa { flex: 0 1 34vh; width: 100%; }
+.mi-sa-phone .padbox { flex: 1; width: 100%; display: flex; min-height: 220px; }
+.mi-sa-phone .padbox > * { flex: 1; }
+.mi-sa-field .crate { position: absolute; top: -7.5%; width: 10%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 3px; background: #b45309; border: 2px solid #78350f; animation: mi-sa-fall linear forwards; }
+@keyframes mi-sa-fall { to { top: calc(94% - (var(--shown) + 1) * 7.5%); } }
+.mi-sa-field .tray { position: absolute; bottom: 2%; height: 4%; transform: translateX(-50%); transition: left 0.08s linear; }
+.mi-sa-field .tray > i { position: absolute; inset: 0; border-radius: var(--r-sm); background: #9ca3af; }
+.mi-side.p1 .mi-sa-field .tray > i { background: var(--p1); }
+.mi-side.p2 .mi-sa-field .tray > i { background: var(--p2); }
+.mi-sa-phone .mi-sa-field .tray > i { background: var(--me); }
+.mi-sa-field .stack { position: absolute; bottom: 100%; left: 50%; display: flex; flex-direction: column-reverse; transform-origin: 50% 100%; transition: transform 0.2s; }
+.mi-sa-field .stack b { display: block; width: 100%; aspect-ratio: 1; border-radius: 3px; background: #d97706; border: 2px solid #78350f; }
+.mi-sa-field .stack[data-more]:not([data-more=""])::after { content: attr(data-more); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: var(--fs-lg); }
+.mi-sa-field.toppled { animation: mi-sa-shake 0.5s; }
+@keyframes mi-sa-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-4%); background: rgba(239, 68, 68, 0.35); } 75% { transform: translateX(4%); } }
+/* The lean meter: a needle from the middle, the way the stack leans; past 0.6 either way it turns red. */
+.mi-sa-lean { position: relative; width: min(70%, 16rem); height: 0.9rem; border-radius: var(--r-pill); background: var(--bg-2); }
+.mi-sa-lean i { position: absolute; top: -0.3rem; bottom: -0.3rem; width: 0.5rem; left: calc(50% - 0.25rem + var(--lean, 0) * 50%); border-radius: var(--r-pill); background: var(--good); transition: left 0.2s; }
+.mi-sa-lean.danger i { background: var(--bad); }
+.mi-side .mi-sa-h { position: absolute; top: 0.4rem; right: 0.8rem; font-size: var(--fs-lg); }

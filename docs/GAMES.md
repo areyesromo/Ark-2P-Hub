@@ -57,7 +57,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (31)
+## Minigames (33)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -95,6 +95,8 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Safe Cracker | `safe-cracker` | party | 2D | Turn the dial (← → on a controller); when it clicks, TRY (A) | `server/games/minis/safe-cracker.js`, `public/games/minis/safe-cracker.js`, `test/minis-party5.test.js` |
 | Reflex Grid | `reflex-grid` | party | 2D | Tap the lit squares before they fade (D-pad + A on a controller) | `server/games/minis/reflex-grid.js`, `public/games/minis/reflex-grid.js`, `test/minis-party5.test.js` |
 | Mirror Me | `mirror-me` | party | 2D | Watch the shape, then join the dots on your phone to draw it from memory | `server/games/minis/mirror-me.js`, `public/games/minis/mirror-me.js`, `test/minis-party5.test.js` |
+| Cannon Lob | `cannon-lob` | party | 2D | Drag to aim (stick up / down), hold FIRE (A) to charge, let go to lob it over the wall. Watch the wind! | `server/games/minis/cannon-lob.js`, `public/games/minis/cannon-lob.js`, `test/minis-party6.test.js` |
+| Stack Attack | `stack-attack` | party | 2D | Slide your tray (joystick / tilt / stick) to catch the crates. Catch them in the middle or the stack leans and topples! | `server/games/minis/stack-attack.js`, `public/games/minis/stack-attack.js`, `test/minis-party6.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->

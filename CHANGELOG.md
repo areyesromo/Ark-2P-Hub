@@ -15,6 +15,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   beams, duck the high ones) and **Pop the Most** (pop the balloons in your colour).
 - New Party Minigames: **Safe Cracker** (turn the dial until it clicks), **Reflex Grid** (tap the
   lights before they fade) and **Mirror Me** (remember a shape and draw it from memory).
+- New Party Minigames: **Cannon Lob** (lob shots over the wall at your rival's tower, with the
+  wind) and **Stack Attack** (catch the falling crates and keep your stack from toppling).
 
 ## 0.1.6
 

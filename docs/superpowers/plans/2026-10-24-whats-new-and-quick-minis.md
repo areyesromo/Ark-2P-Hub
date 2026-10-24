@@ -39,5 +39,7 @@ the AppImage / Steam builds don't pile up. Release B (v0.1.8) is the arcade game
   when they were made, ignores a light you already got, never lights a square twice; Mirror Me
   is phones only (a controller player would draw in plain sight); controller cursors stop at
   row ends.
-- [ ] Steps 4-5.
+- [x] Step 4: Cannon Lob, Stack Attack (tests incl. a real shot over the wall from both sides,
+  the charge timed by the phone, the same crates for both, lean and topple).
+- [ ] Step 5.
 - [ ] PR ready, merge, release v0.1.7.
