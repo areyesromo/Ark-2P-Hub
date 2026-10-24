@@ -323,3 +323,175 @@
 .mi-pour-phone .bottle { height: 4.5rem; display: flex; align-items: center; justify-content: center; font-size: 3.6rem; }
 .mi-pour-phone .bottle span { display: inline-block; transition: transform 0.08s linear; }
 .mi-pour-phone .bottle.pouring span { filter: drop-shadow(0 0 0.6rem #fbbf24); }
+
+/* Hurdle Dash: the whole track, one lane each; the runner faces right. */
+.mi-hd { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 1.5rem; padding: 0 2rem; }
+.mi-hd-lane { position: relative; height: 11rem; border-bottom: 4px solid var(--line); }
+.mi-hd-lane.p1 { border-bottom-color: var(--p1); }
+.mi-hd-lane.p2 { border-bottom-color: var(--p2); }
+.mi-hd-lane .who { position: absolute; top: 0; left: 0; font-weight: 800; font-size: var(--fs-lg); }
+.mi-hd-lane .hurdle { position: absolute; bottom: 0; width: 0.7rem; height: 2.6rem; transform: translateX(-50%); background: repeating-linear-gradient(#fff 0 0.4rem, #ef4444 0.4rem 0.8rem); border-radius: 2px; }
+.mi-hd-lane .finish { position: absolute; right: 0; bottom: 0; width: 0.6rem; height: 100%; background: repeating-linear-gradient(#fff 0 0.6rem, #111 0.6rem 1.2rem); }
+.mi-hd-lane .runner { position: absolute; font-size: 4.5rem; line-height: 1; transform: translateX(-50%) scaleX(-1); transition: left 0.05s linear, bottom 0.05s linear; }
+.mi-hd-lane .runner.stumbling { animation: mi-wiggle 0.12s infinite alternate; opacity: 0.7; }
+
+/* Laser Dodge: beams across each lane. The figure (9rem) is in the low one standing or ducked, out of
+   it jumping; in the high one standing or jumping, under it ducked: the picture matches the rules. */
+.mi-ld-lane { justify-content: flex-end; padding-bottom: 0; }
+.mi-ld-lane .lives { position: absolute; top: 0.4rem; right: 0.8rem; font-size: 1.4rem; }
+.mi-ld-lane .lives .lost { opacity: 0.35; }
+.mi-ld-lane .floor { align-self: stretch; height: 0.5rem; background: var(--line); margin: 0 -1rem; }
+.mi-ld-lane .body { font-size: 9rem; line-height: 1; transition: transform 0.08s; transform-origin: bottom center; }
+.mi-ld-lane .body.air { transform: translateY(-3.5rem); }
+.mi-ld-lane .body.duck { transform: scaleY(0.5); }
+.mi-ld-lane.hit .body { animation: mi-wiggle 0.1s infinite alternate; filter: drop-shadow(0 0 0.6rem var(--bad)); }
+.mi-ld-lane .beam { position: absolute; left: 0; right: 0; height: 0.8rem; border-radius: var(--r-pill); }
+.mi-ld-lane .beam.low { bottom: 2.2rem; }
+.mi-ld-lane .beam.high { bottom: 6.5rem; }
+.mi-ld-lane .beam:not(.live) { border: 2px dashed #ef4444; opacity: 0.7; animation: mi-pulse 0.2s infinite alternate; }
+.mi-ld-lane .beam.live { background: #ef4444; box-shadow: 0 0 1rem #ef4444, 0 0 2rem #f87171; }
+.mi-ld-phone .mi-big-btn { min-height: 120px; touch-action: none; }
+.mi-ld-phone .duck { background: var(--btn); }
+.mi-ld-phone .duck.held { background: var(--warn); color: var(--on-warn); }
+.mi-ld-next { font-size: 2rem; font-weight: 900; color: var(--warn); }
+
+/* Pop the Most: round balloons rising, crosshair rings in each player's colour. The field keeps the
+   server's 2:1 shape (pop-the-most.js ASPECT), and a ring is its hit area: 2 x GRAB_R (0.15) of the
+   height = 15% of the width. */
+.mi-pop-field { align-self: center; width: 100%; aspect-ratio: 2 / 1; max-height: 100%; background: linear-gradient(#0c4a6e, #075985); }
+.mi-pop-field .layer { position: absolute; inset: 0; }
+.mi-pop-field .balloon { position: absolute; width: 5.5%; aspect-ratio: 5 / 6; height: auto; border-radius: 50% 50% 46% 46%; transform: translate(-50%, -50%); display: flex; align-items: center; justify-content: center; font-size: 2rem; color: #fff; box-shadow: inset -0.5rem -0.6rem 0 rgba(0, 0, 0, 0.18); }
+.mi-pop-field .balloon.p1 { background: var(--p1); }
+.mi-pop-field .balloon.p2 { background: var(--p2); }
+.mi-pop-field .balloon.gold { background: #fbbf24; box-shadow: 0 0 1rem #fde68a, inset -0.5rem -0.6rem 0 rgba(0, 0, 0, 0.15); }
+.mi-pop-field .balloon.spike { background: #6b7280; }
+.mi-pop-field .cross { position: absolute; width: 15%; aspect-ratio: 1; border-radius: 50%; border: 0.3rem solid; transform: translate(-50%, -50%); transition: left 0.05s linear, top 0.05s linear; }
+.mi-pop-field .cross.p1 { border-color: var(--p1); }
+.mi-pop-field .cross.p2 { border-color: var(--p2); }
+.mi-pop-field .cross b { position: absolute; top: 100%; left: 50%; transform: translateX(-50%); font-size: 0.9rem; white-space: nowrap; }
+.mi-pop-field .pop { position: absolute; transform: translate(-50%, -50%); font-size: 2rem; font-weight: 900; animation: mi-pop-up 0.6s ease-out forwards; pointer-events: none; }
+.mi-pop-field .pop.own, .mi-pop-field .pop.gold { color: var(--good); }
+.mi-pop-field .pop.spike { color: var(--bad); }
+.mi-pop-field .pop.theirs { color: var(--muted); }
+@keyframes mi-pop-up { to { transform: translate(-50%, -150%); opacity: 0; } }
+.mi-coins-phone .mi-pop-btn { flex: 0 0 auto; min-height: 90px; }
+
+/* Safe Cracker: a dial face that turns (the number stays upright), a lock light, three locks. */
+.mi-sc-dial { position: relative; width: min(16rem, 60vw); aspect-ratio: 1; border-radius: 50%; border: 0.6rem solid var(--line); background: radial-gradient(#334155, #0f172a); transition: box-shadow 0.15s, border-color 0.15s; touch-action: none; }
+.mi-sc-dial .face { position: absolute; inset: 0; border-radius: 50%; transition: transform 0.12s; }
+.mi-sc-dial .mark { position: absolute; top: 0.4rem; left: 50%; width: 0.5rem; height: 1.6rem; margin-left: -0.25rem; border-radius: var(--r-pill); background: #e5e7eb; }
+.mi-sc-dial .num { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 3.4rem; font-weight: 900; transition: transform 0.12s; }
+.mi-sc-dial.click { border-color: #22c55e; box-shadow: 0 0 1.4rem #22c55e; animation: mi-pulse 0.12s infinite alternate; }
+.mi-sc-dial.locked { border-color: var(--bad); }
+.mi-sc-locks { display: flex; gap: 0.6rem; justify-content: center; }
+.mi-sc-locks span { width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 3px solid var(--line); }
+.mi-sc-locks span.open { background: #22c55e; border-color: #22c55e; }
+.mi-sc-phone .mi-big-btn { flex: 0 0 auto; min-height: 90px; }
+
+/* Reflex Grid: 3 x 3; a lit square shows a bar running out over its life. */
+.mi-rg-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 0.6rem; width: min(100%, 22rem); aspect-ratio: 1; }
+.mi-rg-grid .cell { position: relative; border-radius: var(--r-md); background: var(--bg-2); border: 3px solid var(--line); overflow: hidden; padding: 0; }
+.mi-side.p1 .mi-rg-grid .cell.lit { background: var(--p1); }
+.mi-side.p2 .mi-rg-grid .cell.lit { background: var(--p2); }
+.mi-rg-phone .mi-rg-grid .cell.lit { background: var(--me); }
+.mi-rg-grid .cell.lit::after { content: ''; position: absolute; left: 0; bottom: 0; height: 0.4rem; width: 100%; background: rgba(255, 255, 255, 0.85); animation: mi-rg-fade var(--left) linear forwards; }
+.mi-rg-grid .cell.lit.got, .mi-side .mi-rg-grid .cell.lit.got, .mi-rg-phone .mi-rg-grid .cell.lit.got { background: var(--bg-2); }
+.mi-rg-grid .cell.lit.got::after { display: none; }
+.mi-rg-grid .cell.got::before { content: '✓'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: 2rem; color: var(--good); }
+.mi-rg-grid .cell.miss { border-color: var(--bad); background: color-mix(in srgb, var(--bad) 35%, var(--bg-2)); }
+.mi-rg-grid .cell.cursor { outline: 0.3rem solid #fff; outline-offset: 0.15rem; }
+.mi-rg-score { position: absolute; top: 0.3rem; right: 0.8rem; font-size: 2rem; font-weight: 900; }
+.mi-rg-phone .mi-rg-grid { width: min(100%, 360px); }
+@keyframes mi-rg-fade { from { width: 100%; } to { width: 0; } }
+
+/* Mirror Me: dots and lines in an SVG; a time bar for each stage. */
+.mi-mm { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; }
+.mi-mm-title { text-align: center; font-size: var(--fs-xl); font-weight: 900; }
+.mi-mm-bar { height: 0.4rem; border-radius: var(--r-pill); background: var(--warn); align-self: stretch; transform-origin: left; }
+.mi-mm-bar.run { animation: mi-mm-time var(--ms) linear forwards; }
+@keyframes mi-mm-time { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+.mi-mm .board, .mi-mm-phone .board { width: min(100%, 22rem); aspect-ratio: 1; }
+.mi-mm-phone .board { width: min(100%, 340px); touch-action: none; }
+.mi-mm-grid { width: 100%; height: 100%; }
+.mi-mm-grid .dot { fill: #94a3b8; }
+.mi-mm-grid .dot.picked { fill: var(--warn); r: 7; }
+.mi-mm-phone .mi-mm-grid .dot { r: 7; }
+.mi-mm-grid line { stroke-width: 5; stroke-linecap: round; }
+.mi-mm-grid line.shape { stroke: var(--warn); }
+.mi-mm-grid line.mine { stroke: var(--text); }
+.mi-mm-grid line.ghost { stroke: rgba(148, 163, 184, 0.35); stroke-width: 9; }
+.mi-mm-grid line.right { stroke: var(--good); }
+.mi-mm-grid line.wrong { stroke: var(--bad); stroke-dasharray: 4 4; }
+.mi-mm-phone .row { display: flex; gap: 0.8rem; width: 100%; }
+.mi-mm-phone .row button { flex: 1; min-height: 64px; font-size: 1.3rem; font-weight: 800; }
+.mi-side .info { font-weight: 800; color: var(--muted); }
+
+/* Cannon Lob: the field is an SVG in the server's units (cannon-lob.js FIELD, 100 x 60). */
+.mi-cl { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.mi-cl .top { display: flex; justify-content: space-between; align-items: center; font-size: var(--fs-lg); font-weight: 900; }
+.mi-cl .score.p1 { color: var(--p1); }
+.mi-cl .score.p2 { color: var(--p2); }
+.mi-cl .wind, .mi-cl-phone .wind { font-weight: 900; color: var(--warn); }
+.mi-cl .power-row { display: flex; justify-content: space-between; }
+.mi-cl .power-row .power { width: 30%; }
+.mi-cl-field { flex: 1; min-height: 0; width: 100%; border-radius: var(--radius); background: linear-gradient(#0c4a6e, #38bdf8); }
+.mi-cl-field .ground { fill: #3f6212; }
+.mi-cl-field .wall { fill: #78716c; stroke: #44403c; stroke-width: 0.4; }
+.mi-cl-field .tower.p1 .block { fill: var(--p1); }
+.mi-cl-field .tower.p2 .block { fill: var(--p2); }
+.mi-cl-field .block { stroke: rgba(0, 0, 0, 0.35); stroke-width: 0.3; transition: opacity 0.3s, transform 0.3s; }
+.mi-cl-field .block.gone { opacity: 0; transform: translateY(-3px); }
+.mi-cl-field .cannon .base { fill: #1f2937; stroke-width: 0.5; }
+.mi-cl-field .cannon.p1 .base, .mi-cl-field .cannon.p1 .barrel { stroke: var(--p1); }
+.mi-cl-field .cannon.p2 .base, .mi-cl-field .cannon.p2 .barrel { stroke: var(--p2); }
+.mi-cl-field .cannon .barrel { fill: #374151; stroke-width: 0.4; transition: transform 0.08s linear; }
+.mi-cl-field .cannon.reloading .base { fill: #4b5563; }
+.mi-cl-field .cannon .angle { fill: var(--text); font-size: 3px; font-weight: 800; }
+.mi-cl-field .shot { fill: #111827; stroke-width: 0.4; }
+.mi-cl-field .shot.p1 { stroke: var(--p1); }
+.mi-cl-field .shot.p2 { stroke: var(--p2); }
+.mi-cl-field .puff { fill: rgba(255, 255, 255, 0.7); transform-box: fill-box; transform-origin: center; animation: mi-cl-puff 0.6s ease-out forwards; }
+.mi-cl-field .puff.hit { fill: #f97316; }
+@keyframes mi-cl-puff { from { transform: scale(0.3); } to { transform: scale(1.4); opacity: 0; } }
+/* A power bar fills over the charge time while charging. */
+.mi-cl .power, .mi-cl-phone .power { height: 0.8rem; border-radius: var(--r-pill); background: var(--bg-2); overflow: hidden; }
+.mi-cl .power i, .mi-cl-phone .power i { display: block; height: 100%; width: 0; background: var(--warn); }
+.mi-cl .power.on i, .mi-cl-phone .power.on i { width: 100%; transition: width var(--ms) linear; }
+.mi-cl .power.p1 i { background: var(--p1); }
+.mi-cl .power.p2 i { background: var(--p2); }
+.mi-cl-phone .power { width: 100%; height: 1.2rem; }
+.mi-cl-phone .aim { position: relative; width: 100%; flex: 1; min-height: 160px; border-radius: var(--radius); background: var(--bg-2); border: 3px solid var(--line); touch-action: none; overflow: hidden; }
+.mi-cl-phone .aim .barrel { position: absolute; bottom: 1rem; width: 45%; height: 1.2rem; margin-bottom: -0.6rem; border-radius: var(--r-pill); background: var(--me); transform-origin: 0 50%; }
+.mi-cl-phone .aim.side0 .barrel { left: 1rem; }
+.mi-cl-phone .aim.side1 .barrel { right: 1rem; transform-origin: 100% 50%; }
+.mi-cl-phone .aim .deg { position: absolute; top: 0.6rem; left: 50%; transform: translateX(-50%); font-size: var(--fs-xl); }
+.mi-cl-phone .aim .hint { position: absolute; bottom: 0.5rem; left: 50%; transform: translateX(-50%); color: var(--muted); }
+.mi-cl-phone .mi-big-btn { flex: 0 0 auto; min-height: 100px; touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.mi-cl-phone .mi-big-btn.waiting { opacity: 0.5; }
+
+/* Stack Attack: a 3:4 field per player. A crate is 10% of the width (stack-attack.js CRATE_HALF),
+   so 7.5% of the height; the tray's top is at 94%, and a crate falls onto the stack as drawn. */
+.mi-sa { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; min-height: 0; }
+.mi-sa-field { position: relative; height: 100%; max-width: 100%; aspect-ratio: 3 / 4; border-radius: var(--r-md); background: linear-gradient(#1e293b, #0f172a); overflow: hidden; }
+.mi-side .mi-sa-field { height: 80%; }
+.mi-sa-phone { justify-content: flex-start; }
+.mi-sa-phone .mi-sa { flex: 0 1 34vh; width: 100%; }
+.mi-sa-phone .padbox { flex: 1; width: 100%; display: flex; min-height: 220px; }
+.mi-sa-phone .padbox > * { flex: 1; }
+.mi-sa-field .crate { position: absolute; top: -7.5%; width: 10%; aspect-ratio: 1; transform: translateX(-50%); border-radius: 3px; background: #b45309; border: 2px solid #78350f; animation: mi-sa-fall linear forwards; }
+@keyframes mi-sa-fall { to { top: calc(94% - (var(--shown) + 1) * 7.5%); } }
+.mi-sa-field .tray { position: absolute; bottom: 2%; height: 4%; transform: translateX(-50%); transition: left 0.08s linear; }
+.mi-sa-field .tray > i { position: absolute; inset: 0; border-radius: var(--r-sm); background: var(--muted); }
+.mi-side.p1 .mi-sa-field .tray > i { background: var(--p1); }
+.mi-side.p2 .mi-sa-field .tray > i { background: var(--p2); }
+.mi-sa-phone .mi-sa-field .tray > i { background: var(--me); }
+.mi-sa-field .stack { position: absolute; bottom: 100%; left: 50%; display: flex; flex-direction: column-reverse; transform-origin: 50% 100%; transition: transform 0.2s; }
+.mi-sa-field .stack b { display: block; width: 100%; aspect-ratio: 1; border-radius: 3px; background: #d97706; border: 2px solid #78350f; }
+.mi-sa-field .stack[data-more]:not([data-more=""])::after { content: attr(data-more); position: absolute; bottom: 100%; left: 50%; transform: translateX(-50%); font-weight: 900; font-size: var(--fs-lg); }
+.mi-sa-field.toppled { animation: mi-sa-shake 0.5s; }
+@keyframes mi-sa-shake { 0%, 100% { transform: none; } 25% { transform: translateX(-4%); background: color-mix(in srgb, var(--bad) 35%, transparent); } 75% { transform: translateX(4%); } }
+/* The lean meter: a needle from the middle, the way the stack leans; past 0.6 either way it turns red. */
+.mi-sa-lean { position: relative; width: min(70%, 16rem); height: 0.9rem; border-radius: var(--r-pill); background: var(--bg-2); }
+.mi-sa-lean i { position: absolute; top: -0.3rem; bottom: -0.3rem; width: 0.5rem; left: calc(50% - 0.25rem + var(--lean, 0) * 50%); border-radius: var(--r-pill); background: var(--good); transition: left 0.2s; }
+.mi-sa-lean.danger i { background: var(--bad); }
+.mi-side .mi-sa-h { position: absolute; top: 0.4rem; right: 0.8rem; font-size: var(--fs-lg); }

@@ -42,6 +42,12 @@ test('desktop: the hub starts on the next free port, keeps its data in the given
     assert.match(await host.text(), /<html/i);
     const version = await (await fetch(hub.url + '/version')).json();
     assert.equal(version.commit, 'app-test');
+    // What's new: CHANGELOG.md's notes after the version the TV last ran, up to this one.
+    const news = await (await fetch(hub.url + '/whats-new.json?since=0.0.1')).json();
+    assert.equal(news.version, version.version);
+    assert.ok(news.entries.length > 0 && news.entries.every((e) => e.items.length), 'notes up to this version');
+    assert.deepEqual((await (await fetch(hub.url + '/whats-new.json?since=' + version.version)).json()).entries, [], 'nothing new');
+    assert.equal((await fetch(hub.url + '/whats-new.json?since=<script>')).status, 200, 'a bad since is ignored');
     assert.ok(fs.existsSync(path.join(dataDir, 'tls-cert.pem')), 'its https certificate lives in the data folder');
   } finally {
     if (hub) await hub.close();

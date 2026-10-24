@@ -12,6 +12,8 @@ contextBridge.exposeInMainWorld('arkDesktop', {
     ipcRenderer.on('ark:update-state', (_event, state) => cb(state));
     ipcRenderer.invoke('ark:update-state').then(cb);
   },
+  /** { previous, ranBefore }: the version that ran before this one (for What's new). */
+  lastRun: () => ipcRenderer.invoke('ark:last-run'),
   /** The update banner's button: download, restart, or open the releases page. */
   update: () => ipcRenderer.send('ark:update'),
 });

@@ -8,6 +8,7 @@ import { createRequire } from 'node:module';
 import express from 'express';
 import QRCode from 'qrcode';
 import { Server } from 'socket.io';
+import { parseChangelog, notesSince } from './changelog.js';
 import { RoomManager } from './rooms.js';
 import { registerSocketHandlers } from './sockets.js';
 import { resolveJoin, detectLanAddress } from './network.js';
@@ -27,6 +28,15 @@ const VERSION = {
   commit: process.env.ARK_COMMIT || 'dev',
   built: process.env.ARK_BUILT || 'dev',
 };
+// What's new (CHANGELOG.md): the desktop app's TV shows the notes since the version it last ran.
+// Not in the Docker image (it has no release versions), which serves an empty list.
+const CHANGES = (() => {
+  try {
+    return parseChangelog(fs.readFileSync(path.join(ROOT_DIR, 'CHANGELOG.md'), 'utf8'));
+  } catch {
+    return [];
+  }
+})();
 
 export function createApp({
   port = 3000,
@@ -64,6 +74,10 @@ export function createApp({
 
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
   app.get('/version', (_req, res) => res.json(VERSION));
+  app.get('/whats-new.json', (req, res) => {
+    const since = /^\d+\.\d+\.\d+$/.test(String(req.query.since)) ? String(req.query.since) : null;
+    res.json({ version: VERSION.version, entries: notesSince(CHANGES, since, VERSION.version) });
+  });
   // The tables, with each player's avatar and colour (nameKey -> profile).
   app.get('/api/stats', (_req, res) => {
     const board = stats.leaderboard();

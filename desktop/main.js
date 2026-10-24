@@ -8,6 +8,7 @@ import { startHub, isOwnUrl } from './hub.js';
 import { createUpdates } from './updates.js';
 import { createLog } from './applog.js';
 import { withoutSteamOverlay } from './steam.js';
+import { lastRun } from './lastrun.js';
 
 const RELEASES = 'https://github.com/areyesromo/Ark-2P-Hub/releases/latest';
 
@@ -82,6 +83,7 @@ function helpers(pid) {
 let hub = null;
 let win = null;
 let updates = null;
+let run = { previous: null, ranBefore: false }; // for the TV's What's new card (see lastrun.js)
 
 // One hub per machine: a second launch brings the open window to the front. A version started
 // by an update waits for the old one to finish closing instead.
@@ -168,6 +170,9 @@ async function start() {
   });
   app.getGPUInfo('basic').then((info) => log('graphics card', info.gpuDevice), (err) => log('no graphics card info', String(err)));
   log('displays', screen.getAllDisplays().map((d) => ({ bounds: d.bounds, scaleFactor: d.scaleFactor })));
+  // The hub's version (package.json): run from the source, Electron would give its own instead.
+  const version = JSON.parse(fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'package.json'), 'utf8')).version;
+  run = lastRun(dataDir, version);
   hub = await startHub({ dataDir, port: Number(process.env.PORT) || 3000, commit: 'app-' + app.getVersion() });
   console.log(`Ark 2P Hub running: ${hub.url}/host/`);
   log('hub running', { url: hub.url });
@@ -237,6 +242,14 @@ ipcMain.handle('ark:fullscreen', (event) => {
 });
 ipcMain.on('ark:quit', (event) => {
   if (fromHub(event)) app.quit();
+});
+// The version that ran before this one, for the What's new card: given once per run, so a page
+// reload (the TV visiting the stats page and back) doesn't show the card again.
+ipcMain.handle('ark:last-run', (event) => {
+  if (!fromHub(event)) return null;
+  const answer = run;
+  run = { previous: null, ranBefore: false }; // shown once per run
+  return answer;
 });
 ipcMain.handle('ark:update-state', (event) => (fromHub(event) && updates ? updates.state() : { state: 'idle' }));
 ipcMain.on('ark:update', (event) => {

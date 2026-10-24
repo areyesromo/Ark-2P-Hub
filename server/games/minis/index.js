@@ -24,6 +24,16 @@ import iceSumo from './ice-sumo.js';
 import simonSays from './simon-says.js';
 import swordDuel from './sword-duel.js';
 import pourIt from './pour-it.js';
+import hurdleDash from './hurdle-dash.js';
+import laserDodge from './laser-dodge.js';
+import popTheMost from './pop-the-most.js';
+import safeCracker from './safe-cracker.js';
+import reflexGrid from './reflex-grid.js';
+import mirrorMe from './mirror-me.js';
+import cannonLob from './cannon-lob.js';
+import stackAttack from './stack-attack.js';
+import bumperCars from './bumper-cars.js';
+import paintGrab from './paint-grab.js';
 
 export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath];
-export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt];
+export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe, cannonLob, stackAttack, bumperCars, paintGrab];
