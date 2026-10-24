@@ -12,6 +12,8 @@ import sketchGuess from './sketch-guess.js';
 import connectFour from './connect-four.js';
 import sumo from './sumo.js';
 import wordRace from './word-race.js';
+import anagramDuel from './anagram-duel.js';
+import wordHunt, { SIZES as HUNT_SIZES } from './word-hunt.js';
 import miniGolf from './mini-golf.js';
 import bombDuel from './bomb-duel.js';
 import kartRace from './kart-race.js';
@@ -102,6 +104,11 @@ const GAMES = [
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
   }),
   wordRace,
+  withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),
+  withSetup(wordHunt, {
+    size: { title: 'Grid', values: ['medium', 'small', 'large'], label: (k) => `${HUNT_SIZES[k].name} · ${HUNT_SIZES[k].words} words${k === 'small' ? ', across and down' : k === 'medium' ? ', diagonals too' : ', any way, even backwards'}` },
+    ...firstTo('Grids to win', [2, 1, 3]),
+  }),
   miniGolf,
   withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` } }),
   withSetup(battleship, { shotSeconds: { title: 'Time per shot', values: [30, 15, 60], label: (n) => `${n} s` } }),
