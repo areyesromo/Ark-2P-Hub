@@ -4,6 +4,19 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.9
+
+- New game: **Volley Blobs**: beach volleyball for two bouncy blobs. Slide, jump and bounce the
+  ball over the net; up to 3 touches a side.
+- New game: **Brick Breaker Duel**: race to break your wall first, side by side. Power bricks
+  shrink your rival's paddle, give you an extra ball or add a row to their wall.
+- New game: **Asteroid Duel**: two ships, drifting rocks and edges that wrap round. Turn, thrust
+  and shoot; three lives a round.
+- New game: **Rally Tennis**: tennis from above. Your player runs to the ball; you time the swing
+  and aim. Spot-on timing hits hardest; aim wide and mistime it, and it's out.
+- New game: **Falling Blocks Battle**: side-by-side falling blocks with the same pieces for both.
+  Clear lines to send junk rows to your rival; fill your well and you lose the round.
+
 ## 0.1.8
 
 - **What's new**: after an update, the TV shows what changed. Tap the version number (bottom

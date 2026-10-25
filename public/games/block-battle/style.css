@@ -1,0 +1,24 @@
+/* ---- TV ---- */
+
+.bb-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.bb-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.bb-arena canvas { display: block; }
+.bb-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.8rem; pointer-events: none; text-align: center;
+}
+.bb-overlay .big { font-size: 6rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.8); }
+.bb-overlay .sub { font-size: var(--fs-xl); color: var(--text); text-shadow: 0 0 1rem rgba(0, 0, 0, 0.9); }
+
+/* ---- phone ---- */
+
+.bb-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; text-align: center; }
+.bb-phone .score { color: var(--muted); font-weight: 700; }
+.bb-phone .status { font-size: var(--fs-md); min-height: 1.4em; }
+.bb-phone .status.won { color: var(--good); font-weight: 900; font-size: var(--fs-xl); }
+.bb-phone .status.lost { color: var(--bad); font-weight: 900; font-size: var(--fs-xl); }
+/* Rotate on top, ◀ ▶ in the middle, soft drop and DROP at the bottom: three rows of two. */
+.bb-pad { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1.3fr 1fr; gap: 10px; }
+.bb-pad button { font-size: 2.4rem; font-weight: 900; border-radius: var(--radius); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; }
+.bb-pad .hold.on { background: var(--me); color: var(--on-bright); }
+.bb-pad .drop { font-size: var(--fs-xl); }
