@@ -1,0 +1,32 @@
+/* ---- TV ---- */
+
+.ad-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.6rem; font-size: 1.2rem; }
+.ad-stats { display: flex; justify-content: space-between; font-size: var(--fs-xl); letter-spacing: 0.1em; }
+.ad-stats .clock { color: var(--muted); font-size: var(--fs-lg); letter-spacing: 0; font-variant-numeric: tabular-nums; }
+.ad-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.ad-arena canvas { display: block; border-radius: var(--radius); border: 1px solid var(--line); }
+.ad-overlay {
+  position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 0.8rem; pointer-events: none; text-align: center;
+}
+.ad-overlay .big { font-size: 7rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.8); }
+.ad-overlay .sub { font-size: 1.6rem; color: var(--text); text-shadow: 0 0 1rem rgba(0, 0, 0, 0.9); }
+
+/* ---- phone ---- */
+
+.ad-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; text-align: center; }
+.ad-phone .score { color: var(--muted); font-weight: 700; }
+.ad-phone .lives { font-size: var(--fs-lg); letter-spacing: 0.1em; }
+.ad-phone .lives .them { color: var(--muted); }
+.ad-phone .status { font-size: var(--fs-md); min-height: 1.4em; }
+.ad-phone .status.won { color: var(--good); font-weight: 900; font-size: var(--fs-xl); }
+.ad-phone .status.lost { color: var(--bad); font-weight: 900; font-size: var(--fs-xl); }
+/* The movement pad (joystick, D-pad or tilt) fills this: see shared/move-pad.css. */
+.ad-stick { flex: 1; min-height: 0; display: flex; }
+.ad-fire {
+  height: 110px; border-radius: var(--radius); font-size: var(--fs-xl); font-weight: 900; letter-spacing: 0.1em;
+  background: var(--bad-strong); color: #fff; border: 3px solid var(--bad); touch-action: none;
+  user-select: none; -webkit-user-select: none; -webkit-touch-callout: none;
+}
+.ad-fire.held { transform: scale(0.98); }
+.ad-fire.reloading { opacity: 0.6; }

@@ -31,6 +31,7 @@ rest of the screen to the games; the QR code comes back when a seat is free.
 | **Pong** | The classic, in real time. Drag on your phone's touch strip (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
 | **Volley Blobs** | Beach volleyball for two bouncy blobs. Hold ◀ ▶ on your phone (or the stick) to slide and tap JUMP; where the ball hits your dome sets where it goes, so jump into it to smash. Up to 3 touches a side, and the one who lost the point serves. First to 7. |
 | **Brick Breaker Duel** | A race to break your own wall, side by side on the TV. Drag the strip on your phone (or use the stick) to move your paddle; a missed ball just costs a moment. Power bricks shrink your rival's paddle, give you an extra ball or add a row to their wall. First to clear their wall wins; after 2 minutes, most bricks broken (level: next brick wins). |
+| **Asteroid Duel** | Two ships in a field of drifting rocks, and the edges wrap round. Point the joystick (or the stick) where you want to face and push further to thrust; hold FIRE to shoot. Big rocks split when shot, and flying into one hurts. Three lives a round, a short shield after each hit; last ship flying takes the round. First to 3 rounds. |
 | **Light Cycles** | Tron-style. Your cycle leaves a wall behind it: make your rival crash into it. Tap a side of the phone pad or swipe to turn. Cycles speed up as the round goes on. First to 3. |
 | **Snake Battle** | Two snakes, one arena. Eat the glowing food to grow; hit a wall, yourself or your rival and you lose the round. After 60 seconds the longer snake wins. Same controls as Light Cycles. First to 3. |
 | **Tank Duel** | Top-down tank battle with cover. Drive with the joystick (or pick ✛ D-pad or 📱 Tilt on your phone), fire shells that bounce once off walls (trick shots, and watch out for your own). 3 hits and you're out; after 90 s the healthier tank wins. First to 3. |
@@ -80,6 +81,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Pong | Points to win: 3, 5, 7 or 11 |
 | Volley Blobs | Points to win: 5, 7 or 11 |
 | Brick Breaker Duel | Wall: 3, 5 or 7 rows of bricks |
+| Asteroid Duel | Round wins needed: 2, 3 or 5 |
 | Air Hockey | Goals to win: 5, 7 or 10 |
 | Light Cycles, Snake Battle, Tank Duel, Sumo, Bomb Duel | Round wins needed: 2, 3 or 5 |
 | Connect Four | One round, or first to 3 or 5 |
@@ -138,6 +140,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Pong | **Left stick** or **D-pad ↑↓** | Move your paddle |
 | Volley Blobs | **Left stick** or **D-pad ← →**, **A** | Slide, jump |
 | Brick Breaker Duel | **Left stick** or **D-pad ← →** | Move your paddle |
+| Asteroid Duel | **Left stick** or **D-pad**, **A** / **RT** | Steer (push further to thrust), fire |
 | Light Cycles | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |
 | Air Hockey | **Left stick** or **D-pad** | Move your mallet (in TV directions) |
 | Snake Battle | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |

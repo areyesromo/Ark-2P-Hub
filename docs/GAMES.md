@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (33)
+## Games (34)
 
-### ⚔️ Competitive (24)
+### ⚔️ Competitive (25)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -22,6 +22,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Air Hockey | `air-hockey` | The whole table on your phone too: slide your mallet and smash the puck into their goal. First to 7. | `server/games/air-hockey.js`, `public/games/air-hockey/`, `test/air-hockey.test.js` |
 | Volley Blobs | `volley-blobs` | Beach volleyball for two bouncy blobs. Slide, jump and bounce the ball over the net. First to 7. | `server/games/volley-blobs.js`, `public/games/volley-blobs/`, `test/volley-blobs.test.js` |
 | Brick Breaker Duel | `brick-duel` | Race to break your wall first. Power bricks shrink their paddle, give you an extra ball or add a row to their wall. | `server/games/brick-duel.js`, `public/games/brick-duel/`, `test/brick-duel.test.js` |
+| Asteroid Duel | `asteroid-duel` | Two ships in a field of drifting rocks. Turn, thrust and shoot your rival; mind the rocks. Three lives a round. | `server/games/asteroid-duel.js`, `public/games/asteroid-duel/`, `test/asteroid-duel.test.js` |
 | Snake Battle | `snake` | Two snakes, one arena. Eat to grow, make your rival crash. Longest snake wins when time runs out. First to 3. | `server/games/snake.js`, `public/games/snake/`, `test/snake.test.js` |
 | Tank Duel | `tanks` | Top-down tank battle. Drive with the joystick, fire bouncing shells around cover. 3 hits and you are out. First to 3. | `server/games/tanks.js`, `public/games/tanks/`, `test/tanks.test.js` |
 | Sumo | `sumo` | Shove your rival off a shrinking ring. Steer with the stick, DASH to hit hard. First to 3. | `server/games/sumo.js`, `public/games/sumo/`, `test/sounds.test.js`, `test/sumo.test.js` |
