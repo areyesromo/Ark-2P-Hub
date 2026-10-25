@@ -12,6 +12,7 @@
   let view = null;
   let viewAt = 0;
   let lastKey = '';
+  let shownHp = null; // { monster, pct }: where the health bar was, so it drains from there
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -54,7 +55,7 @@
     return '<div class="tq-monster' + (hit ? ' hit' : '') + (down ? ' down' : '') + (v.phase === 'reveal' && v.heartsLost ? ' attacks' : '') + '">' +
       '<div class="emoji">' + m.emoji + '</div>' +
       '<div class="info"><div class="name">' + esc(m.name) + '</div>' +
-      '<div class="tq-hp"><div class="fill' + (pct <= 25 ? ' low' : '') + '" style="width:' + pct + '%"></div><span>' + m.hp + ' / ' + m.maxHp + '</span></div>' +
+      '<div class="tq-hp"><div class="fill' + (pct <= 25 ? ' low' : '') + '" data-pct="' + pct + '" style="width:' + (shownHp && shownHp.monster === v.monsterIndex ? shownHp.pct : pct) + '%"></div><span>' + m.hp + ' / ' + m.maxHp + '</span></div>' +
       (hit ? '<div class="dmg">' + (v.teamStrike ? '⚡ Team strike! ' : '') + '−' + v.damage + '</div>' : '') +
       (v.phase === 'reveal' && v.heartsLost ? '<div class="ouch">' + m.emoji + ' strikes back: −' + v.heartsLost + ' ' + (v.heartsLost > 1 ? 'hearts' : 'heart') + '</div>' : '') +
       '</div></div>';
@@ -90,7 +91,9 @@
     }
     if (v.phase === 'over') {
       return '<div class="qz-center"><div class="big">' + (v.won ? '🏆' : '💀') + '</div><div class="sub">' +
-        (v.won ? 'Quest complete! You beat all three monsters' : 'Out of hearts. The ' + esc(v.monster.name) + ' wins this time') +
+        (v.won ? 'Quest complete! You beat all three monsters'
+          : v.monster.hp === 0 ? 'You beat the ' + esc(v.monster.name) + ', but that was your last heart'
+            : 'Out of hearts. The ' + esc(v.monster.name) + ' wins this time') +
         '<br><strong>' + v.stars + ' / ' + v.maxStars + ' ⭐</strong><br>Rematch or head back to the lobby from your phones or controllers.</div></div>';
     }
     return '<div class="qz-card"><div class="meta">Question ' + v.number + ' · ' + esc(v.question.cat) + '</div><div class="q">' + esc(v.question.text) + '</div></div>' +
@@ -148,10 +151,18 @@
         (v.phase === 'question' || v.phase === 'reveal' ? '<div class="qz-top">' + side(v, 0) + '<span class="vs">🤝</span>' + side(v, 1) + '</div>' : '') +
         body(v);
       bar = root.querySelector('.qz-bar .fill');
+      // The health bar was drawn where it stood: now let it drain to the new value.
+      const hp = root.querySelector('.tq-hp .fill');
+      if (hp) {
+        const pct = Number(hp.getAttribute('data-pct'));
+        hp.getBoundingClientRect(); // (so the browser sees the old width first)
+        hp.style.width = pct + '%';
+        shownHp = { monster: v.monsterIndex, pct: pct };
+      }
     },
     unmount: function () {
       cancelAnimationFrame(raf);
-      root = bar = view = null;
+      root = bar = view = shownHp = null;
       lastKey = '';
     },
   });

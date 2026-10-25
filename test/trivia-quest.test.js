@@ -238,22 +238,90 @@ test('bad input is ignored: out-of-range or non-number answers, a second answer,
   h.g.onInput(0, { type: 'answer', choice: 1 });
   h.g.onInput(0, { type: 'answer', choice: 2 });
   assert.equal(h.g.playerView(0).yourPick, 1);
-  h.g.onInput(5, { type: 'answer', choice: 1 });
   h.g.onInput(0, { type: 'rematch' }); // not over yet
   assert.equal(h.g.phase, 'question');
+  // Only slots 0 and 1: a stray slot neither answers nor ends the wait.
+  h.g.onInput(5, { type: 'answer', choice: 1 });
+  h.g.onInput(-1, { type: 'answer', choice: 1 });
+  assert.equal(h.g.phase, 'question');
+  assert.deepEqual(h.g.hostView().answered, [true, false]);
+});
+
+test('the monster falls on the same reveal as your last heart: it counts, and the quest ends lost', () => {
+  const h = quest({ hearts: 3 });
+  answer(h, true, false);
+  answer(h, true, false); // 1 heart left
+  toQuestion(h);
+  h.g.hp = 5; // one more hit will do it
+  h.g.onInput(0, { type: 'answer', choice: right(h.g) });
+  h.g.onInput(1, { type: 'answer', choice: wrong(h.g) });
+  const v = h.g.hostView();
+  assert.deepEqual([v.monster.hp, v.hearts], [0, 0]);
+  h.ctx.advance(TIMING.revealMs + 10);
+  assert.equal(h.g.phase, 'defeated');
+  h.ctx.advance(TIMING.defeatedMs + 10);
+  const end = h.g.hostView();
+  assert.equal(end.phase, 'over');
+  assert.equal(end.won, false);
+  assert.deepEqual(end.beaten, [1], 'three hearts lost against it: one star');
+  assert.equal(end.stars, 1);
+  assert.equal(h.ctx.pendingTimers(), 0);
+});
+
+test('the Dragon falls on the same reveal as your last heart: the quest is still won', () => {
+  const h = quest({ hearts: 3 });
+  h.g.monsterIndex = 2;
+  h.g.meet();
+  answer(h, true, false);
+  answer(h, true, false);
+  toQuestion(h);
+  h.g.hp = 5;
+  h.g.onInput(0, { type: 'answer', choice: right(h.g) });
+  h.g.onInput(1, { type: 'answer', choice: wrong(h.g) });
+  h.ctx.advance(TIMING.revealMs + 10);
+  h.ctx.advance(TIMING.defeatedMs + 10);
+  const end = h.g.hostView();
+  assert.equal(end.phase, 'over');
+  assert.equal(end.won, true);
+  assert.equal(end.hearts, 0);
+});
+
+test('a quest ends once: the room sees "over" a single time, with nothing left running', () => {
+  const h = quest({ hearts: 3 });
+  const overs = [];
+  const update = h.ctx.update;
+  h.ctx.update = () => {
+    update();
+    const v = h.g.hostView();
+    if (v.phase === 'over') overs.push([v.won, v.stars]);
+  };
+  answer(h, false, false);
+  answer(h, false, false);
+  h.ctx.advance(60000);
+  assert.deepEqual(overs, [[false, 0]]);
+  assert.equal(h.ctx.pendingTimers(), 0);
 });
 
 test('a rematch starts a fresh quest without repeating the last one\'s questions', () => {
   const h = quest({ hearts: 3 });
   const asked = new Set();
   const note = () => asked.add(h.g.hostView().question.text);
+  // A beaten Blob (stars), a 50/50 used, the Golem hurt; then out of hearts.
   toQuestion(h);
   note();
-  answer(h, false, false);
+  h.g.onInput(0, { type: 'fifty' });
+  answer(h, true, true);
+  toQuestion(h);
+  note();
+  answer(h, true, true);
+  toQuestion(h);
+  note();
+  answer(h, true, false);
   toQuestion(h);
   note();
   answer(h, false, false);
   assert.equal(h.g.phase, 'over');
+  assert.ok(h.g.hostView().stars > 0 && h.g.monsterIndex === 1);
   h.g.onInput(1, { type: 'rematch' });
   const v = h.g.hostView();
   assert.equal(v.phase, 'intro');
