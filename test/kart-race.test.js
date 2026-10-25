@@ -269,10 +269,10 @@ test('setup: track, laps and races; best of 3 is first to 2; Mixed varies the tr
   const game = new KartRace(ctx, () => 0.5);
   game.start();
   assert.equal(game.hostView().phase, 'setup');
-  assert.deepEqual(game.settings, { track: 0, laps: 5, races: 1, items: 1 });
+  assert.deepEqual(game.settings, { mode: 0, arena: 0, track: 0, laps: 5, races: 1, items: 1 });
   game.onInput(1, { type: 'setting', key: 'races', value: 3 });
   game.onInput(1, { type: 'setting', key: 'laps', value: 4 }); // not a choice
-  assert.deepEqual(ctx.saved.settings, { track: 0, laps: 5, races: 3, items: 1 });
+  assert.deepEqual(ctx.saved.settings, { mode: 0, arena: 0, track: 0, laps: 5, races: 3, items: 1 });
   game.onInput(0, { type: 'go' });
   game.onInput(1, { type: 'go' }); // both ready
   assert.equal(game.hostView().winScore, 2);
@@ -949,7 +949,7 @@ test('items: ITEM does nothing with an empty queue, while spinning or after fini
   const box = g2.boxes[0];
   Object.assign(k, { x: box.x, y: box.y + 2.5, speed: 0 });
   k.seg = locate(g2.track, k.x, k.y).i;
-  g2.itemCheck(k, 0, g2.ctx.now());
+  g2.boxCheck(g2.ctx.now());
   assert.ok(k.items.length >= 1, 'pulled in from 2.5 away');
 });
 

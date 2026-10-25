@@ -103,7 +103,7 @@
    * an arrow halfway along every link shows which way it runs (yellow at forks).
    * Arrows are HTML, turned by the board's real width and height.
    */
-  function links(spaces) {
+  function links(spaces, drawbridge) {
     let l = '';
     let arrows = '';
     const W = els.board.clientWidth || 16;
@@ -111,8 +111,14 @@
     spaces.forEach(function (s) {
       s.next.forEach(function (n) {
         const t = spaces[n];
-        const fork = s.next.length > 1;
-        l += '<line x1="' + s.x * 100 + '" y1="' + s.y * 100 + '" x2="' + t.x * 100 + '" y2="' + t.y * 100 + '"' + (fork ? ' class="fork"' : '') + '/>';
+        // Sky Bridges' drawbridge: wood when down, red and broken when up (and then the way
+        // onto the short cut is no choice: shown closed too).
+        const db = drawbridge && spaces[drawbridge.span[0]] === s && n === drawbridge.span[1];
+        const shut = drawbridge && drawbridge.up && spaces[drawbridge.fork] === s;
+        const fork = s.next.length > 1 && !shut;
+        const closed = shut && n === drawbridge.to;
+        const cls = db ? 'drawbridge' + (drawbridge.up ? ' up' : '') : closed ? 'drawbridge up' : fork ? 'fork' : '';
+        l += '<line x1="' + s.x * 100 + '" y1="' + s.y * 100 + '" x2="' + t.x * 100 + '" y2="' + t.y * 100 + '"' + (cls ? ' class="' + cls + '"' : '') + '/>';
         const deg = Math.atan2((t.y - s.y) * H, (t.x - s.x) * W) * 180 / Math.PI;
         arrows += '<i class="pb-arrow' + (fork ? ' fork' : '') + '" style="left:' + (s.x + t.x) * 50 + '%;top:' + (s.y + t.y) * 50 + '%;transform:translate(-50%,-50%) rotate(' + deg.toFixed(1) + 'deg)"></i>';
       });
@@ -140,7 +146,7 @@
 
   function drawBoard(v) {
     const spaces = v.board.spaces;
-    let h = links(spaces);
+    let h = links(spaces, v.board.drawbridge);
     const art = v.board.tiles !== 'classic'; // the steampunk tile faces (tiles/*.webp) carry their own icons
     const fork = forkMarks(v);
     spaces.forEach(function (s, i) {
@@ -177,7 +183,7 @@
     if (v.phase === 'over') {
       return '<div class="pb-sub muted">🏁 Rematch on a phone or press A (or ⚙ change the settings).</div>';
     }
-    let h = '<div class="pb-mapname ' + v.board.tier + '">' + esc(v.board.name) + ' · ' + TIER[v.board.tier] + '</div>' +
+    let h = '<div class="pb-mapname ' + v.board.tier + '">' + esc(v.board.name) + ' · ' + TIER[v.board.tier] + '</div>' + twist(v) +
       '<div class="pb-turn">Turn ' + v.round + ' / ' + v.turns + ' · ' + nameOf(v, v.turn) + '</div>';
     if (v.dice) h += '<div class="pb-dice">' + v.dice.values.map(function (d) { return '<span>' + d + '</span>'; }).join('') + (v.dice.bonus ? '<em>+' + v.dice.bonus + '</em>' : '') + '</div>';
     if (v.message) h += '<div class="pb-msg">' + esc(v.message) + '</div>';
@@ -190,6 +196,15 @@
         }).join('') + '</div><div class="pb-time" data-end="' + (receivedAt + p.msLeft) + '">' + Math.ceil(p.msLeft / 1000) + ' s</div>';
     }
     return h;
+  }
+
+  /** The map's twist this round: the drawbridge, or today's market prices. */
+  function twist(v) {
+    const d = v.board.drawbridge;
+    if (d) return '<div class="pb-twist' + (d.up ? ' up' : '') + '">🌉 The drawbridge is ' + (d.up ? 'up: the long way round' : 'down: the short cut is open') + '</div>';
+    const m = v.board.market;
+    if (m) return '<div class="pb-twist">🛒 Today\'s market: shop ' + (m.factor === 1 ? 'at normal prices' : m.factor < 1 ? 'at ' + Math.round(m.factor * 100) + '%' : '× ' + m.factor) + ' · ⭐ ' + m.star + ' 🪙</div>';
+    return '';
   }
 
   function render() {

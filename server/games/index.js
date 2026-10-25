@@ -84,8 +84,8 @@ const GAMES = [
   withSetup(partyBoard, {
     map: {
       title: 'Map',
-      values: ['random', 'island', 'lagoons', 'pipes', 'haunted', 'volcano'],
-      label: (m) => ({ random: '🎲 Random', island: '🏝️ Party Island · Easy', lagoons: '🌊 Twin Lagoons · Easy', pipes: '🔧 Pipe Works · Medium', haunted: '👻 Haunted Maze · Hard', volcano: '🌋 Volcano Peak · Expert' })[m],
+      values: ['random', 'island', 'lagoons', 'pipes', 'skybridges', 'haunted', 'market', 'volcano'],
+      label: (m) => ({ random: '🎲 Random', island: '🏝️ Party Island · Easy', lagoons: '🌊 Twin Lagoons · Easy', pipes: '🔧 Pipe Works · Medium', skybridges: '🌉 Sky Bridges · Medium', haunted: '👻 Haunted Maze · Hard', market: '🛒 Market Square · Hard', volcano: '🌋 Volcano Peak · Expert' })[m],
     },
     turns: { title: 'Game length', values: [10, 15, 20], label: (n) => `${n} turns` },
     style: { title: 'Minigames', values: ['mix', '2d', '3d'], label: (s) => ({ mix: 'Mix of 2D and 3D', '2d': '2D only', '3d': '3D only' })[s] },

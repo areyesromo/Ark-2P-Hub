@@ -36,12 +36,25 @@
   const PICK_ROWS = ['racer', 'tyre'];
   const esc = Ark.escapeHtml;
   let trackNames = []; // from the server's views
+  let arenaNames = [];
+  const MODE = { key: 'mode', title: 'Mode', fmt: function (n) { return n ? '🎈 Battle' : '🏁 Race'; } };
   const ROWS = [
+    MODE,
     { key: 'track', title: 'Track', fmt: function (n) { return n === 0 ? 'Mixed' : trackNames[n - 1] || 'Track ' + n; } },
     { key: 'laps', title: 'Laps', fmt: function (n) { return n + ' laps'; } },
     { key: 'races', title: 'Races', fmt: function (n) { return n === 1 ? 'One race' : n === 4 ? '🏆 Cup (4 tracks)' : 'Best of ' + n; } },
     { key: 'items', title: 'Items (? boxes)', fmt: function (n) { return n ? 'On' : 'Off'; } },
   ];
+  // A battle: an arena and how many rounds (items are always on: they pop the balloons).
+  const BATTLE_ROWS = [
+    MODE,
+    { key: 'arena', title: 'Arena', fmt: function (n) { return n === 0 ? 'Mixed' : arenaNames[n - 1] || 'Arena ' + n; } },
+    { key: 'races', title: 'Rounds', fmt: function (n) { return n === 1 ? 'One round' : n === 4 ? 'First to 3' : 'Best of ' + n; } },
+  ];
+  function rowsFor(v) {
+    return v.settings.mode ? BATTLE_ROWS : ROWS;
+  }
+  const BALLOON_POP_MS = 450;
   Ark.loadScript('/games/kart-race/items.js').then(function () { hudKey = ''; });
   /** An item's emoji (from items.js, once it's here). */
   function itemIcon(kind) {
@@ -163,7 +176,7 @@
       const pick = v.picks[slot];
       const r = R.racer(pick.racer);
       const t = R.tyre(pick.tyre);
-      const row = v.players[slot].local && pads[slot] ? PICK_ROWS[(pads[slot].row || 0) - ROWS.length] : null;
+      const row = v.players[slot].local && pads[slot] ? PICK_ROWS[(pads[slot].row || 0) - rowsFor(v).length] : null;
       const f = function (key) { return row === key ? ' focus p' + (slot + 1) : ''; };
       const ready = v.ready && v.ready[slot] ? ' <span class="ready">✓ Ready</span>' : '';
       return '<div class="pick p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + ready + '</div>' +
@@ -178,8 +191,9 @@
 
   /** Ark.setup.focus for the settings rows only (a player on their Racer / Tyres row is outlined in the picks panel instead). */
   function settingsFocus(v) {
-    const onPicks = function (slot) { return pads[slot] && (pads[slot].row || 0) >= ROWS.length; };
-    const focus = Ark.setup.focus(v, ROWS, [0, 1].map(function (slot) { return onPicks(slot) ? { row: 0 } : pads[slot]; }));
+    const rows = rowsFor(v);
+    const onPicks = function (slot) { return pads[slot] && (pads[slot].row || 0) >= rows.length; };
+    const focus = Ark.setup.focus(v, rows, [0, 1].map(function (slot) { return onPicks(slot) ? { row: 0 } : pads[slot]; }));
     Object.keys(focus).forEach(function (key) {
       focus[key] = focus[key].split(' ').filter(function (c) { return !onPicks(Number(c.slice(1)) - 1); }).join(' ');
       if (!focus[key]) delete focus[key];
@@ -196,9 +210,33 @@
     return { type: key, id: list[(i + dir + list.length) % list.length].id };
   }
 
+  /** 🎈🎈🎈, popped ones faded. */
+  function balloonsHtml(n, of) {
+    let h = '';
+    for (let i = 0; i < of; i++) h += '<span class="kr-balloon' + (i < n ? '' : ' popped') + '">🎈</span>';
+    return h;
+  }
+
+  /** A battle round's clock, counting down: whole seconds. */
+  function countdown(ms) {
+    const secs = Math.ceil(ms / 1000);
+    return Math.floor(secs / 60) + ':' + ('0' + (secs % 60)).slice(-2);
+  }
+
   function renderHud(v) {
     let html = '';
-    if (v.karts) {
+    if (v.karts && v.battle) {
+      const bside = function (slot) {
+        const k = v.karts[slot];
+        return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
+          '<div class="pos balloons">' + balloonsHtml(k.balloons, v.battle.balloons) + (k.items && k.items.length ? ' <span class="item"><b>' + itemIcon(k.items[0]) + '</b>' + k.items.slice(1).map(itemIcon).join('') + '</span>' : '') + '</div>' +
+          '<div class="lap">' + (k.jumped ? '<span class="cut">Jump start! 1 s penalty</span>' : k.spin ? '<span class="cut">💥 Popped!</span>' : k.shield ? '🛡️ Shielded' : '') + '</div>' +
+          racerLine(k) + '</div>' + gaugeHtml(v, k) + '</div>';
+      };
+      html = bside(0) +
+        '<div class="kr-mid"><div class="track">🎈 ' + esc(v.track.name) + (v.races > 1 ? ' · Round ' + v.race + ' · ' + v.scores[0] + ' – ' + v.scores[1] : '') + '</div>' +
+        '<div class="clock' + (v.battle.msLeft <= 10000 && v.phase === 'race' ? ' low' : '') + '">' + countdown(v.battle.msLeft) + '</div></div>' + bside(1);
+    } else if (v.karts) {
       const side = function (slot) {
         const k = v.karts[slot];
         return '<div class="kr-side p' + (slot + 1) + '"><div class="info"><div class="name">' + nameOf(v, slot) + '</div>' +
@@ -218,8 +256,17 @@
     if (v.karts) updateGauges(v);
   }
 
-  /** A little map of a track (or a ? for Mixed) for the setup screen. */
+  /** A little map of a track (or a ? for Mixed) for the setup screen; in a battle, of the arena. */
   function previewHtml(v, n) {
+    if (v.settings.mode) {
+      const a = v.settings.arena;
+      if (a === 0) return '<div class="kr-preview mixed"><span>🎲</span><div>Mixed: a different arena each round</div></div>';
+      if (!Road || !v.arenaPoints) return '';
+      if (!previews['a' + a]) previews['a' + a] = Road.svgPath(Road.centreLine(v.arenaPoints[a - 1]));
+      return '<div class="kr-preview"><svg viewBox="0 0 ' + v.field.w + ' ' + v.field.h + '"><rect width="' + v.field.w + '" height="' + v.field.h + '" rx="0.8"/>' +
+        '<path class="kerb" d="' + previews['a' + a] + '" stroke-width="' + (v.arenaWidth + 0.5) + '"/>' +
+        '<path class="road" d="' + previews['a' + a] + '" stroke-width="' + v.arenaWidth + '"/></svg><div>🎈 ' + esc(arenaNames[a - 1] || '') + '</div></div>';
+    }
     if (n === 0) return '<div class="kr-preview mixed"><span>🎲</span><div>Mixed: a different track each race</div></div>';
     if (!Road || !v.trackPoints) return '';
     if (!previews[n]) previews[n] = Road.svgPath(Road.centreLine(v.trackPoints[n - 1]));
@@ -232,6 +279,16 @@
   /** The leaderboard: one row per race (track, winner, both times), then the wins. */
   function boardHtml(v) {
     const time = function (ms) { return ms === null ? '–' : clock(ms); };
+    const winner = function (h) { return h.winner === null ? '<td>Draw</td>' : '<td class="p' + (h.winner + 1) + '">' + nameOf(v, h.winner) + '</td>'; };
+    if (v.settings.mode) {
+      // A battle: each round's arena, its winner, and the balloons each had left.
+      return '<table class="kr-board"><tr><th>Round</th><th>Arena</th><th>Winner</th><th class="p1">' + nameOf(v, 0) + '</th><th class="p2">' + nameOf(v, 1) + '</th></tr>' +
+        v.history.map(function (h) {
+          return '<tr><td>' + h.race + '</td><td>' + esc(h.track) + '</td>' + winner(h) +
+            [0, 1].map(function (slot) { return '<td' + (h.winner === slot ? ' class="won"' : '') + '>' + (h.balloons ? '🎈 ' + h.balloons[slot] : '–') + '</td>'; }).join('') + '</tr>';
+        }).join('') +
+        '<tr class="total"><td colspan="3">Wins</td><td class="p1">' + v.scores[0] + '</td><td class="p2">' + v.scores[1] + '</td></tr></table>';
+    }
     return '<table class="kr-board"><tr><th>Race</th><th>Track</th><th>Winner</th><th class="p1">' + nameOf(v, 0) + '</th><th class="p2">' + nameOf(v, 1) + '</th></tr>' +
       v.history.map(function (h) {
         return '<tr><td>' + (v.cup && h.race > 4 ? 'Sudden death' : h.race) + '</td><td>' + esc(h.track) + '</td><td class="p' + (h.winner + 1) + '">' + nameOf(v, h.winner) + '</td>' +
@@ -250,24 +307,29 @@
   function renderOverlay(v) {
     let html = '';
     if (v.phase === 'setup') {
-      html = '<div class="panel kr-setup"><div class="title">🏎️ Kart Race</div><div class="kr-setup-row">' + Ark.setup.html(v, ROWS, settingsFocus(v)) + '<div class="kr-setup-col">' + previewHtml(v, v.settings.track) + picksHtml(v) + '</div></div>' +
+      html = '<div class="panel kr-setup"><div class="title">🏎️ Kart Race</div><div class="kr-setup-row">' + Ark.setup.html(v, rowsFor(v), settingsFocus(v)) + '<div class="kr-setup-col">' + previewHtml(v, v.settings.track) + picksHtml(v) + '</div></div>' +
         '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re ready: the lights come on when you both are.</div></div>';
     } else if (v.phase === 'countdown') {
       // Start lights: five come on one by one, then all go out together.
       let lights = '';
       for (let i = 1; i <= 5; i++) lights += '<span class="light' + (v.lights >= i ? ' on' : '') + '"></span>';
-      html = '<div class="panel small"><div class="lights gantry">' + lights + '</div><div class="sub">' + esc(v.track.name) + ' · ' + v.laps + ' laps · wait for the lights to go out, then GAS (too soon: a jump start)</div></div>';
+      html = '<div class="panel small"><div class="lights gantry">' + lights + '</div><div class="sub">' + (v.battle
+        ? '🎈 ' + esc(v.track.name) + ' · three balloons each: pop theirs with items · ' + countdown(v.battle.msLeft) + ' on the clock'
+        : esc(v.track.name) + ' · ' + v.laps + ' laps') + ' · wait for the lights to go out, then GAS (too soon: a jump start)</div></div>';
     } else if (v.phase === 'race' && v.newRecord) {
       html = '<div class="banner">⏱️ New lap record! ' + nameOf(v, v.newRecord.slot) + ' <span class="muted">' + clock(v.newRecord.ms) + '</span></div>';
+    } else if (v.phase === 'finish' && v.result && v.battle) {
+      html = '<div class="banner">' + (v.result.draw ? 'Draw round: nobody scores' : '🎈 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' round ' + v.race : '') + '!') +
+        ' <span class="muted">' + (v.battle.msLeft === 0 ? 'time up' : '') + '</span></div>';
     } else if (v.phase === 'finish' && v.result) {
       html = '<div class="banner">🏁 ' + nameOf(v, v.result.winner) + ' wins' + (v.races > 1 ? ' race ' + v.race : '') + '! <span class="muted">' + clock(v.result.time) + '</span>' +
         (v.newRecord ? '<br>⏱️ New lap record! ' + nameOf(v, v.newRecord.slot) + ' <span class="muted">' + clock(v.newRecord.ms) + '</span>' : '') + '</div>';
     } else if (v.phase === 'standings') {
       html = '<div class="panel"><div class="title">' + (v.cup ? '🏆 Cup standings' : 'Standings') + '</div>' + boardHtml(v) +
-        '<div class="sub">Next: ' + (v.next.suddenDeath ? '<strong>Sudden death</strong> on ' : 'race ' + v.next.race + ' on ') + esc(v.next.track) + '</div>' + readyHtml(v) +
+        '<div class="sub">Next: ' + (v.next.suddenDeath ? '<strong>Sudden death</strong> on ' : (v.settings.mode ? 'round ' : 'race ') + v.next.race + ' on ') + esc(v.next.track) + '</div>' + readyHtml(v) +
         '<div class="sub">Ready (or <strong>A</strong>) when you are: the lights come on when you both are.</div></div>';
     } else if (v.phase === 'over') {
-      const title = v.cup ? nameOf(v, v.winner) + ' wins the cup!' : nameOf(v, v.winner) + ' wins' + (v.races > 1 ? ' ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] : ' the race') + '!';
+      const title = v.cup ? nameOf(v, v.winner) + ' wins the cup!' : nameOf(v, v.winner) + ' wins' + (v.races > 1 ? ' ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] : v.settings.mode ? ' the battle' : ' the race') + '!';
       html = '<div class="panel"><div class="title">🏆 ' + title + '</div>' + (v.races > 1 ? boardHtml(v) : '') + readyHtml(v) +
         '<div class="sub">Rematch when you both press it (🎮 A), change the settings (🎮 Y) or head back to the lobby.</div></div>';
     }
@@ -364,6 +426,7 @@
     g.strokeStyle = '#3f4652';
     g.lineWidth = W;
     strokeLoop(g, line);
+    if (!v.track.start) return; // an arena: no centre line, start or boost pads
     // Centre line.
     g.strokeStyle = 'rgba(255,255,255,0.25)';
     g.lineWidth = 0.08;
@@ -769,6 +832,57 @@
       s.angle += Math.atan2(Math.sin(c.angle - s.angle), Math.cos(c.angle - s.angle)) * 0.5;
     });
     v.karts.forEach(function (c, i) { drawKart(g, c, shown[i], i, now); });
+    if (v.battle) drawBalloons(g, v, now);
+  }
+
+  /**
+   * Battle: each kart's balloons bobbing on strings just behind it (always upright), and a burst
+   * where one pops.
+   */
+  let lastBalloons = null;
+  let bursts = [];
+  function drawBalloons(g, v, now) {
+    v.karts.forEach(function (c, i) {
+      const s = shown[i];
+      if (lastBalloons && c.balloons < lastBalloons[i]) bursts.push({ x: s.x, y: s.y - 1.1, slot: i, at: now });
+      for (let b = 0; b < c.balloons; b++) {
+        const bx = s.x + (b - (c.balloons - 1) / 2) * 0.55;
+        const by = s.y - 1.15 + Math.sin(now / 300 + b * 1.7 + i) * 0.06;
+        g.strokeStyle = 'rgba(241, 245, 249, 0.7)';
+        g.lineWidth = 0.03;
+        g.beginPath();
+        g.moveTo(s.x, s.y - 0.3);
+        g.lineTo(bx, by + 0.3);
+        g.stroke();
+        g.fillStyle = colors[i];
+        g.beginPath();
+        g.ellipse(bx, by, 0.24, 0.3, 0, 0, Math.PI * 2);
+        g.fill();
+        g.strokeStyle = 'rgba(15, 23, 42, 0.6)';
+        g.lineWidth = 0.04;
+        g.stroke();
+        g.fillStyle = 'rgba(255, 255, 255, 0.55)'; // a shine
+        g.beginPath();
+        g.ellipse(bx - 0.08, by - 0.11, 0.05, 0.08, -0.4, 0, Math.PI * 2);
+        g.fill();
+      }
+    });
+    if (!lastBalloons || lastBalloons[0] !== v.karts[0].balloons || lastBalloons[1] !== v.karts[1].balloons) lastBalloons = v.karts.map(function (c) { return c.balloons; });
+    if (bursts.length && now - bursts[0].at >= BALLOON_POP_MS) bursts = bursts.filter(function (b) { return now - b.at < BALLOON_POP_MS; });
+    bursts.forEach(function (b) {
+      const t = (now - b.at) / BALLOON_POP_MS;
+      g.strokeStyle = colors[b.slot];
+      g.globalAlpha = 1 - t;
+      g.lineWidth = 0.08;
+      for (let r = 0; r < 8; r++) {
+        const a = (r * Math.PI) / 4;
+        g.beginPath();
+        g.moveTo(b.x + Math.cos(a) * (0.2 + t * 0.4), b.y + Math.sin(a) * (0.2 + t * 0.4));
+        g.lineTo(b.x + Math.cos(a) * (0.35 + t * 0.9), b.y + Math.sin(a) * (0.35 + t * 0.9));
+        g.stroke();
+      }
+      g.globalAlpha = 1;
+    });
   }
 
   // Controllers, like a console kart game: stick or D-pad ← → steers, RT / A is the gas,
@@ -813,6 +927,7 @@
       if (b.coinsLost > (a.coinsLost || 0)) out.push('drop');
       if (b.spins > (a.spins || 0)) out.push('crash');
       if (b.blocked > (a.blocked || 0)) out.push('lock');
+      if (b.pops > (a.pops || 0)) out.push('point');
       if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
       return out;
     },
@@ -821,11 +936,13 @@
     pad: function (btn, v, slot) {
       if (v.phase === 'setup') {
         if (!pads[slot]) pads[slot] = { row: 0 };
-        const rows = ROWS.concat(PICK_ROWS.map(function (key) { return { key: key }; }));
-        const row = pads[slot].row || 0;
+        const settings = rowsFor(v);
+        const rows = settings.concat(PICK_ROWS.map(function (key) { return { key: key }; }));
+        pads[slot].row = Math.min(pads[slot].row || 0, rows.length - 1); // a mode change can drop rows
+        const row = pads[slot].row;
         // ← → on the Racer / Tyres rows cycles this player's pick; everything else is the usual setup.
-        const input = row >= ROWS.length && (btn === 'LEFT' || btn === 'RIGHT')
-          ? cyclePick(v, slot, PICK_ROWS[row - ROWS.length], btn === 'LEFT' ? -1 : 1)
+        const input = row >= settings.length && (btn === 'LEFT' || btn === 'RIGHT')
+          ? cyclePick(v, slot, PICK_ROWS[row - settings.length], btn === 'LEFT' ? -1 : 1)
           : Ark.setup.pad(btn, v, rows, pads[slot]);
         if (view) {
           overlayKey = '';
@@ -856,7 +973,23 @@
     },
     update: function (v) {
       trackNames = v.trackNames || trackNames;
-      if (!view || v.race !== view.race || !v.karts) shown = null; // a new race: back to the grid
+      arenaNames = v.arenaNames || arenaNames;
+      // The mode changed the settings rows (5 for a race, 3 for a battle): a controller on its
+      // racer or tyres row stays there, one on a settings row stays on the list.
+      if (view && v.settings && view.settings && v.settings.mode !== view.settings.mode) {
+        const was = rowsFor(view).length;
+        const now = rowsFor(v).length;
+        Object.keys(pads).forEach(function (slot) {
+          const row = pads[slot].row || 0;
+          pads[slot].row = row >= was ? now + (row - was) : Math.min(row, now - 1);
+        });
+        overlayKey = '';
+      }
+      if (!view || v.race !== view.race || !v.karts) {
+        shown = null; // a new race: back to the grid
+        lastBalloons = null;
+        bursts = [];
+      }
       view = v;
       viewAt = performance.now();
       renderHud(v);
@@ -864,7 +997,8 @@
     },
     unmount: function () {
       cancelAnimationFrame(raf);
-      root = hud = arena = canvas = overlay = view = shown = line = barrier = barrierPic = null;
+      root = hud = arena = canvas = overlay = view = shown = line = barrier = barrierPic = lastBalloons = null;
+      bursts = [];
       lineKey = hudKey = overlayKey = '';
       Object.keys(pads).forEach(function (k) { delete pads[k]; });
     },
