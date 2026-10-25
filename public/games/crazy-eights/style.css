@@ -1,0 +1,84 @@
+/* ---- cards (TV and phone) ---- */
+
+/* The cards themselves: white with red or black suits (their colours are the thing). */
+.ce-card {
+  --w: 70px;
+  position: relative; flex: none; width: var(--w); height: calc(var(--w) * 1.4);
+  border-radius: calc(var(--w) * 0.1); background: #fafaf9; border: 1px solid #d6d3d1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35); font-weight: 800; user-select: none; -webkit-user-select: none;
+}
+.ce-card.red { color: #dc2626; }
+.ce-card.black { color: #111827; }
+.ce-card .corner { position: absolute; top: 6%; left: 8%; font-size: calc(var(--w) * 0.2); line-height: 1; text-align: center; }
+.ce-card .corner.low { top: auto; left: auto; bottom: 6%; right: 8%; transform: rotate(180deg); }
+.ce-card .pip { position: absolute; inset: 0; display: grid; place-items: center; font-size: calc(var(--w) * 0.55); }
+.ce-card.back { background: repeating-linear-gradient(45deg, #1e3a8a 0 6px, #1d4ed8 6px 12px); border: 3px solid #fafaf9; }
+.ce-card.big { --w: 150px; }
+.ce-card.small { --w: 44px; }
+.ce-card.mini { --w: 48px; }
+.ce-card.fresh { animation: ce-land 0.35s ease-out; }
+
+@keyframes ce-land {
+  from { transform: translateY(-30px) rotate(-8deg) scale(1.1); opacity: 0.4; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ---- TV ---- */
+
+.ce-host { flex: 1; display: flex; flex-direction: column; gap: 1rem; min-height: 0; font-size: 1.2rem; }
+.ce-top { display: grid; grid-template-columns: 1fr auto 1fr; align-items: start; gap: 1.5rem; }
+.ce-hand-no { color: var(--muted); font-weight: 800; align-self: center; }
+.ce-side { display: flex; flex-direction: column; gap: 0.4rem; padding: 0.8rem 1rem; border-radius: var(--radius); border: 2px solid transparent; }
+.ce-side.right { align-items: flex-end; text-align: right; }
+.ce-side.on.p1 { border-color: var(--p1); box-shadow: 0 0 2rem -0.6rem var(--p1); }
+.ce-side.on.p2 { border-color: var(--p2); box-shadow: 0 0 2rem -0.6rem var(--p2); }
+.ce-side .name { font-size: var(--fs-lg); font-weight: 900; }
+.ce-side .count { color: var(--muted); font-size: 0.8em; }
+.ce-side .score { font-weight: 800; }
+.ce-side .status { color: var(--warn); font-weight: 800; min-height: 1.3em; }
+.ce-backs { display: flex; align-items: center; }
+.ce-backs .ce-card + .ce-card { margin-left: -26px; }
+.ce-backs .more { margin-left: 0.5rem; color: var(--muted); font-weight: 800; }
+
+.ce-table { flex: 1; display: flex; align-items: center; justify-content: center; gap: 4rem; position: relative; }
+.ce-pile { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; position: relative; }
+.ce-pile > span { color: var(--muted); font-weight: 800; }
+.ce-called { position: absolute; top: -1.2rem; right: -1.4rem; width: 3.4rem; height: 3.4rem; border-radius: 50%; background: #fafaf9; display: grid; place-items: center; font-size: 2.2rem; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4); }
+.ce-called.red { color: #dc2626; }
+.ce-called.black { color: #111827; }
+.ce-pending { font-size: 4rem; font-weight: 900; color: var(--bad); animation: ce-land 0.35s ease-out; }
+.ce-last { text-align: center; color: var(--muted); font-weight: 700; min-height: 1.4em; }
+.ce-bar { height: 10px; border-radius: 5px; background: var(--bg-2); overflow: hidden; }
+.ce-bar .fill { height: 100%; width: 0; background: var(--good); }
+.ce-bar .fill.low { background: var(--bad); }
+
+.ce-end { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; text-align: center; }
+.ce-end .head { font-size: var(--fs-2xl); font-weight: 900; }
+.ce-end .sub { color: var(--muted); }
+.ce-left { display: flex; flex-direction: column; align-items: center; gap: 0.4rem; font-weight: 800; }
+.ce-row { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; min-height: 20px; }
+
+/* ---- phone ---- */
+
+.ce-phone { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 14px; min-height: 0; text-align: center; }
+.ce-phone .score { color: var(--muted); }
+.ce-phone .msg { margin: 0; }
+.ce-phone .follow { margin: 2px 0 0; color: var(--muted); font-size: var(--fs-sm); }
+.ce-phone .won { color: var(--good); }
+.ce-phone .lost { color: var(--bad); }
+.ce-status { display: flex; align-items: center; gap: 12px; text-align: left; }
+.ce-hand { flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 8px; overflow-y: auto; min-height: 0; padding: 6px 0; }
+.ce-hand .ce-card { --w: 62px; cursor: pointer; transition: transform 0.15s; }
+.ce-hand .ce-card.playable { box-shadow: 0 0 0 3px var(--me), 0 4px 10px rgba(0, 0, 0, 0.4); transform: translateY(-4px); }
+.ce-hand .ce-card.dim { opacity: 0.45; cursor: default; }
+.ce-hand .ce-card.new { outline: 3px dashed var(--warn); outline-offset: 2px; }
+.ce-buttons { display: flex; justify-content: center; }
+.ce-buttons button { min-width: 50%; }
+.ce-suits { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.ce-suits button { font-size: 4rem; background: #fafaf9; border-radius: var(--radius); display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.ce-suits button.red { color: #dc2626; }
+.ce-suits button.black { color: #111827; }
+.ce-suits small { font-size: var(--fs-sm); font-weight: 800; }
+.ce-wait { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.ce-wait .outcome { font-size: 2.2rem; font-weight: 900; }
+.ce-wait p { color: var(--muted); }
