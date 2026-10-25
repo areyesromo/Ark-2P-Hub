@@ -77,6 +77,7 @@ export class PartyBoard {
     this.playlist = new Playlist(this.pool.map((d) => d.id), this.rng); // one per match: no repeats until all are played
     this.star = this.pickStar(null);
     this.round = 1;
+    this.rollMarket();
     this.turn = 0;
     this.phase = 'board';
     this.prompt = null;
@@ -138,7 +139,24 @@ export class PartyBoard {
   }
 
   get starPrice() {
-    return this.map.starPrice || STAR_PRICE;
+    return this.market ? this.market.star : this.map.starPrice || STAR_PRICE;
+  }
+
+  /** Market Square: today's shop price factor and star price, the same for both, new each round. */
+  rollMarket() {
+    const m = this.map.market;
+    if (!m) {
+      this.market = null;
+      return;
+    }
+    const pick = (list) => list[Math.floor(this.rng() * list.length)];
+    this.market = { factor: pick(m.factors), star: pick(m.stars) };
+  }
+
+  /** Sky Bridges: is the drawbridge up this round? (Down for `every` rounds, then up for as many.) */
+  bridgeUp() {
+    const d = this.map.drawbridge;
+    return Boolean(d) && Math.floor((this.round - 1) / d.every) % 2 === 1;
   }
 
   /** '3d' or '2d' (the Board view setting). */
@@ -151,9 +169,9 @@ export class PartyBoard {
     return Object.keys(MAPS).find((id) => MAPS[id] === this.map) || 'island';
   }
 
-  /** An item's price on this map (Volcano Peak's shop costs 50% more). */
+  /** An item's price on this map (Volcano Peak's shop costs 50% more; Market Square's changes daily). */
   price(id) {
-    return Math.round(ITEMS[id].price * (this.map.shopMarkup || 1));
+    return Math.round(ITEMS[id].price * (this.map.shopMarkup || 1) * (this.market ? this.market.factor : 1));
   }
 
   pickStar(not) {
@@ -253,7 +271,14 @@ export class PartyBoard {
 
   /** One hop on: at a fork, the player picks the way first. */
   walk(left) {
-    const here = this.spaces[this.players[this.turn].space];
+    const at = this.players[this.turn].space;
+    const here = this.spaces[at];
+    const d = this.map.drawbridge;
+    if (here.next.length === 2 && d && at === d.fork && this.bridgeUp()) {
+      // The drawbridge is up: no choice, the long way round.
+      this.say('🌉 The bridge is up: the long way round!');
+      return this.hop(here.next.find((n) => n !== d.to), left);
+    }
     if (here.next.length === 2) return this.forkPrompt(here.next, (to) => this.hop(to, left));
     this.hop(here.next[0], left);
   }
@@ -460,6 +485,7 @@ export class PartyBoard {
     }
     if (this.round >= this.turns) return this.finishGame();
     this.round++;
+    this.rollMarket();
     this.turn = 0;
     this.turnStart();
   }
@@ -515,7 +541,11 @@ export class PartyBoard {
       turns: this.turns,
       turn: this.turn,
       players: this.players,
-      board: { name: this.map.name, tier: this.map.tier, spaces: this.spaces, star: this.star, starPrice: this.starPrice, view: this.boardView(), theme: this.theme, tiles: this.tiles },
+      board: {
+        name: this.map.name, tier: this.map.tier, spaces: this.spaces, star: this.star, starPrice: this.starPrice, view: this.boardView(), theme: this.theme, tiles: this.tiles,
+        drawbridge: this.map.drawbridge ? { fork: this.map.drawbridge.fork, span: this.map.drawbridge.span, up: this.bridgeUp() } : null,
+        market: this.market,
+      },
       prompt: p ? { slot: p.slot, kind: p.kind, options: p.options, msLeft: Math.max(0, p.deadline - this.ctx.now()), extra: p.extra || null } : null,
       dice: this.dice,
       items: Object.fromEntries(Object.keys(ITEMS).map((id) => [id, { ...ITEMS[id], price: this.price(id) }])),
@@ -560,6 +590,6 @@ export default {
   name: 'Party Board',
   category: 'competitive',
   music: 'casual',
-  tagline: 'A Mario Party-style board for two: roll, pick your path across one of five maps, grab coins, buy ⭐ stars, raid the shop for items, and battle in a party minigame every round. Most stars wins.',
+  tagline: 'A Mario Party-style board for two: roll, pick your path across one of seven maps, grab coins, buy ⭐ stars, raid the shop for items, and battle in a party minigame every round. Most stars wins.',
   create: (ctx) => new PartyBoard(ctx),
 };

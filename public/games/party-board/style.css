@@ -70,6 +70,10 @@
 .pb-mapname.medium { border-color: var(--warn); }
 .pb-mapname.hard { border-color: var(--bad-strong); }
 .pb-mapname.expert { border-color: #a855f7; }
+.pb-twist { padding: 0.15rem 0.8rem; border-radius: var(--r-pill); font-weight: 800; font-size: var(--fs-md); background: rgba(15, 23, 42, 0.85); color: var(--warn); white-space: nowrap; }
+.pb-twist.up { color: var(--bad-soft); }
+.pb-links line.drawbridge { stroke: #b45309; }
+.pb-links line.drawbridge.up { stroke: var(--bad); stroke-dasharray: 6 8; }
 
 /* The end-of-match recap: a card over the board (TV), a you-vs-them table (phone). */
 .pb-recap { position: absolute; inset: 0; z-index: 5; display: flex; align-items: center; justify-content: center; pointer-events: none; }

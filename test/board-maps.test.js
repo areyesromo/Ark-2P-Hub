@@ -58,7 +58,7 @@ const redShare = (m) => {
 };
 
 test('every map is valid (no dead ends, no bad links)', () => {
-  assert.deepEqual(Object.keys(MAPS), ['island', 'lagoons', 'pipes', 'haunted', 'volcano']);
+  assert.deepEqual(Object.keys(MAPS), ['island', 'lagoons', 'pipes', 'haunted', 'volcano', 'skybridges', 'market']);
   for (const [id, m] of Object.entries(MAPS)) assert.deepEqual(validateMap(m), [], id);
 });
 
@@ -66,6 +66,7 @@ test('tiers and prices', () => {
   const t = Object.fromEntries(Object.entries(MAPS).map(([id, m]) => [id, [m.tier, m.starPrice, m.shopMarkup]]));
   assert.deepEqual(t, {
     island: ['easy', 20, 1], lagoons: ['easy', 20, 1], pipes: ['medium', 20, 1], haunted: ['hard', 25, 1], volcano: ['expert', 30, 1.5],
+    skybridges: ['medium', 20, 1], market: ['hard', 25, 1],
   });
 });
 
@@ -99,4 +100,22 @@ test('3D layouts: height levels, one level per stair, bridges on real links, pat
   m.spaces[3].next = [4, 19]; // the front ledge straight to the back plateau, across everything
   m.spaces[19].h = 1;
   assert.ok(validateMap(m).some((p) => /cross/.test(p)));
+});
+
+test('twists are checked too: the drawbridge sits on a real fork and link; market prices stay sensible', () => {
+  const copy = (m) => ({ ...m, spaces: m.spaces.map((sp) => ({ ...sp, next: sp.next.slice() })) });
+  const sky = MAPS.skybridges;
+  assert.ok(sky.drawbridge, 'Sky Bridges has a drawbridge');
+  let m = copy(sky);
+  m.drawbridge = { ...sky.drawbridge, fork: 1 };
+  assert.ok(validateMap(m).some((p) => /drawbridge/.test(p)));
+  m = copy(sky);
+  m.drawbridge = { ...sky.drawbridge, span: [0, 5] };
+  assert.ok(validateMap(m).some((p) => /drawbridge/.test(p)));
+  const market = MAPS.market;
+  assert.ok(market.market, 'Market Square has a market');
+  assert.equal(market.spaces.filter((sp) => sp.type === 'shop').length, 2, 'two shops');
+  m = copy(market);
+  m.market = { ...market.market, factors: [0, 1] };
+  assert.ok(validateMap(m).some((p) => /market/.test(p)));
 });

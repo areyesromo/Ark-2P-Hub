@@ -5,7 +5,10 @@
 //   starCandidate  where the ⭐ can appear
 //   h          (3D layouts) height level: 0 ground, 1 ledge, 2 top; linked spaces differ by at most 1 (stairs)
 //   bridge     (3D layouts) the `next` links that cross a gap on a bridge
-// A map: { name, tier: easy | medium | hard | expert, starPrice, shopMarkup, spaces }.
+// A map: { name, tier: easy | medium | hard | expert, starPrice, shopMarkup, spaces }, and maybe a twist:
+//   drawbridge { fork, to, span: [a, b], every }  the way from `fork` to `to` crosses a drawbridge (the
+//              link a → b) that is up every other `every` rounds: then that way is shut
+//   market     { factors, stars }  shop prices (× a factor) and the star price change every round
 // validateMap() checks a map has no dead ends or bad links (test/board-maps.test.js).
 
 /** The 28 squares around a 10 × 6 grid's edge, clockwise from the top left. */
@@ -122,12 +125,40 @@ const VOLCANO = world([
   [0.4, -1.8, 1, 'red', 42], [0.5, -3.6, 2, 'blue', 18],
 ]);
 
+// 🌉 Sky Bridges (medium): islands in the sky round the edge; at 2 a short cut across the middle
+// crosses a drawbridge (22 → 23) that is down for two rounds, then up for two (the long way round).
+const SKYBRIDGES = graph([
+  [0.08, 0.88, 'start', 1], [0.08, 0.72, 'blue', 2], [0.08, 0.56, 'blue*', 3, 21], [0.08, 0.4, 'shop', 4],
+  [0.08, 0.24, 'event', 5], [0.18, 0.1, 'blue', 6], [0.32, 0.1, 'red', 7], [0.46, 0.1, 'blue*', 8],
+  [0.6, 0.1, 'bonus', 9], [0.74, 0.1, 'red', 10], [0.88, 0.1, 'blue', 11], [0.92, 0.26, 'blue*', 12],
+  [0.92, 0.42, 'event', 13], [0.92, 0.58, 'red', 14], [0.92, 0.74, 'blue', 15], [0.86, 0.9, 'warp', 16],
+  [0.72, 0.9, 'blue*', 17], [0.58, 0.9, 'red', 18], [0.44, 0.9, 'event', 19], [0.3, 0.9, 'blue', 20],
+  [0.18, 0.9, 'red', 0],
+  [0.22, 0.5, 'blue', 22], [0.36, 0.5, 'red', 23], [0.5, 0.5, 'blue*', 24], [0.64, 0.5, 'event', 25], [0.78, 0.5, 'blue', 13],
+]);
+
+// 🛒 Market Square (hard): a town square with two shops; at 5 the market street cuts through
+// the middle (with the second shop), and at 21 a lane runs back down to the start. Prices change
+// every round (see `market`).
+const MARKET = graph([
+  [0.5, 0.92, 'start', 1], [0.36, 0.92, 'blue', 2], [0.22, 0.92, 'red', 3], [0.08, 0.84, 'shop', 4],
+  [0.08, 0.66, 'blue*', 5], [0.08, 0.48, 'red', 6, 19], [0.08, 0.3, 'event', 7], [0.12, 0.12, 'blue', 8],
+  [0.26, 0.08, 'red', 9], [0.4, 0.08, 'blue*', 10], [0.54, 0.08, 'warp', 11], [0.68, 0.08, 'red', 12],
+  [0.82, 0.08, 'bonus', 13], [0.92, 0.2, 'blue', 14], [0.92, 0.38, 'red', 15], [0.92, 0.56, 'blue*', 16],
+  [0.92, 0.74, 'event', 17], [0.84, 0.9, 'red', 18], [0.66, 0.92, 'blue*', 0],
+  [0.24, 0.5, 'blue', 20], [0.38, 0.4, 'shop', 21], [0.52, 0.4, 'red', 22, 24], [0.66, 0.4, 'blue*', 23],
+  [0.78, 0.5, 'event', 15],
+  [0.52, 0.58, 'red', 25], [0.52, 0.76, 'blue', 0],
+]);
+
 export const MAPS = {
   island: { name: '🏝️ Party Island', tier: 'easy', starPrice: 20, shopMarkup: 1, spaces: loop(ring(), ISLAND) },
   lagoons: { name: '🌊 Twin Lagoons', tier: 'easy', starPrice: 20, shopMarkup: 1, spaces: LAGOONS },
   pipes: { name: '🔧 Pipe Works', tier: 'medium', starPrice: 20, shopMarkup: 1, spaces: PIPES },
   haunted: { name: '👻 Haunted Maze', tier: 'hard', starPrice: 25, shopMarkup: 1, spaces: HAUNTED },
   volcano: { name: '🌋 Volcano Peak', tier: 'expert', starPrice: 30, shopMarkup: 1.5, spaces: VOLCANO },
+  skybridges: { name: '🌉 Sky Bridges', tier: 'medium', starPrice: 20, shopMarkup: 1, spaces: SKYBRIDGES, drawbridge: { fork: 2, to: 21, span: [22, 23], every: 2 } },
+  market: { name: '🛒 Market Square', tier: 'hard', starPrice: 25, shopMarkup: 1, spaces: MARKET, market: { factors: [0.5, 0.75, 1, 1.25, 1.5, 2], stars: [15, 20, 25, 30, 35] } },
 };
 
 /** Everything wrong with a map (an empty list: it's fine). */
@@ -164,6 +195,18 @@ export function validateMap(map) {
   if (count('event') < 2) out.push('fewer than 2 events');
   if (count('bonus') < 1) out.push('no bonus space');
   if (new Set(s.map((sp) => sp.x + ',' + sp.y)).size !== s.length) out.push('two spaces in one spot');
+  // Twists.
+  const d = map.drawbridge;
+  if (d) {
+    if (!ok(d.fork) || s[d.fork].next.length !== 2 || !s[d.fork].next.includes(d.to)) out.push('drawbridge: not on a fork');
+    else if (!Array.isArray(d.span) || !ok(d.span[0]) || !s[d.span[0]].next.includes(d.span[1])) out.push('drawbridge: its span is not a link');
+    if (!Number.isInteger(d.every) || d.every < 1) out.push('drawbridge: rounds up / down must be a whole number');
+  }
+  const mk = map.market;
+  if (mk) {
+    if (!Array.isArray(mk.factors) || !mk.factors.length || mk.factors.some((f) => !(f > 0))) out.push('market: price factors must be above 0');
+    if (!Array.isArray(mk.stars) || !mk.stars.length || mk.stars.some((n) => !Number.isInteger(n) || n < 1)) out.push('market: star prices must be whole coins');
+  }
   // 3D layouts: one level per stair, bridges only on real links, no paths crossing.
   if (s.some((sp) => sp.h !== undefined)) {
     s.forEach((sp, i) => {

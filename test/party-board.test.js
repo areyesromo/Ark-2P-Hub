@@ -592,7 +592,7 @@ test('expert prices: the star costs 30, the shop 50% more', () => {
   assert.equal(asked, 'star', '30 coins: offered');
 });
 
-test('the map setting picks the map; random picks one of the five', () => {
+test('the map setting picks the map; random picks one of them all', () => {
   const pick = (settings, rng) => {
     const ctx = fakeCtx();
     ctx.settings = settings;
@@ -603,7 +603,7 @@ test('the map setting picks the map; random picks one of the five', () => {
   assert.equal(pick({ map: 'pipes' }, () => 0.5).name, MAPS.pipes.name);
   assert.equal(pick({ map: 'volcano' }, () => 0.5).tier, 'expert');
   const q = [0.99];
-  assert.equal(pick({ map: 'random' }, () => (q.length ? q.shift() : 0.5)).name, MAPS.volcano.name);
+  assert.equal(pick({ map: 'random' }, () => (q.length ? q.shift() : 0.5)).name, MAPS.market.name);
 });
 
 // ---- Harsh mode ----
@@ -685,7 +685,7 @@ test('board view: 3D on every map when chosen (2D by default); the view names th
   };
   assert.equal(boardOf({ map: 'island' }).view, '2d');
   assert.equal(boardOf({ map: 'island', view: '2d' }).view, '2d');
-  for (const id of ['island', 'lagoons', 'pipes', 'haunted', 'volcano']) {
+  for (const id of Object.keys(MAPS)) {
     const b = boardOf({ map: id, view: '3d' });
     assert.equal(b.view, '3d', id);
     assert.equal(b.theme, id);

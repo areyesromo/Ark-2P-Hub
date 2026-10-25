@@ -295,6 +295,58 @@
 
   /** The look of each map: background, lights, ground, path style, props and a little motion. */
   const THEMES = {
+    skybridges: {
+      bg: 0x7dd3fc, link: { color: 0xa16207 }, warp: 0x38bdf8, light: { hemi: 1.1, sun: 2 },
+      scenery: function (T, scene, spaces) {
+        // A sea of cloud far below, a grassy island with a rocky underside, clouds drifting past.
+        scene.add(water(T, 0xf0f9ff, { roughness: 1 }), ground(T, 0x65a30d, { mat: { roughness: 1 } }));
+        const under = shadowed(new T.Mesh(new T.ConeGeometry(15, 6, 24), mat(T, 0x78716c, { flatShading: true })));
+        under.scale.z = 0.66;
+        under.rotation.x = Math.PI;
+        under.position.y = -3.9;
+        scene.add(under);
+        const clouds = [];
+        for (let k = 0; k < 6; k++) {
+          const c = cloud(T, 0.9 + (k % 3) * 0.35);
+          c.position.set(-18 + k * 7, 4 + (k % 2) * 1.5, -17 - (k % 3) * 2); // well behind the board, never over it
+          scene.add(c);
+          clouds.push(c);
+        }
+        freeSpots(T, spaces, 7, 1.1).forEach(function (p, k) {
+          const prop = k % 2 ? rock(T, 0xa8a29e, 0.35) : palm(T, 0, 0, 0.08);
+          if (!(k % 2)) prop.scale.setScalar(0.5);
+          prop.position.x = p.x;
+          prop.position.z = p.z;
+          scene.add(prop);
+        });
+        return function (t) {
+          clouds.forEach(function (c, k) { c.position.x = ((-20 + k * 7 + t * 0.6) % 42 + 42) % 42 - 21; });
+        };
+      },
+    },
+    market: {
+      bg: 0x292018, link: { color: 0x78716c }, warp: 0xf59e0b, light: { hemi: 0.95, sun: 1.7, sunColor: 0xfde68a },
+      scenery: function (T, scene, spaces) {
+        scene.add(water(T, 0x1c1410, { roughness: 1 }));
+        const cobbles = canvasTexture(T, function (g, w, h) {
+          g.fillStyle = '#57534e';
+          g.fillRect(0, 0, w, h);
+          g.fillStyle = '#78716c';
+          for (let y = 0; y < 4; y++) for (let x = 0; x < 4; x++) g.fillRect(x * w / 4 + (y % 2) * w / 8 + 3, y * h / 4 + 3, w / 4 - 6, h / 4 - 6);
+        });
+        cobbles.wrapS = cobbles.wrapT = T.RepeatWrapping;
+        cobbles.repeat.set(16, 16);
+        scene.add(ground(T, 0xffffff, { mat: { map: cobbles, roughness: 0.9 } }));
+        const colors = [0xdc2626, 0x2563eb, 0x16a34a, 0xd97706];
+        freeSpots(T, spaces, 8, 1.2).forEach(function (p, k) {
+          const prop = k % 3 === 2 ? crate(T) : stall(T, colors[k % colors.length]);
+          prop.position.x = p.x;
+          prop.position.z = p.z;
+          prop.rotation.y = (k % 4) * 0.4 - 0.6;
+          scene.add(prop);
+        });
+      },
+    },
     island: {
       bg: 0x0b2a4a, link: { color: 0x8d6e4a }, warp: 0x22d3ee,
       scenery: function (T, scene) {
@@ -413,6 +465,41 @@
       },
     },
   };
+
+  /** A cloud: a few white puffs. */
+  function cloud(T, size) {
+    const g = new T.Group();
+    const white = new T.MeshStandardMaterial({ color: 0xffffff, roughness: 1, transparent: true, opacity: 0.92 });
+    [[0, 0, 1], [0.8, -0.1, 0.75], [-0.8, -0.15, 0.7], [0.3, 0.35, 0.65]].forEach(function (c) {
+      const puff = new T.Mesh(new T.SphereGeometry(c[2] * size, 14, 10), white);
+      puff.position.set(c[0] * size, c[1] * size, 0);
+      g.add(puff);
+    });
+    return g;
+  }
+
+  /** A market stall: a table with goods under a striped awning. */
+  function stall(T, color) {
+    const g = new T.Group();
+    const wood = mat(T, 0x92400e);
+    const table = shadowed(new T.Mesh(new T.BoxGeometry(1.4, 0.5, 0.8), wood));
+    table.position.y = 0.25;
+    [-0.65, 0.65].forEach(function (x) {
+      const post = new T.Mesh(new T.CylinderGeometry(0.05, 0.05, 1.5, 6), wood);
+      post.position.set(x, 0.75, -0.35);
+      g.add(post);
+    });
+    const awning = shadowed(new T.Mesh(new T.BoxGeometry(1.6, 0.08, 1), mat(T, color)));
+    awning.position.set(0, 1.5, 0);
+    awning.rotation.x = 0.25;
+    [0xef4444, 0xf59e0b, 0x22c55e].forEach(function (c, k) {
+      const good = new T.Mesh(new T.SphereGeometry(0.14, 10, 8), mat(T, c));
+      good.position.set(-0.4 + k * 0.4, 0.62, 0);
+      g.add(good);
+    });
+    g.add(table, awning);
+    return g;
+  }
 
   /** A path between two spaces: a plank / stone strip, or (Pipe Works) a pipe. */
   function link(T, look, p, q, material) {
@@ -581,6 +668,27 @@
         fork: null, forkKey: '', art: false, faces: {}, steel: null, top: 0.32, apart: 0.42, model: null, props: {}, pops: [], figs: [], sparks: [], victory: null, pedestal: null, confetti: null, tick: null, last: null, die: [], dieKey: '', dieShownAt: 0, cam: new T.Vector3(0, 17, 13), look: new T.Vector3(0, 0, 0),
       };
 
+      /** Sky Bridges' drawbridge from p to q: a wide plank hinged at p (it tilts up when raised). */
+      function drawbridge(T, p, q) {
+        const d = q.clone().sub(p);
+        const len = Math.max(0.1, d.length() - 1.1);
+        const g = new T.Group();
+        g.position.set(p.x, 0.06, p.z);
+        g.rotation.order = 'YXZ';
+        g.rotation.y = Math.atan2(d.x, d.z);
+        const plank = shadowed(new T.Mesh(new T.BoxGeometry(0.62, 0.1, len), mat(T, 0x92400e)));
+        plank.position.z = 0.55 + len / 2;
+        [-0.34, 0.34].forEach(function (x) {
+          const chain = new T.Mesh(new T.CylinderGeometry(0.03, 0.03, len, 6), mat(T, 0x334155, { metalness: 0.6 }));
+          chain.rotation.x = Math.PI / 2;
+          chain.position.set(x, 0.12, 0.55 + len / 2);
+          g.add(chain);
+        });
+        g.add(plank);
+        scene.add(g);
+        return g;
+      }
+
       function build(v) {
         const look = THEMES[v.board.theme] || THEMES.island;
         s.art = v.board.tiles !== 'classic';
@@ -615,8 +723,11 @@
           const t = { mesh: tile, icon: null, face: null };
           s.tiles.push(t);
           dress(t, sp.type, i === v.board.star);
+          const db = v.board.drawbridge;
           sp.next.forEach(function (n) {
-            scene.add(link(T, look.link, p, at(T, v.board.spaces[n]), path));
+            const q = at(T, v.board.spaces[n]);
+            if (db && i === db.span[0] && n === db.span[1]) s.drawbridge = drawbridge(T, p, q);
+            else scene.add(link(T, look.link, p, q, path));
           });
         });
         const sparkMat = new T.MeshBasicMaterial({ color: look.warp, transparent: true, opacity: 0.8 });
@@ -864,6 +975,8 @@
         v.board.spaces.forEach(function (sp, i) {
           if (s.tiles[i]) dress(s.tiles[i], sp.type, i === v.board.star);
         });
+        // Sky Bridges: the drawbridge's plank tilts up from its near end when it's up.
+        if (s.drawbridge) s.drawbridge.rotation.x = v.board.drawbridge && v.board.drawbridge.up ? -1.05 : 0;
         s.last = v; // dressFigure reads the picks from it
         [0, 1].forEach(dressFigure);
         // The end: the winner (both on a draw) flies up onto the pedestal.
