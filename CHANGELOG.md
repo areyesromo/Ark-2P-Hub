@@ -12,6 +12,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   shrink your rival's paddle, give you an extra ball or add a row to their wall.
 - New game: **Asteroid Duel**: two ships, drifting rocks and edges that wrap round. Turn, thrust
   and shoot; three lives a round.
+- New game: **Rally Tennis**: tennis from above. Your player runs to the ball; you time the swing
+  and aim. Spot-on timing hits hardest; aim wide and mistime it, and it's out.
 
 ## 0.1.8
 
