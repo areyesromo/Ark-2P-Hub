@@ -15,6 +15,7 @@ import triviaQuest from './trivia-quest.js';
 import fakeOut from './fake-out.js';
 import crazyEights from './crazy-eights.js';
 import kitchenRush from './kitchen-rush.js';
+import towerDuel from './tower-duel.js';
 import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
 import sketchGuess from './sketch-guess.js';
@@ -130,6 +131,7 @@ const GAMES = [
     kitchen: { title: 'Kitchen', values: [0, 1, 2], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour'][n] },
     minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
+  withSetup(towerDuel, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
   wordRace,
   withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),
   withSetup(wordHunt, {

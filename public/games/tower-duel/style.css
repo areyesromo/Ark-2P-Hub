@@ -1,0 +1,45 @@
+/* ---- TV ---- */
+
+.td-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.td-hud { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; }
+.td-side { display: flex; flex-direction: column; gap: 0.2rem; }
+.td-side.p2 { align-items: flex-end; text-align: right; }
+.td-side .name { font-size: var(--fs-lg); font-weight: 900; }
+.td-side .stats { display: flex; gap: 1rem; font-size: var(--fs-lg); font-weight: 800; }
+.td-side .inc { color: var(--good); }
+.td-side .coming { color: var(--warn); }
+.td-side .pad { color: var(--muted); font-size: var(--fs-sm); }
+.td-mid { color: var(--muted); font-weight: 800; }
+.td-field { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.td-field canvas { display: block; border-radius: var(--r-md); }
+.td-over { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; text-align: center; background: rgba(0, 0, 0, 0.55); }
+.td-over .big { font-size: 6rem; font-weight: 900; }
+.td-over .sub { font-size: var(--fs-xl); line-height: 1.5; }
+
+/* ---- phone ---- */
+
+.td-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 14px 14px; text-align: center; }
+.td-top { display: flex; justify-content: space-between; font-weight: 800; }
+.td-top small { color: var(--good); }
+.td-top .them { color: var(--muted); }
+.td-grid { display: grid; gap: 2px; }
+.td-grid .cell { aspect-ratio: 1; padding: 0; border-radius: 3px; background: #3f7d3a; border: none; font-size: 0.9rem; line-height: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; color: var(--text); }
+.td-grid .cell.road { background: #a16207; }
+.td-grid .cell.tower { background: #374151; }
+.td-grid .cell i { font-style: normal; font-size: 0.5rem; color: #facc15; line-height: 1; }
+.td-grid .cell.picked { outline: 3px solid var(--me); outline-offset: -1px; }
+.td-phone .msg { color: var(--muted); margin: 4px 0; }
+.td-acts { display: flex; gap: 8px; }
+.td-acts button { flex: 1; display: flex; flex-direction: column; align-items: center; font-weight: 800; padding: 10px 6px; }
+.td-acts button small { font-weight: 600; opacity: 0.8; }
+.td-acts button:disabled, .td-sends button:disabled { opacity: 0.4; }
+.td-sends { margin-top: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.td-sends .label { grid-column: 1 / -1; color: var(--muted); font-weight: 700; text-align: left; }
+.td-sends button { display: flex; flex-direction: column; align-items: center; font-weight: 900; padding: 10px 4px; }
+.td-sends small { font-weight: 600; font-size: 0.7rem; opacity: 0.8; }
+.td-wait { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; }
+.td-wait .big { font-size: 6rem; font-weight: 900; }
+.td-wait p { color: var(--muted); }
+.td-wait .outcome { font-size: 2.2rem; font-weight: 900; }
+.td-wait .won { color: var(--good); }
+.td-wait .lost { color: var(--bad); }
