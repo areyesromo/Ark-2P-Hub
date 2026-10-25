@@ -2,9 +2,9 @@
 // the free tiles beside it for towers. Creeps walk the road; each one that reaches your base
 // costs you lives (a brute costs two), and when your lives are gone you lose. Build towers to
 // stop them (Arrow: cheap and quick; Cannon: slow, hits a group; Frost: slows them down), and
-// spend gold to send creeps down your rival's road: every one you send raises your income too.
-// Kills pay a bounty. Every so often both roads get a house wave, a little stronger each time,
-// so a game can't stall. Both roads are the same, and so are the house waves.
+// spend gold to send creeps down your rival's road: every one you send raises your income too
+// (as it sets off). Kills pay a bounty. Every so often both roads get a house wave, tougher each
+// time (see waveOf), so a game can't stall. Both roads are the same, and so are the house waves.
 
 import { settingOf } from './options.js';
 
@@ -26,6 +26,22 @@ export const CREEPS = {
 export const ECONOMY = { startGold: 60, income: 5, incomeEveryMs: 5000, refund: 0.6 };
 export const TIMING = { tickMs: 50, sendEvery: 2, countdownMs: 3000, firstWaveMs: 20000, waveEveryMs: 30000, spacingMs: 400, swarmMs: 250, shotMs: 150 };
 export const LIVES = 20;
+/** Sent creeps waiting to set off down one road, at most (a swarm counts five). */
+export const MAX_SENT = 30;
+
+/**
+ * House wave n: a few more runners each time, brutes from the third wave on, each tougher than
+ * the last (by 13% a wave: twice as tough every six waves or so) and closer together, so even a
+ * road full of top cannons falls in the end.
+ */
+export function waveOf(n) {
+  return {
+    runners: 2 + Math.ceil(n / 2),
+    brutes: Math.floor(n / 3),
+    hpScale: Math.pow(1.13, n - 1),
+    spacingMs: Math.max(120, TIMING.spacingMs - 10 * (n - 1)),
+  };
+}
 
 const segs = PATH.slice(1).map((b, i) => {
   const a = PATH[i];
@@ -68,7 +84,9 @@ export class TowerDuel {
   }
 
   start() {
-    this.sides = [0, 1].map(() => ({ lives: this.lives, gold: ECONOMY.startGold, income: ECONOMY.income, towers: {}, creeps: [], queue: [], shots: [], sent: 0, kills: 0 }));
+    // queue: creeps sent by the rival, waiting to set off; house: the house waves', on their own
+    // queue so that sends never hold a wave back.
+    this.sides = [0, 1].map(() => ({ lives: this.lives, gold: ECONOMY.startGold, income: ECONOMY.income, towers: {}, creeps: [], queue: [], house: [], shots: [], sent: 0, kills: 0 }));
     this.nextId = 1;
     this.wave = 0;
     this.winner = null;
@@ -113,7 +131,7 @@ export class TowerDuel {
         this.nextIncome = now + ECONOMY.incomeEveryMs;
         this.nextWave = now + TIMING.firstWaveMs;
         this.ctx.update();
-      }
+      } else if (this.frame++ % TIMING.sendEvery === 0) this.ctx.update(); // 3, 2, 1
       return;
     }
     if (this.phase !== 'play') return;
@@ -126,10 +144,16 @@ export class TowerDuel {
       this.houseWave(now);
     }
     this.sides.forEach((s, side) => {
-      // Sent and house creeps come out one at a time.
+      // Sent creeps come out one at a time (and only then does the sender's income go up);
+      // the house wave's come out on their own queue.
       while (s.queue.length && s.queue[0].at <= now) {
         const q = s.queue.shift();
-        this.spawn(side, q.kind, q.hpScale || 1, Boolean(q.house));
+        this.spawn(side, q.kind);
+        if (q.income) this.sides[1 - side].income += q.income;
+      }
+      while (s.house.length && s.house[0].at <= now) {
+        const q = s.house.shift();
+        this.spawn(side, q.kind, q.hpScale, true);
       }
       this.walk(s, dt, now);
       this.shoot(s, side, now);
@@ -141,18 +165,17 @@ export class TowerDuel {
     if (this.frame++ % TIMING.sendEvery === 0) this.ctx.update();
   }
 
-  /** The same house wave down both roads: 2 + n/2 runners, brutes every third wave, tougher each time. */
+  /** The same house wave down both roads at the same moment (see waveOf). */
   houseWave(now) {
     this.wave++;
     this.events.waves++;
-    const n = this.wave;
-    const hpScale = 1 + 0.25 * (n - 1);
+    const w = waveOf(this.wave);
     const kinds = [];
-    for (let i = 0; i < 2 + Math.ceil(n / 2); i++) kinds.push('runner');
-    for (let i = 0; i < Math.floor(n / 3); i++) kinds.push('brute');
+    for (let i = 0; i < w.runners; i++) kinds.push('runner');
+    for (let i = 0; i < w.brutes; i++) kinds.push('brute');
     for (const s of this.sides) {
-      const start = Math.max(now, s.queue.length ? s.queue[s.queue.length - 1].at : now);
-      kinds.forEach((kind, i) => s.queue.push({ kind, at: start + i * TIMING.spacingMs, hpScale, house: true }));
+      const start = Math.max(now, s.house.length ? s.house[s.house.length - 1].at + w.spacingMs : now);
+      kinds.forEach((kind, i) => s.house.push({ kind, at: start + i * w.spacingMs, hpScale: w.hpScale }));
     }
   }
 
@@ -214,17 +237,18 @@ export class TowerDuel {
     if (this.phase !== 'play') return;
     const s = this.sides[slot];
     if (input.type === 'send') {
+      if (!Object.hasOwn(CREEPS, input.kind)) return;
       const def = CREEPS[input.kind];
-      if (!Object.hasOwn(CREEPS, input.kind) || s.gold < def.cost) return;
+      const count = def.count || 1;
+      const q = this.sides[1 - slot].queue;
+      if (s.gold < def.cost || q.length + count > MAX_SENT) return; // can't afford it, or their road is full up
       s.gold -= def.cost;
-      s.income += def.income;
       s.sent++;
       this.events.sends++;
-      // Down the other road, after whatever is already queued there.
-      const q = this.sides[1 - slot].queue;
+      // Down the other road, after whatever is already waiting there; your income goes up as it sets off.
       const now = this.ctx.now();
       const start = Math.max(now, q.length ? q[q.length - 1].at + TIMING.spacingMs : now);
-      for (let i = 0; i < (def.count || 1); i++) q.push({ kind: input.kind, at: start + i * TIMING.swarmMs });
+      for (let i = 0; i < count; i++) q.push({ kind: input.kind, at: start + i * TIMING.swarmMs, income: i === 0 ? def.income : 0 });
       return this.ctx.update();
     }
     const { x, y } = input;
@@ -237,7 +261,8 @@ export class TowerDuel {
       s.towers[k] = { kind: input.kind, level: 1, spent: TOWERS[input.kind].cost, readyAt: 0 };
       this.events.builds++;
     } else if (input.type === 'upgrade') {
-      if (!t || t.level >= 3) return;
+      // The level you saw: a double tap (or a resend) doesn't upgrade twice.
+      if (!t || t.level >= 3 || input.level !== t.level) return;
       const cost = TOWERS[t.kind].upgrade[t.level - 1];
       if (s.gold < cost) return;
       s.gold -= cost;
@@ -272,7 +297,7 @@ export class TowerDuel {
         }),
         creeps: s.creeps.map((c) => ({ id: c.id, kind: c.kind, d: r2(c.d), hp: Math.max(0, c.hp), max: c.max, slow: now < c.slowUntil, speed: c.speed })),
         shots: s.shots.map((x) => ({ kind: x.kind, from: x.from, to: x.to })),
-        coming: s.queue.length,
+        coming: s.queue.length + s.house.length,
       })),
       towers: TOWERS,
       creepTypes: CREEPS,
@@ -290,7 +315,10 @@ export class TowerDuel {
   }
 
   playerView(slot) {
-    return Object.assign(this.view(), { you: slot });
+    // The phones don't draw the roads: no creeps or shots for them.
+    const v = this.view();
+    v.sides = v.sides.map((s) => ({ ...s, creeps: [], shots: [] }));
+    return Object.assign(v, { you: slot });
   }
 }
 

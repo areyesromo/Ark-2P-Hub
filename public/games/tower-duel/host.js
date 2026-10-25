@@ -306,7 +306,8 @@
       }
       if (SENDS[btn]) return { type: 'send', kind: SENDS[btn] };
       const here = v.sides[slot].towers.some(function (t) { return t.x === p.x && t.y === p.y; });
-      if (btn === 'A') return here ? { type: 'upgrade', x: p.x, y: p.y } : { type: 'build', x: p.x, y: p.y, kind: p.kind };
+      const tower = v.sides[slot].towers.find(function (t) { return t.x === p.x && t.y === p.y; });
+      if (btn === 'A') return tower ? { type: 'upgrade', x: p.x, y: p.y, level: tower.level } : { type: 'build', x: p.x, y: p.y, kind: p.kind };
       if (btn === 'LT' && here) return { type: 'sell', x: p.x, y: p.y };
       return null;
     },
@@ -325,6 +326,8 @@
     update: function (v) {
       view = v;
       viewAt = performance.now();
+      // A controller player's cursor (and its tower) from the start, not only after a press.
+      [0, 1].forEach(function (slot) { if (v.players[slot] && v.players[slot].local) cursor(slot, v); });
       renderHud(v);
       renderOverlay(v);
     },

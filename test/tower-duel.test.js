@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
-import { TowerDuel, GRID, PATH, pathTiles, TOWERS, CREEPS, ECONOMY, TIMING, pointAt, pathLength } from '../server/games/tower-duel.js';
+import { TowerDuel, GRID, PATH, pathTiles, TOWERS, CREEPS, ECONOMY, TIMING, pointAt, pathLength, waveOf, MAX_SENT } from '../server/games/tower-duel.js';
 import { getGame } from '../server/games/index.js';
 
 /** A game past the countdown, every update building every view (as the room does). */
@@ -83,9 +83,13 @@ test('upgrading (twice at most) and selling (for part of what you paid)', () => 
   s.gold = 1000;
   const [x, y] = besidePath(3);
   g.onInput(0, { type: 'build', x, y, kind: 'frost' });
-  g.onInput(0, { type: 'upgrade', x, y });
-  g.onInput(0, { type: 'upgrade', x, y });
-  g.onInput(0, { type: 'upgrade', x, y });
+  g.onInput(0, { type: 'upgrade', x, y, level: 1 });
+  g.onInput(0, { type: 'upgrade', x, y, level: 1 }); // a double tap: already level 2
+  assert.equal(g.hostView().sides[0].towers[0].level, 2, 'one upgrade for one tap');
+  g.onInput(0, { type: 'upgrade', x, y }); // no level: ignored
+  assert.equal(g.hostView().sides[0].towers[0].level, 2);
+  g.onInput(0, { type: 'upgrade', x, y, level: 2 });
+  g.onInput(0, { type: 'upgrade', x, y, level: 3 });
   const t = g.hostView().sides[0].towers[0];
   assert.equal(t.level, 3);
   const spent = TOWERS.frost.cost + TOWERS.frost.upgrade[0] + TOWERS.frost.upgrade[1];
@@ -97,13 +101,15 @@ test('upgrading (twice at most) and selling (for part of what you paid)', () => 
   assert.equal(g.sides[1].gold, ECONOMY.startGold);
 });
 
-test('sending creeps: paid in gold, they appear on your rival\'s road, and your income goes up', () => {
+test('sending creeps: paid in gold, they appear on your rival\'s road, and your income goes up as each one sets off', () => {
   const { ctx, g } = duel();
   const me = g.sides[0];
   me.gold = 100;
   const income = me.income;
   g.onInput(0, { type: 'send', kind: 'brute' });
   assert.equal(me.gold, 100 - CREEPS.brute.cost);
+  assert.equal(me.income, income, 'not until it sets off');
+  ctx.advance(100);
   assert.equal(me.income, income + CREEPS.brute.income);
   g.onInput(0, { type: 'send', kind: 'swarm' });
   ctx.advance(3000);
@@ -115,6 +121,58 @@ test('sending creeps: paid in gold, they appear on your rival\'s road, and your 
   g.onInput(0, { type: 'send', kind: 'runner' });
   assert.equal(me.gold, 1, 'can\'t afford it');
   g.onInput(0, { type: 'send', kind: 'dragon' });
+  assert.equal(me.gold, 1);
+});
+
+test('a road holds only so many sent creeps waiting at once: no banking a huge income from a queue that never arrives', () => {
+  const { g } = duel();
+  const me = g.sides[0];
+  me.gold = 100000;
+  for (let i = 0; i < 200; i++) g.onInput(0, { type: 'send', kind: 'runner' });
+  assert.equal(g.sides[1].queue.length, MAX_SENT);
+  assert.equal(me.gold, 100000 - MAX_SENT * CREEPS.runner.cost, 'paid only for the ones sent');
+});
+
+test('house waves come on time to both roads, whatever has been sent down them', () => {
+  const { ctx, g } = duel();
+  g.sides[0].gold = 100000;
+  for (let i = 0; i < 40; i++) g.onInput(0, { type: 'send', kind: 'swarm' });
+  ctx.advance(TIMING.firstWaveMs + 100);
+  const house = (side) => g.sides[side].creeps.filter((c) => c.house).length;
+  assert.ok(house(0) >= 1 && house(1) >= 1, 'both roads, straight away: ' + house(0) + ' / ' + house(1));
+  assert.equal(house(0), house(1));
+});
+
+test('the countdown counts down on the screens', () => {
+  const ctx = fakeCtx();
+  const g = new TowerDuel(ctx, () => 0.5);
+  const seen = new Set();
+  const update = ctx.update.bind(ctx);
+  ctx.update = () => { seen.add(g.hostView().countdown); update(); };
+  g.start();
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.ok(seen.has(3) && seen.has(2) && seen.has(1), [...seen].join());
+});
+
+test('the house waves get tougher fast enough that every game ends', () => {
+  const w10 = waveOf(10);
+  const w30 = waveOf(30);
+  assert.ok(w30.hpScale > 10 * w10.hpScale, 'much tougher later on');
+  assert.ok(w30.spacingMs < waveOf(1).spacingMs, 'and closer together');
+  // Twenty waves of a road full of top-level cannons: the base still falls.
+  const { ctx, g } = duel({ lives: 30 });
+  g.sides[0].gold = g.sides[1].gold = 1e9;
+  for (let y = 0; y < GRID.h; y++) {
+    for (let x = 0; x < GRID.w; x++) {
+      for (const slot of [0, 1]) {
+        g.onInput(slot, { type: 'build', x, y, kind: 'cannon' });
+        g.onInput(slot, { type: 'upgrade', x, y, level: 1 });
+        g.onInput(slot, { type: 'upgrade', x, y, level: 2 });
+      }
+    }
+  }
+  for (let t = 0; t < 40 * 60000 && g.phase === 'play'; t += 5000) ctx.advance(5000);
+  assert.equal(g.phase, 'over', 'over within 40 minutes, at wave ' + g.wave);
 });
 
 test('income comes in every few seconds', () => {
@@ -149,9 +207,9 @@ test('towers shoot the creep furthest along in range; a kill pays its bounty to 
   ctx.advance(TOWERS.arrow.every[0] + 60);
   assert.ok(further.hp < further.max, 'the one further along is hit first');
   assert.equal(near.hp, near.max);
-  ctx.advance(10000);
+  ctx.advance(4000);
   assert.ok(!s.creeps.includes(further) && !s.creeps.includes(near));
-  assert.ok(s.gold >= gold + 2 * CREEPS.runner.bounty);
+  assert.equal(s.gold, gold + 2 * CREEPS.runner.bounty, 'the bounties (no income tick in between)');
   assert.equal(g.sides[0].creeps.length, 0);
 });
 
@@ -212,7 +270,9 @@ test('out of lives: the other player wins; both at once is a draw; it ends once,
   // Rematch.
   g.onInput(0, { type: 'rematch' });
   assert.equal(g.phase, 'countdown');
-  assert.deepEqual(g.sides.map((s) => [s.lives, s.gold, s.creeps.length]), [[10, ECONOMY.startGold, 0], [10, ECONOMY.startGold, 0]]);
+  assert.deepEqual(g.sides.map((s) => [s.lives, s.gold, s.income, s.creeps.length, s.queue.length, Object.keys(s.towers).length]), [[10, ECONOMY.startGold, ECONOMY.income, 0, 0, 0], [10, ECONOMY.startGold, ECONOMY.income, 0, 0, 0]]);
+  assert.equal(g.wave, 0);
+  assert.equal(ctx.pendingTimers(), 1, 'the clock runs again');
 });
 
 test('nothing happens outside play; bad input is ignored', () => {

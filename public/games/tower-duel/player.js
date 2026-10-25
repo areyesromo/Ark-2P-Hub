@@ -42,7 +42,8 @@
     const act = e.target.closest('[data-act]');
     if (act && !act.disabled && picked) {
       const a = act.getAttribute('data-act');
-      if (a === 'upgrade' || a === 'sell') api.send({ type: a, x: picked[0], y: picked[1] });
+      if (a === 'upgrade') api.send({ type: a, x: picked[0], y: picked[1], level: Number(act.getAttribute('data-level')) });
+      else if (a === 'sell') api.send({ type: a, x: picked[0], y: picked[1] });
       else api.send({ type: 'build', x: picked[0], y: picked[1], kind: a });
       if (a === 'sell') picked = null;
       api.vibrate(15);
@@ -66,11 +67,11 @@
       const up = t.level < 3 ? def.upgrade[t.level - 1] : null;
       let spent = def.cost;
       for (let i = 0; i < t.level - 1; i++) spent += def.upgrade[i];
-      return '<div class="td-acts"><button data-act="upgrade"' + (up === null || s.gold < up ? ' disabled' : '') + '>' + ICON[t.kind] + ' ' + (up === null ? 'Top level' : 'Upgrade to ' + (t.level + 1) + ' · ' + up + ' 💰') + '</button>' +
+      return '<div class="td-acts"><button data-act="upgrade" data-level="' + t.level + '" data-cost="' + (up === null ? 1e9 : up) + '"' + (up === null || s.gold < up ? ' disabled' : '') + '>' + ICON[t.kind] + ' ' + (up === null ? 'Top level' : 'Upgrade to ' + (t.level + 1) + ' · ' + up + ' 💰') + '</button>' +
         '<button class="ghost" data-act="sell">Sell · +' + Math.floor(spent * v.refund) + ' 💰</button></div>';
     }
     return '<div class="td-acts">' + ['arrow', 'cannon', 'frost'].map(function (k) {
-      return '<button data-act="' + k + '"' + (s.gold < v.towers[k].cost ? ' disabled' : '') + '>' + ICON[k] + ' ' + NAME[k] + '<small>' + v.towers[k].cost + ' 💰</small></button>';
+      return '<button data-act="' + k + '" data-cost="' + v.towers[k].cost + '"' + (s.gold < v.towers[k].cost ? ' disabled' : '') + '>' + ICON[k] + ' ' + NAME[k] + '<small>' + v.towers[k].cost + ' 💰</small></button>';
     }).join('') + '</div>';
   }
 
@@ -80,19 +81,21 @@
     const s = v.sides[v.you];
     if (!road) road = roadTiles(v);
     if (picked && road.has(picked[0] + ',' + picked[1])) picked = null;
-    const key = JSON.stringify([v.phase, v.countdown, s.gold, s.lives, s.income, s.towers, picked, v.sides[1 - v.you].lives, v.winner]);
-    if (key === lastKey) return;
+    // Gold changes all the time (income, every kill): it's updated in place, and the screen is
+    // only rebuilt when what's on it changes (a rebuild under your finger would lose the tap).
+    const key = JSON.stringify([v.phase, v.countdown, s.lives, s.towers, picked, v.sides[1 - v.you].lives, v.winner]);
+    if (key === lastKey) return money(s);
     lastKey = key;
-    const top = '<div class="td-top"><span>❤️ ' + s.lives + '</span><span>💰 ' + s.gold + ' <small>+' + s.income + '/5s</small></span><span class="them">Them ❤️ ' + v.sides[1 - v.you].lives + '</span></div>';
+    const top = '<div class="td-top"><span>❤️ ' + s.lives + '</span><span>💰 <b class="gold"></b> <small class="inc"></small></span><span class="them">Them ❤️ ' + v.sides[1 - v.you].lives + '</span></div>';
     if (v.phase === 'countdown') {
       root.innerHTML = top + '<div class="td-wait"><div class="big">' + (v.countdown || '') + '</div><p>Build towers beside your road, send creeps down theirs.</p></div>';
-      return;
+      return money(s);
     }
     if (v.phase === 'over') {
       const won = v.winner === v.you;
       root.innerHTML = top + '<div class="td-wait"><div class="outcome ' + (v.winner === null ? '' : won ? 'won' : 'lost') + '">' +
         (v.winner === null ? 'Draw! 🤝' : won ? 'You win! 🏆' : 'You lose') + '</div><button class="primary rematch">Rematch</button></div>';
-      return;
+      return money(s);
     }
     let cells = '';
     for (let y = 0; y < v.grid.h; y++) {
@@ -108,8 +111,19 @@
       '<div class="td-grid" style="grid-template-columns:repeat(' + v.grid.w + ',1fr)">' + cells + '</div>' + panel(v, s) +
       '<div class="td-sends"><div class="label">Send to them:</div>' + SEND.map(function (x) {
         const def = v.creepTypes[x[0]];
-        return '<button data-send="' + x[0] + '"' + (s.gold < def.cost ? ' disabled' : '') + '>' + x[1] + ' ' + x[2] + '<small>' + def.cost + ' 💰 · +' + def.income + ' income</small></button>';
+        return '<button data-send="' + x[0] + '" data-cost="' + def.cost + '">' + x[1] + ' ' + x[2] + '<small>' + def.cost + ' 💰 · +' + def.income + ' income</small></button>';
       }).join('') + '</div>';
+    money(s);
+  }
+
+  /** Gold and income, and which buttons you can afford: updated in place on every view. */
+  function money(s) {
+    if (!root) return;
+    const gold = root.querySelector('.gold');
+    if (gold) gold.textContent = String(s.gold);
+    const inc = root.querySelector('.inc');
+    if (inc) inc.textContent = '+' + s.income + '/5s';
+    root.querySelectorAll('[data-cost]').forEach(function (b) { b.disabled = s.gold < Number(b.getAttribute('data-cost')); });
   }
 
   Ark.register('player', 'tower-duel', {
