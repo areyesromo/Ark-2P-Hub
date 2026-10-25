@@ -17,6 +17,7 @@ const EXTRA = {
   'draw-duel': ['server/games/draw-shapes.js', 'server/games/shape-library.js'],
   'sketch-guess': ['server/games/sketch-words.js'],
   'anagram-duel': ['server/games/anagram-words.js'],
+  'trivia-quest': ['server/games/quiz.js', 'server/games/quiz-questions.js', 'public/games/quiz/style.css'],
   'party-board': ['server/games/board/', 'public/games/minis/'],
   'party-minis': ['server/games/minis/', 'public/games/minis/'],
   'micro-mayhem': ['server/games/minis/', 'public/games/minis/'],
