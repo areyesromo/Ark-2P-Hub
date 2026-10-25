@@ -51,6 +51,13 @@ test('the bank: every fact has a blank, a true answer and three different fakes,
     const all = [e.a, ...e.f].map(normal);
     assert.equal(new Set(all).size, 4, 'answers all differ: ' + e.q);
     for (const s of [e.a, ...e.f]) assert.ok(s.length > 0 && s.length <= 40, s);
+    // No fake that would count as the truth, nor two fakes that would count as each other.
+    for (const f of e.f) assert.ok(!FakeOut.isTruth(f, e.a), f + ' vs ' + e.a);
+    for (const f of e.f) for (const g of e.f) if (f !== g) assert.ok(!FakeOut.isTruth(f, g), f + ' vs ' + g);
+    // "a ___" / "an ___": every answer has to read right after it, or the article gives it away.
+    const vowel = (s) => /^[aeiou]/i.test(s);
+    if (/\ban ___/.test(e.q)) for (const s of [e.a, ...e.f]) assert.ok(vowel(s), e.q + ': an ' + s);
+    if (/\ba ___/.test(e.q)) for (const s of [e.a, ...e.f]) assert.ok(!vowel(s), e.q + ': a ' + s);
   }
 });
 
@@ -74,6 +81,26 @@ test('write: the TV only shows who has written; each phone keeps its own fake an
   assert.notEqual(normal(h.g.house), normal(s1));
 });
 
+test('telling a fake from the truth: digits, plurals, spacing and the truth inside a longer answer all count as the truth', () => {
+  for (const [a, b] of [['three', '3'], ['five', 'Five!'], ['13 seconds', 'thirteen seconds'], ['fruit flies', 'fruit fly'], ['mosquitoes', 'mosquito'], ['bellies', 'belly'],
+    ['BackRub', 'back rub'], ['coffee pot', 'coffeepot'], ['greedy landlords', 'landlords'], ['International Orange', 'orange'], ['a fart', 'a smelly fart'], ['pig', 'The PIGS'], ['Émeu', 'emeu']]) {
+    assert.ok(FakeOut.isTruth(b, a), b + ' ~ ' + a);
+  }
+  for (const [a, b] of [['pig', 'pigeon'], ['moth', 'mammoth'], ['eye', 'eyelid'], ['three', 'thirty'], ['Émeu', 'meu'], ['sweetness', 'sugar']]) {
+    assert.ok(!FakeOut.isTruth(b, a), b + ' is a fake for ' + a);
+  }
+});
+
+test('a fake in other letters or emoji is fine; one with nothing in it is turned down with a word to that phone', () => {
+  const h = match();
+  h.g.onInput(0, { type: 'fake', text: '🐷🐷' });
+  assert.equal(h.g.playerView(0).notice, 'empty');
+  h.g.onInput(0, { type: 'fake', text: '日本の豚' });
+  assert.equal(h.g.playerView(0).yourFake, '日本の豚');
+  h.g.onInput(1, { type: 'fake', text: 'cerdo español' });
+  assert.equal(h.g.phase, 'pick');
+});
+
 test('write: the real answer is turned down (that phone only is told), and you can try again', () => {
   const h = match();
   const truth = BANK[h.g.question.index].a;
@@ -82,9 +109,25 @@ test('write: the real answer is turned down (that phone only is told), and you c
   assert.equal(h.g.playerView(0).notice, 'truth');
   assert.equal(h.g.playerView(1).notice, null);
   assert.ok(!JSON.stringify(h.g.hostView()).includes('"truth"'), 'the TV is not told');
+  const tries = h.g.playerView(0).tries;
+  h.g.onInput(0, { type: 'fake', text: truth });
+  assert.equal(h.g.playerView(0).tries, tries + 1, 'every refusal shows on the phone, even the same one twice');
   h.g.onInput(0, { type: 'fake', text: 'something else' });
   assert.equal(h.g.playerView(0).yourFake, 'something else');
   assert.equal(h.g.playerView(0).notice, null);
+});
+
+test('no free peeks: write the truth and you can\'t score for finding it that round', () => {
+  const h = match({ rounds: 4 });
+  h.g.onInput(0, { type: 'fake', text: BANK[h.g.question.index].a });
+  write(h, 'my lie', 'their lie');
+  assert.equal(h.g.playerView(0).peeked, true);
+  h.g.onInput(0, { type: 'pick', option: truthIndex(h.g) });
+  h.g.onInput(1, { type: 'pick', option: truthIndex(h.g) });
+  assert.deepEqual(h.g.scores, [0, POINTS.truth]);
+  finishReveal(h);
+  write(h);
+  assert.equal(h.g.playerView(0).peeked, false, 'next round, a clean slate');
 });
 
 test('write: stuck? use your ready-made fake; and if time runs out, it is used for you', () => {
@@ -139,7 +182,11 @@ test('the scores move only when the reveal reaches the truth; the reveal shows e
   assert.equal(first.reveal.length, 4);
   assert.equal(h.g.options[h.g.order.at(-1)].kind, 'truth', 'the truth comes last');
   assert.equal(first.step, 0);
-  assert.ok(first.reveal.every((r, i) => (i < first.step ? r.kind : r.kind === undefined)), 'unrevealed answers keep their secret');
+  // The cards stay where they were for the pick: their order gives nothing away.
+  assert.deepEqual(first.reveal.map((r) => r.text), h.g.options.map((o) => o.text));
+  assert.deepEqual(first.reveal.map((r) => r.at).sort(), [0, 1, 2, 3]);
+  assert.equal(first.reveal.find((r) => r.at === 3).text, BANK[h.g.question.index].a, '(the truth is shown last)');
+  assert.ok(first.reveal.every((r) => (r.at < first.step ? r.kind : r.kind === undefined)), 'unrevealed answers keep their secret');
   h.ctx.advance(TIMING.stepMs * 4);
   const all = h.g.hostView();
   assert.deepEqual(all.scores, [0, POINTS.truth + POINTS.fooled]);
@@ -170,12 +217,14 @@ test('the same fake from both of you shows once, and neither phone shows it', ()
   assert.equal(h.g.playerView(1).options.filter((o) => o.mine).length, 1);
 });
 
-test('a fake that matches the bank\'s own: the bank brings another', () => {
+test('a fake that matches the bank\'s own: the bank\'s drops out (no swap that one of you would recognise)', () => {
   const h = match();
   const house = h.g.house;
+  const [s0, s1] = h.g.suggestions;
   write(h, house, 'their lie');
-  assert.equal(h.g.options.length, 4);
-  assert.equal(h.g.options.filter((o) => normal(o.text) === normal(house)).length, 1);
+  assert.equal(h.g.options.length, 3, 'truth and your two fakes');
+  assert.ok(!h.g.options.some((o) => o.kind === 'house'));
+  assert.ok(!h.g.options.some((o) => o.text === s0 || o.text === s1), 'nobody\'s ready-made fake turns up');
 });
 
 test('no pick before the time runs out scores nothing; the match ends with a winner (or a draw)', () => {
@@ -243,9 +292,9 @@ test('a rematch starts over, without repeating the last match\'s facts', () => {
   assert.ok(!asked.includes(h.g.question.index));
 });
 
-test('in the lobby: needs two phones (typing your fake is secret), with 4, 6 or 8 rounds', () => {
+test('in the lobby: two phones only (typing your fake is secret), with 4, 6 or 8 rounds', () => {
   const def = getGame('fake-out');
-  assert.equal(def.needsPhone, true);
+  assert.equal(def.phoneOnly, true, 'greyed out with a controller seated');
   const setup = JSON.stringify(def.create(fakeCtx()).hostView());
   assert.ok(setup.includes('"rounds"'));
   assert.ok(setup.includes('6 rounds') && setup.includes('4 rounds') && setup.includes('8 rounds'));

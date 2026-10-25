@@ -7,6 +7,7 @@
   let root = null;
   let api = null;
   let lastKey = '';
+  let lastTries = 0;
 
   function send() {
     const input = root && root.querySelector('.fo-input');
@@ -59,11 +60,15 @@
         return score(v) + fact + '<div class="fo-wait"><p>Your fake:</p><div class="fo-mine">“' + esc(v.yourFake) + '”</div><p>' +
           (v.written[1 - me] ? 'Both in!' : 'Waiting for the other player…') + '</p></div>';
       }
-      return score(v) + fact +
-        (v.notice === 'truth' ? '<p class="lost">That\'s actually the truth! Write a fake one.</p>' : '<p class="msg">Write a fake answer that sounds true.</p>') +
+      const note = v.notice === 'truth' ? '<p class="lost">That\'s actually the truth! Write a fake one.</p>'
+        : v.notice === 'empty' ? '<p class="lost">Use some letters or numbers.</p>'
+          : '<p class="msg">Write a fake answer that sounds true.</p>';
+      return score(v) + fact + note +
+        (v.peeked ? '<p class="msg">You know the truth now, so finding it won\'t score this round.</p>' : '') +
         '<div class="fo-write"><input class="fo-input" type="text" maxlength="40" autocomplete="off" autocapitalize="off" enterkeyhint="send" placeholder="Your fake answer">' +
         '<button class="primary fo-send">Send</button></div>' +
-        '<button class="ghost fo-suggest">Stuck? Use “' + esc(v.suggestion) + '”</button>';
+        '<button class="ghost fo-suggest">Stuck? Use “' + esc(v.suggestion) + '”</button>' +
+        '<p class="msg fo-other">' + (v.written[1 - me] ? 'The other player has written theirs.' : '') + '</p>';
     }
     if (v.phase === 'pick') {
       const picked = v.yourPick !== null;
@@ -77,10 +82,10 @@
     const done = v.step >= v.reveal.length;
     let mine = '';
     if (done) {
-      const truth = v.reveal[v.reveal.length - 1];
+      const truth = v.reveal.find(function (r) { return r.kind === 'truth'; });
       const found = truth.pickedBy.indexOf(me) !== -1;
       const fooledThem = v.reveal.some(function (r) { return r.kind === 'fake' && r.authors.indexOf(me) !== -1 && r.pickedBy.indexOf(1 - me) !== -1; });
-      mine = '<p class="' + (found ? 'won' : 'lost') + '">' + (found ? '✅ You found the truth' : '❌ The truth was “' + esc(truth.text) + '”') + '</p>' +
+      mine = '<p class="' + (found ? 'won' : 'lost') + '">' + (found ? '✅ You found the truth' + (v.peeked ? ' (no points: you peeked)' : '') : '❌ The truth was “' + esc(truth.text) + '”') + '</p>' +
         (fooledThem ? '<p class="won">🤥 Your fake fooled them!</p>' : '') +
         (v.gained[me] ? '<p class="won">+' + v.gained[me] + '</p>' : '');
     }
@@ -97,12 +102,19 @@
       el.appendChild(root);
     },
     update: function (v) {
-      const key = JSON.stringify([v.phase, v.round, v.countdown, v.yourFake, v.notice, v.written, v.yourPick, v.step, v.scores]);
+      // While you're typing, the other player sending theirs only changes a line of text: the box
+      // isn't redrawn under your fingers (the keyboard would close mid-word).
+      const typing = v.phase === 'write' && !v.yourFake;
+      const key = JSON.stringify([v.phase, v.round, v.countdown, v.yourFake, v.notice, v.tries, v.yourPick, v.step, v.scores, typing ? null : v.written]);
+      const other = root.querySelector('.fo-other');
+      if (other && typing) other.textContent = v.written[1 - v.you] ? 'The other player has written theirs.' : '';
       if (key === lastKey) return;
+      const refused = v.tries !== lastTries;
+      lastTries = v.tries;
       lastKey = key;
-      // Keep whatever you were typing (and the keyboard up) when the screen redraws.
+      // Keep whatever you were typing when the screen redraws (but not a fake that was just turned down).
       const input = root.querySelector('.fo-input');
-      const typed = input ? input.value : '';
+      const typed = input && !refused ? input.value : '';
       const focused = input && document.activeElement === input;
       root.innerHTML = render(v);
       const again = root.querySelector('.fo-input');
@@ -114,6 +126,7 @@
     unmount: function () {
       root = null;
       lastKey = '';
+      lastTries = 0;
     },
   });
 })();

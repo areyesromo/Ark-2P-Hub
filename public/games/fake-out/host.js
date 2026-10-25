@@ -31,7 +31,7 @@
       '<span class="points">' + v.scores[slot] + gain + '</span><span class="status">' + status + '</span></div>';
   }
 
-  function revealCard(v, r, i) {
+  function revealCard(v, r) {
     if (!r.kind) return '<div class="fo-answer hidden-yet"><span class="text">' + esc(r.text) + '</span></div>';
     const who = r.kind === 'truth' ? '✅ The truth!'
       : r.kind === 'house' ? '🏦 The bank\'s fake'
@@ -39,7 +39,7 @@
     const fooled = r.pickedBy.length
       ? (r.kind === 'truth' ? 'Found by ' : 'Fooled ') + r.pickedBy.map(function (s) { return nameOf(v, s); }).join(' & ')
       : r.kind === 'truth' ? 'Nobody found it' : 'Fooled nobody';
-    return '<div class="fo-answer ' + r.kind + (i === v.step - 1 ? ' now' : '') + '"><span class="text">' + esc(r.text) + '</span>' +
+    return '<div class="fo-answer ' + r.kind + (r.at === v.step - 1 ? ' now' : '') + '"><span class="text">' + esc(r.text) + '</span>' +
       '<span class="who">' + who + '</span><span class="fooled">' + fooled + '</span></div>';
   }
 
@@ -55,7 +55,8 @@
       return '<div class="fo-center"><div class="big">' + (v.draw ? '🤝' : '🏆') + '</div><div class="sub">' + sub +
         '<br>Rematch or head back to the lobby from your phones.</div></div>';
     }
-    const truth = v.phase === 'reveal' && v.reveal && v.step >= v.reveal.length ? v.reveal[v.reveal.length - 1].text : null;
+    const shown = v.phase === 'reveal' && v.reveal ? v.reveal.find(function (r) { return r.kind === 'truth'; }) : null;
+    const truth = shown ? shown.text : null;
     let html = '<div class="fo-card"><div class="meta">Round ' + v.round + ' / ' + v.rounds + (v.last ? ' · ⭐ double points' : '') + '</div>' +
       '<div class="q">' + factHtml(v, truth) + '</div></div>';
     if (v.phase === 'write') {
@@ -65,7 +66,8 @@
         return '<div class="fo-answer"><span class="text">' + esc(o.text) + '</span></div>';
       }).join('') + '</div><div class="fo-hint">Which one is real? Pick it on your phone.</div>';
     } else if (v.phase === 'reveal') {
-      html += '<div class="fo-list">' + v.reveal.map(function (r, i) { return revealCard(v, r, i); }).join('') + '</div>';
+      // The cards stay where they were for the pick, and turn over one by one.
+      html += '<div class="fo-list">' + v.reveal.map(function (r) { return revealCard(v, r); }).join('') + '</div>';
     }
     return html;
   }
@@ -85,7 +87,7 @@
       if (v.phase === prev.phase && v.written.filter(Boolean).length > prev.written.filter(Boolean).length) out.push('lock');
       if (v.phase === prev.phase && v.picked.filter(Boolean).length > prev.picked.filter(Boolean).length) out.push('lock');
       if (v.phase === 'reveal' && v.step > (prev.phase === 'reveal' ? prev.step : 0)) {
-        const r = v.reveal[v.step - 1];
+        const r = v.reveal.find(function (x) { return x.at === v.step - 1; });
         out.push(r.kind === 'truth' ? 'fanfare' : r.pickedBy.length ? 'wrong' : 'reveal');
       }
       return out;

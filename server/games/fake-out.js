@@ -6,7 +6,9 @@
 // your rival picking your fake scores you 500. The last round counts double. The reveal goes
 // through the answers one by one (whose fake, who fell for it), the truth last.
 //
-// It needs two phones: a controller player would have to write their fake on the TV.
+// It needs two phones: a controller player would have to write their fake on the TV. Writing the
+// truth by mistake is turned down (only your phone is told), and then finding it won't score
+// that round: no checking your guess for free.
 
 import { FAKE_OUT } from './fake-out-questions.js';
 import { settingOf, usedIn } from './options.js';
@@ -16,13 +18,43 @@ export const POINTS = { truth: 1000, fooled: 500 };
 export const TIMING = { countdownMs: 3000, writeMs: 60000, pickMs: 20000, stepMs: 2000, scoresMs: 4000 };
 export const MAX_LEN = 40;
 
-/** An answer for comparing: lower case, letters and digits only, no leading a / an / the, no plural s. */
+const STOP = new Set(['a', 'an', 'the', 'of']);
+const NUMBERS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+const TENS = { thirty: 30, forty: 40, fifty: 50, sixty: 60, seventy: 70, eighty: 80, ninety: 90, hundred: 100, thousand: 1000 };
+
+/** An answer's words for comparing: any alphabet, no accents, numbers as digits, plurals as singulars, no a / an / the. */
+function words(s) {
+  return String(s).normalize('NFD').replace(/\p{M}/gu, '').toLowerCase().split(/[^\p{L}\p{N}]+/u)
+    .filter((w) => w && !STOP.has(w))
+    .map((w) => {
+      if (NUMBERS.includes(w)) return String(NUMBERS.indexOf(w));
+      if (TENS[w]) return String(TENS[w]);
+      if (w.length > 4 && w.endsWith('ies')) return w.slice(0, -3) + 'y';
+      if (w.length > 4 && w.endsWith('oes')) return w.slice(0, -2);
+      if (w.length > 3 && w.endsWith('s') && !w.endsWith('ss')) return w.slice(0, -1);
+      return w;
+    });
+}
+
+/** An answer, normalised (two fakes the same this way are one answer). Spaces don't count: "back rub" is "BackRub". */
 export function normal(s) {
-  return String(s).toLowerCase().replace(/[^a-z0-9 ]+/g, ' ').replace(/\s+/g, ' ').trim()
-    .replace(/^(a|an|the) /, '').replace(/s$/, '');
+  return words(s).join('');
 }
 
 export class FakeOut {
+  /**
+   * Is this "fake" really the truth? The same answer written another way ("3" for "three",
+   * "fruit fly" for "fruit flies", "back rub" for "BackRub"), or the truth inside it ("a smelly
+   * fart") or it inside the truth ("landlords" for "greedy landlords").
+   */
+  static isTruth(text, truth) {
+    const a = words(text);
+    const b = words(truth);
+    if (!a.length || !b.length) return false;
+    if (a.join('') === b.join('')) return true;
+    return b.every((w) => a.includes(w)) || a.every((w) => b.includes(w));
+  }
+
   constructor(ctx, rng = Math.random, bank = FAKE_OUT) {
     this.ctx = ctx;
     this.rng = rng;
@@ -96,6 +128,8 @@ export class FakeOut {
     this.suggestions = [s0, s1];
     this.fakes = [null, null];
     this.notice = [null, null];
+    this.tries = [0, 0]; // turned-down fakes (each shows on the phone, even the same one twice)
+    this.peeked = [false, false]; // wrote the truth: told so, but no points for finding it this round
     this.options = null;
     this.picks = [null, null];
     this.runPhase('write', TIMING.writeMs, () => this.toPick());
@@ -112,10 +146,9 @@ export class FakeOut {
       if (same) same.authors.push(slot); // you both wrote the same thing: one answer
       else options.push({ text, kind: 'fake', authors: [slot] });
     });
-    // The bank's fake, unless one of you wrote it: then another the bank has spare.
-    const taken = new Set(options.map((o) => normal(o.text)));
-    const house = [this.house, ...this.suggestions].find((t) => !taken.has(normal(t)));
-    if (house) options.push({ text: house, kind: 'house', authors: [] });
+    // The bank's fake, unless one of you wrote it (no swapping in a spare: one of you would
+    // know it, from being offered it as a ready-made fake).
+    if (!options.some((o) => normal(o.text) === normal(this.house))) options.push({ text: this.house, kind: 'house', authors: [] });
     this.options = this.shuffle(options);
     this.picks = [null, null];
     this.runPhase('pick', TIMING.pickMs, () => this.toReveal());
@@ -134,7 +167,7 @@ export class FakeOut {
     this.picks.forEach((p, slot) => {
       if (p === null) return;
       const o = this.options[p];
-      if (o.kind === 'truth') this.gained[slot] += POINTS.truth * times;
+      if (o.kind === 'truth') this.gained[slot] += this.peeked[slot] ? 0 : POINTS.truth * times;
       else o.authors.filter((a) => a !== slot).forEach((a) => { this.gained[a] += POINTS.fooled * times; });
     });
     this.before = this.scores.slice();
@@ -169,9 +202,13 @@ export class FakeOut {
       if (input.type === 'suggest') return this.setFake(slot, this.suggestions[slot]);
       if (input.type !== 'fake' || typeof input.text !== 'string' || input.text.length > MAX_LEN * 2) return;
       const text = input.text.replace(/\s+/g, ' ').trim().slice(0, MAX_LEN).trim();
-      if (!normal(text)) return;
-      if (normal(text) === normal(this.question.a)) {
-        this.notice[slot] = 'truth'; // that's the real answer: only this phone is told
+      if (!text) return;
+      const refuse = !normal(text) ? 'empty' : FakeOut.isTruth(text, this.question.a) ? 'truth' : null;
+      if (refuse) {
+        // Only this phone is told. Writing the truth tells you the answer, so finding it won't score this round.
+        this.notice[slot] = refuse;
+        this.tries[slot]++;
+        if (refuse === 'truth') this.peeked[slot] = true;
         return this.ctx.update();
       }
       return this.setFake(slot, text);
@@ -196,14 +233,17 @@ export class FakeOut {
     return this.phaseEnds ? Math.max(0, this.phaseEnds - this.ctx.now()) : 0;
   }
 
-  /** The reveal so far: every answer in order, with its secrets only once it's been shown. */
+  /**
+   * The reveal so far: the answers where they were for the pick (so their order gives nothing
+   * away), each with its turn `at` in the reveal and its secrets only once that turn has come.
+   */
   revealView() {
     if (this.phase !== 'reveal') return null;
     const step = this.step;
-    return this.order.map((i, n) => {
-      const o = this.options[i];
-      if (n >= step) return { text: o.text };
-      return { text: o.text, kind: o.kind, authors: o.authors, pickedBy: [0, 1].filter((s) => this.picks[s] === i) };
+    return this.options.map((o, i) => {
+      const at = this.order.indexOf(i);
+      if (at >= step) return { text: o.text, at };
+      return { text: o.text, at, kind: o.kind, authors: o.authors, pickedBy: [0, 1].filter((s) => this.picks[s] === i) };
     });
   }
 
@@ -245,6 +285,8 @@ export class FakeOut {
       yourFake: this.phase === 'write' || this.phase === 'pick' || this.phase === 'reveal' ? this.fakes && this.fakes[slot] : null,
       suggestion: this.phase === 'write' ? this.suggestions[slot] : null,
       notice: this.phase === 'write' ? this.notice[slot] : null,
+      tries: this.tries ? this.tries[slot] : 0,
+      peeked: Boolean(this.peeked && this.peeked[slot]),
       // Your own fake is marked (the phone leaves it off); the others are what you pick from.
       options: this.phase === 'pick' ? this.options.map((o, i) => ({ text: o.text, i, mine: o.authors.includes(slot) })) : null,
       yourPick: this.phase === 'pick' || this.phase === 'reveal' ? this.picks[slot] : null,
@@ -256,7 +298,7 @@ export default {
   id: 'fake-out',
   music: 'thinking',
   name: 'Fake Out',
-  needsPhone: true, // you each write a secret fake answer on your phone
+  phoneOnly: true, // you each write a secret fake answer on your phone
   tagline: 'Bluffing quiz: write a fake answer to a strange-but-true fact, then spot the real one among the fakes. Find the truth for 1000, fool your rival for 500.',
   create: (ctx) => new FakeOut(ctx),
 };
