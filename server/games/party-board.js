@@ -279,6 +279,11 @@ export class PartyBoard {
       this.say('🌉 The bridge is up: the long way round!');
       return this.hop(here.next.find((n) => n !== d.to), left);
     }
+    if (d && at === d.span[0] && here.next.includes(d.span[1]) && this.bridgeUp()) {
+      // Already on the short cut when it went up: a step back to the fork, then the long way.
+      this.say('🌉 The bridge is up: back to the fork!');
+      return this.hop(d.fork, left);
+    }
     if (here.next.length === 2) return this.forkPrompt(here.next, (to) => this.hop(to, left));
     this.hop(here.next[0], left);
   }
@@ -543,7 +548,7 @@ export class PartyBoard {
       players: this.players,
       board: {
         name: this.map.name, tier: this.map.tier, spaces: this.spaces, star: this.star, starPrice: this.starPrice, view: this.boardView(), theme: this.theme, tiles: this.tiles,
-        drawbridge: this.map.drawbridge ? { fork: this.map.drawbridge.fork, span: this.map.drawbridge.span, up: this.bridgeUp() } : null,
+        drawbridge: this.map.drawbridge ? { fork: this.map.drawbridge.fork, to: this.map.drawbridge.to, span: this.map.drawbridge.span, up: this.bridgeUp() } : null,
         market: this.market,
       },
       prompt: p ? { slot: p.slot, kind: p.kind, options: p.options, msLeft: Math.max(0, p.deadline - this.ctx.now()), extra: p.extra || null } : null,

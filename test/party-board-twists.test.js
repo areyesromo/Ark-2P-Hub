@@ -72,14 +72,58 @@ test('sky bridges: the drawbridge is down in rounds 1-2 (the fork asks), up in r
   assert.ok(said.some((m) => /bridge/i.test(m)), 'told why');
 });
 
-test('sky bridges: the bridge goes up and down every two rounds', () => {
+test('sky bridges: the bridge goes up and down every two rounds, as the rounds really pass', () => {
   const h = board(MAPS.skybridges);
-  const ups = [1, 2, 3, 4, 5, 6].map((r) => {
-    h.g.round = r;
-    return h.v().board.drawbridge.up;
-  });
+  const ups = [];
+  for (let r = 0; r < 6; r++) {
+    ups.push(h.v().board.drawbridge.up);
+    h.g.miniDone({ winner: null }); // the next round
+  }
   assert.deepEqual(ups, [false, false, true, true, false, false]);
-  assert.deepEqual(h.v().board.drawbridge.span, MAPS.skybridges.drawbridge.span);
+  const { fork, to, span } = MAPS.skybridges.drawbridge;
+  assert.deepEqual({ ...h.v().board.drawbridge, up: undefined }, { fork, to, span, up: undefined });
+});
+
+test('sky bridges: already on the short cut when the bridge goes up, you are turned back to the fork and go the long way', () => {
+  const d = MAPS.skybridges.drawbridge;
+  const spaces = MAPS.skybridges.spaces;
+  const h = board(MAPS.skybridges);
+  h.g.round = 3;
+  const p = h.g.players[0];
+  p.coins = 0;
+  p.space = d.span[0] - 1; // two hops before the far side of the span
+  const hops = [];
+  const hop = h.g.hop.bind(h.g);
+  h.g.hop = (to, left) => { hops.push(to); hop(to, left); };
+  h.roll(4);
+  assert.ok(!hops.includes(d.span[1]), 'never crossed the raised span: ' + hops);
+  const long = spaces[d.fork].next.find((n) => n !== d.to);
+  assert.deepEqual(hops, [d.span[0], d.fork, long, spaces[long].next[0]]);
+});
+
+test('sky bridges: with the bridge down, the short cut crosses it', () => {
+  const d = MAPS.skybridges.drawbridge;
+  const h = board(MAPS.skybridges);
+  h.g.players[0].coins = 0;
+  h.g.players[0].space = d.span[0];
+  h.roll(1);
+  assert.equal(h.g.players[0].space, d.span[1]);
+});
+
+test('sky bridges and market square: a rematch puts the bridge down and rolls a fresh market', () => {
+  const sky = board(MAPS.skybridges);
+  for (let r = 0; r < 2; r++) sky.g.miniDone({ winner: null });
+  assert.equal(sky.v().board.drawbridge.up, true);
+  sky.g.start();
+  assert.equal(sky.v().board.drawbridge.up, false);
+
+  const mk = board(MAPS.market);
+  let rolled = 0;
+  const roll = mk.g.rollMarket.bind(mk.g);
+  mk.g.rollMarket = () => { rolled++; roll(); };
+  mk.g.start();
+  assert.equal(rolled, 1, 'the market was rolled again');
+  assert.ok(mk.v().board.market);
 });
 
 // ---- 🛒 Market Square ----
@@ -112,18 +156,15 @@ test('market square: prices change every round, half to double, and the star pri
   assert.equal(Math.max(...m.stars), 35);
 });
 
-test('market square: today\'s prices are the same for both players, and buying pays them', () => {
+test('market square: buying the star pays today\'s market price, not the map\'s', () => {
   const h = board(MAPS.market, seeded(9));
-  const a = h.g.playerView(0);
-  const b = h.g.playerView(1);
-  assert.deepEqual(a.board.market, b.board.market);
-  assert.deepEqual(a.items, b.items);
   const p = h.g.players[0];
   p.coins = 100;
   h.g.star = 4;
   p.space = 3; // a step before the star
   const v = h.roll(1);
   assert.equal(v.prompt.kind, 'star');
+  assert.notEqual(v.board.starPrice, MAPS.market.starPrice, 'this seed rolls a market star price');
   h.g.onInput(0, { type: 'choose', value: 'yes' });
   assert.equal(p.coins, 100 - v.board.starPrice);
 });

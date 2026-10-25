@@ -112,6 +112,10 @@ test('twists are checked too: the drawbridge sits on a real fork and link; marke
   m = copy(sky);
   m.drawbridge = { ...sky.drawbridge, span: [0, 5] };
   assert.ok(validateMap(m).some((p) => /drawbridge/.test(p)));
+  // A real link, but on the main loop, not on the short cut it closes.
+  m = copy(sky);
+  m.drawbridge = { ...sky.drawbridge, span: [5, 6] };
+  assert.ok(validateMap(m).some((p) => /drawbridge: its span is not on the short cut/.test(p)));
   const market = MAPS.market;
   assert.ok(market.market, 'Market Square has a market');
   assert.equal(market.spaces.filter((sp) => sp.type === 'shop').length, 2, 'two shops');

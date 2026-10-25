@@ -200,6 +200,14 @@ export function validateMap(map) {
   if (d) {
     if (!ok(d.fork) || s[d.fork].next.length !== 2 || !s[d.fork].next.includes(d.to)) out.push('drawbridge: not on a fork');
     else if (!Array.isArray(d.span) || !ok(d.span[0]) || !s[d.span[0]].next.includes(d.span[1])) out.push('drawbridge: its span is not a link');
+    else {
+      // The span must close the short cut itself: on the branch from `to`, before it rejoins.
+      const into = s.map(() => 0);
+      s.forEach((sp) => sp.next.forEach((n) => { if (ok(n)) into[n]++; }));
+      const branch = [];
+      for (let i = d.to; ok(i) && into[i] === 1 && !branch.includes(i) && s[i].next.length === 1; i = s[i].next[0]) branch.push(i);
+      if (!branch.includes(d.span[0])) out.push('drawbridge: its span is not on the short cut');
+    }
     if (!Number.isInteger(d.every) || d.every < 1) out.push('drawbridge: rounds up / down must be a whole number');
   }
   const mk = map.market;

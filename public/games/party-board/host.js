@@ -111,10 +111,13 @@
     spaces.forEach(function (s) {
       s.next.forEach(function (n) {
         const t = spaces[n];
-        const fork = s.next.length > 1;
-        // Sky Bridges' drawbridge: wood when down, red and broken when up.
+        // Sky Bridges' drawbridge: wood when down, red and broken when up (and then the way
+        // onto the short cut is no choice: shown closed too).
         const db = drawbridge && spaces[drawbridge.span[0]] === s && n === drawbridge.span[1];
-        const cls = db ? 'drawbridge' + (drawbridge.up ? ' up' : '') : fork ? 'fork' : '';
+        const shut = drawbridge && drawbridge.up && spaces[drawbridge.fork] === s;
+        const fork = s.next.length > 1 && !shut;
+        const closed = shut && n === drawbridge.to;
+        const cls = db ? 'drawbridge' + (drawbridge.up ? ' up' : '') : closed ? 'drawbridge up' : fork ? 'fork' : '';
         l += '<line x1="' + s.x * 100 + '" y1="' + s.y * 100 + '" x2="' + t.x * 100 + '" y2="' + t.y * 100 + '"' + (cls ? ' class="' + cls + '"' : '') + '/>';
         const deg = Math.atan2((t.y - s.y) * H, (t.x - s.x) * W) * 180 / Math.PI;
         arrows += '<i class="pb-arrow' + (fork ? ' fork' : '') + '" style="left:' + (s.x + t.x) * 50 + '%;top:' + (s.y + t.y) * 50 + '%;transform:translate(-50%,-50%) rotate(' + deg.toFixed(1) + 'deg)"></i>';
