@@ -68,11 +68,14 @@ export const ITEMS = {
 export const ODDS = {
   first: { banana: 5, turbo: 3, shield: 3, coinbag: 3, magnet: 1, web: 3, oil: 3, bouncer: 4, bomb: 1 },
   second: { banana: 1, turbo: 3, shield: 1, coinbag: 1, magnet: 2, hover: 2, freeze: 2, swap: 2, thunder: 1, goldturbo: 2, star: 1, web: 1, oil: 1, bouncer: 2, bomb: 2, seeker: 3 },
+  // Battle: the same for both, and only what matters in a fight (no coins or places to swap;
+  // no Hover either: its 🎈 would look like a balloon).
+  battle: { banana: 4, bouncer: 4, seeker: 3, bomb: 2, shield: 3, turbo: 2, star: 1, web: 2, oil: 2, freeze: 2 },
 };
 
 /** A random item for the kart in this slot, by its place. */
 export function rollItem(game, slot) {
-  const odds = game.positions()[slot] === 1 ? ODDS.first : ODDS.second;
+  const odds = game.battle ? ODDS.battle : game.positions()[slot] === 1 ? ODDS.first : ODDS.second;
   const kinds = Object.keys(odds);
   let r = game.rng() * kinds.reduce((sum, k) => sum + odds[k], 0);
   for (const kind of kinds) {
@@ -248,7 +251,9 @@ export function stepShots(game, dt, now) {
       const n = game.track.line.length;
       const apart = Math.abs(rival.seg - s.seg);
       const sameStretch = Math.min(apart, n - apart) < 20;
-      const target = rival.finishedAt === null && sameStretch && Math.hypot(rival.x - s.x, rival.y - s.y) < ITEMS.seekerHome ? rival : Road.pointAt(game.track, w.s + ITEMS.seekerAhead);
+      // In a battle the rival can be either way round the arena: the short way to them.
+      const way = game.battle && ((rival.progress - w.s + 1.5) % 1) - 0.5 < 0 ? -1 : 1;
+      const target = rival.finishedAt === null && sameStretch && Math.hypot(rival.x - s.x, rival.y - s.y) < ITEMS.seekerHome ? rival : Road.pointAt(game.track, w.s + way * ITEMS.seekerAhead);
       s.angle = Math.atan2(target.y - s.y, target.x - s.x);
     }
     s.x += Math.cos(s.angle) * speed * dt;

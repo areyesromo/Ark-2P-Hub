@@ -269,10 +269,10 @@ test('setup: track, laps and races; best of 3 is first to 2; Mixed varies the tr
   const game = new KartRace(ctx, () => 0.5);
   game.start();
   assert.equal(game.hostView().phase, 'setup');
-  assert.deepEqual(game.settings, { track: 0, laps: 5, races: 1, items: 1 });
+  assert.deepEqual(game.settings, { mode: 0, arena: 0, track: 0, laps: 5, races: 1, items: 1 });
   game.onInput(1, { type: 'setting', key: 'races', value: 3 });
   game.onInput(1, { type: 'setting', key: 'laps', value: 4 }); // not a choice
-  assert.deepEqual(ctx.saved.settings, { track: 0, laps: 5, races: 3, items: 1 });
+  assert.deepEqual(ctx.saved.settings, { mode: 0, arena: 0, track: 0, laps: 5, races: 3, items: 1 });
   game.onInput(0, { type: 'go' });
   game.onInput(1, { type: 'go' }); // both ready
   assert.equal(game.hostView().winScore, 2);

@@ -52,6 +52,10 @@
 .kr-mid { text-align: center; }
 .kr-mid .track { color: var(--muted); font-weight: 700; }
 .kr-mid .clock { font-size: 2rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.kr-mid .clock.low { color: var(--bad); }
+/* Battle: balloons left (popped ones faded), on the TV and the phone. */
+.kr-balloon { display: inline-block; }
+.kr-balloon.popped { opacity: 0.2; filter: grayscale(1); }
 .kr-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
 .kr-arena canvas { display: block; border-radius: 10px; box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.5); }
 .kr-overlay { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; pointer-events: none; text-align: center; }

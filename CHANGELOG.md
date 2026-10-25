@@ -9,6 +9,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - Party Board: two new maps. **🌉 Sky Bridges**: a drawbridge across the middle goes up and
   down every two rounds (up, you go the long way round). **🛒 Market Square**: two shops, and
   prices change every round, from half price to double; the star's price moves too.
+- Kart Race: **🎈 Battle** mode. Three balloons each in a wide arena (Donut, Peanut or Plaza);
+  every spin-out pops one. Pop all of theirs, or have more left when the 2 minutes are up.
 
 ## 0.1.9
 
