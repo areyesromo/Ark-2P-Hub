@@ -14,6 +14,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   and shoot; three lives a round.
 - New game: **Rally Tennis**: tennis from above. Your player runs to the ball; you time the swing
   and aim. Spot-on timing hits hardest; aim wide and mistime it, and it's out.
+- New game: **Falling Blocks Battle**: side-by-side falling blocks with the same pieces for both.
+  Clear lines to send junk rows to your rival; fill your well and you lose the round.
 
 ## 0.1.8
 

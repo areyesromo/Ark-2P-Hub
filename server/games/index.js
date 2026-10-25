@@ -7,6 +7,7 @@ import volleyBlobs from './volley-blobs.js';
 import brickDuel from './brick-duel.js';
 import asteroidDuel from './asteroid-duel.js';
 import rallyTennis from './rally-tennis.js';
+import blockBattle from './block-battle.js';
 import snake from './snake.js';
 import tanks from './tanks.js';
 import quiz, { TOPICS } from './quiz.js';
@@ -76,6 +77,7 @@ const GAMES = [
   withSetup(brickDuel, { rows: { title: 'Wall', values: [5, 3, 7], label: (n) => `${n} rows of bricks` } }),
   withSetup(asteroidDuel, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(rallyTennis, firstTo('Games to win', [4, 3, 6])),
+  withSetup(blockBattle, firstTo(ROUNDS_WON, [2, 1, 3])),
   withSetup(snake, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
