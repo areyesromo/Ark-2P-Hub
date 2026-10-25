@@ -2,8 +2,8 @@
 // runs to the ball by themselves; you choose when to swing and where to aim. Swing as the ball
 // reaches you: spot on is a faster, deeper shot; a touch early pulls it left, late pushes it
 // right (on the TV), and holding ◀ or ▶ aims that way too. Aim wide with a mistimed swing and it
-// lands out. A swing too early is a whiff (you need a moment to get ready again); miss it, or
-// be too far away, and the point goes to your rival. Tennis scoring (15, 30, 40, deuce,
+// lands out. One swing per ball: swing too early (a whiff) or from too far away and that ball is
+// gone; too late, too. Then the point goes to your rival. Tennis scoring (15, 30, 40, deuce,
 // advantage); the serve changes each game; first to WIN_GAMES games wins.
 //
 // Every shot's flight is worked out when it's hit (where it bounces, when it reaches the far
@@ -31,7 +31,6 @@ export const TIMING = {
   windowMs: 260, // a swing this far either side of the right moment still hits
   perfectMs: 80, // and this close is spot on
   lagMs: 60, // the right moment, allowing for the swing's trip to the hub
-  cooldownMs: 400, // after a whiff
 };
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
@@ -55,7 +54,6 @@ export class RallyTennis {
     this.pointsPlayed = 0;
     this.players = [0, 1].map(() => ({ x: COURT.w / 2 }));
     if (!this.aims) this.aims = [0, 0]; // held ◀ ▶ (phones and controllers only send changes)
-    this.cooldown = [0, 0];
     this.shot = null;
     this.frame = 0;
     if (this.timer) this.ctx.clearTimeout(this.timer);
@@ -79,7 +77,8 @@ export class RallyTennis {
 
   tick() {
     const now = this.ctx.now();
-    const dt = clamp((now - this.lastTick) / 1000, 0, 0.1);
+    // Not capped tight: if the hub stalls, players still run for all the time the ball took.
+    const dt = clamp((now - this.lastTick) / 1000, 0, 1);
     this.lastTick = now;
     const before = this.phase;
 
@@ -122,11 +121,12 @@ export class RallyTennis {
     // On past the bounce to the far baseline, the same way.
     const to = 1 - slot;
     const along = (BASE[to] - land.y) / (land.y - from.y);
-    const at = { x: land.x + (land.x - from.x) * along, y: BASE[to] };
+    // Never somewhere nobody could run to.
+    const at = { x: clamp(land.x + (land.x - from.x) * along, RUN_LIMIT[0], RUN_LIMIT[1]), y: BASE[to] };
     const flight = SHOT.flight[kind] * 1000;
     const speed = Math.hypot(land.x - from.x, land.y - from.y) / flight;
     const tReach = now + flight + Math.hypot(at.x - land.x, at.y - land.y) / (speed * SHOT.afterBounce);
-    this.shot = { by: slot, to, kind, from, land, at, t0: now, tLand: now + flight, tReach, out: land.x < 0 || land.x > COURT.w, serve: Boolean(serve) };
+    this.shot = { by: slot, to, kind, from, land, at, t0: now, tLand: now + flight, tReach, out: land.x < 0 || land.x > COURT.w, serve: Boolean(serve), swung: false };
     if (this.phase !== 'rally') this.enter('rally');
   }
 
@@ -183,22 +183,18 @@ export class RallyTennis {
       if (slot === this.server) this.hit(slot, 0, true);
       return;
     }
-    if (this.phase !== 'rally' || this.shot.to !== slot || this.shot.out || now < this.cooldown[slot]) return;
-    const offset = now - (this.shot.tReach + TIMING.lagMs);
-    // Too early, or too far from the ball: a whiff, and a moment to recover.
-    if (offset < -TIMING.windowMs || Math.abs(this.players[slot].x - this.shot.at.x) > SHOT.reach) {
-      this.cooldown[slot] = now + TIMING.cooldownMs;
-      return;
-    }
-    if (offset > TIMING.windowMs) return; // too late: the point is already going
+    const s = this.shot;
+    if (this.phase !== 'rally' || s.to !== slot || s.out || s.swung) return;
+    s.swung = true; // one swing per ball: a whiff (too early, too late, too far) lets it go by
+    const offset = now - (s.tReach + TIMING.lagMs);
+    if (Math.abs(offset) > TIMING.windowMs || Math.abs(this.players[slot].x - s.at.x) > SHOT.reach) return;
     this.hit(slot, offset, false);
   }
 
-  /** Where the ball is now: along the ground and its height (for the TV). */
-  ball() {
+  /** Where the ball is at `now`: along the ground and its height (for the TV). */
+  ball(now = this.ctx.now()) {
     const s = this.shot;
     if (!s) return { x: this.players[this.server].x, y: BASE[this.server] + (this.server === 0 ? -0.4 : 0.4), z: 1.2 };
-    const now = this.ctx.now();
     if (now <= s.tLand) {
       const u = (now - s.t0) / (s.tLand - s.t0);
       return { x: s.from.x + (s.land.x - s.from.x) * u, y: s.from.y + (s.land.y - s.from.y) * u, z: (1 - u) * 1 + 4 * 1.6 * u * (1 - u) };
@@ -215,12 +211,15 @@ export class RallyTennis {
       countdown: this.phase === 'countdown' ? Math.max(0, Math.ceil((this.phaseEnds - this.ctx.now()) / 1000)) : 0,
       court: COURT,
       ball: this.ball(),
+      // Where it'll be 33 ms on (the next view), so the TV can carry it on smoothly in between.
+      ballNext: this.phase === 'rally' ? this.ball(this.ctx.now() + 33) : null,
       shot: s ? { by: s.by, to: s.to, kind: s.kind, land: s.land, out: s.out } : null,
       positions: this.players.map((p) => p.x),
       score: this.scoreLabel(),
       calls: this.calls(),
       points: this.points,
       games: this.games,
+      scores: this.games, // the room records the result with these
       winGames: this.winGames,
       server: this.server,
       last: this.last,

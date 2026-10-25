@@ -126,7 +126,7 @@ test('an out ball is the other player\'s point when it lands', () => {
   assert.equal(game.hostView().last.reason, 'out');
 });
 
-test('swinging too early does nothing, and you can\'t just mash', () => {
+test('one swing per ball: swing too early and that ball is gone, however much you mash', () => {
   const { ctx, game } = setup();
   toServe(ctx);
   game.onInput(0, { type: 'swing' });
@@ -134,12 +134,63 @@ test('swinging too early does nothing, and you can\'t just mash', () => {
   const ideal = shot.tReach + TIMING.lagMs;
   ctx.advance(ideal - TIMING.windowMs - 50 - ctx.now());
   game.onInput(1, { type: 'swing' }); // too early: a whiff
-  ctx.advance(TIMING.windowMs - 50);
-  game.onInput(1, { type: 'swing' }); // in the window now, but still recovering from the whiff
-  assert.equal(game.shot, shot);
-  ctx.advance(ideal + 100 - ctx.now());
+  for (let t = ideal - TIMING.windowMs; t < ideal + TIMING.windowMs; t += 50) {
+    ctx.advance(t - ctx.now());
+    game.onInput(1, { type: 'swing' });
+  }
+  assert.equal(game.shot, shot, 'never returned');
+  ctx.advance(200);
+  assert.deepEqual(game.points, [1, 0]);
+});
+
+test('the window\'s edges: spot on within ' + TIMING.perfectMs + ' ms, a hit within ' + TIMING.windowMs + ' ms, late after that', () => {
+  const kind = (late) => {
+    const { ctx, game } = setup();
+    toServe(ctx);
+    game.onInput(0, { type: 'swing' });
+    swingAt(ctx, game, -late);
+    return game.shot.by === 1 ? game.shot.kind : 'missed';
+  };
+  assert.equal(kind(TIMING.perfectMs), 'perfect');
+  assert.equal(kind(TIMING.perfectMs + 1), 'good');
+  assert.equal(kind(TIMING.windowMs), 'weak');
+  assert.equal(kind(TIMING.windowMs + 1), 'missed');
+});
+
+test('swings that don\'t count: at an out ball, after the point', () => {
+  const { ctx, game } = setup();
+  toServe(ctx);
+  game.onInput(0, { type: 'swing' });
+  game.onInput(1, { type: 'aim', dir: 1 });
+  swingAt(ctx, game, -TIMING.windowMs * 0.95); // out
+  const out = game.shot;
+  assert.equal(out.out, true);
+  game.onInput(0, { type: 'swing' }); // at an out ball: nothing
+  assert.equal(game.shot, out);
+  ctx.advance(out.tLand - ctx.now() + 20);
+  assert.equal(game.phase, 'point');
+  game.onInput(0, { type: 'swing' });
   game.onInput(1, { type: 'swing' });
-  assert.equal(game.shot.by, 1);
+  assert.equal(game.phase, 'point');
+  assert.deepEqual(game.points, [1, 0]);
+});
+
+test('no shot goes where nobody could reach it', () => {
+  const { ctx, game } = setup();
+  toServe(ctx);
+  game.phase = 'rally';
+  game.players[0].x = 9.5; // as far out as you can run
+  game.aims[0] = -1;
+  game.hit(0, -0.75 * TIMING.windowMs, false); // weak, across to the far side
+  assert.equal(game.shot.out, false);
+  assert.ok(game.shot.at.x >= -1.5, String(game.shot.at.x));
+});
+
+test('the result is recorded with the games as its score', () => {
+  const { game } = setup(() => 0.3, { wins: 1 });
+  for (let p = 0; p < 4; p++) game.award(0, 'test');
+  assert.equal(game.phase, 'over');
+  assert.deepEqual(game.hostView().scores, [1, 0]);
 });
 
 test('out of reach: the swing whiffs and the point goes to the hitter', () => {
@@ -167,7 +218,8 @@ test('both sides play alike: a mirrored rally gives mirrored shots', () => {
   const a = rally(0);
   const b = rally(1);
   assert.ok(Math.abs(a.t - b.t) < 1e-6 && Math.abs(a.y - b.y) < 1e-9);
-  assert.ok(Math.abs(a.x - (COURT.w - b.x)) < 1e-9 || Math.abs(a.x - b.x) < 1e-9);
+  // ◀ ▶ and early / late are the TV's left and right for both players.
+  assert.ok(Math.abs(a.x - (COURT.w - b.x)) < 1e-9, 'x measured from each player\'s own left on the TV is the same');
 });
 
 test('tennis scoring: 15, 30, 40, deuce, advantage, game; the serve changes each game', () => {

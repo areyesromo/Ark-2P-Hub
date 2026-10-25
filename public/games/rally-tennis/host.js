@@ -1,7 +1,9 @@
 // Rally Tennis on the TV (server/games/rally-tennis.js): the court upright, seen from above,
 // player 1 at the bottom and player 2 at the top (so ◀ ▶ are the TV's left and right for both).
-// The ball's shadow is on the court and the ball rises above it with its height; a mark shows
-// where the last shot bounced. Views come ~30 times a second in a rally.
+// The ball is drawn where it is over the court, bigger the higher it is, its shadow off to the
+// side by its height (sideways, so it reaches both ends at the true moment: lifting it up the
+// screen would bring it to the top player early). A mark shows where the last shot bounced.
+// Views come ~30 times a second in a rally; between them the ball glides to where the next will be.
 (function () {
   Ark.loadCss('/games/rally-tennis/style.css');
   const esc = Ark.escapeHtml;
@@ -17,6 +19,7 @@
   let overlay = null;
   let raf = null;
   let view = null;
+  let viewAt = 0;
   let shown = null; // eased player positions
   let overlayKey = '';
   let boardKey = '';
@@ -133,16 +136,21 @@
       g.stroke();
     });
 
-    // The ball: its shadow on the court, the ball above it by its height.
+    // The ball: its shadow off to the side by its height, the ball over its spot, bigger when high.
     if (view.phase !== 'over') {
-      const b = view.ball;
+      let b = view.ball;
+      const n = view.ballNext;
+      if (n) {
+        const k2 = Math.min(1, (performance.now() - viewAt) / 33);
+        b = { x: b.x + (n.x - b.x) * k2, y: b.y + (n.y - b.y) * k2, z: b.z + (n.z - b.z) * k2 };
+      }
       g.fillStyle = 'rgba(0, 0, 0, 0.35)';
       g.beginPath();
-      g.ellipse(b.x, Y(b.y), 0.22, 0.12, 0, 0, Math.PI * 2);
+      g.ellipse(b.x + b.z * 0.45, Y(b.y), 0.2, 0.12, 0, 0, Math.PI * 2);
       g.fill();
       g.fillStyle = '#d9f99d';
       g.beginPath();
-      g.arc(b.x, Y(b.y) - b.z * 0.9, 0.18 + b.z * 0.03, 0, Math.PI * 2);
+      g.arc(b.x, Y(b.y), 0.18 + b.z * 0.07, 0, Math.PI * 2);
       g.fill();
     }
   }
@@ -182,6 +190,7 @@
     update: function (v) {
       if (view && v.phase === 'serve' && view.phase !== 'serve') shown = null; // back to the middle
       view = v;
+      viewAt = performance.now();
       renderBoard(v);
       renderOverlay(v);
     },

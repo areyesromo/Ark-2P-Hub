@@ -315,6 +315,13 @@ test('the wall setting sets the rows; rematch starts over', () => {
   assert.equal(game.sides[0].broken, 0);
 });
 
+test('the result is recorded with bricks broken as its score', () => {
+  const { game } = setup();
+  game.sides[0].broken = 7;
+  game.sides[1].broken = 4;
+  assert.deepEqual(game.hostView().scores, [7, 4]);
+});
+
 test('the phone view has the scores and no positions', () => {
   const { game } = setup();
   const v = game.playerView(1);

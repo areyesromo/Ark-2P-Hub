@@ -320,6 +320,7 @@ export class BrickDuel {
         broken: s.broken,
       })),
       power: this.power,
+      scores: this.sides.map((s) => s.broken), // the room records the result with these
       winner: this.winner,
     };
   }
