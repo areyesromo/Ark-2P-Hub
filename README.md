@@ -140,7 +140,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Pong | **Left stick** or **D-pad ↑↓** | Move your paddle |
 | Volley Blobs | **Left stick** or **D-pad ← →**, **A** | Slide, jump |
 | Brick Breaker Duel | **Left stick** or **D-pad ← →** | Move your paddle |
-| Asteroid Duel | **Left stick** or **D-pad**, **A** / **RT** | Steer (push further to thrust), fire |
+| Asteroid Duel | **Left stick**, **D-pad** + **B**, hold **A** / **RT** | Steer (push the stick further to thrust; the D-pad turns, B thrusts), fire |
 | Light Cycles | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |
 | Air Hockey | **Left stick** or **D-pad** | Move your mallet (in TV directions) |
 | Snake Battle | **D-pad** / **left stick** (or **Y**↑ **A**↓ **X**← **B**→) | Turn |

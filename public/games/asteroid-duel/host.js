@@ -24,6 +24,7 @@
   let boardKey = '';
   let statsKey = '';
   let colors = null;
+  let frames = 0;
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -43,7 +44,8 @@
       sub = 'Round ' + v.round + ' · first to ' + v.winScore;
     } else if (v.phase === 'roundEnd' && r) {
       big = v.scores[0] + ' : ' + v.scores[1];
-      sub = r.draw ? 'Both out: a draw!' : (r.reason === 'time' ? 'Time! More lives left: ' : '') + nameOf(v, r.roundWinner) + ' takes the round!';
+      if (r.draw) sub = r.reason === 'time' ? 'Time! Level on lives: a draw.' : 'Both out: a draw!';
+      else sub = (r.reason === 'time' ? 'Time! More lives left: ' : '') + nameOf(v, r.roundWinner) + ' takes the round!';
     } else if (v.phase === 'over') {
       big = '🏆';
       sub = nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] +
@@ -64,6 +66,7 @@
   }
 
   function resize() {
+    if (frames++ % 30 && canvas.width) return; // the box rarely changes: measure twice a second
     const f = view.field;
     const box = arena.getBoundingClientRect();
     const scale = Math.min(box.width / f.w, box.height / f.h);
@@ -179,28 +182,48 @@
     sounds: function (prev, v) {
       if (prev.phase !== 'play' || v.phase === 'countdown') return [];
       const out = [];
-      if (v.bullets.length > prev.bullets.length) out.push('shoot');
+      const shots = function (w, slot) { return w.bullets.filter(function (b) { return b.owner === slot; }).length; };
+      if ([0, 1].some(function (slot) { return shots(v, slot) > shots(prev, slot); })) out.push('shoot');
+      // A rock broke if one that was there is gone (a new pair coming in isn't a crash).
+      const ids = v.rocks.map(function (r) { return r.id; });
       if (v.ships.some(function (s, i) { return s.lives < prev.ships[i].lives; })) out.push('boom');
-      else if (v.rocks.length > prev.rocks.length || v.rocks.length < prev.rocks.length) out.push('crash');
+      else if (prev.rocks.some(function (r) { return ids.indexOf(r.id) === -1; })) out.push('crash');
       return out;
     },
-    padHint: 'Left stick or D-pad to steer (push further to thrust) · A / RT to fire · A: rematch at the end',
+    padHint: 'Left stick to steer (push further to thrust) · D-pad turns, B thrusts · hold A / RT to fire · A: rematch at the end',
     pad: function (btn, v) {
-      if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
-      return FIRE_BUTTONS.indexOf(btn) !== -1 ? { type: 'fire' } : null;
+      return v.phase === 'over' && (btn === 'A' || btn === 'START') ? { type: 'rematch' } : null;
     },
     // The stick points where the ship should face, in TV directions; pushed further, it thrusts.
-    padPoll: function (pad) {
+    // The D-pad only turns (a light push), and B thrusts the way you face. The fire trigger rides
+    // along: held, the hub fires as fast as the reload allows.
+    padPoll: function (pad, v, slot) {
       function dz(a) {
         return Math.abs(a) < DEADZONE ? 0 : (a - Math.sign(a) * DEADZONE) / (1 - DEADZONE);
       }
+      const held = function (b) { return pad.held.indexOf(b) !== -1; };
       let x = dz(pad.stick.x);
       let y = dz(pad.stick.y);
-      if (pad.held.indexOf('LEFT') !== -1 && Math.abs(pad.stick.x) < 0.6) x = -1;
-      if (pad.held.indexOf('RIGHT') !== -1 && Math.abs(pad.stick.x) < 0.6) x = 1;
-      if (pad.held.indexOf('UP') !== -1 && Math.abs(pad.stick.y) < 0.6) y = -1;
-      if (pad.held.indexOf('DOWN') !== -1 && Math.abs(pad.stick.y) < 0.6) y = 1;
-      return { type: 'move', x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10 };
+      if (!x && !y) {
+        const dx = (held('RIGHT') ? 1 : 0) - (held('LEFT') ? 1 : 0);
+        const dy = (held('DOWN') ? 1 : 0) - (held('UP') ? 1 : 0);
+        const d = Math.hypot(dx, dy) || 1;
+        x = (dx / d) * 0.4;
+        y = (dy / d) * 0.4;
+      }
+      if (held('B')) {
+        const ship = v && v.ships && v.ships[slot];
+        const d = Math.hypot(x, y);
+        if (d) {
+          x /= d;
+          y /= d;
+        } else if (ship) {
+          x = Math.cos(ship.angle);
+          y = Math.sin(ship.angle);
+        }
+      }
+      const fire = FIRE_BUTTONS.some(held);
+      return { type: 'move', x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, fire: fire };
     },
     mount: function (el) {
       const css = getComputedStyle(document.documentElement);

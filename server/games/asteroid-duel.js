@@ -13,11 +13,12 @@ export const WIN_SCORE = 3;
 export const FIELD = { w: 16, h: 9 };
 
 export const SHIP = { r: 0.35, turnRate: 5, accel: 7, drag: 0.5, maxSpeed: 6, lives: 3, thrustFrom: 0.45 };
-export const BULLET = { r: 0.08, speed: 11, lifeMs: 900, reloadMs: 280, max: 4 };
+export const BULLET = { r: 0.08, speed: 11, lifeMs: 900, reloadMs: 280, max: 3 }; // max: your shots in the air at once
 // Rock sizes 1 (small) to 3 (big): radius and drifting speed.
 export const ROCK = { sizes: [0.3, 0.55, 0.9], speeds: [1.6, 1.2, 0.8], start: 2 }; // start: mirrored pairs of big rocks
 export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
-export const TIMING = { countdownMs: 3000, roundEndMs: 2500, roundMs: 90000, respawnMs: 1500, shieldMs: 2000, rockMs: 4000 };
+export const TIMING = { countdownMs: 3000, roundEndMs: 2500, roundMs: 90000, respawnMs: 1500, shieldMs: 2000, rockMs: 4000, retryMs: 250 };
+const CLEAR = 1; // spawns (a ship, a new rock) keep this much space beyond touching
 
 const START = [
   { x: 2.5, y: FIELD.h / 2, angle: 0 },
@@ -55,8 +56,9 @@ export class AsteroidDuel {
   nextRound() {
     this.round++;
     this.ships = START.map((s) => ({ x: s.x, y: s.y, angle: s.angle, vx: 0, vy: 0, lives: SHIP.lives, alive: true, respawnAt: 0, shieldUntil: 0, reloadUntil: 0, thrust: false }));
-    // A stick held through the pause keeps steering (controllers and phones only send changes).
+    // A stick or trigger held through the pause keeps working (controllers and phones only send changes).
     if (!this.controls) this.controls = [{ x: 0, y: 0 }, { x: 0, y: 0 }];
+    if (!this.triggers) this.triggers = [false, false];
     this.bullets = [];
     this.rocks = [];
     // Big rocks in mirrored pairs (the same distance from each ship, drifting the mirrored way).
@@ -116,12 +118,14 @@ export class AsteroidDuel {
   step(dt, now) {
     this.ships.forEach((s, i) => {
       if (!s.alive) {
-        if (s.lives > 0 && now >= s.respawnAt) {
+        // Back at your spot once it's clear of rocks and your rival (checked every step).
+        if (s.lives > 0 && now >= s.respawnAt && this.clear(START[i], SHIP.r, i)) {
           Object.assign(s, { x: START[i].x, y: START[i].y, angle: START[i].angle, vx: 0, vy: 0, alive: true, shieldUntil: now + TIMING.shieldMs });
         }
         return;
       }
       this.steer(s, this.controls[i], dt);
+      if (this.triggers[i]) this.fire(i);
     });
     this.bullets.forEach((b) => {
       b.x = wrap(b.x + b.vx * dt, FIELD.w);
@@ -137,17 +141,37 @@ export class AsteroidDuel {
     this.collide(now);
     // An empty sky gets a new mirrored pair from the side edges after a moment.
     if (hadRocks && !this.rocks.length) this.nextRockAt = now + TIMING.rockMs;
-    if (!this.rocks.length && now >= this.nextRockAt) {
-      const a = (this.rng() - 0.5) * 1.2; // heading into the field, roughly across it
-      this.addPair(3, 0.5, 0.5 + this.rng() * (FIELD.h - 1), Math.cos(a), Math.sin(a));
-      this.nextRockAt = Infinity;
-    }
+    if (!this.rocks.length && now >= this.nextRockAt) this.newPair(now);
 
     const out = this.ships.map((s) => s.lives <= 0);
     if (out[0] || out[1]) {
       const draw = out[0] && out[1];
       this.endRound({ reason: 'out', draw, roundWinner: draw ? null : out[0] ? 1 : 0 });
     }
+  }
+
+  /**
+   * A new mirrored pair of big rocks, clear of both ships: from the side edges if there's room,
+   * else anywhere in the left half (and its mirror); none fits, another try in a moment.
+   */
+  newPair(now) {
+    const r = ROCK.sizes[2];
+    for (let i = 0; i < 16; i++) {
+      const x = i < 8 ? 0.5 : 1 + this.rng() * (FIELD.w / 2 - 2);
+      const y = 0.5 + this.rng() * (FIELD.h - 1);
+      if (!this.clear({ x, y }, r) || !this.clear({ x: FIELD.w - x, y: FIELD.h - y }, r)) continue;
+      const a = (this.rng() - 0.5) * 1.2; // heading into the field, roughly across it
+      this.addPair(3, x, y, Math.cos(a), Math.sin(a));
+      this.nextRockAt = Infinity;
+      return;
+    }
+    this.nextRockAt = now + TIMING.retryMs;
+  }
+
+  /** Is a circle at `p` (radius r) well clear of every rock and ship (but `self`)? */
+  clear(p, r, self) {
+    if (this.rocks.some((rock) => dist(p, rock) < rockR(rock) + r + CLEAR)) return false;
+    return this.ships.every((s, i) => i === self || !s.alive || dist(p, s) >= SHIP.r + r + CLEAR);
   }
 
   /** Turn towards the stick; past a light push, the engine fires too. */
@@ -193,13 +217,13 @@ export class AsteroidDuel {
       }
       return true;
     });
-    // Ships into rocks.
-    this.ships.forEach((s) => {
-      if (!hittable(s)) return;
-      const rock = this.rocks.find((r) => dist(s, r) < rockR(r) + SHIP.r);
+    // Ships into rocks: both ships are checked before anything breaks, so neither goes first.
+    const hits = this.ships.map((s) => (hittable(s) ? this.rocks.find((r) => dist(s, r) < rockR(r) + SHIP.r) : null));
+    hits.forEach((rock, i) => {
       if (!rock) return;
+      const s = this.ships[i];
       this.lose(s, now);
-      this.split(rock, s.vx, s.vy);
+      if (this.rocks.includes(rock)) this.split(rock, s.vx, s.vy);
     });
     // Ships bump off each other (no harm done).
     const [a, b] = this.ships;
@@ -289,8 +313,18 @@ export class AsteroidDuel {
     if (input.type === 'move' && typeof input.x === 'number' && typeof input.y === 'number' && Number.isFinite(input.x) && Number.isFinite(input.y)) {
       // Stick / joystick direction in TV coordinates (-1..1, down is +y).
       this.controls[slot] = { x: clamp(input.x, -1, 1), y: clamp(input.y, -1, 1) };
+      // A controller's trigger rides along with its stick; a press shoots at once.
+      if (typeof input.fire === 'boolean') {
+        const pressed = input.fire && !this.triggers[slot];
+        this.triggers[slot] = input.fire;
+        if (pressed) this.fire(slot);
+      }
     } else if (input.type === 'fire') {
       this.fire(slot);
+    } else if (input.type === 'trigger' && typeof input.on === 'boolean') {
+      // Held: fires as fast as the reload (and the shots in the air) allow.
+      this.triggers[slot] = input.on;
+      if (input.on) this.fire(slot);
     }
   }
 
@@ -337,7 +371,7 @@ export class AsteroidDuel {
       lives: this.ships.map((x) => x.lives),
       maxLives: SHIP.lives,
       alive: s.alive,
-      ready: s.alive && this.ctx.now() >= s.reloadUntil,
+      ready: s.alive && this.ctx.now() >= s.reloadUntil && this.bullets.filter((b) => b.owner === slot).length < BULLET.max,
       result: this.result,
       winner: this.winner,
     };

@@ -80,13 +80,31 @@ test('fire shoots from the nose; a short reload and a limit on shots in the air'
   game.onInput(0, { type: 'fire' }); // reloading
   assert.equal(game.bullets.length, 1);
   assert.ok(game.bullets[0].vx > 0 && game.bullets[0].x > 4);
-  for (let i = 0; i < BULLET.max + 2; i++) {
+  for (let i = 1; i < BULLET.max + 1; i++) {
     ctx.advance(BULLET.reloadMs);
     game.onInput(0, { type: 'fire' });
   }
-  assert.ok(game.bullets.filter((b) => b.owner === 0).length <= BULLET.max);
+  assert.equal(game.bullets.length, BULLET.max, 'the next shot waits for one to fade');
+  assert.equal(game.playerView(0).ready, false);
   ctx.advance(BULLET.lifeMs + 50);
   assert.equal(game.bullets.length, 0, 'shots fade out');
+});
+
+test('hold the trigger and it fires as fast as the reload allows; let go and it stops', () => {
+  const { ctx, game } = setup();
+  arena(game, { ships: [{ x: 4, y: 4.5, angle: -Math.PI / 2 }, { x: 12, y: 8 }] });
+  game.onInput(0, { type: 'trigger', on: true });
+  ctx.advance(BULLET.reloadMs * 2 + 30);
+  assert.equal(game.bullets.length, 3);
+  game.onInput(0, { type: 'trigger', on: false });
+  const reload = game.ships[0].reloadUntil;
+  ctx.advance(BULLET.lifeMs);
+  assert.equal(game.ships[0].reloadUntil, reload, 'no more shots once let go');
+  // A controller holds it through its stick input.
+  game.onInput(1, { type: 'move', x: 0, y: 0, fire: true });
+  ctx.advance(10);
+  assert.equal(game.bullets.filter((b) => b.owner === 1).length, 1);
+  game.onInput(0, { type: 'trigger', on: 'yes' }); // ignored
 });
 
 test('a hit costs a life; you come back at your spot with a shield that shots pass through', () => {
@@ -111,9 +129,26 @@ test('your own shots can\'t hit you', () => {
   const { ctx, game } = setup();
   arena(game, { ships: [{ x: 4, y: 4.5, angle: 0, vx: 0, vy: 0 }, { x: 12, y: 1 }] });
   game.onInput(0, { type: 'fire' });
-  game.ships[0].vx = 20; // racing after it
+  game.ships[0].x = 5; // jump into its path
   ctx.advance(200);
   assert.equal(game.ships[0].lives, SHIP.lives);
+});
+
+test('hits count across the wrapping edge', () => {
+  const { ctx, game } = setup();
+  arena(game, { ships: [{ x: FIELD.w - 0.3, y: 4.5, angle: 0 }, { x: 0.5, y: 4.5, angle: 0, shieldUntil: 0 }] });
+  game.onInput(0, { type: 'fire' });
+  ctx.advance(60);
+  assert.equal(game.ships[1].lives, SHIP.lives - 1);
+});
+
+test('ships bump each other apart, harmlessly, across the edge too', () => {
+  const { ctx, game } = setup();
+  arena(game, { ships: [{ x: FIELD.w - 0.2, y: 4.5, angle: 0, vx: 3, vy: 0 }, { x: 0.3, y: 4.5, angle: Math.PI, vx: -3, vy: 0 }] });
+  ctx.advance(100);
+  const [a, b] = game.ships;
+  assert.deepEqual([a.lives, b.lives], [SHIP.lives, SHIP.lives]);
+  assert.ok(a.vx < 0 && b.vx > 0, 'bounced');
 });
 
 test('a shot splits a big rock in two smaller ones; the smallest just break', () => {
@@ -134,6 +169,69 @@ test('flying into a rock costs a life', () => {
   arena(game, { ships: [{ x: 4, y: 4.5, angle: 0, vx: 3, vy: 0 }, { x: 14, y: 1 }], rocks: [{ x: 5, y: 4.5, size: 2 }] });
   ctx.advance(300);
   assert.equal(game.ships[0].lives, SHIP.lives - 1);
+});
+
+test('two ships flying into the same rock at once both lose a life', () => {
+  const { ctx, game } = setup();
+  arena(game, {
+    ships: [{ x: 6.5, y: 4.5, angle: 0, vx: 2, vy: 0 }, { x: 9.5, y: 4.5, angle: Math.PI, vx: -2, vy: 0 }],
+    rocks: [{ x: 8, y: 4.5, size: 3 }],
+  });
+  ctx.advance(300);
+  assert.deepEqual(game.ships.map((s) => s.lives), [SHIP.lives - 1, SHIP.lives - 1]);
+});
+
+test('an emptied sky gets a new pair a few seconds later, never on top of a ship', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    let r = seed / 21;
+    const { ctx, game } = setup(() => { r = (r * 9301 + 49297) % 233280 / 233280; return r; });
+    play(ctx);
+    arena(game, { ships: [{ x: 0.5, y: 4.5, angle: 0, shieldUntil: 0 }, { x: FIELD.w - 0.5, y: 2, angle: Math.PI, shieldUntil: 0 }], rocks: [{ x: 8, y: 4.5, size: 1 }] });
+    game.bullets.push({ x: 7.5, y: 4.5, vx: 5, vy: 0, owner: 1, born: ctx.now() });
+    ctx.advance(100);
+    assert.equal(game.rocks.length, 0);
+    ctx.advance(TIMING.rockMs - 200);
+    assert.equal(game.rocks.length, 0, 'not yet');
+    ctx.advance(1500);
+    assert.ok(game.rocks.length >= 2, 'a new pair');
+    for (const rock of game.rocks) {
+      for (const s of game.ships) {
+        const d = Math.hypot(Math.min(Math.abs(rock.x - s.x), FIELD.w - Math.abs(rock.x - s.x)), Math.min(Math.abs(rock.y - s.y), FIELD.h - Math.abs(rock.y - s.y)));
+        assert.ok(d > ROCK.sizes[2] + SHIP.r, `seed ${seed}: rock ${d.toFixed(2)} from a ship`);
+      }
+    }
+    assert.deepEqual(game.ships.map((s) => s.lives), [SHIP.lives, SHIP.lives]);
+  }
+});
+
+test('you don\'t respawn into a rock: you wait until your spot is clear', () => {
+  const { ctx, game } = setup();
+  arena(game, { ships: [{ x: 4, y: 4.5, angle: 0 }, { x: 12, y: 1 }] });
+  game.lose(game.ships[0], ctx.now());
+  // A big rock parked on the start spot.
+  game.rocks = [{ id: 99, x: 2.5, y: 4.5, vx: 0, vy: 0, size: 3 }];
+  ctx.advance(TIMING.respawnMs + TIMING.shieldMs + 500);
+  assert.equal(game.ships[0].alive, false, 'still waiting');
+  assert.equal(game.ships[0].lives, SHIP.lives - 1);
+  game.rocks = [];
+  ctx.advance(100);
+  assert.equal(game.ships[0].alive, true);
+});
+
+test('a held stick and trigger carry over into the next round and a rematch', () => {
+  const { ctx, game } = setup(() => 0.3, { wins: 1 });
+  game.onInput(1, { type: 'move', x: 0, y: 1 });
+  play(ctx);
+  arena(game, { ships: [{ x: 4, y: 4.5, angle: 0, reloadUntil: 0 }, { x: 5.2, y: 4.5, lives: 1, shieldUntil: 0 }] });
+  game.onInput(0, { type: 'fire' });
+  ctx.advance(100);
+  assert.equal(game.phase, 'over');
+  assert.equal(ctx.pendingTimers ? ctx.pendingTimers() : 0, 0, 'no timers left at the end');
+  game.onInput(0, { type: 'rematch' });
+  play(ctx);
+  const y = game.ships[1].y;
+  ctx.advance(500);
+  assert.notEqual(game.ships[1].y, y, 'still steering');
 });
 
 test('rocks keep coming: an empty sky gets a new mirrored pair', () => {

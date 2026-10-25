@@ -1,11 +1,11 @@
 // Asteroid Duel on the phone (server/games/asteroid-duel.js): the shared movement pad steers
-// (point where to face; push further to thrust) and FIRE shoots, again and again while held.
+// (point where to face; push further to thrust) and FIRE shoots, again and again while held
+// (the hub keeps firing until it hears you let go).
 (function () {
   Ark.loadCss('/games/asteroid-duel/style.css');
   Ark.loadCss('/shared/move-pad.css');
   const padReady = Ark.loadScript('/shared/move-pad.js');
   const SEND_EVERY_MS = 50;
-  const AUTOFIRE_MS = 300; // holding FIRE keeps shooting as fast as the reload allows
 
   let root = null;
   let stick = null;
@@ -18,7 +18,7 @@
   let pending = null;
   let lastSent = 0;
   let sendTimer = null;
-  let autofire = null;
+  let firing = false;
 
   function send() {
     sendTimer = null;
@@ -39,24 +39,20 @@
     }
   }
 
-  function fire() {
+  function trigger(on) {
+    if (firing === on) return;
+    firing = on;
+    if (fireBtn) fireBtn.classList.toggle('held', on);
     if (!api) return;
-    api.send({ type: 'fire' });
-    api.vibrate(10);
+    api.send({ type: 'trigger', on: on });
+    if (on) api.vibrate(10);
   }
   function onFireDown(e) {
     e.preventDefault();
     if (fireBtn.setPointerCapture) fireBtn.setPointerCapture(e.pointerId);
-    fireBtn.classList.add('held');
-    fire();
-    clearInterval(autofire);
-    autofire = setInterval(fire, AUTOFIRE_MS);
+    trigger(true);
   }
-  function onFireUp() {
-    if (fireBtn) fireBtn.classList.remove('held');
-    clearInterval(autofire);
-    autofire = null;
-  }
+  function onFireUp() { trigger(false); }
   function onHide() { if (document.hidden) onFireUp(); }
 
   function hearts(n, max) {
@@ -76,7 +72,7 @@
     const r = v.result;
     if (v.phase === 'countdown') status = 'Round ' + v.round + ' starts in ' + v.countdown + '…';
     else if (v.phase === 'play') status = v.alive ? 'Hold FIRE to shoot · push the stick further to thrust' : '💥 Hit! Back in a moment…';
-    else if (v.phase === 'roundEnd' && r) status = r.draw ? 'Both out: a draw' : r.roundWinner === you ? 'Round to you! 🎉' : 'Round to them';
+    else if (v.phase === 'roundEnd' && r) status = r.draw ? (r.reason === 'time' ? 'Time: a draw' : 'Both out: a draw') : r.roundWinner === you ? 'Round to you! 🎉' : 'Round to them';
     else if (v.phase === 'over') {
       cls = v.winner === you ? 'won' : 'lost';
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
@@ -96,6 +92,9 @@
   Ark.register('player', 'asteroid-duel', {
     mount: function (el, a) {
       api = a;
+      firing = true; // so the next line sends it
+      trigger(false); // after a reload or reconnect: nothing held
+      api.send({ type: 'move', x: 0, y: 0 });
       root = document.createElement('div');
       root.className = 'ad-phone';
       root.innerHTML = '<div class="info"></div><div class="ad-stick"></div><button class="ad-fire">FIRE</button><button class="primary rematch hidden">Rematch</button>';
@@ -118,6 +117,7 @@
     unmount: function () {
       document.removeEventListener('visibilitychange', onHide);
       onFireUp();
+      firing = false;
       clearTimeout(sendTimer);
       if (pad) pad.destroy();
       root = stick = pad = fireBtn = info = pending = api = null;
