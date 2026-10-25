@@ -40,9 +40,12 @@ export class CrazyEights {
     this.actions = Boolean(settingOf(ctx, 'actions', 1));
     this.target = settingOf(ctx, 'target', TARGET); // 0: one hand
     this.timer = null;
+    this.opener = 1; // who opens the match: player 1 the first time, then the other each rematch
   }
 
   start() {
+    this.opener = 1 - this.opener;
+    this.turns = 0;
     this.scores = [0, 0];
     this.hand = 0;
     this.winner = null;
@@ -71,7 +74,7 @@ export class CrazyEights {
     this.pendingKind = null;
     this.result = null;
     this.last = null;
-    this.turn = (this.hand - 1) % 2;
+    this.turn = (this.opener + this.hand - 1) % 2; // the players take turns to open a hand
     this.phase = 'play';
     this.turnStart();
   }
@@ -88,6 +91,7 @@ export class CrazyEights {
   /** A fresh turn (or a fresh clock for calling the suit). */
   turnStart() {
     this.drew = null;
+    this.turns++;
     this.clock(TIMING.turnMs, () => this.timeUp());
     this.ctx.update();
   }
@@ -112,7 +116,7 @@ export class CrazyEights {
   play(slot, c) {
     this.hands[slot].splice(this.hands[slot].indexOf(c), 1);
     this.discard.push(c);
-    this.suit = suitOf(c);
+    this.suit = rankOf(c) === '8' ? null : suitOf(c); // an 8's suit is whatever gets called
     this.last = { slot, card: c, kind: 'play' };
     this.events.plays++;
     if (!this.hands[slot].length) return this.handOver(slot);
@@ -158,13 +162,17 @@ export class CrazyEights {
 
   draw(slot) {
     if (this.pending) {
-      // Take what you're owed, and that's your turn.
+      // Take what you're owed (as many as there are), and that's your turn.
+      let taken = 0;
       for (let n = this.pending; n > 0; n--) {
         const c = this.takeCard();
-        if (c) this.hands[slot].push(c);
+        if (c) {
+          this.hands[slot].push(c);
+          taken++;
+        }
       }
       this.events.penalties++;
-      this.last = { slot, kind: 'penalty', count: this.pending };
+      this.last = { slot, kind: 'penalty', count: taken };
       this.pending = 0;
       this.pendingKind = null;
       return this.next();
@@ -232,6 +240,7 @@ export class CrazyEights {
       pending: this.pending,
       pendingKind: this.pendingKind,
       drawn: Boolean(this.drew), // the player on turn has drawn (not what)
+      turns: this.turns, // a new number each turn
       last: this.last,
       actions: this.actions,
       target: this.target,
@@ -250,11 +259,11 @@ export class CrazyEights {
   }
 
   playerView(slot) {
-    const hand = this.hands[slot].slice().sort((a, b) => order(a) - order(b));
+    const cards = this.hands[slot].slice().sort((a, b) => order(a) - order(b));
     return Object.assign(this.common(), {
       you: slot,
-      hand,
-      playable: hand.filter((c) => this.canPlay(slot, c)),
+      cards, // your hand (`hand` is the hand number)
+      playable: cards.filter((c) => this.canPlay(slot, c)),
       drew: this.turn === slot ? this.drew : null,
       canPass: this.phase === 'play' && this.turn === slot && Boolean(this.drew),
     });

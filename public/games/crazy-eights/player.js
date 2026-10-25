@@ -14,7 +14,7 @@
   let api = null;
   let view = null;
   let lastKey = '';
-  let buzzed = '';
+  let buzzed = null; // the turn number we last buzzed for
 
   function onClick(e) {
     const card = e.target.closest('[data-card]');
@@ -53,13 +53,13 @@
     else if (v.pending) msg = v.pendingKind === '2' && v.playable.length ? '<strong>+' + v.pending + '!</strong> Answer with a 2, or take them.' : '<strong>Take ' + v.pending + ' cards.</strong>';
     else if (v.drew) msg = v.playable.length ? 'Play the card you drew, or pass.' : 'No luck: pass.';
     else msg = v.playable.length ? '<strong>Your turn:</strong> play a lit card, or draw.' : '<strong>Your turn:</strong> nothing fits, draw one.';
-    const follow = C.rank(v.top) === '8' ? C.NAME[v.suit] : C.SYMBOL[C.suit(v.top)] + ' or ' + C.rank(v.top);
+    const follow = C.rank(v.top) !== '8' ? C.SYMBOL[C.suit(v.top)] + ' or ' + C.rank(v.top) : v.suit ? C.NAME[v.suit] : 'the suit being called';
     const buttons = mine && v.phase === 'play'
       ? '<div class="ce-buttons">' + (v.drew ? '<button class="ghost ce-pass">Pass</button>' : '<button class="primary ce-draw">' + (v.pending ? 'Take ' + v.pending : 'Draw') + '</button>') + '</div>'
       : '';
     return score +
       '<div class="ce-status"><div class="ce-mini">' + C.face(v.top, 'mini') + '</div><div><p class="msg">' + msg + '</p><p class="follow">Match ' + follow + ' · they hold ' + v.counts[1 - me] + '</p></div></div>' +
-      '<div class="ce-hand">' + v.hand.map(function (c) {
+      '<div class="ce-hand">' + v.cards.map(function (c) {
         const ok = mine && v.playable.indexOf(c) !== -1;
         return C.face(c, (ok ? 'playable' : mine ? 'dim' : '') + (v.drew === c ? ' new' : ''), ' data-card="' + c + '" role="button"');
       }).join('') + '</div>' + buttons;
@@ -68,10 +68,9 @@
   function update(v) {
     view = v;
     if (!C) return;
-    // A buzz when it becomes your turn.
-    const turnKey = v.hand + ':' + v.turn + ':' + (v.events && v.events.plays);
-    if (v.turn === v.you && v.phase === 'play' && buzzed !== turnKey) {
-      buzzed = turnKey;
+    // A buzz when it becomes your turn (once: drawing is still the same turn).
+    if (v.turn === v.you && v.phase === 'play' && buzzed !== v.turns) {
+      buzzed = v.turns;
       api.vibrate(30);
     }
     const key = JSON.stringify([v.phase, v.hand, v.top, v.suit, v.turn, v.counts, v.pending, v.drew, v.playable, v.scores]);
@@ -91,7 +90,8 @@
     update: update,
     unmount: function () {
       root = view = null;
-      lastKey = buzzed = '';
+      lastKey = '';
+      buzzed = null;
     },
   });
 })();

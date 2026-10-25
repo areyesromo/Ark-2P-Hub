@@ -18,6 +18,7 @@
   let viewAt = 0;
   let lastKey = '';
   let lastTop = null;
+  let topAt = 0;
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -51,17 +52,21 @@
     if (l.kind === 'draw') return who + ' drew a card';
     if (l.kind === 'penalty') return who + ' took ' + l.count + ' cards';
     const r = C.rank(l.card);
-    const extra = r === '8' ? ' and called ' + C.SYMBOL[v.suit] + ' ' + C.NAME[v.suit]
+    const extra = r === '8' ? (v.suit ? ' and called ' + C.SYMBOL[v.suit] + ' ' + C.NAME[v.suit] : ' and is calling the suit…')
       : v.actions && r === 'J' ? ': another turn' : v.actions && r === '2' ? ': draw two' : v.actions && l.card === 'QS' ? ': draw five!' : '';
     return who + ' played the ' + r + C.SYMBOL[C.suit(l.card)] + extra;
   }
 
   function middle(v) {
-    const fresh = v.top !== lastTop;
-    const called = C.rank(v.top) === '8' && v.phase !== 'suit' ? '<div class="ce-called ' + (v.suit === 'H' || v.suit === 'D' ? 'red' : 'black') + '">' + C.SYMBOL[v.suit] + '</div>' : '';
+    // The card that just landed: its landing plays on, even if the screen is redrawn mid-way.
+    if (v.top !== lastTop) topAt = performance.now();
+    const age = performance.now() - topAt;
+    const fresh = age < 350;
+    const called = C.rank(v.top) === '8' && v.suit ? '<div class="ce-called ' + (v.suit === 'H' || v.suit === 'D' ? 'red' : 'black') + '">' + C.SYMBOL[v.suit] + '</div>' : '';
     return '<div class="ce-table">' +
       '<div class="ce-pile">' + C.back('big') + '<span>' + v.deckCount + ' left</span></div>' +
-      '<div class="ce-pile">' + C.face(v.top, 'big' + (fresh ? ' fresh' : '')) + called + '<span>' + (C.rank(v.top) === '8' ? 'Follow ' + C.NAME[v.suit] : 'Match ' + C.SYMBOL[C.suit(v.top)] + ' or ' + C.rank(v.top)) + '</span></div>' +
+      '<div class="ce-pile">' + C.face(v.top, 'big' + (fresh ? ' fresh' : ''), fresh ? ' style="animation-delay:-' + Math.round(age) + 'ms"' : '') + called + '<span>' +
+        (C.rank(v.top) !== '8' ? 'Match ' + C.SYMBOL[C.suit(v.top)] + ' or ' + C.rank(v.top) : v.suit ? 'Follow ' + C.NAME[v.suit] : 'Calling the suit…') + '</span></div>' +
       (v.pending ? '<div class="ce-pending">+' + v.pending + '</div>' : '') +
       '</div><div class="ce-last">' + lastLine(v) + '</div>';
   }
