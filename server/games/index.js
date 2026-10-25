@@ -12,6 +12,7 @@ import snake from './snake.js';
 import tanks from './tanks.js';
 import quiz, { TOPICS } from './quiz.js';
 import triviaQuest from './trivia-quest.js';
+import fakeOut from './fake-out.js';
 import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
 import sketchGuess from './sketch-guess.js';
@@ -118,6 +119,7 @@ const GAMES = [
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
     hearts: { title: 'Difficulty', values: [5, 7, 3], label: (n) => (n === 7 ? 'Easy · 7 ❤️' : n === 5 ? 'Normal · 5 ❤️' : 'Hard · 3 ❤️') },
   }),
+  withSetup(fakeOut, { rounds: { title: 'Rounds', values: [6, 4, 8], label: (n) => `${n} rounds` } }),
   wordRace,
   withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),
   withSetup(wordHunt, {

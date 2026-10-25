@@ -9,6 +9,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - New co-op game: **Trivia Quest**. Answer quiz questions together to beat three monsters (a Goo
   Blob, a Stone Golem and the Dragon) before your shared hearts run out. Both right is a team
   strike; each of you has one 50/50. Up to 9 ⭐.
+- New game: **Fake Out**. Write a fake answer to a strange-but-true fact, then spot the real
+  one among the fakes. Find the truth for 1000, fool your rival for 500. Needs two phones.
 
 ## 0.1.10
 
