@@ -4,6 +4,11 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.13
+
+- New game: **Tower Defence Duel**. Build towers to stop the creeps on your road, and spend
+  gold to send creeps down your rival's. Run out of lives and you lose.
+
 ## 0.1.12
 
 - New card game: **Crazy Eights**, your hand secret on your phone. Match the suit or rank, eights

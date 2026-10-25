@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (40)
+## Games (41)
 
-### ⚔️ Competitive (29)
+### ⚔️ Competitive (30)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -36,6 +36,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Quiz Battle | `quiz` | 10 trivia questions. Answer on your phone or controller; right and fast scores more. Most points wins. | `server/games/quiz-questions.js`, `server/games/quiz.js`, `public/games/quiz/`, `test/quiz.test.js`, `test/setup.test.js`, `test/sounds.test.js` |
 | Fake Out | `fake-out` | Bluffing quiz: write a fake answer to a strange-but-true fact, then spot the real one among the fakes. Find the truth for 1000, fool your rival for 500. | `server/games/fake-out-questions.js`, `server/games/fake-out.js`, `public/games/fake-out/`, `test/fake-out.test.js` |
 | Crazy Eights | `crazy-eights` | Card game: match the top card's suit or rank, eights are wild (call the suit), 2s make them draw. First to empty their hand wins the hand. | `server/games/crazy-eights.js`, `public/games/crazy-eights/`, `test/crazy-eights.test.js` |
+| Tower Defence Duel | `tower-duel` | Build towers to stop the creeps on your road and spend gold to send creeps down your rival's. Run out of lives and you lose. | `server/games/tower-duel.js`, `public/games/tower-duel/`, `test/tower-duel.test.js` |
 | Word Race | `word-race` | Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Pick the grid size, time and rounds. | `server/games/word-race.js`, `public/games/word-race/`, `test/anagram-duel.test.js`, `test/word-race.test.js` |
 | Anagram Duel | `anagram-duel` | Same five mixed-up letters for both of you: the first to make a word with all of them takes the round. | `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js` |
 | Word Hunt | `word-hunt` | One word search, two hunters: mark a hidden word first and it's yours. Find more than half to take the grid. | `server/games/word-hunt-words.js`, `server/games/word-hunt.js`, `public/games/word-hunt/`, `test/word-hunt.test.js` |
@@ -119,4 +120,3 @@ here (the test fails while an idea has the same name as a game or minigame in th
 
 - **Desktop / Steam edition**: not a game, the big platform project (see the README's roadmap).
 - **Dungeon Duo**: co-op 3D dungeon crawl: each phone is a hero (fighter, healer), with keys, traps and a boss.
-- **Tower Defence Duel**: build towers on your phone and send waves at your rival's base on the TV.
