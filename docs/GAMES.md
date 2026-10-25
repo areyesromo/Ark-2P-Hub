@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (38)
+## Games (40)
 
-### ⚔️ Competitive (28)
+### ⚔️ Competitive (29)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -35,6 +35,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Kart Race | `kart-race` | Top-down racing: pick one of 12 racers and your tyres, hold GAS, steer, brake for the bends (hold it to reverse), drift for a mini-boost, collect coins to go faster, use items (hold up to 3), hit the boost pads and bump your rival off the line. Six tracks, or a balloon battle in one of three arenas. | `server/games/kart-race.js`, `public/games/kart-race/`, `test/kart-race-battle.test.js`, `test/kart-race.test.js`, `test/kart-racers.test.js` |
 | Quiz Battle | `quiz` | 10 trivia questions. Answer on your phone or controller; right and fast scores more. Most points wins. | `server/games/quiz-questions.js`, `server/games/quiz.js`, `public/games/quiz/`, `test/quiz.test.js`, `test/setup.test.js`, `test/sounds.test.js` |
 | Fake Out | `fake-out` | Bluffing quiz: write a fake answer to a strange-but-true fact, then spot the real one among the fakes. Find the truth for 1000, fool your rival for 500. | `server/games/fake-out-questions.js`, `server/games/fake-out.js`, `public/games/fake-out/`, `test/fake-out.test.js` |
+| Crazy Eights | `crazy-eights` | Card game: match the top card's suit or rank, eights are wild (call the suit), 2s make them draw. First to empty their hand wins the hand. | `server/games/crazy-eights.js`, `public/games/crazy-eights/`, `test/crazy-eights.test.js` |
 | Word Race | `word-race` | Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Pick the grid size, time and rounds. | `server/games/word-race.js`, `public/games/word-race/`, `test/anagram-duel.test.js`, `test/word-race.test.js` |
 | Anagram Duel | `anagram-duel` | Same five mixed-up letters for both of you: the first to make a word with all of them takes the round. | `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js` |
 | Word Hunt | `word-hunt` | One word search, two hunters: mark a hidden word first and it's yours. Find more than half to take the grid. | `server/games/word-hunt-words.js`, `server/games/word-hunt.js`, `public/games/word-hunt/`, `test/word-hunt.test.js` |
@@ -54,11 +55,12 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mancala | `mancala` | Sow stones around the bowls. End in your store to go again; end in an empty bowl of yours to capture across. Fullest store wins. | `server/games/mancala.js`, `public/games/mancala/`, `test/mancala.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
-### 🤝 Co-op & casual (5)
+### 🤝 Co-op & casual (6)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
 | Trivia Quest | `trivia-quest` | Co-op quiz: answer together to bring down three monsters (Goo Blob, Stone Golem, Dragon). Right and fast hits harder; every wrong answer costs a shared heart. | `server/games/trivia-quest.js`, `server/games/quiz.js`, `server/games/quiz-questions.js`, `public/games/quiz/style.css`, `public/games/trivia-quest/`, `test/trivia-quest.test.js` |
+| Kitchen Rush | `kitchen-rush` | Co-op cooking: chop, cook, plate up and serve the orders before they run out. Three kitchens, one of them split down the middle. | `server/games/kitchen-rush.js`, `public/games/kitchen-rush/`, `test/kitchen-rush.test.js` |
 | Bomb Squad | `bomb-squad` | Co-op: one of you has a bomb on your phone, the other has the manual (new rules every bomb). Talk it through and defuse it before the timer runs out. Swap every bomb. | `server/games/bomb-squad-modules.js`, `server/games/bomb-squad.js`, `public/games/bomb-squad/`, `test/bomb-squad.test.js` |
 | Marble Maze | `marble-maze` | Co-op 3D: tilt the board together to roll the marble to the goal. One of you tilts left and right, the other forwards and back. Mind the holes! | `server/games/marble-maze.js`, `public/games/marble-maze/`, `test/marble-maze.test.js` |
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
@@ -115,8 +117,6 @@ here (the test fails while an idea has the same name as a game or minigame in th
 
 ### Games
 
-- **Kitchen Rush**: co-op, Overcooked-style: chop, cook and serve orders before they expire, passing ingredients between you.
-- **Crazy Eights**: card game with your secret hand on the phone; match suit or rank, eights are wild, first out wins.
 - **Desktop / Steam edition**: not a game, the big platform project (see the README's roadmap).
 - **Dungeon Duo**: co-op 3D dungeon crawl: each phone is a hero (fighter, healer), with keys, traps and a boss.
 - **Tower Defence Duel**: build towers on your phone and send waves at your rival's base on the TV.
