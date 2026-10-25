@@ -470,6 +470,7 @@ export class KartRace {
       this.bump();
       this.karts.forEach((k) => this.coinCheck(k, now));
       stepShots(this, dt, now);
+      this.boxCheck(now);
       this.karts.forEach((k, slot) => this.itemCheck(k, slot, now));
       this.karts.forEach((k, slot) => hazardCheck(this, k, slot, now));
       if (this.battle) {
@@ -655,18 +656,33 @@ export class KartRace {
     k.speed *= 1 - 0.45 * into;
   }
 
-  /** ? boxes (a Magnet reaches further) and bananas. */
-  itemCheck(k, slot, now) {
-    if (k.finishedAt !== null) return;
-    const magnet = now < k.magnetUntil;
+  /**
+   * ? boxes (a Magnet reaches further). Both karts at once: a box they reach in the same tick goes
+   * to the nearer one (a dead heat to each in turn), not always to player 1.
+   */
+  boxCheck(now) {
     for (const box of this.boxes) {
-      const room = ITEMS.maxHeld - k.items.length;
-      const far = magnet ? Math.hypot(k.x - box.x, k.y - box.y) > ITEMS.magnetR : touch(k, box.x, box.y) > ITEMS.boxR + KART.r;
-      if (now < box.backAt || room <= 0 || far) continue;
+      if (now < box.backAt) continue;
+      const near = [];
+      this.karts.forEach((k, slot) => {
+        if (k.finishedAt !== null || k.items.length >= ITEMS.maxHeld) return;
+        const d = Math.hypot(k.x - box.x, k.y - box.y);
+        const far = now < k.magnetUntil ? d > ITEMS.magnetR : touch(k, box.x, box.y) > ITEMS.boxR + KART.r;
+        if (!far) near.push({ slot, d });
+      });
+      if (!near.length) continue;
+      const tie = near.length === 2 && Math.abs(near[0].d - near[1].d) < 1e-9;
+      const slot = tie ? (this.boxTies = (this.boxTies || 0) + 1) % 2 : near.reduce((a, b) => (b.d < a.d ? b : a)).slot;
+      const k = this.karts[slot];
       box.backAt = now + ITEMS.respawnMs;
-      for (let n = Math.min(box.double ? 2 : 1, room); n > 0; n--) k.items.push(this.rollItem(slot));
+      for (let n = Math.min(box.double ? 2 : 1, ITEMS.maxHeld - k.items.length); n > 0; n--) k.items.push(this.rollItem(slot));
       this.events.items++;
     }
+  }
+
+  /** Bananas. */
+  itemCheck(k, slot, now) {
+    if (k.finishedAt !== null) return;
     const fx = effects(k, now);
     for (const b of this.bananas.slice()) {
       if (fx.floating) break; // hovering: they pass underneath

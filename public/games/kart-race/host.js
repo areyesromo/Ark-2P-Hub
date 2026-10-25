@@ -867,8 +867,8 @@
         g.fill();
       }
     });
-    lastBalloons = v.karts.map(function (c) { return c.balloons; });
-    bursts = bursts.filter(function (b) { return now - b.at < BALLOON_POP_MS; });
+    if (!lastBalloons || lastBalloons[0] !== v.karts[0].balloons || lastBalloons[1] !== v.karts[1].balloons) lastBalloons = v.karts.map(function (c) { return c.balloons; });
+    if (bursts.length && now - bursts[0].at >= BALLOON_POP_MS) bursts = bursts.filter(function (b) { return now - b.at < BALLOON_POP_MS; });
     bursts.forEach(function (b) {
       const t = (now - b.at) / BALLOON_POP_MS;
       g.strokeStyle = colors[b.slot];
@@ -974,6 +974,17 @@
     update: function (v) {
       trackNames = v.trackNames || trackNames;
       arenaNames = v.arenaNames || arenaNames;
+      // The mode changed the settings rows (5 for a race, 3 for a battle): a controller on its
+      // racer or tyres row stays there, one on a settings row stays on the list.
+      if (view && v.settings && view.settings && v.settings.mode !== view.settings.mode) {
+        const was = rowsFor(view).length;
+        const now = rowsFor(v).length;
+        Object.keys(pads).forEach(function (slot) {
+          const row = pads[slot].row || 0;
+          pads[slot].row = row >= was ? now + (row - was) : Math.min(row, now - 1);
+        });
+        overlayKey = '';
+      }
       if (!view || v.race !== view.race || !v.karts) {
         shown = null; // a new race: back to the grid
         lastBalloons = null;

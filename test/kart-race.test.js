@@ -949,7 +949,7 @@ test('items: ITEM does nothing with an empty queue, while spinning or after fini
   const box = g2.boxes[0];
   Object.assign(k, { x: box.x, y: box.y + 2.5, speed: 0 });
   k.seg = locate(g2.track, k.x, k.y).i;
-  g2.itemCheck(k, 0, g2.ctx.now());
+  g2.boxCheck(g2.ctx.now());
   assert.ok(k.items.length >= 1, 'pulled in from 2.5 away');
 });
 

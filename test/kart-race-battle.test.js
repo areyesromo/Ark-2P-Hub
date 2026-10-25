@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { KartRace, ARENAS, BATTLE, FIELD, TIMING, ITEMS, ODDS, buildArena, pointAt } from '../server/games/kart-race.js';
-import { rollItem } from '../server/games/kart-items.js';
+import { rollItem, hazardCheck } from '../server/games/kart-items.js';
 import { fakeCtx } from './helpers.js';
 
 const TICK = 1000 / 60;
@@ -84,9 +84,35 @@ test('battle: a spin-out pops a balloon; a shield takes the hit instead; a web o
   game.hitKart(a, ctx.now());
   assert.equal(a.balloons, 2, 'shield');
   ticks(ctx, 60);
-  a.webUntil = ctx.now() + 1000; // webbed and oiled: slowed, nothing popped
-  game.hit(a, 0, -1);
+  // A web and an oil slick it drives into: caught, nothing popped.
+  game.webs.push({ x: a.x, y: a.y, owner: 1, safeUntil: 0 });
+  hazardCheck(game, a, 0, ctx.now());
+  assert.ok(a.webUntil > ctx.now(), 'caught in the web');
+  game.oils.push({ x: a.x, y: a.y, owner: 1, safeUntil: 0 });
+  hazardCheck(game, a, 0, ctx.now());
+  assert.ok(a.oilUntil > ctx.now(), 'oiled');
+  // And a head-on wall hit.
+  a.speed = 6;
+  game.hit(a, Math.cos(a.angle), Math.sin(a.angle));
   assert.equal(a.balloons, 2);
+});
+
+test('battle: a Star ram pops a balloon, and so does your own Bouncer once it is flying', () => {
+  const { ctx, game } = battling();
+  const [a, b] = game.karts;
+  b.starUntil = ctx.now() + 5000;
+  Object.assign(b, { x: a.x - 0.8, y: a.y, angle: a.angle, speed: 0 });
+  a.speed = 0;
+  ticks(ctx, 1);
+  assert.equal(a.balloons, 2, 'rammed');
+  assert.equal(b.balloons, 3);
+  ticks(ctx, 90);
+  // Your own Bouncer, back at you after its safe moment.
+  b.starUntil = 0;
+  Object.assign(b, { x: a.x + 6, y: a.y });
+  game.shots.push({ kind: 'bouncer', x: a.x + 0.9, y: a.y, angle: Math.PI, speed: 12, owner: 0, bornAt: ctx.now() - 1000, until: ctx.now() + 3000 });
+  ticks(ctx, 2);
+  assert.equal(a.balloons, 1);
 });
 
 test('battle: lose your last balloon and the round is the other player\'s', () => {
@@ -164,6 +190,56 @@ test('battle: rounds to win: one battle, best of 3, first to 3; a match ends wit
   assert.equal(battling({ races: 4 }).game.cup, false, 'no cup in battle');
 });
 
+test('battle: a draw round inside a best of 3 scores nobody, and the match goes on to a real winner', () => {
+  const g = battling({ races: 3 });
+  const next = () => {
+    g.ctx.advance(TIMING.finishMs + 100);
+    if (g.game.phase !== 'standings') return;
+    g.game.onInput(0, { type: 'go' });
+    g.game.onInput(1, { type: 'go' });
+    g.ctx.advance(TIMING.countdownMs + 50);
+  };
+  const pop = (slot) => {
+    g.game.karts[slot].balloons = 1;
+    g.game.hitKart(g.game.karts[slot], g.ctx.now());
+  };
+  pop(0);
+  next(); // 0-1
+  g.ctx.advance(g.game.raceStart + BATTLE.ms + 50 - g.ctx.now()); // level at the bell: a draw
+  assert.equal(g.game.result.draw, true);
+  next();
+  assert.deepEqual(g.game.scores, [0, 1]);
+  pop(1);
+  next(); // 1-1
+  pop(0);
+  next(); // 1-2
+  assert.equal(g.game.phase, 'over');
+  const v = g.game.hostView();
+  assert.equal(v.winner, 1);
+  assert.deepEqual(v.scores, [1, 2]);
+  assert.deepEqual(v.history.map((h) => h.winner), [1, null, 0, 1]);
+});
+
+test('battle: a box both karts reach in the same tick goes to the nearer one; a dead heat alternates', () => {
+  const { ctx, game } = battling();
+  const [a, b] = game.karts;
+  const box = game.boxes.find((x) => x.double);
+  const set = (da, db) => {
+    for (const k of game.karts) Object.assign(k, { items: [], speed: 0, angle: 0, spinUntil: 0 });
+    Object.assign(a, { x: box.x, y: box.y - da });
+    Object.assign(b, { x: box.x, y: box.y + db });
+    box.backAt = 0;
+    ticks(ctx, 1);
+    return [a.items.length, b.items.length];
+  };
+  assert.deepEqual(set(0.6, 0.55), [0, 2], 'the nearer kart (slot 2) gets it');
+  assert.deepEqual(set(0.55, 0.6), [2, 0]);
+  const first = set(0.58, 0.58);
+  const second = set(0.58, 0.58);
+  assert.notDeepEqual(first, second, 'dead heats take turns');
+  assert.deepEqual([first[0] + first[1], second[0] + second[1]], [2, 2]);
+});
+
 test('battle: items come from the battle list, with the same odds for both players however many balloons they have', () => {
   const { game } = battling();
   game.karts[0].balloons = 1;
@@ -233,16 +309,25 @@ test('the setup offers Race and Battle, and the arenas; race mode is unchanged (
   assert.equal(v.arenaPoints.length, 3);
   game.onInput(0, { type: 'go' });
   game.onInput(1, { type: 'go' });
+  // The grid as before: side by side just past the line.
+  for (const [slot, k] of game.karts.entries()) {
+    const p = pointAt(game.track, 0.012, slot === 0 ? -0.75 : 0.75);
+    assert.ok(Math.hypot(k.x - p.x, k.y - p.y) < 1e-9 && k.progress === 0.012 && k.angle === p.angle);
+  }
   ctx.advance(TIMING.countdownMs + 50);
   const r = game.hostView();
   assert.equal(r.battle, null);
   assert.equal(r.karts[0].balloons, undefined);
   assert.ok(game.coins.length > 0);
+  // ...and the race's own item odds, by place.
+  game.rng = () => 0.999;
+  assert.equal(rollItem(game, 0), Object.keys(ODDS.first).at(-1));
+  assert.equal(rollItem(game, 1), Object.keys(ODDS.second).at(-1));
 });
 
 test('battle: a random arena is never the same twice in a row', () => {
-  let n = 0;
-  const g = battling({ arena: 0, races: 3, rng: () => ((n++ * 0.37) % 1) });
+  // (An rng that always says 0 would pick the same arena again if it could.)
+  const g = battling({ arena: 0, races: 3, rng: () => 0 });
   const seen = [g.game.track.name];
   for (let round = 0; round < 1; round++) {
     g.game.karts[0].balloons = 1;
