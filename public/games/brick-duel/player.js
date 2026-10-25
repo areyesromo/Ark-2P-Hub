@@ -14,6 +14,7 @@
   let pendingX = null;
   let sendTimer = null;
   let powerN = undefined;
+  let dragging = false;
 
   function send() {
     sendTimer = null;
@@ -26,7 +27,10 @@
   function onPointer(e) {
     if (e.type === 'pointermove' && !(e.buttons || e.pointerType === 'touch')) return;
     e.preventDefault();
-    if (e.type === 'pointerdown' && strip.setPointerCapture) strip.setPointerCapture(e.pointerId);
+    if (e.type === 'pointerdown') {
+      dragging = true;
+      if (strip.setPointerCapture) strip.setPointerCapture(e.pointerId);
+    }
     const r = strip.getBoundingClientRect();
     const x = Math.min(1, Math.max(0, (e.clientX - r.left) / r.width));
     knob.style.left = x * 100 + '%';
@@ -38,6 +42,8 @@
 
   function render(v) {
     const you = v.you;
+    // The knob shows where your paddle really is (after a rematch, a reconnect) unless you're dragging it.
+    if (!dragging) knob.style.left = v.paddle * 100 + '%';
     // A buzz when your rival's power brick hits you (not on the first view after joining).
     const n = v.power ? v.power.n : null;
     if (powerN !== undefined && n !== null && n !== powerN && v.power.by !== you && v.power.kind !== 'multi') api.vibrate(150);
@@ -75,6 +81,7 @@
       knob = root.querySelector('.knob');
       strip.addEventListener('pointerdown', onPointer);
       strip.addEventListener('pointermove', onPointer);
+      ['pointerup', 'pointercancel'].forEach(function (ev) { strip.addEventListener(ev, function () { dragging = false; }); });
       root.querySelector('.rematch').addEventListener('click', function () { api.send({ type: 'rematch' }); });
     },
     update: render,
@@ -84,6 +91,7 @@
       lastKey = '';
       pendingX = null;
       powerN = undefined;
+      dragging = false;
     },
   });
 })();

@@ -59,11 +59,14 @@ export class BrickDuel {
     });
     // The sides are built before the countdown is shown (entering it pushes a view).
     const startAt = this.ctx.now() + TIMING.countdownMs;
-    this.sides = [0, 1].map(() => {
+    // A stick or finger held through a rematch keeps working (phones and controllers only send changes).
+    const held = this.sides ? this.sides.map((s) => s.control) : [];
+    this.pending = []; // power effects on the rival, applied once both sides have stepped
+    this.sides = [0, 1].map((slot) => {
       const side = {
         bricks: new Map([...wall].map(([k, b]) => [k, { ...b }])),
         paddle: FIELD.w / 2,
-        control: { mode: 'axis', v: 0 },
+        control: held[slot] || { mode: 'axis', v: 0 },
         balls: [],
         newBalls: [], // extra balls from ⚪ bricks, added once this step's balls have moved
         broken: 0,
@@ -120,6 +123,11 @@ export class BrickDuel {
     for (let i = 0; i < steps && this.phase !== 'over'; i++) {
       const broke = this.sides.map((s) => s.broken);
       this.sides.forEach((side, slot) => this.step(side, slot, dt / steps, now));
+      // Effects on the rival land after both sides have moved, so they hit both sides alike.
+      this.pending.splice(0).forEach((fx) => {
+        if (fx.kind === 'shrink') this.sides[fx.target].shrunkUntil = now + TIMING.shrinkMs;
+        else this.addRow(fx.target);
+      });
       if (this.phase !== 'play') continue;
       // Both sides have stepped: a cleared wall or a sudden-death brick decides it (a tie in
       // the same step goes to whoever has broken more, else carries on / is a draw).
@@ -162,6 +170,7 @@ export class BrickDuel {
         return true;
       }
       if (this.phase !== 'play') return true;
+      const px = b.x;
       const py = b.y;
       b.x += b.vx * dt;
       b.y += b.vy * dt;
@@ -184,7 +193,7 @@ export class BrickDuel {
         b.vy = -Math.cos(rel * PHYSICS.maxBounce) * speed;
         b.y = FIELD.paddleY - r;
       }
-      this.hitBrick(side, slot, b, now);
+      this.hitBrick(side, slot, b, px, py);
       return b.y - r <= FIELD.h; // off the bottom: gone
     });
     side.balls.push(...side.newBalls);
@@ -200,8 +209,12 @@ export class BrickDuel {
     b.vy = -Math.cos(a) * PHYSICS.ballSpeed;
   }
 
-  /** The first brick the ball overlaps breaks; the ball bounces off the side it went in by. */
-  hitBrick(side, slot, b, now) {
+  /**
+   * The first brick the ball overlaps breaks; the ball bounces off the face it came in by (judged
+   * from where it was before this step) and is put back outside, so it can't dig up through a
+   * seam between two bricks.
+   */
+  hitBrick(side, slot, b, px, py) {
     const r = FIELD.ballR;
     for (const [k, brick] of side.bricks) {
       const x0 = brick.c * FIELD.brickW;
@@ -209,27 +222,40 @@ export class BrickDuel {
       const cx = clamp(b.x, x0, x0 + FIELD.brickW);
       const cy = clamp(b.y, y0, y0 + FIELD.brickH);
       if (Math.hypot(b.x - cx, b.y - cy) > r) continue;
-      // How far it's in from each side: the shallower way in is the face it hit.
-      const inX = Math.min(b.x + r - x0, x0 + FIELD.brickW - (b.x - r));
-      const inY = Math.min(b.y + r - y0, y0 + FIELD.brickH - (b.y - r));
-      if (inX < inY) b.vx = b.x < x0 + FIELD.brickW / 2 ? -Math.abs(b.vx) : Math.abs(b.vx);
-      else b.vy = b.y < y0 + FIELD.brickH / 2 ? -Math.abs(b.vy) : Math.abs(b.vy);
+      const wasAboveOrBelow = py + r <= y0 || py - r >= y0 + FIELD.brickH;
+      const wasBeside = px + r <= x0 || px - r >= x0 + FIELD.brickW;
+      let sideways;
+      if (wasAboveOrBelow !== wasBeside) sideways = wasBeside;
+      else {
+        // Came in at a corner (or was already in): the shallower way in.
+        const inX = Math.min(b.x + r - x0, x0 + FIELD.brickW - (b.x - r));
+        const inY = Math.min(b.y + r - y0, y0 + FIELD.brickH - (b.y - r));
+        sideways = inX < inY;
+      }
+      if (sideways) {
+        const left = px < x0 + FIELD.brickW / 2;
+        b.vx = left ? -Math.abs(b.vx) : Math.abs(b.vx);
+        b.x = left ? x0 - r : x0 + FIELD.brickW + r;
+      } else {
+        const above = py < y0 + FIELD.brickH / 2;
+        b.vy = above ? -Math.abs(b.vy) : Math.abs(b.vy);
+        b.y = above ? y0 - r : y0 + FIELD.brickH + r;
+      }
       side.bricks.delete(k);
       side.broken++;
-      if (brick.p) this.usePower(slot, brick.p, now);
+      if (brick.p) this.usePower(slot, brick.p);
       return;
     }
   }
 
-  usePower(slot, kind, now) {
+  usePower(slot, kind) {
     const mine = this.sides[slot];
-    const theirs = this.sides[1 - slot];
-    if (kind === 'shrink') theirs.shrunkUntil = now + TIMING.shrinkMs;
+    if (kind === 'shrink' || kind === 'rows') this.pending.push({ kind, target: 1 - slot });
     else if (kind === 'multi' && mine.balls.length + mine.newBalls.length < MAX_BALLS) {
-      const b = this.heldBall(mine, now);
-      this.serve(mine, b);
-      mine.newBalls.push(b);
-    } else if (kind === 'rows') this.addRow(1 - slot);
+      // Straight up off the paddle, left or right in turn (not a serve: serves stay in step).
+      const a = (mine.newBalls.length % 2 ? 1 : -1) * PHYSICS.serveAngle;
+      mine.newBalls.push({ x: mine.paddle, y: FIELD.paddleY - FIELD.ballR, vx: Math.sin(a) * PHYSICS.ballSpeed, vy: -Math.cos(a) * PHYSICS.ballSpeed, heldUntil: null });
+    }
     this.power = { n: ++this.powers, by: slot, kind };
   }
 
@@ -242,6 +268,18 @@ export class BrickDuel {
       side.bricks = new Map(bricks.map((b) => [key(b.r + 1, b.c), { ...b, r: b.r + 1 }]));
     }
     for (let c = 0; c < FIELD.cols; c++) if (!side.bricks.has(key(0, c))) side.bricks.set(key(0, c), { r: 0, c, p: null });
+    // A brick moved onto a ball doesn't break: the ball is put just under it, heading down.
+    const r = FIELD.ballR;
+    side.balls.forEach((b) => {
+      if (b.heldUntil !== null) return;
+      for (const brick of side.bricks.values()) {
+        const x0 = brick.c * FIELD.brickW;
+        const y0 = FIELD.top + brick.r * FIELD.brickH;
+        if (Math.hypot(b.x - clamp(b.x, x0, x0 + FIELD.brickW), b.y - clamp(b.y, y0, y0 + FIELD.brickH)) > r) continue;
+        b.y = Math.max(b.y, y0 + FIELD.brickH + r);
+        b.vy = Math.abs(b.vy);
+      }
+    });
   }
 
   onInput(slot, input) {
@@ -294,6 +332,7 @@ export class BrickDuel {
       countdown: this.countdown(),
       timeLeft: this.timeLeft(),
       suddenDeath: this.suddenDeath,
+      paddle: this.sides[slot].paddle / FIELD.w, // where your paddle is, 0..1 (the phone's knob)
       broken: this.sides.map((s) => s.broken),
       left: this.sides.map((s) => s.bricks.size),
       shrunk: now < this.sides[slot].shrunkUntil,

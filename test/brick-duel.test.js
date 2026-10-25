@@ -161,6 +161,111 @@ test('a 🧱 brick adds a row to your rival\'s wall (pushing it down), never pas
   assert.ok(Math.max(...[...g.sides[1].bricks.values()].map((b) => b.r)) < MAX_ROWS);
 });
 
+test('a 🧱 row lands the same way whichever side breaks it, and never on a ball (no free brick)', () => {
+  const results = [0, 1].map((slot) => {
+    const { ctx, game } = setup();
+    const rival = 1 - slot;
+    const { x, y } = brickRect(ROWS - 1, 2);
+    game.sides[slot].bricks.set((ROWS - 1) * FIELD.cols + 2, { r: ROWS - 1, c: 2, p: 'rows' });
+    launch(game, slot, { x: x + 0.5, y: y + FIELD.brickH + 0.4, vx: 0, vy: -6 });
+    // The rival's ball has just bounced off the bottom of their wall, heading down.
+    game.sides[rival].balls = [{ x: 4.5, y: FIELD.top + ROWS * FIELD.brickH + 0.2, vx: 0, vy: 6, heldUntil: null }];
+    ctx.advance(150);
+    return { broken: game.sides.map((s) => s.broken)[rival], rows: Math.max(...[...game.sides[rival].bricks.values()].map((b) => b.r)) };
+  });
+  assert.deepEqual(results[0], results[1]);
+  assert.equal(results[0].broken, 0, 'the pushed-down wall didn\'t break on their ball');
+  assert.equal(results[0].rows, ROWS);
+});
+
+test('a 🔻 shrink starts on the next step whichever side breaks it', () => {
+  const at = [0, 1].map((slot) => {
+    const { ctx, game } = setup();
+    const { x, y } = brickRect(ROWS - 1, 0);
+    game.sides[slot].bricks.set((ROWS - 1) * FIELD.cols, { r: ROWS - 1, c: 0, p: 'shrink' });
+    launch(game, slot, { x: x + 0.5, y: y + FIELD.brickH + 0.2, vx: 0, vy: -6 });
+    const seen = [];
+    const step = game.step.bind(game);
+    game.step = (side, s, dt, now) => {
+      if (s === 1 - slot) seen.push(game.paddleW(side, now));
+      return step(side, s, dt, now);
+    };
+    ctx.advance(100);
+    return seen.indexOf(FIELD.shrunkW);
+  });
+  assert.ok(at[0] > 0);
+  assert.equal(at[0], at[1]);
+});
+
+test('a ball rising into the seam between two bricks breaks one and comes back down', () => {
+  for (const off of [0.01, 0.03, 0.05]) {
+    for (const speed of [6.5, 9.5]) {
+      const { ctx, game } = setup();
+      const { y } = brickRect(ROWS - 1, 3);
+      launch(game, 0, { x: 3 + off, y: y + FIELD.brickH + 0.3, vx: 0, vy: -speed });
+      ctx.advance(120);
+      assert.equal(game.sides[0].broken, 1, `seam +${off} at ${speed}`);
+      assert.ok(game.sides[0].balls[0].vy > 0);
+    }
+  }
+});
+
+test('an extra ball isn\'t a serve: both sides keep serving the same way', () => {
+  const { ctx, game } = setup();
+  const { x, y } = brickRect(ROWS - 1, 0);
+  game.sides[0].bricks.set((ROWS - 1) * FIELD.cols, { r: ROWS - 1, c: 0, p: 'multi' });
+  launch(game, 0, { x: x + 0.5, y: y + FIELD.brickH + 0.4, vx: 0, vy: -6 });
+  const serves = game.sides.map((s) => s.serves);
+  ctx.advance(120);
+  assert.deepEqual(game.sides.map((s) => s.serves), serves);
+});
+
+test('both walls cleared in the same step: more broken wins, level is a draw', () => {
+  for (const [a, b, want] of [[4, 4, null], [5, 4, 0]]) {
+    const { ctx, game } = setup();
+    launch(game, 0, { x: 0.5, y: FIELD.top + FIELD.brickH + 0.4, vx: 0, vy: -6 });
+    game.sides[1].balls = [{ x: 0.5, y: FIELD.top + FIELD.brickH + 0.4, vx: 0, vy: -6, heldUntil: null }];
+    game.sides.forEach((s) => { s.bricks.clear(); s.bricks.set(0, { r: 0, c: 0, p: null }); });
+    game.sides[0].broken = a;
+    game.sides[1].broken = b;
+    ctx.advance(150);
+    assert.equal(game.phase, 'over');
+    assert.equal(game.winner, want);
+  }
+});
+
+test('in sudden death, a brick each in the same step carries on', () => {
+  const { ctx, game } = setup();
+  const { x, y } = brickRect(ROWS - 1, 1);
+  launch(game, 0, { x: x + 0.5, y: y + FIELD.brickH + 0.4, vx: 0, vy: -6 });
+  game.sides[1].balls = [{ x: x + 0.5, y: y + FIELD.brickH + 0.4, vx: 0, vy: -6, heldUntil: null }];
+  game.suddenDeath = true;
+  ctx.advance(150);
+  assert.deepEqual(game.sides.map((s) => s.broken), [1, 1]);
+  assert.equal(game.phase, 'play');
+  assert.equal(game.hostView().timeLeft, null);
+});
+
+test('rematch from a real end: one loop, everything reset, a held stick still moves the paddle', () => {
+  const { ctx, game } = setup();
+  game.sides[0].bricks.clear();
+  game.sides[0].bricks.set(0, { r: 0, c: 0, p: null });
+  launch(game, 0, { x: 0.5, y: FIELD.top + FIELD.brickH + 0.4, vx: 0, vy: -6 });
+  game.onInput(1, { type: 'axis', v: 1 });
+  game.suddenDeath = true;
+  ctx.advance(150);
+  assert.equal(game.phase, 'over');
+  game.onInput(0, { type: 'rematch' });
+  assert.equal(game.suddenDeath, false);
+  assert.equal(game.power, null);
+  assert.deepEqual(game.sides.map((s) => s.serves), [0, 0]);
+  const before = ctx.updates;
+  const x = game.sides[1].paddle;
+  ctx.advance(1000);
+  assert.ok(ctx.updates - before <= 33, 'one loop: ' + (ctx.updates - before));
+  assert.ok(game.sides[1].paddle > x, 'the stick held through the rematch still moves it');
+});
+
 test('clear your wall first and you win at once', () => {
   const { ctx, game } = setup();
   game.sides[0].bricks.clear();

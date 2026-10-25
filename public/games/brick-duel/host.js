@@ -5,7 +5,7 @@
 (function () {
   Ark.loadCss('/games/brick-duel/style.css');
   const esc = Ark.escapeHtml;
-  const MAX_EXTRAPOLATE_MS = 100;
+  const MAX_EXTRAPOLATE_MS = 50; // views come every ~33 ms: carry a ball on no further than that, roughly
   const DEADZONE = 0.2;
   const GAP = 0.6; // between the two fields
   const ROW_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#a3e635'];
@@ -128,7 +128,7 @@
       g.fillStyle = '#ffffff';
       side.balls.forEach(function (b) {
         const x = b.held ? shown[slot] : Math.min(f.w - f.ballR, Math.max(f.ballR, b.x + b.vx * dt));
-        const y = b.held ? b.y : b.y + b.vy * dt;
+        const y = b.held ? b.y : Math.min(f.h, Math.max(f.ballR, b.y + b.vy * dt));
         g.beginPath();
         g.arc(x, y, f.ballR, 0, Math.PI * 2);
         g.fill();
