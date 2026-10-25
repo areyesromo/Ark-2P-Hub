@@ -50,7 +50,7 @@
   function heldText(h) {
     if (!h) return 'Hands free';
     if (h.kind === 'plate') return '🍽️ Plate' + (h.contents.length ? ': ' + h.contents.map(function (c) { return ICON[c]; }).join(' ') : ' (empty)');
-    return ICON[h.kind] + ' ' + h.kind + ' (' + STATE[h.state] + ')';
+    return ICON[h.kind] + ' ' + h.kind + (h.kind === 'bun' ? ' (ready)' : ' (' + STATE[h.state] + ')');
   }
 
   function clock(ms) {
@@ -67,7 +67,7 @@
     const orders = v.phase === 'play' ? '<div class="kr-mini">' + v.orders.map(function (o) {
       return '<span class="' + (o.left < 0.25 ? 'late' : '') + '">' + DISH[o.recipe] + '</span>';
     }).join('') + '</div>' : '';
-    const html = '<div class="kr-line">💰 ' + v.coins + ' · ⏱ ' + clock(v.timeLeftMs) + '</div><div class="kr-status">' + status + '</div>' + orders;
+    const html = '<div class="kr-line">💰 ' + v.coins + ' · ⏱️ ' + clock(v.timeLeftMs) + '</div><div class="kr-status">' + status + '</div>' + orders;
     if (html === lastKey) return;
     lastKey = html;
     info.innerHTML = html;

@@ -21,6 +21,8 @@
   let shown = null; // eased chef positions
   let colors = null;
   let topKey = '';
+  let floor = null; // the kitchen drawn once: { key, canvas }
+  let frames = 0;
   let overlayKey = '';
 
   function nameOf(v, slot) {
@@ -153,7 +155,7 @@
 
   const CRATE = { B: 'bun', M: 'meat', T: 'tomato', L: 'lettuce' };
 
-  function drawTile(g, ch, x, y, now) {
+  function drawTile(g, ch, x, y) {
     if (ch === ' ') {
       g.fillStyle = (x + y) % 2 ? '#e7e5e4' : '#d6d3d1';
       g.fillRect(x, y, 1, 1);
@@ -200,7 +202,6 @@
       circle(g, x + 0.5, y + 0.55, 0.22, '#e5e7eb');
       circle(g, x + 0.5, y + 0.3, 0.06, '#e5e7eb');
     }
-    void now;
   }
 
   function drawChef(g, c, s, slot) {
@@ -228,21 +229,36 @@
     if (!v || !canvas || !colors) return;
     const W = v.layout[0].length;
     const H = v.layout.length;
-    const box = canvas.parentNode.getBoundingClientRect();
-    const scale = Math.min(box.width / W, box.height / H);
-    const dpr = window.devicePixelRatio || 1;
-    const w = Math.floor(W * scale);
-    const h = Math.floor(H * scale);
-    if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
-      canvas.width = Math.floor(w * dpr);
-      canvas.height = Math.floor(h * dpr);
-      canvas.style.width = w + 'px';
-      canvas.style.height = h + 'px';
+    // The size only now and then (reading the layout every frame costs on a Raspberry Pi).
+    if (frames++ % 30 === 0 || !canvas.width) {
+      const box = canvas.parentNode.getBoundingClientRect();
+      const scale = Math.min(box.width / W, box.height / H);
+      const dpr = window.devicePixelRatio || 1;
+      const w = Math.floor(W * scale);
+      const h = Math.floor(H * scale);
+      if (canvas.width !== Math.floor(w * dpr) || canvas.height !== Math.floor(h * dpr)) {
+        canvas.width = Math.floor(w * dpr);
+        canvas.height = Math.floor(h * dpr);
+        canvas.style.width = w + 'px';
+        canvas.style.height = h + 'px';
+      }
     }
     const g = canvas.getContext('2d');
     const k = canvas.width / W;
+    // The kitchen itself never changes: drawn once (per size and kitchen), then copied.
+    const key = canvas.width + 'x' + canvas.height + ':' + v.kitchen;
+    if (!floor || floor.key !== key) {
+      const c = document.createElement('canvas');
+      c.width = canvas.width;
+      c.height = canvas.height;
+      const fg = c.getContext('2d');
+      fg.setTransform(k, 0, 0, k, 0, 0);
+      v.layout.forEach(function (row, y) { for (let x = 0; x < row.length; x++) drawTile(fg, row[x], x, y); });
+      floor = { key: key, canvas: c };
+    }
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.drawImage(floor.canvas, 0, 0);
     g.setTransform(k, 0, 0, k, 0, 0);
-    v.layout.forEach(function (row, y) { for (let x = 0; x < row.length; x++) drawTile(g, row[x], x, y, now); });
     // What's on the stations, and how it's coming along.
     v.items.forEach(function (it) {
       const cx = it.x + 0.5;
@@ -327,7 +343,7 @@
     },
     unmount: function () {
       cancelAnimationFrame(raf);
-      root = top = canvas = overlay = view = shown = null;
+      root = top = canvas = overlay = view = shown = floor = null;
       topKey = overlayKey = '';
     },
   });

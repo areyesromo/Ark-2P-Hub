@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
-import { KitchenRush, KITCHENS, RECIPES, TIMING, COINS, starsFor, SIZE } from '../server/games/kitchen-rush.js';
+import { KitchenRush, KITCHENS, RECIPES, TIMING, COINS, MAX_ORDERS, starsFor, starTargets, ordersIn, SIZE } from '../server/games/kitchen-rush.js';
 import { getGame } from '../server/games/index.js';
 
 /** A shift in `kitchen` (0 Diner, 1 Split, 2 Rush hour), past the countdown; every update builds every view. */
@@ -252,8 +252,11 @@ test('orders arrive over the shift (never more than four), and one that runs out
   assert.ok(!g.orders.includes(first));
   assert.ok(g.missed >= 1);
   assert.ok(g.coins <= 50 - COINS.missed);
-  ctx.advance(200000);
-  assert.ok(g.orders.length <= 4);
+  // Four at most, while they're still coming in (nobody serving).
+  for (let t = 0; t < 120000 && g.phase === 'play'; t += 1000) {
+    ctx.advance(1000);
+    assert.ok(g.orders.length <= MAX_ORDERS, String(g.orders.length));
+  }
   assert.ok(g.coins >= 0, 'never below zero');
 });
 
@@ -279,9 +282,23 @@ test('Split: you pass things across the middle counter', () => {
   assert.deepEqual(held(g, 1), { kind: 'bun', state: 'raw' });
 });
 
+test('star targets come from the orders a shift brings: three stars is in reach for a great team, in every kitchen and shift', () => {
+  for (const k of [0, 1, 2]) {
+    for (const minutes of [2, 3, 4]) {
+      const t = starTargets(k, minutes);
+      const orders = ordersIn(k, minutes);
+      const best = orders * (COINS.dish + COINS.tip); // every order, every tip
+      assert.ok(t[0] < t[1] && t[1] < t[2], String(t));
+      assert.ok(t[2] <= orders * COINS.dish, k + '/' + minutes + ': three stars without needing every tip: ' + t[2] + ' of ' + best);
+      assert.ok(t[0] >= 3 * COINS.dish, 'one star still takes a few dishes');
+    }
+  }
+  assert.ok(starTargets(2, 3)[2] > starTargets(0, 3)[2], 'more orders, higher targets');
+  const t = starTargets(0, 3);
+  assert.deepEqual([0, t[0] - 1, t[0], t[1], t[2], t[2] + 50].map((c) => starsFor(c, t)), [0, 0, 1, 2, 3, 3]);
+});
+
 test('the shift ends on time: stars by coins earned, and it ends once with nothing left running', () => {
-  assert.deepEqual([0, 39, 40, 69, 70, 99, 100].map((c) => starsFor(c, 1)), [0, 0, 1, 1, 2, 2, 3]);
-  assert.equal(starsFor(120, 3), 1, 'targets grow with the shift');
   const { ctx, g } = shift({ minutes: 2 });
   g.coins = 150;
   const overs = [];
@@ -291,12 +308,126 @@ test('the shift ends on time: stars by coins earned, and it ends once with nothi
   assert.equal(g.phase, 'over');
   const v = g.hostView();
   assert.equal(v.maxStars, 3);
-  assert.equal(v.stars, starsFor(g.coins, 2));
+  assert.equal(v.stars, starsFor(g.coins, starTargets(0, 2)));
+  assert.deepEqual(v.targets, starTargets(0, 2));
   assert.equal(overs.length, 1);
   assert.equal(ctx.pendingTimers(), 0);
+  // A rematch: a clean kitchen, and nobody still walking from the last shift.
+  g.items['5,3'] = { kind: 'bun', state: 'raw' };
+  g.chefs[0].held = { kind: 'meat', state: 'raw' };
+  g.controls[0] = { x: 1, y: 0, chop: true };
   g.onInput(0, { type: 'rematch' });
   assert.equal(g.phase, 'countdown');
-  assert.equal(g.coins, 0);
+  assert.deepEqual([g.coins, g.served, g.missed, g.orders.length, Object.keys(g.items).length], [0, 0, 0, 0, 0]);
+  assert.deepEqual(g.chefs.map((c) => c.held), [null, null]);
+  assert.deepEqual(g.controls[0], { x: 0, y: 0, chop: false });
+  assert.equal(g.events.served, 0);
+});
+
+test('a plate won\'t go on a plate, a board or a stove; burnt meat never goes on a plate; only buns from a crate onto a plate', () => {
+  const { g } = shift();
+  const top = [5, 3];
+  g.items[g.key(top)] = { kind: 'plate', contents: [] };
+  g.chefs[0].held = { kind: 'plate', contents: ['bun'] };
+  stand(g, 0, top);
+  act(g, 0);
+  assert.deepEqual(held(g, 0), { kind: 'plate', contents: ['bun'] }, 'no plate on a plate');
+  for (const ch of ['C', 'S']) {
+    stand(g, 0, find(g, ch));
+    act(g, 0);
+    assert.equal(held(g, 0).kind, 'plate', 'no plate on ' + ch);
+  }
+  take(g, 0, 'T');
+  assert.deepEqual(held(g, 0).contents, ['bun'], 'a tomato crate adds nothing to a plate');
+  // Burnt meat: not off the stove onto your plate, nor from your hands onto a plate on the counter.
+  const stove = find(g, 'S');
+  g.items[g.key(stove)] = { kind: 'meat', state: 'burnt', cook: 99999 };
+  stand(g, 0, stove);
+  act(g, 0);
+  assert.deepEqual(held(g, 0).contents, ['bun']);
+  g.chefs[1].held = { kind: 'meat', state: 'burnt' };
+  stand(g, 1, top);
+  act(g, 1);
+  assert.deepEqual(g.items[g.key(top)].contents, []);
+  assert.equal(held(g, 1).state, 'burnt');
+});
+
+test('meat keeps its cooking time when you lift it: no dodging the burn by putting it back', () => {
+  const { ctx, g } = shift();
+  take(g, 0, 'M');
+  const stove = find(g, 'S');
+  stand(g, 0, stove);
+  act(g, 0);
+  ctx.advance(TIMING.cookMs + TIMING.burnMs - 500); // half a second from burning
+  act(g, 0);
+  assert.equal(held(g, 0).state, 'cooked');
+  act(g, 0); // back on the stove
+  ctx.advance(600);
+  assert.equal(g.items[g.key(stove)].state, 'burnt');
+  // Raw meat lifted half-cooked carries on from where it was, too.
+  stand(g, 0, find(g, 'X'));
+  g.items[g.key(stove)] = undefined;
+  delete g.items[g.key(stove)];
+  take(g, 0, 'M');
+  stand(g, 0, stove);
+  act(g, 0);
+  ctx.advance(TIMING.cookMs / 2);
+  act(g, 0);
+  act(g, 0);
+  ctx.advance(TIMING.cookMs / 2 + 100);
+  assert.equal(g.items[g.key(stove)].state, 'cooked');
+});
+
+test('one board chops at one chef\'s speed, however many are at it', () => {
+  const { ctx, g } = shift();
+  take(g, 0, 'L');
+  const board = find(g, 'C');
+  stand(g, 0, board);
+  act(g, 0);
+  stand(g, 1, board);
+  g.onInput(0, { type: 'chop', on: true });
+  g.onInput(1, { type: 'chop', on: true });
+  ctx.advance(TIMING.chopMs * 0.75);
+  assert.equal(g.items[g.key(board)].state, 'raw', 'not twice as fast');
+  ctx.advance(TIMING.chopMs * 0.3);
+  assert.equal(g.items[g.key(board)].state, 'chopped');
+});
+
+test('sliding: pushing diagonally into a counter slides you along it, and you never end up inside one', () => {
+  const { ctx, g } = shift();
+  const c = g.chefs[0];
+  Object.assign(c, { x: 3.5, y: 1.5 });
+  g.onInput(0, { type: 'move', x: 0.7, y: -0.7 });
+  ctx.advance(500);
+  assert.ok(c.x > 4.5, 'slid along: ' + c.x);
+  assert.ok(Math.abs(c.y - 1.3) < 0.01, 'flush against the top counter: ' + c.y);
+  // A long random walk in each kitchen: never inside a counter.
+  for (const k of [0, 1, 2]) {
+    let n = 7;
+    const r = () => ((n = (n * 1103515245 + 12345) % 2147483648) / 2147483648);
+    const h = shift({ kitchen: k });
+    for (let i = 0; i < 400; i++) {
+      h.g.onInput(0, { type: 'move', x: r() * 2 - 1, y: r() * 2 - 1 });
+      h.g.onInput(1, { type: 'move', x: r() * 2 - 1, y: r() * 2 - 1 });
+      h.ctx.advance(100);
+      for (const ch of h.g.chefs) {
+        for (const [dx, dy] of [[-0.29, -0.29], [0.29, -0.29], [-0.29, 0.29], [0.29, 0.29]]) {
+          assert.equal(h.g.layout[Math.floor(ch.y + dy)][Math.floor(ch.x + dx)], ' ', KITCHENS[k].name + ' at ' + ch.x + ',' + ch.y);
+        }
+      }
+      if (h.g.phase !== 'play') break;
+    }
+  }
+});
+
+test('ACTION faces the way the stick points now (a controller can turn and press in the same moment)', () => {
+  const { g } = shift();
+  const c = g.chefs[1];
+  Object.assign(c, { x: 4.5, y: 1.5, face: [0, 1], held: null });
+  g.onInput(1, { type: 'move', x: 0, y: -1 });
+  act(g, 1);
+  assert.deepEqual(c.face, [0, -1]);
+  assert.equal(held(g, 1).kind, 'lettuce', 'took from the crate above, not the floor below');
 });
 
 test('a controller sends its stick and CHOP together, held state kept until it changes', () => {
@@ -315,12 +446,19 @@ test('a controller sends its stick and CHOP together, held state kept until it c
 });
 
 test('bad input is ignored; nothing moves or happens outside the shift', () => {
-  const { g } = shift();
+  const { ctx, g } = shift();
   const c = g.chefs[0];
   const before = JSON.stringify(c);
-  for (const input of [{ type: 'move', x: 'a', y: 1 }, { type: 'move', x: NaN, y: 0 }, { type: 'chop', on: 'yes' }, { type: 'cook' }, null]) if (input) g.onInput(0, input);
+  for (const input of [{ type: 'move', x: 'a', y: 1 }, { type: 'move', x: NaN, y: 0 }, { type: 'move', x: 1 }, { type: 'chop', on: 'yes' }, { type: 'cook' }]) g.onInput(0, input);
+  assert.deepEqual(g.controls[0], { x: 0, y: 0, chop: false });
+  ctx.advance(500);
   assert.equal(JSON.stringify(c), before);
+  g.chefs[1].held = null;
+  const items = JSON.stringify(g.items);
   g.onInput(7, { type: 'act' });
+  g.onInput(-1, { type: 'move', x: 1, y: 0 });
+  assert.equal(JSON.stringify(g.items), items);
+  assert.deepEqual(g.controls.map((k) => k.x), [0, 0]);
   g.onInput(0, { type: 'rematch' });
   assert.equal(g.phase, 'play');
 });

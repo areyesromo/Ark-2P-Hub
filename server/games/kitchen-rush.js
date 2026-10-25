@@ -3,7 +3,8 @@
 // down and serves whatever you're facing; hold CHOP at a chopping board. Tomatoes and lettuce
 // need chopping, meat cooks on a stove (and burns if you leave it), buns are ready as they are.
 // Put them on a plate and hand it in at the hatch. A dish served earns coins (and a tip for
-// speed); an order that runs out costs some. Stars at the end by the coins earned.
+// speed); an order that runs out costs some. Stars at the end by the coins earned, against
+// targets set by how many orders the shift brings (see starTargets).
 //
 // The kitchen is a grid of tiles (KITCHENS): ' ' floor, '#' worktop (holds one thing),
 // B / M / T / L crates of buns, meat, tomatoes and lettuce, C chopping board, S stove,
@@ -71,9 +72,23 @@ const SPEED = 4; // tiles a second
 const HALF = 0.3; // half a chef's width
 const REACH = 0.8; // how far in front of you counts as what you're facing
 
-/** Stars for `coins` over a shift of `minutes`: 40, 70 and 100 coins a minute. */
-export function starsFor(coins, minutes) {
-  return [100, 70, 40].findIndex((t) => coins >= t * minutes) === -1 ? 0 : 3 - [100, 70, 40].findIndex((t) => coins >= t * minutes);
+/** How many orders a shift brings: two to start, then one every orderEveryMs. */
+export function ordersIn(k, minutes) {
+  return 2 + Math.floor((minutes * 60000) / TIMING.orderEveryMs[k]);
+}
+
+/**
+ * The coins for one, two and three stars: 40%, 65% and 90% of what every order would pay
+ * without tips (tips make three stars easier, not possible), to the nearest 5.
+ */
+export function starTargets(k, minutes) {
+  const all = ordersIn(k, minutes) * COINS.dish;
+  return [0.4, 0.65, 0.9].map((f) => Math.round((all * f) / 5) * 5);
+}
+
+/** Stars for `coins` against the shift's targets. */
+export function starsFor(coins, targets) {
+  return targets.filter((t) => coins >= t).length;
 }
 
 /** Is this ingredient ready for the plate? */
@@ -83,9 +98,15 @@ function ready(item) {
   return item.kind !== 'plate' && item.state === 'chopped';
 }
 
-/** Something picked up off a station: just what it is (no cooking or chopping progress). */
+/**
+ * Something picked up off a station: what it is, and for meat how long it has cooked (it goes
+ * on from there if you put it back on a stove: no dodging the burn).
+ */
 function carried(item) {
-  return item.kind === 'plate' ? { kind: 'plate', contents: item.contents.slice() } : { kind: item.kind, state: item.state };
+  if (item.kind === 'plate') return { kind: 'plate', contents: item.contents.slice() };
+  const out = { kind: item.kind, state: item.state };
+  if (item.kind === 'meat' && item.cook) out.cook = item.cook;
+  return out;
 }
 
 export class KitchenRush {
@@ -96,13 +117,16 @@ export class KitchenRush {
     this.minutes = settingOf(ctx, 'minutes', 3);
     this.kitchen = KITCHENS[this.k] || KITCHENS[0];
     this.layout = this.kitchen.layout;
+    this.targets = starTargets(this.k, this.minutes);
     this.timer = null;
     // Held controls carry over (phones and controllers only send changes).
     this.controls = [{ x: 0, y: 0, chop: false }, { x: 0, y: 0, chop: false }];
   }
 
   start() {
-    this.chefs = this.kitchen.spawn.map(([x, y]) => ({ x, y, face: [0, -1], held: null }));
+    // A fresh shift: nobody still walking or chopping from the last one.
+    this.controls = [{ x: 0, y: 0, chop: false }, { x: 0, y: 0, chop: false }];
+    this.chefs = this.kitchen.spawn.map(([x, y]) => ({ x, y, face: [0, -1], held: null, chopping: false }));
     this.items = {}; // 'x,y' -> what's on that station
     this.orders = [];
     this.nextId = 1;
@@ -157,6 +181,7 @@ export class KitchenRush {
     }
     if (this.phase !== 'play') return;
     this.chefs.forEach((c, slot) => this.walk(c, this.controls[slot], dt));
+    this.chopped = new Set(); // one chef's worth of chopping per board per tick
     this.chefs.forEach((c, slot) => this.chop(c, this.controls[slot], dt));
     this.cook(dt);
     // Orders: the ones that ran out go (and cost), new ones come in.
@@ -184,7 +209,7 @@ export class KitchenRush {
   /** Move a chef, sliding along counters (one axis at a time). */
   walk(c, ctl, dt) {
     if (!ctl.x && !ctl.y) return;
-    if (Math.abs(ctl.x) > 0.2 || Math.abs(ctl.y) > 0.2) c.face = Math.abs(ctl.x) >= Math.abs(ctl.y) ? [Math.sign(ctl.x), 0] : [0, Math.sign(ctl.y)];
+    this.turn(c, ctl);
     const d = (SPEED * dt) / 1000;
     const EPS = 1e-6;
     const blocked = (x, y) => this.solid(x - HALF, y - HALF) || this.solid(x + HALF - EPS, y - HALF) || this.solid(x - HALF, y + HALF - EPS) || this.solid(x + HALF - EPS, y + HALF - EPS);
@@ -192,11 +217,16 @@ export class KitchenRush {
     const nx = c.x + ctl.x * d;
     if (!blocked(nx, c.y)) c.x = nx;
     else if (ctl.x > 0) c.x = Math.max(c.x, Math.floor(nx + HALF) - HALF);
-    else if (ctl.x < 0) c.x = Math.min(c.x, Math.floor(nx - HALF) + 1 + HALF);
+    else if (ctl.x < 0) c.x = Math.min(c.x, Math.floor(nx - HALF) + 1 + HALF + EPS);
     const ny = c.y + ctl.y * d;
     if (!blocked(c.x, ny)) c.y = ny;
     else if (ctl.y > 0) c.y = Math.max(c.y, Math.floor(ny + HALF) - HALF);
-    else if (ctl.y < 0) c.y = Math.min(c.y, Math.floor(ny - HALF) + 1 + HALF);
+    else if (ctl.y < 0) c.y = Math.min(c.y, Math.floor(ny - HALF) + 1 + HALF + EPS);
+  }
+
+  /** Face the way the stick points (the stronger direction), if it points anywhere. */
+  turn(c, ctl) {
+    if (Math.abs(ctl.x) > 0.2 || Math.abs(ctl.y) > 0.2) c.face = Math.abs(ctl.x) >= Math.abs(ctl.y) ? [Math.sign(ctl.x), 0] : [0, Math.sign(ctl.y)];
   }
 
   /** The tile a chef is facing: [x, y]. */
@@ -212,6 +242,8 @@ export class KitchenRush {
     const item = this.items[this.key(at)];
     if (this.tile(...at) !== 'C' || !item || item.state !== 'raw') return;
     c.chopping = true;
+    if (this.chopped.has(item)) return; // the other chef is already at it
+    this.chopped.add(item);
     item.progress = (item.progress || 0) + dt / TIMING.chopMs;
     if (item.progress >= 1) {
       item.state = 'chopped';
@@ -239,6 +271,7 @@ export class KitchenRush {
   /** ACTION: pick up, put down, plate up or serve, by what you're facing and holding. */
   act(slot) {
     const c = this.chefs[slot];
+    this.turn(c, this.controls[slot]); // the newest stick direction, even if no tick has walked it yet
     const at = this.facing(c);
     const ch = this.tile(...at);
     const k = this.key(at);
@@ -267,7 +300,7 @@ export class KitchenRush {
         if (ch === 'C' && !((h.kind === 'tomato' || h.kind === 'lettuce') && h.state === 'raw')) return;
         if (ch === 'S' && h.kind !== 'meat') return;
         const put = h.kind === 'plate' ? { kind: 'plate', contents: h.contents.slice() } : { ...h };
-        if (ch === 'S' && put.state === 'cooked') put.cook = TIMING.cookMs; // cooked already: it can still burn
+        if (ch === 'S' && put.state === 'cooked' && !put.cook) put.cook = TIMING.cookMs; // cooked already: it can still burn
         this.items[k] = put;
         c.held = null;
       } else if (!h && item) {
@@ -353,7 +386,7 @@ export class KitchenRush {
         const out = { x, y, ...carried(item) };
         if (item.progress) out.progress = r2(item.progress);
         if (item.cook !== undefined) out.cook = r2(Math.min(1, item.cook / TIMING.cookMs)); // 1: cooked
-        if (item.kind === 'meat' && item.state === 'cooked') out.burn = r2(Math.min(1, (item.cook - TIMING.cookMs) / TIMING.burnMs));
+        if (item.kind === 'meat' && item.state === 'cooked' && item.cook) out.burn = r2(Math.min(1, (item.cook - TIMING.cookMs) / TIMING.burnMs));
         return out;
       }),
       orders: this.orders.map((o) => ({ id: o.id, recipe: o.recipe, needs: RECIPES[o.recipe], left: r2(Math.max(0, o.until - now) / (o.until - o.born)) })),
@@ -362,9 +395,9 @@ export class KitchenRush {
       missed: this.missed,
       events: this.events,
       // For the room's history (a co-op game: the team's stars).
-      stars: starsFor(this.coins, this.minutes),
+      stars: starsFor(this.coins, this.targets),
       maxStars: 3,
-      targets: [40, 70, 100].map((t) => t * this.minutes),
+      targets: this.targets,
     };
   }
 
