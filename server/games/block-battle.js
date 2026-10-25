@@ -6,8 +6,9 @@
 // fall faster as the round goes on. First to WIN_SCORE rounds.
 //
 // Holding ◀ ▶ repeats here on the hub (after a short delay), so phones and controllers repeat
-// at the same pace. A piece resting on something locks after a moment; moving or rotating it
-// buys a little more time (a few times).
+// at the same pace. A piece locks TIMING.lockMs after it comes to rest; moving or rotating it
+// while it rests starts that again (up to TIMING.lockResets times). Junk sent while both wells
+// are worked out in a tick reaches the rival only after both are done, so neither goes first.
 
 import { settingOf } from './options.js';
 
@@ -62,6 +63,13 @@ export class BlockBattle {
     this.round++;
     this.sequence = [];
     this.result = null;
+    // The junk gap columns have their own random sequence (so they don't shift the pieces).
+    let seed = Math.floor(this.rng() * 2 ** 32) >>> 0;
+    this.gapRng = () => {
+      seed = (seed * 1664525 + 1013904223) >>> 0;
+      return seed / 2 ** 32;
+    };
+    this.outbox = [0, 0]; // junk sent this tick, delivered once both wells are done
     this.wells = [0, 1].map((slot) => ({
       rows: this.emptyRows(), piece: null, used: 0, lines: 0, pending: 0, out: false,
       fallAt: 0, lockAt: null, resets: 0, shiftAt: 0, held: this.held[slot],
@@ -126,15 +134,18 @@ export class BlockBattle {
     return Math.max(TIMING.minFallMs, TIMING.fallMs * 0.85 ** level);
   }
 
-  /** Tries a move; true if it happened. A successful move of a resting piece buys it time. */
+  /**
+   * Tries a move; true if it happened. Coming to rest starts the lock timer; a move while
+   * resting starts it again (up to the limit, then it runs on).
+   */
   tryMove(w, dx, dy, cells) {
     const p = { ...w.piece, x: w.piece.x + dx, y: w.piece.y + dy, cells: cells || w.piece.cells };
     if (!this.fits(w, p)) return false;
+    const wasResting = w.lockAt !== null;
     w.piece = p;
-    if (w.lockAt !== null && w.resets < TIMING.lockResets) {
-      w.lockAt = null;
-      w.resets++;
-    }
+    if (wasResting) w.resets++;
+    if (this.fits(w, { ...p, y: p.y + 1 })) w.lockAt = null;
+    else if (!wasResting || w.resets <= TIMING.lockResets) w.lockAt = this.ctx.now() + TIMING.lockMs;
     this.dirty = true;
     return true;
   }
@@ -163,10 +174,10 @@ export class BlockBattle {
     const cancel = Math.min(send, w.pending);
     w.pending -= cancel;
     send -= cancel;
-    if (send) this.wells[1 - slot].pending += send;
+    this.outbox[1 - slot] += send;
     if (!cleared && w.pending) {
       // Junk on its way lands now, one gap in the same column for the batch.
-      const gap = Math.floor(this.rng() * WELL.w);
+      const gap = Math.floor(this.gapRng() * WELL.w);
       const junk = [...Array(WELL.w)].map((_, x) => (x === gap ? EMPTY : JUNK)).join('');
       const lost = w.rows.slice(0, w.pending);
       if (lost.some((r) => r !== EMPTY.repeat(WELL.w))) above = true; // pushed out of the top
@@ -199,8 +210,7 @@ export class BlockBattle {
         }
         // Falling, and locking once it has rested for a moment.
         if (now >= w.fallAt) {
-          if (this.tryMove(w, 0, 1)) w.lockAt = null;
-          else if (w.lockAt === null) w.lockAt = now + TIMING.lockMs;
+          if (!this.tryMove(w, 0, 1) && w.lockAt === null) w.lockAt = now + TIMING.lockMs;
           w.fallAt = now + this.fallInterval(w);
         }
         if (w.lockAt !== null && now >= w.lockAt) {
@@ -208,6 +218,7 @@ export class BlockBattle {
           else this.lock(slot);
         }
       });
+      this.deliver();
       this.checkOut();
     }
 
@@ -216,6 +227,14 @@ export class BlockBattle {
       this.shownCountdown = this.countdown();
       this.ctx.update();
     }
+  }
+
+  /** Junk sent since the last delivery joins the rival's queue (never more than a full well). */
+  deliver() {
+    this.wells.forEach((w, slot) => {
+      w.pending = Math.min(WELL.h, w.pending + this.outbox[slot]);
+      this.outbox[slot] = 0;
+    });
   }
 
   /** A full well loses the round (both at once: a draw). */
@@ -257,7 +276,6 @@ export class BlockBattle {
       if (w.out) return;
       this.tryMove(w, input.dir, 0);
       w.shiftAt = this.ctx.now() + TIMING.repeatDelayMs;
-      this.flush();
       return;
     }
     if (input.type === 'soft') {
@@ -277,18 +295,10 @@ export class BlockBattle {
     } else if (input.type === 'drop') {
       while (this.tryMove(w, 0, 1));
       this.lock(slot);
+      this.deliver();
       this.checkOut();
-    } else {
-      return;
     }
-    this.flush();
-  }
-
-  /** Sends a view now if something changed (inputs shouldn't wait for the next tick). */
-  flush() {
-    if (!this.dirty || this.phase !== 'play') return;
-    this.dirty = false;
-    this.ctx.update();
+    // The screens hear about it on the next tick (at most one view a tick, however fast the input).
   }
 
   countdown() {

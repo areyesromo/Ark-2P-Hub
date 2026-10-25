@@ -89,13 +89,15 @@ test('a controller holds ◀ ▶ and soft drop together', () => {
 test('rotate turns the piece, nudging it off a wall if it must', () => {
   const { ctx, game } = setup();
   play(ctx);
-  const before = JSON.stringify(cells(game, 0));
+  const w = game.wells[0];
+  w.piece = { kind: 'I', x: 3, y: 0, cells: [[0, 1], [1, 1], [2, 1], [3, 1]] }; // lying flat
   game.onInput(0, { type: 'rotate', dir: 1 });
-  const k = game.wells[0].piece.kind;
-  if (k !== 'O') assert.notEqual(JSON.stringify(cells(game, 0)), before);
+  assert.equal(new Set(cells(game, 0).map((c) => c[0])).size, 1, 'standing up');
   for (let i = 0; i < 10; i++) { game.onInput(0, { type: 'shift', dir: 1 }); game.onInput(0, { type: 'shift', dir: 0 }); }
+  assert.equal(cells(game, 0)[0][0], WELL.w - 1, 'against the right wall');
   game.onInput(0, { type: 'rotate', dir: -1 });
-  for (const [cx] of cells(game, 0)) assert.ok(cx >= 0 && cx < WELL.w);
+  assert.equal(new Set(cells(game, 0).map((c) => c[1])).size, 1, 'lying flat again: it was nudged off the wall');
+  assert.equal(Math.max(...cells(game, 0).map((c) => c[0])), WELL.w - 1);
 });
 
 test('soft drop falls faster; hard drop lands it at once and the next piece comes', () => {
@@ -115,12 +117,127 @@ test('soft drop falls faster; hard drop lands it at once and the next piece come
   assert.ok(kind);
 });
 
-test('a resting piece locks after a moment', () => {
+/** Advances a tick at a time until slot's piece is resting; returns that time. */
+function untilResting(ctx, game, slot) {
+  const w = game.wells[slot];
+  for (let i = 0; i < 2000 && game.fits(w, { ...w.piece, y: w.piece.y + 1 }); i++) ctx.advance(TIMING.tickMs);
+  return ctx.now();
+}
+
+test('a piece that comes to rest locks ' + TIMING.lockMs + ' ms later', () => {
   const { ctx, game } = setup();
   play(ctx);
   game.onInput(0, { type: 'soft', on: true });
-  ctx.advance(3000);
-  assert.ok(game.wells[0].used >= 2, 'locked and moved on');
+  untilResting(ctx, game, 0);
+  game.onInput(0, { type: 'soft', on: false });
+  const used = game.wells[0].used;
+  ctx.advance(TIMING.lockMs - 40);
+  assert.equal(game.wells[0].used, used, 'not yet');
+  ctx.advance(60);
+  assert.equal(game.wells[0].used, used + 1, 'locked');
+});
+
+test('nudging a resting piece buys time, but only so much', () => {
+  const { ctx, game } = setup();
+  play(ctx);
+  game.onInput(0, { type: 'soft', on: true });
+  untilResting(ctx, game, 0);
+  game.onInput(0, { type: 'soft', on: false });
+  const used = game.wells[0].used;
+  const start = ctx.now();
+  let dir = 1;
+  while (game.wells[0].used === used && ctx.now() - start < 20000) {
+    ctx.advance(TIMING.lockMs - 50);
+    game.onInput(0, { type: 'shift', dir });
+    game.onInput(0, { type: 'shift', dir: 0 });
+    dir = -dir;
+  }
+  const held = ctx.now() - start;
+  assert.ok(held <= (TIMING.lockResets + 1) * TIMING.lockMs + 100, 'locked after ' + held + ' ms');
+  assert.ok(held > TIMING.lockMs * 3, 'nudges did buy time');
+});
+
+test('pieces locking in the same moment: junk sent either way waits for the next piece', () => {
+  const pendingAfter = (sender) => {
+    const { ctx, game } = setup();
+    play(ctx);
+    const rival = 1 - sender;
+    game.wells[sender].rows = game.emptyRows();
+    game.wells[rival].rows = game.emptyRows();
+    for (let i = 0; i < 2; i++) {
+      game.wells[sender].rows[WELL.h - 1 - i] = rowBut(4);
+      game.wells[rival].rows[WELL.h - 1 - i] = rowBut(4, 5);
+    }
+    for (const w of game.wells) w.piece = { kind: 'I', x: 3, y: 0, cells: [[1, 0], [1, 1], [1, 2], [1, 3]] };
+    game.onInput(0, { type: 'soft', on: true });
+    game.onInput(1, { type: 'soft', on: true });
+    ctx.advance(2000);
+    const r = game.wells[rival];
+    return { pending: r.pending, junk: r.rows.filter((row) => row.includes('g')).length };
+  };
+  assert.deepEqual(pendingAfter(0), pendingAfter(1));
+});
+
+test('a single clear keeps junk waiting; it lands with your next piece that clears nothing', () => {
+  const { ctx, game } = setup();
+  play(ctx);
+  game.wells[0].pending = 2;
+  lineUp(game, 0, 1, 4);
+  game.onInput(0, { type: 'drop' });
+  assert.equal(game.wells[0].pending, 2);
+  assert.equal(game.wells[0].rows.filter((r) => r.includes('g')).length, 0);
+  game.onInput(0, { type: 'drop' });
+  const junk = game.wells[0].rows.filter((r) => r.includes('g'));
+  assert.equal(junk.length, 2);
+  assert.equal(junk[0].indexOf('.'), junk[1].indexOf('.'), 'one gap column for the batch');
+});
+
+test('out: a piece set above the top, or junk pushing blocks out of the top', () => {
+  const a = setup();
+  play(a.ctx);
+  const w = a.game.wells[0];
+  w.rows = a.game.emptyRows().map((r, y) => (y < 1 ? r : rowBut((y * 3) % WELL.w)));
+  w.piece = { kind: 'O', x: 4, y: -2, cells: [[0, 0], [1, 0], [0, 1], [1, 1]] };
+  a.game.onInput(0, { type: 'drop' });
+  assert.equal(a.game.phase, 'roundEnd');
+  assert.deepEqual(a.game.scores, [0, 1]);
+  const b = setup();
+  play(b.ctx);
+  const v = b.game.wells[1];
+  v.rows = b.game.emptyRows();
+  v.rows[0] = rowBut(0, 1, 2, 3, 4, 5, 6, 7, 8);
+  v.pending = 3;
+  b.game.onInput(1, { type: 'drop' });
+  assert.deepEqual(b.game.scores, [1, 0]);
+});
+
+test('junk on its way never piles up past a full well', () => {
+  const { ctx, game } = setup();
+  play(ctx);
+  game.wells[1].pending = WELL.h - 1;
+  lineUp(game, 0, 4, 4);
+  game.onInput(0, { type: 'drop' });
+  assert.equal(game.wells[1].pending, WELL.h);
+});
+
+test('a held direction carries into the next round', () => {
+  const { ctx, game } = setup();
+  play(ctx);
+  game.onInput(0, { type: 'shift', dir: 1 });
+  game.wells[1].rows = game.emptyRows().map((r, y) => (y < 2 ? r : rowBut(y % WELL.w)));
+  game.onInput(1, { type: 'drop' });
+  ctx.advance(TIMING.roundEndMs + TIMING.countdownMs + 400);
+  assert.equal(game.round, 2);
+  assert.equal(Math.max(...cells(game, 0).map((c) => c[0])), WELL.w - 1, 'slid all the way right');
+});
+
+test('a burst of inputs is sent to the screens at most once a tick', () => {
+  const { ctx, game } = setup();
+  play(ctx);
+  const before = ctx.updates;
+  for (let i = 0; i < 200; i++) game.onInput(0, { type: 'rotate', dir: 1 });
+  ctx.advance(TIMING.tickMs * 2);
+  assert.ok(ctx.updates - before <= 3, String(ctx.updates - before));
 });
 
 /** Fills the bottom rows of slot's well but for column `gap`, and lines an I piece up over the gap. */
@@ -199,6 +316,8 @@ test('pieces fall faster as the round goes on', () => {
   const start = game.fallInterval();
   ctx.advance(TIMING.speedUpMs * 3);
   assert.ok(game.fallInterval() < start);
+  game.roundStart = -1e9; // a very long round
+  assert.equal(game.fallInterval(), TIMING.minFallMs, 'but never faster than this');
 });
 
 test('bad input is ignored; the default is first to ' + WIN_SCORE, () => {
