@@ -4,6 +4,7 @@ import pong from './pong.js';
 import tron from './tron.js';
 import airHockey from './air-hockey.js';
 import volleyBlobs from './volley-blobs.js';
+import brickDuel from './brick-duel.js';
 import snake from './snake.js';
 import tanks from './tanks.js';
 import quiz, { TOPICS } from './quiz.js';
@@ -70,6 +71,7 @@ const GAMES = [
   withSetup(tron, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(airHockey, firstTo('Goals to win', [7, 5, 10])),
   withSetup(volleyBlobs, firstTo('Points to win', [7, 5, 11])),
+  withSetup(brickDuel, { rows: { title: 'Wall', values: [5, 3, 7], label: (n) => `${n} rows of bricks` } }),
   withSetup(snake, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),

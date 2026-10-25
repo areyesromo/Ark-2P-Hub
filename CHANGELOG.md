@@ -8,6 +8,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - New game: **Volley Blobs**: beach volleyball for two bouncy blobs. Slide, jump and bounce the
   ball over the net; up to 3 touches a side.
+- New game: **Brick Breaker Duel**: race to break your wall first, side by side. Power bricks
+  shrink your rival's paddle, give you an extra ball or add a row to their wall.
 
 ## 0.1.8
 
