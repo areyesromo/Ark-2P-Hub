@@ -14,6 +14,7 @@ import quiz, { TOPICS } from './quiz.js';
 import triviaQuest from './trivia-quest.js';
 import fakeOut from './fake-out.js';
 import crazyEights from './crazy-eights.js';
+import kitchenRush from './kitchen-rush.js';
 import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
 import sketchGuess from './sketch-guess.js';
@@ -124,6 +125,10 @@ const GAMES = [
   withSetup(crazyEights, {
     actions: { title: 'Rules', values: [1, 0], label: (n) => (n ? 'Action cards (2, Jack, Q♠)' : 'Classic') },
     target: { title: 'Match', values: [100, 0, 200], label: (n) => (n ? `First to ${n}` : 'One hand') },
+  }),
+  withSetup(kitchenRush, {
+    kitchen: { title: 'Kitchen', values: [0, 1, 2], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour'][n] },
+    minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
   wordRace,
   withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),

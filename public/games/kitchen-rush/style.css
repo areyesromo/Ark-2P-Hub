@@ -1,0 +1,54 @@
+/* ---- TV ---- */
+
+.kr-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.kr-top { display: flex; align-items: stretch; gap: 1rem; min-height: 6.2rem; }
+.kr-orders { flex: 1; display: flex; gap: 0.8rem; overflow: hidden; }
+.kr-none { align-self: center; color: var(--muted); font-weight: 700; }
+.kr-ticket {
+  width: 13rem; display: grid; grid-template-columns: auto 1fr; grid-template-rows: 1fr auto; gap: 0.3rem 0.6rem;
+  padding: 0.5rem 0.7rem; border-radius: var(--r-md); background: var(--panel); border: 2px solid var(--line);
+  animation: kr-in 0.35s ease-out;
+}
+.kr-ticket .dish { grid-row: 1; font-size: 2.4rem; line-height: 1; }
+.kr-ticket .what { display: flex; flex-direction: column; font-size: var(--fs-sm); }
+.kr-ticket .what span { font-size: 1.2rem; }
+.kr-ticket .time { grid-column: 1 / -1; height: 8px; border-radius: 4px; background: var(--bg-2); overflow: hidden; }
+.kr-ticket .time i { display: block; height: 100%; background: var(--good); transition: width 0.3s linear; }
+.kr-ticket.late { border-color: var(--bad); }
+.kr-ticket.late .time i { background: var(--bad); }
+.kr-score { display: flex; flex-direction: column; align-items: flex-end; justify-content: center; gap: 0.2rem; }
+.kr-score .coins { font-size: var(--fs-xl); font-weight: 900; }
+.kr-score .clock { font-size: var(--fs-lg); font-weight: 800; font-variant-numeric: tabular-nums; }
+.kr-score .stars span { opacity: 0.3; margin-left: 0.3rem; }
+.kr-score .stars span.on { opacity: 1; }
+.kr-score .stars small { font-size: 0.7em; color: var(--muted); margin-left: 0.1rem; }
+.kr-floor { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.kr-floor canvas { display: block; border-radius: var(--r-md); box-shadow: 0 0.6rem 2rem rgba(0, 0, 0, 0.5); }
+.kr-over { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; text-align: center; background: rgba(0, 0, 0, 0.55); border-radius: var(--r-md); }
+.kr-over .big { font-size: 6rem; font-weight: 900; }
+.kr-over .sub { font-size: var(--fs-xl); color: var(--text); line-height: 1.5; }
+
+@keyframes kr-in {
+  from { transform: translateY(-1rem); opacity: 0; }
+  to { transform: none; opacity: 1; }
+}
+
+/* ---- phone ---- */
+
+.kr-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; text-align: center; }
+.kr-line { color: var(--muted); font-weight: 700; }
+.kr-status { font-size: var(--fs-md); min-height: 1.4em; }
+.kr-status .big { font-size: var(--fs-2xl); font-weight: 900; }
+.kr-status .held { font-weight: 800; color: var(--me); }
+.kr-mini { display: flex; justify-content: center; gap: 10px; font-size: 1.4rem; min-height: 1.6rem; }
+.kr-mini .late { animation: kr-blink 0.6s infinite alternate; }
+.kr-controls { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; }
+.kr-stick { flex: 1; min-height: 0; display: flex; }
+.kr-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; height: 26%; }
+.kr-buttons button { font-size: var(--fs-xl); font-weight: 900; border-radius: var(--radius); touch-action: none; user-select: none; -webkit-user-select: none; -webkit-touch-callout: none; display: flex; flex-direction: column; align-items: center; justify-content: center; }
+.kr-buttons small { font-size: var(--fs-sm); opacity: 0.7; }
+.kr-chop.on { background: var(--me); color: var(--on-bright); }
+
+@keyframes kr-blink {
+  to { opacity: 0.3; }
+}

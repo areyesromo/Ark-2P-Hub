@@ -8,6 +8,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - New card game: **Crazy Eights**, your hand secret on your phone. Match the suit or rank, eights
   are wild, 2s make them draw. First to empty their hand wins. Needs two phones.
+- New co-op game: **Kitchen Rush**. Chop, cook, plate up and serve the orders before they run
+  out, together. Three kitchens, one split down the middle so you pass things across.
 
 ## 0.1.11
 
