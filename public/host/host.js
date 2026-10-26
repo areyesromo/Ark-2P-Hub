@@ -296,7 +296,8 @@
   // ---- game stage ------------------------------------------------------
 
   function unmountGame() {
-    if (current && current.renderer.unmount) current.renderer.unmount();
+    // A renderer still loading has nothing mounted yet (and won't: see mountGame).
+    if (current && current.renderer && current.renderer.unmount) current.renderer.unmount();
     current = null;
     pendingView = null;
     lastView = null;
@@ -321,6 +322,7 @@
       pendingView = null;
       renderPadFooter();
     }).catch(function (err) {
+      if (current !== mounting) return; // a game already left: the lobby shows no error
       stage.innerHTML = '<div class="loading">' + Ark.escapeHtml(err.message) + '</div>';
     });
   }

@@ -8,6 +8,7 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - New game: **Kart Race 3D**. Kart Race on a split screen, with a camera behind each kart, so you
   race down the road instead of watching from above. Same racers, tracks, items and battles.
+- Going back to the lobby while a game is still loading no longer leaves the TV stuck on it.
 
 ## 0.1.13
 
