@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (41)
+## Games (42)
 
-### ⚔️ Competitive (30)
+### ⚔️ Competitive (31)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -32,7 +32,8 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Party Minigames | `party-minis` | Mario Party-style showdowns: pump a balloon till it pops, pass the hot potato, out-draw your rival, repeat the glowing path. Win a minigame to score; first to 3 takes it. | `server/games/party-minis.js`, `server/games/minis/`, `public/games/minis/`, `public/games/party-minis/`, `test/minis-motion.test.js`, `test/minis-party2.test.js`, `test/minis-party5.test.js`, `test/party-minis.test.js`, `test/sounds.test.js` |
 | Micro Mayhem | `micro-mayhem` | Tiny games, three seconds each, both of you at once: TAP IT! STOP IT! SHAKE IT! Fail one and lose a life. It keeps getting faster; last one standing wins. | `server/games/micro-mayhem.js`, `server/games/minis/`, `public/games/minis/`, `public/games/micro-mayhem/`, `test/micro-mayhem.test.js`, `test/sounds.test.js` |
 | Bomb Duel | `bomb-duel` | Bomberman-style: blast crates for power-ups and trap your rival in a cross of fire. Walls close in after 90 s. | `server/games/bomb-duel.js`, `public/games/bomb-duel/`, `test/bomb-duel.test.js` |
-| Kart Race | `kart-race` | Top-down racing: pick one of 12 racers and your tyres, hold GAS, steer, brake for the bends (hold it to reverse), drift for a mini-boost, collect coins to go faster, use items (hold up to 3), hit the boost pads and bump your rival off the line. Six tracks, or a balloon battle in one of three arenas. | `server/games/kart-race.js`, `public/games/kart-race/`, `test/kart-race-battle.test.js`, `test/kart-race.test.js`, `test/kart-racers.test.js` |
+| Kart Race | `kart-race` | Top-down racing: pick one of 12 racers and your tyres, hold GAS, steer, brake for the bends (hold it to reverse), drift for a mini-boost, collect coins to go faster, use items (hold up to 3), hit the boost pads and bump your rival off the line. Six tracks, or a balloon battle in one of three arenas. | `server/games/kart-race.js`, `public/games/kart-race/`, `test/kart-race-3d.test.js`, `test/kart-race-battle.test.js`, `test/kart-race.test.js`, `test/kart-racers.test.js` |
+| Kart Race 3D | `kart-race-3d` | Kart Race in 3D: split-screen, a chase camera behind each kart. Same racers, tracks, items and battles. Best on a PC or Steam Deck. | `server/games/kart-race-3d.js`, `server/games/kart-race.js`, `server/games/kart-items.js`, `public/games/kart-race/`, `test/kart-race-3d.test.js` |
 | Quiz Battle | `quiz` | 10 trivia questions. Answer on your phone or controller; right and fast scores more. Most points wins. | `server/games/quiz-questions.js`, `server/games/quiz.js`, `public/games/quiz/`, `test/quiz.test.js`, `test/setup.test.js`, `test/sounds.test.js` |
 | Fake Out | `fake-out` | Bluffing quiz: write a fake answer to a strange-but-true fact, then spot the real one among the fakes. Find the truth for 1000, fool your rival for 500. | `server/games/fake-out-questions.js`, `server/games/fake-out.js`, `public/games/fake-out/`, `test/fake-out.test.js` |
 | Crazy Eights | `crazy-eights` | Card game: match the top card's suit or rank, eights are wild (call the suit), 2s make them draw. First to empty their hand wins the hand. | `server/games/crazy-eights.js`, `public/games/crazy-eights/`, `test/crazy-eights.test.js` |
