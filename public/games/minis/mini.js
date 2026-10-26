@@ -388,12 +388,14 @@
    * A three.js scene filling `el`, drawn every frame. Returns a promise of
    * { THREE, scene, camera, renderer, onFrame(fn), dispose() }; onFrame
    * callbacks run before each draw. Pixel ratio is capped (Pi-friendly).
+   * opts.draw(renderer, scene, w, h) draws each frame instead (split screen: Kart Race 3D);
+   * opts.maxPixelRatio caps the pixel ratio lower or higher than 1.25.
    */
   function scene3d(el, opts) {
     opts = opts || {};
     return three().then(function (THREE) {
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.maxPixelRatio || 1.25));
       // Shadows are off (lighter on the Pi); scene3d(el, { shadows: true }) turns them on,
       // e.g. for HD models later. Meshes keep their castShadow flags for that.
       renderer.shadowMap.enabled = !!opts.shadows;
@@ -428,7 +430,8 @@
           camera.updateProjectionMatrix();
         }
         frames.forEach(function (fn) { fn(); });
-        renderer.render(scene, camera);
+        if (opts.draw) opts.draw(renderer, scene, w, h);
+        else renderer.render(scene, camera);
       });
       return {
         THREE: THREE,
