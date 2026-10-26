@@ -4,6 +4,10 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.14
+
+- Going back to the lobby while a game is still loading no longer leaves the TV stuck on it.
+
 ## 0.1.13
 
 - New game: **Tower Defence Duel**. Build towers to stop the creeps on your road, and spend
