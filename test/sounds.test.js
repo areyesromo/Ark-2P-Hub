@@ -27,7 +27,8 @@ function renderer(id) {
     escapeHtml: String,
   };
   vm.runInNewContext(fs.readFileSync(`public/games/${id}/host.js`, 'utf8'), { Ark, window: {} });
-  assert.ok(registered && registered.sounds, `${id} registers a sounds hook`);
+  // A promise is another game's renderer, loaded first (Kart Race 3D: see kart-race-3d-client.test.js).
+  assert.ok(registered && (registered.sounds || typeof registered.then === 'function'), `${id} registers a sounds hook`);
   return registered;
 }
 

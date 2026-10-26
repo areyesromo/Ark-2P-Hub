@@ -22,6 +22,8 @@
    *     unmount() { ... },        // optional cleanup
    *     zoomable(view) { ... },   // optional, phones: true on menu screens the game draws itself
    *   });                         // (its own setup), so pinch zoom stays on there
+   *
+   * The renderer may also be a promise of one (e.g. another game's renderer, loaded first).
    */
   function register(kind, gameId, renderer) {
     renderers[kind][gameId] = renderer;
