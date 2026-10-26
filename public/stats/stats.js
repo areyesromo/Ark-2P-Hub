@@ -72,12 +72,17 @@
     }).join('') + '</tbody></table>';
   }
 
+  /** A "3D" tag on Kart Race 3D's records and cups (Kart Race keeps its own). */
+  function tag3d(r) {
+    return r.game === 'kart-race-3d' ? ' <span class="tag">3D</span>' : '';
+  }
+
   /** The latest Kart Race cups: who won, and the score in races. */
   function cupsTable(list) {
     return '<table><tbody>' + list.map(function (c) {
       const name = function (i) { return '<span class="' + (c.winner === i ? 'win' : '') + '">' + (c.winner === i ? '🏅 ' : '') + esc(c.players[i]) + '</span>'; };
       return '<tr><td>' + name(0) + ' <span class="vs">vs</span> ' + name(1) + '</td>' +
-        '<td class="num">' + (c.scores ? '<strong>' + c.scores[0] + ' – ' + c.scores[1] + '</strong> <span class="muted">races</span>' : '') + '</td>' +
+        '<td class="num">' + (c.scores ? '<strong>' + c.scores[0] + ' – ' + c.scores[1] + '</strong> <span class="muted">races</span>' : '') + tag3d(c) + '</td>' +
         '<td class="when num">' + ago(c.at) + '</td></tr>';
     }).join('') + '</tbody></table>';
   }
@@ -87,7 +92,7 @@
     return '<table><thead><tr><th>Track</th><th>Holder</th><th class="num">Lap</th><th></th></tr></thead><tbody>' + list.map(function (r) {
       const s = r.ms / 1000;
       const time = Math.floor(s / 60) + ':' + ('0' + (s % 60).toFixed(2)).slice(-5);
-      return '<tr><td>' + esc(r.track) + '</td><td><strong>' + esc(r.name) + '</strong></td><td class="num">' + time + '</td><td class="when num">' + ago(r.at) + '</td></tr>';
+      return '<tr><td>' + esc(r.track) + tag3d(r) + '</td><td><strong>' + esc(r.name) + '</strong></td><td class="num">' + time + '</td><td class="when num">' + ago(r.at) + '</td></tr>';
     }).join('') + '</tbody></table>';
   }
 

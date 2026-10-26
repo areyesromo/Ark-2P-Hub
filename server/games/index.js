@@ -27,6 +27,7 @@ import wordHunt, { SIZES as HUNT_SIZES } from './word-hunt.js';
 import miniGolf from './mini-golf.js';
 import bombDuel from './bomb-duel.js';
 import kartRace from './kart-race.js';
+import kartRace3d from './kart-race-3d.js';
 import memoryMatch from './memory-match.js';
 import bombSquad, { LEVELS as BOMB_LEVELS } from './bomb-squad.js';
 import marbleMaze, { LEVELS as MAZE_LEVELS } from './marble-maze.js';
@@ -114,6 +115,7 @@ const GAMES = [
   }),
   bombDuel,
   kartRace,
+  kartRace3d,
   withSetup(quiz, {
     questions: { title: 'Number of questions', values: [10, 5, 15, 20], label: (n) => String(n) },
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },

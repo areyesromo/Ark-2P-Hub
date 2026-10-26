@@ -66,6 +66,7 @@
   let hud = null;
   let arena = null;
   let canvas = null;
+  let stage = null; // the 3D race in Kart Race 3D (see make), in place of the canvas
   let overlay = null;
   let raf = null;
   let view = null;
@@ -898,109 +899,125 @@
     return { type: 'drive', steer: steer, gas: !brake && (has('A') || has('RT')), brake: brake, drift: has('X') || has('RB') };
   }
 
-  Ark.register('host', 'kart-race', {
-    // Sound: a whoosh on a boost, a knock when karts bump, a chime for each lap.
-    sounds: function (prev, v) {
-      const out = [];
-      const a = prev.events;
-      const b = v.events;
-      // The start: a tick per light, a higher note when they all go out; a click for each ready.
-      if (v.phase === 'countdown' && v.lights > (prev.phase === 'countdown' ? prev.lights || 0 : 0)) out.push('tick');
-      if (prev.phase === 'countdown' && v.phase === 'race') out.push('go');
-      if (v.phase === prev.phase && v.ready && prev.ready && v.ready.some(function (r, i) { return r && !prev.ready[i]; })) out.push('lock');
-      if (!a || !b) return out;
-      if (b.jumpStarts > (a.jumpStarts || 0)) out.push('wrong');
-      if (b.records > (a.records || 0)) out.push('fanfare');
-      if (b.boosts > a.boosts) out.push('whoosh');
-      if (b.bumps > a.bumps + 2) out.push('puck');
-      if (b.laps > a.laps) out.push('correct');
-      if (b.cuts > (a.cuts || 0)) out.push('wrong');
-      if (b.items > (a.items || 0)) out.push('eat');
-      if (b.zapped > (a.zapped || 0)) out.push('boom');
-      if (b.frozen > (a.frozen || 0)) out.push('splash');
-      if (b.fired > (a.fired || 0)) out.push('shoot');
-      if (b.exploded > (a.exploded || 0)) out.push('boom');
-      if (b.snagged > (a.snagged || 0)) out.push('drop');
-      if (b.swapped > (a.swapped || 0)) out.push('lock');
-      if (b.starHits > (a.starHits || 0)) out.push('fanfare');
-      if (b.coins > (a.coins || 0)) out.push('tick');
-      if (b.coinsLost > (a.coinsLost || 0)) out.push('drop');
-      if (b.spins > (a.spins || 0)) out.push('crash');
-      if (b.blocked > (a.blocked || 0)) out.push('lock');
-      if (b.pops > (a.pops || 0)) out.push('point');
-      if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
-      return out;
-    },
-    padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
-    padPoll: padPoll,
-    pad: function (btn, v, slot) {
-      if (v.phase === 'setup') {
-        if (!pads[slot]) pads[slot] = { row: 0 };
-        const settings = rowsFor(v);
-        const rows = settings.concat(PICK_ROWS.map(function (key) { return { key: key }; }));
-        pads[slot].row = Math.min(pads[slot].row || 0, rows.length - 1); // a mode change can drop rows
-        const row = pads[slot].row;
-        // ← → on the Racer / Tyres rows cycles this player's pick; everything else is the usual setup.
-        const input = row >= settings.length && (btn === 'LEFT' || btn === 'RIGHT')
-          ? cyclePick(v, slot, PICK_ROWS[row - settings.length], btn === 'LEFT' ? -1 : 1)
-          : Ark.setup.pad(btn, v, rows, pads[slot]);
-        if (view) {
-          overlayKey = '';
-          renderOverlay(view);
+  /**
+   * The TV renderer. `opts.stage` (Kart Race 3D) draws the race in place of the 2D canvas:
+   * { mount(arenaEl), update(view), unmount() }; the HUD and overlays stay the same.
+   */
+  function make(opts) {
+    opts = opts || {};
+    return {
+      // Sound: a whoosh on a boost, a knock when karts bump, a chime for each lap.
+      sounds: function (prev, v) {
+        const out = [];
+        const a = prev.events;
+        const b = v.events;
+        // The start: a tick per light, a higher note when they all go out; a click for each ready.
+        if (v.phase === 'countdown' && v.lights > (prev.phase === 'countdown' ? prev.lights || 0 : 0)) out.push('tick');
+        if (prev.phase === 'countdown' && v.phase === 'race') out.push('go');
+        if (v.phase === prev.phase && v.ready && prev.ready && v.ready.some(function (r, i) { return r && !prev.ready[i]; })) out.push('lock');
+        if (!a || !b) return out;
+        if (b.jumpStarts > (a.jumpStarts || 0)) out.push('wrong');
+        if (b.records > (a.records || 0)) out.push('fanfare');
+        if (b.boosts > a.boosts) out.push('whoosh');
+        if (b.bumps > a.bumps + 2) out.push('puck');
+        if (b.laps > a.laps) out.push('correct');
+        if (b.cuts > (a.cuts || 0)) out.push('wrong');
+        if (b.items > (a.items || 0)) out.push('eat');
+        if (b.zapped > (a.zapped || 0)) out.push('boom');
+        if (b.frozen > (a.frozen || 0)) out.push('splash');
+        if (b.fired > (a.fired || 0)) out.push('shoot');
+        if (b.exploded > (a.exploded || 0)) out.push('boom');
+        if (b.snagged > (a.snagged || 0)) out.push('drop');
+        if (b.swapped > (a.swapped || 0)) out.push('lock');
+        if (b.starHits > (a.starHits || 0)) out.push('fanfare');
+        if (b.coins > (a.coins || 0)) out.push('tick');
+        if (b.coinsLost > (a.coinsLost || 0)) out.push('drop');
+        if (b.spins > (a.spins || 0)) out.push('crash');
+        if (b.blocked > (a.blocked || 0)) out.push('lock');
+        if (b.pops > (a.pops || 0)) out.push('point');
+        if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
+        return out;
+      },
+      padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
+      padPoll: padPoll,
+      pad: function (btn, v, slot) {
+        if (v.phase === 'setup') {
+          if (!pads[slot]) pads[slot] = { row: 0 };
+          const settings = rowsFor(v);
+          const rows = settings.concat(PICK_ROWS.map(function (key) { return { key: key }; }));
+          pads[slot].row = Math.min(pads[slot].row || 0, rows.length - 1); // a mode change can drop rows
+          const row = pads[slot].row;
+          // ← → on the Racer / Tyres rows cycles this player's pick; everything else is the usual setup.
+          const input = row >= settings.length && (btn === 'LEFT' || btn === 'RIGHT')
+            ? cyclePick(v, slot, PICK_ROWS[row - settings.length], btn === 'LEFT' ? -1 : 1)
+            : Ark.setup.pad(btn, v, rows, pads[slot]);
+          if (view) {
+            overlayKey = '';
+            renderOverlay(view);
+          }
+          return input;
         }
-        return input;
-      }
-      if (v.phase === 'standings') return btn === 'A' || btn === 'START' ? { type: 'go' } : null;
-      if (v.phase === 'over') {
-        if (btn === 'A' || btn === 'START') return { type: 'rematch' };
-        return btn === 'Y' ? { type: 'setup' } : null;
-      }
-      if (v.phase === 'race' && (btn === 'Y' || btn === 'LB')) return { type: 'item' };
-      return null; // driving is read every frame by padPoll
-    },
-    mount: function (el) {
-      const css = getComputedStyle(document.documentElement);
-      colors = [css.getPropertyValue('--p1').trim() || '#22d3ee', css.getPropertyValue('--p2').trim() || '#f472b6'];
-      root = document.createElement('div');
-      root.className = 'kr-host';
-      root.innerHTML = '<div class="kr-hud"></div><div class="kr-arena"><canvas></canvas><div class="kr-overlay"></div></div>';
-      el.appendChild(root);
-      hud = root.querySelector('.kr-hud');
-      arena = root.querySelector('.kr-arena');
-      canvas = root.querySelector('canvas');
-      overlay = root.querySelector('.kr-overlay');
-      raf = requestAnimationFrame(draw);
-    },
-    update: function (v) {
-      trackNames = v.trackNames || trackNames;
-      arenaNames = v.arenaNames || arenaNames;
-      // The mode changed the settings rows (5 for a race, 3 for a battle): a controller on its
-      // racer or tyres row stays there, one on a settings row stays on the list.
-      if (view && v.settings && view.settings && v.settings.mode !== view.settings.mode) {
-        const was = rowsFor(view).length;
-        const now = rowsFor(v).length;
-        Object.keys(pads).forEach(function (slot) {
-          const row = pads[slot].row || 0;
-          pads[slot].row = row >= was ? now + (row - was) : Math.min(row, now - 1);
-        });
-        overlayKey = '';
-      }
-      if (!view || v.race !== view.race || !v.karts) {
-        shown = null; // a new race: back to the grid
-        lastBalloons = null;
+        if (v.phase === 'standings') return btn === 'A' || btn === 'START' ? { type: 'go' } : null;
+        if (v.phase === 'over') {
+          if (btn === 'A' || btn === 'START') return { type: 'rematch' };
+          return btn === 'Y' ? { type: 'setup' } : null;
+        }
+        if (v.phase === 'race' && (btn === 'Y' || btn === 'LB')) return { type: 'item' };
+        return null; // driving is read every frame by padPoll
+      },
+      mount: function (el) {
+        const css = getComputedStyle(document.documentElement);
+        colors = [css.getPropertyValue('--p1').trim() || '#22d3ee', css.getPropertyValue('--p2').trim() || '#f472b6'];
+        root = document.createElement('div');
+        root.className = 'kr-host' + (opts.stage ? ' kr-3d' : '');
+        root.innerHTML = '<div class="kr-hud"></div><div class="kr-arena">' + (opts.stage ? '' : '<canvas></canvas>') + '<div class="kr-overlay"></div></div>';
+        el.appendChild(root);
+        hud = root.querySelector('.kr-hud');
+        arena = root.querySelector('.kr-arena');
+        canvas = root.querySelector('canvas');
+        overlay = root.querySelector('.kr-overlay');
+        // This renderer's own stage (or none: the 2D canvas), whichever game mounted last.
+        stage = opts.stage || null;
+        if (stage) stage.mount(arena);
+        else raf = requestAnimationFrame(draw);
+      },
+      update: function (v) {
+        trackNames = v.trackNames || trackNames;
+        arenaNames = v.arenaNames || arenaNames;
+        // The mode changed the settings rows (5 for a race, 3 for a battle): a controller on its
+        // racer or tyres row stays there, one on a settings row stays on the list.
+        if (view && v.settings && view.settings && v.settings.mode !== view.settings.mode) {
+          const was = rowsFor(view).length;
+          const now = rowsFor(v).length;
+          Object.keys(pads).forEach(function (slot) {
+            const row = pads[slot].row || 0;
+            pads[slot].row = row >= was ? now + (row - was) : Math.min(row, now - 1);
+          });
+          overlayKey = '';
+        }
+        if (!view || v.race !== view.race || !v.karts) {
+          shown = null; // a new race: back to the grid
+          lastBalloons = null;
+          bursts = [];
+        }
+        view = v;
+        viewAt = performance.now();
+        renderHud(v);
+        renderOverlay(v);
+        if (stage) stage.update(v);
+      },
+      unmount: function () {
+        if (stage) stage.unmount();
+        stage = null;
+        cancelAnimationFrame(raf);
+        root = hud = arena = canvas = overlay = view = shown = line = barrier = barrierPic = lastBalloons = null;
         bursts = [];
-      }
-      view = v;
-      viewAt = performance.now();
-      renderHud(v);
-      renderOverlay(v);
-    },
-    unmount: function () {
-      cancelAnimationFrame(raf);
-      root = hud = arena = canvas = overlay = view = shown = line = barrier = barrierPic = lastBalloons = null;
-      bursts = [];
-      lineKey = hudKey = overlayKey = '';
-      Object.keys(pads).forEach(function (k) { delete pads[k]; });
-    },
-  });
+        lineKey = hudKey = overlayKey = '';
+        Object.keys(pads).forEach(function (k) { delete pads[k]; });
+      },
+    };
+  }
+
+  window.ArkKartTV = { make: make };
+  Ark.register('host', 'kart-race', make({}));
 })();
