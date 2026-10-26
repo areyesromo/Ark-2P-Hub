@@ -10,17 +10,44 @@
   /**
    * A closed strip between two loops of the same length (a road, a kerb, a wall's face): vertex 2i
    * is a[i], 2i+1 is b[i]. With a on the left of the direction of travel, the faces point up.
+   * `open`: no quad from the last points back to the first (pass the first points again at the end
+   * instead, so a striped texture runs on across the seam).
    */
-  function ribbon(a, b) {
+  function ribbon(a, b, open) {
     const n = a.length;
+    const quads = open ? n - 1 : n;
     const positions = new Float32Array(n * 6);
-    const indices = new Uint32Array(n * 6);
+    const indices = new Uint32Array(quads * 6);
     for (let i = 0; i < n; i++) {
       positions.set([a[i][0], heightAt(a[i][0], a[i][1]), a[i][1], b[i][0], heightAt(b[i][0], b[i][1]), b[i][1]], i * 6);
+      if (i >= quads) continue;
       const j = (i + 1) % n;
       indices.set([2 * i, 2 * i + 1, 2 * j, 2 * i + 1, 2 * j + 1, 2 * j], i * 6);
     }
     return { positions: positions, indices: indices };
+  }
+
+  /**
+   * Each barrier's inside and outside face, { left: { inner, outer }, right: … }. Where two stretches
+   * share a barrier (it's nearer than `reach`, see track.js barriers), each side's wall stops at the
+   * middle, so the shared one is drawn once instead of two walls overlapping (and flickering).
+   */
+  function wallLines(road, edge, reach) {
+    const Road = globalThis.ArkKartTrack;
+    const out = {};
+    [['left', -1], ['right', 1]].forEach(function (side) {
+      const inner = [];
+      const outer = [];
+      road.line.forEach(function (c, i) {
+        const v = Road.sideAt(road.line, i, side[1]);
+        const e = edge[side[0]][i];
+        const t = e + (e < reach - 1e-9 ? Road.BARRIER / 2 : Road.BARRIER);
+        inner.push([c[0] + v[0] * e, c[1] + v[1] * e]);
+        outer.push([c[0] + v[0] * t, c[1] + v[1] * t]);
+      });
+      out[side[0]] = { inner: inner, outer: outer };
+    });
+    return out;
   }
 
   /** Every wall a camera mustn't see through, as [x1, y1, x2, y2]: both barriers' inside faces and the field's edge. */
@@ -119,5 +146,5 @@
     return [kart[0] + dx * d, kart[1] + dy * d];
   }
 
-  globalThis.ArkKartGeom = { heightAt: heightAt, ribbon: ribbon, wallSegments: wallSegments, smoother: smoother, CAM: CAM, chase: chase, follow: follow, clampEye: clampEye };
+  globalThis.ArkKartGeom = { heightAt: heightAt, ribbon: ribbon, wallLines: wallLines, wallSegments: wallSegments, smoother: smoother, CAM: CAM, chase: chase, follow: follow, clampEye: clampEye };
 })();

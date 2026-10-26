@@ -108,3 +108,29 @@ test('clampEye: an eye behind a wall comes back in front of it, on a shared barr
 test('the default road width is what the ribbon test assumes', () => {
   assert.equal(buildTrack(0).width, TRACK_WIDTH);
 });
+
+test('an open ribbon has no closing quad (a seam the stripes can run across cleanly)', () => {
+  const a = [[0, 0], [1, 0], [2, 0]];
+  const b = [[0, 1], [1, 1], [2, 1]];
+  const { positions, indices } = G.ribbon(a, b, true);
+  assert.equal(positions.length, 3 * 2 * 3);
+  assert.equal(indices.length, 6 * 2);
+  assert.ok(!Array.from(indices).some((i, k) => k >= 6 && i === 0), 'nothing joins the end back to the start');
+});
+
+test('wall lines: a barrier shared by two stretches is drawn once, each side up to the middle', () => {
+  const hp = TRACKS.findIndex((t) => t.name === 'Hairpins');
+  const tr = buildTrack(hp);
+  const reach = tr.width / 2 + tr.out;
+  const W = G.wallLines(tr, tr.edge, reach);
+  let shared = 0;
+  for (const side of ['left', 'right']) {
+    tr.line.forEach((_, i) => {
+      const thick = Math.hypot(W[side].outer[i][0] - W[side].inner[i][0], W[side].outer[i][1] - W[side].inner[i][1]);
+      const isShared = tr.edge[side][i] < reach - 1e-9;
+      if (isShared) shared++;
+      assert.ok(Math.abs(thick - (isShared ? Road.BARRIER / 2 : Road.BARRIER)) < 1e-6, `${side} ${i}: ${thick}`);
+    });
+  }
+  assert.ok(shared > 100, 'Hairpins has long shared stretches');
+});

@@ -41,20 +41,24 @@
     return g;
   }
 
-  /** An upright strip along a line, from height h0 to h1 (a wall's face). */
+  /** An upright strip along a line, from height h0 to h1 (a wall's face); open, like ribbon(a, b, true). */
   function upright(line, h0, h1) {
     const G = window.ArkKartGeom;
     const n = line.length;
     const positions = new Float32Array(n * 6);
-    const indices = new Uint32Array(n * 6);
+    const indices = new Uint32Array((n - 1) * 6);
     for (let i = 0; i < n; i++) {
       const p = line[i];
       const base = G.heightAt(p[0], p[1]);
       positions.set([p[0], base + h0, p[1], p[0], base + h1, p[1]], i * 6);
-      const j = (i + 1) % n;
-      indices.set([2 * i, 2 * i + 1, 2 * j, 2 * i + 1, 2 * j + 1, 2 * j], i * 6);
+      if (i < n - 1) indices.set([2 * i, 2 * i + 1, 2 * i + 2, 2 * i + 1, 2 * i + 3, 2 * i + 2], i * 6);
     }
     return { positions: positions, indices: indices };
+  }
+
+  /** A loop with its first point again at the end: striped strips close on a whole stripe. */
+  function looped(line) {
+    return line.concat([line[0]]);
   }
 
   /** A flat quad lying on the ground at a field point, turned to `angle`. */
@@ -83,8 +87,9 @@
     ground.position.set(f.w / 2, -0.02, f.h / 2);
     group.add(ground);
 
+    // Striped strips (perSample > 0) are open loops, so the stripes don't squash at the seam.
     const strip = function (a, b, mat, lift, perSample) {
-      const r = G.ribbon(a, b);
+      const r = perSample ? G.ribbon(looped(a), looped(b), true) : G.ribbon(a, b);
       const m = new THREE.Mesh(geometry(THREE, r.positions, r.indices, perSample), mat);
       m.position.y = lift;
       group.add(m);
@@ -94,15 +99,15 @@
     strip(Road.outline(road.line, -half - KERB), Road.outline(road.line, -half), kerbMat, 0.01, 0.25);
     strip(Road.outline(road.line, half), Road.outline(road.line, half + KERB), kerbMat, 0.01, 0.25);
 
-    // Tyre walls: the inside face where the server's barrier is, an outside face, and a top.
-    const inner = Road.edgeLines(road, edge, 0);
-    const outer = Road.edgeLines(road, edge, Road.BARRIER);
+    // Tyre walls: the inside face where the server's barrier is, an outside face, and a top (a
+    // barrier shared by two stretches is drawn once: each side builds it up to the middle).
+    const walls = G.wallLines(road, edge, half + v.wallOut);
     ['left', 'right'].forEach(function (side) {
-      [inner[side], outer[side]].forEach(function (line) {
-        const r = upright(line, 0, WALL_H);
+      [walls[side].inner, walls[side].outer].forEach(function (line) {
+        const r = upright(looped(line), 0, WALL_H);
         group.add(new THREE.Mesh(geometry(THREE, r.positions, r.indices, 0.25), wallMat));
       });
-      strip(inner[side], outer[side], wallMat, WALL_H, 0.25);
+      strip(walls[side].inner, walls[side].outer, wallMat, WALL_H, 0.25);
     });
 
     // The field's edge is a wall too.
