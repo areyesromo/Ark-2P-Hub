@@ -233,7 +233,7 @@ export class Stats {
         .filter((m) => m.cup && (m.winner === 0 || m.winner === 1))
         .slice(-10)
         .reverse()
-        .map((m) => ({ at: m.at, players: m.players, winner: m.winner, scores: m.scores })),
+        .map((m) => ({ at: m.at, game: m.game, players: m.players, winner: m.winner, scores: m.scores })),
       total: this.matches.length,
     };
   }
