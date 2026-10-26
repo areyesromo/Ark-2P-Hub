@@ -4,6 +4,11 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.14
+
+- New game: **Kart Race 3D**. Kart Race on a split screen, with a camera behind each kart, so you
+  race down the road instead of watching from above. Same racers, tracks, items and battles.
+
 ## 0.1.13
 
 - New game: **Tower Defence Duel**. Build towers to stop the creeps on your road, and spend

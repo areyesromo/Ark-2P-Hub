@@ -227,3 +227,18 @@ test('best starts: a reaction under 0.1 s is a guess, not saved', () => {
   assert.deepEqual(stats.matches[0].reactions, [{ player: 1, ms: 180 }]);
   room.dispose();
 });
+
+test('lap records: Kart Race and Kart Race 3D keep their own record on the same track', () => {
+  const s = new Stats(null);
+  s.record({ ...win('kart-race', ['Abe', 'Sam'], 0), laps: [{ track: 'Speedway', player: 0, ms: 20000 }] });
+  s.record({ ...win('kart-race-3d', ['Abe', 'Sam'], 0), laps: [{ track: 'Speedway', player: 1, ms: 25000 }] });
+  assert.equal(s.lapRecord('kart-race', 'Speedway').ms, 20000);
+  assert.equal(s.lapRecord('kart-race-3d', 'Speedway').ms, 25000);
+  assert.equal(s.lapRecords().filter((r) => r.track === 'Speedway').length, 2);
+});
+
+test('kart cups say which game they were won in', () => {
+  const s = new Stats(null);
+  s.record({ ...win('kart-race-3d', ['Abe', 'Sam'], 1, [1, 3]), cup: true });
+  assert.equal(s.leaderboard().cups[0].game, 'kart-race-3d');
+});
