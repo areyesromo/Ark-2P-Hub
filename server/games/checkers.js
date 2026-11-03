@@ -252,6 +252,7 @@ export class Checkers {
 
 export default {
   id: 'checkers',
+  handheld: true, // everything's on your phone: no need to watch the TV
   category: 'board',
   music: 'thinking',
   name: 'Checkers',

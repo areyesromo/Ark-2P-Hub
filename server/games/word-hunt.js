@@ -5,6 +5,10 @@
 // yours. The small grid hides them across and down, the medium one diagonally
 // too, and the large one in every direction, backwards as well. First to the
 // chosen number of grids wins.
+//
+// Race mode: the same grid, but your own copy each. You can both find every word; your
+// finds stay on your phone (the TV and your rival only see how many), and the first to
+// find them all takes the grid. Time up: more words takes it.
 
 import { settingOf } from './options.js';
 import { WORDS } from './word-hunt-words.js';
@@ -46,6 +50,10 @@ export class WordHunt {
     const size = settingOf(ctx, 'size', 'medium');
     this.size = Object.prototype.hasOwnProperty.call(SIZES, size) ? size : 'medium';
     this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
+    // Race keeps your finds on your phone; a controller player only has the TV, where both
+    // would see them, so with one in the game it's the shared board.
+    const phones = !(ctx.players || []).some((p) => p && p.local);
+    this.mode = settingOf(ctx, 'mode', 'shared') === 'race' && phones ? 'race' : 'shared';
     this.timer = null;
   }
 
@@ -120,14 +128,19 @@ export class WordHunt {
   }
 
   mark(slot, a, b) {
-    // A hidden word not found yet, marked either way round.
-    const hit = this.placed.find((p) => !this.found.some((f) => f.word === p.word) && ((p.a === a && p.b === b) || (p.a === b && p.b === a)));
+    // A hidden word not found yet (in Race, not by you), marked either way round.
+    const race = this.mode === 'race';
+    const hit = this.placed.find((p) => !this.found.some((f) => f.word === p.word && (!race || f.slot === slot)) && ((p.a === a && p.b === b) || (p.a === b && p.b === a)));
     if (!hit) {
       this.nope[slot]++;
       return;
     }
     this.found.push({ ...hit, slot });
     this.totalWords[slot]++;
+    if (race) {
+      if (this.wordsOf(slot) === this.placed.length) this.finishGrid(); // all of them: first there wins
+      return;
+    }
     // More than half is out of reach for the other player: no need to play the rest.
     if (this.wordsOf(slot) > this.placed.length / 2 || this.found.length === this.placed.length) this.finishGrid();
   }
@@ -174,11 +187,15 @@ export class WordHunt {
     this.timer = null;
   }
 
-  view() {
+  /** `viewer`: whose screen (null for the TV). In Race, while you play, you only see your own finds. */
+  view(viewer) {
     const n = SIZES[this.size].n;
     const shown = this.phase !== 'countdown';
+    const secret = this.mode === 'race' && (this.phase === 'play' || this.phase === 'countdown');
+    const found = secret ? this.found.filter((f) => f.slot === viewer) : this.found;
     return {
       phase: this.phase,
+      mode: this.mode,
       round: this.round,
       scores: this.scores,
       winScore: this.winScore,
@@ -187,10 +204,10 @@ export class WordHunt {
       grid: shown ? this.grid.join('') : null,
       // The words to find (in a steady order) and who found each; where the rest are stays hidden.
       words: shown ? this.placed.map((p) => p.word).sort().map((w) => {
-        const f = this.found.find((x) => x.word === w);
-        return { word: w, by: f ? f.slot : null };
+        const f = found.filter((x) => x.word === w);
+        return { word: w, by: f.length ? f[0].slot : null, both: f.length > 1 }; // (both: in Race, after the grid)
       }) : [],
-      found: this.found.map((f) => ({ a: f.a, b: f.b, slot: f.slot })),
+      found: found.map((f) => ({ a: f.a, b: f.b, slot: f.slot })),
       counts: [this.wordsOf(0), this.wordsOf(1)],
       timeLeft: this.phase === 'play' ? Math.max(0, this.endsAt - this.ctx.now()) : 0,
       gridMs: TIMING.gridMs,
@@ -202,16 +219,17 @@ export class WordHunt {
   }
 
   hostView() {
-    return { ...this.view(), players: this.ctx.players };
+    return { ...this.view(null), players: this.ctx.players };
   }
 
   playerView(slot) {
-    return { ...this.view(), you: slot };
+    return { ...this.view(slot), you: slot };
   }
 }
 
 export default {
   id: 'word-hunt',
+  handheld: true, // everything's on your phone: no need to watch the TV
   music: 'thinking',
   name: 'Word Hunt',
   tagline: 'One word search, two hunters: mark a hidden word first and it\'s yours. Find more than half to take the grid.',

@@ -177,6 +177,7 @@ export class ConnectFour {
 
 export default {
   id: 'connect-four',
+  handheld: true, // everything's on your phone: no need to watch the TV
   music: 'thinking',
   name: 'Connect Four',
   tagline: 'Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3.',

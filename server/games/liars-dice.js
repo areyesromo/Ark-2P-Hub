@@ -150,6 +150,7 @@ export class LiarsDice {
 
 export default {
   id: 'liars-dice',
+  handheld: true, // everything's on your phone: no need to watch the TV
   name: "Liar's Dice",
   category: 'board',
   phoneOnly: true, // your dice are secret

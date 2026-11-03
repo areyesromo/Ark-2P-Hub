@@ -19,7 +19,7 @@
     }
     if (v.phase === 'match') return v.turn === me ? '<span class="won">A pair! Go again 🎉</span>' : 'They found a pair…';
     if (v.phase === 'peek') return v.turn === me ? '<span class="lost">No match.</span> Remember them!' : 'No match: remember them!';
-    return v.turn === me ? '<span class="big you">Your turn</span><br>Tap two cards · ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's' : 'Their turn: watch closely';
+    return v.turn === me ? '<span class="big you">Your turn</span><br>Tap two cards' : 'Their turn: watch closely';
   }
 
   function render(v) {
@@ -81,7 +81,10 @@
         if (view) render(view);
       });
     },
-    update: render,
+    update: function (v) {
+      Ark.phoneClock(v.turn === v.you ? v.timeLeftMs : 0); // the time left, in the phone's header
+      render(v);
+    },
     unmount: function () {
       root = els = view = null;
       key = '';

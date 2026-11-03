@@ -275,6 +275,7 @@ export class BombSquad {
 
 export default {
   id: 'bomb-squad',
+  handheld: true, // everything's on your phone: no need to watch the TV
   name: 'Bomb Squad',
   category: 'casual',
   phoneOnly: true, // the bomb and the manual are both secret

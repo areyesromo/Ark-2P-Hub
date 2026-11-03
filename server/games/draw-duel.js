@@ -224,6 +224,7 @@ export class DrawDuel {
 
 export default {
   id: 'draw-duel',
+  handheld: true, // everything's on your phone: no need to watch the TV
   phoneOnly: true, // you draw with a finger
   music: 'casual',
   name: 'Draw Duel',

@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.16
+
+- Word Hunt: a **Race** mode for two phones. Your own copy of the grid on your phone, your finds
+  kept to yourself, and the first to find every word takes it.
+- **📱 No TV needed** on 22 more games: the board, card, word and quiz games, where your phone
+  shows everything. Fake Out and Liar's Dice now show their reveals on the phones too, and
+  the time left for your turn or answer shows in your phone's header.
+
 ## 0.1.15
 
 - New co-op game: **Dungeon Duo**, in 3D. A Fighter and a Healer fight down three floors

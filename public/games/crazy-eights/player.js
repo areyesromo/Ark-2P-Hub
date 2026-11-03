@@ -87,7 +87,10 @@
       root.addEventListener('click', onClick);
       el.appendChild(root);
     },
-    update: update,
+    update: function (v) {
+      Ark.phoneClock(v.phase === 'play' && v.turn === v.you ? v.timeLeftMs : 0); // the time left, in the phone's header
+      update(v);
+    },
     unmount: function () {
       root = view = null;
       lastKey = '';

@@ -286,6 +286,7 @@ export class SketchGuess {
 
 export default {
   id: 'sketch-guess',
+  handheld: true, // everything's on your phone: no need to watch the TV
   name: 'Sketch & Guess',
   category: 'casual',
   phoneOnly: true, // someone has to draw in secret

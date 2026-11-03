@@ -247,6 +247,7 @@
 
   function unmountGame() {
     if (current && current.renderer && current.renderer.unmount) current.renderer.unmount();
+    Ark.phoneClock(0); // a game's clock doesn't outlive it
     current = null;
     $('phone-stage').innerHTML = '';
   }

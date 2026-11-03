@@ -47,14 +47,16 @@
   function render(v) {
     const me = v.you;
     if (v.phase === 'countdown') {
-      return score(v) + '<div class="fo-wait"><div class="big">' + (v.countdown || '') + '</div><p>Get ready to lie! The fact shows on the TV and here.</p></div>';
+      return score(v) + '<div class="fo-wait"><div class="big">' + (v.countdown || '') + '</div><p>Get ready to lie! The fact shows here (and on the TV).</p></div>';
     }
     if (v.phase === 'over') {
       const text = v.draw ? 'Draw! 🤝' : v.winner === me ? 'You win! 🏆' : 'You lose';
       return score(v) + '<div class="fo-wait"><div class="outcome ' + (v.draw ? '' : v.winner === me ? 'won' : 'lost') + '">' + text + '</div>' +
         '<button class="primary rematch">Rematch</button></div>';
     }
-    const fact = '<div class="fo-q">' + esc(v.question).split('___').join('<span class="fo-blank"></span>') + '</div>';
+    // Once the truth has turned over, it fills the blank (as on the TV).
+    const truthOut = v.phase === 'reveal' && v.reveal && v.reveal.find(function (r) { return r.kind === 'truth'; });
+    const fact = '<div class="fo-q">' + esc(v.question).split('___').join(truthOut ? '<span class="fo-truth">' + esc(truthOut.text) + '</span>' : '<span class="fo-blank"></span>') + '</div>';
     if (v.phase === 'write') {
       if (v.yourFake) {
         return score(v) + fact + '<div class="fo-wait"><p>Your fake:</p><div class="fo-mine">“' + esc(v.yourFake) + '”</div><p>' +
@@ -89,7 +91,15 @@
         (fooledThem ? '<p class="won">🤥 Your fake fooled them!</p>' : '') +
         (v.gained[me] ? '<p class="won">+' + v.gained[me] + '</p>' : '');
     }
-    return score(v) + fact + '<div class="fo-wait"><p>Watch the TV…</p>' + mine + '</div>';
+    // The answers turn over one by one, here as on the TV: whose fake it was, and who fell for it.
+    const who = function (s) { return s === me ? 'you' : 'them'; };
+    const list = v.reveal.map(function (r) {
+      if (!r.kind) return '<li class="later">' + esc(r.text) + '</li>';
+      const what = r.kind === 'truth' ? '✅ The truth' : r.kind === 'house' ? '🏦 The bank\'s fake' : '🤥 ' + (r.authors.indexOf(me) !== -1 ? (r.authors.length > 1 ? 'Both your fakes' : 'Your fake') : 'Their fake');
+      const by = r.pickedBy.length ? (r.kind === 'truth' ? ' · found by ' : ' · fooled ') + r.pickedBy.map(who).join(' & ') : '';
+      return '<li class="' + r.kind + '"><b>' + esc(r.text) + '</b><small>' + what + by + '</small></li>';
+    }).join('');
+    return score(v) + fact + '<ul class="fo-rev">' + list + '</ul><div class="fo-mine-result">' + mine + '</div>';
   }
 
   Ark.register('player', 'fake-out', {
@@ -102,6 +112,7 @@
       el.appendChild(root);
     },
     update: function (v) {
+      Ark.phoneClock(v.phase === 'write' || v.phase === 'pick' ? v.timeLeftMs : 0); // the time left, in the phone's header
       // While you're typing, the other player sending theirs only changes a line of text: the box
       // isn't redrawn under your fingers (the keyboard would close mid-word).
       const typing = v.phase === 'write' && !v.yourFake;

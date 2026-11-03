@@ -187,6 +187,7 @@ export class MindMeld {
 
 export default {
   id: 'mind-meld',
+  handheld: true, // everything's on your phone: no need to watch the TV
   name: 'Mind Meld',
   category: 'casual',
   needsPhone: true, // the clue-giver types on a secret screen
