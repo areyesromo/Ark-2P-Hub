@@ -26,9 +26,10 @@ export const HEROES = {
 export const WARDEN = {
   hp: [40, 28], r: 0.75, speed: 1.1,
   walkMs: 2200, // walks at you this long between moves
-  slamRange: 3.2, slamR: 2.3, slamWindupMs: 1100, slamDamage: 2, // slams if you're close...
+  slamRange: 2.6, slamR: 2.3, slamWindupMs: 1100, slamDamage: 2, // slams if you're close...
   chargeWindupMs: 800, chargeSpeed: 7, chargeMs: 2500, chargeDamage: 2, // ...charges if you're not
   stunMs: 1600, restMs: 900,
+  detourMs: 1800, // how long it steps sideways round a pillar
   summon: ['slime', 'bat', 'slime'], // at half health, once
 };
 export const ENEMIES = {
@@ -121,7 +122,7 @@ export class DungeonDuo {
     const e = { id: this.nextId++, kind, x, y, hp: def.hp, max: def.hp, speed: def.speed, hurtUntil: 0, wobble: this.rng() * Math.PI * 2, throwAt: this.ctx.now() + (def.throwEveryMs || 0) / 2 };
     if (kind === 'warden') {
       const hp = WARDEN.hp[this.easy ? 1 : 0];
-      Object.assign(e, { hp, max: hp, r: WARDEN.r, summoned: false, face: [0, 1], tele: null });
+      Object.assign(e, { hp, max: hp, r: WARDEN.r, summoned: false, face: [0, 1], tele: null, detourUntil: 0, side: 1 });
       this.wardenMove(e, 'walk');
     }
     this.enemies.push(e);
@@ -189,8 +190,10 @@ export class DungeonDuo {
     this.touches(now);
     this.revives(dt);
     this.pickups();
+    // The Warden beaten counts first: a killing blow wins even if the last of you falls with it.
+    if (this.bossFloor && !this.enemies.some((e) => e.kind === 'warden')) return this.enter('floorClear', TIMING.floorClearMs);
     if (this.heroes.every((h) => h.downed)) return this.bothDown();
-    if (this.onStairs() || (this.bossFloor && !this.enemies.some((e) => e.kind === 'warden'))) return this.enter('floorClear', TIMING.floorClearMs);
+    if (this.onStairs()) return this.enter('floorClear', TIMING.floorClearMs);
     if (this.frame++ % TIMING.sendEvery === 0) this.ctx.update();
   }
 
@@ -370,24 +373,46 @@ export class DungeonDuo {
       const h = this.nearestHero(e.x, e.y, 99) || this.heroes[0];
       const len = Math.hypot(h.x - e.x, h.y - e.y) || 1;
       e.face = [(h.x - e.x) / len, (h.y - e.y) / len];
-      let reach = 0;
-      while (reach < 20 && !this.blocked(e.x + e.face[0] * (reach + 0.25), e.y + e.face[1] * (reach + 0.25), e.r)) reach += 0.25;
-      e.tele = { kind: 'charge', dx: e.face[0], dy: e.face[1], len: reach + e.r };
+      e.tele = { kind: 'charge', dx: e.face[0], dy: e.face[1], len: this.laneLength(e, e.face[0], e.face[1]) + e.r };
     }
     if (state === 'rush') e.hitSlots = [];
+  }
+
+  /** How far the Warden could rush from where it stands, along (dx, dy), before hitting a wall. */
+  laneLength(e, dx, dy) {
+    let reach = 0;
+    while (reach < 20 && !this.blocked(e.x + dx * (reach + 0.25), e.y + dy * (reach + 0.25), e.r)) reach += 0.25;
+    return reach;
   }
 
   wardenThink(e, dt, now) {
     const done = now >= e.until;
     if (e.state === 'walk') {
       const h = this.nearestHero(e.x, e.y, 99);
-      if (h && done) return this.wardenMove(e, Math.hypot(h.x - e.x, h.y - e.y) <= WARDEN.slamRange ? 'slam' : 'charge');
+      const len = h ? Math.hypot(h.x - e.x, h.y - e.y) || 1 : 0;
+      if (h && done) {
+        if (len <= WARDEN.slamRange) return this.wardenMove(e, 'slam');
+        // Charge only down a clear lane; with a pillar in the way, keep walking (round it).
+        if (this.canSee(e.x, e.y, h.x, h.y) && this.laneLength(e, (h.x - e.x) / len, (h.y - e.y) / len) >= len - e.r - R) return this.wardenMove(e, 'charge');
+        return this.wardenMove(e, 'walk', 600);
+      }
       if (!h || !e.speed) return;
-      const len = Math.hypot(h.x - e.x, h.y - e.y) || 1;
       e.face = [(h.x - e.x) / len, (h.y - e.y) / len];
-      if (len < e.r + R + 0.1) return;
+      if (len < e.r + R - 0.1) return; // close enough to touch you
       const d = (e.speed * dt) / 1000;
-      this.slide(e, e.face[0] * d, e.face[1] * d);
+      // Going round something: sideways for a while.
+      const dir = now < e.detourUntil ? [-e.face[1] * e.side, e.face[0] * e.side] : e.face;
+      const was = [e.x, e.y];
+      const bump = this.slide(e, dir[0] * d, dir[1] * d);
+      const moved = Math.hypot(e.x - was[0], e.y - was[1]);
+      if (bump && now >= e.detourUntil) {
+        // Head straight at you but bumped into something: step round it, on whichever side is open.
+        const open = (side) => !this.blocked(e.x - e.face[1] * side * 0.5, e.y + e.face[0] * side * 0.5, e.r);
+        e.side = open(e.side || 1) ? e.side || 1 : -(e.side || 1);
+        e.detourUntil = now + WARDEN.detourMs;
+      } else if (bump && moved < d * 0.3) {
+        e.side = -e.side; // can't get by that way either: try the other
+      }
     } else if (e.state === 'slam') {
       if (!done) return;
       // It lands: everyone in the ring is hurt (there's no blocking the ground shaking).
@@ -419,12 +444,14 @@ export class DungeonDuo {
   wardenSummon(e) {
     e.summoned = true;
     this.events.summons++;
+    // Around it, on open floor, and never right on top of one of you.
     let n = 0;
-    for (let i = 0; i < 8 && n < WARDEN.summon.length; i++) {
-      const a = (i / 8) * Math.PI * 2;
-      const x = e.x + Math.cos(a) * 1.8;
-      const y = e.y + Math.sin(a) * 1.8;
-      if (this.blocked(x, y)) continue;
+    for (let i = 0; i < 16 && n < WARDEN.summon.length; i++) {
+      const a = ((i % 8) / 8) * Math.PI * 2;
+      const dist = i < 8 ? 1.8 : 2.6;
+      const x = e.x + Math.cos(a) * dist;
+      const y = e.y + Math.sin(a) * dist;
+      if (this.blocked(x, y) || this.heroes.some((h) => Math.hypot(h.x - x, h.y - y) < 1.3)) continue;
       this.spawnEnemy(WARDEN.summon[n++], x, y);
     }
   }
@@ -494,7 +521,8 @@ export class DungeonDuo {
   hurt(slot, damage, from) {
     const h = this.heroes[slot];
     const now = this.ctx.now();
-    if (h.downed || now < h.invulnUntil) return;
+    if (h.downed) return;
+    // The shield first: it holds even in the moment after a hit (and stops a charge then too).
     if (h.blocking && from) {
       const dx = from[0] - h.x;
       const dy = from[1] - h.y;
@@ -506,6 +534,7 @@ export class DungeonDuo {
         return 'blocked';
       }
     }
+    if (now < h.invulnUntil) return;
     h.hp = Math.max(0, h.hp - damage);
     h.invulnUntil = now + TIMING.invulnMs;
     this.events.hurt++;

@@ -661,6 +661,90 @@ test('the Warden: the sword reaches its big body, it can\'t be shoved, and at ha
   assert.equal(g.enemies.length, after, 'only once');
 });
 
+test('the Warden walks around a pillar to get at you (it can\'t be pinned behind one)', () => {
+  const { ctx, g } = dungeon({ floors: room([
+    '####################',
+    '#                  #',
+    '#                  #',
+    '#        W         #',
+    '#                  #',
+    '#                  #',
+    '#       ##         #',
+    '#       ##         #',
+    '#                  #',
+    '#                  #',
+    '#        S S       #',
+    '####################',
+  ]) });
+  const w = warden(g);
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  put(g, f, 8, 9);
+  Object.assign(g.heroes[f], { x: 9.0, y: 9.32 }); // straight behind the pillar
+  put(g, 1 - f, 17, 1); // far off, so it keeps after the Fighter
+  g.heroes[1 - f].x = 18.5;
+  let closest = 99;
+  for (let t = 0; t < 12000; t += 100) {
+    ctx.advance(100);
+    g.heroes[f].hp = g.heroes[f].max; // keep them standing: this is about where it goes
+    g.heroes[f].downed = false;
+    closest = Math.min(closest, Math.hypot(w.x - g.heroes[f].x, w.y - g.heroes[f].y));
+  }
+  assert.ok(closest < WARDEN.slamR, 'it got round to them: ' + closest.toFixed(2));
+});
+
+test('the Warden\'s help never appears right on top of a hero', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  g.wardenMove(w, 'rest', 60000);
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  Object.assign(g.heroes[f], { x: w.x + 1.5, y: w.y, face: [-1, 0] });
+  w.hp = Math.floor(w.max / 2) + 1;
+  g.attack(f);
+  assert.ok(w.summoned);
+  for (const e of g.enemies) if (e !== w) assert.ok(Math.hypot(e.x - g.heroes[f].x, e.y - g.heroes[f].y) > 1.2, e.kind + ' too close');
+  ctx.advance(TICK);
+});
+
+test('the killing blow on the Warden wins, even if the last of you goes down the same moment', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  g.wardenMove(w, 'rest', 60000);
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  g.hurt(1 - f, 99, null);
+  Object.assign(g.heroes[f], { x: w.x - 1.5, y: w.y, face: [1, 0], hp: 1, invulnUntil: 0 });
+  g.spawnEnemy('slime', g.heroes[f].x - 0.4, w.y);
+  w.hp = 1;
+  g.attack(f);
+  ctx.advance(TICK * 2);
+  assert.equal(g.phase, 'floorClear');
+});
+
+test('a raised shield stops the charge even just after you were hit', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  put(g, f, 5, 5, 1, 0);
+  g.onInput(f, { type: 'special', on: true });
+  put(g, 1 - f, 17, 10);
+  g.wardenMove(w, 'charge');
+  ctx.advance(WARDEN.chargeWindupMs + 400);
+  g.heroes[f].invulnUntil = ctx.now() + TIMING.invulnMs; // as if a bone just hit
+  ctx.advance(800);
+  assert.equal(w.state, 'stunned');
+  assert.ok(w.x > g.heroes[f].x);
+});
+
+test('the walking Warden hurts you if you stand there and let it reach you', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  put(g, 0, Math.floor(w.x) - 3, Math.floor(w.y));
+  put(g, 1, 17, 10);
+  g.heroes[1].x = 18.5;
+  const hp = g.heroes[0].hp;
+  ctx.advance(WARDEN.walkMs - 100);
+  assert.ok(g.heroes[0].hp < hp);
+});
+
 test('beating the Warden on the last floor wins the quest', () => {
   const { ctx, g } = dungeon({ floors: HALL });
   const w = warden(g);

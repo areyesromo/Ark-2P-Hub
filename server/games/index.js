@@ -139,7 +139,7 @@ const GAMES = [
   withSetup(towerDuel, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
   withSetup(dungeonDuo, {
     heroes: { title: 'Heroes', values: [0, 1], label: (n) => (n ? 'Player 1 the ✨ Healer, player 2 the 🛡️ Fighter' : 'Player 1 the 🛡️ Fighter, player 2 the ✨ Healer') },
-    difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (more hearts, 5 continues)' : 'Normal (3 continues)') },
+    difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (more hearts, 5 continues, a weaker Warden)' : 'Normal (3 continues)') },
   }),
   wordRace,
   withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),

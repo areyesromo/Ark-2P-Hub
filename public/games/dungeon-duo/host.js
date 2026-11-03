@@ -358,9 +358,7 @@
         pivot.add(arm);
         return pivot;
       });
-      const glow = new THREE.PointLight(0x67e8f9, 2, 3);
-      glow.position.set(0, 1.6, 0.6);
-      g.add(body, head, el, er, arms[0], arms[1], glow);
+      g.add(body, head, el, er, arms[0], arms[1]); // the eyes glow on their own (no extra light to switch the shaders)
       parts.body = body;
       parts.arms = arms;
       // Its warnings, on the floor: the slam's ring and the charge's lane.
