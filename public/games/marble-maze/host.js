@@ -46,10 +46,9 @@
 
   function setupGl() {
     const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-    // Kept light for the Pi: no more than 1.25x pixels, plain (not soft) shadows.
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFShadowMap;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     els.arena.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
     const camera = new THREE.PerspectiveCamera(38, 16 / 9, 0.1, 200);
@@ -57,7 +56,7 @@
     const sun = new THREE.DirectionalLight(0xffffff, 2.2);
     sun.position.set(-6, 14, 6);
     sun.castShadow = true;
-    sun.shadow.mapSize.set(1024, 1024);
+    sun.shadow.mapSize.set(2048, 2048);
     scene.add(sun);
     scene.add(sun.target);
     gl = { renderer: renderer, scene: scene, camera: camera, sun: sun, board: null, marble: null, goal: null, levelName: null };

@@ -3,7 +3,8 @@
 Jackbox-style 1v1 party games: the TV shows the game, each player's phone (or a gamepad) is the
 controller. Node 20+ ES modules, Express + Socket.IO on the server, plain browser JS on the client
 (no build step, no framework, no bundler). Three.js 0.184 for the 3D bits. Runs in one Docker
-container, built for amd64 and arm64 (Raspberry Pi), so keep things light on the TV side.
+container, built for amd64 and arm64. The TV side targets a Steam Deck as the minimum (the desktop app):
+don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, textures).
 
 ## Commands
 

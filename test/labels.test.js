@@ -12,7 +12,7 @@ test('📱 No TV needed: the games with a handheld mode', () => {
 
 test('🤸 Motion: every game whose phone controls can use tilt or movement', () => {
   const motion = listGames().filter((g) => g.motion).map((g) => g.id).sort();
-  assert.deepEqual(motion, ['asteroid-duel', 'kart-race', 'kart-race-3d', 'kitchen-rush', 'marble-maze', 'micro-mayhem', 'party-board', 'party-minis', 'sumo', 'tanks']);
+  assert.deepEqual(motion, ['asteroid-duel', 'dungeon-duo', 'kart-race', 'kart-race-3d', 'kitchen-rush', 'marble-maze', 'micro-mayhem', 'party-board', 'party-minis', 'sumo', 'tanks']);
   // ...and every game whose phone renderer loads the tilt, motion or move-pad helpers is labelled,
   // directly or through a script it loads (the minigames' mini.js) or a renderer it borrows.
   const MOTION = /\/(tilt|motion|move-pad)\.js/;

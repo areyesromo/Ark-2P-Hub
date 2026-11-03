@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.15
+
+- New co-op game: **Dungeon Duo**, in 3D. A Fighter and a Healer fight down three floors
+  together: keys and doors, spikes, a gate one of you holds open, skeletons, and the Stone Warden
+  at the bottom. Revive each other when one of you goes down.
+- The 3D games (Marble Maze, the 3D minigames and Party Board) are sharper, with soft shadows.
+
 ## 0.1.14
 
 - New game: **Kart Race 3D**. Kart Race on a split screen, with a camera behind each kart, so you

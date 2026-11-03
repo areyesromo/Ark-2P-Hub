@@ -387,18 +387,19 @@
   /**
    * A three.js scene filling `el`, drawn every frame. Returns a promise of
    * { THREE, scene, camera, renderer, onFrame(fn), dispose() }; onFrame
-   * callbacks run before each draw. Pixel ratio is capped (Pi-friendly).
+   * callbacks run before each draw. Pixel ratio up to 2x (sharp on a Steam Deck or a 4K TV).
    * opts.draw(renderer, scene, w, h) draws each frame instead (split screen: Kart Race 3D);
-   * opts.maxPixelRatio caps the pixel ratio lower or higher than 1.25.
+   * opts.maxPixelRatio caps the pixel ratio lower or higher than 2.
    */
   function scene3d(el, opts) {
     opts = opts || {};
     return three().then(function (THREE) {
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.maxPixelRatio || 1.25));
-      // Shadows are off (lighter on the Pi); scene3d(el, { shadows: true }) turns them on,
-      // e.g. for HD models later. Meshes keep their castShadow flags for that.
-      renderer.shadowMap.enabled = !!opts.shadows;
+      renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.maxPixelRatio || 2));
+      // Soft shadows from the sun, for every mesh with castShadow / receiveShadow set;
+      // scene3d(el, { shadows: false }) turns them off.
+      renderer.shadowMap.enabled = opts.shadows !== false;
+      renderer.shadowMap.type = THREE.PCFSoftShadowMap;
       el.appendChild(renderer.domElement);
       renderer.domElement.className = 'mi-3d';
       // setSize(.., false) leaves the CSS size alone, so fill the box here: otherwise the canvas
@@ -409,8 +410,8 @@
       scene.add(new THREE.HemisphereLight(0xdbeafe, 0x1e1b16, 1.1));
       const sun = new THREE.DirectionalLight(0xffffff, 2);
       sun.position.set(4, 10, 6);
-      sun.castShadow = !!opts.shadows;
-      sun.shadow.mapSize.set(1024, 1024);
+      sun.castShadow = opts.shadows !== false;
+      sun.shadow.mapSize.set(2048, 2048);
       const sc = sun.shadow.camera;
       sc.left = sc.bottom = -12;
       sc.right = sc.top = 12;
