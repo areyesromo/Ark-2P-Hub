@@ -16,6 +16,7 @@ import fakeOut from './fake-out.js';
 import crazyEights from './crazy-eights.js';
 import kitchenRush from './kitchen-rush.js';
 import towerDuel from './tower-duel.js';
+import dungeonDuo from './dungeon-duo.js';
 import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
 import sketchGuess from './sketch-guess.js';
@@ -136,6 +137,10 @@ const GAMES = [
     minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
   withSetup(towerDuel, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
+  withSetup(dungeonDuo, {
+    heroes: { title: 'Heroes', values: [0, 1], label: (n) => (n ? 'Player 1 the ✨ Healer, player 2 the 🛡️ Fighter' : 'Player 1 the 🛡️ Fighter, player 2 the ✨ Healer') },
+    difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (more hearts, 5 continues)' : 'Normal (3 continues)') },
+  }),
   wordRace,
   withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),
   withSetup(wordHunt, {
