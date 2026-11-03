@@ -56,6 +56,7 @@ export class MicroMayhem extends MiniGame {
 
 export default {
   id: 'micro-mayhem',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Micro Mayhem',
   category: 'competitive',
   music: 'action',

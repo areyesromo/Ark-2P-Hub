@@ -31,3 +31,16 @@
 .dp-box.zero { opacity: 0.55; }
 .dp-box.on { border-color: var(--me); opacity: 1; }
 .dp-big { font-size: 2rem; font-weight: 900; color: var(--warn); margin-top: 20px; }
+
+/* ---- phone, Handheld screen: the scorecard on top, the dice and Roll in a tray at the bottom ---- */
+.dp-phone.handheld { align-items: stretch; gap: 8px; padding: 8px 10px 12px; overflow: hidden; }
+.dp-phone.handheld .dp-scroll { flex: 1; min-height: 0; overflow-y: auto; }
+.dp-card.dp-mini { width: 100%; min-width: 0; font-size: 0.95rem; }
+.dp-card.dp-mini th, .dp-card.dp-mini td { padding: 3px 6px; }
+.dp-card.dp-mini tr.total td { font-size: 1.15rem; }
+.dp-pick { width: 100%; padding: 4px 0; font-size: 0.95rem; font-weight: 800; background: var(--panel); border: 2px dashed var(--me); color: var(--text); }
+.dp-pick.zero { opacity: 0.55; }
+.dp-pick.on { border-style: solid; background: var(--me); color: var(--on-bright); opacity: 1; }
+.dp-tray { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
+.dp-tray .dp-roll, .dp-tray .dp-score { width: 100%; max-width: 420px; }
+.dp-tray .dp-big { margin-top: 0; }

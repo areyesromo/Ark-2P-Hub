@@ -314,6 +314,7 @@ export class TankDuel {
 
 export default {
   id: 'tanks',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Tank Duel',
   tagline: 'Top-down tank battle. Drive with the joystick, fire bouncing shells around cover. 3 hits and you are out. First to 3.',
   create: (ctx) => new TankDuel(ctx),

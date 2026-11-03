@@ -291,6 +291,11 @@
     socket.on('connect', check);
   }
 
+  /** A game's lobby labels: 📱 No TV needed (playable on the phones alone), 🤸 Motion (tilt or move to play). */
+  function gameLabels(g) {
+    return (g.handheld ? ' <em class="label handheld">📱 No TV needed</em>' : '') + (g.motion ? ' <em class="label motion">🤸 Motion</em>' : '');
+  }
+
   /** True when a controller (plugged into the TV) holds a seat: phone-only games are off then. */
   function controllerSeated(state) {
     return Boolean(state && state.players && state.players.some(function (p) { return p && p.local; }));
@@ -489,6 +494,7 @@
     bindTournament: bindTournament,
     escapeHtml: escapeHtml,
     controllerSeated: controllerSeated,
+    gameLabels: gameLabels,
     register: register,
     loadRenderer: loadRenderer,
     loadCss: loadCss,

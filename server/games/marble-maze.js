@@ -339,6 +339,7 @@ export class MarbleMaze {
 
 export default {
   id: 'marble-maze',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Marble Maze',
   category: 'casual',
   music: 'casual',

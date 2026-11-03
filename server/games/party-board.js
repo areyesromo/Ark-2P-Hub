@@ -592,6 +592,7 @@ export class PartyBoard {
 
 export default {
   id: 'party-board',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Party Board',
   category: 'competitive',
   music: 'casual',

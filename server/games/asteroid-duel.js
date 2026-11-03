@@ -380,6 +380,7 @@ export class AsteroidDuel {
 
 export default {
   id: 'asteroid-duel',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Asteroid Duel',
   tagline: 'Two ships in a field of drifting rocks. Turn, thrust and shoot your rival; mind the rocks. Three lives a round.',
   create: (ctx) => new AsteroidDuel(ctx),

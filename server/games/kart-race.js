@@ -1134,6 +1134,7 @@ export class KartRace {
 
 export default {
   id: 'kart-race',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Kart Race',
   tagline: 'Top-down racing: pick one of 12 racers and your tyres, hold GAS, steer, brake for the bends (hold it to reverse), drift for a mini-boost, collect coins to go faster, use items (hold up to 3), hit the boost pads and bump your rival off the line. Six tracks, or a balloon battle in one of three arenas.',
   create: (ctx) => new KartRace(ctx),

@@ -201,7 +201,7 @@
       return (
         heading +
         '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (pads && g.phoneOnly ? ' class="phone-only"' : '') + (state.readyToPlay && !(pads && g.phoneOnly) ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : '') + '</strong>' +
+        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : '') + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );

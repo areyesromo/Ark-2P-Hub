@@ -21,6 +21,9 @@ one you just played).
 Once both seats are taken, the TV's lobby stacks the two players (with your
 head to head and the tournament) in a narrow column on the left and gives the
 rest of the screen to the games; the QR code comes back when a seat is free.
+Two labels on a game tell you how it plays: **📱 No TV needed** (pick its handheld
+screen and the phones show everything: Dice Party) and **🤸 Motion** (you can tilt or
+move your phone to play; buttons or a joystick always work too).
 
 ### ⚔️ Competitive
 
@@ -61,7 +64,7 @@ rest of the screen to the games; the QR code comes back when a seat is free.
 | Game | How it plays |
 | --- | --- |
 | **Liar's Dice** | Your dice are hidden under a cup on your phone (the TV shows only how many each of you has). Take turns bidding how many of a face there are across *both* players' dice ("three 5s"): raise the count, or keep it and bid a higher face. Or call **Liar!**: the cups lift on the TV, and if there are fewer than bid, the bidder loses a die; otherwise the caller does. Ones are wild (they count as every face). Lose all your dice and you lose. Needs two phones. Before the first match the TV plays a short example round (📖 How to play, a setting); during the game your phone explains each bid in plain words and shows the chance it's true. |
-| **Dice Party** | Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards, with what each open box would score. Highest total wins. |
+| **Dice Party** | Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards, with what each open box would score. Highest total wins. 📱 **No TV needed**: pick the **Handheld** screen and each phone shows the whole scorecard (yours and theirs, the bonus and the totals) with the dice and Roll in a tray at the bottom; tap a box in your column, then tap it again to score. |
 | **Crazy Eights** | The card game, for two phones: your hand is secret on your phone (the cards you can play light up), the TV shows the pile, the suit to follow and how many cards each of you holds. On your turn play a card that matches the top card's **suit or rank**, or an **8** at any time and call the new suit. Can't (or won't) play? Draw one: play it if it fits, or pass. With **action cards** on, a **2** makes the other player draw two (unless they answer with a 2 of their own: they stack), a **Jack** gives you another turn and the **Queen of ♠** makes them draw five. 30 s a turn (out of time: you draw and pass). First to empty their hand wins the hand and scores what's left in the other's: 8s 50, picture cards 10, aces 1, the rest face value. When the draw pile runs out, the played cards are shuffled back in. |
 | **Checkers** | Classic draughts on the TV. Men step diagonally forward; jump to capture, and jumps are a must (a piece that can keep jumping must). Reach the far row to crown a ♛ king that moves both ways. Take every piece or leave your rival with no move; 40 moves without a capture is a draw. Tap a piece on your phone (the board turns so yours are at the bottom), then a ◯. 30 s per move. |
 | **Dots and Boxes** | Take turns joining two neighbouring dots. Close the fourth side of a box to claim it and go again, so don't hand your rival a chain of boxes. When every line is drawn, the most boxes wins. Tap a line on your phone. 20 s per move. |
@@ -107,7 +110,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Kitchen Rush | The kitchen (Diner, Split or Rush Hour) and a 2, 3 or 4 minute shift |
 | Mind Meld | 4, 6, 8 or 10 rounds |
 | Liar's Dice | The how-to-play example round first, or skip it; 5, 3 or 4 dice each; ones wild or not |
-| Dice Party | Full game (13 rounds) or quick (6) |
+| Dice Party | Full game (13 rounds) or quick (6); the screen: TV, or 📱 Handheld (the whole scorecard on your phone, no TV needed) |
 | Crazy Eights | Action cards (2, Jack, Q♠) or classic rules; one hand, or first to 100 or 200 points |
 | Checkers | One game, or first to 2 or 3 |
 | Dots and Boxes | A 4 × 4, 3 × 3 or 5 × 5 grid; one game, or first to 2 or 3 |
