@@ -1,8 +1,8 @@
 // Dungeon Duo on the TV, in 3D with three.js (served by the hub at /vendor/three/). The server
 // (server/games/dungeon-duo.js) runs everything; this draws the floor (walls, doors, keys, the
 // stairs, spikes, plates and gates), the two heroes in your colours, the enemies, bolts and healing circles, with a camera
-// that follows you both. Kept light for a Raspberry Pi: no shadows, the walls drawn as one
-// instanced mesh, the floor as one textured plane.
+// that follows you both. Soft shadows from above, and each hero carries a lantern; the walls
+// are one instanced mesh, the floor one textured plane.
 (function () {
   Ark.loadCss('/games/dungeon-duo/style.css');
   const esc = Ark.escapeHtml;
@@ -81,17 +81,27 @@
 
   function setupGl() {
     const renderer = new THREE.WebGLRenderer({ antialias: true });
-    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.25));
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
     renderer.setClearColor(0x0b0f19);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     els.arena.appendChild(renderer.domElement);
     const scene = new THREE.Scene();
     scene.fog = new THREE.Fog(0x0b0f19, 14, 30);
     const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.1, 100);
-    scene.add(new THREE.HemisphereLight(0xfde68a, 0x111827, 1.2));
-    const sun = new THREE.DirectionalLight(0xffffff, 1.4);
-    sun.position.set(-5, 12, 6);
-    scene.add(sun);
-    gl = { renderer: renderer, scene: scene, camera: camera, level: null, things: null, mapKey: '', heroes: null, enemies: {}, shots: [], bones: [], circles: [], cam: { x: 0, z: 0, d: 10 }, spikeY: -0.3, gateY: 0 };
+    scene.add(new THREE.HemisphereLight(0xfde68a, 0x111827, 0.8));
+    // The light from above follows the camera, so its shadow map stays sharp around the heroes.
+    const sun = new THREE.DirectionalLight(0xfff7ed, 1.5);
+    sun.castShadow = true;
+    sun.shadow.mapSize.set(2048, 2048);
+    sun.shadow.bias = -0.0005;
+    const sc = sun.shadow.camera;
+    sc.left = sc.bottom = -14;
+    sc.right = sc.top = 14;
+    sc.near = 1;
+    sc.far = 40;
+    scene.add(sun, sun.target);
+    gl = { renderer: renderer, scene: scene, camera: camera, sun: sun, level: null, things: null, mapKey: '', heroes: null, enemies: {}, shots: [], bones: [], circles: [], cam: { x: 0, z: 0, d: 10 }, spikeY: -0.3, gateY: 0 };
   }
 
   function mat(color, extra) {
@@ -101,20 +111,41 @@
   /** A stone floor texture (drawn once per floor). */
   function stoneTexture(w, h) {
     const c = document.createElement('canvas');
-    c.width = w * 32;
-    c.height = h * 32;
+    const S = 96; // pixels a tile
+    c.width = w * S;
+    c.height = h * S;
     const g = c.getContext('2d');
+    let seed = 7;
+    const rnd = function () { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const shade = 70 + ((x * 7 + y * 13) % 5) * 6;
         g.fillStyle = 'rgb(' + shade + ',' + (shade - 4) + ',' + (shade - 10) + ')';
-        g.fillRect(x * 32, y * 32, 32, 32);
-        g.strokeStyle = 'rgba(0,0,0,0.35)';
-        g.strokeRect(x * 32 + 0.5, y * 32 + 0.5, 31, 31);
+        g.fillRect(x * S, y * S, S, S);
+        // Speckles and a crack or two, so the stone isn't flat.
+        for (let i = 0; i < 60; i++) {
+          const d = (rnd() - 0.5) * 30;
+          g.fillStyle = 'rgba(' + (d > 0 ? '255,240,220,' : '0,0,0,') + (Math.abs(d) / 120).toFixed(3) + ')';
+          g.fillRect(x * S + rnd() * S, y * S + rnd() * S, 2 + rnd() * 5, 2 + rnd() * 5);
+        }
+        if (rnd() < 0.3) {
+          g.strokeStyle = 'rgba(0,0,0,0.3)';
+          g.lineWidth = 1.5;
+          g.beginPath();
+          let cx = x * S + rnd() * S;
+          let cy = y * S + rnd() * S;
+          g.moveTo(cx, cy);
+          for (let i = 0; i < 4; i++) g.lineTo((cx += (rnd() - 0.5) * 30), (cy += (rnd() - 0.5) * 30));
+          g.stroke();
+        }
+        g.strokeStyle = 'rgba(0,0,0,0.45)';
+        g.lineWidth = 3;
+        g.strokeRect(x * S + 1.5, y * S + 1.5, S - 3, S - 3);
       }
     }
     const t = new THREE.CanvasTexture(c);
     t.colorSpace = THREE.SRGBColorSpace;
+    t.anisotropy = gl.renderer.capabilities.getMaxAnisotropy();
     return t;
   }
 
@@ -137,10 +168,12 @@
     const level = new THREE.Group();
     const floorMesh = new THREE.Mesh(new THREE.PlaneGeometry(W, H), new THREE.MeshStandardMaterial({ map: stoneTexture(W, H), roughness: 0.95 }));
     floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
     level.add(floorMesh);
     const walls = [];
     v.map.forEach(function (row, y) { for (let x = 0; x < W; x++) if (row[x] === '#') walls.push([x, y]); });
     const wallMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, WALL_H, 1), mat(0x57534e), walls.length);
+    wallMesh.castShadow = wallMesh.receiveShadow = true;
     const m = new THREE.Matrix4();
     walls.forEach(function (p, i) {
       m.makeTranslation(p[0] + 0.5 - W / 2, WALL_H / 2, p[1] + 0.5 - H / 2);
@@ -235,6 +268,7 @@
     gl.spikes = spikeGroup;
     gl.gate = gate;
     gl.plateMat = plateMat;
+    things.traverse(function (o) { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
     gl.scene.add(things);
     gl.things = things;
   }
@@ -271,6 +305,11 @@
     reviveRing.position.y = 0.05;
     reviveRing.visible = false;
     parts.reviveRing = reviveRing;
+    g.traverse(function (o) { if (o.isMesh) o.castShadow = true; });
+    // A lantern: warm light around each hero, in the dark corners.
+    const lamp = new THREE.PointLight(0xffd8a0, 3.5, 5, 1.6);
+    lamp.position.set(0, 1.8, 0);
+    g.add(lamp);
     gl.scene.add(g, reviveRing);
     parts.shown = null;
     parts.role = role;
@@ -316,6 +355,7 @@
       parts.body = body;
       parts.wings = [wl, wr];
     }
+    g.traverse(function (o) { if (o.isMesh) o.castShadow = true; });
     gl.scene.add(g);
     return parts;
   }
@@ -468,6 +508,8 @@
     gl.cam.d += (want - gl.cam.d) * ck;
     gl.camera.position.set(gl.cam.x, gl.cam.d * 0.95, gl.cam.z + gl.cam.d * 0.62);
     gl.camera.lookAt(gl.cam.x, 0, gl.cam.z);
+    gl.sun.position.set(gl.cam.x - 5, 14, gl.cam.z + 6);
+    gl.sun.target.position.set(gl.cam.x, 0, gl.cam.z);
   }
 
   function resize() {
