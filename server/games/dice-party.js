@@ -2,7 +2,8 @@
 // three times, holding the ones you like between rolls, then score them in
 // one of 13 boxes (each box once). Upper boxes (ones to sixes) earn a 35
 // bonus at 63 or more. Highest total wins. Nothing is secret, so it plays on
-// phones or controllers.
+// phones or controllers. On the Handheld screen each phone shows the whole
+// scorecard too, so it plays without the TV.
 
 import { settingOf } from './options.js';
 
@@ -53,6 +54,7 @@ export class DiceParty {
     this.ctx = ctx;
     this.rng = rng;
     this.rounds = settingOf(ctx, 'rounds', ROUNDS);
+    this.handheld = settingOf(ctx, 'screen', 0) === 1; // Handheld: the phones show the whole scorecard
     this.firstStarter = 0;
   }
 
@@ -125,6 +127,7 @@ export class DiceParty {
     const rolled = this.rollsLeft < ROLLS;
     return {
       phase: this.phase,
+      handheld: this.handheld,
       turn: this.turn,
       round: this.round,
       rounds: this.rounds,
@@ -155,6 +158,7 @@ export class DiceParty {
 
 export default {
   id: 'dice-party',
+  handheld: true, // its Handheld screen puts everything on the phones: no TV needed
   name: 'Dice Party',
   category: 'board',
   music: 'casual',

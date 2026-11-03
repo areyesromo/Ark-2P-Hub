@@ -46,6 +46,7 @@ export class PartyMinis extends MiniGame {
 
 export default {
   id: 'party-minis',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Party Minigames',
   category: 'competitive',
   music: 'casual',

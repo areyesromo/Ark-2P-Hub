@@ -55,6 +55,8 @@ import { withSetup } from './options.js';
  * controllers (one of them needs a private screen).
  * phoneOnly: true means both players need a phone: with a controller seated, the
  * lobby greys the game out and the room won't start it.
+ * handheld: true labels it "📱 No TV needed" in the lobby (it can be played on the
+ * phones alone); motion: true labels it "🤸 Motion" (phones can tilt or move to play).
  *
  * create(ctx) returns an instance with:
  *   start()                  begin (or restart) the match
@@ -168,7 +170,10 @@ const GAMES = [
     seeds: { title: 'Stones per pit', values: [4, 3, 5], label: (n) => `${n} stones` },
     ...firstTo('Games to win', [1, 2, 3]),
   }),
-  withSetup(diceParty, { rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) } }),
+  withSetup(diceParty, {
+    rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
+    screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
+  }),
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
 ];
 
@@ -181,13 +186,15 @@ export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
     .sort((a, b) => byCategory(a) - byCategory(b))
-    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music }) => ({
+    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music, handheld, motion }) => ({
       id,
       name,
       tagline,
       category: category || 'competitive',
       needsPhone: Boolean(needsPhone || phoneOnly),
       phoneOnly: Boolean(phoneOnly),
+      handheld: Boolean(handheld), // lobby label: 📱 No TV needed
+      motion: Boolean(motion), // lobby label: 🤸 Motion
       // The TV's background music for this game (see public/host/music.js).
       music: MUSIC_MOODS.includes(music) ? music : category === 'casual' ? 'casual' : 'action',
     }));

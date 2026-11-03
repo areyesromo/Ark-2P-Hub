@@ -132,7 +132,7 @@
       return (
         heading +
         '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (pads && g.phoneOnly ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !(pads && g.phoneOnly) ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : '') + '</strong>' +
+        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : '') + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );

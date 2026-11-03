@@ -9,6 +9,10 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - New game: **Kart Race 3D**. Kart Race on a split screen, with a camera behind each kart, so you
   race down the road instead of watching from above. Same racers, tracks, items and battles.
 - Going back to the lobby while a game is still loading no longer leaves the TV stuck on it.
+- Dice Party: a **📱 Handheld** screen. Your phone shows the whole scorecard, with the dice and
+  Roll at the bottom: play it without the TV.
+- New labels on the games: **📱 No TV needed** and **🤸 Motion** (tilt or move your phone to
+  play).
 
 ## 0.1.13
 

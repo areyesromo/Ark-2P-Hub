@@ -257,6 +257,7 @@ export class Sumo {
 
 export default {
   id: 'sumo',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Sumo',
   tagline: 'Shove your rival off a shrinking ring. Steer with the stick, DASH to hit hard. First to 3.',
   create: (ctx) => new Sumo(ctx),

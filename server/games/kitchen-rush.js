@@ -412,6 +412,7 @@ export class KitchenRush {
 
 export default {
   id: 'kitchen-rush',
+  motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Kitchen Rush',
   category: 'casual',
   music: 'casual',
