@@ -159,17 +159,17 @@ export class Tron {
       scores: this.scores,
       winScore: this.winScore,
       players: this.ctx.players,
-      grid: GRID,
       countdown: this.countdown(),
       tickMs: this.tickMs,
-      cycles: this.cycles.map((c) => ({
-        path: c.corners.concat([[c.x, c.y]]),
-        dir: c.dir,
-        crashed: c.crashed,
-      })),
+      ...this.arena(),
       result: this.result,
       winner: this.winner,
     };
+  }
+
+  /** The trails as the TV draws them (the phones show them too: nothing here is secret). */
+  arena() {
+    return { grid: GRID, cycles: this.cycles.map((c) => ({ path: c.corners.concat([[c.x, c.y]]), dir: c.dir, crashed: c.crashed })) };
   }
 
   playerView(slot) {
@@ -181,6 +181,8 @@ export class Tron {
       winScore: this.winScore,
       countdown: this.countdown(),
       dir: this.cycles[slot].dir,
+      tickMs: this.tickMs,
+      ...this.arena(),
       result: this.result,
       winner: this.winner,
     };
@@ -189,6 +191,7 @@ export class Tron {
 
 export default {
   id: 'tron',
+  handheld: true, // the phone shows the whole game too: no need to watch the TV
   name: 'Light Cycles',
   tagline: 'Tron-style. Leave a wall behind you and make your rival crash into it. First to 3.',
   create: (ctx) => new Tron(ctx),

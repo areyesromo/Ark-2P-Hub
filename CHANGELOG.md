@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.17
+
+- **📱 No TV needed** on five action games: Pong's whole court on your phone (your paddle at
+  the bottom), Brick Breaker Duel's wall and balls, Snake Battle's and Light Cycles' arena above
+  the pad, and in Tower Defence Duel the creeps on your road plus a small map of your rival's.
+- Draw Duel shows your rival's drawing on your phone at the reveal, and Word Race lists their
+  words under yours at the end of a round.
+
 ## 0.1.16
 
 - Word Hunt: a **Race** mode for two phones. Your own copy of the grid on your phone, your finds

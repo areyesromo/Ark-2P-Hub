@@ -117,9 +117,14 @@
 
   function myWords(v) {
     if (v.result) {
-      return v.result.tally[v.you].map(function (w) {
-        return '<li class="' + (w.shared ? 'shared' : '') + '">' + esc(w.word.toUpperCase()) + '<em>' + (w.shared ? '×' : '+' + w.points) + '</em></li>';
-      }).join('');
+      // Yours, then theirs (as on the TV): the words you both found are crossed out on both.
+      const list = function (slot) {
+        return v.result.tally[slot].map(function (w) {
+          return '<li class="' + (w.shared ? 'shared' : '') + '">' + esc(w.word.toUpperCase()) + '<em>' + (w.shared ? '×' : '+' + w.points) + '</em></li>';
+        }).join('');
+      };
+      const none = '<li class="wr-none">none</li>';
+      return '<li class="wr-head">Yours</li>' + (list(v.you) || none) + '<li class="wr-head">Theirs</li>' + (list(1 - v.you) || none);
     }
     return v.yourWords.slice().reverse().map(function (w) {
       return '<li>' + esc(w.word.toUpperCase()) + '<em>+' + w.points + '</em></li>';

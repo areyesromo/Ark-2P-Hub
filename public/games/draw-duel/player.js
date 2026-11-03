@@ -64,6 +64,8 @@
   }
 
   function redraw() {
+    // The rival's panel first: showing it shrinks the pad, which is measured next.
+    if (els && view) els.theirs.classList.toggle('hidden', !(view.phase === 'reveal' && view.theirStrokes));
     const c = els.canvas;
     const box = els.pad.getBoundingClientRect();
     const css = Math.floor(Math.min(box.width, box.height));
@@ -80,6 +82,25 @@
       paint(c, view.strokes || [], color, 0.02);
     }
     if (view.phase === 'draw') paint(c, strokes, color, 0.02);
+    drawTheirs();
+  }
+
+  function drawTheirs() {
+    const show = view.phase === 'reveal' && view.theirStrokes;
+    els.theirs.classList.toggle('hidden', !show);
+    if (!show) return;
+    const c = els.theirCanvas;
+    const css = Math.floor(els.theirs.getBoundingClientRect().width);
+    const px = Math.floor(css * (window.devicePixelRatio || 1));
+    if (!px) return;
+    if (c.width !== px) {
+      c.width = c.height = px;
+      c.style.width = c.style.height = css + 'px';
+    }
+    c.getContext('2d').clearRect(0, 0, px, px);
+    const theirColor = getComputedStyle(document.body).getPropertyValue('--p' + (2 - view.you)).trim() || '#f472b6';
+    if (view.outline) paint(c, alignTo(view.outline, view.theirStrokes), '#eef0ff', 0.02, 0.35);
+    paint(c, view.theirStrokes, theirColor, 0.03);
   }
 
   // ---- drawing input -------------------------------------------------------
@@ -231,6 +252,8 @@
         '<div class="score"></div>' +
         '<div class="prompt"></div>' +
         '<div class="dd-pad"><canvas></canvas></div>' +
+        // At the reveal: your rival's drawing too, small, with the real shape over it.
+        '<div class="dd-theirs hidden"><canvas></canvas><span>Theirs</span></div>' +
         '<div class="dd-tools hidden"><button class="undo">↶ Undo</button><button class="clear">Clear</button><button class="primary done">Done ✓</button></div>' +
         '<button class="primary rematch hidden">Rematch</button>';
       el.appendChild(root);
@@ -238,7 +261,9 @@
         score: root.querySelector('.score'),
         prompt: root.querySelector('.prompt'),
         pad: root.querySelector('.dd-pad'),
-        canvas: root.querySelector('canvas'),
+        canvas: root.querySelector('.dd-pad canvas'),
+        theirs: root.querySelector('.dd-theirs'),
+        theirCanvas: root.querySelector('.dd-theirs canvas'),
         tools: root.querySelector('.dd-tools'),
         rematch: root.querySelector('.rematch'),
       };

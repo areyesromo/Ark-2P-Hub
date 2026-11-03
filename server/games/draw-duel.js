@@ -212,6 +212,7 @@ export class DrawDuel {
       phaseMs: TIMING[this.phase + 'Ms'] || 0,
       // The phone keeps its own drawing while you draw; it gets the server's copy back for the reveal.
       strokes: revealing ? this.strokes[slot] : null,
+      theirStrokes: revealing ? this.strokes[1 - slot] : null, // so the phone can show both at the reveal
       done: this.done[slot],
       opponentDone: this.done[1 - slot],
       accuracy: this.accuracy,

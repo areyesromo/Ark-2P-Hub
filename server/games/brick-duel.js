@@ -312,16 +312,20 @@ export class BrickDuel {
       timeLeft: this.timeLeft(),
       suddenDeath: this.suddenDeath,
       field: FIELD,
-      sides: this.sides.map((s) => ({
-        paddle: s.paddle,
-        paddleW: this.paddleW(s, now),
-        balls: s.balls.map((b) => ({ x: b.x, y: b.y, vx: b.vx, vy: b.vy, held: b.heldUntil !== null })),
-        bricks: [...s.bricks.values()].map((b) => [b.r, b.c, b.p]),
-        broken: s.broken,
-      })),
+      sides: this.sides.map((s) => this.sideView(s, now)),
       power: this.power,
       scores: this.sides.map((s) => s.broken), // the room records the result with these
       winner: this.winner,
+    };
+  }
+
+  sideView(s, now) {
+    return {
+      paddle: s.paddle,
+      paddleW: this.paddleW(s, now),
+      balls: s.balls.map((b) => ({ x: b.x, y: b.y, vx: b.vx, vy: b.vy, held: b.heldUntil !== null })),
+      bricks: [...s.bricks.values()].map((b) => [b.r, b.c, b.p]),
+      broken: s.broken,
     };
   }
 
@@ -330,6 +334,9 @@ export class BrickDuel {
     return {
       phase: this.phase,
       you: slot,
+      // Your own side, so the phone can show your wall and balls (the TV shows both).
+      field: FIELD,
+      side: this.sideView(this.sides[slot], now),
       countdown: this.countdown(),
       timeLeft: this.timeLeft(),
       suddenDeath: this.suddenDeath,
@@ -345,6 +352,7 @@ export class BrickDuel {
 
 export default {
   id: 'brick-duel',
+  handheld: true, // the phone shows the whole game too: no need to watch the TV
   name: 'Brick Breaker Duel',
   tagline: 'Race to break your wall first. Power bricks shrink their paddle, give you an extra ball or add a row to their wall.',
   create: (ctx) => new BrickDuel(ctx),

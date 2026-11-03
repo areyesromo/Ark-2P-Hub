@@ -298,3 +298,13 @@ test('in the lobby: a head-to-head game with phones or controllers, and the live
   assert.ok(setup.includes('"lives"'));
   assert.ok(setup.includes('20 lives') && setup.includes('10 lives') && setup.includes('30 lives'));
 });
+
+test('the phones see the creeps on both roads (to play without the TV); only the shots stay on the TV', () => {
+  const { ctx, g } = duel();
+  ctx.advance(TIMING.firstWaveMs + 2000);
+  const tv = g.hostView();
+  assert.ok(tv.sides[0].creeps.length > 0, 'a wave is on the road');
+  const v = g.playerView(0);
+  assert.deepEqual(v.sides.map((s) => s.creeps), tv.sides.map((s) => s.creeps));
+  assert.ok(v.sides.every((s) => s.shots.length === 0));
+});

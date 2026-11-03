@@ -4,11 +4,18 @@
 // for an added row.
 (function () {
   Ark.loadCss('/games/brick-duel/style.css');
+  // The bricks are drawn by a helper shared with the other screen; if it fails to load, try again.
+  let bricksLoading = null;
+  function needBricks() {
+    if (window.ArkBricks || bricksLoading) return false;
+    bricksLoading = Ark.loadScript('/games/brick-duel/bricks.js').catch(function () { bricksLoading = null; });
+    return true;
+  }
+  needBricks();
   const esc = Ark.escapeHtml;
   const MAX_EXTRAPOLATE_MS = 50; // views come every ~33 ms: carry a ball on no further than that, roughly
   const DEADZONE = 0.2;
   const GAP = 0.6; // between the two fields
-  const ROW_COLORS = ['#ef4444', '#f97316', '#eab308', '#22c55e', '#3b82f6', '#8b5cf6', '#ec4899', '#14b8a6', '#f43f5e', '#a3e635'];
   const POWER_TEXT = {
     shrink: function (a, b) { return a + ' shrank ' + b + '\'s paddle!'; },
     multi: function (a) { return a + ' got an extra ball!'; },
@@ -89,28 +96,9 @@
     }
   }
 
-  function drawBrick(g, f, b) {
-    const x = b[1] * f.brickW + 0.04;
-    const y = f.top + b[0] * f.brickH + 0.04;
-    const w = f.brickW - 0.08;
-    const h = f.brickH - 0.08;
-    g.fillStyle = b[2] ? '#f8fafc' : ROW_COLORS[b[0] % ROW_COLORS.length];
-    g.fillRect(x, y, w, h);
-    if (!b[2]) return;
-    g.fillStyle = '#0f172a';
-    if (b[2] === 'shrink') g.fillRect(x + w * 0.25, y + h * 0.4, w * 0.5, h * 0.2);
-    else if (b[2] === 'multi') {
-      g.beginPath();
-      g.arc(x + w / 2, y + h / 2, h * 0.28, 0, Math.PI * 2);
-      g.fill();
-    } else {
-      for (let i = 0; i < 3; i++) g.fillRect(x + w * (0.2 + i * 0.25), y + h * 0.2, w * 0.1, h * 0.6);
-    }
-  }
-
   function draw() {
     raf = requestAnimationFrame(draw);
-    if (!view) return;
+    if (!view || !window.ArkBricks) return void needBricks();
     resize();
     const f = view.field;
     const g = canvas.getContext('2d');
@@ -121,7 +109,7 @@
       g.setTransform(k, 0, 0, k, slot * (f.w + GAP) * k, 0);
       g.fillStyle = '#0b1020';
       g.fillRect(0, 0, f.w, f.h);
-      side.bricks.forEach(function (b) { drawBrick(g, f, b); });
+      side.bricks.forEach(function (b) { window.ArkBricks.drawBrick(g, f, b); });
       shown[slot] += (side.paddle - shown[slot]) * 0.5;
       g.fillStyle = colors[slot];
       g.fillRect(shown[slot] - side.paddleW / 2, f.paddleY, side.paddleW, f.paddleH);

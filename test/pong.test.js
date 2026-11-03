@@ -110,3 +110,14 @@ test('first to WIN_SCORE wins, the loop stops, and rematch restarts', () => {
   assert.deepEqual(game.scores, [0, 0]);
   assert.equal(ctx.pendingTimers(), 1);
 });
+
+test('each phone gets the court (ball, paddles, field) so it can show the game without the TV', () => {
+  const ctx = fakeCtx();
+  const game = new Pong(ctx, () => 0.5);
+  game.start();
+  ctx.advance(TIMING.countdownMs + 100);
+  const v = game.playerView(1);
+  assert.deepEqual(v.ball, { x: game.ball.x, y: game.ball.y, vx: game.ball.vx, vy: game.ball.vy });
+  assert.deepEqual(v.paddles, game.paddles);
+  assert.deepEqual(v.field, FIELD);
+});

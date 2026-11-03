@@ -329,3 +329,11 @@ test('the phone view has the scores and no positions', () => {
   assert.deepEqual(v.broken, [0, 0]);
   assert.equal(v.sides, undefined);
 });
+
+test('each phone gets its own side of the field (wall, balls, paddle) to show the game without the TV', () => {
+  const { ctx, game } = setup();
+  ctx.advance(TIMING.countdownMs + 50);
+  const v = game.playerView(1);
+  assert.deepEqual(v.field, FIELD);
+  assert.deepEqual(v.side, game.hostView().sides[1]);
+});
