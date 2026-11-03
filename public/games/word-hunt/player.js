@@ -26,7 +26,7 @@
   function render() {
     const v = view;
     if (!root || !v || !window.ArkHunt) return;
-    const k = JSON.stringify([v.phase, v.round, v.scores, v.grid, v.found, v.words, v.counts, v.result, from, to]);
+    const k = JSON.stringify([v.phase, v.round, v.scores, v.grid, v.found, v.words, v.counts, v.nope, v.result, from, to]);
     if (k === key) return;
     key = k;
     root.querySelector('.info').innerHTML = top(v);
@@ -98,6 +98,7 @@
       ready.then(render);
     },
     update: function (v) {
+      Ark.phoneClock(v.phase === 'play' ? v.timeLeft : 0); // the time left, in the phone's header
       if (!view || view.round !== v.round) {
         from = to = null;
         dragging = false;

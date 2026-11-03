@@ -62,9 +62,10 @@
     let html = '';
     // At the reveal, the dice that counted for the bid stand out (yours here, theirs below).
     const shown = v.result && v.hands;
-    const counted = function (d) { return d === v.result.bid.face || (v.wild && d === 1); };
-    html += '<div class="ld-mine' + (shown ? ' ld-theirs' : '') + '">' + (v.mine || []).map(function (d) { return ArkDice.html(d, shown ? (counted(d) ? 'wild' : 'dim') : v.wild && d === 1 ? 'wild' : ''); }).join('') + '</div>';
-    html += '<p class="ld-info">Your dice · rival has ' + v.counts[1 - mine] + ' · ' + v.total + ' dice in play' + (v.wild ? ' · ones are wild' : '') + '</p>';
+    // As on the TV: the bid's face green, a wild one yellow, the rest dimmed.
+    const look = function (d) { return d === v.result.bid.face ? 'match' : v.wild && d === 1 ? 'wild' : 'dim'; };
+    html += '<div class="ld-mine' + (shown ? ' ld-theirs' : '') + '">' + (v.mine || []).map(function (d) { return ArkDice.html(d, shown ? look(d) : v.wild && d === 1 ? 'wild' : ''); }).join('') + '</div>';
+    html += '<p class="ld-info">' + (shown ? 'Your dice' : 'Your dice · rival has ' + v.counts[1 - mine] + ' · ' + v.total + ' dice in play') + (v.wild ? ' · ones are wild' : '') + '</p>';
     if (v.phase === 'bidding') {
       html += '<div class="ld-current">' + (v.bid ? (v.bid.by === mine ? 'You bid ' : 'They bid ') + bidText(v.bid) : 'No bid yet') + '</div>';
       if (myTurn && v.bid) html += explain(v, v.bid, true);
@@ -85,7 +86,7 @@
         '<p class="ld-info">There ' + (r.actual === 1 ? 'was' : 'were') + ' ' + r.actual + ' for a bid of ' + bidText(r.bid) + '</p>';
       // Their cup lifted, here as on the TV: the dice that counted for the bid stand out.
       if (v.hands) {
-        html += '<p class="ld-info">Their dice</p><div class="ld-mine ld-theirs">' + v.hands[1 - mine].map(function (d) { return ArkDice.html(d, counted(d) ? 'wild' : 'dim'); }).join('') + '</div>';
+        html += '<p class="ld-info">Their dice</p><div class="ld-mine ld-theirs">' + v.hands[1 - mine].map(function (d) { return ArkDice.html(d, look(d)); }).join('') + '</div>';
       }
       if (v.phase === 'over') html += '<div class="ld-current big">' + (v.winner === mine ? 'You win! 🏆' : 'You lose') + '</div><button class="primary ld-rematch">Rematch</button>';
     }

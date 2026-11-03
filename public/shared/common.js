@@ -483,7 +483,34 @@
     };
   }
 
+  /**
+   * The time left for whatever you're doing, in the phone's header (⏱ 12 s), so a phone shows
+   * the clock without the TV. phoneClock(ms) starts it counting down on its own (games don't send
+   * a view every second); phoneClock(0) hides it. The hub hides it when a game is unmounted.
+   */
+  let clockEnds = 0;
+  let clockTimer = null;
+  function drawClock() {
+    const el = document.getElementById('me-clock');
+    const s = Math.ceil((clockEnds - Date.now()) / 1000);
+    if (!el || s <= 0) {
+      if (el) el.classList.add('hidden');
+      clearInterval(clockTimer);
+      clockTimer = null;
+      return;
+    }
+    el.textContent = '⏱ ' + s + ' s';
+    el.classList.remove('hidden');
+    el.classList.toggle('low', s <= 5);
+  }
+  function phoneClock(ms) {
+    clockEnds = ms > 0 ? Date.now() + ms : 0;
+    if (ms > 0 && !clockTimer) clockTimer = setInterval(drawClock, 250);
+    drawClock();
+  }
+
   window.Ark = {
+    phoneClock: phoneClock,
     lobbyLayout: lobbyLayout,
     avatarHtml: avatarHtml,
     profilePicker: profilePicker,

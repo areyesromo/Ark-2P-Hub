@@ -183,7 +183,10 @@
         render(view);
       });
     },
-    update: render,
+    update: function (v) {
+      Ark.phoneClock(v.timeLeftMs); // the time left, in the phone's header
+      render(v);
+    },
     unmount: function () {
       clearTimeout(sendTimer);
       root = els = view = null;

@@ -49,7 +49,7 @@
         marks.push({ slot: slot, cursor: at, from: p.from, to: at });
       });
     }
-    const k = JSON.stringify([v.phase, v.round, v.scores, v.grid, v.found, v.words, v.counts, v.result, marks]);
+    const k = JSON.stringify([v.phase, v.round, v.scores, v.grid, v.found, v.words, v.counts, v.nope, v.result, marks]);
     if (k === key) return;
     key = k;
     if (v.phase === 'countdown') {

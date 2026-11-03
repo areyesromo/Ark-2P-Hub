@@ -112,6 +112,7 @@
       el.appendChild(root);
     },
     update: function (v) {
+      Ark.phoneClock(v.phase === 'write' || v.phase === 'pick' ? v.timeLeftMs : 0); // the time left, in the phone's header
       // While you're typing, the other player sending theirs only changes a line of text: the box
       // isn't redrawn under your fingers (the keyboard would close mid-word).
       const typing = v.phase === 'write' && !v.yourFake;

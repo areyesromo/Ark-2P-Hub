@@ -42,7 +42,7 @@
 
   function words(v) {
     return '<ul class="wh-words">' + v.words.map(function (w) {
-      return '<li class="' + (w.by === null ? '' : 'found p' + (w.by + 1) + '-text') + '">' + w.word + '</li>';
+      return '<li class="' + (w.by === null ? '' : 'found p' + (w.by + 1) + '-text') + '">' + w.word + (w.both ? ' <small>(both)</small>' : '') + '</li>';
     }).join('') + '</ul>';
   }
 

@@ -50,7 +50,10 @@ export class WordHunt {
     const size = settingOf(ctx, 'size', 'medium');
     this.size = Object.prototype.hasOwnProperty.call(SIZES, size) ? size : 'medium';
     this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
-    this.mode = settingOf(ctx, 'mode', 'shared') === 'race' ? 'race' : 'shared';
+    // Race keeps your finds on your phone; a controller player only has the TV, where both
+    // would see them, so with one in the game it's the shared board.
+    const phones = !(ctx.players || []).some((p) => p && p.local);
+    this.mode = settingOf(ctx, 'mode', 'shared') === 'race' && phones ? 'race' : 'shared';
     this.timer = null;
   }
 
@@ -189,9 +192,7 @@ export class WordHunt {
     const n = SIZES[this.size].n;
     const shown = this.phase !== 'countdown';
     const secret = this.mode === 'race' && (this.phase === 'play' || this.phase === 'countdown');
-    // (A controller player only has the TV, so the TV shows theirs.)
-    const tvShows = (slot) => Boolean(this.ctx.players && this.ctx.players[slot] && this.ctx.players[slot].local);
-    const found = secret ? this.found.filter((f) => (viewer === null ? tvShows(f.slot) : f.slot === viewer)) : this.found;
+    const found = secret ? this.found.filter((f) => f.slot === viewer) : this.found;
     return {
       phase: this.phase,
       mode: this.mode,
@@ -203,8 +204,8 @@ export class WordHunt {
       grid: shown ? this.grid.join('') : null,
       // The words to find (in a steady order) and who found each; where the rest are stays hidden.
       words: shown ? this.placed.map((p) => p.word).sort().map((w) => {
-        const f = found.find((x) => x.word === w);
-        return { word: w, by: f ? f.slot : null };
+        const f = found.filter((x) => x.word === w);
+        return { word: w, by: f.length ? f[0].slot : null, both: f.length > 1 }; // (both: in Race, after the grid)
       }) : [],
       found: found.map((f) => ({ a: f.a, b: f.b, slot: f.slot })),
       counts: [this.wordsOf(0), this.wordsOf(1)],

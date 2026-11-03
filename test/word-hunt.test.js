@@ -144,15 +144,35 @@ test('Race: time up, more words takes the grid', () => {
   assert.equal(g.result.winner, 0);
 });
 
-test('Race: a controller player only has the TV, so the TV shows their finds (and never a phone player\'s)', () => {
+test('Race needs two phones: with a controller player (who only has the TV) it\'s the shared board', () => {
   const ctx = fakeCtx();
   ctx.settings = { mode: 'race' };
   ctx.players = [{ name: 'Phone' }, { name: 'Pad', local: true }];
   const g = new WordHunt(ctx, seeded(4));
   g.start();
   ctx.advance(TIMING.countdownMs);
-  const [p, q] = g.placed;
+  assert.equal(g.hostView().mode, 'shared');
+  const [p] = g.placed;
+  g.onInput(1, { type: 'mark', a: p.a, b: p.b });
   g.onInput(0, { type: 'mark', a: p.a, b: p.b });
-  g.onInput(1, { type: 'mark', a: q.a, b: q.b });
-  assert.deepEqual(g.hostView().found, [{ a: q.a, b: q.b, slot: 1 }]);
+  assert.deepEqual(g.hostView().counts, [0, 1], 'first to mark it gets it');
+});
+
+test('Race: a word you both found shows as found by both once the grid is over', () => {
+  const { g } = game({ mode: 'race', size: 'small' });
+  const [p] = g.placed;
+  g.onInput(0, { type: 'mark', a: p.a, b: p.b });
+  for (const q of g.placed) g.onInput(1, { type: 'mark', a: q.a, b: q.b });
+  const w = g.playerView(0).words.find((x) => x.word === p.word);
+  assert.equal(w.both, true);
+  // And the rival's finds are hidden from you while you play (checked on the next grid).
+});
+
+test('Race: while you play, your rival\'s finds are nowhere in your view', () => {
+  const { g } = game({ mode: 'race' });
+  const [p] = g.placed;
+  g.onInput(1, { type: 'mark', a: p.a, b: p.b });
+  const mine = g.playerView(0);
+  assert.deepEqual(mine.found, []);
+  assert.ok(mine.words.every((w) => w.by === null && !w.both));
 });

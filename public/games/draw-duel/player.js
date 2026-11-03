@@ -249,7 +249,10 @@
       root.addEventListener('click', onButton);
       window.addEventListener('resize', onResize);
     },
-    update: render,
+    update: function (v) {
+      Ark.phoneClock(v.phase === 'draw' ? v.timeLeftMs : 0); // the time left, in the phone's header
+      render(v);
+    },
     unmount: function () {
       clearTimeout(sendTimer);
       window.removeEventListener('resize', onResize);

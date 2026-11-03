@@ -80,6 +80,7 @@
       el.appendChild(root);
     },
     update: function (v) {
+      Ark.phoneClock(v.phase === 'question' ? v.timeLeftMs : 0); // the time left, in the phone's header
       if (v.phase === 'reveal' && buzzed !== v.number) {
         buzzed = v.number;
         api.vibrate(v.yourPick === v.correct ? 40 : [80, 40, 80]);

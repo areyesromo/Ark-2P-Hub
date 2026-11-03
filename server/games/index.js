@@ -144,7 +144,7 @@ const GAMES = [
   wordRace,
   withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),
   withSetup(wordHunt, {
-    mode: { title: 'Mode', values: ['shared', 'race'], label: (k) => (k === 'race' ? 'Race: your own board each, first to find every word' : 'Shared board: first to mark a word gets it') },
+    mode: { title: 'Mode', values: ['shared', 'race'], label: (k) => (k === 'race' ? 'Race (two phones): your own board each, first to find every word' : 'Shared board: first to mark a word gets it') },
     size: { title: 'Grid', values: ['medium', 'small', 'large'], label: (k) => `${HUNT_SIZES[k].name} · ${HUNT_SIZES[k].words} words${k === 'small' ? ', across and down' : k === 'medium' ? ', diagonals too' : ', any way, even backwards'}` },
     ...firstTo('Grids to win', [2, 1, 3]),
   }),
