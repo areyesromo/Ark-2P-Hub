@@ -3,7 +3,14 @@
 // at its top speed, as in Pong). Your rival's count is at the top; no need to watch the TV.
 (function () {
   Ark.loadCss('/games/brick-duel/style.css');
-  Ark.loadScript('/games/brick-duel/bricks.js');
+  // The bricks are drawn by a helper shared with the other screen; if it fails to load, try again.
+  let bricksLoading = null;
+  function needBricks() {
+    if (window.ArkBricks || bricksLoading) return false;
+    bricksLoading = Ark.loadScript('/games/brick-duel/bricks.js').catch(function () { bricksLoading = null; });
+    return true;
+  }
+  needBricks();
   const SEND_EVERY_MS = 33;
   const MAX_EXTRAPOLATE_MS = 50; // carry a ball on no further than about one view
 
@@ -76,7 +83,7 @@
   function draw() {
     raf = requestAnimationFrame(draw);
     const v = view;
-    if (!v || !v.side || !strip || !window.ArkBricks) return;
+    if (!v || !v.side || !strip || !window.ArkBricks) return void needBricks();
     const f = v.field;
     const box = strip.parentElement.getBoundingClientRect();
     const cssW = Math.floor(Math.min(box.width, (box.height * f.w) / f.h));

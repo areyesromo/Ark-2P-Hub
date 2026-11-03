@@ -92,9 +92,9 @@
     });
     // The ball, moved on by its speed since the last view so it doesn't stutter.
     if (v.phase === 'play' || v.phase === 'point') {
-      const dt = v.phase === 'play' ? Math.min(0.1, (performance.now() - viewAt) / 1000) : 0;
-      const bx = Math.min(f.w, Math.max(0, v.ball.x + v.ball.vx * dt));
-      const by = Math.min(f.h, Math.max(0, v.ball.y + v.ball.vy * dt));
+      const dt = v.phase === 'play' ? Math.min(0.05, (performance.now() - viewAt) / 1000) : 0; // about one view
+      const bx = Math.min(f.w - f.ballR, Math.max(f.ballR, v.ball.x + v.ball.vx * dt));
+      const by = Math.min(f.h - f.ballR, Math.max(f.ballR, v.ball.y + v.ball.vy * dt));
       const p = toScreen(v, bx, by);
       g.fillStyle = '#f8fafc';
       g.beginPath();

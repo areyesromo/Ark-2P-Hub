@@ -64,6 +64,8 @@
   }
 
   function redraw() {
+    // The rival's panel first: showing it shrinks the pad, which is measured next.
+    if (els && view) els.theirs.classList.toggle('hidden', !(view.phase === 'reveal' && view.theirStrokes));
     const c = els.canvas;
     const box = els.pad.getBoundingClientRect();
     const css = Math.floor(Math.min(box.width, box.height));

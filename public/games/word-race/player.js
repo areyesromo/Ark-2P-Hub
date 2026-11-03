@@ -123,7 +123,8 @@
           return '<li class="' + (w.shared ? 'shared' : '') + '">' + esc(w.word.toUpperCase()) + '<em>' + (w.shared ? '×' : '+' + w.points) + '</em></li>';
         }).join('');
       };
-      return '<li class="wr-head">Yours</li>' + list(v.you) + '<li class="wr-head">Theirs</li>' + (list(1 - v.you) || '<li class="shared">none</li>');
+      const none = '<li class="wr-none">none</li>';
+      return '<li class="wr-head">Yours</li>' + (list(v.you) || none) + '<li class="wr-head">Theirs</li>' + (list(1 - v.you) || none);
     }
     return v.yourWords.slice().reverse().map(function (w) {
       return '<li>' + esc(w.word.toUpperCase()) + '<em>+' + w.points + '</em></li>';

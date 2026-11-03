@@ -4,7 +4,14 @@
 // for an added row.
 (function () {
   Ark.loadCss('/games/brick-duel/style.css');
-  Ark.loadScript('/games/brick-duel/bricks.js');
+  // The bricks are drawn by a helper shared with the other screen; if it fails to load, try again.
+  let bricksLoading = null;
+  function needBricks() {
+    if (window.ArkBricks || bricksLoading) return false;
+    bricksLoading = Ark.loadScript('/games/brick-duel/bricks.js').catch(function () { bricksLoading = null; });
+    return true;
+  }
+  needBricks();
   const esc = Ark.escapeHtml;
   const MAX_EXTRAPOLATE_MS = 50; // views come every ~33 ms: carry a ball on no further than that, roughly
   const DEADZONE = 0.2;
@@ -91,7 +98,7 @@
 
   function draw() {
     raf = requestAnimationFrame(draw);
-    if (!view || !window.ArkBricks) return;
+    if (!view || !window.ArkBricks) return void needBricks();
     resize();
     const f = view.field;
     const g = canvas.getContext('2d');

@@ -89,3 +89,4 @@
 
 /* The heading over each list at the end of a round. */
 .wr-words .wr-head { flex-basis: 100%; color: var(--muted); font-weight: 800; background: none; border: 0; }
+.wr-words .wr-none { color: var(--muted); background: none; }
