@@ -176,3 +176,16 @@ test('after the last round the higher total wins; equal totals draw; rematch pic
   assert.equal(game.draw, true);
   assert.equal(game.winner, null);
 });
+
+test('at the reveal each phone also gets the rival\'s drawing (never while you draw)', () => {
+  const { ctx, game } = setup();
+  toDraw(ctx);
+  drawStrokes(game, 0, [[0.1, 0.1, 0.9, 0.9]]);
+  drawStrokes(game, 1, [[0.2, 0.8, 0.8, 0.2]]);
+  assert.equal(game.playerView(0).theirStrokes, null, 'not while drawing');
+  game.onInput(0, { type: 'done' });
+  game.onInput(1, { type: 'done' });
+  while (game.phase !== 'reveal') ctx.advance(50);
+  assert.deepEqual(game.playerView(0).theirStrokes, game.strokes[1]);
+  assert.deepEqual(game.playerView(1).theirStrokes, game.strokes[0]);
+});

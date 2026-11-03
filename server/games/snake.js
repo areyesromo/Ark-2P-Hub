@@ -210,14 +210,17 @@ export class SnakeBattle {
       scores: this.scores,
       winScore: this.winScore,
       players: this.ctx.players,
-      grid: GRID,
       countdown: this.countdown(),
       timeLeft: this.timeLeft(),
-      snakes: this.snakes.map((s) => ({ body: s.body, dir: s.dir, crashed: s.crashed })),
-      food: this.food,
+      ...this.arena(),
       result: this.result,
       winner: this.winner,
     };
+  }
+
+  /** The board as the TV draws it (the phones show it too: nothing on it is secret). */
+  arena() {
+    return { grid: GRID, snakes: this.snakes.map((s) => ({ body: s.body, dir: s.dir, crashed: s.crashed })), food: this.food };
   }
 
   playerView(slot) {
@@ -231,6 +234,7 @@ export class SnakeBattle {
       timeLeft: this.timeLeft(),
       dir: this.snakes[slot].dir,
       lengths: this.snakes.map((s) => s.body.length),
+      ...this.arena(),
       result: this.result,
       winner: this.winner,
     };
@@ -239,6 +243,7 @@ export class SnakeBattle {
 
 export default {
   id: 'snake',
+  handheld: true, // the phone shows the whole game too: no need to watch the TV
   name: 'Snake Battle',
   tagline: 'Two snakes, one arena. Eat to grow, make your rival crash. Longest snake wins when time runs out. First to 3.',
   create: (ctx) => new SnakeBattle(ctx),

@@ -180,3 +180,13 @@ test('first to WIN_SCORE wins; the loop stops; rematch restarts', () => {
   assert.equal(game.phase, 'countdown');
   assert.deepEqual(game.scores, [0, 0]);
 });
+
+test('each phone gets the arena (both snakes and the food) to show the game without the TV', () => {
+  const { ctx, game } = setup();
+  ctx.advance(TIMING.countdownMs + TICK * 3);
+  const v = game.playerView(0);
+  const tv = game.hostView();
+  assert.deepEqual(v.grid, tv.grid);
+  assert.deepEqual(v.snakes, tv.snakes);
+  assert.deepEqual(v.food, tv.food);
+});

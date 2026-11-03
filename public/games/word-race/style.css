@@ -86,3 +86,6 @@
 .wr-phone .change { align-self: center; }
 .wr-phone .ark-setup { margin: 0; }
 .wr-host .ark-setup .opt { pointer-events: none; }
+
+/* The heading over each list at the end of a round. */
+.wr-words .wr-head { flex-basis: 100%; color: var(--muted); font-weight: 800; background: none; border: 0; }

@@ -25,6 +25,5 @@
 .bd-phone .status { font-size: var(--fs-md); min-height: 1.4em; }
 .bd-phone .status.won { color: var(--good); font-weight: 900; font-size: var(--fs-xl); }
 .bd-phone .status.lost { color: var(--bad); font-weight: 900; font-size: var(--fs-xl); }
-.bd-strip { flex: 1; position: relative; border-radius: var(--radius); border: 3px solid var(--me); background: var(--panel); touch-action: none; overflow: hidden; }
-.bd-strip .knob { position: absolute; bottom: 18%; left: 50%; width: 40%; height: 6%; border-radius: var(--r-md); background: var(--me); transform: translateX(-50%); opacity: 0.85; }
-.bd-strip .hint { position: absolute; inset: 12px 0 auto; color: var(--muted); font-size: var(--fs-sm); }
+.bd-court { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.bd-strip { display: block; touch-action: none; border-radius: var(--r-md); border: 3px solid var(--me); }

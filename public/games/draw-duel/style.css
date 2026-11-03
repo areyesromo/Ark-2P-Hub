@@ -95,3 +95,8 @@
 
 .dd-tools { display: grid; grid-template-columns: 1fr 1fr 1.4fr; gap: 10px; }
 .dd-tools button { padding: 14px 8px; font-size: 1.05rem; }
+
+/* The rival's drawing at the reveal, small beside the score. */
+.dd-theirs { width: 38%; align-self: center; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.dd-theirs canvas { width: 100%; aspect-ratio: 1; background: var(--panel); border: 2px solid var(--line); border-radius: var(--r-md); }
+.dd-theirs span { color: var(--muted); font-weight: 700; font-size: var(--fs-sm); }

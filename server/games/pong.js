@@ -209,9 +209,14 @@ export class Pong {
   }
 
   playerView(slot) {
+    const b = this.ball;
     return {
       phase: this.phase,
       you: slot,
+      // The whole court too, so a phone can show the game (nothing here is secret).
+      ball: { x: b.x, y: b.y, vx: b.vx, vy: b.vy },
+      paddles: this.paddles,
+      field: FIELD,
       scores: this.scores,
       winScore: this.winScore,
       countdown: this.phaseEnds ? Math.max(0, Math.ceil((this.phaseEnds - this.ctx.now()) / 1000)) : 0,
@@ -223,6 +228,7 @@ export class Pong {
 
 export default {
   id: 'pong',
+  handheld: true, // the phone shows the whole game too: no need to watch the TV
   name: 'Pong',
   tagline: 'The classic. Drag on your phone or use the stick to move your paddle. First to 5.',
   create: (ctx) => new Pong(ctx),

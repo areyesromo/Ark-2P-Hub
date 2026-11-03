@@ -56,32 +56,5 @@
 .pong-phone .status.won { color: var(--good); font-weight: 900; font-size: 1.8rem; }
 .pong-phone .status.lost { color: var(--bad); font-weight: 900; font-size: 1.8rem; }
 
-.pong-strip {
-  flex: 1;
-  position: relative;
-  border-radius: 24px;
-  border: 3px solid var(--me);
-  background:
-    repeating-linear-gradient(to bottom, transparent 0 38px, rgba(255, 255, 255, 0.04) 38px 40px),
-    var(--panel);
-  touch-action: none;
-  overflow: hidden;
-}
-.pong-strip .knob {
-  position: absolute;
-  left: 18%;
-  right: 18%;
-  height: 22%;
-  border-radius: 14px;
-  background: var(--me);
-  box-shadow: 0 0 24px var(--me);
-  transform: translateY(-50%);
-  top: 50%;
-  opacity: 0.85;
-}
-.pong-strip .hint {
-  position: absolute;
-  inset: auto 0 12px;
-  color: var(--muted);
-  font-size: 0.9rem;
-}
+.pong-court { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.pong-court canvas { display: block; touch-action: none; border-radius: var(--r-md); border: 3px solid var(--me); background: #070914; }
