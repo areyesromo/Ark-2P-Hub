@@ -152,6 +152,7 @@
   function disposeGroup(group) {
     gl.scene.remove(group);
     group.traverse(function (o) {
+      if (o.isInstancedMesh) o.dispose(); // its instance buffer
       if (o.geometry) o.geometry.dispose();
       if (o.material) {
         if (o.material.map) o.material.map.dispose();
@@ -244,7 +245,7 @@
         } else if (c === 'G') {
           for (let i = 0; i < 4; i++) {
             const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, WALL_H, 6), barMat);
-            // Bars across whichever way the gateway runs (walls above and below: bars across x).
+            // Bars across the way through (walls above and below: you walk along x, so the bars line up along z).
             const across = (v.map[y - 1] || '')[x] === '#';
             bar.position.set(px + (across ? 0 : (i - 1.5) * 0.24), WALL_H / 2, pz + (across ? (i - 1.5) * 0.24 : 0));
             gate.add(bar);

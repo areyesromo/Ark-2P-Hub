@@ -43,7 +43,7 @@ export const TIMING = {
 const R = 0.3; // half a hero's (or enemy's) width
 const TOUCH = 0.65; // an enemy this close hurts
 const KNOCKBACK = 0.6; // how far the shield shoves an enemy
-const REVIVE_RANGE = 1.2;
+const REVIVE_RANGE = 1.4; // from a safe tile beside spikes, too
 const ENEMY_LETTERS = { s: 'slime', b: 'bat', k: 'skeleton' };
 
 /** Stars for a quest: finishing, few retries (one at most), and a good time. */
@@ -181,9 +181,12 @@ export class DungeonDuo {
     return [[b.x - R, b.y - R], [b.x + R - E, b.y - R], [b.x - R, b.y + R - E], [b.x + R - E, b.y + R - E]].map(([x, y]) => (this.map[Math.floor(y)] || [])[Math.floor(x)]);
   }
 
-  /** Gates stand open while a hero is on a plate, and don't shut on anyone still in the gateway. */
+  /**
+   * Gates stand open while a hero is on a plate, and don't shut on anyone still in the gateway.
+   * They also open while either of you is down, so the gate never keeps you from a revive.
+   */
   updateGate() {
-    const onPlate = this.heroes.some((h) => this.map[Math.floor(h.y)][Math.floor(h.x)] === 'P');
+    const onPlate = this.heroes.some((h) => h.downed || this.map[Math.floor(h.y)][Math.floor(h.x)] === 'P');
     const inGate = this.gateOpen && [...this.heroes, ...this.enemies].some((b) => this.corners(b).includes('G'));
     this.gateOpen = onPlate || inGate;
   }
@@ -192,11 +195,13 @@ export class DungeonDuo {
     return (this.ctx.now() - this.floorAt) % (SPIKES.downMs + SPIKES.upMs) >= SPIKES.downMs;
   }
 
-  /** Raised spikes hurt whoever is standing on them; a shield is no use against the floor. */
+  /** Raised spikes hurt whoever is standing on them, once a rise; a shield is no use against the floor. */
   spikes() {
     if (!this.spikesUp()) return;
+    const rise = Math.floor((this.ctx.now() - this.floorAt) / (SPIKES.downMs + SPIKES.upMs));
     this.heroes.forEach((h, slot) => {
-      if (!h.downed && this.map[Math.floor(h.y)][Math.floor(h.x)] === '^') this.hurt(slot, SPIKES.damage, null);
+      if (h.downed || h.spikedRise === rise || this.map[Math.floor(h.y)][Math.floor(h.x)] !== '^') return;
+      if (this.hurt(slot, SPIKES.damage, null)) h.spikedRise = rise;
     });
   }
 

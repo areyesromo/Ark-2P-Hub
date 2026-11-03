@@ -345,6 +345,53 @@ test('a gate is open only while someone stands on a plate (or in the gateway); i
   assert.equal(e.hp, ENEMIES.slime.hp, 'the bolt hit the gate');
 });
 
+test('the gate opens while one of you is down, so you can always get to each other (and an enemy in the gateway holds it)', () => {
+  const { ctx, g } = dungeon({ floors: room([
+    '####################',
+    '#S S  P  #         #',
+    '#        G         #',
+    ...Array(8).fill('#        #         #'),
+    '####################',
+  ]) });
+  const gate = find(g, 'G');
+  put(g, 0, gate[0] - 2, gate[1]);
+  put(g, 1, gate[0] + 2, gate[1]);
+  ctx.advance(TICK * 2);
+  assert.equal(g.hostView().gateOpen, false);
+  g.hurt(1, 99, null);
+  ctx.advance(TICK * 2);
+  assert.equal(g.hostView().gateOpen, true, 'open: your partner is down on the other side');
+  g.onInput(0, { type: 'move', x: 1, y: 0 });
+  ctx.advance(1500);
+  assert.ok(g.heroes[0].x > gate[0] + 1, 'through to them');
+  g.onInput(0, { type: 'move', x: 0, y: 0 });
+  ctx.advance(TIMING.reviveMs + 200);
+  assert.equal(g.heroes[1].downed, false, 'revived');
+  ctx.advance(TICK * 2);
+  assert.equal(g.hostView().gateOpen, false, 'shut again');
+  // An enemy standing in the gateway keeps it open.
+  put(g, 0, 6, 1);
+  ctx.advance(TICK * 2);
+  assert.equal(g.hostView().gateOpen, true);
+  const e = g.spawnEnemy('slime', gate[0] + 0.5, gate[1] + 0.5);
+  e.speed = 0;
+  put(g, 0, 2, 8);
+  put(g, 1, 3, 8);
+  ctx.advance(TICK * 2);
+  assert.equal(g.hostView().gateOpen, true, 'not shut on the slime');
+});
+
+test('raised spikes cost one heart a rise, however long you stand on them', () => {
+  const { ctx, g } = dungeon({ floors: room(['####################', '#S S   ^           #', ...Array(9).fill('#                  #'), '####################']) });
+  const spike = find(g, '^');
+  put(g, 1, 17, 9);
+  while (g.spikesUp()) ctx.advance(TICK);
+  put(g, 0, spike[0], spike[1]);
+  const hp = g.heroes[0].hp;
+  ctx.advance(SPIKES.downMs + SPIKES.upMs - TICK);
+  assert.equal(g.heroes[0].hp, hp - 1);
+});
+
 test('skeletons keep their distance and throw bones when they can see you; the shield blocks a bone from the front', () => {
   const { ctx, g } = dungeon({ floors: room(['####################', '#S S               #', ...Array(9).fill('#                  #'), '####################']) });
   const fighter = g.heroes.findIndex((h) => h.role === 'fighter');
@@ -427,7 +474,6 @@ test('a held shield blocks an enemy pressing on it now and then (not every tick)
   s.x = 9.1;
   g.heroes[f].face = [1, 0];
   g.onInput(f, { type: 'special', on: true });
-  g.blockUntil = 0;
   g.heroes[f].blockUntil = 0;
   ctx.advance(TICK * 2);
   assert.ok(s.x > 9.4, 'knocked back');
