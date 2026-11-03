@@ -7,7 +7,9 @@
 // you're downed: your partner revives you by standing beside you for a moment. If you're both
 // down, it's back to the start of the floor, and that costs a continue; out of continues, the
 // quest is over. Keys open locked doors; both of you on the stairs (on your feet) and it's down
-// to the next floor. Stars at the end: for finishing, for few retries, and for a good time.
+// to the next floor. Further down: spikes that go up and down in turn, gates that only stay
+// open while one of you stands on a pressure plate, and skeletons that throw bones from a
+// distance (the shield blocks those too). Stars at the end: for finishing, for few retries, and for a good time.
 
 import { settingOf } from './options.js';
 import { FLOORS } from './dungeon-duo-floors.js';
@@ -20,13 +22,18 @@ export const HEROES = {
 export const ENEMIES = {
   slime: { hp: 3, speed: 1.3, damage: 1, aggro: 7 },
   bat: { hp: 1, speed: 2.6, damage: 1, aggro: 8 },
+  // Skeletons keep about `keepAway` from you and throw a bone now and then, if they can see you.
+  skeleton: { hp: 3, speed: 1.5, damage: 1, aggro: 8, keepAway: 3.5, throwEveryMs: 2000, boneSpeed: 5, boneMs: 2500 },
 };
+/** Spikes: down for a while, then up (and hurting) for a moment, all together. */
+export const SPIKES = { downMs: 2000, upMs: 1000, damage: 1 };
 export const CONTINUES = [3, 5];
 export const TIMING = {
   tickMs: 1000 / 30,
   sendEvery: 2,
   countdownMs: 3000,
   invulnMs: 900,
+  blockMs: 400, // after a block, the shield holds against the next hit from the front for free
   reviveMs: 2000,
   circleMs: 4000,
   retryMs: 2500,
@@ -35,9 +42,9 @@ export const TIMING = {
 };
 const R = 0.3; // half a hero's (or enemy's) width
 const TOUCH = 0.65; // an enemy this close hurts
+const KNOCKBACK = 0.6; // how far the shield shoves an enemy
 const REVIVE_RANGE = 1.2;
-const SOLID = new Set(['#', 'D', 'G']);
-const ENEMY_LETTERS = { s: 'slime', b: 'bat' };
+const ENEMY_LETTERS = { s: 'slime', b: 'bat', k: 'skeleton' };
 
 /** Stars for a quest: finishing, few retries (one at most), and a good time. */
 export function starsFor({ won, retries, ms, par }) {
@@ -61,10 +68,11 @@ export class DungeonDuo {
     this.retries = 0;
     this.floor = 0;
     this.won = false;
-    this.events = { hits: 0, kills: 0, hurt: 0, blocked: 0, heals: 0, downs: 0, revives: 0, keys: 0, doors: 0 };
+    this.events = { hits: 0, kills: 0, hurt: 0, blocked: 0, heals: 0, downs: 0, revives: 0, keys: 0, doors: 0, thrown: 0 };
     this.startedAt = null;
     this.finishedMs = 0;
     this.controls = [{ x: 0, y: 0, special: false }, { x: 0, y: 0, special: false }];
+    this.nextId = 1; // never restarted mid-quest: the TV knows enemies by id
     this.load();
     this.enter('countdown', TIMING.countdownMs);
     this.loop();
@@ -76,9 +84,11 @@ export class DungeonDuo {
     this.map = f.map.map((row) => row.split(''));
     this.enemies = [];
     this.shots = [];
+    this.bones = [];
     this.circles = [];
     this.keys = 0;
-    this.nextId = 1;
+    this.gateOpen = false;
+    this.floorAt = this.ctx.now(); // the spikes' rhythm starts here
     const starts = [];
     this.map.forEach((row, y) => row.forEach((c, x) => {
       if (c === 'S') starts.push([x + 0.5, y + 0.5]);
@@ -88,13 +98,13 @@ export class DungeonDuo {
     const roles = this.swap ? ['healer', 'fighter'] : ['fighter', 'healer'];
     this.heroes = roles.map((role, slot) => {
       const max = HEROES[role].hp[this.easy ? 1 : 0];
-      return { role, x: starts[slot][0], y: starts[slot][1], face: [0, 1], hp: max, max, downed: false, revive: 0, invulnUntil: 0, readyAt: 0, healAt: 0, blocking: false };
+      return { role, x: starts[slot][0], y: starts[slot][1], face: [0, 1], hp: max, max, downed: false, revive: 0, invulnUntil: 0, blockUntil: 0, readyAt: 0, healAt: 0, blocking: false };
     });
   }
 
   spawnEnemy(kind, x, y) {
     const def = ENEMIES[kind];
-    const e = { id: this.nextId++, kind, x, y, hp: def.hp, max: def.hp, speed: def.speed, hurtUntil: 0, wobble: this.rng() * Math.PI * 2 };
+    const e = { id: this.nextId++, kind, x, y, hp: def.hp, max: def.hp, speed: def.speed, hurtUntil: 0, wobble: this.rng() * Math.PI * 2, throwAt: this.ctx.now() + (def.throwEveryMs || 0) / 2 };
     this.enemies.push(e);
     return e;
   }
@@ -143,9 +153,12 @@ export class DungeonDuo {
       return;
     }
     if (this.phase !== 'play') return;
+    this.updateGate();
     this.heroes.forEach((h, slot) => this.walkHero(h, this.controls[slot], dt));
-    this.moveEnemies(dt);
+    this.moveEnemies(dt, now);
     this.moveShots(dt, now);
+    this.moveBones(dt, now);
+    this.spikes();
     this.heal(now);
     this.touches(now);
     this.revives(dt);
@@ -157,7 +170,41 @@ export class DungeonDuo {
 
   solid(x, y) {
     const row = this.map[Math.floor(y)];
-    return !row || SOLID.has(row[Math.floor(x)]);
+    if (!row) return true;
+    const c = row[Math.floor(x)];
+    return c === '#' || c === 'D' || (c === 'G' && !this.gateOpen) || c === undefined;
+  }
+
+  /** The tiles a body's corners are on. */
+  corners(b) {
+    const E = 1e-6;
+    return [[b.x - R, b.y - R], [b.x + R - E, b.y - R], [b.x - R, b.y + R - E], [b.x + R - E, b.y + R - E]].map(([x, y]) => (this.map[Math.floor(y)] || [])[Math.floor(x)]);
+  }
+
+  /** Gates stand open while a hero is on a plate, and don't shut on anyone still in the gateway. */
+  updateGate() {
+    const onPlate = this.heroes.some((h) => this.map[Math.floor(h.y)][Math.floor(h.x)] === 'P');
+    const inGate = this.gateOpen && [...this.heroes, ...this.enemies].some((b) => this.corners(b).includes('G'));
+    this.gateOpen = onPlate || inGate;
+  }
+
+  spikesUp() {
+    return (this.ctx.now() - this.floorAt) % (SPIKES.downMs + SPIKES.upMs) >= SPIKES.downMs;
+  }
+
+  /** Raised spikes hurt whoever is standing on them; a shield is no use against the floor. */
+  spikes() {
+    if (!this.spikesUp()) return;
+    this.heroes.forEach((h, slot) => {
+      if (!h.downed && this.map[Math.floor(h.y)][Math.floor(h.x)] === '^') this.hurt(slot, SPIKES.damage, null);
+    });
+  }
+
+  /** Nothing solid on the straight line between two points. */
+  canSee(ax, ay, bx, by) {
+    const steps = Math.ceil(Math.hypot(bx - ax, by - ay) / 0.25);
+    for (let i = 1; i < steps; i++) if (this.solid(ax + ((bx - ax) * i) / steps, ay + ((by - ay) * i) / steps)) return false;
+    return true;
   }
 
   blocked(x, y) {
@@ -215,16 +262,29 @@ export class DungeonDuo {
     return best;
   }
 
-  moveEnemies(dt) {
+  moveEnemies(dt, now) {
     for (const e of this.enemies) {
       const def = ENEMIES[e.kind];
       const h = this.nearestHero(e.x, e.y, def.aggro);
-      if (!h || !e.speed) continue;
+      if (!h) continue;
       let dx = h.x - e.x;
       let dy = h.y - e.y;
       const len = Math.hypot(dx, dy) || 1;
       dx /= len;
       dy /= len;
+      if (e.kind === 'skeleton') {
+        if (now >= e.throwAt && this.canSee(e.x, e.y, h.x, h.y)) {
+          e.throwAt = now + def.throwEveryMs;
+          this.bones.push({ x: e.x + dx * 0.4, y: e.y + dy * 0.4, vx: dx * def.boneSpeed, vy: dy * def.boneSpeed, damage: def.damage, until: now + def.boneMs });
+          this.events.thrown++;
+        }
+        // Back off when you get close, come closer when you're far, otherwise hold still.
+        const way = len < def.keepAway ? -1 : len > def.keepAway + 1.5 ? 1 : 0;
+        const d = (e.speed * dt) / 1000;
+        if (way && d) this.slide(e, dx * d * way, dy * d * way);
+        continue;
+      }
+      if (!e.speed) continue;
       if (e.kind === 'bat') {
         // Bats flutter: a wobble across the way they fly.
         e.wobble += dt / 180;
@@ -256,6 +316,23 @@ export class DungeonDuo {
     this.shots = keep;
   }
 
+  /** Bones fly until they hit a hero (who might block it), a wall, or run out. */
+  moveBones(dt, now) {
+    const keep = [];
+    for (const b of this.bones) {
+      b.x += (b.vx * dt) / 1000;
+      b.y += (b.vy * dt) / 1000;
+      if (now >= b.until || this.solid(b.x, b.y)) continue;
+      const slot = this.heroes.findIndex((h) => !h.downed && Math.hypot(h.x - b.x, h.y - b.y) < 0.45);
+      if (slot >= 0) {
+        this.hurt(slot, b.damage, [b.x - b.vx, b.y - b.vy]); // from where it was thrown
+        continue;
+      }
+      keep.push(b);
+    }
+    this.bones = keep;
+  }
+
   damageEnemy(e, damage, now) {
     e.hp -= damage;
     e.hurtUntil = now + 200;
@@ -283,7 +360,13 @@ export class DungeonDuo {
   touches() {
     for (const e of this.enemies) {
       this.heroes.forEach((h, slot) => {
-        if (!h.downed && Math.hypot(h.x - e.x, h.y - e.y) < TOUCH) this.hurt(slot, ENEMIES[e.kind].damage, [e.x, e.y]);
+        if (h.downed || Math.hypot(h.x - e.x, h.y - e.y) >= TOUCH) return;
+        if (this.hurt(slot, ENEMIES[e.kind].damage, [e.x, e.y]) !== 'blocked') return;
+        // Shoved back off the shield.
+        const dx = e.x - h.x;
+        const dy = e.y - h.y;
+        const len = Math.hypot(dx, dy) || 1;
+        this.slide(e, (dx / len) * KNOCKBACK, (dy / len) * KNOCKBACK);
       });
     }
   }
@@ -291,6 +374,7 @@ export class DungeonDuo {
   /**
    * Hero `slot` takes `damage` from point `from` (null: from nowhere in particular). A Fighter
    * holding the shield blocks anything from in front; after a hit, a moment before the next.
+   * Gives 'hurt', 'blocked', or nothing (it didn't count).
    */
   hurt(slot, damage, from) {
     const h = this.heroes[slot];
@@ -301,8 +385,10 @@ export class DungeonDuo {
       const dy = from[1] - h.y;
       const len = Math.hypot(dx, dy) || 1;
       if ((dx * h.face[0] + dy * h.face[1]) / len > 0.35) {
+        if (now < h.blockUntil) return 'blocked'; // still braced from the last one: no fuss
+        h.blockUntil = now + TIMING.blockMs;
         this.events.blocked++;
-        return;
+        return 'blocked';
       }
     }
     h.hp = Math.max(0, h.hp - damage);
@@ -314,6 +400,7 @@ export class DungeonDuo {
       h.blocking = false;
       this.events.downs++;
     }
+    return 'hurt';
   }
 
   /** A downed hero comes back once their partner has stood beside them long enough. */
@@ -392,8 +479,10 @@ export class DungeonDuo {
 
   special(slot, on) {
     const h = this.heroes[slot];
+    const was = this.controls[slot].special;
     this.controls[slot].special = on;
     if (h.role === 'fighter') {
+      if (on === was) return;
       h.blocking = on && !h.downed;
       return this.ctx.update();
     }
@@ -409,9 +498,9 @@ export class DungeonDuo {
     if (input.type === 'rematch' && this.phase === 'over') return this.start();
     const ctl = this.controls[slot];
     if (input.type === 'move') {
-      let x = Number(input.x);
-      let y = Number(input.y);
-      if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+      let x = input.x;
+      let y = input.y;
+      if (typeof x !== 'number' || typeof y !== 'number' || !Number.isFinite(x) || !Number.isFinite(y)) return;
       const len = Math.hypot(x, y);
       if (len > 1) {
         x /= len;
@@ -450,6 +539,9 @@ export class DungeonDuo {
       })),
       enemies: this.enemies.map((e) => ({ id: e.id, kind: e.kind, x: r2(e.x), y: r2(e.y), hp: e.hp, max: e.max, hurt: now < e.hurtUntil })),
       shots: this.shots.map((s) => ({ x: r2(s.x), y: r2(s.y) })),
+      bones: this.bones.map((b) => ({ x: r2(b.x), y: r2(b.y) })),
+      spikesUp: this.spikesUp(),
+      gateOpen: this.gateOpen,
       circles: this.circles.map((c) => ({ x: r2(c.x), y: r2(c.y), r: c.r, left: r2((c.until - now) / TIMING.circleMs) })),
       keys: this.keys,
       continues: this.continues,

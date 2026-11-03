@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
-import { DungeonDuo, HEROES, ENEMIES, TIMING, CONTINUES, starsFor } from '../server/games/dungeon-duo.js';
+import { DungeonDuo, HEROES, ENEMIES, TIMING, CONTINUES, SPIKES, starsFor } from '../server/games/dungeon-duo.js';
 import { FLOORS } from '../server/games/dungeon-duo-floors.js';
 import { getGame } from '../server/games/index.js';
 
@@ -42,8 +42,8 @@ test('every floor is 20 × 12, walled in, with two starts; on each, every key, d
     for (const row of f.map) assert.equal(row.length, 20, f.name + ': ' + row);
     assert.ok(f.map[0].split('').every((c) => c === '#') && f.map[11].split('').every((c) => c === '#'));
     assert.equal(f.map.join('').split('S').length - 1, 2, 'two starts');
-    // Walk from the start: through doors only if a key has been found first.
-    const walk = (open) => {
+    // Walk from the start, through doors and gates only when told to.
+    const walk = (doors, gates) => {
       const seen = new Set();
       const [sx, sy] = (() => { for (let y = 0; y < 12; y++) { const x = f.map[y].indexOf('S'); if (x >= 0) return [x, y]; } })();
       const todo = [[sx, sy]];
@@ -53,19 +53,23 @@ test('every floor is 20 × 12, walled in, with two starts; on each, every key, d
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const c = f.map[y + dy][x + dx];
           const k = x + dx + ',' + (y + dy);
-          if (seen.has(k) || c === '#' || (!open && (c === 'D' || c === 'G'))) continue;
+          if (seen.has(k) || c === '#' || (!doors && c === 'D') || (!gates && c === 'G')) continue;
           seen.add(k);
           todo.push([x + dx, y + dy]);
         }
       }
       return seen;
     };
-    const shut = walk(false);
-    const open = walk(true);
+    const shut = walk(false, false);
+    const gated = walk(false, true);
+    const open = walk(true, true);
     f.map.forEach((row, y) => [...row].forEach((c, x) => {
-      if ('KP'.includes(c)) assert.ok(shut.has(x + ',' + y), f.name + ': ' + c + ' reachable before any door');
+      if (c === 'P') assert.ok(shut.has(x + ',' + y) || gated.has(x + ',' + y), f.name + ': a plate reachable');
+      if (c === 'K') assert.ok(gated.has(x + ',' + y), f.name + ': the key reachable before any door');
       if (c === 'E' || c === 'W') assert.ok(open.has(x + ',' + y), f.name + ': ' + c + ' reachable');
     }));
+    // A gate needs a plate on the side you start, so one of you can hold it open.
+    if (f.map.join('').includes('G')) assert.ok(f.map.some((row, y) => [...row].some((c, x) => c === 'P' && shut.has(x + ',' + y))), f.name + ': a plate before the gate');
     const keys = f.map.join('').split('K').length - 1;
     const doors = f.map.join('').split('D').length - 1;
     assert.ok(keys >= doors, f.name + ': a key for every door');
@@ -274,6 +278,213 @@ test('the last floor cleared: the quest is won, with stars for finishing, few re
   assert.equal(g.floor, 0);
 });
 
+test('spikes go up and down in turn: stepping on them while they\'re up hurts, and the shield doesn\'t help', () => {
+  const { ctx, g } = dungeon({ floors: room(['####################', '#S S   ^           #', ...Array(9).fill('#                  #'), '####################']) });
+  const spike = find(g, '^');
+  put(g, 1, 17, 9);
+  // Wait until they're down, then stand on them.
+  while (g.spikesUp()) ctx.advance(TICK);
+  put(g, 0, spike[0], spike[1]);
+  g.onInput(0, { type: 'special', on: true });
+  const hp = g.heroes[0].hp;
+  ctx.advance(TICK * 2);
+  assert.equal(g.heroes[0].hp, hp, 'safe while down');
+  assert.equal(g.hostView().spikesUp, false);
+  ctx.advance(SPIKES.downMs);
+  assert.equal(g.hostView().spikesUp, true);
+  assert.ok(g.heroes[0].hp < hp, 'hurt once they come up, shield or not');
+  // Off them: no more harm.
+  put(g, 0, spike[0] + 3, spike[1]);
+  g.heroes[0].invulnUntil = 0;
+  const hp2 = g.heroes[0].hp;
+  ctx.advance(SPIKES.upMs);
+  assert.equal(g.heroes[0].hp, hp2);
+});
+
+test('a gate is open only while someone stands on a plate (or in the gateway); it stops enemies and bolts too', () => {
+  const { ctx, g } = dungeon({ floors: room([
+    '####################',
+    '#S S  P  #         #',
+    '#        G         #',
+    ...Array(8).fill('#        #         #'),
+    '####################',
+  ]) });
+  const gate = find(g, 'G');
+  const plate = find(g, 'P');
+  // Shut: you can't walk through.
+  put(g, 0, gate[0] - 1, gate[1]);
+  put(g, 1, 2, 6);
+  g.onInput(0, { type: 'move', x: 1, y: 0 });
+  ctx.advance(500);
+  assert.ok(g.heroes[0].x < gate[0], 'blocked by the gate');
+  assert.equal(g.hostView().gateOpen, false);
+  // A partner on the plate: open.
+  put(g, 1, plate[0], plate[1]);
+  ctx.advance(TICK * 2);
+  assert.equal(g.hostView().gateOpen, true);
+  // Halfway through the gateway when the partner steps off: it waits for you.
+  g.onInput(0, { type: 'move', x: 0, y: 0 });
+  put(g, 0, gate[0], gate[1]);
+  put(g, 1, 2, 6);
+  ctx.advance(TICK * 2);
+  assert.equal(g.hostView().gateOpen, true, 'not shut on someone');
+  put(g, 0, gate[0] + 2, gate[1]);
+  ctx.advance(TICK * 2);
+  assert.equal(g.hostView().gateOpen, false, 'shut once clear');
+  // Shut, it stops enemies and bolts.
+  const s = g.spawnEnemy('slime', gate[0] - 1.5, gate[1] + 0.5);
+  ctx.advance(3000);
+  assert.ok(s.x < gate[0], 'the slime stays behind it');
+  const healer = g.heroes.findIndex((h) => h.role === 'healer');
+  put(g, healer, gate[0] + 2, gate[1], -1, 0);
+  g.enemies = [];
+  const e = g.spawnEnemy('slime', gate[0] - 1.5, gate[1] + 0.5);
+  e.speed = 0;
+  g.attack(healer);
+  ctx.advance(1500);
+  assert.equal(e.hp, ENEMIES.slime.hp, 'the bolt hit the gate');
+});
+
+test('skeletons keep their distance and throw bones when they can see you; the shield blocks a bone from the front', () => {
+  const { ctx, g } = dungeon({ floors: room(['####################', '#S S               #', ...Array(9).fill('#                  #'), '####################']) });
+  const fighter = g.heroes.findIndex((h) => h.role === 'fighter');
+  const healer = 1 - fighter;
+  put(g, healer, 17, 10);
+  put(g, fighter, 5, 5, 1, 0);
+  const k = g.spawnEnemy('skeleton', 6.5, 5.5);
+  ctx.advance(1500);
+  assert.ok(Math.hypot(k.x - g.heroes[fighter].x, k.y - g.heroes[fighter].y) > 2.5, 'it backed off');
+  // It throws: hurt with no shield...
+  k.x = 9.5; k.y = 5.5; k.speed = 0;
+  g.heroes[fighter].invulnUntil = 0;
+  const hp = g.heroes[fighter].hp;
+  ctx.advance(ENEMIES.skeleton.throwEveryMs + 1500);
+  assert.ok(g.hostView().events.thrown > 0, 'it threw');
+  assert.ok(g.heroes[fighter].hp < hp, 'a bone hit');
+  // ...and blocked when facing it with the shield up.
+  g.heroes[fighter].invulnUntil = 0;
+  g.heroes[fighter].hp = g.heroes[fighter].max;
+  put(g, fighter, 5, 5, 1, 0);
+  g.onInput(fighter, { type: 'special', on: true });
+  const blocked = g.events.blocked;
+  ctx.advance(ENEMIES.skeleton.throwEveryMs + 1500);
+  assert.equal(g.heroes[fighter].hp, g.heroes[fighter].max);
+  assert.ok(g.events.blocked > blocked);
+  // Bones show on the TV while they fly.
+  assert.ok(Array.isArray(g.hostView().bones));
+});
+
+test('a skeleton behind a wall can\'t see you, so it doesn\'t throw', () => {
+  const { ctx, g } = dungeon({ floors: room([
+    '####################',
+    '#S S     #         #',
+    ...Array(9).fill('#        #         #'),
+    '####################',
+  ]) });
+  put(g, 0, 5, 5);
+  put(g, 1, 4, 8);
+  const k = g.spawnEnemy('skeleton', 12.5, 5.5);
+  k.speed = 0;
+  ctx.advance(ENEMIES.skeleton.throwEveryMs * 3);
+  assert.equal(g.events.thrown, 0);
+});
+
+test('the Crypt (floor 2) has the spikes, the plates and gate, and skeletons', () => {
+  const crypt = FLOORS[1].map.join('');
+  assert.equal(FLOORS[1].name, 'The Crypt');
+  for (const c of '^PGk') assert.ok(crypt.includes(c), c);
+  const { ctx, g } = dungeon();
+  g.floor = 1;
+  g.load();
+  assert.ok(g.enemies.some((e) => e.kind === 'skeleton'));
+  assert.ok(find(g, 'G') && find(g, 'P'), 'plates and gates stay on the map');
+  ctx.advance(TICK);
+});
+
+test('enemy ids never repeat from one floor (or retry) to the next, so the TV never mixes them up', () => {
+  const two = room(['####################', '#S S  b s          #', ...Array(9).fill('#                  #'), '####################'])
+    .concat(room(['####################', '#S S  s b          #', ...Array(9).fill('#                  #'), '####################']));
+  const { g } = dungeon({ floors: two });
+  const first = g.enemies.map((e) => e.id);
+  g.floor = 1;
+  g.load();
+  assert.ok(g.enemies.every((e) => !first.includes(e.id)));
+});
+
+test('a held shield blocks an enemy pressing on it now and then (not every tick), and pushes it back', () => {
+  const { ctx, g } = dungeon({ floors: room(['####################', '#S S               #', ...Array(9).fill('#                  #'), '####################']) });
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  put(g, 1 - f, 17, 10);
+  put(g, f, 8, 5, 1, 0);
+  g.onInput(f, { type: 'special', on: true });
+  const s = g.spawnEnemy('slime', 9.1, 5.5);
+  ctx.advance(3000);
+  assert.equal(g.heroes[f].hp, g.heroes[f].max);
+  assert.ok(g.events.blocked >= 2 && g.events.blocked <= 3000 / TIMING.blockMs + 1, 'blocked ' + g.events.blocked);
+  // Pushed back each time: it never gets to sit on the shield.
+  g.onInput(f, { type: 'special', on: false });
+  s.speed = 0;
+  s.x = 9.1;
+  g.heroes[f].face = [1, 0];
+  g.onInput(f, { type: 'special', on: true });
+  g.blockUntil = 0;
+  g.heroes[f].blockUntil = 0;
+  ctx.advance(TICK * 2);
+  assert.ok(s.x > 9.4, 'knocked back');
+});
+
+test('the shield slows you while it\'s up', () => {
+  const { ctx, g } = dungeon({ floors: room(['####################', '#S S               #', ...Array(9).fill('#                  #'), '####################']) });
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  put(g, f, 2, 5);
+  g.onInput(f, { type: 'move', x: 1, y: 0 });
+  ctx.advance(1000);
+  const free = g.heroes[f].x - 2.5;
+  put(g, f, 2, 7);
+  g.onInput(f, { type: 'special', on: true });
+  ctx.advance(1000);
+  const slow = g.heroes[f].x - 2.5;
+  assert.ok(Math.abs(free - HEROES.fighter.speed) < 0.3, 'free ' + free);
+  assert.ok(Math.abs(slow - HEROES.fighter.blockSpeed) < 0.3, 'slow ' + slow);
+});
+
+test('the revive starts over if your partner walks away', () => {
+  const { ctx, g } = dungeon({ floors: room(['####################', '#S S               #', ...Array(9).fill('#                  #'), '####################']) });
+  put(g, 0, 5, 5);
+  put(g, 1, 6, 5);
+  g.hurt(0, 99, null);
+  ctx.advance(TIMING.reviveMs * 0.75);
+  assert.ok(g.heroes[0].revive > 0);
+  put(g, 1, 12, 5);
+  ctx.advance(TICK * 2);
+  assert.equal(g.heroes[0].revive, 0);
+  put(g, 1, 6, 5);
+  ctx.advance(TIMING.reviveMs * 0.75);
+  assert.equal(g.heroes[0].downed, true, 'not yet: it started over');
+});
+
+test('a rematch starts the quest over: continues, retries, the clock and the events all fresh', () => {
+  const { ctx, g } = dungeon({ floors: room(['####################', '#S S               #', ...Array(9).fill('#                  #'), '####################']) });
+  for (let i = 0; i <= CONTINUES[0]; i++) {
+    g.hurt(0, 99, null);
+    g.hurt(1, 99, null);
+    ctx.advance(TICK * 2);
+    if (g.phase === 'retry') ctx.advance(TIMING.retryMs + 50);
+  }
+  assert.equal(g.phase, 'over');
+  const v = g.hostView();
+  assert.ok(v.timeMs > 0, 'the time it took');
+  ctx.advance(5000);
+  assert.equal(g.hostView().timeMs, v.timeMs, 'the clock stopped');
+  g.onInput(0, { type: 'move', x: 1, y: 0 });
+  g.onInput(0, { type: 'rematch' });
+  assert.equal(g.continues, CONTINUES[0]);
+  assert.equal(g.retries, 0);
+  assert.equal(g.events.downs, 0);
+  assert.equal(g.hostView().timeMs, 0);
+  assert.deepEqual(g.controls[0], { x: 0, y: 0, special: false });
+});
+
 test('a controller sends its stick and SPECIAL together: the shield held, the circle on the press', () => {
   const { g } = dungeon();
   g.enemies = [];
@@ -294,8 +505,17 @@ test('bad input is ignored', () => {
   g.onInput(5, { type: 'attack' });
   g.onInput(0, { type: 'special', on: 'yes' });
   g.onInput(0, { type: 'rematch' });
+  g.onInput(0, { type: 'move', x: '1', y: true });
+  g.onInput(0, { type: 'move', x: NaN, y: 0 });
   assert.equal(g.phase, 'play');
   assert.equal(g.heroes[0].blocking, false);
+  assert.deepEqual(g.controls[0], { x: 0, y: 0, special: false });
+  // The same shield state again doesn't send everyone a new view.
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  g.onInput(f, { type: 'special', on: true });
+  const sent = g.ctx.updates;
+  g.onInput(f, { type: 'special', on: true });
+  assert.equal(g.ctx.updates, sent);
 });
 
 test('in the lobby: a co-op game (casual) with motion controls, the heroes and difficulty to pick', () => {

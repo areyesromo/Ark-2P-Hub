@@ -25,4 +25,24 @@ export const FLOORS = [
       '####################',
     ],
   },
+  {
+    name: 'The Crypt',
+    // You start shut in behind a gate: one stands on the plate while the other gets out, then
+    // the plate outside lets the first one through. Spikes guard the key and the way down;
+    // skeletons throw bones from a distance.
+    map: [
+      '####################',
+      '#SS  #  k    ^^   K#',
+      '#    #       ^^    #',
+      '# P  G   P   ^^  s #',
+      '#    #       ^^    #',
+      '#############^^#####',
+      '#  ^^^  #    ^^    #',
+      '#  ^^^  D      k   #',
+      '#       #          #',
+      '#  E    #  b    ^^ #',
+      '#       #       ^^ #',
+      '####################',
+    ],
+  },
 ];

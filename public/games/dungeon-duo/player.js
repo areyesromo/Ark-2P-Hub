@@ -62,7 +62,7 @@
     let status;
     if (v.phase === 'countdown') status = '<span class="big">' + (v.countdown || '') + '</span><br>You\'re the ' + (role === 'fighter' ? '🛡️ Fighter' : '✨ Healer');
     else if (v.phase === 'retry') status = '<span class="lost">You both went down: back to the start of the floor</span>';
-    else if (v.phase === 'floorClear') status = '<span class="won">Floor cleared! 🪜</span>';
+    else if (v.phase === 'floorClear') status = '<span class="won">Floor cleared! ⬇️</span>';
     else if (v.phase === 'over') status = '<span class="big">' + (v.won ? '⭐'.repeat(v.stars) : '💀') + '</span><br>' + (v.won ? 'Quest complete!' : 'Out of continues');
     else if (me.downed) status = '<span class="lost">You\'re down!</span> Your partner can revive you by standing beside you';
     else if (them.downed) status = '<span class="lost">Your partner is down!</span> Stand beside them to revive them';

@@ -1,6 +1,6 @@
 // Dungeon Duo on the TV, in 3D with three.js (served by the hub at /vendor/three/). The server
 // (server/games/dungeon-duo.js) runs everything; this draws the floor (walls, doors, keys, the
-// stairs), the two heroes in your colours, the enemies, bolts and healing circles, with a camera
+// stairs, spikes, plates and gates), the two heroes in your colours, the enemies, bolts and healing circles, with a camera
 // that follows you both. Kept light for a Raspberry Pi: no shadows, the walls drawn as one
 // instanced mesh, the floor as one textured plane.
 (function () {
@@ -65,7 +65,7 @@
     } else if (v.phase === 'retry') {
       html = '<div class="big">💀</div><div class="sub">You both went down. Back to the start of the floor (' + v.continues + ' continue' + (v.continues === 1 ? '' : 's') + ' left)</div>';
     } else if (v.phase === 'floorClear') {
-      html = '<div class="big">🪜</div><div class="sub">' + esc(v.floorName) + ' cleared!' + (v.floor + 1 < v.floors ? ' Down you go…' : '') + '</div>';
+      html = '<div class="big">⬇️</div><div class="sub">' + esc(v.floorName) + ' cleared!' + (v.floor + 1 < v.floors ? ' Down you go…' : '') + '</div>';
     } else if (v.phase === 'over') {
       html = '<div class="big">' + (v.won ? '⭐'.repeat(v.stars) : '💀') + '</div><div class="sub">' +
         (v.won ? 'Quest complete in ' + clock(v.timeMs) + (v.retries ? ' (' + v.retries + ' retr' + (v.retries === 1 ? 'y' : 'ies') + ')' : ', not one retry') : 'Out of continues: the dungeon wins this time') +
@@ -91,7 +91,7 @@
     const sun = new THREE.DirectionalLight(0xffffff, 1.4);
     sun.position.set(-5, 12, 6);
     scene.add(sun);
-    gl = { renderer: renderer, scene: scene, camera: camera, level: null, things: null, mapKey: '', heroes: null, enemies: {}, shots: [], circles: [], cam: { x: 0, z: 0, d: 10 } };
+    gl = { renderer: renderer, scene: scene, camera: camera, level: null, things: null, mapKey: '', heroes: null, enemies: {}, shots: [], bones: [], circles: [], cam: { x: 0, z: 0, d: 10 }, spikeY: -0.3, gateY: 0 };
   }
 
   function mat(color, extra) {
@@ -122,7 +122,10 @@
     gl.scene.remove(group);
     group.traverse(function (o) {
       if (o.geometry) o.geometry.dispose();
-      if (o.material && o.material.map) o.material.map.dispose();
+      if (o.material) {
+        if (o.material.map) o.material.map.dispose();
+        o.material.dispose();
+      }
     });
   }
 
@@ -158,6 +161,11 @@
     const W = gl.size.w;
     const H = gl.size.h;
     gl.keyMeshes = [];
+    gl.plates = [];
+    const spikes = [];
+    const gate = new THREE.Group(); // every gate's bars, raised and lowered together
+    const plateMat = mat(0x78716c, { emissive: 0x000000 });
+    const barMat = mat(0x9ca3af, { metalness: 0.7, roughness: 0.35 });
     v.map.forEach(function (row, y) {
       for (let x = 0; x < W; x++) {
         const c = row[x];
@@ -190,9 +198,43 @@
           glow.rotation.x = -Math.PI / 2;
           glow.position.set(px, 0.08, pz);
           things.add(glow);
+        } else if (c === '^') {
+          spikes.push([px, pz]);
+          const pit = new THREE.Mesh(new THREE.PlaneGeometry(0.92, 0.92), mat(0x292524));
+          pit.rotation.x = -Math.PI / 2;
+          pit.position.set(px, 0.005, pz);
+          things.add(pit);
+        } else if (c === 'P') {
+          const plate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.7), plateMat);
+          plate.position.set(px, 0.025, pz);
+          things.add(plate);
+        } else if (c === 'G') {
+          for (let i = 0; i < 4; i++) {
+            const bar = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.04, WALL_H, 6), barMat);
+            // Bars across whichever way the gateway runs (walls above and below: bars across x).
+            const across = (v.map[y - 1] || '')[x] === '#';
+            bar.position.set(px + (across ? 0 : (i - 1.5) * 0.24), WALL_H / 2, pz + (across ? (i - 1.5) * 0.24 : 0));
+            gate.add(bar);
+          }
         }
       }
     });
+    // The spikes: four little cones a tile, one instanced mesh, raised and lowered as one.
+    const cone = new THREE.InstancedMesh(new THREE.ConeGeometry(0.1, 0.36, 6), mat(0xd6d3d1, { metalness: 0.6, roughness: 0.3 }), Math.max(1, spikes.length * 4));
+    cone.count = spikes.length * 4;
+    const m = new THREE.Matrix4();
+    spikes.forEach(function (p, i) {
+      for (let j = 0; j < 4; j++) {
+        m.makeTranslation(p[0] + (j % 2 ? 0.2 : -0.2), 0.18, p[1] + (j < 2 ? 0.2 : -0.2));
+        cone.setMatrixAt(i * 4 + j, m);
+      }
+    });
+    const spikeGroup = new THREE.Group();
+    spikeGroup.add(cone);
+    things.add(spikeGroup, gate);
+    gl.spikes = spikeGroup;
+    gl.gate = gate;
+    gl.plateMat = plateMat;
     gl.scene.add(things);
     gl.things = things;
   }
@@ -223,14 +265,21 @@
       g.add(staff, orb);
       parts.orb = orb;
     }
-    const reviveRing = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.5, 24, 1, 0, 0.01), new THREE.MeshBasicMaterial({ color: 0x86efac, side: THREE.DoubleSide }));
+    // The revive ring: the whole ring, drawn as far round as the revive has got (6 indices a segment).
+    const reviveRing = new THREE.Mesh(new THREE.RingGeometry(0.42, 0.5, 24, 1), new THREE.MeshBasicMaterial({ color: 0x86efac, side: THREE.DoubleSide }));
     reviveRing.rotation.x = -Math.PI / 2;
     reviveRing.position.y = 0.05;
     reviveRing.visible = false;
     parts.reviveRing = reviveRing;
     gl.scene.add(g, reviveRing);
     parts.shown = null;
+    parts.role = role;
     return parts;
+  }
+
+  function dropHero(p) {
+    disposeGroup(p.group);
+    disposeGroup(p.reviveRing);
   }
 
   function makeEnemy(kind) {
@@ -242,6 +291,20 @@
       blob.position.y = 0.22;
       g.add(blob);
       parts.body = blob;
+    } else if (kind === 'skeleton') {
+      const bone = mat(0xe7e5e4);
+      const body = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.55, 8), bone);
+      body.position.y = 0.3;
+      const skull = new THREE.Mesh(new THREE.SphereGeometry(0.15, 10, 8), bone);
+      skull.position.y = 0.72;
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0xef4444 });
+      const eyeGeo = new THREE.SphereGeometry(0.03, 6, 4);
+      const el = new THREE.Mesh(eyeGeo, eyeMat);
+      const er = new THREE.Mesh(eyeGeo, eyeMat);
+      el.position.set(-0.06, 0.74, 0.13);
+      er.position.set(0.06, 0.74, 0.13);
+      g.add(body, skull, el, er);
+      parts.body = body;
     } else {
       const body = new THREE.Mesh(new THREE.SphereGeometry(0.16, 10, 8), mat(0x7c3aed));
       const wingGeo = new THREE.BoxGeometry(0.34, 0.02, 0.18);
@@ -255,6 +318,14 @@
     }
     gl.scene.add(g);
     return parts;
+  }
+
+  /** Where the nearer of the two heroes is shown, from `p`. */
+  function nearer(p, heroes) {
+    const a = heroes[0].shown;
+    const b = heroes[1].shown;
+    const q = Math.hypot(a.x - p.x, a.z - p.z) <= Math.hypot(b.x - p.x, b.z - p.z) ? a : b;
+    return [q.x, q.z];
   }
 
   /** Tile coordinates to the scene's. */
@@ -273,7 +344,18 @@
       buildThings(v);
     }
     const k = Math.min(1, dt * 14);
+    // Built again if the roles were swapped in the setup since.
+    if (gl.heroes && gl.heroes.some(function (p, i) { return p.role !== v.heroes[i].role; })) {
+      gl.heroes.forEach(dropHero);
+      gl.heroes = null;
+    }
     if (!gl.heroes) gl.heroes = v.heroes.map(function (h, i) { return makeHero(h.role, colors[i]); });
+    // Spikes up or down, the gate's bars down while it's open, the plates lit.
+    gl.spikeY += ((v.spikesUp ? 0 : -0.3) - gl.spikeY) * Math.min(1, dt * 20);
+    if (gl.spikes) gl.spikes.position.y = gl.spikeY;
+    gl.gateY += ((v.gateOpen ? -WALL_H * 0.95 : 0) - gl.gateY) * Math.min(1, dt * 10);
+    if (gl.gate) gl.gate.position.y = gl.gateY;
+    if (gl.plateMat) gl.plateMat.emissive.setHex(v.gateOpen ? 0x166534 : 0x000000);
     v.heroes.forEach(function (h, i) {
       const p = gl.heroes[i];
       const [tx, tz] = at(h.x, h.y);
@@ -293,25 +375,29 @@
       if (p.orb) p.orb.scale.setScalar(h.swing ? 1.6 : 1);
       p.reviveRing.visible = h.downed && h.revive > 0;
       if (p.reviveRing.visible) {
-        p.reviveRing.geometry.dispose();
-        p.reviveRing.geometry = new THREE.RingGeometry(0.42, 0.5, 24, 1, 0, Math.max(0.01, h.revive * Math.PI * 2));
+        p.reviveRing.geometry.setDrawRange(0, Math.ceil(h.revive * 24) * 6);
         p.reviveRing.position.set(p.shown.x, 0.05, p.shown.z);
       }
     });
     // Enemies: made and removed as they come and go.
     const seen = {};
     v.enemies.forEach(function (e) {
-      seen[e.id] = true;
-      let p = gl.enemies[e.id];
-      if (!p) p = gl.enemies[e.id] = makeEnemy(e.kind);
+      const id = e.id + e.kind;
+      seen[id] = true;
+      let p = gl.enemies[id];
+      if (!p) p = gl.enemies[id] = makeEnemy(e.kind);
       const [tx, tz] = at(e.x, e.y);
-      if (!p.shown) p.shown = { x: tx, z: tz };
+      if (!p.shown || v.phase !== 'play') p.shown = { x: tx, z: tz }; // no gliding back across the walls on a retry
       p.shown.x += (tx - p.shown.x) * k;
       p.shown.z += (tz - p.shown.z) * k;
       if (e.kind === 'slime') {
         const bob = Math.sin(t / 180 + e.id);
         p.body.scale.set(1 + bob * 0.08, 0.65 - bob * 0.08, 1 + bob * 0.08);
         p.group.position.set(p.shown.x, 0, p.shown.z);
+      } else if (e.kind === 'skeleton') {
+        p.group.position.set(p.shown.x, 0, p.shown.z);
+        const [hx, hz] = gl.heroes[0].shown && gl.heroes[1].shown ? nearer(p.shown, gl.heroes) : [p.shown.x, p.shown.z + 1];
+        p.group.rotation.y = Math.atan2(hx - p.shown.x, hz - p.shown.z);
       } else {
         const flap = Math.sin(t / 60 + e.id);
         p.wings[0].rotation.z = flap * 0.7;
@@ -338,6 +424,20 @@
         const [x, z] = at(v.shots[i].x, v.shots[i].y);
         s.position.set(x, 0.5, z);
       }
+    });
+    // Bones: a pool of little white sticks, spinning.
+    const bones = v.bones || [];
+    while (gl.bones.length < bones.length) {
+      const b = new THREE.Mesh(new THREE.BoxGeometry(0.34, 0.07, 0.07), mat(0xf5f5f4));
+      gl.scene.add(b);
+      gl.bones.push(b);
+    }
+    gl.bones.forEach(function (b, i) {
+      b.visible = i < bones.length;
+      if (!b.visible) return;
+      const [x, z] = at(bones[i].x, bones[i].y);
+      b.position.set(x, 0.5, z);
+      b.rotation.y = t / 70;
     });
     while (gl.circles.length < v.circles.length) {
       const c = new THREE.Mesh(new THREE.CircleGeometry(1, 32), new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.3 }));
@@ -393,7 +493,7 @@
     view = v;
     if (!els) return;
     renderHud(v);
-    renderOverlay(v);
+    if (!els.failed) renderOverlay(v); // keep the reason on screen if the 3D couldn't start
   }
 
   // Controllers: the stick (or D-pad) walks; A attacks; hold B for the Fighter's shield, press it for the Healer's circle.
@@ -423,6 +523,7 @@
       else if (b.hits > a.hits) out.push('paddle');
       if (b.hurt > a.hurt) out.push('crash');
       if (b.blocked > a.blocked) out.push('lock');
+      if (b.thrown > a.thrown) out.push('whoosh');
       if (b.keys > a.keys || b.doors > a.doors) out.push('reveal');
       if (b.revives > a.revives) out.push('correct');
       return out;
@@ -450,11 +551,14 @@
         } catch (e) {
           els.overlay.innerHTML = '<div class="sub">3D isn\'t available: this browser couldn\'t start WebGL.</div>';
           els.overlay.classList.remove('hidden');
+          overlayKey = 'error';
+          els.failed = true;
         }
       }).catch(function () {
         if (!els) return;
         els.overlay.innerHTML = '<div class="sub">Couldn\'t load the 3D engine.</div>';
         els.overlay.classList.remove('hidden');
+        els.failed = true;
       });
       if (window.ResizeObserver) {
         fit = new ResizeObserver(resize);
