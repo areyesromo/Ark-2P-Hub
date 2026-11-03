@@ -99,6 +99,7 @@ export class RockPaperScissors {
 
 export default {
   id: 'rock-paper-scissors',
+  handheld: true, // everything's on your phone: no need to watch the TV
   music: 'thinking',
   name: 'Rock Paper Scissors',
   tagline: 'Pick in secret on your phone or controller. The TV reveals both. First to 3.',

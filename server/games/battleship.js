@@ -243,6 +243,7 @@ export class Battleship {
 
 export default {
   id: 'battleship',
+  handheld: true, // everything's on your phone: no need to watch the TV
   music: 'thinking',
   name: 'Battleship',
   tagline: 'Hide your fleet on your phone, then take turns firing at the enemy grid. Sink all 5 ships to win.',

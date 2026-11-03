@@ -345,6 +345,7 @@ export class WordRace {
 
 export default {
   id: 'word-race',
+  handheld: true, // everything's on your phone: no need to watch the TV
   phoneOnly: true, // you swipe words on the phone
   music: 'thinking',
   name: 'Word Race',

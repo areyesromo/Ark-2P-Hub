@@ -257,6 +257,7 @@ export class TriviaQuest {
 
 export default {
   id: 'trivia-quest',
+  handheld: true, // everything's on your phone: no need to watch the TV
   music: 'thinking',
   category: 'casual',
   name: 'Trivia Quest',

@@ -123,6 +123,7 @@ export class ReactionDuel {
 
 export default {
   id: 'reaction-duel',
+  handheld: true, // everything's on your phone: no need to watch the TV
   name: 'Reaction Duel',
   tagline: 'Wait for GO… then tap faster than your rival. Jump early and you lose the point.',
   create: (ctx) => new ReactionDuel(ctx),

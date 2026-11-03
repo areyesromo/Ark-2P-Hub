@@ -591,6 +591,7 @@ export class MiniGolf {
 
 export default {
   id: 'mini-golf',
+  handheld: true, // everything's on your phone: no need to watch the TV
   music: 'casual',
   name: 'Mini Golf',
   tagline: 'Same hole, same time: pull back and putt on your phone. Walls, bumpers, sand, water and a windmill. Fewest strokes wins.',

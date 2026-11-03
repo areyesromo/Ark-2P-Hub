@@ -272,6 +272,7 @@ export class CrazyEights {
 
 export default {
   id: 'crazy-eights',
+  handheld: true, // everything's on your phone: no need to watch the TV
   name: 'Crazy Eights',
   phoneOnly: true, // your hand is secret, on your phone
   tagline: 'Card game: match the top card\'s suit or rank, eights are wild (call the suit), 2s make them draw. First to empty their hand wins the hand.',

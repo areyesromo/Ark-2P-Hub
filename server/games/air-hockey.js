@@ -252,6 +252,7 @@ export class AirHockey {
 
 export default {
   id: 'air-hockey',
+  handheld: true, // everything's on your phone: no need to watch the TV
   name: 'Air Hockey',
   tagline: 'The whole table on your phone too: slide your mallet and smash the puck into their goal. First to 7.',
   create: (ctx) => new AirHockey(ctx),

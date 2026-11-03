@@ -38,7 +38,7 @@
 
     if (v.phase === 'countdown') {
       return '<div class="score">' + score + '</div><div class="qz-wait"><div class="big">' + (v.countdown || '') +
-        '</div><p>Get ready! Read the question on the TV and tap your answer here.</p></div>';
+        '</div><p>Get ready! The question shows here (and on the TV): tap your answer.</p></div>';
     }
     if (v.phase === 'over') {
       let cls = 'won';

@@ -195,6 +195,7 @@ export class MemoryMatch {
 
 export default {
   id: 'memory-match',
+  handheld: true, // everything's on your phone: no need to watch the TV
   name: 'Memory Match',
   tagline: 'Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins.',
   music: 'thinking',

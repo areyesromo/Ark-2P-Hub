@@ -60,7 +60,10 @@
     if (k === key) return;
     key = k;
     let html = '';
-    html += '<div class="ld-mine">' + (v.mine || []).map(function (d) { return ArkDice.html(d, v.wild && d === 1 ? 'wild' : ''); }).join('') + '</div>';
+    // At the reveal, the dice that counted for the bid stand out (yours here, theirs below).
+    const shown = v.result && v.hands;
+    const counted = function (d) { return d === v.result.bid.face || (v.wild && d === 1); };
+    html += '<div class="ld-mine' + (shown ? ' ld-theirs' : '') + '">' + (v.mine || []).map(function (d) { return ArkDice.html(d, shown ? (counted(d) ? 'wild' : 'dim') : v.wild && d === 1 ? 'wild' : ''); }).join('') + '</div>';
     html += '<p class="ld-info">Your dice · rival has ' + v.counts[1 - mine] + ' · ' + v.total + ' dice in play' + (v.wild ? ' · ones are wild' : '') + '</p>';
     if (v.phase === 'bidding') {
       html += '<div class="ld-current">' + (v.bid ? (v.bid.by === mine ? 'You bid ' : 'They bid ') + bidText(v.bid) : 'No bid yet') + '</div>';
@@ -80,6 +83,10 @@
       const r = v.result;
       html += '<div class="ld-current">' + (r.loser === mine ? '😬 You lose a die' : '😎 They lose a die') + '</div>' +
         '<p class="ld-info">There ' + (r.actual === 1 ? 'was' : 'were') + ' ' + r.actual + ' for a bid of ' + bidText(r.bid) + '</p>';
+      // Their cup lifted, here as on the TV: the dice that counted for the bid stand out.
+      if (v.hands) {
+        html += '<p class="ld-info">Their dice</p><div class="ld-mine ld-theirs">' + v.hands[1 - mine].map(function (d) { return ArkDice.html(d, counted(d) ? 'wild' : 'dim'); }).join('') + '</div>';
+      }
       if (v.phase === 'over') html += '<div class="ld-current big">' + (v.winner === mine ? 'You win! 🏆' : 'You lose') + '</div><button class="primary ld-rematch">Rematch</button>';
     }
     root.innerHTML = html;

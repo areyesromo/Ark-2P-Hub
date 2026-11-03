@@ -63,3 +63,6 @@
 .ld-explain .warn { color: var(--warn); }
 .ld-explain .bad { color: var(--bad); }
 .ld-hint { margin: 0; font-size: 0.9rem; color: var(--muted); }
+
+/* The rival's cup at the reveal: the dice that counted stand out. */
+.ld-theirs .die.dim { opacity: 0.4; }

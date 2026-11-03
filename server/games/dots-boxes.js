@@ -171,6 +171,7 @@ export class DotsBoxes {
 
 export default {
   id: 'dots-boxes',
+  handheld: true, // everything's on your phone: no need to watch the TV
   category: 'board',
   music: 'thinking',
   name: 'Dots and Boxes',

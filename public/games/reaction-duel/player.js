@@ -24,7 +24,7 @@
     const r = v.result;
     switch (v.phase) {
       case 'ready':
-        return { cls: '', big: 'Ready?', sub: 'Watch the TV. Tap anywhere here when it says GO.' };
+        return { cls: '', big: 'Ready?', sub: 'Tap anywhere here when it says GO (here or on the TV).' };
       case 'wait':
         return { cls: 'wait', big: 'Wait…', sub: "Don't tap yet!" };
       case 'go':

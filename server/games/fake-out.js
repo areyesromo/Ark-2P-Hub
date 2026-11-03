@@ -296,6 +296,7 @@ export class FakeOut {
 
 export default {
   id: 'fake-out',
+  handheld: true, // everything's on your phone: no need to watch the TV
   music: 'thinking',
   name: 'Fake Out',
   phoneOnly: true, // you each write a secret fake answer on your phone

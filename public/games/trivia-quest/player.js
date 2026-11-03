@@ -45,7 +45,7 @@
   function render(v) {
     if (v.phase === 'intro' || v.phase === 'defeated') {
       const text = v.phase === 'intro'
-        ? '<strong>' + esc(v.monster.name) + '</strong> blocks the way! Watch the TV.'
+        ? '<strong>' + esc(v.monster.name) + '</strong> blocks the way!'
         : '<strong>' + esc(v.monster.name) + '</strong> is beaten! ' + '⭐'.repeat(v.beaten[v.beaten.length - 1]);
       return status(v) + '<div class="qz-wait"><div class="big">' + v.monster.emoji + '</div><p>' + text + '</p></div>';
     }

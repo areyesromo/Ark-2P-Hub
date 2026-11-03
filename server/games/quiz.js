@@ -190,6 +190,7 @@ export class QuizBattle {
 
 export default {
   id: 'quiz',
+  handheld: true, // everything's on your phone: no need to watch the TV
   music: 'thinking',
   name: 'Quiz Battle',
   tagline: '10 trivia questions. Answer on your phone or controller; right and fast scores more. Most points wins.',

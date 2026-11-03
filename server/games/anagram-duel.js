@@ -170,6 +170,7 @@ export class AnagramDuel {
 
 export default {
   id: 'anagram-duel',
+  handheld: true, // everything's on your phone: no need to watch the TV
   phoneOnly: true, // the letters you pick are private
   music: 'thinking',
   name: 'Anagram Duel',
