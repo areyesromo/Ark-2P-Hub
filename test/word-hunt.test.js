@@ -97,3 +97,62 @@ test('only straight lines on the grid count; bad input is ignored', () => {
   assert.deepEqual(g.hostView().nope, [0, 0]);
   assert.equal(new WordHunt(fakeCtx(), Math.random).size, 'medium');
 });
+
+test('Race: your own board each; you can both find the same word, and you only see your own finds', () => {
+  const { g } = game({ mode: 'race' });
+  const [p, q] = g.placed;
+  g.onInput(0, { type: 'mark', a: p.a, b: p.b });
+  g.onInput(1, { type: 'mark', a: p.b, b: p.a });
+  g.onInput(1, { type: 'mark', a: q.a, b: q.b });
+  assert.deepEqual(g.hostView().counts, [1, 2]);
+  const mine = g.playerView(0);
+  assert.equal(mine.mode, 'race');
+  assert.deepEqual(mine.found, [{ a: p.a, b: p.b, slot: 0 }]);
+  assert.equal(mine.words.find((w) => w.word === p.word).by, 0);
+  assert.equal(mine.words.find((w) => w.word === q.word).by, null, 'their find stays off your list');
+  // The TV only has the counts while you play, not which words or where.
+  const tv = g.hostView();
+  assert.deepEqual(tv.found, []);
+  assert.ok(tv.words.every((w) => w.by === null));
+  // Marking the same word again does nothing.
+  g.onInput(0, { type: 'mark', a: p.a, b: p.b });
+  assert.deepEqual(g.hostView().counts, [1, 2]);
+});
+
+test('Race: the first to find every word takes the grid; then all the finds are shown', () => {
+  const { g } = game({ mode: 'race', size: 'small', wins: 2 });
+  const all = g.placed.slice();
+  // Player 1 gets more than half first: in Race that doesn't end it.
+  for (const p of all.slice(0, 5)) g.onInput(0, { type: 'mark', a: p.a, b: p.b });
+  assert.equal(g.phase, 'play');
+  for (const p of all) g.onInput(1, { type: 'mark', a: p.a, b: p.b });
+  assert.equal(g.phase, 'result');
+  assert.equal(g.result.winner, 1);
+  assert.deepEqual(g.scores, [0, 1]);
+  const tv = g.hostView();
+  assert.equal(tv.found.length, 5 + all.length, 'everyone\'s finds, now it\'s over');
+  assert.deepEqual(tv.result.words, [5, all.length]);
+});
+
+test('Race: time up, more words takes the grid', () => {
+  const { ctx, g } = game({ mode: 'race' });
+  const [p, q] = g.placed;
+  g.onInput(0, { type: 'mark', a: p.a, b: p.b });
+  g.onInput(0, { type: 'mark', a: q.a, b: q.b });
+  g.onInput(1, { type: 'mark', a: p.a, b: p.b });
+  ctx.advance(TIMING.gridMs);
+  assert.equal(g.result.winner, 0);
+});
+
+test('Race: a controller player only has the TV, so the TV shows their finds (and never a phone player\'s)', () => {
+  const ctx = fakeCtx();
+  ctx.settings = { mode: 'race' };
+  ctx.players = [{ name: 'Phone' }, { name: 'Pad', local: true }];
+  const g = new WordHunt(ctx, seeded(4));
+  g.start();
+  ctx.advance(TIMING.countdownMs);
+  const [p, q] = g.placed;
+  g.onInput(0, { type: 'mark', a: p.a, b: p.b });
+  g.onInput(1, { type: 'mark', a: q.a, b: q.b });
+  assert.deepEqual(g.hostView().found, [{ a: q.a, b: q.b, slot: 1 }]);
+});

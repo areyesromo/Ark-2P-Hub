@@ -21,7 +21,7 @@
 
   function side(v, slot) {
     return '<div class="wh-side p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div><div class="count">' + v.counts[slot] + '</div>' +
-      '<div class="muted">word' + (v.counts[slot] === 1 ? '' : 's') + ' · need ' + Math.ceil((v.words.length + 1) / 2) + '</div></div>';
+      '<div class="muted">' + (v.mode === 'race' ? 'of ' + v.words.length + ' words' : 'word' + (v.counts[slot] === 1 ? '' : 's') + ' · need ' + Math.ceil((v.words.length + 1) / 2)) + '</div></div>';
   }
 
   function banner(v) {
@@ -49,12 +49,12 @@
         marks.push({ slot: slot, cursor: at, from: p.from, to: at });
       });
     }
-    const k = JSON.stringify([v.phase, v.round, v.scores, v.grid, v.found, v.words, v.result, marks]);
+    const k = JSON.stringify([v.phase, v.round, v.scores, v.grid, v.found, v.words, v.counts, v.result, marks]);
     if (k === key) return;
     key = k;
     if (v.phase === 'countdown') {
       root.innerHTML = Ark.scoreboardHtml(v.players, v.scores, v.winScore, v.round) +
-        '<div class="wh-center"><div class="big">Grid ' + v.round + '</div><div class="sub">' + esc(v.sizeName) + ' · mark a hidden word from its first letter to its last. First to mark it gets it.</div></div>';
+        '<div class="wh-center"><div class="big">Grid ' + v.round + '</div><div class="sub">' + esc(v.sizeName) + (v.mode === 'race' ? ' · Race: your own board each, on your phone. First to find every word takes the grid.' : ' · mark a hidden word from its first letter to its last. First to mark it gets it.') + '</div></div>';
       return;
     }
     root.innerHTML = Ark.scoreboardHtml(v.players, v.scores, v.winScore, v.round) +
@@ -71,7 +71,7 @@
   Ark.register('host', 'word-hunt', {
     sounds: function (prev, v) {
       if (v.phase === 'play' && prev.phase !== 'play') return ['go'];
-      if (v.found.length > prev.found.length) return ['correct'];
+      if (v.counts[0] + v.counts[1] > prev.counts[0] + prev.counts[1]) return ['correct']; // (in Race the TV doesn't see where)
       if (v.nope[0] + v.nope[1] > prev.nope[0] + prev.nope[1]) return ['wrong'];
       return [];
     },
