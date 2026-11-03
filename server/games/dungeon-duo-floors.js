@@ -45,4 +45,23 @@ export const FLOORS = [
       '####################',
     ],
   },
+  {
+    name: "The Warden's Hall",
+    // The Stone Warden in the middle: pillars to dodge behind (and to make it charge into).
+    // No stairs: beat it and the quest is won.
+    map: [
+      '####################',
+      '#                  #',
+      '#  ##        ##    #',
+      '#  ##        ##    #',
+      '#                  #',
+      '#        W         #',
+      '#                  #',
+      '#    ##       ##   #',
+      '#    ##       ##   #',
+      '#                  #',
+      '#        SS        #',
+      '####################',
+    ],
+  },
 ];

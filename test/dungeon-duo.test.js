@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
-import { DungeonDuo, HEROES, ENEMIES, TIMING, CONTINUES, SPIKES, starsFor } from '../server/games/dungeon-duo.js';
+import { DungeonDuo, HEROES, ENEMIES, TIMING, CONTINUES, SPIKES, WARDEN, starsFor } from '../server/games/dungeon-duo.js';
 import { FLOORS } from '../server/games/dungeon-duo-floors.js';
 import { getGame } from '../server/games/index.js';
 
@@ -529,6 +529,147 @@ test('a rematch starts the quest over: continues, retries, the clock and the eve
   assert.equal(g.events.downs, 0);
   assert.equal(g.hostView().timeMs, 0);
   assert.deepEqual(g.controls[0], { x: 0, y: 0, special: false });
+});
+
+// The Stone Warden: a hall with the boss in the middle and a pillar to charge into.
+const HALL = room([
+  '####################',
+  '#                  #',
+  '#  ##              #',
+  '#  ##              #',
+  '#                  #',
+  '#         W        #',
+  '#                  #',
+  '#                  #',
+  '#                  #',
+  '#                  #',
+  '#        S S       #',
+  '####################',
+]);
+const warden = (g) => g.enemies.find((e) => e.kind === 'warden');
+
+test('the Stone Warden waits on the last floor: big, with lots of health (less on Easy)', () => {
+  const last = FLOORS[FLOORS.length - 1];
+  assert.equal(FLOORS.length, 3);
+  assert.ok(last.map.join('').includes('W'), 'the boss is on the last floor');
+  assert.ok(!last.map.join('').includes('E'), 'no stairs: beating it is the way out');
+  const { g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  assert.equal(w.hp, WARDEN.hp[0]);
+  assert.ok(w.r > 0.5, 'bigger than a hero');
+  assert.equal(warden(dungeon({ floors: HALL, difficulty: 1 }).g).hp, WARDEN.hp[1]);
+  assert.ok(WARDEN.hp[1] < WARDEN.hp[0]);
+});
+
+test('the Warden gives you a moment once the floor starts (its clock doesn\'t run during the countdown or a retry)', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  assert.equal(warden(g).state, 'walk');
+  ctx.advance(WARDEN.walkMs - 300);
+  assert.equal(warden(g).state, 'walk', 'still walking: no move straight away');
+  g.hurt(0, 99, null);
+  g.hurt(1, 99, null);
+  ctx.advance(TICK * 2);
+  ctx.advance(TIMING.retryMs + 50);
+  assert.equal(g.phase, 'play');
+  ctx.advance(WARDEN.walkMs - 300);
+  assert.equal(warden(g).state, 'walk', 'and again after a retry');
+});
+
+test('the Warden\'s slam: a warning ring first, then it hurts everyone inside it (a shield is no help)', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  put(g, f, Math.floor(w.x) - 1, Math.floor(w.y), 1, 0); // close, facing it, shield up
+  g.onInput(f, { type: 'special', on: true });
+  put(g, 1 - f, 17, 10); // well outside
+  g.wardenMove(w, 'slam');
+  ctx.advance(TICK);
+  const tele = g.hostView().enemies.find((e) => e.kind === 'warden').tele;
+  assert.equal(tele.kind, 'slam');
+  assert.ok(tele.r >= 2);
+  const hp = [g.heroes[0].hp, g.heroes[1].hp];
+  ctx.advance(WARDEN.slamWindupMs - 100);
+  assert.equal(g.heroes[f].hp, hp[f], 'nothing yet: time to get out');
+  ctx.advance(200);
+  assert.equal(g.heroes[f].hp, hp[f] - WARDEN.slamDamage, 'inside the ring');
+  assert.equal(g.heroes[1 - f].hp, hp[1 - f], 'outside it');
+  assert.ok(g.events.slams >= 1);
+});
+
+test('the Warden\'s charge: it lines up, then rushes in a straight line; it hurts whoever it hits and is stunned when it hits a wall', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  const healer = g.heroes.findIndex((h) => h.role === 'healer');
+  put(g, healer, 2, 5); // to its left, in the open
+  put(g, 1 - healer, 17, 10);
+  g.wardenMove(w, 'charge');
+  const tele = g.hostView().enemies.find((e) => e.kind === 'warden').tele;
+  assert.equal(tele.kind, 'charge');
+  assert.ok(tele.dx < -0.9, 'aimed at the healer');
+  const x0 = w.x;
+  const hp = g.heroes[healer].hp;
+  ctx.advance(WARDEN.chargeWindupMs - 50);
+  assert.equal(w.x, x0, 'it waits while it lines up');
+  ctx.advance(1500);
+  assert.equal(g.heroes[healer].hp, hp - WARDEN.chargeDamage, 'run over (once)');
+  assert.ok(w.x < x0 - 5, 'it rushed');
+  assert.equal(w.state, 'stunned', 'into the wall');
+  // Stunned: it stands still for a moment, a good time to hit it.
+  const x1 = w.x;
+  ctx.advance(WARDEN.stunMs - 200);
+  assert.equal(w.x, x1);
+});
+
+test('a raised shield stops the Warden\'s charge dead and stuns it', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  put(g, f, 5, 5, 1, 0);
+  g.onInput(f, { type: 'special', on: true });
+  put(g, 1 - f, 17, 10);
+  g.wardenMove(w, 'charge');
+  const hp = g.heroes[f].hp;
+  ctx.advance(WARDEN.chargeWindupMs + 1000);
+  assert.equal(g.heroes[f].hp, hp);
+  assert.equal(w.state, 'stunned');
+  assert.ok(w.x > g.heroes[f].x + 0.8, 'stopped in front of the shield');
+});
+
+test('the Warden: the sword reaches its big body, it can\'t be shoved, and at half health it calls up help (once)', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  w.speed = 0;
+  g.wardenMove(w, 'rest', 60000);
+  const f = g.heroes.findIndex((h) => h.role === 'fighter');
+  put(g, 1 - f, 17, 10);
+  Object.assign(g.heroes[f], { x: w.x - w.r - 0.95, y: w.y, face: [1, 0] });
+  g.attack(f);
+  assert.equal(w.hp, WARDEN.hp[0] - HEROES.fighter.damage);
+  // Shield up against it: it doesn't budge.
+  const x = w.x;
+  Object.assign(g.heroes[f], { x: w.x - w.r - 0.3, y: w.y, face: [1, 0] });
+  g.onInput(f, { type: 'special', on: true });
+  ctx.advance(500);
+  assert.equal(w.x, x);
+  g.onInput(f, { type: 'special', on: false });
+  const before = g.enemies.length;
+  g.damageEnemy(w, Math.ceil(w.hp - w.max / 2), ctx.now());
+  assert.ok(w.hp <= w.max / 2);
+  assert.ok(g.enemies.length > before, 'help arrived');
+  const after = g.enemies.length;
+  g.damageEnemy(w, 1, ctx.now());
+  assert.equal(g.enemies.length, after, 'only once');
+});
+
+test('beating the Warden on the last floor wins the quest', () => {
+  const { ctx, g } = dungeon({ floors: HALL });
+  const w = warden(g);
+  g.damageEnemy(w, w.hp, ctx.now());
+  ctx.advance(TICK * 2);
+  assert.equal(g.phase, 'floorClear');
+  ctx.advance(TIMING.floorClearMs + 50);
+  assert.equal(g.phase, 'over');
+  assert.equal(g.hostView().won, true);
 });
 
 test('a controller sends its stick and SPECIAL together: the shield held, the circle on the press', () => {

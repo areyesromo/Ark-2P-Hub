@@ -66,7 +66,13 @@
     else if (v.phase === 'over') status = '<span class="big">' + (v.won ? '⭐'.repeat(v.stars) : '💀') + '</span><br>' + (v.won ? 'Quest complete!' : 'Out of continues');
     else if (me.downed) status = '<span class="lost">You\'re down!</span> Your partner can revive you by standing beside you';
     else if (them.downed) status = '<span class="lost">Your partner is down!</span> Stand beside them to revive them';
-    else status = Ark.escapeHtml(v.floorName) + ' · 🗝️ ' + v.keys;
+    else {
+      const boss = v.enemies.find(function (e) { return e.kind === 'warden'; });
+      if (boss && boss.state === 'slam') status = '<span class="lost">It\'s about to slam: get out of the ring!</span>';
+      else if (boss && boss.state === 'charge') status = '<span class="lost">It\'s lining up a charge: step aside' + (role === 'fighter' ? ', or face it with your shield' : '') + '!</span>';
+      else if (boss) status = 'Stone Warden ' + boss.hp + ' / ' + boss.max + (boss.state === 'stunned' ? ' · <span class="won">stunned: hit it!</span>' : '');
+      else status = Ark.escapeHtml(v.floorName) + ' · 🗝️ ' + v.keys;
+    }
     const healIn = role === 'healer' && me.healIn > 0 ? Math.ceil(me.healIn / 1000) : 0;
     const html = '<div class="dd-hearts"><span>You ' + hearts(me) + '</span><span class="them">Them ' + hearts(them) + '</span></div><div class="dd-status">' + status + '</div>';
     const key = html + healIn;

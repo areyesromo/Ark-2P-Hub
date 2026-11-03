@@ -9,7 +9,10 @@
 // quest is over. Keys open locked doors; both of you on the stairs (on your feet) and it's down
 // to the next floor. Further down: spikes that go up and down in turn, gates that only stay
 // open while one of you stands on a pressure plate, and skeletons that throw bones from a
-// distance (the shield blocks those too). Stars at the end: for finishing, for few retries, and for a good time.
+// distance (the shield blocks those too). At the bottom waits the Stone Warden: it slams the
+// ground (get out of the ring before it lands), charges in a straight line (into a wall, or
+// into a raised shield, and it's stunned for a moment), and calls up help at half health.
+// Beat it and the quest is won. Stars at the end: for finishing, for few retries, and for a good time.
 
 import { settingOf } from './options.js';
 import { FLOORS } from './dungeon-duo-floors.js';
@@ -19,11 +22,21 @@ export const HEROES = {
   fighter: { hp: [6, 9], damage: 2, everyMs: 400, reach: 1.3, arc: 0.6, speed: 3.4, blockSpeed: 1.7 },
   healer: { hp: [5, 8], damage: 1, everyMs: 400, boltSpeed: 9, boltMs: 1200, speed: 3.6, healEveryMs: 12000 },
 };
+/** The Stone Warden, the boss: health by difficulty ([normal, easy]), size, and its moves. */
+export const WARDEN = {
+  hp: [40, 28], r: 0.75, speed: 1.1,
+  walkMs: 2200, // walks at you this long between moves
+  slamRange: 3.2, slamR: 2.3, slamWindupMs: 1100, slamDamage: 2, // slams if you're close...
+  chargeWindupMs: 800, chargeSpeed: 7, chargeMs: 2500, chargeDamage: 2, // ...charges if you're not
+  stunMs: 1600, restMs: 900,
+  summon: ['slime', 'bat', 'slime'], // at half health, once
+};
 export const ENEMIES = {
   slime: { hp: 3, speed: 1.3, damage: 1, aggro: 7 },
   bat: { hp: 1, speed: 2.6, damage: 1, aggro: 8 },
   // Skeletons keep about `keepAway` from you and throw a bone now and then, if they can see you.
   skeleton: { hp: 3, speed: 1.5, damage: 1, aggro: 8, keepAway: 3.5, throwEveryMs: 2000, boneSpeed: 5, boneMs: 2500 },
+  warden: { hp: WARDEN.hp[0], speed: WARDEN.speed, damage: 1, aggro: 99 },
 };
 /** Spikes: down for a while, then up (and hurting) for a moment, all together. */
 export const SPIKES = { downMs: 2000, upMs: 1000, damage: 1 };
@@ -44,7 +57,7 @@ const R = 0.3; // half a hero's (or enemy's) width
 const TOUCH = 0.65; // an enemy this close hurts
 const KNOCKBACK = 0.6; // how far the shield shoves an enemy
 const REVIVE_RANGE = 1.4; // from a safe tile beside spikes, too
-const ENEMY_LETTERS = { s: 'slime', b: 'bat', k: 'skeleton' };
+const ENEMY_LETTERS = { s: 'slime', b: 'bat', k: 'skeleton', W: 'warden' };
 
 /** Stars for a quest: finishing, few retries (one at most), and a good time. */
 export function starsFor({ won, retries, ms, par }) {
@@ -68,7 +81,7 @@ export class DungeonDuo {
     this.retries = 0;
     this.floor = 0;
     this.won = false;
-    this.events = { hits: 0, kills: 0, hurt: 0, blocked: 0, heals: 0, downs: 0, revives: 0, keys: 0, doors: 0, thrown: 0 };
+    this.events = { hits: 0, kills: 0, hurt: 0, blocked: 0, heals: 0, downs: 0, revives: 0, keys: 0, doors: 0, thrown: 0, slams: 0, charges: 0, summons: 0 };
     this.startedAt = null;
     this.finishedMs = 0;
     this.controls = [{ x: 0, y: 0, special: false }, { x: 0, y: 0, special: false }];
@@ -95,6 +108,7 @@ export class DungeonDuo {
       if (ENEMY_LETTERS[c]) this.spawnEnemy(ENEMY_LETTERS[c], x + 0.5, y + 0.5);
       if (c === 'S' || ENEMY_LETTERS[c]) row[x] = ' ';
     }));
+    this.bossFloor = this.enemies.some((e) => e.kind === 'warden');
     const roles = this.swap ? ['healer', 'fighter'] : ['fighter', 'healer'];
     this.heroes = roles.map((role, slot) => {
       const max = HEROES[role].hp[this.easy ? 1 : 0];
@@ -105,8 +119,20 @@ export class DungeonDuo {
   spawnEnemy(kind, x, y) {
     const def = ENEMIES[kind];
     const e = { id: this.nextId++, kind, x, y, hp: def.hp, max: def.hp, speed: def.speed, hurtUntil: 0, wobble: this.rng() * Math.PI * 2, throwAt: this.ctx.now() + (def.throwEveryMs || 0) / 2 };
+    if (kind === 'warden') {
+      const hp = WARDEN.hp[this.easy ? 1 : 0];
+      Object.assign(e, { hp, max: hp, r: WARDEN.r, summoned: false, face: [0, 1], tele: null });
+      this.wardenMove(e, 'walk');
+    }
     this.enemies.push(e);
     return e;
+  }
+
+  /** Into play: the Warden's first walk (and the spikes' rhythm) start now, not during the wait before. */
+  play() {
+    this.floorAt = this.ctx.now();
+    for (const e of this.enemies) if (e.kind === 'warden') this.wardenMove(e, 'walk');
+    this.enter('play', 0);
   }
 
   enter(phase, ms) {
@@ -137,17 +163,17 @@ export class DungeonDuo {
       if (now >= this.phaseEnds) {
         if (this.phase === 'countdown') {
           this.startedAt = now;
-          this.enter('play', 0);
+          this.play();
         } else if (this.phase === 'retry') {
           this.load();
-          this.enter('play', 0);
+          this.play();
         } else if (this.floor + 1 >= this.floors.length) {
           this.won = true;
           return this.finish();
         } else {
           this.floor++;
           this.load();
-          this.enter('play', 0);
+          this.play();
         }
       } else if (this.frame++ % TIMING.sendEvery === 0) this.ctx.update();
       return;
@@ -164,7 +190,7 @@ export class DungeonDuo {
     this.revives(dt);
     this.pickups();
     if (this.heroes.every((h) => h.downed)) return this.bothDown();
-    if (this.onStairs()) return this.enter('floorClear', TIMING.floorClearMs);
+    if (this.onStairs() || (this.bossFloor && !this.enemies.some((e) => e.kind === 'warden'))) return this.enter('floorClear', TIMING.floorClearMs);
     if (this.frame++ % TIMING.sendEvery === 0) this.ctx.update();
   }
 
@@ -178,7 +204,8 @@ export class DungeonDuo {
   /** The tiles a body's corners are on. */
   corners(b) {
     const E = 1e-6;
-    return [[b.x - R, b.y - R], [b.x + R - E, b.y - R], [b.x - R, b.y + R - E], [b.x + R - E, b.y + R - E]].map(([x, y]) => (this.map[Math.floor(y)] || [])[Math.floor(x)]);
+    const r = b.r || R;
+    return [[b.x - r, b.y - r], [b.x + r - E, b.y - r], [b.x - r, b.y + r - E], [b.x + r - E, b.y + r - E]].map(([x, y]) => (this.map[Math.floor(y)] || [])[Math.floor(x)]);
   }
 
   /**
@@ -212,26 +239,27 @@ export class DungeonDuo {
     return true;
   }
 
-  blocked(x, y) {
+  blocked(x, y, r = R) {
     const E = 1e-6;
-    return this.solid(x - R, y - R) || this.solid(x + R - E, y - R) || this.solid(x - R, y + R - E) || this.solid(x + R - E, y + R - E);
+    return this.solid(x - r, y - r) || this.solid(x + r - E, y - r) || this.solid(x - r, y + r - E) || this.solid(x + r - E, y + r - E);
   }
 
   /** Move a body one axis at a time, stopping flush against walls. Gives the tile it bumped into, if any. */
   slide(b, vx, vy) {
     const E = 1e-6;
+    const r = b.r || R;
     let bump = null;
     const nx = b.x + vx;
-    if (!this.blocked(nx, b.y)) b.x = nx;
+    if (!this.blocked(nx, b.y, r)) b.x = nx;
     else if (vx) {
-      bump = [Math.floor(vx > 0 ? nx + R : nx - R), Math.floor(b.y)];
-      b.x = vx > 0 ? Math.max(b.x, Math.floor(nx + R) - R) : Math.min(b.x, Math.floor(nx - R) + 1 + R + E);
+      bump = [Math.floor(vx > 0 ? nx + r : nx - r), Math.floor(b.y)];
+      b.x = vx > 0 ? Math.max(b.x, Math.floor(nx + r) - r) : Math.min(b.x, Math.floor(nx - r) + 1 + r + E);
     }
     const ny = b.y + vy;
-    if (!this.blocked(b.x, ny)) b.y = ny;
+    if (!this.blocked(b.x, ny, r)) b.y = ny;
     else if (vy) {
-      bump = bump || [Math.floor(b.x), Math.floor(vy > 0 ? ny + R : ny - R)];
-      b.y = vy > 0 ? Math.max(b.y, Math.floor(ny + R) - R) : Math.min(b.y, Math.floor(ny - R) + 1 + R + E);
+      bump = bump || [Math.floor(b.x), Math.floor(vy > 0 ? ny + r : ny - r)];
+      b.y = vy > 0 ? Math.max(b.y, Math.floor(ny + r) - r) : Math.min(b.y, Math.floor(ny - r) + 1 + r + E);
     }
     return bump;
   }
@@ -270,6 +298,10 @@ export class DungeonDuo {
   moveEnemies(dt, now) {
     for (const e of this.enemies) {
       const def = ENEMIES[e.kind];
+      if (e.kind === 'warden') {
+        this.wardenThink(e, dt, now);
+        continue;
+      }
       const h = this.nearestHero(e.x, e.y, def.aggro);
       if (!h) continue;
       let dx = h.x - e.x;
@@ -311,7 +343,7 @@ export class DungeonDuo {
       s.x += (s.vx * dt) / 1000;
       s.y += (s.vy * dt) / 1000;
       if (now >= s.until || this.solid(s.x, s.y)) continue;
-      const hit = this.enemies.find((e) => Math.hypot(e.x - s.x, e.y - s.y) < 0.45);
+      const hit = this.enemies.find((e) => Math.hypot(e.x - s.x, e.y - s.y) < 0.45 + (e.r || R) - R);
       if (hit) {
         this.damageEnemy(hit, s.damage, now);
         continue;
@@ -319,6 +351,82 @@ export class DungeonDuo {
       keep.push(s);
     }
     this.shots = keep;
+  }
+
+  /**
+   * Start one of the Warden's moves: 'walk' (at you), 'slam' or 'charge' (the warning first),
+   * 'rush' (the charge itself), 'stunned' or 'rest'. `ms` overrides how long it lasts.
+   */
+  wardenMove(e, state, ms) {
+    const now = this.ctx.now();
+    const lasts = { walk: WARDEN.walkMs, slam: WARDEN.slamWindupMs, charge: WARDEN.chargeWindupMs, rush: WARDEN.chargeMs, stunned: WARDEN.stunMs, rest: WARDEN.restMs };
+    e.state = state;
+    e.since = now;
+    e.until = now + (ms === undefined ? lasts[state] : ms);
+    e.tele = null;
+    if (state === 'slam') e.tele = { kind: 'slam', r: WARDEN.slamR };
+    if (state === 'charge') {
+      // Lock on to the nearest hero; it won't turn once it's lined up.
+      const h = this.nearestHero(e.x, e.y, 99) || this.heroes[0];
+      const len = Math.hypot(h.x - e.x, h.y - e.y) || 1;
+      e.face = [(h.x - e.x) / len, (h.y - e.y) / len];
+      let reach = 0;
+      while (reach < 20 && !this.blocked(e.x + e.face[0] * (reach + 0.25), e.y + e.face[1] * (reach + 0.25), e.r)) reach += 0.25;
+      e.tele = { kind: 'charge', dx: e.face[0], dy: e.face[1], len: reach + e.r };
+    }
+    if (state === 'rush') e.hitSlots = [];
+  }
+
+  wardenThink(e, dt, now) {
+    const done = now >= e.until;
+    if (e.state === 'walk') {
+      const h = this.nearestHero(e.x, e.y, 99);
+      if (h && done) return this.wardenMove(e, Math.hypot(h.x - e.x, h.y - e.y) <= WARDEN.slamRange ? 'slam' : 'charge');
+      if (!h || !e.speed) return;
+      const len = Math.hypot(h.x - e.x, h.y - e.y) || 1;
+      e.face = [(h.x - e.x) / len, (h.y - e.y) / len];
+      if (len < e.r + R + 0.1) return;
+      const d = (e.speed * dt) / 1000;
+      this.slide(e, e.face[0] * d, e.face[1] * d);
+    } else if (e.state === 'slam') {
+      if (!done) return;
+      // It lands: everyone in the ring is hurt (there's no blocking the ground shaking).
+      this.events.slams++;
+      this.heroes.forEach((h, slot) => {
+        if (!h.downed && Math.hypot(h.x - e.x, h.y - e.y) <= WARDEN.slamR) this.hurt(slot, WARDEN.slamDamage, null);
+      });
+      this.wardenMove(e, 'rest');
+    } else if (e.state === 'charge') {
+      if (!done) return;
+      this.events.charges++;
+      this.wardenMove(e, 'rush');
+    } else if (e.state === 'rush') {
+      if (done) return this.wardenMove(e, 'rest');
+      const d = (WARDEN.chargeSpeed * dt) / 1000;
+      if (this.slide(e, e.face[0] * d, e.face[1] * d)) return this.wardenMove(e, 'stunned'); // into a wall
+      for (let slot = 0; slot < 2; slot++) {
+        const h = this.heroes[slot];
+        if (h.downed || e.hitSlots.includes(slot) || Math.hypot(h.x - e.x, h.y - e.y) >= TOUCH + e.r - R) continue;
+        e.hitSlots.push(slot);
+        if (this.hurt(slot, WARDEN.chargeDamage, [e.x, e.y]) === 'blocked') return this.wardenMove(e, 'stunned'); // into a shield
+      }
+    } else if (done) {
+      this.wardenMove(e, 'walk'); // after a rest or a stun
+    }
+  }
+
+  /** At half health, the Warden calls up help around it (once). */
+  wardenSummon(e) {
+    e.summoned = true;
+    this.events.summons++;
+    let n = 0;
+    for (let i = 0; i < 8 && n < WARDEN.summon.length; i++) {
+      const a = (i / 8) * Math.PI * 2;
+      const x = e.x + Math.cos(a) * 1.8;
+      const y = e.y + Math.sin(a) * 1.8;
+      if (this.blocked(x, y)) continue;
+      this.spawnEnemy(WARDEN.summon[n++], x, y);
+    }
   }
 
   /** Bones fly until they hit a hero (who might block it), a wall, or run out. */
@@ -342,6 +450,7 @@ export class DungeonDuo {
     e.hp -= damage;
     e.hurtUntil = now + 200;
     this.events.hits++;
+    if (e.kind === 'warden' && !e.summoned && e.hp > 0 && e.hp <= e.max / 2) this.wardenSummon(e);
     if (e.hp > 0) return;
     this.enemies.splice(this.enemies.indexOf(e), 1);
     this.events.kills++;
@@ -365,8 +474,9 @@ export class DungeonDuo {
   touches() {
     for (const e of this.enemies) {
       this.heroes.forEach((h, slot) => {
-        if (h.downed || Math.hypot(h.x - e.x, h.y - e.y) >= TOUCH) return;
-        if (this.hurt(slot, ENEMIES[e.kind].damage, [e.x, e.y]) !== 'blocked') return;
+        if (h.downed || Math.hypot(h.x - e.x, h.y - e.y) >= TOUCH + (e.r || R) - R) return;
+        if (e.kind === 'warden' && (e.state === 'stunned' || e.state === 'rush')) return; // the rush hurts on its own; stunned, it's harmless
+        if (this.hurt(slot, ENEMIES[e.kind].damage, [e.x, e.y]) !== 'blocked' || e.kind === 'warden') return; // too heavy to shove
         // Shoved back off the shield.
         const dx = e.x - h.x;
         const dy = e.y - h.y;
@@ -473,7 +583,7 @@ export class DungeonDuo {
         const dx = e.x - h.x;
         const dy = e.y - h.y;
         const d = Math.hypot(dx, dy);
-        if (d > def.reach || (d > 0.01 && (dx * h.face[0] + dy * h.face[1]) / d < def.arc)) continue;
+        if (d > def.reach + (e.r || R) - R || (d > 0.01 && (dx * h.face[0] + dy * h.face[1]) / d < def.arc)) continue;
         this.damageEnemy(e, def.damage, now);
       }
     } else {
@@ -542,7 +652,13 @@ export class DungeonDuo {
         revive: h.downed ? r2(h.revive / TIMING.reviveMs) : 0, hurt: now < h.invulnUntil, blocking: h.blocking,
         swing: h.swungAt && now - h.swungAt < 200, readyIn: Math.max(0, h.readyAt - now), healIn: h.role === 'healer' ? Math.max(0, h.healAt - now) : 0,
       })),
-      enemies: this.enemies.map((e) => ({ id: e.id, kind: e.kind, x: r2(e.x), y: r2(e.y), hp: e.hp, max: e.max, hurt: now < e.hurtUntil })),
+      enemies: this.enemies.map((e) => {
+        const o = { id: e.id, kind: e.kind, x: r2(e.x), y: r2(e.y), hp: e.hp, max: e.max, hurt: now < e.hurtUntil };
+        if (e.kind !== 'warden') return o;
+        // The boss: what it's doing, and the warning for the move it's about to make.
+        const left = r2(Math.max(0, (e.until - now) / Math.max(1, e.until - e.since)));
+        return Object.assign(o, { r: e.r, state: e.state, face: [r2(e.face[0]), r2(e.face[1])], tele: e.tele && Object.assign({ left }, e.tele, e.tele.dx === undefined ? {} : { dx: r2(e.tele.dx), dy: r2(e.tele.dy), len: r2(e.tele.len) }) });
+      }),
       shots: this.shots.map((s) => ({ x: r2(s.x), y: r2(s.y) })),
       bones: this.bones.map((b) => ({ x: r2(b.x), y: r2(b.y) })),
       spikesUp: this.spikesUp(),

@@ -7,7 +7,7 @@
   Ark.loadCss('/games/dungeon-duo/style.css');
   const esc = Ark.escapeHtml;
   const DEADZONE = 0.2;
-  const WALL_H = 1.1;
+  const WALL_H = 0.9;
 
   let THREE = null;
   let threeReady = null;
@@ -51,8 +51,10 @@
       return '<div class="dd-side p' + (slot + 1) + (h.downed ? ' down' : '') + '"><div class="name">' + nameOf(v, slot) + ' <small>' + role + '</small></div>' +
         '<div class="hearts">' + hearts(h) + '</div>' + (h.downed ? '<div class="note">Down! Stand by them to revive</div>' : '') + '</div>';
     };
+    const boss = v.enemies.find(function (e) { return e.kind === 'warden'; });
+    const bar = boss ? '<div class="dd-boss"><b>Stone Warden</b><div class="bar"><span style="width:' + Math.round((100 * boss.hp) / boss.max) + '%"></span></div></div>' : '';
     const html = side(0) + '<div class="dd-mid"><div class="floor">' + esc(v.floorName) + ' · floor ' + (v.floor + 1) + ' of ' + v.floors + '</div>' +
-      '<div class="stats">🗝️ ' + v.keys + ' · continues ' + v.continues + ' · ' + clock(v.timeMs) + '</div></div>' + side(1);
+      '<div class="stats">🗝️ ' + v.keys + ' · continues ' + v.continues + ' · ' + clock(v.timeMs) + '</div>' + bar + '</div>' + side(1);
     if (html === hudKey) return;
     hudKey = html;
     els.hud.innerHTML = html;
@@ -61,7 +63,9 @@
   function renderOverlay(v) {
     let html = '';
     if (v.phase === 'countdown') {
-      html = '<div class="big">' + (v.countdown || '') + '</div><div class="sub">' + esc(v.floorName) + ': find the key, open the door, take the stairs down together</div>';
+      const boss = v.enemies.some(function (e) { return e.kind === 'warden'; });
+      html = '<div class="big">' + (v.countdown || '') + '</div><div class="sub">' + esc(v.floorName) + ': ' +
+        (boss ? 'beat the Stone Warden. Get out of its ring before it slams; a shield (or a wall) stops its charge' : 'find the key, open the door, take the stairs down together') + '</div>';
     } else if (v.phase === 'retry') {
       html = '<div class="big">💀</div><div class="sub">You both went down. Back to the start of the floor (' + v.continues + ' continue' + (v.continues === 1 ? '' : 's') + ' left)</div>';
     } else if (v.phase === 'floorClear') {
@@ -331,6 +335,45 @@
       blob.position.y = 0.22;
       g.add(blob);
       parts.body = blob;
+    } else if (kind === 'warden') {
+      // The Stone Warden: a hulking block of stone with glowing eyes and heavy arms.
+      g.rotation.order = 'YXZ'; // turn to face, then lean forward
+      const stone = mat(0x78716c, { roughness: 0.95 });
+      const body = new THREE.Mesh(new THREE.BoxGeometry(1.2, 1.1, 0.9), stone);
+      body.position.y = 0.75;
+      const head = new THREE.Mesh(new THREE.BoxGeometry(0.6, 0.45, 0.55), stone);
+      head.position.set(0, 1.5, 0.1);
+      const eyeMat = new THREE.MeshBasicMaterial({ color: 0x67e8f9 });
+      const eyeGeo = new THREE.BoxGeometry(0.12, 0.06, 0.04);
+      const el = new THREE.Mesh(eyeGeo, eyeMat);
+      const er = new THREE.Mesh(eyeGeo, eyeMat);
+      el.position.set(-0.13, 1.55, 0.39);
+      er.position.set(0.13, 1.55, 0.39);
+      const armGeo = new THREE.BoxGeometry(0.34, 1.0, 0.38);
+      const arms = [-1, 1].map(function (side) {
+        const pivot = new THREE.Group();
+        pivot.position.set(side * 0.8, 1.2, 0);
+        const arm = new THREE.Mesh(armGeo, stone);
+        arm.position.y = -0.45;
+        pivot.add(arm);
+        return pivot;
+      });
+      const glow = new THREE.PointLight(0x67e8f9, 2, 3);
+      glow.position.set(0, 1.6, 0.6);
+      g.add(body, head, el, er, arms[0], arms[1], glow);
+      parts.body = body;
+      parts.arms = arms;
+      // Its warnings, on the floor: the slam's ring and the charge's lane.
+      const red = new THREE.MeshBasicMaterial({ color: 0xef4444, transparent: true, opacity: 0.5, side: THREE.DoubleSide, depthWrite: false });
+      parts.ring = new THREE.Mesh(new THREE.RingGeometry(0.88, 1, 48), red);
+      parts.ring.rotation.x = -Math.PI / 2;
+      parts.fill = new THREE.Mesh(new THREE.CircleGeometry(1, 48), red.clone());
+      parts.fill.rotation.x = -Math.PI / 2;
+      parts.lane = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), red.clone());
+      parts.lane.rotation.x = -Math.PI / 2;
+      parts.warn = new THREE.Group();
+      parts.warn.add(parts.ring, parts.fill, parts.lane);
+      gl.scene.add(parts.warn);
     } else if (kind === 'skeleton') {
       const bone = mat(0xe7e5e4);
       const body = new THREE.Mesh(new THREE.CylinderGeometry(0.12, 0.16, 0.55, 8), bone);
@@ -435,6 +478,32 @@
         const bob = Math.sin(t / 180 + e.id);
         p.body.scale.set(1 + bob * 0.08, 0.65 - bob * 0.08, 1 + bob * 0.08);
         p.group.position.set(p.shown.x, 0, p.shown.z);
+      } else if (e.kind === 'warden') {
+        p.group.position.set(p.shown.x, 0, p.shown.z);
+        p.group.rotation.y = Math.atan2(e.face[0], e.face[1]);
+        const left = e.tele ? e.tele.left : 0;
+        // Arms up for the slam, leaning in for the charge, slumped and wobbling when stunned.
+        const lift = e.state === 'slam' ? -2.6 * (1 - left) : e.state === 'rush' ? -1.2 : 0;
+        p.arms.forEach(function (a) { a.rotation.x = lift; });
+        p.group.rotation.x = e.state === 'charge' || e.state === 'rush' ? 0.25 : 0;
+        p.group.rotation.z = e.state === 'stunned' ? Math.sin(t / 120) * 0.12 : 0;
+        p.ring.visible = p.fill.visible = !!e.tele && e.tele.kind === 'slam';
+        p.lane.visible = !!e.tele && e.tele.kind === 'charge';
+        if (p.ring.visible) {
+          p.ring.scale.setScalar(e.tele.r);
+          p.fill.scale.setScalar(e.tele.r * (1 - left)); // fills up as the slam comes
+          p.fill.material.opacity = 0.25;
+          p.ring.material.opacity = 0.5 + 0.4 * Math.abs(Math.sin(t / 90));
+          p.ring.position.set(p.shown.x, 0.03, p.shown.z);
+          p.fill.position.set(p.shown.x, 0.025, p.shown.z);
+        }
+        if (p.lane.visible) {
+          const len = e.tele.len;
+          p.lane.scale.set(e.r * 2, len, 1);
+          p.lane.rotation.z = Math.atan2(e.tele.dx, e.tele.dy) + Math.PI;
+          p.lane.position.set(p.shown.x + (e.tele.dx * len) / 2, 0.03, p.shown.z + (e.tele.dy * len) / 2);
+          p.lane.material.opacity = 0.2 + 0.4 * (1 - left);
+        }
       } else if (e.kind === 'skeleton') {
         p.group.position.set(p.shown.x, 0, p.shown.z);
         const [hx, hz] = gl.heroes[0].shown && gl.heroes[1].shown ? nearer(p.shown, gl.heroes) : [p.shown.x, p.shown.z + 1];
@@ -451,6 +520,7 @@
     Object.keys(gl.enemies).forEach(function (id) {
       if (seen[id]) return;
       disposeGroup(gl.enemies[id].group);
+      if (gl.enemies[id].warn) disposeGroup(gl.enemies[id].warn);
       delete gl.enemies[id];
     });
     // Bolts and circles: a small pool each.
@@ -507,7 +577,8 @@
     gl.cam.x += (mx - gl.cam.x) * ck;
     gl.cam.z += (mz - gl.cam.z) * ck;
     gl.cam.d += (want - gl.cam.d) * ck;
-    gl.camera.position.set(gl.cam.x, gl.cam.d * 0.95, gl.cam.z + gl.cam.d * 0.62);
+    // Steep enough that a wall in front never hides a hero standing against it.
+    gl.camera.position.set(gl.cam.x, gl.cam.d * 1.12, gl.cam.z + gl.cam.d * 0.3);
     gl.camera.lookAt(gl.cam.x, 0, gl.cam.z);
     gl.sun.position.set(gl.cam.x - 5, 14, gl.cam.z + 6);
     gl.sun.target.position.set(gl.cam.x, 0, gl.cam.z);
@@ -566,7 +637,9 @@
       else if (b.hits > a.hits) out.push('paddle');
       if (b.hurt > a.hurt) out.push('crash');
       if (b.blocked > a.blocked) out.push('lock');
-      if (b.thrown > a.thrown) out.push('whoosh');
+      if (b.thrown > a.thrown || b.charges > a.charges) out.push('whoosh');
+      if (b.slams > a.slams) out.push('boom');
+      if (b.summons > a.summons) out.push('reveal');
       if (b.keys > a.keys || b.doors > a.doors) out.push('reveal');
       if (b.revives > a.revives) out.push('correct');
       return out;
