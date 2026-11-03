@@ -153,7 +153,7 @@ test('Dice Party: a quick game is 6 turns each', () => {
 test('Dice Party: a Screen setting, TV or Handheld (everything on the phones); TV by default', async () => {
   const { getGame } = await import('../server/games/index.js');
   const setup = JSON.stringify(getGame('dice-party').create(fakeCtx()).hostView());
-  assert.ok(setup.includes('"screen"') && setup.includes('TV') && setup.includes('Handheld'));
+  assert.ok(setup.includes('"screen"') && setup.includes('📺 TV') && setup.includes('📱 Handheld'));
   for (const [screen, handheld] of [[undefined, false], [0, false], [1, true]]) {
     const ctx = fakeCtx();
     ctx.settings = { rounds: 6, screen };

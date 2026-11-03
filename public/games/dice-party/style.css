@@ -42,5 +42,6 @@
 .dp-pick.zero { opacity: 0.55; }
 .dp-pick.on { border-style: solid; background: var(--me); color: var(--on-bright); opacity: 1; }
 .dp-tray { display: flex; flex-direction: column; align-items: center; gap: 8px; padding-top: 8px; border-top: 1px solid var(--line); }
-.dp-tray .dp-roll, .dp-tray .dp-score { width: 100%; max-width: 420px; }
+.dp-tray .dp-buttons { display: flex; gap: 8px; width: 100%; max-width: 420px; }
+.dp-tray .dp-roll, .dp-tray .dp-score { flex: 1; padding: 14px 8px; font-size: 1.1rem; }
 .dp-tray .dp-big { margin-top: 0; }

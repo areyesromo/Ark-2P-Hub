@@ -13,6 +13,7 @@
   let view = null;
   let key = '';
   let pick = null; // box id waiting for a confirm tap
+  let pickedFor = ''; // the dice it was picked for: new dice, pick again
 
   /** The dice, tappable to hold on your turn once you've rolled. */
   function diceRow(v, mine) {
@@ -55,11 +56,11 @@
       const lastLine = v.last ? (v.last.by === me ? 'You' : 'They') + ' scored ' + v.last.points + ' in ' + esc(v.last.box) : '';
       const status = myTurn ? (v.rollsLeft === 3 ? '<strong>Your turn:</strong> roll!' : v.rollsLeft ? 'Tap dice to hold · tap a box (twice) to score' : 'No rolls left: pick a box')
         : 'Their turn…' + (lastLine ? ' · ' + lastLine : '');
+      // Roll stays while a box is picked (looking at a box never costs you your rolls); Score sits beside it.
       let buttons = '';
       if (myTurn) {
-        buttons = pick
-          ? '<button class="primary dp-score">Score ' + v.options[pick] + ' in ' + esc(v.boxes.find(function (x) { return x.id === pick; }).name) + '</button>'
-          : '<button class="primary dp-roll"' + (v.rollsLeft ? '' : ' disabled') + '>' + (v.rollsLeft ? '🎲 Roll (' + v.rollsLeft + ' left)' : 'No rolls left') + '</button>';
+        buttons = '<div class="dp-buttons"><button class="' + (pick ? 'ghost' : 'primary') + ' dp-roll"' + (v.rollsLeft ? '' : ' disabled') + '>' + (v.rollsLeft ? '🎲 Roll (' + v.rollsLeft + ' left)' : 'No rolls left') + '</button>' +
+          (pick ? '<button class="primary dp-score">Score ' + v.options[pick] + ' in ' + esc(v.boxes.find(function (x) { return x.id === pick; }).name) + '</button>' : '') + '</div>';
       }
       tray = '<p class="dp-info">' + status + '</p>' + (v.rollsLeft < 3 || myTurn ? diceRow(v, myTurn) : '') + buttons;
     }
@@ -72,7 +73,7 @@
     const me = v.you;
     const myTurn = v.phase === 'turn' && v.turn === me;
     const rolled = v.rollsLeft < 3;
-    if (!myTurn || !(pick in v.options)) pick = null;
+    if (!myTurn || !(pick in v.options) || pickedFor !== v.dice.join()) pick = null;
     const k = JSON.stringify([v.handheld, v.phase, v.turn, v.dice, v.held, v.rollsLeft, v.cards, pick]);
     if (k === key) return;
     key = k;
@@ -129,6 +130,7 @@
           // Handheld: a second tap on the same box scores it.
           if (view.handheld && pick === box) { api.send({ type: 'score', box: box }); pick = null; api.vibrate(20); return; }
           pick = box;
+          pickedFor = view.dice.join();
           key = '';
           render(view);
         }

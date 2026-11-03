@@ -22,8 +22,9 @@ Once both seats are taken, the TV's lobby stacks the two players (with your
 head to head and the tournament) in a narrow column on the left and gives the
 rest of the screen to the games; the QR code comes back when a seat is free.
 Two labels on a game tell you how it plays: **📱 No TV needed** (pick its handheld
-screen and the phones show everything: Dice Party) and **🤸 Motion** (you can tilt or
-move your phone to play; buttons or a joystick always work too).
+screen and the phones show everything, so nobody has to watch the TV once you've
+joined: Dice Party) and **🤸 Motion** (you can tilt or move your phone to play; buttons
+or a joystick always work too).
 
 ### ⚔️ Competitive
 
