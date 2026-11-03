@@ -43,3 +43,9 @@
 .td-wait .outcome { font-size: 2.2rem; font-weight: 900; }
 .td-wait .won { color: var(--good); }
 .td-wait .lost { color: var(--bad); }
+
+/* The creeps over your grid (taps go through to the tiles), and your rival's road, small. */
+.td-board { position: relative; }
+.td-creeps { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.td-mini { display: flex; align-items: center; gap: 8px; justify-content: flex-end; color: var(--muted); font-weight: 700; font-size: var(--fs-sm); }
+.td-mini canvas { width: 34%; aspect-ratio: 4 / 3; /* the 12 × 9 grid */ border-radius: var(--r-sm); border: 1px solid var(--line); }

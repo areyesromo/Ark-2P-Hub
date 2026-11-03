@@ -315,15 +315,17 @@ export class TowerDuel {
   }
 
   playerView(slot) {
-    // The phones don't draw the roads: no creeps or shots for them.
+    // The phones draw the creeps on both roads (yours, and your rival's on the small map), but
+    // not the shots: those are only the TV's flourish.
     const v = this.view();
-    v.sides = v.sides.map((s) => ({ ...s, creeps: [], shots: [] }));
+    v.sides = v.sides.map((s) => ({ ...s, shots: [] }));
     return Object.assign(v, { you: slot });
   }
 }
 
 export default {
   id: 'tower-duel',
+  handheld: true, // your road and a small map of theirs on your phone: no need to watch the TV
   name: 'Tower Defence Duel',
   tagline: 'Build towers to stop the creeps on your road and spend gold to send creeps down your rival\'s. Run out of lives and you lose.',
   create: (ctx) => new TowerDuel(ctx),

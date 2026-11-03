@@ -1,7 +1,8 @@
 // Tower Defence Duel on the phone (server/games/tower-duel.js): your half of the map as a grid.
 // Tap a free tile to pick it, then build (Arrow, Cannon or Frost); tap a tower to upgrade or
 // sell it. The send buttons along the bottom send creeps down your rival's road (and raise your
-// income). Lives, gold and income at the top; the creeps themselves are on the TV.
+// income). Lives, gold and income at the top. The creeps walk your road on the grid, and a
+// small map shows your rival's road (their towers and creeps), so you can play without the TV.
 (function () {
   Ark.loadCss('/games/tower-duel/style.css');
   const ICON = { arrow: '🏹', cannon: '💣', frost: '❄️' };
@@ -14,6 +15,65 @@
   let picked = null; // [x, y]
   let lastKey = '';
   let road = null; // 'x,y' of the road tiles
+  let segs = null; // the road as segments, to place a creep from how far along it is
+  const CREEP_LOOK = { runner: { r: 0.2, fill: '#f97316' }, brute: { r: 0.32, fill: '#7f1d1d' }, swarm: { r: 0.13, fill: '#a855f7' } };
+
+  function pointAt(d) {
+    for (let i = 0; i < segs.length; i++) {
+      const q = segs[i];
+      if (d <= q.len) return [q.a[0] + ((q.b[0] - q.a[0]) * d) / q.len, q.a[1] + ((q.b[1] - q.a[1]) * d) / q.len];
+      d -= q.len;
+    }
+    return segs[segs.length - 1].b;
+  }
+
+  /** A canvas sized to its box (in pixels), scaled to grid tiles. */
+  function fit(c, v) {
+    const css = c.getBoundingClientRect();
+    const dpr = window.devicePixelRatio || 1;
+    const W = Math.round(css.width * dpr);
+    const H = Math.round(css.height * dpr);
+    if (c.width !== W || c.height !== H) {
+      c.width = W;
+      c.height = H;
+    }
+    const g = c.getContext('2d');
+    g.setTransform(W / v.grid.w, 0, 0, H / v.grid.h, 0, 0);
+    g.clearRect(0, 0, v.grid.w, v.grid.h);
+    return g;
+  }
+
+  function drawCreeps(g, side) {
+    side.creeps.forEach(function (c) {
+      const p = pointAt(c.d);
+      const look = CREEP_LOOK[c.kind] || CREEP_LOOK.runner;
+      g.fillStyle = look.fill;
+      g.beginPath();
+      g.arc(p[0], p[1], look.r, 0, Math.PI * 2);
+      g.fill();
+      g.strokeStyle = c.slow ? '#7dd3fc' : 'rgba(0,0,0,0.6)';
+      g.lineWidth = 0.06;
+      g.stroke();
+    });
+  }
+
+  /** The creeps on your grid, and your rival's road on the small map: redrawn on every view. */
+  function drawLive(v) {
+    if (!root || v.phase !== 'play') return;
+    const mine = root.querySelector('.td-creeps');
+    if (mine) drawCreeps(fit(mine, v), v.sides[v.you]);
+    const mini = root.querySelector('.td-mini canvas');
+    if (!mini) return;
+    const g = fit(mini, v);
+    const them = v.sides[1 - v.you];
+    g.fillStyle = '#3f7d3a';
+    g.fillRect(0, 0, v.grid.w, v.grid.h);
+    g.fillStyle = '#a16207';
+    road.forEach(function (k) { const xy = k.split(','); g.fillRect(Number(xy[0]), Number(xy[1]), 1, 1); });
+    g.fillStyle = '#374151';
+    them.towers.forEach(function (t) { g.fillRect(t.x + 0.1, t.y + 0.1, 0.8, 0.8); });
+    drawCreeps(g, them);
+  }
 
   function roadTiles(v) {
     const out = new Set();
@@ -79,12 +139,23 @@
     if (!v) return;
     view = v;
     const s = v.sides[v.you];
-    if (!road) road = roadTiles(v);
+    if (!road) {
+      road = roadTiles(v);
+      segs = [];
+      for (let i = 1; i < v.path.length; i++) {
+        const a = v.path[i - 1];
+        const b = v.path[i];
+        segs.push({ a: a, b: b, len: Math.hypot(b[0] - a[0], b[1] - a[1]) });
+      }
+    }
     if (picked && road.has(picked[0] + ',' + picked[1])) picked = null;
     // Gold changes all the time (income, every kill): it's updated in place, and the screen is
     // only rebuilt when what's on it changes (a rebuild under your finger would lose the tap).
     const key = JSON.stringify([v.phase, v.countdown, s.lives, s.towers, picked, v.sides[1 - v.you].lives, v.winner]);
-    if (key === lastKey) return money(s);
+    if (key === lastKey) {
+      drawLive(v);
+      return money(s);
+    }
     lastKey = key;
     const top = '<div class="td-top"><span>❤️ ' + s.lives + '</span><span>💰 <b class="gold"></b> <small class="inc"></small></span><span class="them">Them ❤️ ' + v.sides[1 - v.you].lives + '</span></div>';
     if (v.phase === 'countdown') {
@@ -108,12 +179,14 @@
       }
     }
     root.innerHTML = top +
-      '<div class="td-grid" style="grid-template-columns:repeat(' + v.grid.w + ',1fr)">' + cells + '</div>' + panel(v, s) +
+      '<div class="td-mini"><span>Their road</span><canvas></canvas></div>' +
+      '<div class="td-board"><div class="td-grid" style="grid-template-columns:repeat(' + v.grid.w + ',1fr)">' + cells + '</div><canvas class="td-creeps"></canvas></div>' + panel(v, s) +
       '<div class="td-sends"><div class="label">Send to them:</div>' + SEND.map(function (x) {
         const def = v.creepTypes[x[0]];
         return '<button data-send="' + x[0] + '" data-cost="' + def.cost + '">' + x[1] + ' ' + x[2] + '<small>' + def.cost + ' 💰 · +' + def.income + ' income</small></button>';
       }).join('') + '</div>';
     money(s);
+    drawLive(v);
   }
 
   /** Gold and income, and which buttons you can afford: updated in place on every view. */
@@ -136,7 +209,7 @@
     },
     update: render,
     unmount: function () {
-      root = view = picked = road = null;
+      root = view = picked = road = segs = null;
       lastKey = '';
     },
   });
