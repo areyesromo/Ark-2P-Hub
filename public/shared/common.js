@@ -293,7 +293,22 @@
 
   /** A game's lobby labels: 📱 No TV needed (playable on the phones alone), 🤸 Motion (tilt or move to play). */
   function gameLabels(g) {
-    return (g.handheld ? ' <em class="label handheld">📱 No TV needed</em>' : '') + (g.motion ? ' <em class="label motion">🤸 Motion</em>' : '');
+    return (g.handheld ? ' <em class="label handheld">📱 No TV needed</em>' : '') + (g.motion ? ' <em class="label motion">🤸 Motion</em>' : '') + (g.vsComputer ? ' <em class="label bot">🤖 Vs computer</em>' : '');
+  }
+
+  const BOT_LEVEL_NAMES = { easy: 'Easy', normal: 'Normal', hard: 'Hard' };
+
+  /** The computer's seat, if it's playing: { slot, level }, or null. */
+  function botSeat(state) {
+    const p = state && state.players ? state.players.find(function (x) { return x && x.bot; }) : null;
+    return p ? { slot: p.slot, level: p.bot } : null;
+  }
+
+  /** The level buttons for the computer (Easy, Normal, Hard), the one playing lit; leave: a ✕ to send it away. */
+  function botLevelsHtml(level, leave) {
+    return '<span class="bot-levels">' + Object.keys(BOT_LEVEL_NAMES).map(function (k) {
+      return '<button class="ghost' + (k === level ? ' on' : '') + '" data-bot="' + k + '">' + BOT_LEVEL_NAMES[k] + '</button>';
+    }).join('') + (leave ? '<button class="ghost" data-bot-leave title="Send the computer away">✕</button>' : '') + '</span>';
   }
 
   /** True when a controller (plugged into the TV) holds a seat: phone-only games are off then. */
@@ -522,6 +537,9 @@
     escapeHtml: escapeHtml,
     controllerSeated: controllerSeated,
     gameLabels: gameLabels,
+    botSeat: botSeat,
+    botLevelsHtml: botLevelsHtml,
+    botLevelNames: BOT_LEVEL_NAMES,
     register: register,
     loadRenderer: loadRenderer,
     loadCss: loadCss,

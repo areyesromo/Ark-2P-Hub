@@ -82,7 +82,7 @@
   }
 
   function pickPanel(v) {
-    const local = [0, 1].filter(function (s) { return v.players[s].local && !v.commanders[s]; });
+    const local = [0, 1].filter(function (s) { return v.players[s].local && !v.players[s].bot && !v.commanders[s]; }); // (the computer picks for itself)
     return '<div class="ub-roster tv">' + v.roster.map(function (c, i) {
       const on = local.filter(function (s) { return padOf(v, s).pick === i; }).map(function (s) { return ' aim p' + (s + 1); }).join('');
       return '<div class="ub-card' + on + '"><div class="ub-head"><span class="ub-icon">' + c.icon + '</span><div><b>' + esc(c.name) + '</b><small>' + esc(c.style) + '</small></div></div>' +

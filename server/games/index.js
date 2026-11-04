@@ -20,6 +20,7 @@ import dungeonDuo from './dungeon-duo.js';
 import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
 import { SEAS } from './battleship-ultimate.js';
+import { battleshipBot } from './battleship-bot.js';
 const SEA_NAMES = Object.fromEntries(Object.entries(SEAS).map(([k, v]) => [k, v.name]));
 import sketchGuess from './sketch-guess.js';
 import connectFour from './connect-four.js';
@@ -60,6 +61,11 @@ import { withSetup } from './options.js';
  * lobby greys the game out and the room won't start it.
  * handheld: true labels it "📱 No TV needed" in the lobby (it can be played on the
  * phones alone); motion: true labels it "🤸 Motion" (phones can tilt or move to play).
+ * bot(view, level, rng): the computer opponent ("🤖 Vs computer" in the lobby). Given the
+ * computer's own playerView and its level ('easy', 'normal', 'hard'), it gives its next input,
+ * or null when it has no move. The room seats it as a controller player (ctx.players[slot].bot
+ * is its level) and plays its moves after a pause (Room#driveBot). Games without one can't be
+ * started while it's seated.
  *
  * create(ctx) returns an instance with:
  *   start()                  begin (or restart) the match
@@ -162,7 +168,7 @@ const GAMES = [
   }),
   miniGolf,
   withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` }, ...timer('timed', '20 s to draw') }),
-  withSetup(battleship, {
+  withSetup({ ...battleship, bot: battleshipBot }, {
     mode: { title: 'Mode', values: ['classic', 'ultimate'], label: (k) => (k === 'ultimate' ? '⚡ Ultimate: commanders, shaped ships and skills' : 'Classic: 5 ships, one shot a turn') },
     sea: { title: 'Sea (Ultimate)', values: ['open', 'archipelago', 'reef', 'strait', 'fog', 'volcano', 'random'], label: (k) => (k === 'random' ? '🎲 Any sea' : SEA_NAMES[k]) },
     shotSeconds: { title: 'Time per shot', values: [30, 15, 60, 0], label: (n) => (n ? `${n} s` : 'No timer: it waits for you') },
@@ -210,7 +216,7 @@ export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
     .sort((a, b) => byCategory(a) - byCategory(b))
-    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music, handheld, motion }) => ({
+    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music, handheld, motion, bot }) => ({
       id,
       name,
       tagline,
@@ -219,6 +225,7 @@ export function listGames() {
       phoneOnly: Boolean(phoneOnly),
       handheld: Boolean(handheld), // lobby label: 📱 No TV needed
       motion: Boolean(motion), // lobby label: 🤸 Motion
+      vsComputer: Boolean(bot), // lobby label: 🤖 Vs computer (a `bot` plays the other seat: see Room#driveBot)
       // The TV's background music for this game (see public/host/music.js).
       music: MUSIC_MOODS.includes(music) ? music : category === 'casual' ? 'casual' : 'action',
     }));

@@ -11,6 +11,10 @@ const IDLE_ROOM_MS = 30 * 60 * 1000;
 
 const newToken = () => randomBytes(16).toString('hex');
 
+export const BOT_LEVELS = ['easy', 'normal', 'hard'];
+export const BOT_NAME = 'Computer';
+const BOT_THINK_MS = 1100; // the computer's pause before each move, so you can follow it
+
 export function sanitizeName(name) {
   return String(name ?? '')
     .replace(/[\u0000-\u001f\u007f]/g, '')
@@ -59,7 +63,7 @@ export class Room {
   touch() { this.lastActive = Date.now(); }
 
   isIdle(now = Date.now()) {
-    const anyoneHere = this.hostSockets.size > 0 || this.players.some((p) => p && p.connected);
+    const anyoneHere = this.hostSockets.size > 0 || this.players.some((p) => p && p.connected && !p.bot);
     return !anyoneHere && now - this.lastActive > IDLE_ROOM_MS;
   }
 
@@ -114,16 +118,44 @@ export class Room {
     return { slot, player, rejoined: false };
   }
 
-  /** Controller players come and go with the TV. Call after the host sockets change. */
+  /**
+   * The computer opponent (see a game's `bot`): it takes the free seat, or changes level if it's
+   * already here. It plays as a controller seat does (the game places its ships for it), from
+   * its own player view.
+   */
+  seatBot(level) {
+    if (!BOT_LEVELS.includes(level)) return { error: 'Pick a level: easy, normal or hard.' };
+    const here = this.players.findIndex((p) => p && p.bot);
+    if (here !== -1) {
+      if (this.game) return { error: 'Finish this game first.' };
+      this.players[here].bot = level;
+      this.broadcastState();
+      return { slot: here, ok: true };
+    }
+    if (this.game) return { error: 'Finish this game first.' };
+    if (this.players.some((p) => p && p.name.toLowerCase() === BOT_NAME.toLowerCase())) return { error: `Someone here is already called ${BOT_NAME}.` };
+    const slot = this.players.findIndex((p) => p === null);
+    if (slot === -1) return { error: 'This room already has two players.' };
+    this.players[slot] = { name: BOT_NAME, token: newToken(), socketId: null, connected: true, local: true, bot: level };
+    this.tournament.reset();
+    this.broadcastState();
+    return { slot, ok: true };
+  }
+
+  get botSlot() {
+    return this.players.findIndex((p) => p && p.bot);
+  }
+
+  /** Controller players come and go with the TV (the computer stays). Call after the host sockets change. */
   syncLocalPlayers() {
     const tvHere = this.hostSockets.size > 0;
-    for (const p of this.players) if (p && p.local) p.connected = tvHere;
+    for (const p of this.players) if (p && p.local && !p.bot) p.connected = tvHere;
   }
 
   /** Rename a controller player (phones pick their name when they join). */
   renameLocal(slot, rawName) {
     const p = this.players[slot];
-    if (!p || !p.local) return { error: 'Only controller players can be renamed here.' };
+    if (!p || !p.local || p.bot) return { error: 'Only controller players can be renamed here.' };
     const name = sanitizeName(rawName);
     if (!name) return { error: 'Please enter a name.' };
     const other = this.players[1 - slot];
@@ -151,7 +183,8 @@ export class Room {
   pickRandomGame(rng = Math.random) {
     const allLocal = this.players.every((p) => p && p.local);
     const anyLocal = this.players.some((p) => p && p.local);
-    let pool = listGames().filter((g) => !(g.needsPhone && allLocal) && !(g.phoneOnly && anyLocal));
+    const bot = this.botSlot !== -1;
+    let pool = listGames().filter((g) => !(g.needsPhone && allLocal) && !(g.phoneOnly && anyLocal) && (!bot || g.vsComputer));
     if (pool.length > 1) pool = pool.filter((g) => g.id !== this.lastGameId);
     return pool[Math.floor(rng() * pool.length)].id;
   }
@@ -162,6 +195,7 @@ export class Room {
     if (!def) return { error: 'Unknown game.' };
     if (!this.readyToPlay) return { error: 'Waiting for two players.' };
     if (def.phoneOnly && this.players.some((p) => p && p.local)) return { error: `${def.name} needs two phones.` };
+    if (this.botSlot !== -1 && !def.bot) return { error: `${def.name} can't be played against the computer (yet).` };
 
     this.stopGame({ silent: true });
     this.lastPhase = null;
@@ -172,7 +206,7 @@ export class Room {
 
     const ctx = {
       get players() {
-        return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}`, local: Boolean(p && p.local) }));
+        return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}`, local: Boolean(p && p.local), ...(p && p.bot ? { bot: p.bot } : {}) }));
       },
       now: () => Date.now(),
       // The fastest lap on a track in this game's history (Kart Race), or null.
@@ -206,6 +240,7 @@ export class Room {
   stopGame({ silent = false } = {}) {
     for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
+    this.botTimer = null;
     this.generation++;
     this.game = null;
     this.gameId = null;
@@ -243,7 +278,7 @@ export class Room {
       hostConnected: this.hostSockets.size > 0,
       readyToPlay: this.readyToPlay,
       players: this.players.map((p, slot) =>
-        p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local), profile: this.profileOf(p.name) } : null,
+        p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local), ...(p.bot ? { bot: p.bot } : {}), profile: p.bot ? { ...this.profileOf(p.name), avatar: '🤖' } : this.profileOf(p.name) } : null,
       ),
       games: this.lobbyGames(),
       h2h: this.headToHead(),
@@ -281,6 +316,30 @@ export class Room {
     this.players.forEach((p, slot) => {
       if (p) this.io.to(this.playerChannel(slot)).emit('game:view', { gameId, view: this.game.playerView(slot) });
     });
+    this.driveBot();
+  }
+
+  /**
+   * The computer's move, if it has one: after a pause it looks again (the game may have moved
+   * on) and plays. One move is waiting at a time; stopping the game clears it with the timers.
+   */
+  driveBot() {
+    const slot = this.botSlot;
+    if (slot === -1 || this.botTimer || !this.game) return;
+    const def = getGame(this.gameId);
+    const think = () => (def && def.bot && this.game ? def.bot(this.game.playerView(slot), this.players[slot].bot, Math.random) : null);
+    if (!think()) return;
+    const generation = this.generation;
+    const t = setTimeout(() => {
+      this.timers.delete(t);
+      this.botTimer = null;
+      if (this.generation !== generation || !this.game || !this.players[slot] || !this.players[slot].bot) return;
+      const input = think();
+      if (input) this.handleInput(slot, input);
+      this.driveBot(); // (in case that move was refused, or changed nothing on screen)
+    }, BOT_THINK_MS);
+    this.timers.add(t);
+    this.botTimer = t;
   }
 
   /**
@@ -298,7 +357,7 @@ export class Room {
       }
       this.broadcastState();
     }
-    if (!this.stats) return;
+    if (!this.stats || this.botSlot !== -1) return; // (games against the computer aren't in anyone's stats)
     const match = {
       game: def.id,
       gameName: def.name,
@@ -343,7 +402,7 @@ export class Room {
   /** The record between the two seated players, for the lobby. */
   headToHead() {
     const [a, b] = this.players;
-    return this.stats && a && b ? this.stats.headToHead(a.name, b.name) : null;
+    return this.stats && a && b && !a.bot && !b.bot ? this.stats.headToHead(a.name, b.name) : null;
   }
 
   /** Bring a (re)connecting socket fully up to date. */

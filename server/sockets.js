@@ -13,6 +13,8 @@ const reply = (ack, payload) => {
  *   lobby:return
  *   lobby:tournament { bestOf } | { reset: true } -> ack { ok, tournament } | { error }
  *   game:input    { type, ... }              (players only, game-specific)
+ *   bot:join      { level }                  -> ack { ok, slot } | { error }  (the computer takes the free seat, or changes level)
+ *   bot:leave                                -> ack { ok }  (the computer gives up its seat)
  *
  * Controllers plugged into the TV (host only):
  *   pad:join      { name, token? }           -> ack { ok, slot, token, name }
@@ -186,6 +188,20 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
     socket.on('lobby:tournament', (data, ack) => {
       if (!room) return reply(ack, { error: 'Not in a room.' });
       reply(ack, room.setTournament(asObject(data)));
+    });
+
+    // The computer opponent, from the TV or a seated phone (for a game with no TV at all).
+    socket.on('bot:join', (data, ack) => {
+      if (!room || (role === 'player' && slot === null)) return reply(ack, { error: 'Not in a room.' });
+      room.touch();
+      reply(ack, room.seatBot(asObject(data).level));
+    });
+
+    socket.on('bot:leave', (data, ack) => {
+      if (!room) return reply(ack, { error: 'Not in a room.' });
+      const seat = room.botSlot;
+      if (seat !== -1) room.removePlayer(seat);
+      reply(ack, { ok: true });
     });
 
     socket.on('game:input', (data) => {
