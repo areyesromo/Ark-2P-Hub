@@ -187,3 +187,50 @@ test('Race needs two phones: with a controller player it\'s the usual turns', ()
   ctx.advance(TIMING.countdownMs + 10);
   assert.equal(game.phase, 'turn');
 });
+
+test('a card is a whole number: a card can\'t be paired with itself by sending its number as text', () => {
+  for (const mode of ['turns', 'race']) {
+    const { game } = playing({ mode });
+    const slot = mode === 'race' ? 0 : game.turn;
+    game.onInput(slot, { type: 'flip', index: 3 });
+    game.onInput(slot, { type: 'flip', index: '3' });
+    game.onInput(slot, { type: 'flip', index: 3.5 });
+    assert.deepEqual(game.scores, [0, 0], mode);
+  }
+});
+
+test('Race: tapping one of your face-up misses again starts a new pair with it', () => {
+  const { game } = racing();
+  const faces = [...new Set(game.cards.map((c) => c.face))];
+  const { a, b } = pairOf(game, faces[0]);
+  const { a: c } = pairOf(game, faces[1]);
+  game.onInput(0, { type: 'flip', index: a });
+  game.onInput(0, { type: 'flip', index: c }); // a miss: a and c stay up
+  game.onInput(0, { type: 'flip', index: a }); // a again: the start of a new pair
+  game.onInput(0, { type: 'flip', index: b });
+  assert.deepEqual(game.scores, [1, 0]);
+});
+
+test('Race: the end shows every face, coloured by who paired what; a rematch starts fresh', () => {
+  const p = racing();
+  for (const f of [...new Set(p.game.cards.map((x) => x.face))]) {
+    const { a, b } = pairOf(p.game, f);
+    p.game.onInput(0, { type: 'flip', index: a });
+    p.game.onInput(0, { type: 'flip', index: b });
+  }
+  const tv = p.game.hostView();
+  assert.ok(tv.cards.every((c) => c.up && c.owner === 0));
+  p.game.onInput(0, { type: 'rematch' });
+  p.ctx.advance(TIMING.countdownMs + 10);
+  assert.equal(p.game.phase, 'race');
+  assert.deepEqual(p.game.scores, [0, 0]);
+  assert.ok(p.game.playerView(0).cards.every((c) => !c.up));
+});
+
+test('Race with a controller player seated mid-game: the TV shows their board and the controller flips', () => {
+  const { ctx, game } = racing();
+  ctx.players[1].local = true; // a controller took the dropped phone's seat
+  const { a } = pairOf(game, game.cards[0].face);
+  game.onInput(1, { type: 'flip', index: a });
+  assert.equal(game.hostView().cards[a].up, true, 'their flip shows on the TV');
+});

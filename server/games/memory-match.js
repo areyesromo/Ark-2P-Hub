@@ -120,8 +120,9 @@ export class MemoryMatch {
   raceFlip(slot, index) {
     const card = this.cards[index];
     const up = this.mine[slot];
-    if (!card || this.found[slot].has(index) || up.includes(index)) return;
-    if (up.length === 2) up.length = 0; // turn the last mismatch back
+    if (!card || this.found[slot].has(index)) return;
+    if (up.includes(index) && up.length === 1) return; // already your first card
+    if (up.length === 2) up.length = 0; // turn the last mismatch back (tapping one of them starts afresh with it)
     up.push(index);
     this.events.flips++;
     if (up.length === 2) {
@@ -137,6 +138,7 @@ export class MemoryMatch {
   }
 
   flip(slot, index) {
+    if (!Number.isInteger(index)) return; // a card's number (as text, it could pair a card with itself)
     if (this.phase === 'race') return this.raceFlip(slot, index);
     if (this.phase !== 'turn' || slot !== this.turn) return;
     const card = this.cards[index];
@@ -191,6 +193,14 @@ export class MemoryMatch {
   view(viewer) {
     const playing = Boolean(this.cards);
     const racing = playing && this.race && this.phase !== 'over';
+    // The TV shows a board in a Race only for a controller player (one took a dropped phone's seat).
+    const local = this.ctx.players.findIndex((p) => p && p.local);
+    const board = viewer === null ? (local === -1 ? null : local) : viewer;
+    // The end of a Race: every face, coloured by who paired it (yours on your phone; the TV the winner's).
+    const raceOwner = (i) => {
+      if (viewer !== null) return this.found[viewer].has(i) ? viewer : null;
+      return this.winner !== null && this.found[this.winner].has(i) ? this.winner : null;
+    };
     const [cols, rows] = gridOf(this.settings.cards);
     return {
       phase: this.phase,
@@ -203,11 +213,13 @@ export class MemoryMatch {
         ? null
         : racing
           ? this.cards.map((c, i) => {
-            if (viewer === null) return { up: false };
-            if (this.found[viewer].has(i)) return { face: c.face, owner: viewer, up: true };
-            return this.mine[viewer].includes(i) ? { face: c.face, owner: null, up: true } : { up: false };
+            if (board === null) return { up: false };
+            if (this.found[board].has(i)) return { face: c.face, owner: board, up: true };
+            return this.mine[board].includes(i) ? { face: c.face, owner: null, up: true } : { up: false };
           })
-          : this.cards.map((c, i) => (c.owner !== null || this.flipped.includes(i) || this.phase === 'over' ? { face: c.face, owner: c.owner, up: true } : { up: false })),
+          : this.race && this.phase === 'over'
+            ? this.cards.map((c, i) => ({ face: c.face, owner: raceOwner(i), up: true }))
+            : this.cards.map((c, i) => (c.owner !== null || this.flipped.includes(i) || this.phase === 'over' ? { face: c.face, owner: c.owner, up: true } : { up: false })),
       race: Boolean(this.race),
       flipped: playing ? this.flipped : [],
       turn: this.turn,
@@ -238,7 +250,7 @@ export default {
   id: 'memory-match',
   handheld: true, // everything's on your phone: no need to watch the TV
   name: 'Memory Match',
-  tagline: 'Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins.',
+  tagline: 'Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. Or Race: your own board each, first to clear it.',
   music: 'thinking',
   create: (ctx) => new MemoryMatch(ctx),
 };

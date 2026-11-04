@@ -209,7 +209,7 @@ test('a 5x5, 60-second, best-of-1 match', () => {
 
 test('Race: the first to the target points takes the round, and words you both found count for both', () => {
   const { ctx, game } = setup();
-  game.settings.goal = 3; // (the setup offers 30, 50 or 75)
+  game.settings.goal = 3; // (the setup offers 20, 35 or 50)
   toPlay(ctx);
   say(game, 0, 'cat');
   say(game, 1, 'cat'); // both: counts for both in a Race
@@ -233,8 +233,8 @@ test('Race: if the time cap runs out first, more points takes the round', () => 
   assert.equal(game.result.winner, 0);
 });
 
-test('Race is in the setup, as the goal: timed (shared words cancel) or first to 30, 50 or 75 points', async () => {
+test('Race is in the setup, as the goal: timed (shared words cancel) or first to 20, 35 or 50 points', async () => {
   const { OPTIONS } = await import('../server/games/word-race.js');
-  assert.deepEqual(OPTIONS.goal, [0, 30, 50, 75]);
+  assert.deepEqual(OPTIONS.goal, [0, 20, 35, 50]);
   assert.equal(DEFAULTS.goal, 0, 'the usual timed rounds by default');
 });

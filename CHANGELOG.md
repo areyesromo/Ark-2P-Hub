@@ -8,7 +8,7 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - Memory Match: a **Race** mode for two phones. The same cards on each phone, you both flip at
   once on your own board, and the first to clear every pair wins.
-- Word Race: a **Race** mode. The first to 30, 50 or 75 points takes the round, and words you
+- Word Race: a **Race** mode. The first to 20, 35 or 50 points takes the round, and words you
   both found count for both.
 
 ## 0.1.18

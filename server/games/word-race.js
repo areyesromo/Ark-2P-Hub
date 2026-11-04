@@ -23,7 +23,7 @@ export const OPTIONS = {
   size: [4, 5, 6], // grid is size x size
   time: [90, 60, 120, 180], // seconds per round
   rounds: [3, 1, 5], // best of
-  goal: [0, 30, 50, 75], // 0: timed rounds (shared words cancel); else Race to this many points
+  goal: [0, 20, 35, 50], // 0: timed rounds (shared words cancel); else Race to this many points (reachable even on 4×4)
 };
 export const DEFAULTS = defaultsOf(OPTIONS);
 export const MIN_GRID_WORDS = { 4: 40, 5: 100, 6: 150 }; // reroll grids poorer than this
@@ -365,6 +365,6 @@ export default {
   phoneOnly: true, // you swipe words on the phone
   music: 'thinking',
   name: 'Word Race',
-  tagline: 'Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Pick the grid size, time and rounds.',
+  tagline: 'Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Or Race: first to the target points takes the round.',
   create: (ctx) => new WordRace(ctx),
 };
