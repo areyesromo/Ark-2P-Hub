@@ -94,7 +94,7 @@ test("a game's saved settings survive going back to the lobby, per room and per 
   r.startGame('pong');
   r.stopGame();
   r.startGame('word-race');
-  assert.deepEqual(r.game.hostView().settings, { size: 6, time: 180, rounds: 3 });
+  assert.deepEqual(r.game.hostView().settings, { size: 6, time: 180, rounds: 3, goal: 0 });
   r.stopGame();
   const other = room({ phones: [true, true] });
   other.startGame('word-race');

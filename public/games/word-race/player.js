@@ -137,11 +137,12 @@
     if (v.phase === 'countdown') return 'Get ready… ' + v.countdown + (loaded ? '<br><small>' + Ark.setup.summary(v, ArkWords.ROWS) + '</small>' : '');
     if (v.phase === 'play') {
       const pts = v.yourWords.reduce(function (s, w) { return s + w.points; }, 0);
+      if (v.points) return '🏁 You <strong>' + v.points[you] + '</strong> / ' + v.goal + ' · them ' + v.points[1 - you] + ' · ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's';
       return v.yourWords.length + ' words · ' + pts + ' pts · ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's · them: ' + v.counts[1 - you];
     }
     if (v.result) {
       const r = v.result;
-      const line = 'You ' + r.points[you] + ' – ' + r.points[1 - you] + ' them (shared words cancel)';
+      const line = 'You ' + r.points[you] + ' – ' + r.points[1 - you] + ' them' + (v.goal ? '' : ' (shared words cancel)');
       if (v.phase === 'over') {
         if (v.draw) return '<span class="big">Draw! 🤝</span><br>' + line;
         return '<span class="big ' + (v.winner === you ? 'won' : 'lost') + '">' + (v.winner === you ? 'You win! 🏆' : 'You lose') + '</span><br>' + line;
@@ -162,7 +163,7 @@
     if (!view || view.round !== v.round) path = [];
     view = v;
     drawGrid();
-    const key = JSON.stringify([v.phase, v.round, v.countdown, Math.ceil(v.timeLeftMs / 1000), v.yourWords.length, v.counts, v.scores, Boolean(v.result), v.settings, loaded]);
+    const key = JSON.stringify([v.phase, v.round, v.countdown, Math.ceil(v.timeLeftMs / 1000), v.yourWords.length, v.counts, v.points, v.scores, Boolean(v.result), v.settings, loaded]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';

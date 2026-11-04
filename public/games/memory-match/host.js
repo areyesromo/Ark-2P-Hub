@@ -34,11 +34,16 @@
         '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</div></div>';
     }
     if (v.phase === 'countdown') {
-      return '<div class="panel"><div class="big">' + v.countdown + '</div><div class="sub">' + nameOf(v, v.turn) + ' goes first. Flip two cards: a pair is yours and you go again.</div></div>';
+      return '<div class="panel"><div class="big">' + v.countdown + '</div><div class="sub">' + (v.race
+        ? 'Race! The same cards on both phones: flip at the same time, and the first to clear every pair wins.'
+        : nameOf(v, v.turn) + ' goes first. Flip two cards: a pair is yours and you go again.') + '</div></div>';
     }
-    const local = v.players[v.turn].local && v.phase === 'turn';
-    const grid = ArkMemory.gridHtml(v, local ? { index: padOf(v.turn).cursor, cls: 'p' + (v.turn + 1) } : null);
+    const raceLocal = v.phase === 'race' ? v.players.findIndex(function (p) { return p.local; }) : -1;
+    const aimer = raceLocal !== -1 ? raceLocal : v.turn;
+    const local = (v.players[v.turn].local && v.phase === 'turn') || raceLocal !== -1;
+    const grid = ArkMemory.gridHtml(v, local ? { index: padOf(aimer).cursor, cls: 'p' + (aimer + 1) } : null);
     let banner = '';
+    if (v.phase === 'race') banner = '<div class="mm-banner">🏁 Race! On your phones · ' + v.pairs + ' pairs to clear</div>';
     if (v.phase === 'over') {
       banner = '<div class="mm-banner">' + (v.draw ? "🤝 It's a draw!" : '🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!') +
         '<div class="sub">Rematch, change the settings (🎮 Y) or head back to the lobby.</div></div>';
@@ -94,7 +99,8 @@
         if (btn === 'A' || btn === 'START') return { type: 'rematch' };
         return btn === 'Y' ? { type: 'setup' } : null;
       }
-      if (v.phase !== 'turn' || v.turn !== slot) return null;
+      // (In a Race, a controller player who took a dropped phone's seat flips on the TV too.)
+      if (!(v.phase === 'turn' && v.turn === slot) && v.phase !== 'race') return null;
       if (MOVES[btn]) {
         const x = Math.min(v.cols - 1, Math.max(0, (p.cursor % v.cols) + MOVES[btn][0]));
         const y = Math.min(v.rows - 1, Math.max(0, Math.floor(p.cursor / v.cols) + MOVES[btn][1]));

@@ -33,6 +33,7 @@
     { key: 'size', title: 'Grid', fmt: function (n) { return n + '×' + n; } },
     { key: 'time', title: 'Time per round', fmt: function (s) { return s % 60 ? Math.floor(s / 60) + '½ min' : s / 60 + ' min'; } },
     { key: 'rounds', title: 'Match', fmt: function (n) { return n === 1 ? 'One round' : 'Best of ' + n; } },
+    { key: 'goal', title: 'Mode', fmt: function (n) { return n ? 'Race to ' + n + ' points' : 'Timed: shared words cancel'; } },
   ];
 
   window.ArkWords = { gridHtml: gridHtml, spell: spell, adjacent: adjacent, ROWS: ROWS };
