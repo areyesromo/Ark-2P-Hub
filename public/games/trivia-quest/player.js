@@ -26,7 +26,7 @@
     const you = v.you;
     if (v.phase === 'question') {
       if (v.yourPick !== null) return 'Locked in. ' + (v.theyAnswered ? 'Revealing…' : 'Waiting for your partner…');
-      return v.theyAnswered ? '<strong>Your partner has answered.</strong> Agree on it?' : 'Talk it over, then pick. Faster hits harder.';
+      return v.theyAnswered ? '<strong>Your partner has answered.</strong> Agree on it?' : 'Talk it over, then pick.' + (v.timed ? ' Faster hits harder.' : '');
     }
     if (v.phase === 'reveal') {
       const strike = v.teamStrike ? ' <strong>⚡ Team strike!</strong>' : '';

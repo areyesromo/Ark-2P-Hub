@@ -45,6 +45,8 @@ export class MindMeld {
     this.ctx = ctx;
     this.rng = rng;
     this.rounds = settingOf(ctx, 'rounds', ROUNDS);
+    // Timed (90 s for the clue, 60 s to guess) or no timer (the usual: it's a thinking game).
+    this.clock = settingOf(ctx, 'timer', 'off') === 'timed';
     this.timer = null;
     this.firstGiver = 0;
   }
@@ -79,10 +81,12 @@ export class MindMeld {
     this.timer = null;
   }
 
+  /** Into `phase`, and `then` after `ms` (null: no time limit, it waits for you). */
   timed(phase, ms, then) {
     this.clearTimer();
     this.phase = phase;
-    this.phaseEnds = this.ctx.now() + ms;
+    this.phaseEnds = ms === null ? null : this.ctx.now() + ms;
+    if (ms === null) return this.ctx.update();
     this.timer = this.ctx.setTimeout(() => {
       this.timer = null;
       then();
@@ -106,7 +110,7 @@ export class MindMeld {
     this.clue = null;
     this.aim = 50;
     this.result = null;
-    this.timed('clue', TIMING.clueMs, () => this.reveal(true));
+    this.timed('clue', this.clock ? TIMING.clueMs : null, () => this.reveal(true));
   }
 
   reveal(noClue = false) {
@@ -135,7 +139,7 @@ export class MindMeld {
       const clue = cleanClue(input.text);
       if (!clue) return;
       this.clue = clue;
-      return this.timed('guess', TIMING.guessMs, () => this.reveal());
+      return this.timed('guess', this.clock ? TIMING.guessMs : null, () => this.reveal());
     }
     if (this.phase !== 'guess' && this.phase !== 'clue') return;
     if (slot !== this.guesser) return;
@@ -166,7 +170,8 @@ export class MindMeld {
       target: revealed && this.result ? this.result.target : null,
       result: this.result,
       bands: BANDS,
-      timeLeftMs: this.phase === 'clue' || this.phase === 'guess' ? Math.max(0, this.phaseEnds - now) : 0,
+      timeLeftMs: this.phaseEnds !== null && (this.phase === 'clue' || this.phase === 'guess') ? Math.max(0, this.phaseEnds - now) : 0,
+      timed: this.clock,
       history: this.history,
       stars: this.stars,
       maxStars: this.rounds * 3,

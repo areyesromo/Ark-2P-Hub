@@ -39,6 +39,7 @@ export class CrazyEights {
     this.rng = rng;
     this.actions = Boolean(settingOf(ctx, 'actions', 1));
     this.target = settingOf(ctx, 'target', TARGET); // 0: one hand
+    this.timedTurns = settingOf(ctx, 'timer', 'timed') === 'timed'; // or no timer: a turn waits for you
     this.timer = null;
     this.opener = 1; // who opens the match: player 1 the first time, then the other each rematch
   }
@@ -92,7 +93,7 @@ export class CrazyEights {
   turnStart() {
     this.drew = null;
     this.turns++;
-    this.clock(TIMING.turnMs, () => this.timeUp());
+    this.turnClock(() => this.timeUp());
     this.ctx.update();
   }
 
@@ -103,6 +104,14 @@ export class CrazyEights {
       this.timer = null;
       onEnd();
     }, ms);
+  }
+
+  /** The clock for a turn (or for calling the suit), if turns are timed. */
+  turnClock(onEnd) {
+    if (this.timedTurns) return this.clock(TIMING.turnMs, onEnd);
+    if (this.timer) this.ctx.clearTimeout(this.timer);
+    this.timer = null;
+    this.turnEnds = null;
   }
 
   /** Can `slot` play card c now? */
@@ -123,7 +132,7 @@ export class CrazyEights {
     if (rankOf(c) === '8') {
       this.events.eights++;
       this.phase = 'suit';
-      this.clock(TIMING.turnMs, () => this.callSuit(this.mostHeld(slot)));
+      this.turnClock(() => this.callSuit(this.mostHeld(slot)));
       return this.ctx.update();
     }
     if (this.actions && rankOf(c) === '2') {
@@ -245,6 +254,7 @@ export class CrazyEights {
       actions: this.actions,
       target: this.target,
       timeLeftMs: this.turnEnds ? Math.max(0, this.turnEnds - this.ctx.now()) : 0,
+      timed: this.timedTurns,
       turnMs: TIMING.turnMs,
       // At the end of a hand both hands are shown.
       result: this.result,

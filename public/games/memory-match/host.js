@@ -43,7 +43,7 @@
       banner = '<div class="mm-banner">' + (v.draw ? "🤝 It's a draw!" : '🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!') +
         '<div class="sub">Rematch, change the settings (🎮 Y) or head back to the lobby.</div></div>';
     }
-    return banner + grid + (v.phase === 'over' ? '' : '<div class="mm-bar"><div class="fill"></div></div>');
+    return banner + grid + (v.phase === 'over' || !v.timed ? '' : '<div class="mm-bar"><div class="fill"></div></div>'); // no bar with no timer
   }
 
   function render() {
@@ -64,7 +64,7 @@
     if (!root || !view) return;
     const bar = root.querySelector('.mm-bar .fill');
     if (!bar) return;
-    const frac = view.phase === 'turn' ? Math.max(0, view.timeLeftMs - (performance.now() - viewAt)) / view.turnMs : 0;
+    const frac = view.phase === 'turn' && view.timed ? Math.max(0, view.timeLeftMs - (performance.now() - viewAt)) / view.turnMs : 0;
     bar.style.width = (frac * 100).toFixed(2) + '%';
     bar.className = 'fill p' + (view.turn + 1) + (frac < 0.25 ? ' low' : '');
   }

@@ -85,7 +85,7 @@
       return '<div class="ce-end"><div class="head">' + head + '</div>' + hands +
         '<div class="sub">' + (v.phase === 'over' ? 'Rematch or head back to the lobby from your phones.' : 'Next hand coming up…') + '</div></div>';
     }
-    return middle(v) + '<div class="ce-bar"><div class="fill"></div></div>';
+    return middle(v) + (v.timed ? '<div class="ce-bar"><div class="fill"></div></div>' : ''); // no bar with no timer
   }
 
   function render(v) {

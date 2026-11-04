@@ -1,9 +1,9 @@
 // Trivia Quest. Co-op: the two of you face three monsters in a row (Goo Blob, Stone Golem,
 // then the Dragon), each with a health bar, and share a row of hearts. Every turn is a
 // question from the Quiz Battle bank; you both answer secretly on your phones (talk it over
-// first: that's the point) and it's revealed when you've both answered or time runs out. A
-// right answer hits the monster, harder the faster it came, and both right is a team strike
-// (half as much again). Every wrong or missing answer costs a heart. Beat a monster for up to
+// first: that's the point) and it's revealed when you've both answered (or, timed, when time
+// runs out). A right answer hits the monster (timed: harder the faster it came), and both right
+// is a team strike (half as much again). Every wrong or missing answer costs a heart. Beat a monster for up to
 // three stars (fewer for each heart lost against it); run out of hearts and the quest ends.
 // Each player has one 50/50 per quest, on their own phone only.
 
@@ -32,6 +32,9 @@ export class TriviaQuest {
     this.rng = rng;
     const topic = TOPICS[settingOf(ctx, 'topic', 0) - 1];
     this.maxHearts = settingOf(ctx, 'hearts', HEARTS);
+    // Timed (15 s a question, 12 s against the Dragon) or no timer (the usual: a question waits
+    // for you both, and answering fast earns half the speed bonus, whenever you answer).
+    this.clock = settingOf(ctx, 'timer', 'off') === 'timed';
     this.bank = topic && bank.some((q) => q.cat === topic) ? bank.filter((q) => q.cat === topic) : bank;
     // Asked in earlier quests in this room, so rematches don't repeat.
     this.used = usedIn(ctx, 'quest:' + (topic || 'all'));
@@ -89,10 +92,12 @@ export class TriviaQuest {
   /** A timed phase, with a fresh view every second (for the clock), then onEnd. */
   runPhase(phase, ms, onEnd) {
     this.phase = phase;
-    this.phaseEnds = this.ctx.now() + ms;
+    this.phaseEnds = ms === null ? null : this.ctx.now() + ms; // null: no time limit
     this.onPhaseEnd = onEnd;
     this.ctx.update();
-    this.scheduleStep();
+    if (this.timer) this.ctx.clearTimeout(this.timer);
+    this.timer = null;
+    if (ms !== null) this.scheduleStep();
   }
 
   scheduleStep() {
@@ -118,7 +123,7 @@ export class TriviaQuest {
     this.damage = 0;
     this.heartsLost = 0;
     this.questionStart = this.ctx.now();
-    this.runPhase('question', this.questionMs, () => this.reveal());
+    this.runPhase('question', this.clock ? this.questionMs : null, () => this.reveal());
   }
 
   reveal() {
@@ -127,7 +132,7 @@ export class TriviaQuest {
     const q = this.questions[this.index];
     this.picks.forEach((p, slot) => {
       if (p === q.correct) {
-        const left = Math.max(0, this.phaseEnds - this.answeredAt[slot]) / this.questionMs;
+        const left = this.clock ? Math.max(0, this.phaseEnds - this.answeredAt[slot]) / this.questionMs : 0.5;
         this.hits[slot] = DAMAGE.base + Math.round(DAMAGE.speed * left);
       } else this.heartsLost++;
     });
@@ -216,6 +221,7 @@ export class TriviaQuest {
       countdown: this.phase === 'intro' ? Math.ceil(this.timeLeftMs() / 1000) : 0,
       timeLeftMs: this.timeLeftMs(),
       questionMs: this.questionMs,
+      timed: this.clock,
       answered: this.picks ? this.picks.map((p) => p !== null) : [false, false],
       // Secret until the reveal.
       correct: revealing ? q.correct : null,
@@ -261,6 +267,6 @@ export default {
   music: 'thinking',
   category: 'casual',
   name: 'Trivia Quest',
-  tagline: 'Co-op quiz: answer together to bring down three monsters (Goo Blob, Stone Golem, Dragon). Right and fast hits harder; every wrong answer costs a shared heart.',
+  tagline: 'Co-op quiz: answer together to bring down three monsters (Goo Blob, Stone Golem, Dragon). Right answers hit, both right is a team strike; every wrong answer costs a shared heart.',
   create: (ctx) => new TriviaQuest(ctx),
 };

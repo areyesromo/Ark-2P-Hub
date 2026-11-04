@@ -17,7 +17,7 @@
   function status(v) {
     if (v.phase === 'play') {
       const again = v.lastBoxes.length && v.lastLine && v.lastLine.by === v.turn;
-      return nameOf(v, v.turn) + (again ? ' closed a box: go again!' : "'s turn") + ' <span class="clock">⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's</span>';
+      return nameOf(v, v.turn) + (again ? ' closed a box: go again!' : "'s turn") + (v.timed ? ' <span class="clock">⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's</span>' : '');
     }
     if (v.phase === 'roundEnd') return v.result.draw ? 'Same number of boxes: a draw' : nameOf(v, v.result.winner) + ' takes the round, ' + Math.max(v.score[0], v.score[1]) + ' to ' + Math.min(v.score[0], v.score[1]) + '! 🎉';
     if (v.phase === 'over') {

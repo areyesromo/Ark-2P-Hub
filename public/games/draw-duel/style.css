@@ -61,6 +61,7 @@
 
 .dd-bar { height: 12px; border-radius: 6px; background: var(--bg-2); overflow: hidden; }
 .dd-host.phase-countdown .dd-bar, .dd-host.phase-reveal .dd-bar, .dd-host.phase-over .dd-bar { visibility: hidden; }
+.dd-host.untimed.phase-draw .dd-bar { visibility: hidden; } /* no timer: no bar while you draw */
 .dd-bar .fill { height: 100%; width: 0; background: var(--good); border-radius: 6px; }
 .dd-bar .fill.low { background: var(--bad); }
 

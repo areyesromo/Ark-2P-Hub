@@ -19,7 +19,7 @@
   function status(v) {
     if (v.phase === 'play') {
       return nameOf(v, v.turn) + "'s turn" + (v.chain ? ': keep jumping!' : v.legal.some(function (m) { return Math.abs(m.to[0] - m.from[0]) === 2; }) ? ': a jump is a must' : '') +
-        ' <span class="clock">⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's</span>';
+        (v.timed ? ' <span class="clock">⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's</span>' : '');
     }
     if (v.phase === 'roundEnd') return v.result.draw ? '40 quiet moves: a draw' : nameOf(v, v.result.winner) + ' ' + WHY[v.result.why] + '! 🎉';
     if (v.phase === 'over') {

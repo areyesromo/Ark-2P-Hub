@@ -60,6 +60,8 @@ export class FakeOut {
     this.rng = rng;
     this.bank = bank;
     this.rounds = settingOf(ctx, 'rounds', ROUNDS);
+    // Timed (60 s to write, 20 s to pick: the usual) or no timer (it waits for you both).
+    this.clock = settingOf(ctx, 'timer', 'timed') === 'timed';
     // Asked in earlier matches in this room, so rematches don't repeat.
     this.used = usedIn(ctx, 'fake-out');
     this.timer = null;
@@ -96,13 +98,16 @@ export class FakeOut {
   }
 
   /** A timed phase, with a fresh view every second (for the clock), then onEnd. */
+  /** Into `phase` for `ms`, then `onEnd` (ms null: no time limit, it waits for you). */
   runPhase(phase, ms, onEnd) {
     this.phase = phase;
     this.phaseStart = this.ctx.now();
-    this.phaseEnds = this.phaseStart + ms;
+    this.phaseEnds = ms === null ? null : this.phaseStart + ms;
     this.onPhaseEnd = onEnd;
     this.ctx.update();
-    this.scheduleStep();
+    if (this.timer) this.ctx.clearTimeout(this.timer);
+    this.timer = null;
+    if (ms !== null) this.scheduleStep();
   }
 
   scheduleStep() {
@@ -132,7 +137,7 @@ export class FakeOut {
     this.peeked = [false, false]; // wrote the truth: told so, but no points for finding it this round
     this.options = null;
     this.picks = [null, null];
-    this.runPhase('write', TIMING.writeMs, () => this.toPick());
+    this.runPhase('write', this.clock ? TIMING.writeMs : null, () => this.toPick());
   }
 
   /** Both fakes in (a missing one is that player's ready-made fake): the answers to pick from. */
@@ -151,7 +156,7 @@ export class FakeOut {
     if (!options.some((o) => normal(o.text) === normal(this.house))) options.push({ text: this.house, kind: 'house', authors: [] });
     this.options = this.shuffle(options);
     this.picks = [null, null];
-    this.runPhase('pick', TIMING.pickMs, () => this.toReveal());
+    this.runPhase('pick', this.clock ? TIMING.pickMs : null, () => this.toReveal());
   }
 
   get last() {
@@ -258,7 +263,8 @@ export class FakeOut {
       question: this.question && this.phase !== 'countdown' ? this.question.q : null,
       countdown: this.phase === 'countdown' ? Math.ceil(this.timeLeftMs() / 1000) : 0,
       timeLeftMs: this.timeLeftMs(),
-      phaseMs: this.phase === 'write' ? TIMING.writeMs : this.phase === 'pick' ? TIMING.pickMs : 0,
+      phaseMs: !this.clock ? 0 : this.phase === 'write' ? TIMING.writeMs : this.phase === 'pick' ? TIMING.pickMs : 0,
+      timed: this.clock,
       written: writing ? this.fakes.map(Boolean) : [true, true],
       picked: this.phase === 'pick' ? this.picks.map((p) => p !== null) : [false, false],
       reveal: this.revealView(),

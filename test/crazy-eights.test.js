@@ -6,9 +6,9 @@ import { CrazyEights, TIMING, HAND_SIZE, value, deck as fullDeck } from '../serv
 import { getGame } from '../server/games/index.js';
 
 /** A hand in play (actions on unless said), every update building every view (as the room does). */
-function game({ actions = 1, target = 100, rng = () => 0.5 } = {}) {
+function game({ actions = 1, target = 100, rng = () => 0.5, timer = 'timed' } = {}) {
   const ctx = fakeCtx();
-  ctx.settings = { actions, target };
+  ctx.settings = { actions, target, timer };
   let g = null;
   const update = ctx.update.bind(ctx);
   ctx.update = () => {
@@ -328,4 +328,31 @@ test('in the lobby: two phones only, with action cards on or off and the match l
   const setup = JSON.stringify(def.create(fakeCtx()).hostView());
   assert.ok(setup.includes('"actions"') && setup.includes('"target"'));
   assert.ok(setup.includes('One hand') && setup.includes('First to 100') && setup.includes('First to 200'));
+});
+
+test('the timer is a choice: with no timer a turn (and calling the suit) waits for you', () => {
+  const { ctx, g } = game({ timer: 'off' });
+  const turn = g.turn;
+  const hand = g.hands[turn].length;
+  ctx.advance(TIMING.turnMs * 5);
+  assert.equal(g.turn, turn, 'nobody drew or passed for you');
+  assert.equal(g.hands[turn].length, hand);
+  const v = g.hostView();
+  assert.equal(v.timed, false);
+  assert.equal(v.timeLeftMs, 0);
+  assert.equal(ctx.pendingTimers(), 0);
+  assert.equal(game().g.hostView().timed, true, 'timed is the usual');
+});
+
+test('with no timer, calling the suit after an 8 waits for you too', () => {
+  const { ctx, g } = game({ timer: 'off' });
+  table(g, { hands: [['8C', '4H', '6D'], ['3C', '4C', '9D']], top: 'KS' });
+  play(g, 0, '8C');
+  assert.equal(g.phase, 'suit');
+  ctx.advance(TIMING.turnMs * 10);
+  assert.equal(g.phase, 'suit', 'still yours to call');
+  assert.equal(ctx.pendingTimers(), 0);
+  g.onInput(0, { type: 'suit', suit: 'H' });
+  assert.equal(g.phase, 'play');
+  assert.equal(g.turn, 1);
 });

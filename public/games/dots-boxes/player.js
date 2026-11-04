@@ -23,7 +23,7 @@
     if (v.phase === 'play') {
       if (v.turn !== you) return 'Their turn…';
       const again = v.lastBoxes.length && v.lastLine && v.lastLine.by === you;
-      return '<strong>' + (again ? 'Box! Go again!' : 'Your turn!') + '</strong> Tap a line · ' + Math.ceil(v.timeLeftMs / 1000) + 's';
+      return '<strong>' + (again ? 'Box! Go again!' : 'Your turn!') + '</strong> Tap a line' + (v.timed ? ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '');
     }
     if (v.phase === 'roundEnd') {
       if (v.result.draw) return 'Same number of boxes: a draw';

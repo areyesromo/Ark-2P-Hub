@@ -107,3 +107,24 @@ test('the clock sows a pit for you when it runs out; a whole game always ends', 
   const total = v().pits.reduce((a, b) => a + b, 0);
   assert.equal(total, 48, 'no stones lost');
 });
+
+test('the timer is a choice: with no timer a turn waits for you, and no clock shows', () => {
+  const ctx = fakeCtx();
+  ctx.settings = { timer: 'off' };
+  const game = new Mancala(ctx, () => 0);
+  game.start();
+  assert.equal(game.phase, 'play');
+  const turn = game.turn;
+  ctx.advance(TIMING.turnMs * 10);
+  assert.equal(game.phase, 'play');
+  assert.equal(game.turn, turn, 'nobody moved for you');
+  assert.equal(game.hostView().timeLeftMs, 0);
+  assert.equal(game.hostView().timed, false);
+  assert.equal(ctx.pendingTimers(), 0);
+  // Timed is the usual.
+  const t = fakeCtx();
+  const timed = new Mancala(t, () => 0);
+  timed.start();
+  assert.equal(timed.hostView().timed, true);
+  assert.equal(timed.hostView().timeLeftMs, TIMING.turnMs);
+});

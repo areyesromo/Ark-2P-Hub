@@ -60,9 +60,9 @@
     let html = '<div class="fo-card"><div class="meta">Round ' + v.round + ' / ' + v.rounds + (v.last ? ' · ⭐ double points' : '') + '</div>' +
       '<div class="q">' + factHtml(v, truth) + '</div></div>';
     if (v.phase === 'write') {
-      html += '<div class="fo-bar"><div class="fill"></div></div><div class="fo-hint">✍️ On your phone, write a fake answer that sounds true…</div>';
+      html += (v.timed ? '<div class="fo-bar"><div class="fill"></div></div>' : '') + '<div class="fo-hint">✍️ On your phone, write a fake answer that sounds true…</div>';
     } else if (v.phase === 'pick') {
-      html += '<div class="fo-bar"><div class="fill"></div></div><div class="fo-list">' + v.options.map(function (o) {
+      html += (v.timed ? '<div class="fo-bar"><div class="fill"></div></div>' : '') + '<div class="fo-list">' + v.options.map(function (o) {
         return '<div class="fo-answer"><span class="text">' + esc(o.text) + '</span></div>';
       }).join('') + '</div><div class="fo-hint">Which one is real? Pick it on your phone.</div>';
     } else if (v.phase === 'reveal') {

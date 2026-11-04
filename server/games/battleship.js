@@ -62,7 +62,7 @@ export function randomFleet(rng = Math.random) {
 export class Battleship {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
-    this.turnMs = settingOf(ctx, 'shotSeconds', TIMING.turnMs / 1000) * 1000;
+    this.turnMs = settingOf(ctx, 'shotSeconds', TIMING.turnMs / 1000) * 1000; // 0: no timer, placing and firing wait for you
     this.rng = rng;
     this.timer = null;
     this.matches = 0;
@@ -84,16 +84,18 @@ export class Battleship {
       if (p.local) this.ready[slot] = true;
     });
     if (this.ready.every(Boolean)) return this.aim();
-    this.runPhase('place', TIMING.placeMs, () => this.aim());
+    this.runPhase('place', this.turnMs ? TIMING.placeMs : null, () => this.aim());
   }
 
   /** Enter a timed phase, pushing a fresh view every second, then call onEnd. */
   runPhase(phase, ms, onEnd) {
     this.phase = phase;
-    this.phaseEnds = this.ctx.now() + ms;
+    this.phaseEnds = ms === null ? null : this.ctx.now() + ms; // null: no time limit
     this.onPhaseEnd = onEnd;
     this.ctx.update();
-    this.scheduleStep();
+    if (this.timer) this.ctx.clearTimeout(this.timer);
+    this.timer = null;
+    if (ms !== null) this.scheduleStep();
   }
 
   scheduleStep() {
@@ -118,7 +120,7 @@ export class Battleship {
   aim() {
     this.stopTimer();
     this.ready = [true, true]; // whatever was placed when the placing clock ran out is final
-    this.runPhase('aim', this.turnMs, () => this.fire(this.turn, this.randomTarget(1 - this.turn)));
+    this.runPhase('aim', this.turnMs || null, () => this.fire(this.turn, this.randomTarget(1 - this.turn)));
   }
 
   randomTarget(target) {
@@ -215,6 +217,7 @@ export class Battleship {
       turn: this.turn,
       ready: this.ready,
       timeLeftMs: this.timeLeftMs(),
+      timed: this.turnMs > 0,
       phaseMs: TIMING[this.phase + 'Ms'] || 0,
       lastShot: this.lastShot,
       fired: this.fired,

@@ -146,3 +146,22 @@ test('bad fire input is ignored', () => {
   assert.equal(game.phase, 'aim');
   assert.equal(game.fired[0], 0);
 });
+
+test('no timer is a choice of time per shot: placing and firing wait for you', () => {
+  const ctx = fakeCtx();
+  ctx.settings = { shotSeconds: 0 };
+  const game = new Battleship(ctx);
+  game.start();
+  ctx.advance(TIMING.placeMs * 3);
+  assert.equal(game.phase, 'place', 'still placing');
+  assert.equal(game.hostView().timed, false);
+  game.onInput(0, { type: 'ready', ships: ROWS });
+  game.onInput(1, { type: 'ready', ships: ROWS });
+  assert.equal(game.phase, 'aim');
+  const turn = game.turn;
+  ctx.advance(TIMING.turnMs * 5);
+  assert.equal(game.phase, 'aim');
+  assert.equal(game.turn, turn, 'nobody fired for you');
+  assert.equal(game.hostView().timeLeftMs, 0);
+  assert.equal(ctx.pendingTimers(), 0);
+});

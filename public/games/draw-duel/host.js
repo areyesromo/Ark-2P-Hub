@@ -118,7 +118,7 @@
     });
     els.round.textContent = v.phase === 'countdown' || v.phase === 'over' ? 'Draw Duel' : 'Round ' + v.round + ' / ' + v.rounds;
     els.center.innerHTML = centerHtml(v);
-    els.root.className = 'dd-host phase-' + v.phase;
+    els.root.className = 'dd-host phase-' + v.phase + (v.timed === false ? ' untimed' : '');
   }
 
   function renderCanvases(v) {

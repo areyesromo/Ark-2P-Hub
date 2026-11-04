@@ -20,6 +20,7 @@ export class DrawDuel {
   constructor(ctx, rng = Math.random, shapes = SHAPES) {
     this.ctx = ctx;
     this.roundCount = settingOf(ctx, 'rounds', ROUNDS);
+    this.clock = settingOf(ctx, 'timer', 'timed') === 'timed'; // or no timer: draw until you both press Done
     this.rng = rng;
     this.shapes = shapes;
     this.used = usedIn(ctx, 'shapes'); // shown in earlier matches in this room
@@ -63,10 +64,12 @@ export class DrawDuel {
   /** Enter a timed phase, pushing a fresh view every second, then call onEnd. */
   runPhase(phase, ms, onEnd) {
     this.phase = phase;
-    this.phaseEnds = this.ctx.now() + ms;
+    this.phaseEnds = ms === null ? null : this.ctx.now() + ms; // null: no time limit
     this.onPhaseEnd = onEnd;
     this.push();
-    this.scheduleStep();
+    if (this.timer) this.ctx.clearTimeout(this.timer);
+    this.timer = null;
+    if (ms !== null) this.scheduleStep();
   }
 
   scheduleStep() {
@@ -102,7 +105,7 @@ export class DrawDuel {
   show() {
     this.index++;
     this.resetDrawings();
-    this.runPhase('show', TIMING.showMs, () => this.runPhase('draw', TIMING.drawMs, () => this.reveal()));
+    this.runPhase('show', TIMING.showMs, () => this.runPhase('draw', this.clock ? TIMING.drawMs : null, () => this.reveal()));
   }
 
   reveal() {
@@ -185,7 +188,8 @@ export class DrawDuel {
       outline: shape.outline,
       countdown: this.phase === 'countdown' ? Math.ceil(this.timeLeftMs() / 1000) : 0,
       timeLeftMs: this.timeLeftMs(),
-      phaseMs: TIMING[this.phase + 'Ms'] || 0,
+      phaseMs: this.phase === 'draw' && !this.clock ? 0 : TIMING[this.phase + 'Ms'] || 0,
+      timed: this.clock,
       strokes: this.strokes,
       done: this.done,
       accuracy: this.accuracy,
@@ -209,7 +213,8 @@ export class DrawDuel {
       outline: shape.outline,
       countdown: this.phase === 'countdown' ? Math.ceil(this.timeLeftMs() / 1000) : 0,
       timeLeftMs: this.timeLeftMs(),
-      phaseMs: TIMING[this.phase + 'Ms'] || 0,
+      phaseMs: this.phase === 'draw' && !this.clock ? 0 : TIMING[this.phase + 'Ms'] || 0,
+      timed: this.clock,
       // The phone keeps its own drawing while you draw; it gets the server's copy back for the reveal.
       strokes: revealing ? this.strokes[slot] : null,
       theirStrokes: revealing ? this.strokes[1 - slot] : null, // so the phone can show both at the reveal

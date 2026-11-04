@@ -25,7 +25,7 @@
       const m = v.lastMove;
       const note = m && m.captured ? (m.slot === you ? 'You captured ' + m.captured.stones + '! ' : 'They captured ' + m.captured.stones + '. ') : '';
       if (v.turn !== you) return note + 'Their turn…';
-      return note + '<strong>' + (m && m.again && m.slot === you ? 'Go again!' : 'Your turn!') + '</strong> Tap a bowl on your side · ' + Math.ceil(v.timeLeftMs / 1000) + 's';
+      return note + '<strong>' + (m && m.again && m.slot === you ? 'Go again!' : 'Your turn!') + '</strong> Tap a bowl on your side' + (v.timed ? ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '');
     }
     if (v.phase === 'roundEnd') {
       if (v.result.draw) return 'A draw!';

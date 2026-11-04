@@ -75,6 +75,14 @@ import { withSetup } from './options.js';
 // options.js). The first value of each list is the default.
 const firstTo = (title, values) => ({ wins: { title, values, label: (n) => (n === 1 ? 'One round' : `First to ${n}`) } });
 const ROUNDS_WON = 'Round wins needed';
+/**
+ * Timed (the game's usual times, said in `times`) or no timer (a turn or answer waits for you).
+ * `usual` is the one picked first: 'off' for the co-op thinking games, 'timed' where a timer stops
+ * one player stalling the other. The game reads it with settingOf(ctx, 'timer', ...).
+ */
+const timer = (usual, times) => ({
+  timer: { title: 'Timer', values: usual === 'off' ? ['off', 'timed'] : ['timed', 'off'], label: (k) => (k === 'off' ? 'No timer: it waits for you' : `⏱ Timed: ${times}`) },
+});
 
 const GAMES = [
   withSetup(reactionDuel, firstTo('Points to win', [3, 5, 7])),
@@ -126,11 +134,13 @@ const GAMES = [
   withSetup(triviaQuest, {
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
     hearts: { title: 'Difficulty', values: [5, 7, 3], label: (n) => (n === 7 ? 'Easy · 7 ❤️' : n === 5 ? 'Normal · 5 ❤️' : 'Hard · 3 ❤️') },
+    ...timer('off', '15 s a question (12 s for the Dragon), faster hits harder'),
   }),
-  withSetup(fakeOut, { rounds: { title: 'Rounds', values: [6, 4, 8], label: (n) => `${n} rounds` } }),
+  withSetup(fakeOut, { rounds: { title: 'Rounds', values: [6, 4, 8], label: (n) => `${n} rounds` }, ...timer('timed', '60 s to write, 20 s to pick') }),
   withSetup(crazyEights, {
     actions: { title: 'Rules', values: [1, 0], label: (n) => (n ? 'Action cards (2, Jack, Q♠)' : 'Classic') },
     target: { title: 'Match', values: [100, 0, 200], label: (n) => (n ? `First to ${n}` : 'One hand') },
+    ...timer('timed', '30 s a turn'),
   }),
   withSetup(kitchenRush, {
     kitchen: { title: 'Kitchen', values: [0, 1, 2], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour'][n] },
@@ -149,9 +159,9 @@ const GAMES = [
     ...firstTo('Grids to win', [2, 1, 3]),
   }),
   miniGolf,
-  withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` } }),
-  withSetup(battleship, { shotSeconds: { title: 'Time per shot', values: [30, 15, 60], label: (n) => `${n} s` } }),
-  withSetup(connectFour, firstTo(ROUNDS_WON, [3, 1, 5])),
+  withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` }, ...timer('timed', '20 s to draw') }),
+  withSetup(battleship, { shotSeconds: { title: 'Time per shot', values: [30, 15, 60, 0], label: (n) => (n ? `${n} s` : 'No timer: it waits for you') } }),
+  withSetup(connectFour, { ...firstTo(ROUNDS_WON, [3, 1, 5]), ...timer('timed', '20 s a move') }),
   memoryMatch,
   withSetup(bombSquad, {
     level: { title: 'Difficulty', values: [2, 1, 3, 4], label: (n) => `${BOMB_LEVELS[n].name} · ${BOMB_LEVELS[n].modules} modules, ${BOMB_LEVELS[n].ms / 60000} min` },
@@ -161,20 +171,22 @@ const GAMES = [
     levels: { title: 'Mazes', values: [3, 5, 1], label: (n) => (n === 1 ? 'One maze' : n === MAZE_LEVELS.length ? `All ${n} mazes` : `${n} mazes`) },
     controls: { title: 'Who tilts what', values: [1, 2], label: (n) => (n === 1 ? 'Split: one ↔, one ↕' : 'Shared: both steer') },
   }),
-  withSetup(mindMeld, { rounds: { title: 'Rounds (you swap who gives the clue)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
+  withSetup(mindMeld, { rounds: { title: 'Rounds (you swap who gives the clue)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` }, ...timer('off', '90 s for the clue, 60 s to guess') }),
   withSetup(liarsDice, {
     tutorial: { title: 'How to play', values: [1, 0], label: (t) => (t ? '📖 Show a quick example round first' : 'Skip it, we know the rules') },
     dice: { title: 'Dice each', values: [5, 3, 4], label: (n) => `${n} dice` },
     wild: { title: 'Ones', values: [1, 0], label: (n) => (n ? 'Wild (count as any face)' : 'Just ones') },
   }),
-  withSetup(checkers, firstTo('Games to win', [1, 2, 3])),
+  withSetup(checkers, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
   withSetup(dotsBoxes, {
     size: { title: 'Grid', values: [4, 3, 5], label: (n) => `${n} × ${n} boxes` },
     ...firstTo('Games to win', [1, 2, 3]),
+    ...timer('timed', '20 s a move'),
   }),
   withSetup(mancala, {
     seeds: { title: 'Stones per pit', values: [4, 3, 5], label: (n) => `${n} stones` },
     ...firstTo('Games to win', [1, 2, 3]),
+    ...timer('timed', '30 s a move'),
   }),
   withSetup(diceParty, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },

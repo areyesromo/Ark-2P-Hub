@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.18
+
+- A **Timer** choice in setup for the games whose clock only keeps things moving: **Timed**
+  (the usual times, shown on the button) or **No timer** (a turn or answer waits for you).
+  Mind Meld and Trivia Quest now start on No timer (pick Timed for the old clock; in Trivia
+  Quest with no timer every right answer hits as hard as a middling-fast one). Fake Out, Crazy
+  Eights, Checkers, Mancala, Connect Four, Dots and Boxes, Draw Duel, Battleship and Memory
+  Match start timed.
+
 ## 0.1.17
 
 - **📱 No TV needed** on five action games: Pong's whole court on your phone (your paddle at

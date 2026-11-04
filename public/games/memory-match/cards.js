@@ -4,7 +4,7 @@
   const ROWS = [
     { key: 'cards', title: 'Cards', fmt: function (n) { return n + ' cards'; } },
     { key: 'theme', title: 'Pictures', fmt: function (n) { return n === 0 ? 'Mixed' : themes[n - 1] || 'Set ' + n; } },
-    { key: 'turnSeconds', title: 'Time per turn', fmt: function (n) { return n + ' s'; } },
+    { key: 'turnSeconds', title: 'Time per turn', fmt: function (n) { return n ? n + ' s' : 'No timer'; } },
   ];
 
   function setThemes(names) {
