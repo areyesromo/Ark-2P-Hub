@@ -19,6 +19,8 @@ import towerDuel from './tower-duel.js';
 import dungeonDuo from './dungeon-duo.js';
 import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
+import { SEAS } from './battleship-ultimate.js';
+const SEA_NAMES = Object.fromEntries(Object.entries(SEAS).map(([k, v]) => [k, v.name]));
 import sketchGuess from './sketch-guess.js';
 import connectFour from './connect-four.js';
 import sumo from './sumo.js';
@@ -160,7 +162,11 @@ const GAMES = [
   }),
   miniGolf,
   withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` }, ...timer('timed', '20 s to draw') }),
-  withSetup(battleship, { shotSeconds: { title: 'Time per shot', values: [30, 15, 60, 0], label: (n) => (n ? `${n} s` : 'No timer: it waits for you') } }),
+  withSetup(battleship, {
+    mode: { title: 'Mode', values: ['classic', 'ultimate'], label: (k) => (k === 'ultimate' ? '⚡ Ultimate: commanders, shaped ships and skills' : 'Classic: 5 ships, one shot a turn') },
+    sea: { title: 'Sea (Ultimate)', values: ['open', 'archipelago', 'reef', 'strait', 'random'], label: (k) => (k === 'random' ? '🎲 Any sea' : SEA_NAMES[k]) },
+    shotSeconds: { title: 'Time per shot', values: [30, 15, 60, 0], label: (n) => (n ? `${n} s` : 'No timer: it waits for you') },
+  }),
   withSetup(connectFour, { ...firstTo(ROUNDS_WON, [3, 1, 5]), ...timer('timed', '20 s a move') }),
   memoryMatch,
   withSetup(bombSquad, {

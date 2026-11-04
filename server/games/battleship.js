@@ -6,6 +6,7 @@
 // nobody sees until it's hit; they just aim and fire on the TV.
 
 import { settingOf } from './options.js';
+import { UltimateBattleship, UTIMING } from './battleship-ultimate.js';
 
 export const SIZE = 10;
 export const FLEET = [
@@ -249,6 +250,9 @@ export default {
   handheld: true, // everything's on your phone: no need to watch the TV
   music: 'thinking',
   name: 'Battleship',
-  tagline: 'Hide your fleet on your phone, then take turns firing at the enemy grid. Sink all 5 ships to win.',
-  create: (ctx) => new Battleship(ctx),
+  tagline: 'Hide your fleet on your phone, then take turns firing at the enemy grid. Sink every ship to win. Or Ultimate: commanders, shaped ships, skills and new seas.',
+  // Classic, or Ultimate (commanders, shaped ships, seas and skills: battleship-ultimate.js).
+  create: (ctx) => (settingOf(ctx, 'mode', 'classic') === 'ultimate'
+    ? new UltimateBattleship(ctx, Math.random, { sea: settingOf(ctx, 'sea', 'open'), turnMs: settingOf(ctx, 'shotSeconds', UTIMING.turnMs / 1000) * 1000 })
+    : new Battleship(ctx)),
 };

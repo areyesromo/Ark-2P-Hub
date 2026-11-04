@@ -11,6 +11,29 @@
   let aim = null; // cell picked on the enemy grid, fired on the second tap
   let note = ''; // short feedback while placing
   let lastShotKey = '';
+  let host = null; // the element this phone screen lives in
+  // Ultimate mode has its own screens (ultimate.js, ultimate-player.js), loaded when needed.
+  let ultimate = null;
+  let ultimateLoading = null;
+  let ultimateView = null;
+  let generation = 0; // bumped on every unmount and switch back to Classic: a late load is dropped
+
+  function toUltimate(v) {
+    ultimateView = v;
+    if (ultimate) return ultimate.update(v);
+    if (ultimateLoading) return;
+    const mine = generation;
+    ultimateLoading = Ark.loadScript('/games/battleship/ultimate.js')
+      .then(function () { return Ark.loadScript('/games/battleship/ultimate-player.js'); })
+      .then(function () {
+        if (!host || mine !== generation) return;
+        if (root) root.style.display = 'none';
+        ultimate = window.ArkUltimate.player;
+        ultimate.mount(host, api);
+        ultimate.update(ultimateView);
+      })
+      .catch(function () { ultimateLoading = null; });
+  }
 
   function lens() {
     return view.fleet.map(function (f) { return f.len; });
@@ -193,6 +216,14 @@
   }
 
   function update(v) {
+    if (v.ultimate) return toUltimate(v);
+    if (ultimate || ultimateLoading) { // back to Classic (a new setup), or a load that's no longer wanted
+      generation++;
+      if (ultimate) ultimate.unmount();
+      ultimate = null;
+      ultimateLoading = null;
+      if (root) root.style.display = '';
+    }
     const prev = view;
     view = v;
     if (v.phase === 'place' && (!prev || prev.phase !== 'place' || !fleet)) {
@@ -214,6 +245,7 @@
   Ark.register('player', 'battleship', {
     mount: function (el, a) {
       api = a;
+      host = el;
       root = document.createElement('div');
       root.className = 'bs-phone';
       root.addEventListener('click', onClick);
@@ -225,6 +257,9 @@
     },
     update: update,
     unmount: function () {
+      if (ultimate) ultimate.unmount();
+      generation++;
+      ultimate = ultimateLoading = ultimateView = host = null;
       root = view = fleet = aim = null;
       selected = null;
       note = lastShotKey = '';
