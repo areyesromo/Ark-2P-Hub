@@ -17,7 +17,7 @@ const HIT = 2;
 const BLOCKED = new Set(['#', '*', '^']);
 const SIDES = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
-export function battleshipBot(view, level, rng = Math.random) {
+export function battleshipBot(view, level, rng = Math.random, retries = 0) {
   if (!view || !BOT_LEVELS.includes(level)) return null;
   if (view.ultimate && view.phase === 'pick') {
     return view.yourCommander ? null : { type: 'commander', id: COMMANDER_IDS[Math.floor(rng() * COMMANDER_IDS.length)] };
@@ -28,6 +28,7 @@ export function battleshipBot(view, level, rng = Math.random) {
   const best = bestCell(sea, score, rng);
   if (!best) return null;
   const shot = { type: 'fire', x: best.x, y: best.y };
+  if (retries >= 2) return { type: 'fire', ...pickOpen(sea, rng) }; // its move was refused: any open square will do
   return view.ultimate ? ultimateMove(view, sea, score, best, level, rng) || shot : shot;
 }
 
@@ -156,6 +157,12 @@ function density(sea) {
     else if (live.has(k)) score[k] += 1000; // a scanned ship square
   }
   return score;
+}
+
+function pickOpen(sea, rng) {
+  const open = [];
+  for (let y = 0; y < sea.h; y++) for (let x = 0; x < sea.w; x++) if (sea.open(x, y)) open.push({ x, y });
+  return open[Math.floor(rng() * open.length)];
 }
 
 /** The open square with the best score (ties broken at random); any open square if all score 0. */

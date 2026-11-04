@@ -110,6 +110,7 @@ export class Room {
 
     let slot = this.players.findIndex((p) => p === null);
     if (slot === -1) slot = this.players.findIndex((p) => p && !p.connected);
+    if (slot === -1 && !this.game) slot = this.botSlot; // in the lobby, a person takes the computer's seat
     if (slot === -1) return { error: 'This room already has two players.' };
 
     const player = { name, token: newToken(), socketId: null, connected: local && this.hostSockets.size > 0, local };
@@ -128,6 +129,7 @@ export class Room {
     const here = this.players.findIndex((p) => p && p.bot);
     if (here !== -1) {
       if (this.game) return { error: 'Finish this game first.' };
+      if (this.players[here].bot !== level) this.tournament.reset(); // a new level: a new series
       this.players[here].bot = level;
       this.broadcastState();
       return { slot: here, ok: true };
@@ -140,6 +142,11 @@ export class Room {
     this.tournament.reset();
     this.broadcastState();
     return { slot, ok: true };
+  }
+
+  /** The running game's definition, for its `bot`. */
+  botDef() {
+    return this.gameId ? getGame(this.gameId) : null;
   }
 
   get botSlot() {
@@ -241,6 +248,8 @@ export class Room {
     for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
     this.botTimer = null;
+    this.botRetries = 0;
+    this.botLastMove = null;
     this.generation++;
     this.game = null;
     this.gameId = null;
@@ -296,6 +305,7 @@ export class Room {
   setProfile(slot, fields) {
     const p = Number.isInteger(slot) && slot >= 0 && slot < MAX_PLAYERS ? this.players[slot] : null;
     if (!p || !this.profiles) return { error: 'Nobody in that seat.' };
+    if (p.bot) return { error: 'The computer keeps its 🤖.' };
     const profile = this.profiles.set(p.name, fields);
     if (!profile) return { error: 'Pick an avatar or a colour from the list.' };
     this.broadcastState();
@@ -326,8 +336,16 @@ export class Room {
   driveBot() {
     const slot = this.botSlot;
     if (slot === -1 || this.botTimer || !this.game) return;
-    const def = getGame(this.gameId);
-    const think = () => (def && def.bot && this.game ? def.bot(this.game.playerView(slot), this.players[slot].bot, Math.random) : null);
+    const def = this.botDef();
+    // The same move again means the game refused it: `retries` lets the bot try something else.
+    const think = () => {
+      try {
+        return def && def.bot && this.game ? def.bot(this.game.playerView(slot), this.players[slot].bot, Math.random, this.botRetries || 0) : null;
+      } catch (err) {
+        console.error(`[room ${this.code}] computer move error:`, err);
+        return null;
+      }
+    };
     if (!think()) return;
     const generation = this.generation;
     const t = setTimeout(() => {
@@ -335,7 +353,11 @@ export class Room {
       this.botTimer = null;
       if (this.generation !== generation || !this.game || !this.players[slot] || !this.players[slot].bot) return;
       const input = think();
-      if (input) this.handleInput(slot, input);
+      if (!input) return;
+      const key = JSON.stringify(input);
+      this.botRetries = key === this.botLastMove ? (this.botRetries || 0) + 1 : 0;
+      this.botLastMove = key;
+      this.handleInput(slot, input);
       this.driveBot(); // (in case that move was refused, or changed nothing on screen)
     }, BOT_THINK_MS);
     this.timers.add(t);
@@ -352,7 +374,7 @@ export class Room {
     const category = def.category || 'competitive';
     if (category !== 'casual' && this.tournament.record({ game: def.name, winner: view.winner })) {
       const t = this.tournament;
-      if (t.champion !== null && this.stats) {
+      if (t.champion !== null && this.stats && this.botSlot === -1) { // (not a series against the computer)
         this.stats.recordTournament({ players: this.players.map((p, slot) => (p ? p.name : `Player ${slot + 1}`)), winner: t.champion, wins: t.wins.slice(), bestOf: t.bestOf });
       }
       this.broadcastState();

@@ -30,8 +30,9 @@ No one to play with? Games labelled **🤖 Vs computer** (Battleship, Classic an
 played against the computer: with a seat free, tap **Easy**, **Normal** or **Hard** under it on the
 TV (or on your phone's lobby, or press **LT** on a controller). Easy fires mostly at random, Normal
 hunts around its hits and uses its skills, and Hard works out where your ships could still be. It
-plays from what its own phone would show, so it never peeks at your fleet. Games against it don't
-count in the leaderboard; tap ✕ on its seat to send it away.
+plays from what its own phone would show, so it never peeks at your fleet. Games (and tournaments)
+against it don't count in the leaderboard; tap ✕ on its seat to send it away, or just join: whoever
+scans in from the lobby takes its seat.
 
 ### ⚔️ Competitive
 
@@ -154,7 +155,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Lobby | **D-pad**, then **A** | Pick a game and start it (the first card, 🎲 Random, lets the hub choose) |
 | Lobby | **Y** | Change your name: cycles through names on the leaderboard (so your wins count for you), then ready-made ones (Ace, Blaze, Comet…) |
 | Lobby | **X** | Tournament: off, best of 3, 5 or 7 games |
-| Lobby | **LT** | Play the computer: it takes the free seat (Normal); press again for Easy, Normal or Hard |
+| Lobby | **LT** | Play the computer: it takes the free seat on Easy; press again for Normal, then Hard, then it leaves |
 | Lobby | **LB** / **RB** | Pick your avatar and colour (D-pad to move, **A** to pick, **B** to close) |
 | Mind Meld | **Left stick** or **D-pad ← →** turns the dial, **A** locks in | Controller players always guess; the clue-giver needs a phone to type |
 | Marble Maze | **Left stick** or **D-pad** tilts the board | In split mode only your axis counts: player 1 left/right, player 2 forwards/back. **A** plays again at the end |

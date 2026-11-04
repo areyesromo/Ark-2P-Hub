@@ -226,7 +226,7 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
 
     socket.on('pad:input', (data) => {
       const { slot: seat, input } = asObject(data);
-      if (role === 'host' && room.players[seat] && room.players[seat].local) room.handleInput(seat, input);
+      if (role === 'host' && room.players[seat] && room.players[seat].local && !room.players[seat].bot) room.handleInput(seat, input);
     });
 
     // A player's avatar and colour: from their own phone, or from the TV ({ slot }).

@@ -157,3 +157,8 @@ test('Ultimate: the computer never aims at land, ice or lava', () => {
     }
   }
 });
+
+test('told its move was refused, the computer falls back to a plain shot', () => {
+  const m = battleshipBot(classicView({ [at(4, 4)]: 2 }), 'hard', Math.random, 2);
+  assert.equal(m.type, 'fire');
+});

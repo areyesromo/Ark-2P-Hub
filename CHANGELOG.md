@@ -9,7 +9,7 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - 🤖 Play the computer: with a seat free, pick Easy, Normal or Hard on the TV or your phone (or LT
   on a controller). It plays Battleship, Classic and Ultimate (it picks a commander and uses its
   skills and special), only sees what its own phone would, and its games don't count in the
-  leaderboard.
+  leaderboard. Someone joining from the lobby takes its seat.
 
 ## 0.1.21
 

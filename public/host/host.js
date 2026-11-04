@@ -117,8 +117,9 @@
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
     $('join-warn').classList.toggle('hidden', !state.joinGuess);
-    // Both seats taken: the QR code steps aside and the game list gets the room.
-    Ark.lobbyLayout($('lobby'), 'full', state.players.every(Boolean), document.querySelector('.join'),
+    // Both seats taken: the QR code steps aside and the game list gets the room (it stays while
+    // the computer has a seat: someone who scans in takes it).
+    Ark.lobbyLayout($('lobby'), 'full', state.players.every(function (p) { return p && !p.bot; }), document.querySelector('.join'),
       [document.querySelector('.players-col'), document.querySelector('.games')], lobbyDrawn);
     lobbyDrawn = true;
     state.players.forEach(function (p, i) { renderSeat(i, p); });
@@ -712,12 +713,16 @@
     const n = cards.length;
     if (btn === 'Y') return renamePad(idx, seat);
     if (btn === 'LT') {
-      // The computer takes the free seat (Normal); again, its level goes round: Easy, Normal, Hard.
+      // The computer takes the free seat (Easy); again: Normal, Hard, then it leaves.
       const bot = Ark.botSeat(state);
       const levels = Object.keys(Ark.botLevelNames);
-      const level = bot ? levels[(levels.indexOf(bot.level) + 1) % levels.length] : 'normal';
+      const level = bot ? levels[levels.indexOf(bot.level) + 1] : levels[0];
+      if (!level) {
+        socket.emit('bot:leave');
+        return flashPad('🤖 The computer left · LT to bring it back');
+      }
       seatBot(level);
-      return flashPad('🤖 The computer: ' + Ark.botLevelNames[level] + ' · LT to change, ✕ on its seat to remove');
+      return flashPad('🤖 The computer: ' + Ark.botLevelNames[level] + ' · LT for ' + (levels[levels.indexOf(level) + 1] ? Ark.botLevelNames[levels[levels.indexOf(level) + 1]] : 'it to leave'));
     }
     if (btn === 'X') {
       // Cycle the tournament: off, best of 3, 5, 7.

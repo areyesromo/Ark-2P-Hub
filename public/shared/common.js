@@ -236,7 +236,7 @@
   function setupFocus(v, rows, pads) {
     const focus = {};
     [0, 1].forEach(function (slot) {
-      if (!v.players[slot].local) return;
+      if (!v.players[slot].local || v.players[slot].bot) return; // (the computer has no cursor)
       const key = rows[(pads[slot] && pads[slot].row) || 0].key;
       focus[key] = (focus[key] ? focus[key] + ' ' : '') + 'p' + (slot + 1);
     });
