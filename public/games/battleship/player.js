@@ -16,15 +16,17 @@
   let ultimate = null;
   let ultimateLoading = null;
   let ultimateView = null;
+  let generation = 0; // bumped on every unmount and switch back to Classic: a late load is dropped
 
   function toUltimate(v) {
     ultimateView = v;
     if (ultimate) return ultimate.update(v);
     if (ultimateLoading) return;
+    const mine = generation;
     ultimateLoading = Ark.loadScript('/games/battleship/ultimate.js')
       .then(function () { return Ark.loadScript('/games/battleship/ultimate-player.js'); })
       .then(function () {
-        if (!host) return;
+        if (!host || mine !== generation) return;
         if (root) root.style.display = 'none';
         ultimate = window.ArkUltimate.player;
         ultimate.mount(host, api);
@@ -215,8 +217,9 @@
 
   function update(v) {
     if (v.ultimate) return toUltimate(v);
-    if (ultimate) { // back to Classic (a new setup)
-      ultimate.unmount();
+    if (ultimate || ultimateLoading) { // back to Classic (a new setup), or a load that's no longer wanted
+      generation++;
+      if (ultimate) ultimate.unmount();
       ultimate = null;
       ultimateLoading = null;
       if (root) root.style.display = '';
@@ -255,6 +258,7 @@
     update: update,
     unmount: function () {
       if (ultimate) ultimate.unmount();
+      generation++;
       ultimate = ultimateLoading = ultimateView = host = null;
       root = view = fleet = aim = null;
       selected = null;

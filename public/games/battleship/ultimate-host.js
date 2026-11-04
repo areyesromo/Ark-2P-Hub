@@ -42,7 +42,7 @@
 
   function banner(v) {
     if (v.phase === 'pick') {
-      return '<div class="big">Pick your commanders</div><div class="sub">On your phones (controllers: ←→ and A). ' +
+      return '<div class="big">Pick your commanders</div><div class="sub">On your phones (controllers: ←→ and A)' + (v.timed ? ' · ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's, then one is picked for you' : '') + '. ' +
         [0, 1].map(function (s) { return nameOf(v, s) + (v.commanders[s] ? ' ✅' : ' …'); }).join(' · ') + '</div>';
     }
     if (v.phase === 'place') {
@@ -66,6 +66,7 @@
     if (pad && pad.act !== 'shot' && pad.act !== 'shield') {
       const aim = pad.act === 'special' ? cmd(v, shooter).special.aim : v.skillDefs[pad.act].aim;
       mark = U.footprint(aim, { x: pad.x, y: pad.y, dir: pad.dir }, v.size);
+      if (pad.first) mark.push([pad.first.x, pad.first.y]); // a Double Shot's first square, picked
     }
     const head = c ? '<span class="ub-icon">' + c.icon + '</span> ' + nameOf(v, slot) + ' <span class="muted">' + esc(c.name) + '</span>' : nameOf(v, slot);
     const meters = c && v.phase !== 'place'
@@ -157,7 +158,15 @@
     },
     update: function (v) {
       view = v;
-      [0, 1].forEach(function (s) { if (pads[s] && v.phase === 'pick' && !v.commanders[s]) return; if (pads[s] && v.phase !== 'aim') pads[s].first = null; });
+      [0, 1].forEach(function (s) {
+        const p = pads[s];
+        if (!p) return;
+        if (v.phase !== 'aim') p.first = null;
+        // Back on the sea (a new one may be smaller), and back to the shot if the chosen action's gone.
+        p.x = Math.min(v.size.w - 1, p.x);
+        p.y = Math.min(v.size.h - 1, p.y);
+        if (v.phase === 'pick' || (v.phase === 'aim' && v.commanders[s] && v.commanders[s] !== 'picked' && actsOf(v, s).indexOf(p.act) === -1)) p.act = 'shot';
+      });
       render();
     },
     unmount: function () {

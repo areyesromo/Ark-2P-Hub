@@ -87,7 +87,7 @@ export const SKILLS = {
   sonar: { name: 'Sonar', icon: '📡', cost: 2, aim: 'box3', about: 'counts the ship cells in a 3×3 (submarines don\'t show)' },
   torpedo: { name: 'Torpedo', icon: '🌊', cost: 4, aim: 'row', about: 'runs along a row until it hits a ship (the water it crosses shows as misses)' },
   double: { name: 'Double Shot', icon: '🎯', cost: 2, aim: 'two', about: 'two shots this turn' },
-  shield: { name: 'Shield', icon: '🛡️', cost: 3, aim: 'own2', about: 'protects a 2×2 of your own sea: the next hit on each of its ships is stopped' },
+  shield: { name: 'Shield', icon: '🛡️', cost: 3, aim: 'own2', about: 'protects a 2×2 of your own sea: the next hit on each ship cell under it is stopped' },
 };
 
 /** The commanders: a fleet each (with their skills), and a special charged by hits. */
@@ -372,6 +372,12 @@ export class UltimateBattleship {
     return t !== null && t !== '#' && t !== '*' && this.shots[target][this.idx(x, y)] === EMPTY;
   }
 
+  /** Row `y` of `target`'s sea still has a cell to shoot at (for a torpedo to find). */
+  rowOpen(target, y) {
+    for (let x = 0; x < this.size.w; x++) if (this.open(target, x, y)) return true;
+    return false;
+  }
+
   randomTarget(target) {
     const open = [];
     for (let y = 0; y < this.size.h; y++) for (let x = 0; x < this.size.w; x++) if (this.open(target, x, y)) open.push({ x, y });
@@ -402,7 +408,7 @@ export class UltimateBattleship {
       this.hits[slot]++;
       this.energy[slot] = Math.min(ENERGY.max, this.energy[slot] + ENERGY.perHit);
       const special = COMMANDERS[this.commanders[slot]].special;
-      if (!this.firingSpecial) this.charge[slot] = Math.min(special.charge, this.charge[slot] + 1); // a special's own hits don't recharge it
+      this.charge[slot] = Math.min(special.charge, this.charge[slot] + 1); // (a special's own hits don't count: it's reset after)
       const sunk = this.isSunk(target, ship);
       out.push({ x, y, result: sunk ? 'sunk' : 'hit', ship: sunk ? COMMANDERS[this.commanders[target]].fleet[ship].name : undefined });
     }
@@ -463,7 +469,11 @@ export class UltimateBattleship {
       ? footprint('own2', a, this.size).filter(([x, y]) => this.open(slot, x, y) && !this.shields[slot].has(this.idx(x, y)))
       : null;
     if (cover && !cover.length) return;
-    if (def.aim === 'two' && (!Number.isInteger(input.x2) || !Number.isInteger(input.y2) || (input.x2 === a.x && input.y2 === a.y))) return;
+    if (def.aim === 'row' && !this.rowOpen(target, a.y)) return;
+    if (def.aim === 'two') {
+      const ok = (n, max) => Number.isInteger(n) && n >= 0 && n < max;
+      if (!ok(input.x2, this.size.w) || !ok(input.y2, this.size.h) || (input.x2 === a.x && input.y2 === a.y)) return;
+    }
     this.energy[slot] -= def.cost; // paid first, so the hits it lands are all counted (up to the cap)
     if (def.aim === 'own2') {
       // A shield on your own sea: secret, so only your phone shows it.
@@ -499,10 +509,10 @@ export class UltimateBattleship {
       const a = this.aimOf(input);
       if (!a) return;
       if (special.aim === 'rows3') {
-        this.firingSpecial = true;
+        if (![-1, 0, 1].some((dy) => a.y + dy >= 0 && a.y + dy < this.size.h && this.rowOpen(target, a.y + dy))) return; // nothing to find: not spent
         for (let dy = -1; dy <= 1; dy++) if (a.y + dy >= 0 && a.y + dy < this.size.h) cells = cells.concat(this.torpedo(slot, target, a.y + dy, a.from));
-        this.firingSpecial = false;
       } else if (special.aim === 'box5') {
+        if (!footprint('box5', a, this.size).some(([x, y]) => this.open(target, x, y))) return; // nothing left to see: not spent
         // Full Scan: the ship cells in a 5×5 show on your view of their sea (until you hit them).
         footprint('box5', a, this.size).forEach(([x, y]) => {
           if (this.shipAt(target, x, y) !== -1 && this.shots[target][this.idx(x, y)] === EMPTY) this.spotted[slot].add(this.idx(x, y));
@@ -510,9 +520,7 @@ export class UltimateBattleship {
       } else {
         const at = footprint(special.aim, a, this.size);
         if (!at.some(([x, y]) => this.open(target, x, y))) return; // nothing to hit: not spent
-        this.firingSpecial = true;
         cells = this.strike(slot, target, at);
-        this.firingSpecial = false;
       }
     }
     this.charge[slot] = 0;

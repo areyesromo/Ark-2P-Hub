@@ -344,3 +344,26 @@ test('Deep Freeze wears off: after the skipped turn, the frozen player plays aga
   assert.equal(g.turn, 1, 'their turn again');
   assert.deepEqual(g.frozen, [false, false]);
 });
+
+test('a Torpedo, Wolf Pack or Full Scan with nothing left to find isn\'t spent; a Double Shot\'s second square must be on the sea', () => {
+  const h = battle({ commanders: ['mako', 'vega'], fleets: [randomFleet('open', 'mako', () => 0.5), VEGA_ROWS] });
+  const { g } = h;
+  g.energy[0] = 10;
+  for (let x = 0; x < 10; x++) g.shots[1][g.idx(x, 7)] = 1; // row 7 all shot
+  g.onInput(0, { type: 'skill', skill: 'torpedo', x: 0, y: 7, from: 'w' });
+  assert.equal(g.phase, 'aim');
+  assert.equal(g.energy[0], 10);
+  g.charge[0] = COMMANDERS.mako.special.charge;
+  for (const y of [6, 8]) for (let x = 0; x < 10; x++) g.shots[1][g.idx(x, y)] = 1;
+  g.onInput(0, { type: 'special', x: 0, y: 7, from: 'w' });
+  assert.equal(g.phase, 'aim');
+  assert.equal(g.charge[0], COMMANDERS.mako.special.charge);
+  g.onInput(0, { type: 'skill', skill: 'double', x: 5, y: 5, x2: 99, y2: 0 });
+  assert.equal(g.phase, 'aim', 'an off-sea second square is refused');
+  // Full Scan over cells all shot already.
+  const n = battle({ commanders: ['nova', 'vega'], fleets: [randomFleet('open', 'nova', () => 0.5), VEGA_ROWS] });
+  for (let y = 0; y < 5; y++) for (let x = 0; x < 5; x++) n.g.shots[1][n.g.idx(x, y)] = 1;
+  n.g.charge[0] = COMMANDERS.nova.special.charge;
+  n.g.onInput(0, { type: 'special', x: 2, y: 2 });
+  assert.equal(n.g.phase, 'aim');
+});

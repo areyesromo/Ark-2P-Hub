@@ -69,9 +69,10 @@
     });
     (opts.shields || []).forEach(function (i) { cls[i].push('shield'); });
     (opts.spotted || []).forEach(function (i) { cls[i].push('spotted'); });
-    (opts.mark || []).forEach(function (c) { cls[c[1] * w + c[0]].push('mark'); });
+    const on = function (x, y) { return x >= 0 && y >= 0 && x < w && y < h; };
+    (opts.mark || []).forEach(function (c) { if (on(c[0], c[1])) cls[c[1] * w + c[0]].push('mark'); });
     (opts.last || []).forEach(function (c) { if (c.x >= 0 && c.x < w && c.y >= 0 && c.y < h) cls[c.y * w + c.x].push('last', 'r-' + c.result); });
-    if (opts.cursor) cls[opts.cursor.y * w + opts.cursor.x].push('cursor');
+    if (opts.cursor && on(opts.cursor.x, opts.cursor.y)) cls[opts.cursor.y * w + opts.cursor.x].push('cursor');
     const sonar = {};
     (opts.sonar || []).forEach(function (s) { sonar[s.y * w + s.x] = s.count; });
     let html = '<div class="ub-sea" style="--w:' + w + ';--h:' + h + '">';

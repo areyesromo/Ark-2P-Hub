@@ -130,7 +130,7 @@
   function pickScreen(v) {
     const picked = v.commanders[v.you];
     if (picked) return '<div class="ub-wait"><div class="big">✅</div><p>Commander picked. ' + (v.commanders[1 - v.you] ? 'Starting…' : 'Waiting for your rival…') + '</p></div>';
-    return '<p class="msg">Pick your commander: their fleet, their skills and their special.</p><div class="ub-roster">' + v.roster.map(function (c) {
+    return '<p class="msg">Pick your commander: their fleet, their skills and their special.' + (v.timed ? ' ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's, then one is picked for you.' : '') + '</p><div class="ub-roster">' + v.roster.map(function (c) {
       return '<div class="ub-card"><div class="ub-head"><span class="ub-icon">' + c.icon + '</span><div><b>' + c.name + '</b><small>' + c.style + '</small></div></div>' +
         '<div class="ub-special">⭐ <b>' + c.special.name + '</b>: ' + c.special.about + '</div>' +
         '<div class="ub-ships">' + c.fleet.map(function (s) {
