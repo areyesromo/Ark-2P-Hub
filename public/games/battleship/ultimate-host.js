@@ -52,7 +52,8 @@
     const last = v.last ? U.lastText(v, -1, function (s) { return nameOf(v, s); }) : '';
     if (v.phase === 'shot') return '<div class="big">' + last + '</div>';
     const p = v.players[v.turn].local && pads[v.turn] ? ' · 🎮 ' + actName(v, v.turn, pads[v.turn].act) : '';
-    return '<div class="big">' + nameOf(v, v.turn) + ' to fire' + p + '</div><div class="sub">' + (v.timed ? '⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's · ' : '') + last + '</div>';
+    const volcano = v.eruption ? '🌋 The volcano erupted! · ' : v.eruptIn !== null ? '🌋 Eruption in ' + v.eruptIn + ' turn' + (v.eruptIn === 1 ? '' : 's') + ' · ' : '';
+    return '<div class="big">' + nameOf(v, v.turn) + ' to fire' + p + '</div><div class="sub">' + volcano + (v.timed ? '⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's · ' : '') + last + '</div>';
   }
 
   function side(v, slot) {
@@ -75,7 +76,7 @@
     return '<div class="bs-side' + ((v.phase === 'aim' || v.phase === 'shot') && v.turn === shooter ? ' targeted' : '') + (v.phase === 'over' && v.winner === slot ? ' winner' : '') + '">' +
       '<div class="bs-title">' + head + '</div>' + meters +
       U.seaHtml({ rows: v.rows, shots: b.shots, ships: b.ships, sonar: v.sonar.filter(function (s) { return s.by === shooter; }), mark: mark, cursor: cursor,
-        fx: v.last && v.phase === 'shot' && v.last.by === shooter ? v.last : null, frozen: v.frozen[slot] }) +
+        fx: v.last && v.phase === 'shot' && v.last.by === shooter ? v.last : v.eruption && v.eruption[slot].length ? { kind: 'eruption', cells: v.eruption[slot] } : null, frozen: v.frozen[slot] }) +
       '<div class="bs-status"><span>' + (b.afloat === null ? '' : b.afloat + ' ship' + (b.afloat === 1 ? '' : 's') + ' afloat') + '</span></div></div>';
   }
 

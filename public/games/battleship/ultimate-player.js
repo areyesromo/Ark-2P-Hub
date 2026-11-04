@@ -31,7 +31,7 @@
         const row = view.rows[c[1]];
         const t = row && row[c[0]];
         const k = c[0] + ',' + c[1];
-        if (!t || t === '#' || t === '*' || taken[k] || (t === '~' && cells.length > 3)) return false;
+        if (!t || t === '#' || t === '*' || t === '^' || taken[k] || (t === '~' && cells.length > 3)) return false;
         taken[k] = true;
         return true;
       });
@@ -99,6 +99,9 @@
     const kind = aimKind(v);
     if (kind === 'none') return;
     if ((kind === 'own2') !== (board === 'mine')) return; // a shield goes on your own sea; the rest on theirs
+    // A plain shot only on a square you can still hit (not land, ice or lava, not shot already).
+    const t = v.rows[y][x];
+    if (kind === 'cell' && (t === '#' || t === '*' || t === '^' || v.theirs.shots[y * v.size.w + x] !== 0)) return;
     if (kind === 'two' && aim && aim.x2 === undefined && !(aim.x === x && aim.y === y)) aim = { x: aim.x, y: aim.y, x2: x, y2: y };
     else if (kind === 'cell' && aim && aim.x === x && aim.y === y) return fire();
     else aim = { x: x, y: y };
@@ -172,19 +175,19 @@
     const about = action === 'shot' ? 'Tap a square on their sea, then tap again (or Fire)' : action === 'special' ? special.about : v.skillDefs[action].about;
     let msg;
     if (v.phase === 'shot' || !myTurn) msg = v.last ? U.lastText(v, you) : 'Their turn…';
-    else msg = '<strong>Your turn.</strong> ' + about + (kind === 'own2' ? ' (on your own sea, below)' : kind === 'two' && aim && aim.x2 === undefined ? ': now the second square' : '');
+    else msg = (v.eruption ? '🌋 <strong>The volcano erupted!</strong> ' : v.eruptIn !== null && v.eruptIn <= 2 ? '🌋 Eruption in ' + v.eruptIn + '! ' : '') + '<strong>Your turn.</strong> ' + about + (kind === 'own2' ? ' (on your own sea, below)' : kind === 'two' && aim && aim.x2 === undefined ? ': now the second square' : '');
     return '<div class="ub-meters"><span>⚡ ' + U.pips(v.energy[you], 10, 'energy') + '</span><span>⭐ ' + U.pips(v.charge[you], v.chargeNeeded[you], 'charge') + '</span></div>' +
       '<p class="msg">' + msg + (v.timed && myTurn ? ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '') + '</p>' +
       '<div class="label">Their sea · ' + v.theirs.afloat + ' afloat</div>' +
       '<div data-board="theirs" class="ub-board' + (myTurn && kind !== 'own2' ? ' live' : '') + '">' +
-      U.seaHtml({ rows: v.rows, shots: v.theirs.shots, ships: v.theirs.ships, spotted: v.theirs.spotted, sonar: v.sonar.filter(function (s) { return s.by === you; }), mark: kind === 'own2' ? [] : mark, fx: v.last && v.phase === 'shot' && v.last.by === you ? v.last : null, frozen: v.frozen[1 - you] }) + '</div>' +
+      U.seaHtml({ rows: v.rows, shots: v.theirs.shots, ships: v.theirs.ships, spotted: v.theirs.spotted, sonar: v.sonar.filter(function (s) { return s.by === you; }), mark: kind === 'own2' ? [] : mark, fx: v.last && v.phase === 'shot' && v.last.by === you ? v.last : v.eruption && v.eruption[1 - you].length ? { kind: 'eruption', cells: v.eruption[1 - you] } : null, frozen: v.frozen[1 - you] }) + '</div>' +
       (myTurn ? acts + '<div class="bs-tools">' +
         (lines ? '<button class="dir">' + (dir === 'h' ? '↔ Across' : '↕ Down') + '</button>' : '') +
         (sides ? '<button class="side">' + (from === 'w' ? '➡ From the left' : '⬅ From the right') + '</button>' : '') +
         '<button class="primary fire"' + (ready(v) ? '' : ' disabled') + '>Fire' + (aim && kind === 'cell' ? ' at ' + U.coord(aim.x, aim.y) : '') + '</button></div>' : '') +
       '<div class="label">Your fleet · ' + v.mine.afloat + ' afloat</div>' +
       '<div data-board="mine" class="ub-board small' + (kind === 'own2' ? ' live' : '') + '">' +
-      U.seaHtml({ rows: v.rows, shots: v.mine.shots, ships: v.mine.ships, shields: v.mine.shields, mark: kind === 'own2' ? mark : [], fx: v.last && v.phase === 'shot' && v.last.by !== you ? v.last : null, frozen: v.frozen[you] }) + '</div>';
+      U.seaHtml({ rows: v.rows, shots: v.mine.shots, ships: v.mine.ships, shields: v.mine.shields, mark: kind === 'own2' ? mark : [], fx: v.last && v.phase === 'shot' && v.last.by !== you ? v.last : v.eruption && v.eruption[you].length ? { kind: 'eruption', cells: v.eruption[you] } : null, frozen: v.frozen[you] }) + '</div>';
   }
 
   function overScreen(v) {

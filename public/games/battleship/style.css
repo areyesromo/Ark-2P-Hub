@@ -158,7 +158,7 @@
 .ub-meters { display: flex; gap: 14px; justify-content: center; font-weight: 700; flex-wrap: wrap; }
 
 .ub-roster { display: flex; flex-direction: column; gap: 10px; }
-.ub-roster.tv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
+.ub-roster.tv { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1rem; }
 .ub-card { background: var(--panel); border: 2px solid var(--line); border-radius: var(--r-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
 .ub-card.aim.p1 { border-color: var(--p1); }
 .ub-card.aim.p2 { border-color: var(--p2); }
@@ -215,3 +215,9 @@
   from { opacity: 0; transform: scale(1.1); }
   to { opacity: 1; transform: none; }
 }
+
+/* Fog and lava (Fog Bank, Volcano); a shot into the fog shows as a question until it lifts. */
+.ub-sea .cell.fog { background: #3b4a5c; }
+.ub-sea .cell.lava { background: radial-gradient(circle, #ffb347 0%, #e8590c 55%, #7c2d12 100%); box-shadow: none; animation: ub-lava 2.4s ease-in-out infinite alternate; }
+.ub-sea .cell.fogged::after { content: '?'; position: absolute; inset: 0; display: grid; place-items: center; color: #cbd5e1; font-weight: 900; }
+@keyframes ub-lava { to { filter: brightness(1.25); } }

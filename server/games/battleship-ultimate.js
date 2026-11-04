@@ -10,7 +10,12 @@
 // start of each turn and 1 for every hit you land. Lose a ship and its skill is gone. Your
 // commander also has a special that charges only as you land hits. Sink every ship to win.
 
-/** The seas: '.' water, '#' land or rock (nothing goes there), '~' shallows (small ships only), '*' ice (no ships; it stops torpedoes). */
+/**
+ * The seas: '.' water, '#' land or rock (nothing goes there), '~' shallows (small ships only),
+ * '*' ice (no ships; it stops torpedoes), '%' fog (water, but what a shot there did shows only
+ * at the start of the shooter's next turn), '^' lava (like land; once, after 8 turns, the volcano
+ * erupts and hits every ship cell right next to it).
+ */
 export const SEAS = {
   open: {
     name: 'Open Sea',
@@ -48,6 +53,36 @@ export const SEAS = {
       '..........',
     ],
   },
+  fog: {
+    name: 'Fog Bank',
+    rows: [
+      '..........',
+      '..%%%.....',
+      '..%%%%....',
+      '...%%%....',
+      '..........',
+      '......%%%.',
+      '.....%%%%.',
+      '......%%..',
+      '.%%.......',
+      '.%%.......',
+    ],
+  },
+  volcano: {
+    name: 'Volcano',
+    rows: [
+      '..........',
+      '..........',
+      '...^......',
+      '..^^^.....',
+      '...^......',
+      '.......#..',
+      '......^^..',
+      '......^...',
+      '.#........',
+      '..........',
+    ],
+  },
   strait: {
     name: 'Frozen Strait',
     rows: [
@@ -78,6 +113,8 @@ const SHAPES = {
   L5: [[0, 0], [0, 1], [0, 2], [0, 3], [1, 3]],
   T5: [[0, 0], [1, 0], [2, 0], [1, 1], [1, 2]],
   Z5: [[0, 0], [1, 0], [1, 1], [1, 2], [2, 2]],
+  U5: [[0, 0], [2, 0], [0, 1], [1, 1], [2, 1]],
+  X5: [[1, 0], [0, 1], [1, 1], [2, 1], [1, 2]],
 };
 
 /** The skills a ship can carry: what it costs in energy, and what it does. */
@@ -152,6 +189,29 @@ export const COMMANDERS = {
       { name: 'Fireship', shape: 'I1' },
     ],
   },
+  tempest: {
+    name: 'Admiral Tempest', icon: '🌪️', style: 'The storm',
+    special: { name: 'Typhoon', about: 'hits every other cell of a 4×4', aim: 'checker4', charge: 6 },
+    fleet: [
+      { name: 'Eye of the Storm', shape: 'X5', skill: 'barrage' },
+      { name: 'Harbour', shape: 'U5', skill: 'shield' },
+      { name: 'Stormchaser', shape: 'I3', skill: 'airstrike' },
+      { name: 'Weather Ship', shape: 'I3', skill: 'sonar' },
+      { name: 'Squall', shape: 'I2', skill: 'double' },
+    ],
+  },
+  kraken: {
+    name: 'Captain Kraken', icon: '🦑', style: 'The deep',
+    special: { name: 'Deep Strike', about: 'hits a whole column', aim: 'col', charge: 6 },
+    fleet: [
+      { name: 'Leviathan', shape: 'X5', skill: 'torpedo', stealth: true },
+      { name: 'Lair', shape: 'U5', skill: 'sonar' },
+      { name: 'Eel', shape: 'I3', skill: 'torpedo', stealth: true },
+      { name: 'Ink Ship', shape: 'I2', skill: 'shield' },
+      { name: 'Squid', shape: 'I2', skill: 'double' },
+      { name: 'Shrimp', shape: 'I1' },
+    ],
+  },
 };
 export const COMMANDER_IDS = Object.keys(COMMANDERS);
 
@@ -161,6 +221,9 @@ export const UTIMING = { pickMs: 60000, placeMs: 120000, turnMs: 30000, shotMs: 
 const EMPTY = 0;
 const MISS = 1;
 const HIT = 2;
+const FOGGED = 3; // (as the screens see it) a shot into the fog, not shown yet
+const BLOCKED = new Set(['#', '*', '^']); // no ships, no shots
+export const ERUPT_AFTER = 8; // turns, on the Volcano
 
 /** A shape's cells at turn `rot` (0-3, a quarter turn each), shifted so the top-left is (0, 0). */
 export function shapeCells(shape, rot) {
@@ -197,7 +260,7 @@ export function validFleet(sea, commander, ships) {
     return cells.every(([x, y]) => {
       const t = terrain(sea, x, y);
       const k = x + ',' + y;
-      if (t === null || t === '#' || t === '*' || taken.has(k)) return false;
+      if (t === null || BLOCKED.has(t) || taken.has(k)) return false;
       if (t === '~' && cells.length > 3) return false;
       taken.add(k);
       return true;
@@ -237,7 +300,7 @@ function fitsSoFar(sea, commander, ships) {
     return cells.every(([x, y]) => {
       const t = terrain(sea, x, y);
       const k = x + ',' + y;
-      if (t === null || t === '#' || t === '*' || taken.has(k) || (t === '~' && cells.length > 3)) return false;
+      if (t === null || BLOCKED.has(t) || taken.has(k) || (t === '~' && cells.length > 3)) return false;
       taken.add(k);
       return true;
     });
@@ -260,6 +323,11 @@ export function footprint(aim, a, size) {
     out.push([x, y], [x + 1, y], [x, y + 1], [x + 1, y + 1]);
   } else if (aim === 'two') {
     out.push([x, y], [a.x2, a.y2]);
+  } else if (aim === 'col') {
+    for (let i = 0; i < size.h; i++) out.push([x, i]);
+  } else if (aim === 'checker4') {
+    // Every other cell of the 4×4 from (x, y): the ones in step with its corner.
+    for (let dy = 0; dy < 4; dy++) for (let dx = 0; dx < 4; dx++) if ((dx + dy) % 2 === 0) out.push([x + dx, y + dy]);
   }
   return out.filter(([cx, cy]) => cx >= 0 && cy >= 0 && cx < size.w && cy < size.h);
 }
@@ -289,6 +357,10 @@ export class UltimateBattleship {
     this.energy = [0, 0];
     this.charge = [0, 0];
     this.frozen = [false, false];
+    this.fogged = [new Set(), new Set()]; // shots into the fog on each player's sea, not shown yet
+    this.turns = 0; // turns started (the Volcano erupts after ERUPT_AFTER)
+    this.erupted = false;
+    this.eruption = null; // [cells on player 1's sea, on player 2's], for the turn it happens
     this.hits = [0, 0];
     this.fired = [0, 0];
     this.last = null; // the last action: { by, kind, name, cells: [{ x, y, result }], ... }
@@ -345,11 +417,43 @@ export class UltimateBattleship {
       this.last = { by: this.turn, kind: 'frozen', cells: [] };
       this.turn = 1 - this.turn;
     }
+    // The fog lifts on what you fired into it last turn.
+    this.fogged[1 - this.turn].clear();
+    this.turns++;
+    this.eruption = null;
+    if (this.sea === 'volcano' && !this.erupted && this.turns > ERUPT_AFTER && this.erupt()) return;
     this.energy[this.turn] = Math.min(ENERGY.max, this.energy[this.turn] + ENERGY.perTurn);
     this.runPhase('aim', this.turnMs || null, () => this.shoot(this.turn, this.randomTarget(1 - this.turn)));
   }
 
   // ---- the fleets -------------------------------------------------------------------------
+
+  /**
+   * The Volcano erupts (once): every ship cell right next to lava is hit, on both seas. Gives
+   * true if that ended the game.
+   */
+  erupt() {
+    this.erupted = true;
+    const near = (x, y) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => terrain(this.sea, x + dx, y + dy) === '^');
+    this.eruption = [0, 1].map((slot) => {
+      const out = [];
+      const fleet = COMMANDERS[this.commanders[slot]].fleet;
+      this.fleets[slot].forEach((s, i) => placedCells(fleet[i], s).forEach(([x, y]) => {
+        const k = this.idx(x, y);
+        if (near(x, y) && this.shots[slot][k] === EMPTY) {
+          this.shots[slot][k] = HIT;
+          out.push({ x, y, result: this.isSunk(slot, i) ? 'sunk' : 'hit' });
+        }
+      }));
+      return out;
+    });
+    const gone = [0, 1].map((slot) => COMMANDERS[this.commanders[slot]].fleet.every((_, i) => this.isSunk(slot, i)));
+    if (gone[0] || gone[1]) {
+      this.finish(gone[0] && gone[1] ? null : gone[0] ? 1 : 0);
+      return true;
+    }
+    return false;
+  }
 
   /** The ship of `slot`'s fleet on cell (x, y), as its index, or -1. */
   shipAt(slot, x, y) {
@@ -369,7 +473,7 @@ export class UltimateBattleship {
   /** A cell you can still shoot at on your rival's sea: on the sea, not land or ice, not shot. */
   open(target, x, y) {
     const t = terrain(this.sea, x, y);
-    return t !== null && t !== '#' && t !== '*' && this.shots[target][this.idx(x, y)] === EMPTY;
+    return t !== null && !BLOCKED.has(t) && this.shots[target][this.idx(x, y)] === EMPTY;
   }
 
   /** Row `y` of `target`'s sea still has a cell to shoot at (for a torpedo to find). */
@@ -402,7 +506,8 @@ export class UltimateBattleship {
       this.shields[target].delete(k); // (a shield over open water is spent on nothing)
       this.shots[target][k] = ship === -1 ? MISS : HIT;
       if (ship === -1) {
-        out.push({ x, y, result: 'miss' });
+        if (terrain(this.sea, x, y) === '%') this.fogged[target].add(k);
+        out.push({ x, y, result: terrain(this.sea, x, y) === '%' ? 'fog' : 'miss' });
         continue;
       }
       this.hits[slot]++;
@@ -410,6 +515,11 @@ export class UltimateBattleship {
       const special = COMMANDERS[this.commanders[slot]].special;
       this.charge[slot] = Math.min(special.charge, this.charge[slot] + 1); // (a special's own hits don't count: it's reset after)
       const sunk = this.isSunk(target, ship);
+      if (terrain(this.sea, x, y) === '%') {
+        this.fogged[target].add(k);
+        out.push({ x, y, result: 'fog' });
+        continue;
+      }
       out.push({ x, y, result: sunk ? 'sunk' : 'hit', ship: sunk ? COMMANDERS[this.commanders[target]].fleet[ship].name : undefined });
     }
     return out;
@@ -425,7 +535,7 @@ export class UltimateBattleship {
     for (let i = 0; i < w; i++) {
       const x = from === 'e' ? w - 1 - i : i;
       const t = terrain(this.sea, x, y);
-      if (t === '#' || t === '*') return out.concat([{ x, y, result: 'stopped' }]);
+      if (BLOCKED.has(t)) return out.concat([{ x, y, result: 'stopped' }]);
       if (this.shots[target][this.idx(x, y)] !== EMPTY) continue; // already shot: it runs on past
       if (this.shipAt(target, x, y) !== -1) return out.concat(this.strike(slot, target, [[x, y]]));
       out.push(...this.strike(slot, target, [[x, y]])); // open water: a miss
@@ -603,12 +713,16 @@ export class UltimateBattleship {
       .filter((s) => all || s.sunk || this.phase === 'over');
   }
 
-  board(slot) {
+  /** `slot`'s sea as `viewer` sees it (null: the TV): shots into the fog stay hidden from all but the sea's owner. */
+  board(slot, viewer) {
     const placing = this.phase === 'pick' || this.phase === 'place';
+    const fog = viewer === slot || this.phase === 'over' ? new Set() : this.fogged[slot];
     return {
-      shots: this.shots[slot],
-      ships: placing ? [] : this.shipsOf(slot, false),
-      afloat: placing || !this.commanders[slot] ? null : COMMANDERS[this.commanders[slot]].fleet.filter((_, i) => !this.isSunk(slot, i)).length,
+      shots: fog.size ? this.shots[slot].map((v, k) => (fog.has(k) ? FOGGED : v)) : this.shots[slot],
+      // (a ship sunk in the fog shows once the fog lifts)
+      ships: placing ? [] : this.shipsOf(slot, false).filter((sh) => !sh.cells.some(([x, y]) => fog.has(this.idx(x, y)))),
+      afloat: placing || !this.commanders[slot] ? null : COMMANDERS[this.commanders[slot]].fleet.filter((e, i) => !this.isSunk(slot, i) ||
+        placedCells(e, this.fleets[slot][i]).some(([x, y]) => fog.has(this.idx(x, y)))).length, // (sunk in the fog: not yet)
     };
   }
 
@@ -635,6 +749,8 @@ export class UltimateBattleship {
       chargeNeeded: this.commanders.every(Boolean) ? this.commanders.map((c) => COMMANDERS[c].special.charge) : [0, 0],
       frozen: this.frozen,
       sonar: this.sonar,
+      eruptIn: this.sea === 'volcano' && !this.erupted ? Math.max(0, ERUPT_AFTER + 1 - this.turns) : null,
+      eruption: this.eruption,
       // Where a shield went is its owner's secret.
       last: this.last && this.last.skill === 'shield' ? Object.assign({}, this.last, { at: undefined }) : this.last,
       hits: this.hits,
@@ -647,17 +763,17 @@ export class UltimateBattleship {
 
   hostView() {
     return Object.assign(this.common(), {
-      boards: [this.board(0), this.board(1)],
+      boards: [this.board(0, null), this.board(1, null)],
       players: this.ctx.players,
     });
   }
 
   playerView(slot) {
     const common = this.common();
-    const mine = this.board(slot);
+    const mine = this.board(slot, slot);
     mine.ships = this.shipsOf(slot, true);
     mine.shields = [...this.shields[slot]];
-    const theirs = this.board(1 - slot);
+    const theirs = this.board(1 - slot, slot);
     theirs.spotted = [...this.spotted[slot]];
     return Object.assign(common, {
       you: slot,

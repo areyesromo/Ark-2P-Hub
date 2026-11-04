@@ -29,6 +29,10 @@
       rows.forEach(function (r) { for (let i = 0; i < size.w; i++) out.push([i, r]); });
     } else if (aim === 'two' && a.x2 !== undefined) {
       out.push([x, y], [a.x2, a.y2]);
+    } else if (aim === 'col') {
+      for (let i = 0; i < size.h; i++) out.push([x, i]);
+    } else if (aim === 'checker4') {
+      for (let dy = 0; dy < 4; dy++) for (let dx = 0; dx < 4; dx++) if ((dx + dy) % 2 === 0) out.push([x + dx, y + dy]);
     } else {
       out.push([x, y]);
     }
@@ -54,6 +58,8 @@
         if (t === '#') cls[y * w + x].push('land');
         else if (t === '~') cls[y * w + x].push('shallow');
         else if (t === '*') cls[y * w + x].push('ice');
+        else if (t === '%') cls[y * w + x].push('fog');
+        else if (t === '^') cls[y * w + x].push('lava');
       }
     }
     (opts.ships || []).forEach(function (s) {
@@ -68,6 +74,7 @@
     (opts.shots || []).forEach(function (v, i) {
       if (v === 1) cls[i].push('miss');
       if (v === 2) cls[i].push('hit');
+      if (v === 3) cls[i].push('fogged');
     });
     (opts.shields || []).forEach(function (i) { cls[i].push('shield'); });
     (opts.spotted || []).forEach(function (i) { cls[i].push('spotted'); });
@@ -145,6 +152,7 @@
     if (l.skill === 'shield') return '🛡️ ' + who + ' raised a shield';
     if (l.name === 'Full Scan') return '🛰️ ' + who + ' scanned a 5×5';
     if (l.name === 'Deep Freeze') return '🧊 ' + who + ' froze the enemy fleet: they miss a turn';
+    if (l.cells.length && l.cells.every(function (c) { return c.result === 'fog'; })) return who + ': ' + what + '🌫️ into the fog (it shows next turn)';
     what += sunk.length ? '🔥 sank the ' + sunk.join(' and the ') : hits ? '💥 ' + hits + ' hit' + (hits === 1 ? '' : 's') : l.cells.length > 1 ? '💦 all missed' : '💦 a miss';
     if (blocked) what += ' (🛡️ a shield took a hit)';
     if (l.cells.some(function (c) { return c.result === 'stopped'; })) what += ' (stopped by the ice or land)';
