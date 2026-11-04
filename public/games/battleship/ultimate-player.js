@@ -159,7 +159,6 @@
     const myTurn = v.phase === 'aim' && v.turn === you;
     const kind = myTurn ? aimKind(v) : null;
     const mark = myTurn && aim ? U.footprint(kind === 'cell' ? 'cell' : kind, { x: aim.x, y: aim.y, x2: aim.x2, y2: aim.y2, dir: dir }, v.size) : [];
-    const last = v.last && v.phase === 'shot' ? v.last.cells : [];
     const special = me.special;
     const acts = '<div class="ub-acts">' +
       '<button data-act="shot" class="' + (action === 'shot' ? 'on' : '') + '">🎯 Shot</button>' +
@@ -178,14 +177,14 @@
       '<p class="msg">' + msg + (v.timed && myTurn ? ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '') + '</p>' +
       '<div class="label">Their sea · ' + v.theirs.afloat + ' afloat</div>' +
       '<div data-board="theirs" class="ub-board' + (myTurn && kind !== 'own2' ? ' live' : '') + '">' +
-      U.seaHtml({ rows: v.rows, shots: v.theirs.shots, ships: v.theirs.ships, spotted: v.theirs.spotted, sonar: v.sonar.filter(function (s) { return s.by === you; }), mark: kind === 'own2' ? [] : mark, last: v.last && v.last.by === you ? last : [] }) + '</div>' +
+      U.seaHtml({ rows: v.rows, shots: v.theirs.shots, ships: v.theirs.ships, spotted: v.theirs.spotted, sonar: v.sonar.filter(function (s) { return s.by === you; }), mark: kind === 'own2' ? [] : mark, fx: v.last && v.phase === 'shot' && v.last.by === you ? v.last : null, frozen: v.frozen[1 - you] }) + '</div>' +
       (myTurn ? acts + '<div class="bs-tools">' +
         (lines ? '<button class="dir">' + (dir === 'h' ? '↔ Across' : '↕ Down') + '</button>' : '') +
         (sides ? '<button class="side">' + (from === 'w' ? '➡ From the left' : '⬅ From the right') + '</button>' : '') +
         '<button class="primary fire"' + (ready(v) ? '' : ' disabled') + '>Fire' + (aim && kind === 'cell' ? ' at ' + U.coord(aim.x, aim.y) : '') + '</button></div>' : '') +
       '<div class="label">Your fleet · ' + v.mine.afloat + ' afloat</div>' +
       '<div data-board="mine" class="ub-board small' + (kind === 'own2' ? ' live' : '') + '">' +
-      U.seaHtml({ rows: v.rows, shots: v.mine.shots, ships: v.mine.ships, shields: v.mine.shields, mark: kind === 'own2' ? mark : [], last: v.last && v.last.by !== you ? last : [] }) + '</div>';
+      U.seaHtml({ rows: v.rows, shots: v.mine.shots, ships: v.mine.ships, shields: v.mine.shields, mark: kind === 'own2' ? mark : [], fx: v.last && v.phase === 'shot' && v.last.by !== you ? v.last : null, frozen: v.frozen[you] }) + '</div>';
   }
 
   function overScreen(v) {

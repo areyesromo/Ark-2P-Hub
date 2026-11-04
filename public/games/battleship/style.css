@@ -180,3 +180,38 @@
 .ub-acts button.special:not(:disabled) { border: 2px solid var(--good); }
 /* On the TV each sea is as big as fits its half (its cells have no width of their own). */
 .ub-host .ub-sea { width: min(100%, calc(50vh * var(--w) / var(--h))); margin: 0 auto; }
+
+/* ---- Ultimate: what a move looks like as it lands ---- */
+/* Each landed cell plays in turn (--d), so a strike runs along its line and a torpedo leaves a wake. */
+.ub-sea .cell.last { animation: none; }
+.ub-sea .cell.last::before { content: ''; position: absolute; inset: -20%; border-radius: 50%; pointer-events: none; opacity: 0; animation: ub-burst 0.7s ease-out calc(var(--d, 0) * 110ms) both; }
+.ub-sea .cell.r-hit::before, .ub-sea .cell.r-sunk::before { background: radial-gradient(circle, #fff7c2 0%, #ff9f43 35%, #ff5a3c 60%, transparent 70%); }
+.ub-sea .cell.r-miss::before { background: radial-gradient(circle, transparent 35%, rgba(170, 220, 255, 0.9) 45%, transparent 60%); }
+.ub-sea .cell.r-blocked::before { background: radial-gradient(circle, rgba(125, 211, 252, 0.95) 0%, transparent 65%); content: ''; }
+.ub-sea .cell.r-stopped::before { background: radial-gradient(circle, #e0f2fe 0%, transparent 65%); }
+.ub-sea.fx-torpedo .cell.last { background: #0e5a7a; transition: background 0.2s calc(var(--d, 0) * 110ms); }
+.ub-sea .cell.scan { animation: ub-scan 1.2s ease-out calc(var(--d, 0) * 140ms) both; }
+.ub-sea .cell.sinking { animation: ub-sink 1s ease-in-out 0.4s both; }
+.ub-sea.frozen { position: relative; }
+.ub-sea.frozen::after { content: '❄️'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 4em; background: rgba(207, 232, 245, 0.28); border-radius: var(--r-sm); pointer-events: none; animation: ub-frost 1.2s ease-out both; }
+
+@keyframes ub-burst {
+  0% { opacity: 0; transform: scale(0.3); }
+  25% { opacity: 1; }
+  100% { opacity: 0; transform: scale(1.6); }
+}
+@keyframes ub-scan {
+  0% { box-shadow: inset 0 0 0 0 rgba(74, 222, 128, 0); }
+  40% { box-shadow: inset 0 0 0 4px rgba(74, 222, 128, 0.9); }
+  100% { box-shadow: inset 0 0 0 1px rgba(74, 222, 128, 0.35); }
+}
+@keyframes ub-sink {
+  0%, 100% { transform: none; }
+  20% { transform: translateX(-3px) rotate(-3deg); }
+  40% { transform: translateX(3px) rotate(3deg); }
+  60% { transform: translateY(2px) scale(0.92); filter: brightness(0.7); }
+}
+@keyframes ub-frost {
+  from { opacity: 0; transform: scale(1.1); }
+  to { opacity: 1; transform: none; }
+}

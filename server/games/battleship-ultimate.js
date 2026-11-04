@@ -495,7 +495,7 @@ export class UltimateBattleship {
     } else {
       cells = this.strike(slot, target, footprint(def.aim, Object.assign({}, a, { x2: input.x2, y2: input.y2 }), this.size));
     }
-    this.act(slot, Object.assign({ kind: 'skill', skill: kind, name: def.name, at: { x: a.x, y: a.y }, cells }, extra));
+    this.act(slot, Object.assign({ kind: 'skill', skill: kind, name: def.name, at: { x: a.x, y: a.y }, aim: def.aim, dir: a.dir, cells }, extra));
   }
 
   useSpecial(slot, input) {
@@ -524,7 +524,9 @@ export class UltimateBattleship {
       }
     }
     this.charge[slot] = 0;
-    this.act(slot, { kind: 'special', name: special.name, cells });
+    // Where it was aimed (and how), for the screens' effects; Deep Freeze has no aim.
+    const aimed = special.aim === 'none' ? {} : { at: { x: input.x, y: input.y }, aim: special.aim, dir: input.dir === 'v' ? 'v' : 'h' };
+    this.act(slot, Object.assign({ kind: 'special', name: special.name, cells }, aimed));
   }
 
   /** The aim of an input: a cell on the sea, and a direction ('h'/'v') or a side for torpedoes ('w'/'e'). */
