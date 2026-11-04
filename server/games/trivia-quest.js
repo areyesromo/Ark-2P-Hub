@@ -1,9 +1,9 @@
 // Trivia Quest. Co-op: the two of you face three monsters in a row (Goo Blob, Stone Golem,
 // then the Dragon), each with a health bar, and share a row of hearts. Every turn is a
 // question from the Quiz Battle bank; you both answer secretly on your phones (talk it over
-// first: that's the point) and it's revealed when you've both answered or time runs out. A
-// right answer hits the monster, harder the faster it came, and both right is a team strike
-// (half as much again). Every wrong or missing answer costs a heart. Beat a monster for up to
+// first: that's the point) and it's revealed when you've both answered (or, timed, when time
+// runs out). A right answer hits the monster (timed: harder the faster it came), and both right
+// is a team strike (half as much again). Every wrong or missing answer costs a heart. Beat a monster for up to
 // three stars (fewer for each heart lost against it); run out of hearts and the quest ends.
 // Each player has one 50/50 per quest, on their own phone only.
 
@@ -267,6 +267,6 @@ export default {
   music: 'thinking',
   category: 'casual',
   name: 'Trivia Quest',
-  tagline: 'Co-op quiz: answer together to bring down three monsters (Goo Blob, Stone Golem, Dragon). Right and fast hits harder; every wrong answer costs a shared heart.',
+  tagline: 'Co-op quiz: answer together to bring down three monsters (Goo Blob, Stone Golem, Dragon). Right answers hit, both right is a team strike; every wrong answer costs a shared heart.',
   create: (ctx) => new TriviaQuest(ctx),
 };

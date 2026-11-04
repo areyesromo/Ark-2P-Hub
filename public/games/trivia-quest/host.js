@@ -82,8 +82,8 @@
     if (v.phase === 'intro') {
       return '<div class="qz-center"><div class="big tq-enter">' + v.monster.emoji + '</div>' +
         '<div class="sub"><strong>' + esc(v.monster.name) + '</strong> blocks the way! ' + (v.monsterIndex === 0
-          ? 'Answer together to wear it down: right and fast hits harder, both right is a team strike. Every wrong answer costs a heart.'
-          : v.monsterIndex === v.monsters.length - 1 ? 'The boss: less time to answer.' : 'Tougher this time.') + '</div></div>';
+          ? 'Answer together to wear it down: right ' + (v.timed ? 'and fast ' : '') + 'hits harder, both right is a team strike. Every wrong answer costs a heart.'
+          : v.monsterIndex === v.monsters.length - 1 ? (v.timed ? 'The boss: less time to answer.' : 'The boss: the toughest of all.') : 'Tougher this time.') + '</div></div>';
     }
     if (v.phase === 'defeated') {
       return '<div class="qz-center"><div class="big">' + '⭐'.repeat(v.beaten[v.beaten.length - 1]) + '</div>' +

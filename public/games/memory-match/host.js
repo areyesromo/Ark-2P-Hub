@@ -43,7 +43,7 @@
       banner = '<div class="mm-banner">' + (v.draw ? "🤝 It's a draw!" : '🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!') +
         '<div class="sub">Rematch, change the settings (🎮 Y) or head back to the lobby.</div></div>';
     }
-    return banner + grid + (v.phase === 'over' ? '' : '<div class="mm-bar"><div class="fill"></div></div>');
+    return banner + grid + (v.phase === 'over' || !v.timed ? '' : '<div class="mm-bar"><div class="fill"></div></div>'); // no bar with no timer
   }
 
   function render() {

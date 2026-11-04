@@ -343,3 +343,16 @@ test('the timer is a choice: with no timer a turn (and calling the suit) waits f
   assert.equal(ctx.pendingTimers(), 0);
   assert.equal(game().g.hostView().timed, true, 'timed is the usual');
 });
+
+test('with no timer, calling the suit after an 8 waits for you too', () => {
+  const { ctx, g } = game({ timer: 'off' });
+  table(g, { hands: [['8C', '4H', '6D'], ['3C', '4C', '9D']], top: 'KS' });
+  play(g, 0, '8C');
+  assert.equal(g.phase, 'suit');
+  ctx.advance(TIMING.turnMs * 10);
+  assert.equal(g.phase, 'suit', 'still yours to call');
+  assert.equal(ctx.pendingTimers(), 0);
+  g.onInput(0, { type: 'suit', suit: 'H' });
+  assert.equal(g.phase, 'play');
+  assert.equal(g.turn, 1);
+});
