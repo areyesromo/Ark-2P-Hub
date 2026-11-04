@@ -181,7 +181,8 @@
   function renderLobby() {
     const opponent = state.players[1 - me.slot];
     let status;
-    if (!opponent) status = 'Waiting for an opponent to join…';
+    if (!opponent) status = 'Waiting for an opponent to join…<br>No one around? Play the 🤖 computer: ' + Ark.botLevelsHtml(null);
+    else if (opponent.bot) status = 'You vs the 🤖 <strong>computer</strong>: ' + Ark.botLevelsHtml(opponent.bot, true) + '<br><small>Only the games it can play are listed.</small>';
     else if (!opponent.connected) status = Ark.escapeHtml(opponent.name) + ' is reconnecting…';
     else status = 'You vs <strong>' + Ark.escapeHtml(opponent.name) + '</strong>. Pick a game!';
     $('lobby-status').innerHTML = status;
@@ -192,15 +193,18 @@
 
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
     const pads = Ark.controllerSeated(state);
+    const bot = Ark.botSeat(state);
+    const games = bot ? state.games.filter(function (g) { return g.vsComputer; }) : state.games; // (against the computer, only the games it can play)
     $('phone-games').innerHTML =
       '<button data-game="random" class="random"' + (state.readyToPlay ? '' : ' disabled') + '><strong>🎲 Random game</strong><span>Can\'t decide? Let the hub pick.</span></button>' +
-      state.games.map(function (g, i) {
-      const heading = i === 0 || state.games[i - 1].category !== g.category
+      games.map(function (g, i) {
+      const heading = i === 0 || games[i - 1].category !== g.category
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
         : '';
+      const off = pads && g.phoneOnly;
       return (
         heading +
-        '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (pads && g.phoneOnly ? ' class="phone-only"' : '') + (state.readyToPlay && !(pads && g.phoneOnly) ? '' : ' disabled') + '>' +
+        '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (off ? ' class="phone-only"' : '') + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
         '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : '') + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
@@ -209,6 +213,13 @@
   }
 
   Ark.bindTournament($('tourney'), socket);
+
+  // The computer opponent: a level button seats it (or changes its level), ✕ sends it away.
+  $('lobby-status').addEventListener('click', function (e) {
+    const lvl = e.target.closest('[data-bot]');
+    if (lvl) return socket.emit('bot:join', { level: lvl.getAttribute('data-bot') }, function (res) { if (res && res.error) alert(res.error); });
+    if (e.target.closest('[data-bot-leave]')) socket.emit('bot:leave');
+  });
 
   /** At the end of a match the phones show the tournament score too. */
   function renderTourneyBar() {

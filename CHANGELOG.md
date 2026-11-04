@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.22
+
+- 🤖 Play the computer: with a seat free, pick Easy, Normal or Hard on the TV or your phone (or LT
+  on a controller). It plays Battleship, Classic and Ultimate (it picks a commander and uses its
+  skills and special), only sees what its own phone would, and its games don't count in the
+  leaderboard. Someone joining from the lobby takes its seat.
+
 ## 0.1.21
 
 - Ultimate Battleship: every move now plays out on the TV and phones (explosions along the line,

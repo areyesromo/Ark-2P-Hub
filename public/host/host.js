@@ -77,7 +77,10 @@
     const label = '<span class="label">Player ' + (slot + 1) + '</span>';
     if (!p) {
       el.className = 'seat empty';
-      el.innerHTML = label + '<span class="who">Waiting…</span><span class="status">Scan the code to join</span>';
+      // No one to play? The computer can take the seat (when someone's in the other one).
+      const other = state.players[1 - slot];
+      el.innerHTML = label + '<span class="who">Waiting…</span><span class="status">Scan the code to join</span>' +
+        (other && !other.bot ? '<span class="status">or play the 🤖 computer: ' + Ark.botLevelsHtml(null) + '</span>' : '');
       return;
     }
     el.className = 'seat filled' + (p.connected ? '' : ' away');
@@ -85,8 +88,17 @@
     el.innerHTML =
       '<button class="kick' + (confirming ? ' armed' : '') + '" data-kick="' + slot + '" title="Remove this player">' + (confirming ? 'Remove?' : '✕') + '</button>' +
       label +
-      '<span class="who"><button class="seat-avatar" data-profile="' + slot + '" title="Change avatar and colour">' + Ark.avatarHtml(p.profile) + '</button><span class="nm">' + Ark.escapeHtml(p.name) + '</span></span>' +
-      '<span class="status">' + (p.local ? '🎮 Controller · ' : '') + (p.connected ? 'Ready' : 'Reconnecting…') + '</span>';
+      '<span class="who">' + (p.bot ? '<span class="seat-avatar">' + Ark.avatarHtml(p.profile) + '</span>' : '<button class="seat-avatar" data-profile="' + slot + '" title="Change avatar and colour">' + Ark.avatarHtml(p.profile) + '</button>') + '<span class="nm">' + Ark.escapeHtml(p.name) + '</span></span>' +
+      (p.bot
+        ? '<span class="status">🤖 The computer · ' + Ark.botLevelsHtml(p.bot) + '</span>'
+        : '<span class="status">' + (p.local ? '🎮 Controller · ' : '') + (p.connected ? 'Ready' : 'Reconnecting…') + '</span>');
+  }
+
+  /** The computer takes the free seat at this level (or changes to it). */
+  function seatBot(level) {
+    socket.emit('bot:join', { level: level }, function (res) {
+      if (res && res.error) flashPad('⚠️ ' + res.error);
+    });
   }
 
   const GROUPS = {
@@ -98,19 +110,23 @@
   // The first lobby card picks a game at random (the server chooses, see Room#pickRandomGame).
   const RANDOM = { id: 'random', name: '🎲 Random game', tagline: "Can't decide? Let the hub pick one for you." };
   function lobbyCards() {
-    return [RANDOM].concat(state.games);
+    // Against the computer, only the games it can play.
+    return [RANDOM].concat(Ark.botSeat(state) ? state.games.filter(function (g) { return g.vsComputer; }) : state.games);
   }
 
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
     $('join-warn').classList.toggle('hidden', !state.joinGuess);
-    // Both seats taken: the QR code steps aside and the game list gets the room.
-    Ark.lobbyLayout($('lobby'), 'full', state.players.every(Boolean), document.querySelector('.join'),
+    // Both seats taken: the QR code steps aside and the game list gets the room (it stays while
+    // the computer has a seat: someone who scans in takes it).
+    Ark.lobbyLayout($('lobby'), 'full', state.players.every(function (p) { return p && !p.bot; }), document.querySelector('.join'),
       [document.querySelector('.players-col'), document.querySelector('.games')], lobbyDrawn);
     lobbyDrawn = true;
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
-    $('games-hint').textContent = state.readyToPlay
+    $('games-hint').textContent = Ark.botSeat(state)
+      ? 'The games you can play against the computer. Choose here, from your phone, or with a controller (D-pad + A).'
+      : state.readyToPlay
       ? 'Choose here, from either phone, or with a controller (D-pad + A).'
       : 'Games unlock once both players are in.';
     renderPadHint();
@@ -125,13 +141,14 @@
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
     const pads = Ark.controllerSeated(state);
     $('game-list').innerHTML = cards.map(function (g, i) {
+      const off = pads && g.phoneOnly;
       const heading = i > 0 && (i === 1 || cards[i - 1].category !== g.category)
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
         : '';
       const tag = newest && g.lastPlayed === newest ? '<em class="tag">⏱ Last played</em>' : '';
       return (
         heading +
-        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (pads && g.phoneOnly ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !(pads && g.phoneOnly) ? '' : ' disabled') + '>' +
+        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
         '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : '') + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
@@ -162,7 +179,7 @@
   let picker = null; // { slot, pad (the controller using it, or null), sheet }
   function openPicker(slot, pad) {
     const p = state && state.players[slot];
-    if (!p || picker) return;
+    if (!p || p.bot || picker) return;
     picker = { slot: slot, pad: pad === undefined ? null : pad };
     picker.sheet = Ark.profilePicker({
       profile: p.profile,
@@ -176,6 +193,8 @@
     });
   }
   document.querySelector('.seats').addEventListener('click', function (e) {
+    const lvl = e.target.closest('[data-bot]');
+    if (lvl) return seatBot(lvl.getAttribute('data-bot'));
     const av = e.target.closest('[data-profile]');
     if (av) return openPicker(Number(av.getAttribute('data-profile')));
     const btn = e.target.closest('[data-kick]');
@@ -556,7 +575,7 @@
     let text;
     if (padMessage) text = padMessage;
     else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
-    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · D-pad + A pick a game' +
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · LT play the computer · D-pad + A pick a game' +
       (awayPhones().length ? ' · Back: free the seat of a phone that left' : '');
     $('pad-hint').textContent = text;
     renderUpdate(); // its RT tag shows while a controller is connected
@@ -565,7 +584,7 @@
   function renderPadFooter() {
     const el = $('pad-footer');
     const r = current && current.renderer;
-    const anyPad = state && state.players.some(function (p) { return p && p.local; });
+    const anyPad = state && state.players.some(function (p) { return p && p.local && !p.bot; });
     const setup = Ark.setup.isHub(lastView);
     const show = Boolean(state && state.phase === 'playing' && anyPad && (setup || (r && r.padHint)));
     el.classList.toggle('hidden', !show);
@@ -693,6 +712,18 @@
     const cards = lobbyCards();
     const n = cards.length;
     if (btn === 'Y') return renamePad(idx, seat);
+    if (btn === 'LT') {
+      // The computer takes the free seat (Easy); again: Normal, Hard, then it leaves.
+      const bot = Ark.botSeat(state);
+      const levels = Object.keys(Ark.botLevelNames);
+      const level = bot ? levels[levels.indexOf(bot.level) + 1] : levels[0];
+      if (!level) {
+        socket.emit('bot:leave');
+        return flashPad('🤖 The computer left · LT to bring it back');
+      }
+      seatBot(level);
+      return flashPad('🤖 The computer: ' + Ark.botLevelNames[level] + ' · LT for ' + (levels[levels.indexOf(level) + 1] ? Ark.botLevelNames[levels[levels.indexOf(level) + 1]] : 'it to leave'));
+    }
     if (btn === 'X') {
       // Cycle the tournament: off, best of 3, 5, 7.
       const t = state.tournament;
