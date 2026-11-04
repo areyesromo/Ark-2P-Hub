@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.20
+
+- **⚡ Ultimate Battleship** (pick it in Battleship's setup): five commanders, each with their own
+  fleet (some of it L, T and Z shaped) and a special, ship skills paid with energy (air strikes,
+  sonar, torpedoes, shields and more), and four seas with islands, reefs and ice.
+
 ## 0.1.19
 
 - Memory Match: a **Race** mode for two phones. The same cards on each phone, you both flip at
