@@ -34,7 +34,7 @@
   function render() {
     if (!root || !view || !loaded) return;
     const v = view;
-    const local = v.phase === 'play' && v.players[v.turn].local ? v.turn : null;
+    const local = v.phase === 'play' && v.players[v.turn].local && !v.players[v.turn].bot ? v.turn : null; // (not for the computer)
     root.innerHTML =
       Ark.scoreboardHtml(v.players, v.scores, v.winScore, v.round) +
       '<div class="db-status">' + status(v) + '</div>' +

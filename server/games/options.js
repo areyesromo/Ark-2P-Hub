@@ -102,6 +102,11 @@ class SetupFirst {
   playerView(slot) {
     return this.game ? { ...this.game.playerView(slot), ...this.hub() } : { phase: 'setup', you: slot, players: this.ctx.players, ...this.hub() };
   }
+
+  /** What the computer opponent sees (see a game's `bot`): the game's botView if it has one. */
+  botView(slot) {
+    return this.game && this.game.botView ? { ...this.game.botView(slot), ...this.hub() } : this.playerView(slot);
+  }
 }
 
 /**

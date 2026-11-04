@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.23
+
+- 🤖 The computer now plays Connect Four, Checkers, Dots and Boxes, Mancala, Rock Paper Scissors,
+  Memory Match, Dice Party, Quiz Battle, Reaction Duel and Trivia Quest (as your teammate), at
+  Easy, Normal or Hard.
+- With the computer seated, the games it can't play stay in the list, greyed out; the ones coming
+  next (Pong, Air Hockey, Snake Battle, Light Cycles, Tank Duel, Word Hunt) say ⏳ Coming soon.
+
 ## 0.1.22
 
 - 🤖 Play the computer: with a seat free, pick Easy, Normal or Hard on the TV or your phone (or LT

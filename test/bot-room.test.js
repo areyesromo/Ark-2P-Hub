@@ -56,9 +56,9 @@ test('a person can\'t join under the computer\'s name, and it can\'t be renamed'
 test('against the computer, only games it can play start (and come up at random)', () => {
   const { r } = room();
   const vs = listGames().filter((g) => g.vsComputer).map((g) => g.id);
-  assert.deepEqual(vs, ['battleship']);
+  assert.ok(vs.includes('battleship') && vs.includes('connect-four'));
   assert.match(r.startGame('pong').error, /computer/);
-  for (let i = 0; i < 20; i++) assert.equal(r.pickRandomGame(), 'battleship');
+  for (let i = 0; i < 40; i++) assert.ok(vs.includes(r.pickRandomGame()));
   assert.ok(r.startGame('battleship').ok);
   r.dispose();
 });
@@ -164,5 +164,33 @@ test('a broken move doesn\'t take the room down, and a refused one isn\'t retrie
   r.driveBot();
   wait(t, 6000);
   assert.ok(seen.includes(2), JSON.stringify(seen));
+  r.dispose();
+});
+
+test('the computer waits its own pause, works out a move once per position, and forgets on a rematch', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const { r } = room();
+  r.startGame('rock-paper-scissors');
+  r.handleInput(0, { type: 'go' });
+  const calls = [];
+  const def = { bot: (view, level, rng, retries, memory) => { calls.push(view.phase); memory.seen = (memory.seen || 0) + 1; return view.phase === 'choose' && !view.yourPick ? { type: 'pick', choice: 'rock', botDelayMs: 300 } : null; } };
+  r.botDef = () => def;
+  r.botTimer = null;
+  r.driveBot();
+  r.pushGameViews();
+  r.pushGameViews(); // the same position again: no new thinking
+  assert.equal(calls.length, 1, 'once per position: ' + calls.length);
+  wait(t, 200);
+  assert.equal(r.game.game.picks[1], null, 'not before its pause');
+  wait(t, 200);
+  assert.equal(r.game.game.picks[1], 'rock', 'after its 300 ms');
+  // Ana wins three; then a rematch: a fresh memory.
+  const g = r.game.game;
+  g.scores = [g.winScore - 1, 0];
+  r.handleInput(0, { type: 'pick', choice: 'paper' });
+  assert.equal(g.phase, 'over');
+  assert.ok(r.botMemory.seen > 0);
+  r.handleInput(0, { type: 'rematch' });
+  assert.equal(r.botMemory.seen || 0, 1, 'forgotten (one look since)');
   r.dispose();
 });
