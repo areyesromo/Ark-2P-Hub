@@ -85,9 +85,9 @@ export const SKILLS = {
   airstrike: { name: 'Air Strike', icon: '✈️', cost: 3, aim: 'line3', about: 'hits 3 cells in a line' },
   barrage: { name: 'Barrage', icon: '💥', cost: 4, aim: 'plus', about: 'hits a plus of 5 cells' },
   sonar: { name: 'Sonar', icon: '📡', cost: 2, aim: 'box3', about: 'counts the ship cells in a 3×3 (submarines don\'t show)' },
-  torpedo: { name: 'Torpedo', icon: '🌊', cost: 3, aim: 'row', about: 'runs along a row until it hits something' },
+  torpedo: { name: 'Torpedo', icon: '🌊', cost: 4, aim: 'row', about: 'runs along a row until it hits a ship (the water it crosses shows as misses)' },
   double: { name: 'Double Shot', icon: '🎯', cost: 2, aim: 'two', about: 'two shots this turn' },
-  shield: { name: 'Shield', icon: '🛡️', cost: 3, aim: 'own2', about: 'protects a 2×2 of your own sea from the next hit on each cell' },
+  shield: { name: 'Shield', icon: '🛡️', cost: 3, aim: 'own2', about: 'protects a 2×2 of your own sea: the next hit on each of its ships is stopped' },
 };
 
 /** The commanders: a fleet each (with their skills), and a special charged by hits. */
@@ -106,7 +106,7 @@ export const COMMANDERS = {
   },
   mako: {
     name: 'Captain Mako', icon: '🦈', style: 'The hunter',
-    special: { name: 'Wolf Pack', about: 'three torpedoes down three rows', aim: 'rows3', charge: 5 },
+    special: { name: 'Wolf Pack', about: 'three torpedoes down three rows', aim: 'rows3', charge: 6 },
     fleet: [
       { name: 'Stalker', shape: 'L4', skill: 'torpedo', stealth: true },
       { name: 'Submarine', shape: 'I3', skill: 'torpedo', stealth: true },
@@ -156,7 +156,7 @@ export const COMMANDERS = {
 export const COMMANDER_IDS = Object.keys(COMMANDERS);
 
 export const ENERGY = { perTurn: 1, perHit: 1, max: 10 };
-export const UTIMING = { placeMs: 120000, turnMs: 30000, shotMs: 1800 };
+export const UTIMING = { pickMs: 60000, placeMs: 120000, turnMs: 30000, shotMs: 1800 };
 
 const EMPTY = 0;
 const MISS = 1;
@@ -294,9 +294,11 @@ export class UltimateBattleship {
     this.last = null; // the last action: { by, kind, name, cells: [{ x, y, result }], ... }
     this.winner = null;
     this.turn = this.matches++ % 2;
-    this.phase = 'pick';
-    // Controller players pick on the TV; everyone starts on the first commander highlighted.
-    this.ctx.update();
+    // Timed games pick a commander for anyone who hasn't in time; with no timer it waits.
+    this.runPhase('pick', this.turnMs ? UTIMING.pickMs : null, () => {
+      this.commanders = this.commanders.map((c) => c || COMMANDER_IDS[Math.floor(this.rng() * COMMANDER_IDS.length)]);
+      this.toPlace();
+    });
   }
 
   // ---- phases and the clock --------------------------------------------------------------
@@ -385,12 +387,13 @@ export class UltimateBattleship {
     for (const [x, y] of cells) {
       if (!this.open(target, x, y)) continue;
       const k = this.idx(x, y);
-      if (this.shields[target].has(k)) {
+      const ship = this.shipAt(target, x, y);
+      if (ship !== -1 && this.shields[target].has(k)) {
         this.shields[target].delete(k);
         out.push({ x, y, result: 'blocked' });
         continue;
       }
-      const ship = this.shipAt(target, x, y);
+      this.shields[target].delete(k); // (a shield over open water is spent on nothing)
       this.shots[target][k] = ship === -1 ? MISS : HIT;
       if (ship === -1) {
         out.push({ x, y, result: 'miss' });
@@ -399,24 +402,29 @@ export class UltimateBattleship {
       this.hits[slot]++;
       this.energy[slot] = Math.min(ENERGY.max, this.energy[slot] + ENERGY.perHit);
       const special = COMMANDERS[this.commanders[slot]].special;
-      this.charge[slot] = Math.min(special.charge, this.charge[slot] + 1);
+      if (!this.firingSpecial) this.charge[slot] = Math.min(special.charge, this.charge[slot] + 1); // a special's own hits don't recharge it
       const sunk = this.isSunk(target, ship);
       out.push({ x, y, result: sunk ? 'sunk' : 'hit', ship: sunk ? COMMANDERS[this.commanders[target]].fleet[ship].name : undefined });
     }
     return out;
   }
 
-  /** A torpedo down row `y` from the `from` side ('w' or 'e'): it stops at land or ice, or hits the first ship cell. */
+  /**
+   * A torpedo down row `y` from the `from` side ('w' or 'e'): it stops at land or ice, or hits
+   * the first ship cell. The open water it runs through shows as misses (its wake gives it away).
+   */
   torpedo(slot, target, y, from) {
     const { w } = this.size;
+    const out = [];
     for (let i = 0; i < w; i++) {
       const x = from === 'e' ? w - 1 - i : i;
       const t = terrain(this.sea, x, y);
-      if (t === '#' || t === '*') return [{ x, y, result: 'stopped' }];
+      if (t === '#' || t === '*') return out.concat([{ x, y, result: 'stopped' }]);
       if (this.shots[target][this.idx(x, y)] !== EMPTY) continue; // already shot: it runs on past
-      if (this.shipAt(target, x, y) !== -1 || this.shields[target].has(this.idx(x, y))) return this.strike(slot, target, [[x, y]]);
+      if (this.shipAt(target, x, y) !== -1) return out.concat(this.strike(slot, target, [[x, y]]));
+      out.push(...this.strike(slot, target, [[x, y]])); // open water: a miss
     }
-    return [];
+    return out;
   }
 
   // ---- your turn --------------------------------------------------------------------------
@@ -445,10 +453,20 @@ export class UltimateBattleship {
     if (!a) return;
     let cells;
     let extra = {};
+    // An aim that can't do anything is refused (nothing is spent): a strike needs an open cell
+    // to land on, a shield some open water of yours to cover.
+    if (['line3', 'plus', 'two', 'box3'].includes(def.aim)) {
+      const at = footprint(def.aim, Object.assign({}, a, { x2: input.x2, y2: input.y2 }), this.size);
+      if (!at.some(([x, y]) => this.open(target, x, y))) return;
+    }
+    const cover = def.aim === 'own2'
+      ? footprint('own2', a, this.size).filter(([x, y]) => this.open(slot, x, y) && !this.shields[slot].has(this.idx(x, y)))
+      : null;
+    if (cover && !cover.length) return;
+    if (def.aim === 'two' && (!Number.isInteger(input.x2) || !Number.isInteger(input.y2) || (input.x2 === a.x && input.y2 === a.y))) return;
+    this.energy[slot] -= def.cost; // paid first, so the hits it lands are all counted (up to the cap)
     if (def.aim === 'own2') {
       // A shield on your own sea: secret, so only your phone shows it.
-      const cover = footprint('own2', a, this.size).filter(([x, y]) => this.shots[slot][this.idx(x, y)] === EMPTY);
-      if (!cover.length) return;
       cover.forEach(([x, y]) => this.shields[slot].add(this.idx(x, y)));
       cells = [];
     } else if (def.aim === 'box3') {
@@ -465,10 +483,8 @@ export class UltimateBattleship {
     } else if (def.aim === 'row') {
       cells = this.torpedo(slot, target, a.y, a.from);
     } else {
-      if (def.aim === 'two' && (!Number.isInteger(input.x2) || !Number.isInteger(input.y2) || (input.x2 === a.x && input.y2 === a.y))) return;
       cells = this.strike(slot, target, footprint(def.aim, Object.assign({}, a, { x2: input.x2, y2: input.y2 }), this.size));
     }
-    this.energy[slot] -= def.cost;
     this.act(slot, Object.assign({ kind: 'skill', skill: kind, name: def.name, at: { x: a.x, y: a.y }, cells }, extra));
   }
 
@@ -483,14 +499,20 @@ export class UltimateBattleship {
       const a = this.aimOf(input);
       if (!a) return;
       if (special.aim === 'rows3') {
+        this.firingSpecial = true;
         for (let dy = -1; dy <= 1; dy++) if (a.y + dy >= 0 && a.y + dy < this.size.h) cells = cells.concat(this.torpedo(slot, target, a.y + dy, a.from));
+        this.firingSpecial = false;
       } else if (special.aim === 'box5') {
         // Full Scan: the ship cells in a 5×5 show on your view of their sea (until you hit them).
         footprint('box5', a, this.size).forEach(([x, y]) => {
           if (this.shipAt(target, x, y) !== -1 && this.shots[target][this.idx(x, y)] === EMPTY) this.spotted[slot].add(this.idx(x, y));
         });
       } else {
-        cells = this.strike(slot, target, footprint(special.aim, a, this.size));
+        const at = footprint(special.aim, a, this.size);
+        if (!at.some(([x, y]) => this.open(target, x, y))) return; // nothing to hit: not spent
+        this.firingSpecial = true;
+        cells = this.strike(slot, target, at);
+        this.firingSpecial = false;
       }
     }
     this.charge[slot] = 0;
@@ -600,10 +622,11 @@ export class UltimateBattleship {
       commanders: this.commanders.every(Boolean) ? this.commanders : this.commanders.map((c) => (c ? 'picked' : null)),
       energy: this.energy,
       charge: this.charge,
-      chargeNeeded: this.commanders.map((c) => (c ? COMMANDERS[c].special.charge : 0)),
+      chargeNeeded: this.commanders.every(Boolean) ? this.commanders.map((c) => COMMANDERS[c].special.charge) : [0, 0],
       frozen: this.frozen,
       sonar: this.sonar,
-      last: this.last,
+      // Where a shield went is its owner's secret.
+      last: this.last && this.last.skill === 'shield' ? Object.assign({}, this.last, { at: undefined }) : this.last,
       hits: this.hits,
       fired: this.fired,
       timeLeftMs: this.timeLeftMs(),
@@ -620,18 +643,21 @@ export class UltimateBattleship {
   }
 
   playerView(slot) {
+    const common = this.common();
     const mine = this.board(slot);
     mine.ships = this.shipsOf(slot, true);
     mine.shields = [...this.shields[slot]];
     const theirs = this.board(1 - slot);
     theirs.spotted = [...this.spotted[slot]];
-    return Object.assign(this.common(), {
+    return Object.assign(common, {
       you: slot,
       yourCommander: this.commanders[slot],
       // Your fleet's shapes in each of their four turns, for placing it.
       fleetDefs: this.commanders[slot] ? COMMANDERS[this.commanders[slot]].fleet.map((e) => ({ name: e.name, skill: e.skill || null, rots: [0, 1, 2, 3].map((r) => shapeCells(e.shape, r)) })) : null,
       // Your fleet while you place it (a random one to start from).
       placing: this.phase === 'place' && this.fleets[slot] ? this.fleets[slot] : null,
+      // Your own last move in full (where your shield went is for your phone only).
+      last: this.last && this.last.by === slot ? this.last : common.last,
       skills: this.phase === 'aim' || this.phase === 'shot' ? Object.keys(this.skillsOf(slot)) : [],
       mine,
       theirs,

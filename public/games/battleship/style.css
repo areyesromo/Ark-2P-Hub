@@ -115,3 +115,68 @@
 @media (prefers-reduced-motion: reduce) {
   .bs-grid .cell.last { outline: 3px solid rgba(255, 220, 120, 0.9); outline-offset: -3px; }
 }
+
+/* ---- Ultimate (ultimate.js, ultimate-player.js, ultimate-host.js) ---- */
+
+.ub-sea {
+  --water: #12304a;
+  --hull: #8b98b8;
+  display: grid;
+  grid-template-columns: repeat(var(--w), 1fr);
+  gap: 2px;
+  aspect-ratio: var(--w) / var(--h);
+  user-select: none;
+  -webkit-user-select: none;
+}
+.ub-sea .cell { position: relative; background: var(--water); border-radius: 3px; box-shadow: inset 0 0 0 1px rgba(120, 180, 255, 0.18); }
+/* The sea itself: land and rock, shallows, ice (game colours, not the palette). */
+.ub-sea .cell.land { background: #6b5b3e; box-shadow: none; }
+.ub-sea .cell.shallow { background: #1f6a78; }
+.ub-sea .cell.ice { background: #cfe8f5; box-shadow: none; }
+.ub-sea .cell.ship { background: var(--hull); }
+.ub-sea .cell.ship.sunk { background: #5b2430; }
+.ub-sea .cell.ship.selected { background: var(--warn); }
+.ub-sea .cell.shield { box-shadow: inset 0 0 0 3px #7dd3fc; }
+.ub-sea .cell.spotted { background: #4b5563; box-shadow: inset 0 0 0 2px #facc15; }
+.ub-sea .cell.mark { box-shadow: inset 0 0 0 3px var(--warn); }
+.ub-sea .cell.cursor { box-shadow: inset 0 0 0 4px #fff, 0 0 12px #fff; z-index: 1; }
+.ub-sea .cell.miss::after { content: ''; position: absolute; inset: 36%; border-radius: 50%; background: rgba(255, 255, 255, 0.55); }
+.ub-sea .cell.hit::after { content: '✕'; position: absolute; inset: 0; display: grid; place-items: center; color: #ff5a3c; font-weight: 900; }
+.ub-sea .cell.hit:not(.ship) { background: #3a1e26; }
+.ub-sea .cell.last { animation: bs-pulse 0.9s ease-out 2; }
+.ub-sea .cell.r-blocked::before { content: '🛡️'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 0.8em; }
+.ub-sea .sonar { position: absolute; inset: 0; display: grid; place-items: center; font-weight: 900; color: #facc15; text-shadow: 0 0 4px #000; z-index: 1; }
+
+.ub-shape { display: inline-grid; grid-template-columns: repeat(var(--w), 0.55em); gap: 1px; vertical-align: middle; margin-right: 2px; }
+.ub-shape i { width: 0.55em; height: 0.55em; border-radius: 1px; }
+.ub-shape i.on { background: #8b98b8; }
+
+.ub-pips { display: inline-flex; gap: 2px; vertical-align: middle; }
+.ub-pips i { width: 0.55em; height: 0.9em; border-radius: 2px; background: var(--line); }
+.ub-pips.energy i.on { background: var(--warn); }
+.ub-pips.charge i.on { background: var(--good); }
+.ub-meters { display: flex; gap: 14px; justify-content: center; font-weight: 700; flex-wrap: wrap; }
+
+.ub-roster { display: flex; flex-direction: column; gap: 10px; }
+.ub-roster.tv { display: grid; grid-template-columns: repeat(5, 1fr); gap: 1rem; }
+.ub-card { background: var(--panel); border: 2px solid var(--line); border-radius: var(--r-md); padding: 10px 12px; display: flex; flex-direction: column; gap: 6px; text-align: left; }
+.ub-card.aim.p1 { border-color: var(--p1); }
+.ub-card.aim.p2 { border-color: var(--p2); }
+.ub-head { display: flex; gap: 10px; align-items: center; }
+.ub-head small { display: block; color: var(--muted); font-weight: 700; }
+.ub-icon { font-size: 1.8em; }
+.ub-special { font-size: var(--fs-sm); }
+.ub-ships { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+.ub-wait { text-align: center; margin-top: 20vh; }
+.ub-wait .big { font-size: 4rem; }
+
+.ub-phone .ub-board { width: 100%; }
+.ub-phone .ub-board.small { width: 70%; align-self: center; }
+.ub-phone .ub-board.live { outline: 2px solid var(--me); outline-offset: 3px; border-radius: var(--r-sm); }
+.ub-acts { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+.ub-acts button { padding: 6px 10px; font-size: var(--fs-sm); display: flex; flex-direction: column; align-items: center; }
+.ub-acts button small { opacity: 0.8; }
+.ub-acts button.on { background: var(--me); color: var(--on-bright); }
+.ub-acts button.special:not(:disabled) { border: 2px solid var(--good); }
+/* On the TV each sea is as big as fits its half (its cells have no width of their own). */
+.ub-host .ub-sea { width: min(100%, calc(50vh * var(--w) / var(--h))); margin: 0 auto; }

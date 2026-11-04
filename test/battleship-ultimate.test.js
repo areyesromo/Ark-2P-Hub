@@ -163,13 +163,13 @@ test('a Torpedo runs along a row and hits the first ship; ice stops it', () => {
   const { g } = h;
   g.energy[0] = 10;
   g.onInput(0, { type: 'skill', skill: 'torpedo', x: 0, y: 4, from: 'e' }); // from the right: the Cruiser's far end
-  assert.deepEqual(g.last.cells.map((c) => [c.x, c.result]), [[2, 'hit']]);
+  assert.deepEqual(g.last.cells.filter((c) => c.result !== 'miss').map((c) => [c.x, c.result]), [[2, 'hit']]);
   // On the Frozen Strait, ice at (1, 1) stops a torpedo from the left on row 1.
   const STRAIT = [{ x: 3, y: 0, rot: 0 }, { x: 3, y: 1, rot: 0 }, { x: 0, y: 3, rot: 0 }, { x: 0, y: 5, rot: 0 }, { x: 0, y: 9, rot: 0 }, { x: 11, y: 9, rot: 0 }];
   const s = battle({ sea: 'strait', fleets: [STRAIT, STRAIT] });
   s.g.energy[0] = 10;
   s.g.onInput(0, { type: 'skill', skill: 'torpedo', x: 0, y: 1, from: 'w' });
-  assert.deepEqual(s.g.last.cells, [{ x: 1, y: 1, result: 'stopped' }]);
+  assert.deepEqual(s.g.last.cells.at(-1), { x: 1, y: 1, result: 'stopped' });
 });
 
 test('a Shield on your own sea stops the next hit on each of its cells, and only your phone knows it\'s there', () => {
@@ -255,4 +255,92 @@ test('in the lobby: Battleship\'s setup has the mode (classic or Ultimate) and t
   assert.equal(g.hostView().sea, 'reef');
   assert.equal(g.hostView().timed, false);
   assert.equal(g.hostView().roster.length, 5);
+});
+
+// ---- fixes from the review of the engine ----
+
+const FROST_ROWS = [{ x: 0, y: 0, rot: 0 }, { x: 5, y: 0, rot: 0 }, { x: 0, y: 4, rot: 0 }, { x: 0, y: 6, rot: 0 }, { x: 0, y: 8, rot: 0 }, { x: 9, y: 9, rot: 0 }];
+
+test('a raised shield doesn\'t say where it is; and the specials\' charge doesn\'t give a pick away before you\'ve both picked', () => {
+  const h = battle({ commanders: ['frost', 'vega'], fleets: [FROST_ROWS, VEGA_ROWS] });
+  h.g.energy[0] = 10;
+  h.g.onInput(0, { type: 'skill', skill: 'shield', x: 0, y: 4 });
+  for (const v of [h.g.playerView(1), h.g.hostView()]) assert.equal(v.last.at, undefined);
+  assert.deepEqual(h.g.playerView(0).last.at, { x: 0, y: 4 }, 'your own phone knows');
+  const ctx = fakeCtx();
+  const g = new UltimateBattleship(ctx, () => 0.3, {});
+  g.start();
+  g.onInput(0, { type: 'commander', id: 'nova' });
+  assert.deepEqual(g.hostView().chargeNeeded, [0, 0]);
+});
+
+test('a shield stops a hit, not a miss; a torpedo runs past a shield on open water and marks its path', () => {
+  const h = battle({ commanders: ['frost', 'vega'], fleets: [FROST_ROWS, VEGA_ROWS] });
+  const { g } = h;
+  g.energy[0] = 10;
+  g.onInput(0, { type: 'skill', skill: 'shield', x: 7, y: 5 }); // over open water (and (8,5))
+  next(h);
+  g.onInput(1, { type: 'fire', x: 7, y: 5 });
+  assert.equal(g.last.cells[0].result, 'miss');
+  next(h);
+  g.onInput(0, { type: 'fire', x: 9, y: 0 });
+  next(h);
+  // A torpedo from the east along row 4: past the shield's water at... (row 4 has the Cruiser at 0-2)
+  g.energy[1] = 10;
+  g.onInput(1, { type: 'skill', skill: 'torpedo', x: 0, y: 4, from: 'e' });
+  assert.deepEqual(g.last.cells.filter((c) => c.result !== 'miss').map((c) => [c.x, c.result]), [[2, 'hit']]);
+  assert.ok(g.last.cells.filter((c) => c.result === 'miss').length >= 5, 'the water it ran through is marked');
+});
+
+test('a skill is paid before it lands (so hits at full energy still count), and one that can\'t do anything isn\'t spent', () => {
+  const h = battle();
+  const { g } = h;
+  g.energy[0] = ENERGY.max;
+  g.onInput(0, { type: 'skill', skill: 'double', x: 0, y: 0, x2: 1, y2: 0 });
+  assert.equal(g.energy[0], ENERGY.max, 'paid 2, got 2 back');
+  next(h);
+  g.onInput(1, { type: 'fire', x: 9, y: 0 });
+  next(h);
+  // An Air Strike on cells already shot: refused, nothing spent.
+  const e = g.energy[0];
+  g.onInput(0, { type: 'skill', skill: 'airstrike', x: 0, y: 0, dir: 'h' }); // (0,0),(1,0) shot; (2,0) open
+  assert.equal(g.phase, 'shot', 'one cell still open: it goes');
+  next(h);
+  g.onInput(1, { type: 'fire', x: 9, y: 1 });
+  next(h);
+  g.energy[0] = 10;
+  [0, 1, 2].forEach((x) => { g.shots[1][g.idx(x, 2)] = 1; });
+  g.onInput(0, { type: 'skill', skill: 'airstrike', x: 0, y: 2, dir: 'h' }); // all shot already
+  assert.equal(g.phase, 'aim', 'refused');
+  assert.equal(g.energy[0], 10);
+  void e;
+});
+
+test('a timed game doesn\'t wait forever for a commander: one is picked for you', () => {
+  const ctx = fakeCtx();
+  const g = new UltimateBattleship(ctx, () => 0.3, {});
+  g.start();
+  g.onInput(0, { type: 'commander', id: 'vega' });
+  ctx.advance(UTIMING.pickMs + 1000);
+  assert.equal(g.phase, 'place');
+  assert.ok(COMMANDER_IDS.includes(g.commanders[1]));
+  // With no timer, the pick waits.
+  const c2 = fakeCtx();
+  const u = new UltimateBattleship(c2, () => 0.3, { turnMs: 0 });
+  u.start();
+  c2.advance(UTIMING.pickMs * 3);
+  assert.equal(u.phase, 'pick');
+});
+
+test('Deep Freeze wears off: after the skipped turn, the frozen player plays again', () => {
+  const h = battle({ commanders: ['frost', 'vega'], fleets: [FROST_ROWS, VEGA_ROWS] });
+  const { g } = h;
+  g.charge[0] = COMMANDERS.frost.special.charge;
+  g.onInput(0, { type: 'special' });
+  next(h);
+  assert.equal(g.turn, 0);
+  g.onInput(0, { type: 'fire', x: 9, y: 0 });
+  next(h);
+  assert.equal(g.turn, 1, 'their turn again');
+  assert.deepEqual(g.frozen, [false, false]);
 });

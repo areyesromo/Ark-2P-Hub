@@ -7,6 +7,27 @@
   let view = null;
   let loaded = false;
   const cursors = {}; // controller players aim with a cursor: slot -> { x, y }
+  let host = null; // the element the TV screen lives in
+  // Ultimate mode has its own screen (ultimate.js, ultimate-host.js), loaded when needed.
+  let ultimate = null;
+  let ultimateLoading = null;
+  let ultimateView = null;
+
+  function toUltimate(v) {
+    ultimateView = v;
+    if (ultimate) return ultimate.update(v);
+    if (ultimateLoading) return;
+    ultimateLoading = Ark.loadScript('/games/battleship/ultimate.js')
+      .then(function () { return Ark.loadScript('/games/battleship/ultimate-host.js'); })
+      .then(function () {
+        if (!host) return;
+        if (root) root.style.display = 'none';
+        ultimate = window.ArkUltimate.host;
+        ultimate.mount(host);
+        ultimate.update(ultimateView);
+      })
+      .catch(function () { ultimateLoading = null; });
+  }
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -83,6 +104,7 @@
   Ark.register('host', 'battleship', {
     // Sound: splash for a miss, a bang for a hit, a bigger one for a sinking.
     sounds: function (prev, v) {
+      if (v.ultimate || prev.ultimate) return ultimate && v.ultimate && prev.ultimate ? ultimate.sounds(prev, v) : [];
       const out = [];
       if (v.ready.filter(Boolean).length > prev.ready.filter(Boolean).length) out.push('lock');
       const s = v.lastShot;
@@ -92,8 +114,9 @@
       }
       return out;
     },
-    padHint: 'D-pad aims · A fires · your fleet is placed at random (it stays hidden)',
+    padHint: 'D-pad aims · A fires · your fleet is placed at random (it stays hidden) · Ultimate: ←→ A pick a commander, LB/RB shot, skill or special, Y turns a line',
     pad: function (btn, v, slot) {
+      if (v.ultimate) return ultimate ? ultimate.pad(btn, v, slot) : null;
       if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
       if (v.phase !== 'aim' || v.turn !== slot) return null;
       const c = cursors[slot] || (cursors[slot] = { x: Math.floor(v.size / 2), y: Math.floor(v.size / 2) });
@@ -107,6 +130,7 @@
       return null;
     },
     mount: function (el) {
+      host = el;
       root = document.createElement('div');
       root.className = 'bs-host';
       el.appendChild(root);
@@ -116,10 +140,18 @@
       });
     },
     update: function (v) {
+      if (v.ultimate) return toUltimate(v);
+      if (ultimate) { // back to Classic (a new setup)
+        ultimate.unmount();
+        ultimate = ultimateLoading = null;
+        if (root) root.style.display = '';
+      }
       view = v;
       render();
     },
     unmount: function () {
+      if (ultimate) ultimate.unmount();
+      ultimate = ultimateLoading = ultimateView = host = null;
       root = view = null;
       Object.keys(cursors).forEach(function (k) { delete cursors[k]; });
     },
