@@ -19,12 +19,14 @@ export function connectFourBot(view, level, rng = Math.random) {
   if (level === 'easy' && rng() < 0.33) return { type: 'drop', col: open[Math.floor(rng() * open.length)], botDelayMs: pace };
   let best = null;
   let bestScore = -Infinity;
+  let bestRaw = -Infinity; // (cuts the search short where a move can't beat it)
   for (const c of open) {
     const r = drop(board, c, me, rows);
-    const score = wins(board, c, r, cols, rows) ? WIN : -negamax(board, DEPTH[level] - 1, 3 - me, -Infinity, Infinity, cols, rows, level);
+    const score = wins(board, c, r, cols, rows) ? WIN : -negamax(board, DEPTH[level] - 1, 3 - me, -Infinity, -bestRaw + 1, cols, rows, level);
     board[r][c] = 0;
     const s = score + rng() * 0.5; // (ties: any of them)
     if (s > bestScore) { bestScore = s; best = c; }
+    bestRaw = Math.max(bestRaw, score);
   }
   return { type: 'drop', col: best, botDelayMs: pace };
 }

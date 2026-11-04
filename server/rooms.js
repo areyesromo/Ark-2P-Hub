@@ -251,6 +251,7 @@ export class Room {
     this.botRetries = 0;
     this.botLastMove = null;
     this.botMemory = {}; // the computer's memory for a match (see a game's `bot`)
+    this.botCache = null; // its last answer, for the position it was worked out for
     this.generation++;
     this.game = null;
     this.gameId = null;
@@ -322,6 +323,10 @@ export class Room {
     const { gameId } = this;
     const view = this.game.hostView();
     if (view.phase === 'over' && this.lastPhase !== 'over') this.recordResult(view);
+    if (this.lastPhase === 'over' && view.phase !== 'over') { // a rematch: the computer starts afresh
+      this.botMemory = {};
+      this.botCache = null;
+    }
     this.lastPhase = view.phase;
     this.io.to(this.hostChannel).emit('game:view', { gameId, view });
     this.players.forEach((p, slot) => {
@@ -339,11 +344,16 @@ export class Room {
     if (slot === -1 || !this.game) return;
     const def = this.botDef();
     // The same move again means the game refused it: `retries` lets the bot try something else.
+    // One answer per position: the clock ticking down doesn't make it think again.
     const think = () => {
       try {
         if (!def || !def.bot || !this.game) return null;
         const view = this.game.botView ? this.game.botView(slot) : this.game.playerView(slot);
-        return def.bot(view, this.players[slot].bot, Math.random, this.botRetries || 0, this.botMemory);
+        const key = JSON.stringify(view, (k, v) => (k === 'timeLeftMs' ? undefined : v)) + '|' + (this.botRetries || 0);
+        if (this.botCache && this.botCache.def === def && this.botCache.key === key) return this.botCache.move;
+        const move = def.bot(view, this.players[slot].bot, Math.random, this.botRetries || 0, this.botMemory);
+        this.botCache = { def, key, move };
+        return move;
       } catch (err) {
         console.error(`[room ${this.code}] computer move error:`, err);
         return null;

@@ -11,7 +11,7 @@ import { BOXES, ROLLS } from './dice-party.js';
 const PAR = { ones: 2, twos: 5, threes: 8, fours: 11, fives: 14, sixes: 17, three: 16, four: 8, house: 14, small: 17, large: 13, yahtzee: 9, chance: 22 };
 const TRIALS = { normal: 40, hard: 220 };
 
-export function diceBot(view, level, rng = Math.random) {
+export function diceBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   if (!view || view.phase !== 'turn' || view.turn !== view.you || !['easy', 'normal', 'hard'].includes(level)) return null;
   const pace = 600 + rng() * 700;
   const card = view.cards[view.you];
@@ -24,8 +24,14 @@ export function diceBot(view, level, rng = Math.random) {
   const score = () => ({ type: 'score', box: bestBox(dice).id, botDelayMs: pace });
   if (view.rollsLeft === 0) return score();
 
-  let want;
-  if (level === 'easy') {
+  // One decision a roll (asked again after each hold, it sticks to it: no flip-flopping).
+  const rollKey = view.round + ':' + view.rollsLeft + ':' + dice.join('');
+  const plan = memory.dicePlan && memory.dicePlan.key === rollKey ? memory.dicePlan : null;
+  if (plan && plan.score) return score();
+  let want = plan ? plan.want : null;
+  if (want) {
+    // (already decided)
+  } else if (level === 'easy') {
     const counts = [0, 0, 0, 0, 0, 0, 0];
     dice.forEach((d) => counts[d]++);
     const face = counts.indexOf(Math.max(...counts));
@@ -46,8 +52,12 @@ export function diceBot(view, level, rng = Math.random) {
       const ev = total / TRIALS[level];
       if (ev > bestEv) { bestEv = ev; want = hold; }
     }
-    if (now >= bestEv) return score(); // what it has beats rolling on
+    if (now >= bestEv) { // what it has beats rolling on
+      memory.dicePlan = { key: rollKey, score: true };
+      return score();
+    }
   }
+  memory.dicePlan = { key: rollKey, want };
   const toggle = want.findIndex((h, i) => h !== view.held[i]);
   if (toggle !== -1) return { type: 'hold', die: toggle, botDelayMs: 350 + rng() * 300 };
   return { type: 'roll', botDelayMs: pace };

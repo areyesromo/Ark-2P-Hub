@@ -166,3 +166,31 @@ test('a broken move doesn\'t take the room down, and a refused one isn\'t retrie
   assert.ok(seen.includes(2), JSON.stringify(seen));
   r.dispose();
 });
+
+test('the computer waits its own pause, works out a move once per position, and forgets on a rematch', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const { r } = room();
+  r.startGame('rock-paper-scissors');
+  r.handleInput(0, { type: 'go' });
+  const calls = [];
+  const def = { bot: (view, level, rng, retries, memory) => { calls.push(view.phase); memory.seen = (memory.seen || 0) + 1; return view.phase === 'choose' && !view.yourPick ? { type: 'pick', choice: 'rock', botDelayMs: 300 } : null; } };
+  r.botDef = () => def;
+  r.botTimer = null;
+  r.driveBot();
+  r.pushGameViews();
+  r.pushGameViews(); // the same position again: no new thinking
+  assert.equal(calls.length, 1, 'once per position: ' + calls.length);
+  wait(t, 200);
+  assert.equal(r.game.game.picks[1], null, 'not before its pause');
+  wait(t, 200);
+  assert.equal(r.game.game.picks[1], 'rock', 'after its 300 ms');
+  // Ana wins three; then a rematch: a fresh memory.
+  const g = r.game.game;
+  g.scores = [g.winScore - 1, 0];
+  r.handleInput(0, { type: 'pick', choice: 'paper' });
+  assert.equal(g.phase, 'over');
+  assert.ok(r.botMemory.seen > 0);
+  r.handleInput(0, { type: 'rematch' });
+  assert.equal(r.botMemory.seen || 0, 1, 'forgotten (one look since)');
+  r.dispose();
+});

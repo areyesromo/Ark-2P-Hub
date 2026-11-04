@@ -179,3 +179,41 @@ test('Reaction Duel: the computer never jumps the gun, and Hard is quicker than 
   const def = getGame('reaction-duel');
   assert.equal(def.bot({ phase: 'wait', you: 1 }, 'hard', Math.random), null);
 });
+
+test('Dice Party: the computer decides what to hold once a roll, and doesn\'t flip-flop', () => {
+  const def = getGame('dice-party');
+  for (const level of ['normal', 'hard']) {
+    let undone = 0;
+    let holds = 0;
+    for (let seed = 1; seed <= 6; seed++) {
+      const ctx = fakeCtx();
+      ctx.players.forEach((p) => { p.local = true; p.bot = level; });
+      const g = def.create(ctx);
+      g.start();
+      if (g.hostView().phase === 'setup') g.onInput(0, { type: 'go' });
+      const rng = seeded(seed);
+      const memory = [{}, {}];
+      const toggled = { key: null, dice: new Set() };
+      for (let i = 0; i < 3000 && g.hostView().phase !== 'over'; i++) {
+        const slot = g.hostView().turn;
+        // The room asks again after every move (and on every update): ask twice here.
+        def.bot(g.botView ? g.botView(slot) : g.playerView(slot), level, rng, 0, memory[slot]);
+        const m = def.bot(g.botView ? g.botView(slot) : g.playerView(slot), level, rng, 0, memory[slot]);
+        if (!m) break;
+        if (m.type === 'hold') {
+          // A die toggled twice in the same roll is a flip-flop (letting go of last roll's hold isn't).
+          holds++;
+          const v = g.hostView();
+          const key = v.turn + ':' + v.round + ':' + v.rollsLeft;
+          if (toggled.key !== key) { toggled.key = key; toggled.dice = new Set(); }
+          if (toggled.dice.has(m.die)) undone++;
+          toggled.dice.add(m.die);
+        }
+        const { botDelayMs, ...input } = m;
+        g.onInput(slot, input);
+      }
+      assert.equal(g.hostView().phase, 'over');
+    }
+    assert.equal(undone, 0, level + ': ' + undone + ' of ' + holds + ' holds undone');
+  }
+});
