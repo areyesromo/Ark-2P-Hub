@@ -9,9 +9,9 @@ import { getGame } from '../server/games/index.js';
 const BANK = Array.from({ length: 60 }, (_, i) => ({ cat: i % 2 ? 'Science' : 'History', q: 'Question ' + i + '?', a: ['right ' + i, 'wrong a' + i, 'wrong b' + i, 'wrong c' + i] }));
 
 /** A quest with `hearts`, every update building every view (as the room does). */
-function quest({ hearts = 5, rng = () => 0.5 } = {}) {
+function quest({ hearts = 5, rng = () => 0.5, timer = 'timed' } = {}) {
   const ctx = fakeCtx();
-  ctx.settings = { hearts, topic: 0 };
+  ctx.settings = { hearts, topic: 0, timer };
   let g = null;
   const update = ctx.update.bind(ctx);
   ctx.update = () => {
@@ -340,4 +340,24 @@ test('in the lobby: a co-op game with a topic and difficulty to pick', () => {
   const setup = JSON.stringify(def.create(fakeCtx()).hostView());
   assert.ok(setup.includes('"hearts"') && setup.includes('"topic"'));
   assert.ok(setup.includes('Normal') && setup.includes('Easy') && setup.includes('Hard'));
+});
+
+test('the timer is a choice: with no timer (the usual) a question waits for you both, and the speed bonus is half', () => {
+  const h = quest({ timer: 'off' });
+  toQuestion(h);
+  const { ctx, g } = h;
+  assert.equal(g.hostView().timed, false);
+  ctx.advance(g.questionMs * 5);
+  assert.equal(g.phase, 'question', 'still waiting');
+  assert.equal(g.hostView().timeLeftMs, 0);
+  g.onInput(0, { type: 'answer', choice: right(g) });
+  ctx.advance(60000);
+  assert.equal(g.phase, 'question', 'waiting for the other one');
+  g.onInput(1, { type: 'answer', choice: right(g) });
+  assert.equal(g.phase, 'reveal');
+  assert.deepEqual(g.hits, [DAMAGE.base + Math.round(DAMAGE.speed / 2), DAMAGE.base + Math.round(DAMAGE.speed / 2)]);
+  // With no setting at all, it's untimed.
+  const ctx2 = fakeCtx();
+  ctx2.settings = { hearts: 5, topic: 0 };
+  assert.equal(new TriviaQuest(ctx2, () => 0.5, BANK).clock, false);
 });

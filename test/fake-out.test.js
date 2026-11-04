@@ -9,9 +9,9 @@ import { getGame } from '../server/games/index.js';
 const BANK = Array.from({ length: 20 }, (_, i) => ({ q: 'Fact ' + i + ' is ___.', a: 'truth ' + i, f: ['bank a' + i, 'bank b' + i, 'bank c' + i] }));
 
 /** A match of `rounds`, every update building every view (as the room does). */
-function match({ rounds = 4, rng = () => 0.5 } = {}) {
+function match({ rounds = 4, rng = () => 0.5, timer = 'timed' } = {}) {
   const ctx = fakeCtx();
-  ctx.settings = { rounds };
+  ctx.settings = { rounds, timer };
   let g = null;
   const update = ctx.update.bind(ctx);
   ctx.update = () => {
@@ -298,4 +298,20 @@ test('in the lobby: two phones only (typing your fake is secret), with 4, 6 or 8
   const setup = JSON.stringify(def.create(fakeCtx()).hostView());
   assert.ok(setup.includes('"rounds"'));
   assert.ok(setup.includes('6 rounds') && setup.includes('4 rounds') && setup.includes('8 rounds'));
+});
+
+test('the timer is a choice: with no timer, writing and picking wait for you both', () => {
+  const { ctx, g } = match({ timer: 'off' });
+  assert.equal(g.hostView().timed, false);
+  ctx.advance(TIMING.writeMs * 3);
+  assert.equal(g.phase, 'write', 'still writing');
+  assert.equal(g.hostView().timeLeftMs, 0);
+  write({ ctx, g });
+  assert.equal(g.phase, 'pick');
+  ctx.advance(TIMING.pickMs * 3);
+  assert.equal(g.phase, 'pick', 'still picking');
+  g.onInput(0, { type: 'pick', option: truthIndex(g) });
+  g.onInput(1, { type: 'pick', option: truthIndex(g) });
+  assert.equal(g.phase, 'reveal');
+  assert.equal(match().g.hostView().timed, true, 'timed is the usual');
 });

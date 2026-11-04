@@ -40,7 +40,7 @@
       if (v.turn !== you) return 'Their turn…';
       const jump = v.legal.some(function (m) { return Math.abs(m.to[0] - m.from[0]) === 2; });
       return '<strong>' + (v.chain ? 'Keep jumping!' : jump ? 'You must jump!' : 'Your turn!') + '</strong> ' +
-        (v.chain || selected ? 'Tap a ◯' : 'Tap a piece') + ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's';
+        (v.chain || selected ? 'Tap a ◯' : 'Tap a piece') + (v.timed ? ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '');
     }
     if (v.phase === 'roundEnd') {
       if (v.result.draw) return '40 quiet moves: a draw';

@@ -189,3 +189,21 @@ test('at the reveal each phone also gets the rival\'s drawing (never while you d
   assert.deepEqual(game.playerView(0).theirStrokes, game.strokes[1]);
   assert.deepEqual(game.playerView(1).theirStrokes, game.strokes[0]);
 });
+
+test('the timer is a choice: with no timer you draw until you\'ve both pressed Done', () => {
+  const ctx = fakeCtx();
+  ctx.settings = { timer: 'off' };
+  const game = new DrawDuel(ctx);
+  game.start();
+  toDraw(ctx);
+  assert.equal(game.phase, 'draw');
+  assert.equal(game.hostView().timed, false);
+  ctx.advance(TIMING.drawMs * 5);
+  assert.equal(game.phase, 'draw', 'still drawing');
+  assert.equal(game.playerView(0).timeLeftMs, 0);
+  game.onInput(0, { type: 'done' });
+  assert.equal(game.phase, 'draw');
+  game.onInput(1, { type: 'done' });
+  assert.equal(game.phase, 'reveal');
+  assert.equal(setup().game.hostView().timed, true, 'timed is the usual');
+});

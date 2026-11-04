@@ -23,7 +23,7 @@ export const THEMES = [
 export const OPTIONS = {
   cards: [16, 24, 36], // 4x4, 4x6, 6x6
   theme: [0, ...THEMES.map((_, i) => i + 1)], // 0: a mix of every theme
-  turnSeconds: [20, 10, 30],
+  turnSeconds: [20, 10, 30, 0], // 0: no timer, a turn waits for you
 };
 export const TIMING = { countdownMs: 2500, peekMs: 1300, matchMs: 700 };
 
@@ -83,10 +83,12 @@ export class MemoryMatch {
   }
 
   /** Enter a phase that ends after `ms` with `then()`. */
+  /** Into `phase`, then `then` after `ms` (null: no time limit). */
   timed(phase, ms, then) {
     this.clearTimer();
     this.phase = phase;
-    this.phaseEnds = this.ctx.now() + ms;
+    this.phaseEnds = ms === null ? null : this.ctx.now() + ms;
+    if (ms === null) return this.ctx.update();
     this.timer = this.ctx.setTimeout(() => {
       this.timer = null;
       then();
@@ -96,7 +98,7 @@ export class MemoryMatch {
 
   startTurn() {
     this.flipped = [];
-    this.timed('turn', this.settings.turnSeconds * 1000, () => this.outOfTime());
+    this.timed('turn', this.settings.turnSeconds ? this.settings.turnSeconds * 1000 : null, () => this.outOfTime());
   }
 
   /** Too slow: flip random cards for them. */
@@ -178,7 +180,8 @@ export class MemoryMatch {
       draw: this.draw,
       lastMatch: this.lastMatch || null,
       events: this.events || null,
-      timeLeftMs: this.phase === 'turn' ? Math.max(0, this.phaseEnds - this.ctx.now()) : 0,
+      timeLeftMs: this.phase === 'turn' && this.phaseEnds !== null ? Math.max(0, this.phaseEnds - this.ctx.now()) : 0,
+      timed: this.settings.turnSeconds > 0,
       turnMs: this.settings.turnSeconds * 1000,
       countdown: this.phase === 'countdown' ? Math.ceil(Math.max(0, this.phaseEnds - this.ctx.now()) / 1000) : 0,
     };

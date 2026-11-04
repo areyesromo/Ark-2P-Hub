@@ -101,24 +101,24 @@ starts). The numbers above are the defaults; you can change, for example:
 | Air Hockey | Goals to win: 5, 7 or 10 |
 | Light Cycles, Snake Battle, Tank Duel, Sumo, Bomb Duel | Round wins needed: 2, 3 or 5 |
 | Tower Defence Duel | 10, 20 or 30 lives |
-| Connect Four | One round, or first to 3 or 5 |
+| Connect Four | One round, or first to 3 or 5; timed (20 s a move) or no timer |
 | Quiz Battle | 5, 10, 15 or 20 questions, and the topic (mixed or one category) |
-| Fake Out | 4, 6 or 8 rounds |
-| Draw Duel | 3, 5, 7 or 10 rounds |
-| Battleship | 15, 30 or 60 s per shot |
+| Fake Out | 4, 6 or 8 rounds; timed (60 s to write, 20 s to pick) or no timer |
+| Draw Duel | 3, 5, 7 or 10 rounds; timed (20 s to draw) or no timer (draw until you both press Done) |
+| Battleship | 15, 30 or 60 s per shot, or no timer (placing and firing wait for you) |
 | Sketch & Guess | 4, 6, 8 or 10 rounds |
 | Bomb Squad | Easy (2 modules), Normal (3), Hard (4) or Expert (6), and 1, 3 or 5 bombs |
 | Marble Maze | 1, 3 or all 5 mazes; split (one ↔, one ↕) or shared controls |
-| Trivia Quest | The topic (mixed or one category), and Easy (7 hearts), Normal (5) or Hard (3) |
+| Trivia Quest | The topic (mixed or one category), Easy (7 hearts), Normal (5) or Hard (3), and no timer (the usual: a question waits for you both) or timed (15 s a question, 12 s for the Dragon, and faster hits harder) |
 | Kitchen Rush | The kitchen (Diner, Split or Rush Hour) and a 2, 3 or 4 minute shift |
 | Dungeon Duo | Who's the Fighter and who's the Healer; Normal (3 continues) or Easy (more hearts, 5 continues, a weaker Warden) |
-| Mind Meld | 4, 6, 8 or 10 rounds |
+| Mind Meld | 4, 6, 8 or 10 rounds; no timer (the usual) or timed (90 s for the clue, 60 s to guess) |
 | Liar's Dice | The how-to-play example round first, or skip it; 5, 3 or 4 dice each; ones wild or not |
 | Dice Party | Full game (13 rounds) or quick (6); the screen: TV, or 📱 Handheld (the whole scorecard on your phone, no TV needed) |
-| Crazy Eights | Action cards (2, Jack, Q♠) or classic rules; one hand, or first to 100 or 200 points |
-| Checkers | One game, or first to 2 or 3 |
-| Dots and Boxes | A 4 × 4, 3 × 3 or 5 × 5 grid; one game, or first to 2 or 3 |
-| Mancala | 4, 3 or 5 stones per bowl; one game, or first to 2 or 3 |
+| Crazy Eights | Action cards (2, Jack, Q♠) or classic rules; one hand, or first to 100 or 200 points; timed (30 s a turn) or no timer |
+| Checkers | One game, or first to 2 or 3; timed (30 s a move) or no timer |
+| Dots and Boxes | A 4 × 4, 3 × 3 or 5 × 5 grid; one game, or first to 2 or 3; timed (20 s a move) or no timer |
+| Mancala | 4, 3 or 5 stones per bowl; one game, or first to 2 or 3; timed (30 s a move) or no timer |
 | Micro Mayhem | 3 or 5 lives; normal pace or fast (starts at speed 3) |
 | Party Minigames | First to 3, 4 or 5 wins; minigames: a random mix, random 2D, random 3D, or one minigame of your choice (to practise it) |
 | Party Board | Map (random or one of seven), tile art ⚙️ steampunk with 3D models (default: steampunk tiles, a brass die with the roll on a number plate, a spinning collectible star, coins that pop up when won and scatter when lost), ⚙️ steampunk light (the faces on plain discs, for slower TVs) or 🎨 classic colours, board view 2D or 🧊 3D (every map has its own scenery: a palm island, sandy lagoons, a metal pipe yard, a foggy graveyard with ghosts, a lava field under a smoking peak, islands floating in the sky with a drawbridge, a market square with stalls; each player picks the steampunk engineer or mechanic miniature, which hop the paths, your character flies across the board when a warp flings it, a tumbling die, a camera that follows the turn), 10, 15 or 20 turns; minigames: a mix, 2D only or 3D only; bonus stars on or off; Harsh mode on or off |
@@ -129,7 +129,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Bomb Duel | Also how many crates |
 | Kart Race | 🏁 Race or 🎈 Battle. Race: track (or a mix), 3, 5 or 8 laps, one race, best of 3 or a 🏆 cup (4 tracks, most wins), items on or off. Battle: arena (or a mix), one round, best of 3 or first to 3. Each player's racer and tyres |
 | Kart Race 3D | As Kart Race |
-| Memory Match | 16, 24 or 36 cards, the pictures (animals, food, sports, things, faces, nature, space & travel, ocean, or a mix), 10, 20 or 30 s per turn |
+| Memory Match | 16, 24 or 36 cards, the pictures (animals, food, sports, things, faces, nature, space & travel, ocean, or a mix), 10, 20 or 30 s per turn, or no timer |
 
 The room remembers your choice for next time. At the end of a match,
 **Rematch** plays again with the same settings and **⚙ Change settings** (or

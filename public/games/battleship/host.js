@@ -24,10 +24,10 @@
   function banner(v) {
     const s = v.lastShot;
     if (v.phase === 'place') {
-      return '<div class="big">Hide your fleets!</div><div class="sub">Place your ships on your phone, then tap Ready · ⏱ ' + clock(v.timeLeftMs) + '</div>';
+      return '<div class="big">Hide your fleets!</div><div class="sub">Place your ships on your phone, then tap Ready' + (v.timed ? ' · ⏱ ' + clock(v.timeLeftMs) : '') + '</div>';
     }
     if (v.phase === 'aim') {
-      return '<div class="big">' + nameOf(v, v.turn) + ' to fire</div><div class="sub">⏱ ' + secs(v.timeLeftMs) + 's' +
+      return '<div class="big">' + nameOf(v, v.turn) + ' to fire</div><div class="sub">' + (v.timed ? '⏱ ' + secs(v.timeLeftMs) + 's' : '') +
         (s ? ' · last: ' + nameOf(v, s.by) + ' → ' + ArkSea.coord(s.x, s.y) + ' ' + (s.result === 'miss' ? 'miss' : s.result === 'hit' ? 'hit' : 'sank the ' + esc(s.ship)) : '') + '</div>';
     }
     if (v.phase === 'shot' && s) {

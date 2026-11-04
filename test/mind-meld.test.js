@@ -65,7 +65,7 @@ test('roles swap every round; the match ends after the last round with stars out
 });
 
 test('timers: no clue in time scores nothing; no lock-in in time takes the dial where it is', () => {
-  const { ctx, g } = game();
+  const { ctx, g } = game({ timer: 'timed' });
   ctx.advance(TIMING.clueMs + 1);
   assert.equal(g.phase, 'reveal');
   assert.deepEqual([g.result.noClue, g.result.stars], [true, 0]);
@@ -86,4 +86,22 @@ test('controllers: a controller player always guesses; two controllers need a ph
   }
   const { g: g2 } = game({}, [true, true]);
   assert.equal(g2.phase, 'needPhone');
+});
+
+test('the timer is a choice: with no timer (the usual) the clue and the guess wait for you', () => {
+  const { ctx, g } = game();
+  assert.equal(g.hostView().timed, false);
+  ctx.advance(TIMING.clueMs * 5);
+  assert.equal(g.phase, 'clue', 'still waiting for the clue');
+  assert.equal(g.playerView(g.giver).timeLeftMs, 0);
+  assert.equal(ctx.pendingTimers(), 0);
+  g.onInput(g.giver, { type: 'clue', text: 'tea' });
+  ctx.advance(TIMING.guessMs * 5);
+  assert.equal(g.phase, 'guess', 'still waiting for the guess');
+  g.onInput(g.guesser, { type: 'lock' });
+  assert.equal(g.phase, 'reveal');
+  // Timed: the usual times.
+  const t = game({ timer: 'timed' });
+  assert.equal(t.g.hostView().timed, true);
+  assert.equal(t.g.playerView(t.g.giver).timeLeftMs, TIMING.clueMs);
 });

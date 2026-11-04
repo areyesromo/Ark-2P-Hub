@@ -25,7 +25,7 @@
   }
 
   function status(v) {
-    if (v.phase === 'play') return nameOf(v, v.turn) + "'s turn" + moveNote(v) + ' <span class="clock">⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's</span>';
+    if (v.phase === 'play') return nameOf(v, v.turn) + "'s turn" + moveNote(v) + (v.timed ? ' <span class="clock">⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's</span>' : '');
     if (v.phase === 'roundEnd') {
       const st = v.result.stores;
       return v.result.draw ? 'A draw: ' + st[0] + ' each' : nameOf(v, v.result.winner) + ' wins the round ' + Math.max(st[0], st[1]) + ' : ' + Math.min(st[0], st[1]) + '! 🎉';

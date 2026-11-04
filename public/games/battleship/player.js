@@ -134,7 +134,7 @@
       return note || 'Tap a ship, then tap where it goes. Tap it again to turn it.';
     }
     if (v.phase === 'aim') {
-      if (v.turn === you) return '<strong>Your turn!</strong> Tap a square, tap again to fire · ' + Math.ceil(v.timeLeftMs / 1000) + 's';
+      if (v.turn === you) return '<strong>Your turn!</strong> Tap a square, tap again to fire' + (v.timed ? ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '');
       return 'Their turn…';
     }
     if (v.phase === 'shot' && s) {
@@ -169,7 +169,7 @@
         return { x: s.x, y: s.y, dir: s.dir, len: v.fleet[i].len };
       }));
       root.innerHTML =
-        '<div class="score">Place your fleet · ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's</div>' +
+        '<div class="score">Place your fleet' + (v.timed ? ' · ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '') + '</div>' +
         '<p class="msg">' + status(v) + '</p>' +
         '<div data-board="mine" class="big-board' + (ready ? ' locked' : '') + '">' +
         ArkSea.gridHtml({ size: v.size, ships: ships, selected: ready ? null : selected }) + '</div>' +

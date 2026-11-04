@@ -98,3 +98,24 @@ test('views: phones get "you", the TV the players; rematch only at the end', () 
   game.onInput(0, { type: 'rematch' });
   assert.equal(v().phase, 'play');
 });
+
+test('the timer is a choice: with no timer a turn waits for you, and no clock shows', () => {
+  const ctx = fakeCtx();
+  ctx.settings = { timer: 'off' };
+  const game = new DotsBoxes(ctx, () => 0);
+  game.start();
+  assert.equal(game.phase, 'play');
+  const turn = game.turn;
+  ctx.advance(TIMING.turnMs * 10);
+  assert.equal(game.phase, 'play');
+  assert.equal(game.turn, turn, 'nobody moved for you');
+  assert.equal(game.hostView().timeLeftMs, 0);
+  assert.equal(game.hostView().timed, false);
+  assert.equal(ctx.pendingTimers(), 0);
+  // Timed is the usual.
+  const t = fakeCtx();
+  const timed = new DotsBoxes(t, () => 0);
+  timed.start();
+  assert.equal(timed.hostView().timed, true);
+  assert.equal(timed.hostView().timeLeftMs, TIMING.turnMs);
+});

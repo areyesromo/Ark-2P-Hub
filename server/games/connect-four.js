@@ -38,6 +38,7 @@ export class ConnectFour {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
     this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
+    this.clock = settingOf(ctx, 'timer', 'timed') === 'timed'; // or no timer: a turn waits for you
     this.rng = rng;
     this.timer = null;
   }
@@ -67,6 +68,11 @@ export class ConnectFour {
   // ---- clock ------------------------------------------------------------------
 
   startTurn() {
+    if (!this.clock) {
+      this.clearTimer();
+      this.turnEnds = null;
+      return this.ctx.update();
+    }
     this.turnEnds = this.ctx.now() + TIMING.turnMs;
     this.ctx.update();
     this.scheduleTick();
@@ -160,8 +166,9 @@ export class ConnectFour {
       result: this.result,
       scores: this.scores,
       winScore: this.winScore,
-      timeLeftMs: this.phase === 'play' ? Math.max(0, this.turnEnds - this.ctx.now()) : 0,
+      timeLeftMs: this.phase === 'play' && this.turnEnds !== null ? Math.max(0, this.turnEnds - this.ctx.now()) : 0,
       turnMs: TIMING.turnMs,
+      timed: this.clock,
       winner: this.winner,
     };
   }

@@ -97,7 +97,7 @@
         '<br><strong>' + v.stars + ' / ' + v.maxStars + ' ⭐</strong><br>Rematch or head back to the lobby from your phones or controllers.</div></div>';
     }
     return '<div class="qz-card"><div class="meta">Question ' + v.number + ' · ' + esc(v.question.cat) + '</div><div class="q">' + esc(v.question.text) + '</div></div>' +
-      '<div class="qz-bar"><div class="fill"></div></div>' +
+      (v.timed ? '<div class="qz-bar"><div class="fill"></div></div>' : '') + // no bar with no timer
       '<div class="qz-grid">' + [0, 1, 2, 3].map(function (i) { return tile(v, i); }).join('') + '</div>';
   }
 

@@ -27,7 +27,7 @@
     const you = v.you;
     if (v.phase === 'play') {
       return v.turn === you
-        ? '<strong>Your turn!</strong> Tap a column · ' + Math.ceil(v.timeLeftMs / 1000) + 's'
+        ? '<strong>Your turn!</strong> Tap a column' + (v.timed ? ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '')
         : 'Their turn…';
     }
     if (v.phase === 'roundEnd') {

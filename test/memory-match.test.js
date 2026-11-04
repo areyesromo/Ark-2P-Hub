@@ -121,3 +121,15 @@ test('picture sets: every set can fill the biggest board; Mixed never repeats a 
     assert.equal(new Set(g.cards.map((c) => c.face)).size, 18, THEMES[t - 1].name);
   }
 });
+
+test('no timer is a choice of time per turn: a turn waits for you', () => {
+  const { ctx, game } = playing({ turnSeconds: 0 });
+  assert.equal(game.phase, 'turn');
+  const turn = game.turn;
+  ctx.advance(60000);
+  assert.equal(game.phase, 'turn');
+  assert.equal(game.turn, turn, 'still your turn');
+  assert.equal(game.hostView().timeLeftMs, 0);
+  assert.equal(game.hostView().timed, false);
+  assert.equal(ctx.pendingTimers(), 0);
+});

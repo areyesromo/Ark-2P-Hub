@@ -64,7 +64,7 @@
     if (!root || !view) return;
     const bar = root.querySelector('.mm-bar .fill');
     if (!bar) return;
-    const frac = view.phase === 'turn' ? Math.max(0, view.timeLeftMs - (performance.now() - viewAt)) / view.turnMs : 0;
+    const frac = view.phase === 'turn' && view.timed ? Math.max(0, view.timeLeftMs - (performance.now() - viewAt)) / view.turnMs : 0;
     bar.style.width = (frac * 100).toFixed(2) + '%';
     bar.className = 'fill p' + (view.turn + 1) + (frac < 0.25 ? ' low' : '');
   }
