@@ -4,7 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
 import {
-  UltimateBattleship, SEAS, SEA_IDS, COMMANDERS, COMMANDER_IDS, SKILLS, ENERGY, UTIMING,
+  UltimateBattleship, SEAS, SEA_IDS, COMMANDERS, COMMANDER_IDS, SKILLS, ENERGY, UTIMING, ERUPT_AFTER,
   shapeCells, placedCells, validFleet, randomFleet, terrain,
 } from '../server/games/battleship-ultimate.js';
 
@@ -48,7 +48,7 @@ test('shapes turn four ways (an L, a T and a Z look different each way); every f
     assert.ok(c.fleet.some((e) => e.skill), id);
     assert.ok(c.special.charge >= 4, id);
   }
-  assert.equal(COMMANDER_IDS.length, 5);
+  assert.equal(COMMANDER_IDS.length, 7);
   assert.ok(COMMANDER_IDS.some((id) => COMMANDERS[id].fleet.some((e) => /^[LTZO]/.test(e.shape))), 'angled shapes in the fleets');
 });
 
@@ -246,7 +246,7 @@ test('in the lobby: Battleship\'s setup has the mode (classic or Ultimate) and t
   const { getGame } = await import('../server/games/index.js');
   const setup = getGame('battleship').create(fakeCtx());
   assert.deepEqual(setup.options.mode, ['classic', 'ultimate']);
-  assert.deepEqual(setup.options.sea, ['open', 'archipelago', 'reef', 'strait', 'random']);
+  assert.deepEqual(setup.options.sea, ['open', 'archipelago', 'reef', 'strait', 'fog', 'volcano', 'random']);
   const ctx = fakeCtx();
   ctx.settings = { mode: 'ultimate', sea: 'reef', shotSeconds: 0 };
   const g = (await import('../server/games/battleship.js')).default.create(ctx);
@@ -254,7 +254,7 @@ test('in the lobby: Battleship\'s setup has the mode (classic or Ultimate) and t
   assert.equal(g.phase, 'pick');
   assert.equal(g.hostView().sea, 'reef');
   assert.equal(g.hostView().timed, false);
-  assert.equal(g.hostView().roster.length, 5);
+  assert.equal(g.hostView().roster.length, 7);
 });
 
 // ---- fixes from the review of the engine ----
@@ -366,4 +366,149 @@ test('a Torpedo, Wolf Pack or Full Scan with nothing left to find isn\'t spent; 
   n.g.charge[0] = COMMANDERS.nova.special.charge;
   n.g.onInput(0, { type: 'special', x: 2, y: 2 });
   assert.equal(n.g.phase, 'aim');
+});
+
+test('two more commanders: Tempest (a cross and a U) with Typhoon, and Kraken (a hidden cross) with Deep Strike', () => {
+  assert.ok(COMMANDER_IDS.includes('tempest') && COMMANDER_IDS.includes('kraken'));
+  const shapes = (id) => COMMANDERS[id].fleet.map((e) => e.shape);
+  assert.ok(shapes('tempest').includes('X5') && shapes('tempest').includes('U5'));
+  assert.ok(shapes('kraken').includes('X5'));
+  assert.ok(COMMANDERS.kraken.fleet.find((e) => e.shape === 'X5').stealth, 'the Leviathan hides from sonar');
+  // A cross looks the same every way; a U doesn't.
+  const key = (cells) => JSON.stringify(cells.slice().sort());
+  assert.equal(new Set([0, 1, 2, 3].map((r) => key(shapeCells('X5', r)))).size, 1);
+  assert.equal(new Set([0, 1, 2, 3].map((r) => key(shapeCells('U5', r)))).size, 4);
+  // Typhoon: every other cell of a 4×4 (8 cells).
+  const t = battle({ commanders: ['tempest', 'vega'], fleets: [randomFleet('open', 'tempest', () => 0.5), VEGA_ROWS] });
+  t.g.charge[0] = COMMANDERS.tempest.special.charge;
+  t.g.onInput(0, { type: 'special', x: 0, y: 0 });
+  assert.equal(t.g.last.cells.length, 8);
+  assert.ok(t.g.last.cells.every((c) => (c.x + c.y) % 2 === 0), 'a chequerboard');
+  // Deep Strike: the whole column.
+  const k = battle({ commanders: ['kraken', 'vega'], fleets: [randomFleet('open', 'kraken', () => 0.5), VEGA_ROWS] });
+  k.g.charge[0] = COMMANDERS.kraken.special.charge;
+  k.g.onInput(0, { type: 'special', x: 0, y: 3 });
+  assert.equal(k.g.last.cells.length, 10);
+  assert.ok(k.g.last.cells.every((c) => c.x === 0));
+  assert.equal(k.g.last.cells.filter((c) => c.result !== 'miss').length, 5, 'the Vega fleet\'s 5 ships down the left edge');
+});
+
+test('the Fog Bank: a shot into the fog doesn\'t show what it did until the shooter\'s next turn (the target\'s own phone knows)', () => {
+  assert.ok(SEA_IDS.includes('fog'));
+  const fog = [];
+  SEAS.fog.rows.forEach((r, y) => [...r].forEach((c, x) => { if (c === '%') fog.push([x, y]); }));
+  assert.ok(fog.length >= 10);
+  const h = battle({ sea: 'fog' });
+  const { g } = h;
+  const [fx, fy] = fog[0];
+  g.onInput(0, { type: 'fire', x: fx, y: fy });
+  assert.equal(g.last.cells[0].result, 'fog');
+  const k = g.idx(fx, fy);
+  assert.equal(g.hostView().boards[1].shots[k], 3, 'fogged on the TV');
+  assert.equal(g.playerView(0).theirs.shots[k], 3, 'and for the shooter');
+  assert.notEqual(g.playerView(1).mine.shots[k], 3, 'the target knows');
+  next(h);
+  g.onInput(1, { type: 'fire', x: 9, y: 9 });
+  next(h);
+  assert.notEqual(g.playerView(0).theirs.shots[k], 3, 'the fog lifts on the shooter\'s next turn');
+});
+
+test('the Volcano: ships can\'t sit on lava; after 8 turns it erupts once, hitting every ship cell next to the lava, on both seas', () => {
+  assert.ok(SEA_IDS.includes('volcano'));
+  const lava = [];
+  SEAS.volcano.rows.forEach((r, y) => [...r].forEach((c, x) => { if (c === '^') lava.push([x, y]); }));
+  assert.ok(lava.length >= 6);
+  const [lx, ly] = lava[0];
+  assert.ok(!validFleet('volcano', 'vega', VEGA_ROWS.map((s, i) => (i === 5 ? { x: lx, y: ly, rot: 0 } : s))), 'not on lava');
+  // A Patrol Boat right next to the lava.
+  const by = [[lx + 1, ly], [lx - 1, ly], [lx, ly + 1], [lx, ly - 1]].find(([x, y]) => terrain('volcano', x, y) === '.');
+  const fleet = randomFleet('volcano', 'vega', () => 0.5).map((s, i) => (i === 5 ? { x: by[0], y: by[1], rot: 0 } : s));
+  const near = (s, i) => placedCells(COMMANDERS.vega.fleet[i], s).some(([x, y]) => [[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => terrain('volcano', x + dx, y + dy) === '^'));
+  if (!validFleet('volcano', 'vega', fleet)) return; // (the random fleet happened to sit there)
+  const h = battle({ sea: 'volcano', fleets: [fleet, fleet] });
+  const { g } = h;
+  assert.equal(g.hostView().eruptIn, 8);
+  for (let t = 0; t < 8; t++) {
+    const target = 1 - g.turn;
+    const spot = g.randomTarget(target);
+    g.onInput(g.turn, { type: 'fire', x: spot.x, y: spot.y });
+    if (g.phase === 'over') return;
+    next(h);
+  }
+  assert.ok(g.hostView().eruption, 'it erupted');
+  for (const slot of [0, 1]) {
+    fleet.forEach((s, i) => {
+      if (!near(s, i)) return;
+      placedCells(COMMANDERS.vega.fleet[i], s).forEach(([x, y]) => {
+        if ([[1, 0], [-1, 0], [0, 1], [0, -1]].some(([dx, dy]) => terrain('volcano', x + dx, y + dy) === '^')) assert.equal(g.shots[slot][g.idx(x, y)], 2);
+      });
+    });
+  }
+  assert.equal(g.hostView().eruptIn, null, 'once');
+});
+
+// ---- the fog keeps its secrets (review of 0a79ed0) ----
+
+/** A Vega fleet for the Fog Bank: the Patrol Boat at (2,1) and the Destroyer across (2,3)-(3,3), half in the fog. */
+const FOG_FLEET = [{ x: 0, y: 0, rot: 1 }, { x: 5, y: 0, rot: 0 }, { x: 6, y: 9, rot: 0 }, { x: 0, y: 9, rot: 0 }, { x: 2, y: 3, rot: 0 }, { x: 2, y: 1, rot: 0 }];
+
+test('a hit in the fog gives nothing away until it lifts: not the hit count, energy or charge, nor a ship sunk partly in the fog', () => {
+  assert.ok(validFleet('fog', 'vega', FOG_FLEET));
+  assert.equal(terrain('fog', 2, 1), '%');
+  assert.equal(terrain('fog', 3, 3), '%');
+  assert.equal(terrain('fog', 2, 3), '.');
+  const h = battle({ sea: 'fog', fleets: [VEGA_ROWS, FOG_FLEET] });
+  const { g } = h;
+  const before = { e: g.energy[0], c: g.charge[0] };
+  g.onInput(0, { type: 'fire', x: 2, y: 1 }); // the Patrol Boat, in the fog
+  for (const v of [g.hostView(), g.playerView(0)]) {
+    assert.deepEqual(v.hits, [0, 0]);
+    assert.equal(v.energy[0], before.e);
+    assert.equal(v.charge[0], before.c);
+  }
+  next(h);
+  g.onInput(1, { type: 'fire', x: 9, y: 9 });
+  next(h);
+  assert.equal(g.hits[0], 1, 'counted once the fog lifts');
+  assert.equal(g.energy[0], Math.min(ENERGY.max, before.e + ENERGY.perHit + ENERGY.perTurn));
+  // A Double Shot into the fog half of the Destroyer, then its open half: no "sunk" yet.
+  g.energy[0] = 10;
+  g.onInput(0, { type: 'skill', skill: 'double', x: 3, y: 3, x2: 2, y2: 3 });
+  assert.ok(!g.last.cells.some((c) => c.result === 'sunk' || c.ship), JSON.stringify(g.last.cells));
+  assert.ok(!g.hostView().boards[1].ships.some((s) => s.name === 'Destroyer'));
+});
+
+test('torpedoes lose their way in the fog: they stop at its edge', () => {
+  const h = battle({ sea: 'fog', fleets: [VEGA_ROWS, FOG_FLEET] });
+  h.g.energy[0] = 10;
+  h.g.onInput(0, { type: 'skill', skill: 'torpedo', x: 0, y: 1, from: 'e' });
+  assert.deepEqual(h.g.last.cells.at(-1), { x: 4, y: 1, result: 'stopped' });
+  assert.equal(h.g.shots[1][h.g.idx(2, 1)], 0, 'the Patrol Boat wasn\'t touched');
+});
+
+test('a frozen player\'s fog lifts at their skipped turn', () => {
+  const h = battle({ sea: 'fog', commanders: ['vega', 'frost'], fleets: [VEGA_ROWS, FROST_ROWS] });
+  const { g } = h;
+  g.onInput(0, { type: 'fire', x: 3, y: 1 }); // into the fog
+  next(h);
+  g.charge[1] = COMMANDERS.frost.special.charge;
+  g.onInput(1, { type: 'special' });
+  next(h); // player 1's turn is skipped
+  assert.equal(g.turn, 1);
+  assert.notEqual(g.hostView().boards[1].shots[g.idx(3, 1)], 3, 'lifted');
+});
+
+test('the Volcano can sink both fleets at once: a draw', () => {
+  // The Patrol Boat at (5,3), next to the lava at (4,3); every other ship already sunk.
+  const fleet = [{ x: 0, y: 0, rot: 0 }, { x: 0, y: 1, rot: 0 }, { x: 5, y: 2, rot: 0 }, { x: 5, y: 4, rot: 0 }, { x: 0, y: 9, rot: 0 }, { x: 5, y: 3, rot: 0 }];
+  assert.ok(validFleet('volcano', 'vega', fleet));
+  const h = battle({ sea: 'volcano', fleets: [fleet, fleet] });
+  const { g } = h;
+  for (const slot of [0, 1]) g.fleets[slot].slice(0, 5).forEach((s, i) => placedCells(COMMANDERS.vega.fleet[i], s).forEach(([x, y]) => { g.shots[slot][g.idx(x, y)] = 2; }));
+  g.turns = ERUPT_AFTER;
+  g.onInput(g.turn, { type: 'fire', x: 9, y: 0 });
+  next(h);
+  assert.equal(g.phase, 'over');
+  assert.equal(g.winner, null);
+  assert.equal(g.hostView().winner, null);
 });

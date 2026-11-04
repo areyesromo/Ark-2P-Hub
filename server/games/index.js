@@ -164,7 +164,7 @@ const GAMES = [
   withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` }, ...timer('timed', '20 s to draw') }),
   withSetup(battleship, {
     mode: { title: 'Mode', values: ['classic', 'ultimate'], label: (k) => (k === 'ultimate' ? '⚡ Ultimate: commanders, shaped ships and skills' : 'Classic: 5 ships, one shot a turn') },
-    sea: { title: 'Sea (Ultimate)', values: ['open', 'archipelago', 'reef', 'strait', 'random'], label: (k) => (k === 'random' ? '🎲 Any sea' : SEA_NAMES[k]) },
+    sea: { title: 'Sea (Ultimate)', values: ['open', 'archipelago', 'reef', 'strait', 'fog', 'volcano', 'random'], label: (k) => (k === 'random' ? '🎲 Any sea' : SEA_NAMES[k]) },
     shotSeconds: { title: 'Time per shot', values: [30, 15, 60, 0], label: (n) => (n ? `${n} s` : 'No timer: it waits for you') },
   }),
   withSetup(connectFour, { ...firstTo(ROUNDS_WON, [3, 1, 5]), ...timer('timed', '20 s a move') }),

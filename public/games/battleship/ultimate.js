@@ -29,6 +29,10 @@
       rows.forEach(function (r) { for (let i = 0; i < size.w; i++) out.push([i, r]); });
     } else if (aim === 'two' && a.x2 !== undefined) {
       out.push([x, y], [a.x2, a.y2]);
+    } else if (aim === 'col') {
+      for (let i = 0; i < size.h; i++) out.push([x, i]);
+    } else if (aim === 'checker4') {
+      for (let dy = 0; dy < 4; dy++) for (let dx = 0; dx < 4; dx++) if ((dx + dy) % 2 === 0) out.push([x + dx, y + dy]);
     } else {
       out.push([x, y]);
     }
@@ -38,7 +42,10 @@
   /**
    * A sea. opts: rows (terrain strings), shots (flat: 0 none, 1 miss, 2 hit), ships ([{ cells,
    * sunk, i }]), selected (a ship's i), shields, spotted (flat indexes), sonar ([{ x, y, count }]),
-   * mark ([[x, y]], where an aim lands), last ([{ x, y, result }]), cursor ({ x, y }).
+   * mark ([[x, y]], where an aim lands), last ([{ x, y, result }]), cursor ({ x, y }),
+   * fx (the move that just landed here, for its effect: explosions one after another, a
+   * torpedo's wake, a sonar or scan sweep, a ship going down) and frozen (frost over the sea).
+   * id names the sea on this screen, so an effect plays once, not again on every redraw.
    */
   function seaHtml(opts) {
     const rows = opts.rows;
@@ -52,6 +59,8 @@
         if (t === '#') cls[y * w + x].push('land');
         else if (t === '~') cls[y * w + x].push('shallow');
         else if (t === '*') cls[y * w + x].push('ice');
+        else if (t === '%') cls[y * w + x].push('fog');
+        else if (t === '^') cls[y * w + x].push('lava');
       }
     }
     (opts.ships || []).forEach(function (s) {
@@ -66,23 +75,64 @@
     (opts.shots || []).forEach(function (v, i) {
       if (v === 1) cls[i].push('miss');
       if (v === 2) cls[i].push('hit');
+      if (v === 3) cls[i].push('fogged');
     });
     (opts.shields || []).forEach(function (i) { cls[i].push('shield'); });
     (opts.spotted || []).forEach(function (i) { cls[i].push('spotted'); });
     const on = function (x, y) { return x >= 0 && y >= 0 && x < w && y < h; };
     (opts.mark || []).forEach(function (c) { if (on(c[0], c[1])) cls[c[1] * w + c[0]].push('mark'); });
-    (opts.last || []).forEach(function (c) { if (c.x >= 0 && c.x < w && c.y >= 0 && c.y < h) cls[c.y * w + c.x].push('last', 'r-' + c.result); });
+    // The move that just landed: each cell in turn (--d), so a strike runs along its line.
+    const delay = {};
+    const fx = opts.fx || null;
+    const landed = fx ? fx.cells : opts.last || [];
+    landed.forEach(function (c, i) {
+      if (c.x >= 0 && c.x < w && c.y >= 0 && c.y < h) {
+        cls[c.y * w + c.x].push('last', 'r-' + c.result);
+        delay[c.y * w + c.x] = i;
+      }
+    });
+    // A sonar or scan sweeps its area, from the middle out.
+    if (fx && fx.at && (fx.skill === 'sonar' || fx.aim === 'box5')) {
+      footprint(fx.skill === 'sonar' ? 'box3' : 'box5', fx.at, { w: w, h: h }).forEach(function (c) {
+        const k = c[1] * w + c[0];
+        cls[k].push('scan');
+        delay[k] = Math.max(Math.abs(c[0] - fx.at.x), Math.abs(c[1] - fx.at.y));
+      });
+    }
+    // A ship sunk by this move goes down whole.
+    if (fx) {
+      const sunkHere = fx.cells.filter(function (c) { return c.result === 'sunk'; });
+      (opts.ships || []).forEach(function (sh) {
+        if (!sh.sunk || !sh.cells.some(function (c) { return sunkHere.some(function (d) { return d.x === c[0] && d.y === c[1]; }); })) return;
+        sh.cells.forEach(function (c) { const k = c[1] * w + c[0]; if (cls[k]) cls[k].push('sinking'); });
+      });
+    }
     if (opts.cursor && on(opts.cursor.x, opts.cursor.y)) cls[opts.cursor.y * w + opts.cursor.x].push('cursor');
     const sonar = {};
     (opts.sonar || []).forEach(function (s) { sonar[s.y * w + s.x] = s.count; });
-    let html = '<div class="ub-sea" style="--w:' + w + ';--h:' + h + '">';
+    const kind = fx ? ' fx-' + (fx.skill || (fx.aim === 'row' || fx.aim === 'rows3' ? 'torpedo' : fx.kind)) : '';
+    let html = '<div class="ub-sea' + kind + (opts.frozen ? ' frozen' : '') + (seen(opts.id, fx, opts.frozen) ? ' played' : '') + '" style="--w:' + w + ';--h:' + h + '">';
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const k = y * w + x;
-        html += '<span class="cell ' + cls[k].join(' ') + '" data-x="' + x + '" data-y="' + y + '">' + (sonar[k] !== undefined ? '<b class="sonar">' + sonar[k] + '</b>' : '') + '</span>';
+        html += '<span class="cell ' + cls[k].join(' ') + '"' + (delay[k] !== undefined ? ' style="--d:' + delay[k] + '"' : '') + ' data-x="' + x + '" data-y="' + y + '">' + (sonar[k] !== undefined ? '<b class="sonar">' + sonar[k] + '</b>' : '') + '</span>';
       }
     }
     return html + '</div>';
+  }
+
+  const played = {}; // sea id -> the effect last drawn on it
+
+  /** True if this sea's effect (its move, or its frost) was already drawn: it isn't played again. */
+  function seen(id, fx, frozen) {
+    if (!id || (!fx && !frozen)) {
+      if (id) delete played[id];
+      return false;
+    }
+    const key = JSON.stringify(fx) + (frozen ? '❄' : '');
+    if (played[id] === key) return true;
+    played[id] = key;
+    return false;
   }
 
   /** A ship's shape, small: its cells as a mini grid. */
@@ -117,9 +167,12 @@
     if (l.skill === 'shield') return '🛡️ ' + who + ' raised a shield';
     if (l.name === 'Full Scan') return '🛰️ ' + who + ' scanned a 5×5';
     if (l.name === 'Deep Freeze') return '🧊 ' + who + ' froze the enemy fleet: they miss a turn';
-    what += sunk.length ? '🔥 sank the ' + sunk.join(' and the ') : hits ? '💥 ' + hits + ' hit' + (hits === 1 ? '' : 's') : '💦 a miss';
+    const fog = l.cells.filter(function (c) { return c.result === 'fog'; }).length;
+    if (l.cells.length && fog === l.cells.length) return who + ': ' + what + '🌫️ into the fog (it shows next turn)';
+    what += sunk.length ? '🔥 sank the ' + sunk.join(' and the ') : hits ? '💥 ' + hits + ' hit' + (hits === 1 ? '' : 's') : fog ? '💦 no hits in the open' : l.cells.length > 1 ? '💦 all missed' : '💦 a miss';
+    if (fog) what += ' (🌫️ ' + fog + ' into the fog)';
     if (blocked) what += ' (🛡️ a shield took a hit)';
-    if (l.cells.some(function (c) { return c.result === 'stopped'; })) what += ' (stopped by the ice or land)';
+    if (l.cells.some(function (c) { return c.result === 'stopped'; })) what += ' (stopped by land, ice or fog)';
     return who + ': ' + what;
   }
 
