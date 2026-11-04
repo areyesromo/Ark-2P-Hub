@@ -298,6 +298,15 @@
 
   const BOT_LEVEL_NAMES = { easy: 'Easy', normal: 'Normal', hard: 'Hard' };
 
+  /**
+   * With the computer seated, a game it can't play is greyed out: its tag says why (it's planned:
+   * Coming soon). Gives '' for a game it plays, or with no computer seated.
+   */
+  function botTag(state, g) {
+    if (!botSeat(state) || g.id === 'random' || g.vsComputer) return '';
+    return g.botSoon ? '<em class="tag soon">⏳ Coming soon</em>' : '<em class="tag">🧑 Needs a person</em>';
+  }
+
   /** The computer's seat, if it's playing: { slot, level }, or null. */
   function botSeat(state) {
     const p = state && state.players ? state.players.find(function (x) { return x && x.bot; }) : null;
@@ -538,6 +547,7 @@
     controllerSeated: controllerSeated,
     gameLabels: gameLabels,
     botSeat: botSeat,
+    botTag: botTag,
     botLevelsHtml: botLevelsHtml,
     botLevelNames: BOT_LEVEL_NAMES,
     register: register,

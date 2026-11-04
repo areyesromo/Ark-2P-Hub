@@ -259,6 +259,13 @@ export class TriviaQuest {
       fiftyLeft: !this.fifty[slot],
     });
   }
+
+  /** The computer teammate's view: its own, plus the answer (see quiz-bot.js: it's right only as often as its level says). */
+  botView(slot) {
+    const p = this.ctx.players[slot];
+    const asking = this.phase === 'question' && this.questions[this.index];
+    return Object.assign(this.playerView(slot), p && p.bot && asking ? { botAnswer: this.questions[this.index].correct } : {});
+  }
 }
 
 export default {

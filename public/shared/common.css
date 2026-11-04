@@ -199,6 +199,7 @@ em.label { display: inline-block; font-style: normal; font-size: 0.72rem; font-w
 em.label.handheld { color: var(--good); border-color: var(--good); }
 em.label.motion { color: var(--warn); border-color: var(--warn); }
 em.label.bot { color: var(--p2); border-color: var(--p2); }
+em.tag.soon { color: var(--warn); }
 /* The computer opponent's level (lobby seats on the TV, the phone lobby). */
 .bot-levels { display: inline-flex; gap: 6px; flex-wrap: wrap; }
 .bot-levels button { padding: 4px 12px; font-size: var(--fs-sm); }

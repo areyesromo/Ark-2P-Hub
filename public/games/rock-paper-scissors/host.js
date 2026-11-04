@@ -20,7 +20,7 @@
       caption = 'Locked in';
     }
     // A controller player still choosing gets the buttons right in their block, big.
-    const keys = !pick && !view.locked[slot] && view.phase === 'choose' && view.players[slot].local
+    const keys = !pick && !view.locked[slot] && view.phase === 'choose' && view.players[slot].local && !view.players[slot].bot
       ? '<div class="keys"><span><b>X</b>✊</span><span><b>Y</b>✋</span><span><b>B</b>✌️</span></div>'
       : '';
     return '<div class="' + cls + '"><div class="emoji">' + emoji + '</div><div class="caption">' + caption + '</div>' + keys + '</div>';

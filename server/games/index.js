@@ -21,6 +21,15 @@ import drawDuel from './draw-duel.js';
 import battleship from './battleship.js';
 import { SEAS } from './battleship-ultimate.js';
 import { battleshipBot } from './battleship-bot.js';
+import { connectFourBot } from './connect-four-bot.js';
+import { checkersBot } from './checkers-bot.js';
+import { dotsBoxesBot } from './dots-boxes-bot.js';
+import { mancalaBot } from './mancala-bot.js';
+import { rpsBot } from './rock-paper-scissors-bot.js';
+import { memoryMatchBot } from './memory-match-bot.js';
+import { diceBot } from './dice-party-bot.js';
+import { quizBot } from './quiz-bot.js';
+import { reactionDuelBot } from './reaction-duel-bot.js';
 const SEA_NAMES = Object.fromEntries(Object.entries(SEAS).map(([k, v]) => [k, v.name]));
 import sketchGuess from './sketch-guess.js';
 import connectFour from './connect-four.js';
@@ -61,9 +70,13 @@ import { withSetup } from './options.js';
  * lobby greys the game out and the room won't start it.
  * handheld: true labels it "📱 No TV needed" in the lobby (it can be played on the
  * phones alone); motion: true labels it "🤸 Motion" (phones can tilt or move to play).
- * bot(view, level, rng): the computer opponent ("🤖 Vs computer" in the lobby). Given the
- * computer's own playerView and its level ('easy', 'normal', 'hard'), it gives its next input,
- * or null when it has no move. The room seats it as a controller player (ctx.players[slot].bot
+ * bot(view, level, rng, retries, memory): the computer opponent ("🤖 Vs computer" in the lobby).
+ * Given the computer's own view and its level ('easy', 'normal', 'hard'), it gives its next input,
+ * or null when it has no move. The view is playerView, or botView(slot) if the game has one (a
+ * quiz adds the answer there, for the computer to get right as often as its level says). The input
+ * may carry botDelayMs, its pause before playing it (a reaction time); memory is an object kept
+ * for the match (what it has seen, how you play); retries counts the times the same move came
+ * back (the game refused it). The room seats it as a controller player (ctx.players[slot].bot
  * is its level) and plays its moves after a pause (Room#driveBot). Games without one can't be
  * started while it's seated.
  *
@@ -93,8 +106,8 @@ const timer = (usual, times) => ({
 });
 
 const GAMES = [
-  withSetup(reactionDuel, firstTo('Points to win', [3, 5, 7])),
-  withSetup(rockPaperScissors, firstTo('Points to win', [3, 5, 7])),
+  withSetup({ ...reactionDuel, bot: reactionDuelBot }, firstTo('Points to win', [3, 5, 7])),
+  withSetup({ ...rockPaperScissors, bot: rpsBot }, firstTo('Points to win', [3, 5, 7])),
   withSetup(pong, firstTo('Points to win', [5, 3, 7, 11])),
   withSetup(tron, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(airHockey, firstTo('Goals to win', [7, 5, 10])),
@@ -135,11 +148,11 @@ const GAMES = [
   bombDuel,
   kartRace,
   kartRace3d,
-  withSetup(quiz, {
+  withSetup({ ...quiz, bot: quizBot }, {
     questions: { title: 'Number of questions', values: [10, 5, 15, 20], label: (n) => String(n) },
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
   }),
-  withSetup(triviaQuest, {
+  withSetup({ ...triviaQuest, bot: quizBot }, {
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
     hearts: { title: 'Difficulty', values: [5, 7, 3], label: (n) => (n === 7 ? 'Easy · 7 ❤️' : n === 5 ? 'Normal · 5 ❤️' : 'Hard · 3 ❤️') },
     ...timer('off', '15 s a question (12 s for the Dragon), faster hits harder'),
@@ -173,8 +186,8 @@ const GAMES = [
     sea: { title: 'Sea (Ultimate)', values: ['open', 'archipelago', 'reef', 'strait', 'fog', 'volcano', 'random'], label: (k) => (k === 'random' ? '🎲 Any sea' : SEA_NAMES[k]) },
     shotSeconds: { title: 'Time per shot', values: [30, 15, 60, 0], label: (n) => (n ? `${n} s` : 'No timer: it waits for you') },
   }),
-  withSetup(connectFour, { ...firstTo(ROUNDS_WON, [3, 1, 5]), ...timer('timed', '20 s a move') }),
-  memoryMatch,
+  withSetup({ ...connectFour, bot: connectFourBot }, { ...firstTo(ROUNDS_WON, [3, 1, 5]), ...timer('timed', '20 s a move') }),
+  { ...memoryMatch, bot: memoryMatchBot },
   withSetup(bombSquad, {
     level: { title: 'Difficulty', values: [2, 1, 3, 4], label: (n) => `${BOMB_LEVELS[n].name} · ${BOMB_LEVELS[n].modules} modules, ${BOMB_LEVELS[n].ms / 60000} min` },
     bombs: { title: 'Bombs (you swap roles each one)', values: [3, 1, 5], label: (n) => (n === 1 ? 'One bomb' : `${n} bombs`) },
@@ -189,18 +202,18 @@ const GAMES = [
     dice: { title: 'Dice each', values: [5, 3, 4], label: (n) => `${n} dice` },
     wild: { title: 'Ones', values: [1, 0], label: (n) => (n ? 'Wild (count as any face)' : 'Just ones') },
   }),
-  withSetup(checkers, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
-  withSetup(dotsBoxes, {
+  withSetup({ ...checkers, bot: checkersBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
+  withSetup({ ...dotsBoxes, bot: dotsBoxesBot }, {
     size: { title: 'Grid', values: [4, 3, 5], label: (n) => `${n} × ${n} boxes` },
     ...firstTo('Games to win', [1, 2, 3]),
     ...timer('timed', '20 s a move'),
   }),
-  withSetup(mancala, {
+  withSetup({ ...mancala, bot: mancalaBot }, {
     seeds: { title: 'Stones per pit', values: [4, 3, 5], label: (n) => `${n} stones` },
     ...firstTo('Games to win', [1, 2, 3]),
     ...timer('timed', '30 s a move'),
   }),
-  withSetup(diceParty, {
+  withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
   }),
@@ -210,6 +223,9 @@ const GAMES = [
 export const CATEGORIES = ['competitive', 'board', 'casual'];
 /** Background music moods a game can ask for; by default competitive games get 'action', casual ones 'casual'. */
 export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
+
+/** Games the computer opponent is planned for: "⏳ Coming soon" in the lobby while it's seated. */
+const BOT_SOON = new Set(['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt']);
 
 /** Games for the lobby, grouped by category (in CATEGORIES order) so lists and controller focus agree. */
 export function listGames() {
@@ -226,6 +242,7 @@ export function listGames() {
       handheld: Boolean(handheld), // lobby label: 📱 No TV needed
       motion: Boolean(motion), // lobby label: 🤸 Motion
       vsComputer: Boolean(bot), // lobby label: 🤖 Vs computer (a `bot` plays the other seat: see Room#driveBot)
+      botSoon: !bot && BOT_SOON.has(id), // the computer can't play it yet, but will: "⏳ Coming soon"
       // The TV's background music for this game (see public/host/music.js).
       music: MUSIC_MOODS.includes(music) ? music : category === 'casual' ? 'casual' : 'action',
     }));

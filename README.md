@@ -26,11 +26,16 @@ everything, the board, the question, the reveal and the result, so nobody has to
 the TV once you've joined: most board, card, word and quiz games, with the time left in the phone's header;
 Dice Party with its Handheld screen) and **🤸 Motion** (you can tilt or move your phone to play; buttons
 or a joystick always work too).
-No one to play with? Games labelled **🤖 Vs computer** (Battleship, Classic and Ultimate) can be
-played against the computer: with a seat free, tap **Easy**, **Normal** or **Hard** under it on the
-TV (or on your phone's lobby, or press **LT** on a controller). Easy fires mostly at random, Normal
-hunts around its hits and uses its skills, and Hard works out where your ships could still be. It
-plays from what its own phone would show, so it never peeks at your fleet. Games (and tournaments)
+No one to play with? Games labelled **🤖 Vs computer** can be played against the computer:
+Battleship (Classic and Ultimate), Connect Four, Checkers, Dots and Boxes, Mancala, Rock Paper
+Scissors, Memory Match, Dice Party, Quiz Battle, Reaction Duel, and Trivia Quest (where it's your
+teammate). With a seat free, tap **Easy**, **Normal** or **Hard** under it on the TV (or on your
+phone's lobby, or press **LT** on a controller). While it's seated, the games it can't play are
+greyed out; the ones it's learning next (Pong, Air Hockey, Snake Battle, Light Cycles, Tank Duel,
+Word Hunt) say **⏳ Coming soon**. Easy makes mistakes and forgets, Normal plays sensibly, and Hard
+looks further ahead (board games), remembers every card (Memory Match), reads your habits (Rock
+Paper Scissors) and knows more answers. It plays from what its own phone would show, so it never
+peeks at your fleet, your cards or your pick. Games (and tournaments)
 against it don't count in the leaderboard; tap ✕ on its seat to send it away, or just join: whoever
 scans in from the lobby takes its seat.
 

@@ -33,7 +33,7 @@
     const key = moveKey(v);
     const animate = key !== lastMoveKey;
     lastMoveKey = key;
-    const aimer = v.phase === 'play' && v.players[v.turn].local ? v.turn : null;
+    const aimer = v.phase === 'play' && v.players[v.turn].local && !v.players[v.turn].bot ? v.turn : null; // (not for the computer)
     root.innerHTML =
       Ark.scoreboardHtml(v.players, v.scores, v.winScore, v.round) +
       '<div class="c4-status">' + status(v) + '</div>' +

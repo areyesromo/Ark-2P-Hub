@@ -110,8 +110,7 @@
   // The first lobby card picks a game at random (the server chooses, see Room#pickRandomGame).
   const RANDOM = { id: 'random', name: '🎲 Random game', tagline: "Can't decide? Let the hub pick one for you." };
   function lobbyCards() {
-    // Against the computer, only the games it can play.
-    return [RANDOM].concat(Ark.botSeat(state) ? state.games.filter(function (g) { return g.vsComputer; }) : state.games);
+    return [RANDOM].concat(state.games);
   }
 
   function renderLobby() {
@@ -125,7 +124,7 @@
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
     $('games-hint').textContent = Ark.botSeat(state)
-      ? 'The games you can play against the computer. Choose here, from your phone, or with a controller (D-pad + A).'
+      ? 'Games marked 🤖 Vs computer can be played against the computer (more are coming soon). Choose here, from your phone, or with a controller (D-pad + A).'
       : state.readyToPlay
       ? 'Choose here, from either phone, or with a controller (D-pad + A).'
       : 'Games unlock once both players are in.';
@@ -141,7 +140,8 @@
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
     const pads = Ark.controllerSeated(state);
     $('game-list').innerHTML = cards.map(function (g, i) {
-      const off = pads && g.phoneOnly;
+      const botTag = Ark.botTag(state, g); // (with the computer seated, a game it can't play is greyed out)
+      const off = (pads && g.phoneOnly) || Boolean(botTag);
       const heading = i > 0 && (i === 1 || cards[i - 1].category !== g.category)
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
         : '';
@@ -149,7 +149,7 @@
       return (
         heading +
         '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : '') + Ark.gameLabels(g) + '</strong>' +
+        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
@@ -746,6 +746,7 @@
     } else if (btn === 'A' || btn === 'START') {
       if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
       else if (cards[focus].phoneOnly) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');
+      else if (Ark.botTag(state, cards[focus])) flashPad('🤖 ' + cards[focus].name + (cards[focus].botSoon ? ': the computer can\'t play it yet (coming soon).' : ' needs a person, not the computer.'));
       else socket.emit('lobby:start', { gameId: cards[focus].id }, function (res) {
         if (res && res.error) flashPad('⚠️ ' + res.error);
       });

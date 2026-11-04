@@ -38,9 +38,9 @@
         ? 'Race! The same cards on both phones: flip at the same time, and the first to clear every pair wins.'
         : nameOf(v, v.turn) + ' goes first. Flip two cards: a pair is yours and you go again.') + '</div></div>';
     }
-    const raceLocal = v.phase === 'race' ? v.players.findIndex(function (p) { return p.local; }) : -1;
+    const raceLocal = v.phase === 'race' ? v.players.findIndex(function (p) { return p.local && !p.bot; }) : -1;
     const aimer = raceLocal !== -1 ? raceLocal : v.turn;
-    const local = (v.players[v.turn].local && v.phase === 'turn') || raceLocal !== -1;
+    const local = (v.players[v.turn].local && !v.players[v.turn].bot && v.phase === 'turn') || raceLocal !== -1;
     const grid = ArkMemory.gridHtml(v, local ? { index: padOf(aimer).cursor, cls: 'p' + (aimer + 1) } : null);
     let banner = '';
     if (v.phase === 'race') banner = '<div class="mm-banner">🏁 Race! On your phones · ' + v.pairs + ' pairs to clear</div>';
