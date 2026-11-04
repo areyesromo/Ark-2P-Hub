@@ -133,6 +133,7 @@
 .ub-sea .cell.land { background: #6b5b3e; box-shadow: none; }
 .ub-sea .cell.shallow { background: #1f6a78; }
 .ub-sea .cell.ice { background: #cfe8f5; box-shadow: none; }
+.ub-sea .cell.fog { background: #3b4a5c; } /* (before .ship, so its owner still sees a ship in the fog) */
 .ub-sea .cell.ship { background: var(--hull); }
 .ub-sea .cell.ship.sunk { background: #5b2430; }
 .ub-sea .cell.ship.selected { background: var(--warn); }
@@ -195,6 +196,9 @@
 .ub-sea.frozen { position: relative; }
 .ub-sea.frozen::after { content: '❄️'; position: absolute; inset: 0; display: grid; place-items: center; font-size: 4em; background: rgba(207, 232, 245, 0.28); border-radius: var(--r-sm); pointer-events: none; animation: ub-frost 1.2s ease-out both; }
 
+/* An effect plays once: redrawn (a tick of the clock, a tap) it stays still. */
+.ub-sea.played .cell.last::before, .ub-sea.played .cell.scan, .ub-sea.played .cell.sinking, .ub-sea.played.frozen::after { animation: none; }
+
 @keyframes ub-burst {
   0% { opacity: 0; transform: scale(0.3); }
   25% { opacity: 1; }
@@ -216,8 +220,7 @@
   to { opacity: 1; transform: none; }
 }
 
-/* Fog and lava (Fog Bank, Volcano); a shot into the fog shows as a question until it lifts. */
-.ub-sea .cell.fog { background: #3b4a5c; }
+/* Lava (Volcano); a shot into the fog shows as a question until it lifts. */
 .ub-sea .cell.lava { background: radial-gradient(circle, #ffb347 0%, #e8590c 55%, #7c2d12 100%); box-shadow: none; animation: ub-lava 2.4s ease-in-out infinite alternate; }
 .ub-sea .cell.fogged::after { content: '?'; position: absolute; inset: 0; display: grid; place-items: center; color: #cbd5e1; font-weight: 900; }
 @keyframes ub-lava { to { filter: brightness(1.25); } }

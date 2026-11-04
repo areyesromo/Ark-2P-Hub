@@ -358,6 +358,7 @@ export class UltimateBattleship {
     this.charge = [0, 0];
     this.frozen = [false, false];
     this.fogged = [new Set(), new Set()]; // shots into the fog on each player's sea, not shown yet
+    this.fogPay = [{ hits: 0, charge: 0 }, { hits: 0, charge: 0 }]; // what each player's hits in the fog earn, once it lifts
     this.turns = 0; // turns started (the Volcano erupts after ERUPT_AFTER)
     this.erupted = false;
     this.eruption = null; // [cells on player 1's sea, on player 2's], for the turn it happens
@@ -415,15 +416,25 @@ export class UltimateBattleship {
     if (this.frozen[this.turn]) {
       this.frozen[this.turn] = false;
       this.last = { by: this.turn, kind: 'frozen', cells: [] };
+      this.liftFog(this.turn); // (a skipped turn still lifts it)
       this.turn = 1 - this.turn;
     }
-    // The fog lifts on what you fired into it last turn.
-    this.fogged[1 - this.turn].clear();
+    this.liftFog(this.turn);
     this.turns++;
     this.eruption = null;
     if (this.sea === 'volcano' && !this.erupted && this.turns > ERUPT_AFTER && this.erupt()) return;
     this.energy[this.turn] = Math.min(ENERGY.max, this.energy[this.turn] + ENERGY.perTurn);
     this.runPhase('aim', this.turnMs || null, () => this.shoot(this.turn, this.randomTarget(1 - this.turn)));
+  }
+
+  /** The fog lifts on what `slot` fired into it last turn: the hits there count now. */
+  liftFog(slot) {
+    this.fogged[1 - slot].clear();
+    const pay = this.fogPay[slot];
+    this.hits[slot] += pay.hits;
+    this.energy[slot] = Math.min(ENERGY.max, this.energy[slot] + pay.hits * ENERGY.perHit);
+    this.charge[slot] = Math.min(COMMANDERS[this.commanders[slot]].special.charge, this.charge[slot] + pay.charge);
+    this.fogPay[slot] = { hits: 0, charge: 0 };
   }
 
   // ---- the fleets -------------------------------------------------------------------------
@@ -442,6 +453,7 @@ export class UltimateBattleship {
         const k = this.idx(x, y);
         if (near(x, y) && this.shots[slot][k] === EMPTY) {
           this.shots[slot][k] = HIT;
+          this.shields[slot].delete(k); // (lava burns through a shield)
           out.push({ x, y, result: this.isSunk(slot, i) ? 'sunk' : 'hit' });
         }
       }));
@@ -510,24 +522,29 @@ export class UltimateBattleship {
         out.push({ x, y, result: terrain(this.sea, x, y) === '%' ? 'fog' : 'miss' });
         continue;
       }
+      if (terrain(this.sea, x, y) === '%') {
+        // A hit in the fog: nothing shows (not even the reward) until it lifts.
+        this.fogged[target].add(k);
+        this.fogPay[slot].hits++;
+        this.fogPay[slot].charge++;
+        out.push({ x, y, result: 'fog' });
+        continue;
+      }
       this.hits[slot]++;
       this.energy[slot] = Math.min(ENERGY.max, this.energy[slot] + ENERGY.perHit);
       const special = COMMANDERS[this.commanders[slot]].special;
       this.charge[slot] = Math.min(special.charge, this.charge[slot] + 1); // (a special's own hits don't count: it's reset after)
-      const sunk = this.isSunk(target, ship);
-      if (terrain(this.sea, x, y) === '%') {
-        this.fogged[target].add(k);
-        out.push({ x, y, result: 'fog' });
-        continue;
-      }
-      out.push({ x, y, result: sunk ? 'sunk' : 'hit', ship: sunk ? COMMANDERS[this.commanders[target]].fleet[ship].name : undefined });
+      // A ship still partly in the fog isn't shown sunk yet.
+      const fleet = COMMANDERS[this.commanders[target]].fleet;
+      const sunk = this.isSunk(target, ship) && !placedCells(fleet[ship], this.fleets[target][ship]).some(([cx, cy]) => this.fogged[target].has(this.idx(cx, cy)));
+      out.push({ x, y, result: sunk ? 'sunk' : 'hit', ship: sunk ? fleet[ship].name : undefined });
     }
     return out;
   }
 
   /**
-   * A torpedo down row `y` from the `from` side ('w' or 'e'): it stops at land or ice, or hits
-   * the first ship cell. The open water it runs through shows as misses (its wake gives it away).
+   * A torpedo down row `y` from the `from` side ('w' or 'e'): it stops at land, ice or fog (it
+   * loses its way there), or hits the first ship cell. The open water it runs through shows as misses (its wake gives it away).
    */
   torpedo(slot, target, y, from) {
     const { w } = this.size;
@@ -535,7 +552,7 @@ export class UltimateBattleship {
     for (let i = 0; i < w; i++) {
       const x = from === 'e' ? w - 1 - i : i;
       const t = terrain(this.sea, x, y);
-      if (BLOCKED.has(t)) return out.concat([{ x, y, result: 'stopped' }]);
+      if (BLOCKED.has(t) || t === '%') return out.concat([{ x, y, result: 'stopped' }]);
       if (this.shots[target][this.idx(x, y)] !== EMPTY) continue; // already shot: it runs on past
       if (this.shipAt(target, x, y) !== -1) return out.concat(this.strike(slot, target, [[x, y]]));
       out.push(...this.strike(slot, target, [[x, y]])); // open water: a miss
@@ -634,6 +651,7 @@ export class UltimateBattleship {
       }
     }
     this.charge[slot] = 0;
+    this.fogPay[slot].charge = 0;
     // Where it was aimed (and how), for the screens' effects; Deep Freeze has no aim.
     const aimed = special.aim === 'none' ? {} : { at: { x: input.x, y: input.y }, aim: special.aim, dir: input.dir === 'v' ? 'v' : 'h' };
     this.act(slot, Object.assign({ kind: 'special', name: special.name, cells }, aimed));

@@ -45,6 +45,7 @@
    * mark ([[x, y]], where an aim lands), last ([{ x, y, result }]), cursor ({ x, y }),
    * fx (the move that just landed here, for its effect: explosions one after another, a
    * torpedo's wake, a sonar or scan sweep, a ship going down) and frozen (frost over the sea).
+   * id names the sea on this screen, so an effect plays once, not again on every redraw.
    */
   function seaHtml(opts) {
     const rows = opts.rows;
@@ -110,7 +111,7 @@
     const sonar = {};
     (opts.sonar || []).forEach(function (s) { sonar[s.y * w + s.x] = s.count; });
     const kind = fx ? ' fx-' + (fx.skill || (fx.aim === 'row' || fx.aim === 'rows3' ? 'torpedo' : fx.kind)) : '';
-    let html = '<div class="ub-sea' + kind + (opts.frozen ? ' frozen' : '') + '" style="--w:' + w + ';--h:' + h + '">';
+    let html = '<div class="ub-sea' + kind + (opts.frozen ? ' frozen' : '') + (seen(opts.id, fx, opts.frozen) ? ' played' : '') + '" style="--w:' + w + ';--h:' + h + '">';
     for (let y = 0; y < h; y++) {
       for (let x = 0; x < w; x++) {
         const k = y * w + x;
@@ -118,6 +119,20 @@
       }
     }
     return html + '</div>';
+  }
+
+  const played = {}; // sea id -> the effect last drawn on it
+
+  /** True if this sea's effect (its move, or its frost) was already drawn: it isn't played again. */
+  function seen(id, fx, frozen) {
+    if (!id || (!fx && !frozen)) {
+      if (id) delete played[id];
+      return false;
+    }
+    const key = JSON.stringify(fx) + (frozen ? '❄' : '');
+    if (played[id] === key) return true;
+    played[id] = key;
+    return false;
   }
 
   /** A ship's shape, small: its cells as a mini grid. */
@@ -152,10 +167,12 @@
     if (l.skill === 'shield') return '🛡️ ' + who + ' raised a shield';
     if (l.name === 'Full Scan') return '🛰️ ' + who + ' scanned a 5×5';
     if (l.name === 'Deep Freeze') return '🧊 ' + who + ' froze the enemy fleet: they miss a turn';
-    if (l.cells.length && l.cells.every(function (c) { return c.result === 'fog'; })) return who + ': ' + what + '🌫️ into the fog (it shows next turn)';
-    what += sunk.length ? '🔥 sank the ' + sunk.join(' and the ') : hits ? '💥 ' + hits + ' hit' + (hits === 1 ? '' : 's') : l.cells.length > 1 ? '💦 all missed' : '💦 a miss';
+    const fog = l.cells.filter(function (c) { return c.result === 'fog'; }).length;
+    if (l.cells.length && fog === l.cells.length) return who + ': ' + what + '🌫️ into the fog (it shows next turn)';
+    what += sunk.length ? '🔥 sank the ' + sunk.join(' and the ') : hits ? '💥 ' + hits + ' hit' + (hits === 1 ? '' : 's') : fog ? '💦 no hits in the open' : l.cells.length > 1 ? '💦 all missed' : '💦 a miss';
+    if (fog) what += ' (🌫️ ' + fog + ' into the fog)';
     if (blocked) what += ' (🛡️ a shield took a hit)';
-    if (l.cells.some(function (c) { return c.result === 'stopped'; })) what += ' (stopped by the ice or land)';
+    if (l.cells.some(function (c) { return c.result === 'stopped'; })) what += ' (stopped by land, ice or fog)';
     return who + ': ' + what;
   }
 

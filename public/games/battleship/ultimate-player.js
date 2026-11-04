@@ -180,19 +180,21 @@
       '<p class="msg">' + msg + (v.timed && myTurn ? ' · ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '') + '</p>' +
       '<div class="label">Their sea · ' + v.theirs.afloat + ' afloat</div>' +
       '<div data-board="theirs" class="ub-board' + (myTurn && kind !== 'own2' ? ' live' : '') + '">' +
-      U.seaHtml({ rows: v.rows, shots: v.theirs.shots, ships: v.theirs.ships, spotted: v.theirs.spotted, sonar: v.sonar.filter(function (s) { return s.by === you; }), mark: kind === 'own2' ? [] : mark, fx: v.last && v.phase === 'shot' && v.last.by === you ? v.last : v.eruption && v.eruption[1 - you].length ? { kind: 'eruption', cells: v.eruption[1 - you] } : null, frozen: v.frozen[1 - you] }) + '</div>' +
+      U.seaHtml({ id: 'theirs', rows: v.rows, shots: v.theirs.shots, ships: v.theirs.ships, spotted: v.theirs.spotted, sonar: v.sonar.filter(function (s) { return s.by === you; }), mark: kind === 'own2' ? [] : mark, fx: v.last && v.phase === 'shot' && v.last.by === you ? v.last : v.eruption && v.eruption[1 - you].length ? { kind: 'eruption', cells: v.eruption[1 - you] } : null, frozen: v.frozen[1 - you] }) + '</div>' +
       (myTurn ? acts + '<div class="bs-tools">' +
         (lines ? '<button class="dir">' + (dir === 'h' ? '↔ Across' : '↕ Down') + '</button>' : '') +
         (sides ? '<button class="side">' + (from === 'w' ? '➡ From the left' : '⬅ From the right') + '</button>' : '') +
         '<button class="primary fire"' + (ready(v) ? '' : ' disabled') + '>Fire' + (aim && kind === 'cell' ? ' at ' + U.coord(aim.x, aim.y) : '') + '</button></div>' : '') +
       '<div class="label">Your fleet · ' + v.mine.afloat + ' afloat</div>' +
       '<div data-board="mine" class="ub-board small' + (kind === 'own2' ? ' live' : '') + '">' +
-      U.seaHtml({ rows: v.rows, shots: v.mine.shots, ships: v.mine.ships, shields: v.mine.shields, mark: kind === 'own2' ? mark : [], fx: v.last && v.phase === 'shot' && v.last.by !== you ? v.last : v.eruption && v.eruption[you].length ? { kind: 'eruption', cells: v.eruption[you] } : null, frozen: v.frozen[you] }) + '</div>';
+      U.seaHtml({ id: 'mine', rows: v.rows, shots: v.mine.shots, ships: v.mine.ships, shields: v.mine.shields, mark: kind === 'own2' ? mark : [], fx: v.last && v.phase === 'shot' && v.last.by !== you ? v.last : v.eruption && v.eruption[you].length ? { kind: 'eruption', cells: v.eruption[you] } : null, frozen: v.frozen[you] }) + '</div>';
   }
 
   function overScreen(v) {
     const won = v.winner === v.you;
-    return '<div class="outcome ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</div>' +
+    // (the Volcano can sink both fleets at once: a draw)
+    const outcome = v.winner === null ? '<div class="outcome draw">🌋 A draw: the volcano took both fleets</div>' : '<div class="outcome ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</div>';
+    return outcome +
       '<div class="label">Their fleet</div><div data-board="theirs" class="ub-board">' + U.seaHtml({ rows: v.rows, shots: v.theirs.shots, ships: v.theirs.ships }) + '</div>' +
       '<button class="primary rematch">Rematch</button>';
   }

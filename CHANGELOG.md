@@ -8,10 +8,11 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - Ultimate Battleship: every move now plays out on the TV and phones (explosions along the line,
   a torpedo's wake, sonar sweeps, ships going down, frost for Deep Freeze).
-- Two new commanders: 🌪️ Admiral Tempest (a cross and a U, and Typhoon) and 🦑 Captain Kraken
-  (a hidden cross-shaped Leviathan, and Deep Strike down a whole column).
-- Two new seas: the **Fog Bank** (shots into the fog show only on your next turn) and the
-  **Volcano** (it erupts after 8 turns and hits every ship next to the lava).
+- Ultimate Battleship: two new commanders, 🌪️ Admiral Tempest (a cross and a U, and Typhoon) and
+  🦑 Captain Kraken (a hidden cross-shaped Leviathan, and Deep Strike down a whole column).
+- Ultimate Battleship: two new seas. In the **Fog Bank**, shots into the fog (and what they earn)
+  show only on your next turn, and torpedoes lose their way in it. The **Volcano** erupts after
+  8 turns and hits every ship square next to the lava; if it sinks both fleets, it's a draw.
 
 ## 0.1.20
 
