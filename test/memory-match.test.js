@@ -11,7 +11,7 @@ function playing(settings = {}) {
   for (const [key, value] of Object.entries(settings)) game.onInput(0, { type: 'setting', key, value });
   game.onInput(0, { type: 'go' });
   ctx.advance(TIMING.countdownMs + 10);
-  assert.equal(game.phase, 'turn');
+  assert.equal(game.phase, settings.mode === 'race' ? 'race' : 'turn');
   return { ctx, game };
 }
 
@@ -102,11 +102,11 @@ test('setup: card count, theme and turn time are remembered; bad values ignored'
   const ctx = fakeCtx();
   const game = new MemoryMatch(ctx);
   game.start();
-  assert.deepEqual(game.settings, { cards: 16, theme: 0, turnSeconds: 20 });
+  assert.deepEqual(game.settings, { mode: 'turns', cards: 16, theme: 0, turnSeconds: 20 });
   game.onInput(1, { type: 'setting', key: 'cards', value: 36 });
   game.onInput(1, { type: 'setting', key: 'cards', value: 20 });
   game.onInput(1, { type: 'flip', index: 0 }); // nothing to flip yet
-  assert.deepEqual(ctx.saved.settings, { cards: 36, theme: 0, turnSeconds: 20 });
+  assert.deepEqual(ctx.saved.settings, { mode: 'turns', cards: 36, theme: 0, turnSeconds: 20 });
   for (const t of THEMES) assert.ok(t.faces.length >= 18 && new Set(t.faces).size === t.faces.length, `${t.name}: 18+ different faces`);
 });
 
@@ -132,4 +132,58 @@ test('no timer is a choice of time per turn: a turn waits for you', () => {
   assert.equal(game.hostView().timeLeftMs, 0);
   assert.equal(game.hostView().timed, false);
   assert.equal(ctx.pendingTimers(), 0);
+});
+
+/** A Race match (two phones), past the countdown. */
+function racing(extra = {}) {
+  return playing({ mode: 'race', ...extra });
+}
+
+test('Race: the same cards on each phone, you both flip at once, and you only see your own board', () => {
+  const { game } = racing();
+  assert.equal(game.phase, 'race');
+  const { a, b } = pairOf(game, game.cards[0].face);
+  game.onInput(0, { type: 'flip', index: a });
+  game.onInput(1, { type: 'flip', index: a }); // both at once: no turns
+  assert.equal(game.playerView(0).cards[a].up, true);
+  assert.equal(game.playerView(1).cards[a].up, true);
+  game.onInput(0, { type: 'flip', index: b });
+  assert.deepEqual(game.scores, [1, 0], 'a pair for player 1 only');
+  assert.equal(game.playerView(0).cards[b].owner, 0);
+  assert.equal(game.playerView(1).cards[b].up, false, 'not on the other board');
+  // The TV keeps both boards face down while you race: only the counts.
+  assert.ok(game.hostView().cards.every((c) => !c.up));
+});
+
+test('Race: a mismatch stays up until your next flip turns it back; first to clear every pair wins', () => {
+  const { game } = racing();
+  const faces = [...new Set(game.cards.map((c) => c.face))];
+  const { a } = pairOf(game, faces[0]);
+  const { a: c } = pairOf(game, faces[1]);
+  game.onInput(1, { type: 'flip', index: a });
+  game.onInput(1, { type: 'flip', index: c });
+  assert.equal(game.playerView(1).cards[a].up, true, 'shown so you can remember it');
+  game.onInput(1, { type: 'flip', index: pairOf(game, faces[2]).a });
+  assert.equal(game.playerView(1).cards[a].up, false, 'turned back');
+  // Player 2 clears the board.
+  const p2 = racing();
+  for (const f of [...new Set(p2.game.cards.map((x) => x.face))]) {
+    const { a: x, b: y } = pairOf(p2.game, f);
+    p2.game.onInput(1, { type: 'flip', index: x });
+    p2.game.onInput(1, { type: 'flip', index: y });
+  }
+  assert.equal(p2.game.phase, 'over');
+  assert.equal(p2.game.winner, 1);
+  assert.equal(p2.ctx.pendingTimers(), 0);
+});
+
+test('Race needs two phones: with a controller player it\'s the usual turns', () => {
+  const ctx = fakeCtx();
+  ctx.players[1].local = true;
+  const game = new MemoryMatch(ctx);
+  game.start();
+  game.onInput(0, { type: 'setting', key: 'mode', value: 'race' });
+  game.onInput(0, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 10);
+  assert.equal(game.phase, 'turn');
 });

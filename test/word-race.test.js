@@ -144,16 +144,16 @@ test('setup: defaults, either player changes settings, bad values are ignored, t
   game.onInput(1, { type: 'setting', key: 'rounds', value: 1 });
   for (const [key, value] of [['size', 9], ['time', '60'], ['rounds', 2], ['__proto__', 1], ['toString', 1]]) game.onInput(0, { type: 'setting', key, value });
   game.onInput(0, { type: 'word', path: [0, 1, 2] }); // ignored in setup
-  assert.deepEqual(game.settings, { size: 5, time: 60, rounds: 1 });
-  assert.deepEqual(ctx.saved.settings, { size: 5, time: 60, rounds: 1 });
+  assert.deepEqual(game.settings, { size: 5, time: 60, rounds: 1, goal: 0 });
+  assert.deepEqual(ctx.saved.settings, { size: 5, time: 60, rounds: 1, goal: 0 });
 
   // A new launch in the same room starts from the saved settings.
   const again = new WordRace(Object.assign(fakeCtx(), { saved: ctx.saved }));
   again.start();
-  assert.deepEqual(again.settings, { size: 5, time: 60, rounds: 1 });
+  assert.deepEqual(again.settings, { size: 5, time: 60, rounds: 1, goal: 0 });
   // ...but not from junk.
   const junk = new WordRace(Object.assign(fakeCtx(), { saved: { settings: { size: 99, time: 60 } } }));
-  assert.deepEqual(junk.settings, { size: DEFAULTS.size, time: 60, rounds: DEFAULTS.rounds });
+  assert.deepEqual(junk.settings, { size: DEFAULTS.size, time: 60, rounds: DEFAULTS.rounds, goal: 0 });
 });
 
 test('a 5x5, 60-second, best-of-1 match', () => {
@@ -205,4 +205,36 @@ test('a 5x5, 60-second, best-of-1 match', () => {
   game.onInput(0, { type: 'setup' });
   assert.equal(game.phase, 'setup');
   assert.equal(ctx.pendingTimers(), 0);
+});
+
+test('Race: the first to the target points takes the round, and words you both found count for both', () => {
+  const { ctx, game } = setup();
+  game.settings.goal = 3; // (the setup offers 30, 50 or 75)
+  toPlay(ctx);
+  say(game, 0, 'cat');
+  say(game, 1, 'cat'); // both: counts for both in a Race
+  say(game, 1, 'dog');
+  assert.deepEqual(game.playerView(0).points, [1, 2], 'the points race is on both screens');
+  say(game, 0, 'car');
+  assert.equal(game.phase, 'play');
+  say(game, 1, 'core');
+  assert.notEqual(game.phase, 'play', 'player 2 reached 3 first');
+  assert.equal(game.result.winner, 1);
+  assert.deepEqual(game.result.points, [2, 3]);
+  assert.equal(game.result.tally[0].find((t) => t.word === 'cat').shared, false, 'nothing cancels');
+});
+
+test('Race: if the time cap runs out first, more points takes the round', () => {
+  const { ctx, game } = setup();
+  game.settings.goal = 30;
+  toPlay(ctx);
+  say(game, 0, 'cat');
+  ctx.advance(game.settings.time * 1000);
+  assert.equal(game.result.winner, 0);
+});
+
+test('Race is in the setup, as the goal: timed (shared words cancel) or first to 30, 50 or 75 points', async () => {
+  const { OPTIONS } = await import('../server/games/word-race.js');
+  assert.deepEqual(OPTIONS.goal, [0, 30, 50, 75]);
+  assert.equal(DEFAULTS.goal, 0, 'the usual timed rounds by default');
 });

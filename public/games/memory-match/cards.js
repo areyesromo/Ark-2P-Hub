@@ -2,6 +2,7 @@
 (function () {
   let themes = ['Animals', 'Food', 'Sports', 'Things']; // updated from the server's views (themeNames)
   const ROWS = [
+    { key: 'mode', title: 'Mode', fmt: function (m) { return m === 'race' ? 'Race (two phones): your own board each, at once' : 'Take turns on one board'; } },
     { key: 'cards', title: 'Cards', fmt: function (n) { return n + ' cards'; } },
     { key: 'theme', title: 'Pictures', fmt: function (n) { return n === 0 ? 'Mixed' : themes[n - 1] || 'Set ' + n; } },
     { key: 'turnSeconds', title: 'Time per turn', fmt: function (n) { return n ? n + ' s' : 'No timer'; } },

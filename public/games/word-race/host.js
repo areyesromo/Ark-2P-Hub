@@ -29,7 +29,9 @@
     } else if (v.result) {
       body = '<div class="pts">' + v.result.points[slot] + ' pts</div>' + wordList(v, slot);
     } else {
-      body = '<div class="count">' + v.counts[slot] + '</div><div class="muted">word' + (v.counts[slot] === 1 ? '' : 's') + ' found</div>';
+      body = v.points
+        ? '<div class="count">' + v.points[slot] + '</div><div class="muted">of ' + v.goal + ' points · ' + v.counts[slot] + ' word' + (v.counts[slot] === 1 ? '' : 's') + '</div>'
+        : '<div class="count">' + v.counts[slot] + '</div><div class="muted">word' + (v.counts[slot] === 1 ? '' : 's') + ' found</div>';
     }
     return '<div class="wr-side p' + (slot + 1) + '"><div class="name">' + nameOf(v, slot) + '</div>' + body + '</div>';
   }
@@ -43,7 +45,7 @@
     if (v.phase === 'setup') return loaded ? setup(v) : '';
     if (v.phase === 'countdown') {
       return '<div class="wr-center"><div class="big">' + (v.countdown || '') + '</div><div class="sub">Round ' + v.round +
-        ': find words by joining touching letters. Words you both find cancel out!</div>' +
+        ': find words by joining touching letters. ' + (v.goal ? 'First to ' + v.goal + ' points takes the round!' : 'Words you both find cancel out!') + '</div>' +
         (loaded ? '<div class="sub">' + Ark.setup.summary(v, ArkWords.ROWS) + '</div>' : '') + '</div>';
     }
     if (!loaded || !v.grid) return '';
@@ -63,7 +65,7 @@
   function render() {
     if (!root || !view) return;
     const v = view;
-    const key = JSON.stringify([v.phase, v.round, v.countdown, v.counts, v.scores, Boolean(v.result), v.settings, loaded]);
+    const key = JSON.stringify([v.phase, v.round, v.countdown, v.counts, v.points, v.scores, Boolean(v.result), v.settings, loaded]);
     if (key === textKey) return;
     textKey = key;
     root.innerHTML =

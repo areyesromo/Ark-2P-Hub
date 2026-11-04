@@ -34,11 +34,14 @@
         '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</div></div>';
     }
     if (v.phase === 'countdown') {
-      return '<div class="panel"><div class="big">' + v.countdown + '</div><div class="sub">' + nameOf(v, v.turn) + ' goes first. Flip two cards: a pair is yours and you go again.</div></div>';
+      return '<div class="panel"><div class="big">' + v.countdown + '</div><div class="sub">' + (v.race
+        ? 'Race! The same cards on both phones: flip at the same time, and the first to clear every pair wins.'
+        : nameOf(v, v.turn) + ' goes first. Flip two cards: a pair is yours and you go again.') + '</div></div>';
     }
     const local = v.players[v.turn].local && v.phase === 'turn';
     const grid = ArkMemory.gridHtml(v, local ? { index: padOf(v.turn).cursor, cls: 'p' + (v.turn + 1) } : null);
     let banner = '';
+    if (v.phase === 'race') banner = '<div class="mm-banner">🏁 Race! On your phones · ' + v.pairs + ' pairs to clear</div>';
     if (v.phase === 'over') {
       banner = '<div class="mm-banner">' + (v.draw ? "🤝 It's a draw!" : '🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!') +
         '<div class="sub">Rematch, change the settings (🎮 Y) or head back to the lobby.</div></div>';

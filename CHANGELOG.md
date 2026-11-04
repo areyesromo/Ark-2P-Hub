@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.19
+
+- Memory Match: a **Race** mode for two phones. The same cards on each phone, you both flip at
+  once on your own board, and the first to clear every pair wins.
+- Word Race: a **Race** mode. The first to 30, 50 or 75 points takes the round, and words you
+  both found count for both.
+
 ## 0.1.18
 
 - A **Timer** choice in setup for the games whose clock only keeps things moving: **Timed**

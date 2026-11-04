@@ -12,7 +12,8 @@
   function status(v) {
     const me = v.you;
     if (v.phase === 'setup') return '<span class="big">🃏 Memory Match</span><br>Pick the settings (either of you can), then start.';
-    if (v.phase === 'countdown') return 'Get ready… ' + v.countdown + '<br>' + (v.turn === me ? 'You go first!' : 'They go first.');
+    if (v.phase === 'countdown') return 'Get ready… ' + v.countdown + '<br>' + (v.race ? 'Race: your own board. Clear it first!' : v.turn === me ? 'You go first!' : 'They go first.');
+    if (v.phase === 'race') return '<span class="big you">Race!</span><br>Find every pair before they do';
     if (v.phase === 'over') {
       if (v.draw) return '<span class="big">Draw! 🤝</span>';
       return '<span class="big ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span>';
@@ -31,12 +32,14 @@
     key = k;
     const me = v.you;
     const setup = v.phase === 'setup';
-    els.score.textContent = setup ? '' : 'Pairs: you ' + v.scores[me] + ' · them ' + v.scores[1 - me] + ' · ' + (v.pairs - v.scores[0] - v.scores[1]) + ' left';
+    els.score.textContent = setup ? '' : v.race
+      ? 'Pairs: you ' + v.scores[me] + ' of ' + v.pairs + ' · them ' + v.scores[1 - me]
+      : 'Pairs: you ' + v.scores[me] + ' · them ' + v.scores[1 - me] + ' · ' + (v.pairs - v.scores[0] - v.scores[1]) + ' left';
     els.status.innerHTML = status(v);
     els.setup.innerHTML = setup ? Ark.setup.html(v, ArkMemory.ROWS) : '';
     els.go.classList.toggle('hidden', !setup);
     els.board.innerHTML = v.cards && v.phase !== 'countdown' ? ArkMemory.gridHtml(v) : '';
-    els.board.classList.toggle('mine', v.phase === 'turn' && v.turn === me);
+    els.board.classList.toggle('mine', (v.phase === 'turn' && v.turn === me) || v.phase === 'race');
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
     els.change.classList.toggle('hidden', v.phase !== 'over');
   }
@@ -68,7 +71,8 @@
       };
       els.board.addEventListener('click', function (e) {
         const card = e.target.closest('.card');
-        if (!card || !view || view.phase !== 'turn' || view.turn !== view.you || card.classList.contains('up')) return;
+        const myGo = view && ((view.phase === 'turn' && view.turn === view.you) || view.phase === 'race');
+        if (!card || !myGo || (card.classList.contains('up') && view.phase !== 'race')) return; // (in a Race an up card that isn't paired turns back)
         api.send({ type: 'flip', index: Number(card.getAttribute('data-i')) });
         api.vibrate(10);
       });

@@ -1,7 +1,9 @@
 // Word Race (Boggle for two). Both players get the same 4x4 grid of letters
 // and race to find words by tracing paths of touching tiles (across, down or
 // diagonally, each tile at most once per word). Longer words score more.
-// When the time's up, words you BOTH found cancel out, so rare finds win.
+// When the time's up, words you BOTH found cancel out, so rare finds win. Or Race: the first to
+// a target score takes the round (words you both found count for both; the round's time is
+// only a cap, after which more points wins).
 // Before the first round either player can pick the grid size (4x4 to 6x6),
 // the time per round and the match length; the room remembers the choice.
 //
@@ -21,6 +23,7 @@ export const OPTIONS = {
   size: [4, 5, 6], // grid is size x size
   time: [90, 60, 120, 180], // seconds per round
   rounds: [3, 1, 5], // best of
+  goal: [0, 30, 50, 75], // 0: timed rounds (shared words cancel); else Race to this many points
 };
 export const DEFAULTS = defaultsOf(OPTIONS);
 export const MIN_GRID_WORDS = { 4: 40, 5: 100, 6: 150 }; // reroll grids poorer than this
@@ -248,17 +251,24 @@ export class WordRace {
     }, Math.max(0, Math.min(1000, left)));
   }
 
-  endRound() {
-    // Words both players found cancel out.
+  /** Race: each of your points so far (nothing cancels). */
+  racePoints() {
+    return this.words.map((ws) => ws.reduce((s, w) => s + wordPoints(w), 0));
+  }
+
+  /** The round's end. `first`: who reached the Race's target (else the most points wins). */
+  endRound(first) {
+    // Words both players found cancel out (not in a Race).
+    const race = this.settings.goal > 0;
     const sets = this.words.map((ws) => new Set(ws));
     const tally = this.words.map((ws, slot) =>
       ws.map((w) => {
-        const shared = sets[1 - slot].has(w);
+        const shared = !race && sets[1 - slot].has(w);
         return { word: w, points: shared ? 0 : wordPoints(w), shared };
       }),
     );
     const points = tally.map((t) => t.reduce((s, x) => s + x.points, 0));
-    const winner = points[0] === points[1] ? null : points[0] > points[1] ? 0 : 1;
+    const winner = first !== undefined ? first : points[0] === points[1] ? null : points[0] > points[1] ? 0 : 1;
     if (winner !== null) this.scores[winner]++;
     this.result = { tally, points, winner };
     if (winner !== null && this.scores[winner] >= this.winScore) return this.finish(winner);
@@ -301,6 +311,10 @@ export class WordRace {
       reply = { ok: true, points: wordPoints(word) };
     }
     this.feedback[slot] = Object.assign({ word, seq: ++this.seq }, reply);
+    if (reply.ok && this.settings.goal > 0 && this.racePoints()[slot] >= this.settings.goal) {
+      this.stopTimer();
+      return this.endRound(slot); // first to the target takes it
+    }
     this.ctx.update();
   }
 
@@ -321,6 +335,8 @@ export class WordRace {
       timeLeftMs: this.timeLeftMs(),
       playMs: this.settings.time * 1000,
       counts: this.words.map((w) => w.length),
+      points: this.settings.goal > 0 && this.words ? this.racePoints() : null, // Race: the points race, on every screen
+      goal: this.settings.goal,
       possible: this.possible,
       result: revealing ? this.result : null,
       scores: this.scores,

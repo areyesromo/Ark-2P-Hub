@@ -21,6 +21,8 @@ export const THEMES = [
 ];
 
 export const OPTIONS = {
+  // Take turns on one board, or Race: the same cards on each phone, flipped at once (two phones).
+  mode: ['turns', 'race'],
   cards: [16, 24, 36], // 4x4, 4x6, 6x6
   theme: [0, ...THEMES.map((_, i) => i + 1)], // 0: a mix of every theme
   turnSeconds: [20, 10, 30, 0], // 0: no timer, a turn waits for you
@@ -66,6 +68,10 @@ export class MemoryMatch {
     this.starter = 1 - this.starter;
     this.lastMatch = null; // { by, face } for the TV
     this.events = { flips: 0, matches: 0, misses: 0 };
+    // Race keeps your board on your phone; a controller player only has the TV, so it's turns.
+    this.race = this.settings.mode === 'race' && !this.ctx.players.some((p) => p && p.local);
+    this.found = [new Set(), new Set()]; // Race: the cards each of you has paired
+    this.mine = [[], []]; // Race: the cards each of you has face up right now
     this.timed('countdown', TIMING.countdownMs, () => this.startTurn());
   }
 
@@ -98,6 +104,7 @@ export class MemoryMatch {
 
   startTurn() {
     this.flipped = [];
+    if (this.race) return this.timed('race', null); // no turns and no clock: first to clear wins
     this.timed('turn', this.settings.turnSeconds ? this.settings.turnSeconds * 1000 : null, () => this.outOfTime());
   }
 
@@ -109,7 +116,28 @@ export class MemoryMatch {
     }
   }
 
+  /** Race: your own flip on your own board. A mismatch stays up until your next flip. */
+  raceFlip(slot, index) {
+    const card = this.cards[index];
+    const up = this.mine[slot];
+    if (!card || this.found[slot].has(index) || up.includes(index)) return;
+    if (up.length === 2) up.length = 0; // turn the last mismatch back
+    up.push(index);
+    this.events.flips++;
+    if (up.length === 2) {
+      if (this.cards[up[0]].face === card.face) {
+        up.forEach((i) => this.found[slot].add(i));
+        up.length = 0;
+        this.scores[slot]++;
+        this.events.matches++;
+        if (this.found[slot].size === this.cards.length) return this.finish(slot);
+      } else this.events.misses++;
+    }
+    this.ctx.update();
+  }
+
   flip(slot, index) {
+    if (this.phase === 'race') return this.raceFlip(slot, index);
     if (this.phase !== 'turn' || slot !== this.turn) return;
     const card = this.cards[index];
     if (!card || card.owner !== null || this.flipped.includes(index)) return;
@@ -134,11 +162,12 @@ export class MemoryMatch {
     }
   }
 
-  finish() {
+  /** The end: `first` cleared the board in a Race; otherwise most pairs wins. */
+  finish(first) {
     this.clearTimer();
     this.flipped = [];
     const [a, b] = this.scores;
-    this.winner = a === b ? null : a > b ? 0 : 1;
+    this.winner = first !== undefined ? first : a === b ? null : a > b ? 0 : 1;
     this.draw = this.winner === null;
     this.phase = 'over';
     this.ctx.update();
@@ -158,8 +187,10 @@ export class MemoryMatch {
     if (input.type === 'flip') this.flip(slot, input.index);
   }
 
-  view() {
+  /** `viewer`: whose screen (null for the TV). In a Race each board is your own until the end. */
+  view(viewer) {
     const playing = Boolean(this.cards);
+    const racing = playing && this.race && this.phase !== 'over';
     const [cols, rows] = gridOf(this.settings.cards);
     return {
       phase: this.phase,
@@ -168,9 +199,16 @@ export class MemoryMatch {
       cols,
       rows,
       // Face-down cards don't reveal their face to anyone.
-      cards: playing
-        ? this.cards.map((c, i) => (c.owner !== null || this.flipped.includes(i) || this.phase === 'over' ? { face: c.face, owner: c.owner, up: true } : { up: false }))
-        : null,
+      cards: !playing
+        ? null
+        : racing
+          ? this.cards.map((c, i) => {
+            if (viewer === null) return { up: false };
+            if (this.found[viewer].has(i)) return { face: c.face, owner: viewer, up: true };
+            return this.mine[viewer].includes(i) ? { face: c.face, owner: null, up: true } : { up: false };
+          })
+          : this.cards.map((c, i) => (c.owner !== null || this.flipped.includes(i) || this.phase === 'over' ? { face: c.face, owner: c.owner, up: true } : { up: false })),
+      race: Boolean(this.race),
       flipped: playing ? this.flipped : [],
       turn: this.turn,
       scores: this.scores,
@@ -181,18 +219,18 @@ export class MemoryMatch {
       lastMatch: this.lastMatch || null,
       events: this.events || null,
       timeLeftMs: this.phase === 'turn' && this.phaseEnds !== null ? Math.max(0, this.phaseEnds - this.ctx.now()) : 0,
-      timed: this.settings.turnSeconds > 0,
+      timed: this.settings.turnSeconds > 0 && !this.race,
       turnMs: this.settings.turnSeconds * 1000,
       countdown: this.phase === 'countdown' ? Math.ceil(Math.max(0, this.phaseEnds - this.ctx.now()) / 1000) : 0,
     };
   }
 
   hostView() {
-    return Object.assign(this.view(), { players: this.ctx.players });
+    return Object.assign(this.view(null), { players: this.ctx.players });
   }
 
   playerView(slot) {
-    return Object.assign(this.view(), { you: slot });
+    return Object.assign(this.view(slot), { you: slot });
   }
 }
 
