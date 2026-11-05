@@ -5,9 +5,10 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
 const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', ...REALTIME];
-const SOON = ['kitchen-rush', 'dungeon-duo', 'marble-maze'];
+const SOON = [];
+const COOP = ['kitchen-rush', 'dungeon-duo', 'marble-maze']; // (the computer as your teammate: nobody to beat)
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -240,7 +241,7 @@ test('Dice Party: the computer decides what to hold once a roll, and doesn\'t fl
 });
 
 test('action games and Word Hunt: Hard beats Easy, and every game ends', () => {
-  for (const id of REALTIME) hardBeatsEasy(id, 6, 4); // (the games roll their own dice: a few to be sure)
+  for (const id of REALTIME.filter((x) => !COOP.includes(x))) hardBeatsEasy(id, 6, 4); // (the games roll their own dice: a few to be sure)
 });
 
 test('Pong: the computer still misses its share at full speed (a new roll each time the ball comes)', () => {
@@ -562,4 +563,26 @@ test('minigames: a move meant for one mole or one moment isn\'t played on the ne
   const first = PLAYERS['tug-of-war'](base({}, m, 1000));
   const again = PLAYERS['tug-of-war'](base({}, m, first.t + 1));
   assert.ok(again.t >= first.t + 500, JSON.stringify([first, again]));
+});
+
+// ---- the co-op games: the computer as your teammate ----
+
+test('Kitchen Rush: the computer cooks with you (two of it earn stars), and gets dishes out on its own', () => {
+  const pair = play('kitchen-rush', ['hard', 'hard'], { seed: 2, settings: { kitchen: 0 } }).view;
+  assert.ok(pair.stars >= 2, 'stars ' + pair.stars + ', served ' + pair.served);
+  const split = play('kitchen-rush', ['normal', 'normal'], { seed: 3, settings: { kitchen: 1 } }).view;
+  assert.ok(split.served >= 4, 'the Split kitchen, passing over the middle: served ' + split.served);
+  const alone = play('kitchen-rush', ['hard', null], { seed: 4, settings: { kitchen: 0 } }).view;
+  assert.ok(alone.served >= 4, 'with an idle partner: served ' + alone.served);
+});
+
+test('Marble Maze: the computer tilts its half of the board (two of it clear the mazes)', () => {
+  const { view } = play('marble-maze', ['hard', 'hard'], { seed: 1, settings: { levels: 3 } });
+  assert.ok(view.history.filter((h) => h.cleared).length === 3, JSON.stringify(view.history));
+});
+
+test('Dungeon Duo: the computer fights, heals, revives, holds the gate and finds the stairs (two of it win the Easy quest)', () => {
+  let won = 0;
+  for (let seed = 1; seed <= 3; seed++) if (play('dungeon-duo', ['hard', 'normal'], { seed, settings: { difficulty: 1 } }).view.won) won++;
+  assert.ok(won >= 2, 'won ' + won + ' of 3');
 });

@@ -57,7 +57,7 @@ test('against the computer, only games it can play start (and come up at random)
   const { r } = room();
   const vs = listGames().filter((g) => g.vsComputer).map((g) => g.id);
   assert.ok(vs.includes('battleship') && vs.includes('connect-four'));
-  assert.match(r.startGame('marble-maze').error, /computer/);
+  assert.match(r.startGame('draw-duel').error, /computer/);
   for (let i = 0; i < 40; i++) assert.ok(vs.includes(r.pickRandomGame()));
   assert.ok(r.startGame('battleship').ok);
   r.dispose();

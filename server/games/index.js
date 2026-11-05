@@ -49,6 +49,9 @@ import { anagramDuelBot } from './anagram-duel-bot.js';
 import { wordRaceBot } from './word-race-bot.js';
 import { miniBot } from './minis/bots.js';
 import { partyBoardBot } from './party-board-bot.js';
+import { marbleMazeBot } from './marble-maze-bot.js';
+import { kitchenRushBot } from './kitchen-rush-bot.js';
+import { dungeonDuoBot } from './dungeon-duo-bot.js';
 import { bombDuelBot } from './bomb-duel-bot.js';
 import { kartRaceBot } from './kart-race-bot.js';
 import { towerDuelBot } from './tower-duel-bot.js';
@@ -191,12 +194,12 @@ const GAMES = [
     target: { title: 'Match', values: [100, 0, 200], label: (n) => (n ? `First to ${n}` : 'One hand') },
     ...timer('timed', '30 s a turn'),
   }),
-  withSetup(kitchenRush, {
+  withSetup({ ...kitchenRush, bot: kitchenRushBot }, {
     kitchen: { title: 'Kitchen', values: [0, 1, 2], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour'][n] },
     minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
   withSetup({ ...towerDuel, bot: towerDuelBot }, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
-  withSetup(dungeonDuo, {
+  withSetup({ ...dungeonDuo, bot: dungeonDuoBot }, {
     heroes: { title: 'Heroes', values: [0, 1], label: (n) => (n ? 'Player 1 the ✨ Healer, player 2 the 🛡️ Fighter' : 'Player 1 the 🛡️ Fighter, player 2 the ✨ Healer') },
     difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (more hearts, 5 continues, a weaker Warden)' : 'Normal (3 continues)') },
   }),
@@ -220,7 +223,7 @@ const GAMES = [
     level: { title: 'Difficulty', values: [2, 1, 3, 4], label: (n) => `${BOMB_LEVELS[n].name} · ${BOMB_LEVELS[n].modules} modules, ${BOMB_LEVELS[n].ms / 60000} min` },
     bombs: { title: 'Bombs (you swap roles each one)', values: [3, 1, 5], label: (n) => (n === 1 ? 'One bomb' : `${n} bombs`) },
   }),
-  withSetup(marbleMaze, {
+  withSetup({ ...marbleMaze, bot: marbleMazeBot }, {
     levels: { title: 'Mazes', values: [3, 5, 1], label: (n) => (n === 1 ? 'One maze' : n === MAZE_LEVELS.length ? `All ${n} mazes` : `${n} mazes`) },
     controls: { title: 'Who tilts what', values: [1, 2], label: (n) => (n === 1 ? 'Split: one ↔, one ↕' : 'Shared: both steer') },
   }),
@@ -254,7 +257,6 @@ export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
 
 /** Games the computer opponent is planned for: "⏳ Coming soon" in the lobby while it's seated. */
 const BOT_SOON = new Set([
-  'kitchen-rush', 'dungeon-duo', 'marble-maze', // and a teammate in the co-op games
 ]);
 
 /** Games for the lobby, grouped by category (in CATEGORIES order) so lists and controller focus agree. */
