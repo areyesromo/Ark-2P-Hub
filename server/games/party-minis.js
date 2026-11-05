@@ -12,7 +12,7 @@ export const STYLES = ['mix', '2d', '3d'];
 
 export function poolFor(pool, style, players = []) {
   // A phone-only minigame (Bowling Bash: you swipe) never comes up with a controller seated.
-  if (players.some((p) => p && p.local)) pool = pool.filter((m) => !m.phoneOnly);
+  if (players.some((p) => p && p.local && !p.bot)) pool = pool.filter((m) => !m.phoneOnly); // (the computer plays them all)
   const one = pool.filter((m) => m.id === style);
   if (one.length) return one;
   const picked = style === '2d' || style === '3d' ? pool.filter((m) => m.look === style) : pool;

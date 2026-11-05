@@ -169,7 +169,7 @@
       return '<div class="pb-msg">🎭 Pick your character</div><div class="pb-opts">' + [0, 1].map(function (slot) {
         const picked = v.pick.picks[slot];
         if (picked) return '<span>' + nameOf(v, slot) + ': ' + CHARACTER[picked] + ' ✅</span>';
-        if (!v.localPlayers[slot]) return '<span>' + nameOf(v, slot) + ': picking on their phone…</span>';
+        if (!v.localPlayers[slot]) return '<span>' + nameOf(v, slot) + ': picking…</span>'; // (on a phone, or the computer)
         return '<span>' + nameOf(v, slot) + ': ' + v.pick.options.map(function (c, i) {
           return '<b class="' + (cursors[slot] === i ? 'cur' : '') + '">' + CHARACTER[c] + '</b>';
         }).join(' ') + '</span>';

@@ -5,9 +5,9 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem'];
 const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', ...REALTIME];
-const SOON = ['party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
+const SOON = ['kitchen-rush', 'dungeon-duo', 'marble-maze'];
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -447,4 +447,119 @@ test('Word Race: the computer finds everyday words (Easy fewer than Hard), and t
   const words = g.result.tally.map((t) => t.length);
   assert.ok(words[0] > words[1], JSON.stringify(words));
   assert.ok(words[0] < 60 && words[1] >= 1, 'human-sized: ' + JSON.stringify(words));
+});
+
+// ---- the minigames (Micro Mayhem, Party Minigames, Party Board's rounds) ----
+
+/** One minigame, the computer in the seats given levels (null: that player does nothing). */
+async function oneMini(id, levels, seed = 1) {
+  const { MICROS, PARTIES } = await import('../server/games/minis/index.js');
+  const { MiniGame } = await import('../server/games/minis/runner.js');
+  const { miniBot } = await import('../server/games/minis/bots.js');
+  const def = [...MICROS, ...PARTIES].find((d) => d.id === id);
+  const ctx = fakeCtx();
+  const g = new MiniGame(ctx, [def], seeded(seed));
+  g.isOver = function () { return this.count >= 1; };
+  g.start();
+  const rng = seeded(seed + 1);
+  const memory = [{}, {}];
+  const pending = [null, null];
+  let now = 0;
+  let quickest = Infinity;
+  const ask = (slot) => (levels[slot] ? miniBot(g.botView(slot), levels[slot], rng, memory[slot]) : null);
+  while (g.phase !== 'over' && now < 120000) {
+    for (const slot of [0, 1]) {
+      const move = ask(slot);
+      if (!move) pending[slot] = null;
+      else if (!pending[slot]) pending[slot] = { at: now + move.botDelayMs, move };
+      if (move) quickest = Math.min(quickest, move.botDelayMs);
+    }
+    ctx.advance(16);
+    now += 16;
+    for (const slot of [0, 1]) {
+      if (!pending[slot] || pending[slot].at > now) continue;
+      const { move } = pending[slot];
+      pending[slot] = null;
+      const fresh = ask(slot);
+      if (!fresh || (move.botFor !== undefined && fresh.botFor !== move.botFor)) continue;
+      const { botDelayMs, botFor, ...input } = move;
+      g.onInput(slot, input);
+    }
+  }
+  return { def, g, result: g.lastResult, quickest };
+}
+
+test('minigames: the computer has a player for every one, beats (or passes, alone) someone who does nothing, and never spins', async () => {
+  const { MICROS, PARTIES } = await import('../server/games/minis/index.js');
+  const { PLAYERS } = await import('../server/games/minis/bots.js');
+  for (const def of [...MICROS, ...PARTIES]) {
+    assert.ok(PLAYERS[def.id], 'a player for ' + def.id);
+    const { result, quickest } = await oneMini(def.id, ['normal', null], 3);
+    assert.ok(result, def.id + ' finished');
+    assert.ok(quickest >= 30, def.id + ': never a move straight back (a refused one spinning): ' + quickest);
+    if (def.kind === 'micro') assert.equal(result.pass[0], true, def.id + ' passed');
+    else assert.equal(result.winner, 0, def.id + ' won: ' + JSON.stringify(result));
+  }
+});
+
+test('minigames: Hard beats Easy where skill decides it', async () => {
+  for (const id of ['balloon', 'quick-draw', 'tug-of-war', 'whack-a-mole', 'reflex-grid', 'hurdle-dash', 'laser-dodge', 'mirror-me', 'sword-duel']) {
+    let wins = 0;
+    for (let seed = 1; seed <= 4; seed++) {
+      const flip = seed % 2;
+      const { result } = await oneMini(id, flip ? ['easy', 'hard'] : ['hard', 'easy'], seed);
+      if (result.winner === (flip ? 1 : 0)) wins++;
+    }
+    assert.ok(wins >= 3, id + ': Hard won ' + wins + ' of 4');
+  }
+});
+
+test('minigames: the computer sees its own screen plus the clock (no hidden glass, shape or pick)', async () => {
+  const { PARTIES } = await import('../server/games/minis/index.js');
+  const { MiniGame } = await import('../server/games/minis/runner.js');
+  for (const id of ['mirror-me', 'glass-bridge', 'penalty', 'memory-path', 'safe-cracker']) {
+    const ctx = fakeCtx();
+    const g = new MiniGame(ctx, [PARTIES.find((d) => d.id === id)]);
+    g.start();
+    g.onInput(0, { type: 'ready' });
+    g.onInput(1, { type: 'ready' });
+    ctx.advance(3500);
+    const { elapsedMs, ...seen } = g.botView(1);
+    assert.equal(elapsedMs, 3500, id);
+    assert.deepEqual(seen, g.playerView(1), id);
+  }
+});
+
+test('the party games: with the computer in the other seat, the phone-only minigames still come up, and the TV doesn\'t take it for a controller', async () => {
+  const { poolFor } = await import('../server/games/party-minis.js');
+  const { PARTIES } = await import('../server/games/minis/index.js');
+  const ids = poolFor(PARTIES, 'mix', [{ local: false }, { local: true, bot: 'hard' }]).map((d) => d.id);
+  assert.ok(ids.includes('bowling') && ids.includes('sword-duel'));
+  assert.ok(!poolFor(PARTIES, 'mix', [{ local: false }, { local: true }]).some((d) => d.id === 'bowling'), 'a controller: not those');
+  const ctx = fakeCtx();
+  ctx.players[1].local = true;
+  ctx.players[1].bot = 'normal';
+  const g = getGame('party-board').create(ctx);
+  g.start();
+  g.onInput(0, { type: 'go' });
+  assert.deepEqual(g.hostView().localPlayers, [false, false]);
+});
+
+test('minigames: a move meant for one mole or one moment isn\'t played on the next (Whack-a-Mole, Sword Duel, Tug of War)', async () => {
+  const { PLAYERS } = await import('../server/games/minis/bots.js');
+  const base = (s, m = {}, el = 1000) => ({ s, you: 1, el, level: 'hard', L: { think: 1, slip: 0, timing: 0, aim: 0 }, rng: () => 0.5, m, react: () => 250, at: (t) => ({ botDelayMs: Math.max(0, t - el) }) });
+  // Whack-a-Mole: the whack names its mole (a new one up in the same hole isn't hit by it).
+  const holes = new Array(9).fill(null);
+  holes[4] = { id: 17, who: 'gold', left: 900 };
+  assert.equal(PLAYERS['whack-a-mole'](base({ holes })).botFor, 17);
+  // Sword Duel: jumping the gun is for the wait; it isn't played once the arrow's up.
+  const slip = { ...base({ stage: 'wait', n: 2, out: [false, false], dir: null }), L: { think: 1, slip: 1, timing: 0, aim: 0 }, rng: () => 0.01 };
+  const early = PLAYERS['sword-duel'](slip);
+  const go = PLAYERS['sword-duel']({ ...slip, s: { stage: 'go', n: 2, out: [false, false], dir: 'left' } });
+  assert.ok(early && go && early.botFor !== go.botFor, JSON.stringify([early, go]));
+  // Tug of War: once a beat's pull is due, the next is for the next beat (never the same one again).
+  const m = {};
+  const first = PLAYERS['tug-of-war'](base({}, m, 1000));
+  const again = PLAYERS['tug-of-war'](base({}, m, first.t + 1));
+  assert.ok(again.t >= first.t + 500, JSON.stringify([first, again]));
 });

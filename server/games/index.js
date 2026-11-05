@@ -47,6 +47,8 @@ import { crazyEightsBot } from './crazy-eights-bot.js';
 import { liarsDiceBot } from './liars-dice-bot.js';
 import { anagramDuelBot } from './anagram-duel-bot.js';
 import { wordRaceBot } from './word-race-bot.js';
+import { miniBot } from './minis/bots.js';
+import { partyBoardBot } from './party-board-bot.js';
 import { bombDuelBot } from './bomb-duel-bot.js';
 import { kartRaceBot } from './kart-race-bot.js';
 import { towerDuelBot } from './tower-duel-bot.js';
@@ -128,6 +130,9 @@ const timer = (usual, times) => ({
   timer: { title: 'Timer', values: usual === 'off' ? ['off', 'timed'] : ['timed', 'off'], label: (k) => (k === 'off' ? 'No timer: it waits for you' : `⏱ Timed: ${times}`) },
 });
 
+/** Party Minigames and Micro Mayhem: the computer is the minigame player (minis/bots.js). */
+const minigamesBot = (view, level, rng, retries, memory) => miniBot(view, level, rng, memory);
+
 const GAMES = [
   withSetup({ ...reactionDuel, bot: reactionDuelBot }, firstTo('Points to win', [3, 5, 7])),
   withSetup({ ...rockPaperScissors, bot: rpsBot }, firstTo('Points to win', [3, 5, 7])),
@@ -142,7 +147,7 @@ const GAMES = [
   withSetup({ ...snake, bot: snakeBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...tanks, bot: tanksBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...sumo, bot: sumoBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
-  withSetup(partyBoard, {
+  withSetup({ ...partyBoard, bot: partyBoardBot }, {
     map: {
       title: 'Map',
       values: ['random', 'island', 'lagoons', 'pipes', 'skybridges', 'haunted', 'market', 'volcano'],
@@ -155,7 +160,7 @@ const GAMES = [
     tiles: { title: 'Tile art', values: ['art', 'light', 'classic'], label: (v) => ({ art: '⚙️ Steampunk (3D models)', light: '⚙️ Steampunk (light, for slower TVs)', classic: '🎨 Classic colours' })[v] },
     harsh: { title: 'Hazards', values: [0, 1], label: (h) => (h ? '💀 Harsh mode (⚡ 💀 🌪️ spaces)' : 'Normal spaces') },
   }),
-  withSetup(partyMinis, {
+  withSetup({ ...partyMinis, bot: minigamesBot }, {
     ...firstTo('Wins needed', [3, 4, 5]),
     // A mix, or just one minigame over and over (to practise it, or a favourite).
     style: {
@@ -164,7 +169,7 @@ const GAMES = [
       label: (s) => ({ mix: '🎲 Random mix', '2d': '🎲 Random 2D', '3d': '🎲 Random 3D' })[s] || `🎯 ${PARTIES.find((m) => m.id === s).name}`,
     },
   }),
-  withSetup(microMayhem, {
+  withSetup({ ...microMayhem, bot: minigamesBot }, {
     lives: { title: 'Lives', values: [3, 5], label: (n) => `${n} lives` },
     pace: { title: 'Pace', values: ['normal', 'fast'], label: (p) => (p === 'fast' ? 'Fast (starts at speed 3)' : 'Normal') },
   }),
@@ -249,7 +254,6 @@ export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
 
 /** Games the computer opponent is planned for: "⏳ Coming soon" in the lobby while it's seated. */
 const BOT_SOON = new Set([
-  'party-board', 'party-minis', 'micro-mayhem', // the party games
   'kitchen-rush', 'dungeon-duo', 'marble-maze', // and a teammate in the co-op games
 ]);
 

@@ -333,7 +333,7 @@
       host.q.innerHTML = opts.question(s);
       host.sides.forEach(function (el, slot) {
         el.innerHTML = '<div class="who">' + nameOf({ players: host.players }, slot) + '</div>' + mark(s.res[slot]) +
-          grid(s, slot, host.players[slot] && host.players[slot].local, false);
+          grid(s, slot, host.players[slot] && host.players[slot].local && !host.players[slot].bot, false);
       });
     }
 

@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.28
+
+- 🤖 The computer now plays Party Board, Party Minigames and Micro Mayhem, every minigame, at
+  Easy, Normal or Hard. It reacts and times its taps like a person, remembers paths and shapes about
+  as well as one, and on the board heads for the star and uses its items.
+- With the computer in the other seat, the phone-only minigames (Bowling Bash, Sword Duel, Pour
+  It, Mirror Me) still come up, and the TV no longer shows a controller cursor for it.
+
 ## 0.1.27
 
 - 🤖 The computer now plays Crazy Eights, Liar's Dice, Anagram Duel and Word Race, at Easy, Normal
