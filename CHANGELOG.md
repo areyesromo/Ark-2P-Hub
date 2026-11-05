@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.29
+
+- 🤖 The computer is now a teammate in the co-op games: Kitchen Rush (it cooks, plates up and
+  serves, and passes things over in the Split kitchen), Dungeon Duo (it fights, heals, revives you,
+  holds the gate and finds the stairs) and Marble Maze (it tilts its half of the board). Easy,
+  Normal or Hard, as in the other games.
+- Every game that can have a computer player now has one: the drawing and bluffing games still
+  need a person.
+
 ## 0.1.28
 
 - 🤖 The computer now plays Party Board, Party Minigames and Micro Mayhem, every minigame, at

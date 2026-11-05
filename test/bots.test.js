@@ -5,9 +5,10 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
 const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', ...REALTIME];
-const SOON = ['kitchen-rush', 'dungeon-duo', 'marble-maze'];
+const SOON = [];
+const COOP = ['kitchen-rush', 'dungeon-duo', 'marble-maze']; // (the computer as your teammate: nobody to beat)
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -240,7 +241,7 @@ test('Dice Party: the computer decides what to hold once a roll, and doesn\'t fl
 });
 
 test('action games and Word Hunt: Hard beats Easy, and every game ends', () => {
-  for (const id of REALTIME) hardBeatsEasy(id, 6, 4); // (the games roll their own dice: a few to be sure)
+  for (const id of REALTIME.filter((x) => !COOP.includes(x))) hardBeatsEasy(id, 6, 4); // (the games roll their own dice: a few to be sure)
 });
 
 test('Pong: the computer still misses its share at full speed (a new roll each time the ball comes)', () => {
@@ -562,4 +563,95 @@ test('minigames: a move meant for one mole or one moment isn\'t played on the ne
   const first = PLAYERS['tug-of-war'](base({}, m, 1000));
   const again = PLAYERS['tug-of-war'](base({}, m, first.t + 1));
   assert.ok(again.t >= first.t + 500, JSON.stringify([first, again]));
+});
+
+// ---- the co-op games: the computer as your teammate ----
+
+test('Kitchen Rush: the computer cooks with you (two of it earn stars), and gets dishes out on its own', () => {
+  const pair = play('kitchen-rush', ['hard', 'hard'], { seed: 2, settings: { kitchen: 0 } }).view;
+  assert.ok(pair.stars >= 2, 'stars ' + pair.stars + ', served ' + pair.served);
+  const split = play('kitchen-rush', ['normal', 'normal'], { seed: 3, settings: { kitchen: 1 } }).view;
+  assert.ok(split.served >= 4, 'the Split kitchen, passing over the middle: served ' + split.served);
+  const alone = play('kitchen-rush', ['hard', null], { seed: 4, settings: { kitchen: 0 } }).view;
+  assert.ok(alone.served >= 4, 'with an idle partner: served ' + alone.served);
+});
+
+test('Marble Maze: the computer tilts its half of the board (two of it clear the mazes)', () => {
+  const { view } = play('marble-maze', ['hard', 'hard'], { seed: 1, settings: { levels: 3 } });
+  assert.ok(view.history.filter((h) => h.cleared).length === 3, JSON.stringify(view.history));
+});
+
+test('Dungeon Duo: the computer fights, heals, revives, holds the gate and finds the stairs (two of it win the Easy quest)', () => {
+  let won = 0;
+  for (let seed = 1; seed <= 3; seed++) if (play('dungeon-duo', ['hard', 'normal'], { seed, settings: { difficulty: 1 } }).view.won) won++;
+  assert.ok(won >= 2, 'won ' + won + ' of 3');
+});
+
+/** Run one game with the computer in seat 1 only (seat 0 does nothing), for `ms`. */
+function withTeammate(g, ctx, id, level, ms, memory = {}) {
+  const def = getGame(id);
+  let pending = null;
+  let now = 0;
+  while (now < ms) {
+    const move = def.bot(g.playerView(1), level, Math.random, 0, memory);
+    if (!move) pending = null;
+    else if (!pending) pending = { at: now + move.botDelayMs, move };
+    ctx.advance(16);
+    now += 16;
+    if (pending && pending.at <= now) {
+      const { move: m } = pending;
+      pending = null;
+      const fresh = def.bot(g.playerView(1), level, Math.random, 0, memory);
+      if (!fresh || (m.botFor !== undefined && fresh.botFor !== m.botFor)) continue;
+      const { botDelayMs, botFor, ...input } = m;
+      g.onInput(1, input);
+    }
+  }
+}
+
+test('Dungeon Duo: past the gate with the key, the computer opens the door (it doesn\'t go back to stand on a plate)', async () => {
+  const { DungeonDuo } = await import('../server/games/dungeon-duo.js');
+  const { FLOORS } = await import('../server/games/dungeon-duo-floors.js');
+  const ctx = fakeCtx();
+  ctx.players[1].bot = 'normal';
+  const g = new DungeonDuo(ctx, Math.random, [FLOORS[1]]);
+  g.start();
+  ctx.advance(3500);
+  // Both through the gate, the key in hand (you stand about).
+  g.map.forEach((row) => row.forEach((c, x) => { if (c === 'K' || 'skb'.includes(c)) row[x] = ' '; }));
+  g.enemies = [];
+  g.keys = 1;
+  Object.assign(g.heroes[0], { x: 10.5, y: 2.5 });
+  Object.assign(g.heroes[1], { x: 11.5, y: 2.5 });
+  withTeammate(g, ctx, 'dungeon-duo', 'normal', 25000);
+  assert.equal(g.events.doors, 1, 'the door: ' + JSON.stringify([g.heroes[1].x, g.heroes[1].y]));
+});
+
+test('Kitchen Rush: the computer clears burnt meat off the stoves (it doesn\'t stand there holding raw meat)', async () => {
+  const ctx = fakeCtx();
+  ctx.players[1].bot = 'hard';
+  const g = getGame('kitchen-rush').create(ctx);
+  g.start();
+  g.onInput(0, { type: 'go' });
+  const k = g.game;
+  ctx.advance(3500);
+  k.items['10,0'] = { kind: 'meat', state: 'burnt', cook: 99999 };
+  k.items['11,0'] = { kind: 'meat', state: 'burnt', cook: 99999 };
+  withTeammate(g, ctx, 'kitchen-rush', 'hard', 60000);
+  assert.ok(k.events.binned >= 1 && k.served >= 1, JSON.stringify({ binned: k.events.binned, served: k.served }));
+});
+
+test('co-op: between mazes and while down the computer lets go of the stick (no tilt left on, no walking off)', async () => {
+  const ctx = fakeCtx();
+  ctx.players[1].bot = 'hard';
+  const g = getGame('marble-maze').create(ctx);
+  g.start();
+  g.onInput(0, { type: 'go' });
+  const m = g.game;
+  ctx.advance(3500);
+  const memory = {}; // (the room keeps the computer's memory all game)
+  withTeammate(g, ctx, 'marble-maze', 'hard', 2000, memory);
+  m.endLevel(true); // (cleared: the result card)
+  withTeammate(g, ctx, 'marble-maze', 'hard', 1500, memory);
+  assert.deepEqual(m.controls[1], { x: 0, y: 0 });
 });
