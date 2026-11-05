@@ -8,8 +8,9 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - 🤖 The computer now plays Volley Blobs, Brick Breaker Duel, Rally Tennis, Sumo, Asteroid Duel and
   Mini Golf, at Easy, Normal or Hard.
-- 🤖 The computer reacts like a person in the action games: never faster than a quick player (on
-  Hard), with a person's spread of reaction times, a wobble in its aim and the odd misjudgement.
+- 🤖 The computer reacts like a person in the action games: it answers what it sees a human
+  reaction time later (a quick player's on Hard, never faster), times what it sees coming with a
+  person's error, and has a wobble in its aim and the odd misjudgement.
 - With the computer seated, the games it's learning next say ⏳ Coming soon: Falling Blocks Battle,
   Bomb Duel, Kart Race, Tower Defence Duel, the card and word games, the party games, and a
   teammate in the co-op games.

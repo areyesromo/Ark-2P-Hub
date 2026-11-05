@@ -55,11 +55,13 @@ function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs
   for (const [key, value] of Object.entries(settings)) g.onInput(0, { type: 'setting', key, value });
   if (g.hostView().phase === 'setup') g.onInput(0, { type: 'go' });
   let now = 0;
+  const ask = (slot) => (levels[slot] ? def.bot(viewOf(slot), levels[slot], rng, 0, memory[slot]) : human ? human(g.playerView(slot), slot, rng) : null);
   while (g.hostView().phase !== 'over' && now < limitMs) {
+    // As the room does: a look on every update; a waiting move it no longer wants is dropped.
     for (const slot of [0, 1]) {
-      if (pending[slot]) continue;
-      const move = levels[slot] ? def.bot(viewOf(slot), levels[slot], rng, 0, memory[slot]) : human ? human(g.playerView(slot), slot, rng) : null;
-      if (move) pending[slot] = { at: now + (move.botDelayMs ?? 1100), move };
+      const move = ask(slot);
+      if (!move) pending[slot] = null;
+      else if (!pending[slot]) pending[slot] = { at: now + (move.botDelayMs ?? 1100), move };
     }
     const next = pending.filter(Boolean).map((p) => p.at);
     // (the room asks on every update: in an action game, never let more than a frame go by unasked)
@@ -69,11 +71,13 @@ function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs
     now += step;
     for (const slot of [0, 1]) {
       if (!pending[slot] || pending[slot].at > now) continue;
+      const { move: decided } = pending[slot];
       pending[slot] = null;
-      // A fresh look, as the room does when the pause is over.
-      const move = levels[slot] ? def.bot(viewOf(slot), levels[slot], rng, 0, memory[slot]) : human ? human(g.playerView(slot), slot, rng) : null;
-      if (!move) continue;
-      const { botDelayMs, ...input } = move;
+      // As the room does: it plays what it decided when it looked, if it still wants to move (a
+      // move it timed, botAnticipate, it judges afresh).
+      const fresh = ask(slot);
+      if (!fresh) continue;
+      const { botDelayMs, botAnticipate, ...input } = decided.botAnticipate ? fresh : decided;
       const before = JSON.stringify(g.hostView());
       g.onInput(slot, input);
       if (JSON.stringify(g.hostView()) === before) stats.refused++;
@@ -293,6 +297,7 @@ test('the computer never reacts faster than a person could (Pong, Air Hockey, Ta
     pong: { phase: 'play', you: 1, ball: { x: 8, y: 4.5, vx: 10, vy: 2 }, paddles: [4.5, 4.5] },
     'air-hockey': { phase: 'play', you: 0, puck: { x: 5, y: 4, vx: -3, vy: 0 }, mallets: [{ x: 2, y: 4.5 }, { x: 14, y: 4.5 }] },
     'reaction-duel': { phase: 'go', you: 0 },
+    tanks: { phase: 'play', you: 0, ready: true, field: { w: 16, h: 9 }, obstacles: [], shells: [], tanks: [{ x: 2, y: 4.5, angle: 0, alive: true }, { x: 14, y: 4.5, angle: Math.PI, alive: true }] },
   };
   for (const [id, view] of Object.entries(views)) {
     for (const level of ['easy', 'normal', 'hard']) {
@@ -302,4 +307,27 @@ test('the computer never reacts faster than a person could (Pong, Air Hockey, Ta
       }
     }
   }
+});
+
+test('Snake Battle: the computer really does take in your snake late (from the game\'s live views)', async () => {
+  const { laggedSight } = await import('../server/games/snake-bot.js');
+  const ctx = fakeCtx();
+  ctx.players.forEach((p) => (p.local = true));
+  const g = getGame('snake').create(ctx);
+  g.start();
+  g.onInput(0, { type: 'go' });
+  const memory = {};
+  let lagged = 0;
+  let looks = 0;
+  for (let i = 0; i < 400; i++) {
+    ctx.advance(16);
+    const v = g.playerView(0);
+    if (v.phase !== 'play') continue;
+    const them = v.snakes[1];
+    const snap = { body: them.body.map((c) => c.slice()), crashed: them.crashed };
+    const seen = laggedSight(memory, 'snake', v.round, v.snakes[0].body[0].join(), snap, 270, v.tickMs);
+    looks++;
+    if (seen.body[0].join() !== them.body[0].join()) lagged++;
+  }
+  assert.ok(looks > 50 && lagged / looks > 0.6, lagged + ' of ' + looks + ' looks were behind');
 });

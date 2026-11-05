@@ -33,9 +33,13 @@ export function brickDuelBot(view, level, rng = Math.random, retries = 0, memory
     x = ((x % (2 * span)) + 2 * span) % (2 * span);
     if (x > span) x = 2 * span - x;
     x += r;
-    // One decision per ball that comes down (a slip of the same size all the way, as a person's).
-    const id = Math.round(ball.vx * 100) + ':' + side.broken;
-    if (!memory.brick || memory.brick.id !== id) {
+    // One decision per ball that comes down (a slip of the same size all the way, as a person's):
+    // a new one each time a ball turns to come down.
+    const i = side.balls.indexOf(ball);
+    const down = side.balls.map((x) => !x.held && x.vy > 0);
+    const fresh = !memory.brick || memory.brick.i !== i || !(memory.brick.down || [])[i];
+    if (memory.brick) memory.brick.down = down;
+    if (fresh) {
       const half = side.paddleW / 2;
       let off;
       if (rng() < MISS[level]) off = (rng() < 0.5 ? -1 : 1) * (half + r + 0.1 + rng() * 0.4); // misjudged
@@ -46,7 +50,7 @@ export function brickDuelBot(view, level, rng = Math.random, retries = 0, memory
         const want = Math.max(-1, Math.min(1, ((aim + 0.5) - x) / 3)); // -1: hard left .. 1: hard right
         off = -want * half * 0.7; // (hit on the right of the paddle to send it left, and so on)
       }
-      memory.brick = { id, off };
+      memory.brick = { i, off, down };
     }
     target = x + memory.brick.off;
   }

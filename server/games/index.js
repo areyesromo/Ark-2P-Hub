@@ -86,7 +86,9 @@ import { withSetup } from './options.js';
  * Given the computer's own view and its level ('easy', 'normal', 'hard'), it gives its next input,
  * or null when it has no move. The view is playerView, or botView(slot) if the game has one (a
  * quiz adds the answer there, for the computer to get right as often as its level says). The input
- * may carry botDelayMs, its pause before playing it (a reaction time); memory is an object kept
+ * may carry botDelayMs, its pause before playing it (a reaction time: what it worked out when it
+ * looked is what it plays then; with botAnticipate, a move it saw coming and timed, such as its
+ * own planned turn, it judges afresh at that moment); memory is an object kept
  * for the match (what it has seen, how you play); retries counts the times the same move came
  * back (the game refused it). The room seats it as a controller player (ctx.players[slot].bot
  * is its level) and plays its moves after a pause (Room#driveBot). Games without one can't be

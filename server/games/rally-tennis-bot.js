@@ -3,13 +3,14 @@
  * but an anticipation: you watch the ball come and swing when it gets to you, a little early or
  * late each time. So it swings at the right moment give or take its level's timing error (a new
  * one each shot), and aims away from you on the harder levels.
- *   easy:   timing off by about 170 ms (about one swing in eight a whiff), never aims.
- *   normal: about 120 ms (a whiff now and then), aims now and then.
- *   hard:   about 90 ms (hardly ever a whiff, often spot on), and aims for the side you're not on.
+ *   easy:   timing off by about 190 ms (about one swing in six a whiff), never aims.
+ *   normal: about 150 ms (one in ten), aims now and then.
+ *   hard:   about 125 ms (one in twenty, and wide ones it aims can go out), and aims for the side
+ *           you're not on.
  */
 import { reactionMs } from './bot-human.js';
 
-const LEVEL = { easy: { timing: 170, aims: 0 }, normal: { timing: 120, aims: 0.4 }, hard: { timing: 90, aims: 0.9 } };
+const LEVEL = { easy: { timing: 190, aims: 0 }, normal: { timing: 150, aims: 0.4 }, hard: { timing: 125, aims: 0.9 } };
 
 export function rallyTennisBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];

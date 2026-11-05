@@ -13,8 +13,10 @@ import { reactionMs } from './bot-human.js';
 const SLIP = { easy: 1.1, normal: 0.6, hard: 0.15 }; // how far off it may judge where the ball comes down
 
 export function volleyBlobsBot(view, level, rng = Math.random, retries = 0, memory = {}) {
-  if (!view || !(level in SLIP) || view.phase !== 'play' || !view.ball || !view.blobs) return null;
+  if (!view || !(level in SLIP) || !view.ball || !view.blobs) return null;
   const me = view.you;
+  // Between points: let go of the stick (a held direction carries on into the next rally).
+  if (view.phase !== 'play') return view.blobs[me].move ? { type: 'move', x: 0, botDelayMs: reactionMs(level, rng) } : null;
   const b = view.ball;
   const blob = view.blobs[me];
   const g = view.gravity || 12;

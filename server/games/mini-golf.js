@@ -593,7 +593,7 @@ export class MiniGolf {
  * Where a putt from `from` ends up on `hole`, by the game's own physics (for the computer
  * opponent, mini-golf-bot.js): { x, y, holed, water }. `millAngle`: the windmill's angle now.
  */
-export function simulatePutt(hole, from, angle, power, millAngle = 0, maxMs = 5000) {
+export function simulatePutt(hole, from, angle, power, millAngle = 0, maxMs = 4000) {
   const sim = Object.create(MiniGolf.prototype);
   Object.defineProperty(sim, 'hole', { value: hole });
   sim.walls = wallsOf(hole);

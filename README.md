@@ -35,10 +35,12 @@ tap **Easy**, **Normal** or **Hard** under it on the TV (or on your phone's lobb
 on a controller). While it's seated, the games it can't play are greyed out (the ones it's
 learning next say **⏳ Coming soon**). Easy makes mistakes and forgets, Normal plays sensibly, and
 Hard looks further ahead (board games), remembers every card (Memory Match), reads your habits
-(Rock Paper Scissors) and knows more answers. In the action games it reacts like a person, never
-faster: a slow player on Easy (about a third of a second), the average on Normal and a quick one
-on Hard (about a fifth of a second), with a person's spread; its aim wobbles and it misjudges now
-and then, so it can always be beaten. It plays from what its own phone would show, so it never
+(Rock Paper Scissors) and knows more answers. In the action games it answers what it sees no
+faster than a person: it plays what it made of the moment a reaction time later, a slow player's
+on Easy (about a third of a second), the average on Normal, a quick one's on Hard (about a fifth),
+with a person's spread. What it sees coming (a tennis swing, a jump, its own planned turn) it
+times, with a person's error. Its aim wobbles and it misjudges now and then, so it can always be
+beaten. It plays from what its own phone would show, so it never
 peeks at your fleet, your cards or your pick. Games (and tournaments)
 against it don't count in the leaderboard; tap ✕ on its seat to send it away, or just join: whoever
 scans in from the lobby takes its seat.

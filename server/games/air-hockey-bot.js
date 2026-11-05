@@ -4,8 +4,8 @@
  * between the puck and the goal mouth.
  *   easy:   slow to react, unsteady, and only nudges the puck.
  *   normal: quicker, and strikes towards somewhere in your goal mouth (hard to read).
- *   hard:   the same, guards its goal tighter (right in line with the puck), and reacts quicker
- *           (a sharp player's reactions: bot-human.js).
+ *   hard:   the same, guards its goal tighter (right in line with the puck), reacts quicker (a
+ *           sharp player's reactions: bot-human.js), and goes where the puck will be by then.
  */
 import { FIELD } from './air-hockey.js';
 import { reactionMs } from './bot-human.js';
@@ -13,7 +13,7 @@ import { reactionMs } from './bot-human.js';
 const LEVEL = {
   easy: { through: 0, lead: 0, wobble: 0.7, spread: 0, guard: 0.4 },
   normal: { through: 1.1, lead: 0.1, wobble: 0.35, spread: 0.3, guard: 0.6 },
-  hard: { through: 1.1, lead: 0.1, wobble: 0.35, spread: 0.3, guard: 1 },
+  hard: { through: 1.1, lead: 0.22, wobble: 0.35, spread: 0.3, guard: 1 }, // (it leads by about its reaction time: where the puck will be when it gets there)
 };
 
 export function airHockeyBot(view, level, rng = Math.random) {

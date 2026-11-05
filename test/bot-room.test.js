@@ -215,3 +215,25 @@ test('a move the computer no longer wants (the game moved on) is dropped, not pl
   // (a fresh one was only scheduled by a later look)
   r.dispose();
 });
+
+test('the computer answers what it saw a reaction time later, not sooner: the move it worked out then is the one it plays', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const { r } = room();
+  r.startGame('rock-paper-scissors');
+  r.handleInput(0, { type: 'go' });
+  let answer = 'rock';
+  const def = { bot: (view) => (view.phase === 'choose' && !view.yourPick ? { type: 'pick', choice: answer, botDelayMs: 300 } : null) };
+  clearTimeout(r.botTimer); // (the real one's move, waiting)
+  r.botTimer = null;
+  r.botDef = () => def;
+  r.botCache = null;
+  r.driveBot(); // it sees the round: rock, in 300 ms
+  wait(t, 100);
+  answer = 'paper'; // something changes 100 ms later...
+  r.botCache = null;
+  r.pushGameViews();
+  wait(t, 300);
+  // ...it plays what it decided when it looked (a person can't take in the change that fast).
+  assert.equal(r.game.game.picks[1], 'rock');
+  r.dispose();
+});

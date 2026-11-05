@@ -9,10 +9,12 @@
  */
 import { PHYSICS, simulatePutt } from './mini-golf.js';
 
+const THINK_MS = 12; // planning per look, at most
+
 const LEVEL = {
   easy: { angles: 0, powers: 0, slipAngle: 0.07, slipPower: 0.15 },
-  normal: { angles: 32, powers: 5, slipAngle: 0.03, slipPower: 0.07 },
-  hard: { angles: 64, powers: 7, slipAngle: 0.012, slipPower: 0.03 },
+  normal: { angles: 24, powers: 4, slipAngle: 0.03, slipPower: 0.07 },
+  hard: { angles: 40, powers: 6, slipAngle: 0.012, slipPower: 0.03 },
 };
 
 export function miniGolfBot(view, level, rng = Math.random, retries = 0, memory = {}) {
@@ -21,19 +23,34 @@ export function miniGolfBot(view, level, rng = Math.random, retries = 0, memory 
   const b = view.balls[view.you];
   if (b.done || b.holed || b.vx || b.vy) return null;
   const id = view.holeNo + ':' + b.strokes + ':' + b.x + ',' + b.y;
-  if (!memory.golf || memory.golf.id !== id) memory.golf = { id, plan: plan(view, b, level, rng) };
+  if (!memory.golf || memory.golf.id !== id) {
+    // How long it'll take to line up and putt (so it judges the windmill as it'll be then).
+    const aimMs = 900 + rng() * 1200;
+    const puttMs = 700 + rng() * 900;
+    const mill = view.hole.windmill;
+    const millThen = mill ? view.millAngle + (mill.speed * (aimMs + puttMs + 60)) / 1000 : 0;
+    memory.golf = { id, aimMs, puttMs, work: plan(view, b, level, rng, millThen), plan: null };
+  }
   const g = memory.golf;
+  // It thinks it through a little at a time (a few ms each look), so the hub never stalls.
+  if (!g.plan) {
+    const until = Date.now() + THINK_MS;
+    for (let step = g.work.next(); ; step = g.work.next()) {
+      if (step.done) { g.plan = step.value; break; }
+      if (Date.now() > until) return null;
+    }
+  }
   // Line it up first (the TV shows the aim), then putt.
   const off = Math.abs(Math.atan2(Math.sin(b.aim.angle - g.plan.angle), Math.cos(b.aim.angle - g.plan.angle)));
-  if (off > 0.02) return { type: 'aim', angle: g.plan.angle, power: 0, botDelayMs: 900 + rng() * 1200 };
+  if (off > 0.02) return { type: 'aim', angle: g.plan.angle, power: 0, botDelayMs: g.aimMs };
   // The putt itself, with a person's slip.
   const angle = g.plan.angle + gauss(rng) * L.slipAngle;
   const power = Math.max(0.05, Math.min(1, g.plan.power * (1 + gauss(rng) * L.slipPower)));
-  return { type: 'shoot', angle, power, botDelayMs: 700 + rng() * 900 };
+  return { type: 'shoot', angle, power, botDelayMs: g.puttMs };
 }
 
-/** The putt it means to play: { angle, power }. */
-function plan(view, b, level, rng) {
+/** The putt it means to play, { angle, power }, worked out a putt at a time (it yields after each). */
+function* plan(view, b, level, rng, mill) {
   const hole = view.hole;
   const [cx, cy] = hole.cup;
   const direct = Math.atan2(cy - b.y, cx - b.x);
@@ -43,12 +60,12 @@ function plan(view, b, level, rng) {
   const byEye = { angle: direct, power: Math.min(1, (Math.sqrt(2 * PHYSICS.rollDecel * d) * 1.1 + 0.6) / PHYSICS.maxSpeed) };
   if (!L.angles) return byEye;
   // In its head: a fan of angles and powers, the best ending (in the cup, or nearest it).
-  const tried = [{ ...byEye, score: score(simulatePutt(hole, [b.x, b.y], byEye.angle, byEye.power, view.millAngle), cx, cy) }];
+  const tried = [{ ...byEye, score: (yield 0, score(simulatePutt(hole, [b.x, b.y], byEye.angle, byEye.power, mill), cx, cy)) }];
   for (let i = 0; i < L.angles; i++) {
     const angle = direct + ((i / L.angles) * 2 - 1) * Math.PI;
     for (let j = 1; j <= L.powers; j++) {
       const power = j / L.powers;
-      tried.push({ angle, power, score: score(simulatePutt(hole, [b.x, b.y], angle, power, view.millAngle), cx, cy) + rng() * 0.01 });
+      tried.push({ angle, power, score: (yield 0, score(simulatePutt(hole, [b.x, b.y], angle, power, mill), cx, cy)) + rng() * 0.01 });
     }
   }
   tried.sort((a, c) => a.score - c.score);
@@ -59,15 +76,15 @@ function plan(view, b, level, rng) {
     let bestAvg = Infinity;
     for (const c of tried.slice(0, 8)) {
       let sum = 0;
-      for (let k = 0; k < 5; k++) sum += score(simulatePutt(hole, [b.x, b.y], c.angle + gauss(rng) * L.slipAngle, Math.max(0.05, Math.min(1, c.power * (1 + gauss(rng) * L.slipPower))), view.millAngle), cx, cy);
-      if (sum / 5 < bestAvg) { bestAvg = sum / 5; best = c; }
+      for (let k = 0; k < 4; k++) sum += (yield 0, score(simulatePutt(hole, [b.x, b.y], c.angle + gauss(rng) * L.slipAngle, Math.max(0.05, Math.min(1, c.power * (1 + gauss(rng) * L.slipPower))), mill), cx, cy));
+      if (sum / 4 < bestAvg) { bestAvg = sum / 4; best = c; }
     }
   }
   // A finer look round the best one.
-  for (let k = 0; k < 24; k++) {
+  for (let k = 0; k < 16; k++) {
     const angle = best.angle + (rng() * 2 - 1) * (Math.PI / L.angles);
     const power = Math.max(0.05, Math.min(1, best.power + (rng() * 2 - 1) * (0.5 / L.powers)));
-    const s = score(simulatePutt(hole, [b.x, b.y], angle, power, view.millAngle), cx, cy);
+    const s = (yield 0, score(simulatePutt(hole, [b.x, b.y], angle, power, mill), cx, cy));
     if (s < best.score) best = { angle, power, score: s };
   }
   return best;
