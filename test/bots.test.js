@@ -5,8 +5,9 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel'];
-const SOON = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt'];
+const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', ...REALTIME];
+const SOON = [];
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -49,7 +50,7 @@ function play(id, levels, { seed = 1, human = null, settings = {}, limitMs = 30 
       if (move) pending[slot] = { at: now + (move.botDelayMs ?? 1100), move };
     }
     const next = pending.filter(Boolean).map((p) => p.at);
-    const step = next.length ? Math.max(0, Math.min(...next) - now) : 500;
+    const step = next.length ? Math.max(0, Math.min(...next) - now) : REALTIME.includes(id) ? 16 : 500; // (the room asks on every update)
     ctx.advance(step);
     now += step;
     for (const slot of [0, 1]) {
@@ -82,7 +83,7 @@ for (const id of BOT_GAMES.filter((x) => x !== 'battleship')) {
       assert.equal(view.phase, 'over', id + ' ' + level);
       // (both move, but in Reaction Duel the quicker one may win every round before the other taps)
       assert.ok(id === 'reaction-duel' ? stats.moves[0] + stats.moves[1] > 0 : stats.moves[0] > 0 && stats.moves[1] > 0, id + ' both moved');
-      assert.equal(stats.refused, 0, id + ' every move taken');
+      if (!REALTIME.includes(id)) assert.equal(stats.refused, 0, id + ' every move taken'); // (a steer shows a tick later)
     }
   });
 }
@@ -216,4 +217,8 @@ test('Dice Party: the computer decides what to hold once a roll, and doesn\'t fl
     }
     assert.equal(undone, 0, level + ': ' + undone + ' of ' + holds + ' holds undone');
   }
+});
+
+test('action games and Word Hunt: Hard beats Easy, and every game ends', () => {
+  for (const id of REALTIME) hardBeatsEasy(id, 4, 3);
 });

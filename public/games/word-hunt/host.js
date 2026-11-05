@@ -43,7 +43,7 @@
     const marks = [];
     if (v.phase === 'play') {
       [0, 1].forEach(function (slot) {
-        if (!v.players[slot].local) return;
+        if (!v.players[slot].local || v.players[slot].bot) return; // (the computer has no cursor)
         const p = padOf(slot);
         const at = p.y * v.n + p.x;
         marks.push({ slot: slot, cursor: at, from: p.from, to: at });

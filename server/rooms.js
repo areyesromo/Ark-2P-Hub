@@ -349,7 +349,7 @@ export class Room {
       try {
         if (!def || !def.bot || !this.game) return null;
         const view = this.game.botView ? this.game.botView(slot) : this.game.playerView(slot);
-        const key = JSON.stringify(view, (k, v) => (k === 'timeLeftMs' ? undefined : v)) + '|' + (this.botRetries || 0);
+        const key = JSON.stringify(view, (k, v) => (k === 'timeLeftMs' || k === 'timeLeft' ? undefined : v)) + '|' + (this.botRetries || 0);
         if (this.botCache && this.botCache.def === def && this.botCache.key === key) return this.botCache.move;
         const move = def.bot(view, this.players[slot].bot, Math.random, this.botRetries || 0, this.botMemory);
         this.botCache = { def, key, move };

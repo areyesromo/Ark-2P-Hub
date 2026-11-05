@@ -310,6 +310,12 @@ export class TankDuel {
       winner: this.winner,
     };
   }
+
+  /** The computer opponent's view: its controls, plus the field the TV shows everyone (see tanks-bot.js). */
+  botView(slot) {
+    const v = this.hostView();
+    return Object.assign(this.playerView(slot), { field: v.field, obstacles: v.obstacles, tanks: v.tanks, shells: v.shells });
+  }
 }
 
 export default {

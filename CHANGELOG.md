@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.24
+
+- 🤖 The computer now plays the action games too: Pong, Air Hockey, Snake Battle, Light Cycles
+  and Tank Duel, and Word Hunt (it searches the grid like you do), at Easy, Normal or Hard.
+- Air Hockey: a mallet can no longer push the puck through a wall in a corner, and a puck resting
+  in a corner (where no mallet can get behind it) drifts back out after a moment.
+
 ## 0.1.23
 
 - 🤖 The computer now plays Connect Four, Checkers, Dots and Boxes, Mancala, Rock Paper Scissors,
