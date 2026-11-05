@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.26
+
+- 🤖 The computer now plays Falling Blocks Battle, Bomb Duel, Kart Race and Kart Race 3D (races and
+  balloon battles) and Tower Defence Duel, at Easy, Normal or Hard. In Kart Race it readies up on
+  the menus once you have.
+
 ## 0.1.25
 
 - 🤖 The computer now plays Volley Blobs, Brick Breaker Duel, Rally Tennis, Sumo, Asteroid Duel and

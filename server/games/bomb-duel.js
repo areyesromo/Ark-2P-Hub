@@ -402,6 +402,11 @@ export class BombDuel {
   playerView(slot) {
     return Object.assign(this.common(), { you: slot });
   }
+
+  /** The computer opponent's view: its own, plus the way it's holding (see bomb-duel-bot.js). */
+  botView(slot) {
+    return Object.assign(this.playerView(slot), { want: this.players ? this.players[slot].want : null });
+  }
 }
 
 export default {

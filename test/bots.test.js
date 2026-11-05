@@ -5,9 +5,9 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel'];
 const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', ...REALTIME];
-const SOON = ['block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
+const SOON = [ 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -330,4 +330,13 @@ test('Snake Battle: the computer really does take in your snake late (from the g
     if (seen.body[0].join() !== them.body[0].join()) lagged++;
   }
   assert.ok(looks > 50 && lagged / looks > 0.6, lagged + ' of ' + looks + ' looks were behind');
+});
+
+test('Kart Race: the computer fights a balloon battle too, and readies up after you on the menus', () => {
+  // You (sitting still) say go on the standings; it readies after you.
+  const human = (v, slot) => ((v.phase === 'standings' || v.phase === 'setup') && !(v.ready || [])[slot] ? { type: 'go', botDelayMs: 500 } : null);
+  const { view, stats } = play('kart-race', ['hard', null], { seed: 2, human, settings: { mode: 1 } });
+  assert.ok(stats.moves[0] > 0);
+  assert.equal(view.phase, 'over');
+  assert.ok(view.battle, 'a battle');
 });

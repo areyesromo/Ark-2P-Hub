@@ -1130,6 +1130,20 @@ export class KartRace {
   playerView(slot) {
     return Object.assign(this.common(), { you: slot });
   }
+
+  /**
+   * The computer opponent's view (see kart-race-bot.js): its own, plus what a driver reads off the
+   * road on the TV: points along the middle of the road ahead of its kart, and where it is on it.
+   */
+  botView(slot) {
+    const v = this.playerView(slot);
+    if (!this.karts || !this.track || this.battle) return v;
+    const k = this.karts[slot];
+    const here = locate(this.track, k.x, k.y);
+    const len = this.track.length;
+    const ahead = [1, 2, 3.5, 5, 7, 9.5].map((d) => pointAt(this.track, (((here.s + d / len) % 1) + 1) % 1));
+    return Object.assign(v, { road: { s: here.s, off: here.d, length: len, ahead } });
+  }
 }
 
 export default {
