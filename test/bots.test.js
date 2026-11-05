@@ -62,7 +62,9 @@ function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs
       if (move) pending[slot] = { at: now + (move.botDelayMs ?? 1100), move };
     }
     const next = pending.filter(Boolean).map((p) => p.at);
-    const step = next.length ? Math.max(0, Math.min(...next) - now) : REALTIME.includes(id) ? 16 : 500; // (the room asks on every update)
+    // (the room asks on every update: in an action game, never let more than a frame go by unasked)
+    const most = REALTIME.includes(id) ? 16 : 500;
+    const step = next.length ? Math.min(most, Math.max(0, Math.min(...next) - now)) : most;
     ctx.advance(step);
     now += step;
     for (const slot of [0, 1]) {
@@ -282,4 +284,21 @@ test('Word Hunt: a word that also reads somewhere else on the grid is still foun
     tried.add(m.a + '-' + m.b);
   }
   assert.ok(tried.has('0-6') && tried.has('0-2'), [...tried].join(' '));
+});
+
+test('the computer never reacts faster than a person could (Pong, Air Hockey, Tank Duel, Reaction Duel)', async () => {
+  const { REACTION } = await import('../server/games/bot-human.js');
+  const views = {
+    pong: { phase: 'play', you: 1, ball: { x: 8, y: 4.5, vx: 10, vy: 2 }, paddles: [4.5, 4.5] },
+    'air-hockey': { phase: 'play', you: 0, puck: { x: 5, y: 4, vx: -3, vy: 0 }, mallets: [{ x: 2, y: 4.5 }, { x: 14, y: 4.5 }] },
+    'reaction-duel': { phase: 'go', you: 0 },
+  };
+  for (const [id, view] of Object.entries(views)) {
+    for (const level of ['easy', 'normal', 'hard']) {
+      for (let i = 0; i < 200; i++) {
+        const m = getGame(id).bot(view, level, Math.random, 0, {});
+        assert.ok(m.botDelayMs >= REACTION[level].floor, id + ' ' + level + ' ' + m.botDelayMs);
+      }
+    }
+  }
 });

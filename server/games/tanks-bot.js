@@ -2,27 +2,31 @@
  * The computer opponent for Tank Duel (see `bot` in index.js). It reads the field the TV shows.
  * With a clear line to you it turns to face you and fires; without one it drives round the cover
  * towards you (a path on a coarse grid); and it steps aside from shells coming its way.
- *   easy:   slow, fires when only roughly facing you (with a clear line), never dodges.
- *   normal: waits for a clear line and a closer aim, and dodges shells that are close.
- *   hard:   quick, aims tight, and dodges early.
+ * Its aim wobbles a little each shot, as a person's does, and it reacts at human speed
+ * (bot-human.js).
+ *   easy:   slow, aims loosely (many shots miss), never dodges.
+ *   normal: a steadier aim, and dodges shells that are close.
+ *   hard:   quicker, aims tight, and dodges early.
  */
 import { TANK, SHELL } from './tanks.js';
+import { reactionMs } from './bot-human.js';
 
+// aim: how far its aim strays (radians, a new wobble each shot, as a person's does); dodge: how
+// far ahead (s) it sees a shell coming.
 const LEVEL = {
-  easy: { react: [320, 520], aim: 0.5, dodge: 0 },
-  normal: { react: [120, 200], aim: 0.14, dodge: 0.7 },
-  hard: { react: [60, 110], aim: 0.07, dodge: 1.1 },
+  easy: { aim: 0.12, dodge: 0 },
+  normal: { aim: 0.06, dodge: 0.7 },
+  hard: { aim: 0.03, dodge: 1.1 },
 };
 const CELL = 0.5;
 
-export function tanksBot(view, level, rng = Math.random) {
+export function tanksBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];
   if (!view || !L || view.phase !== 'play' || !view.tanks) return null;
   const me = view.tanks[view.you];
   const foe = view.tanks[1 - view.you];
   if (!me || !me.alive || !foe || !foe.alive) return null;
-  const [lo, hi] = L.react;
-  const pace = lo + rng() * (hi - lo);
+  const pace = reactionMs(level, rng); // (a human reaction: bot-human.js)
   const move = (dx, dy, mag) => {
     const d = Math.hypot(dx, dy) || 1;
     return { type: 'move', x: (dx / d) * mag, y: (dy / d) * mag, botDelayMs: pace };
@@ -53,9 +57,12 @@ export function tanksBot(view, level, rng = Math.random) {
   const dy = foe.y - me.y;
   const clear = lineClear(me.x, me.y, foe.x, foe.y, walls);
   if (clear) {
-    const want = Math.atan2(dy, dx);
+    // Where it means to shoot: at you, give or take this shot's wobble.
+    if (memory.tankAim === undefined || view.ready !== memory.tankReady) memory.tankAim = (rng() * 2 - 1) * L.aim;
+    memory.tankReady = view.ready;
+    const want = Math.atan2(dy, dx) + memory.tankAim;
     const off = Math.abs(Math.atan2(Math.sin(want - me.angle), Math.cos(want - me.angle)));
-    if (off < L.aim && view.ready) return { type: 'fire', botDelayMs: pace };
+    if (off < 0.05 && view.ready) return { type: 'fire', botDelayMs: pace };
     // Turn to face them (a tank faces the way it drives): closing in from afar, barely creeping
     // up close.
     const dist = Math.hypot(dx, dy);
