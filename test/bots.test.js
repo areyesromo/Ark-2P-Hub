@@ -5,9 +5,9 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf'];
 const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', ...REALTIME];
-const SOON = [];
+const SOON = ['block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -55,23 +55,29 @@ function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs
   for (const [key, value] of Object.entries(settings)) g.onInput(0, { type: 'setting', key, value });
   if (g.hostView().phase === 'setup') g.onInput(0, { type: 'go' });
   let now = 0;
+  const ask = (slot) => (levels[slot] ? def.bot(viewOf(slot), levels[slot], rng, 0, memory[slot]) : human ? human(g.playerView(slot), slot, rng) : null);
   while (g.hostView().phase !== 'over' && now < limitMs) {
+    // As the room does: a look on every update; a waiting move it no longer wants is dropped.
     for (const slot of [0, 1]) {
-      if (pending[slot]) continue;
-      const move = levels[slot] ? def.bot(viewOf(slot), levels[slot], rng, 0, memory[slot]) : human ? human(g.playerView(slot), slot, rng) : null;
-      if (move) pending[slot] = { at: now + (move.botDelayMs ?? 1100), move };
+      const move = ask(slot);
+      if (!move) pending[slot] = null;
+      else if (!pending[slot]) pending[slot] = { at: now + (move.botDelayMs ?? 1100), move };
     }
     const next = pending.filter(Boolean).map((p) => p.at);
-    const step = next.length ? Math.max(0, Math.min(...next) - now) : REALTIME.includes(id) ? 16 : 500; // (the room asks on every update)
+    // (the room asks on every update: in an action game, never let more than a frame go by unasked)
+    const most = REALTIME.includes(id) ? 16 : 500;
+    const step = next.length ? Math.min(most, Math.max(0, Math.min(...next) - now)) : most;
     ctx.advance(step);
     now += step;
     for (const slot of [0, 1]) {
       if (!pending[slot] || pending[slot].at > now) continue;
+      const { move: decided } = pending[slot];
       pending[slot] = null;
-      // A fresh look, as the room does when the pause is over.
-      const move = levels[slot] ? def.bot(viewOf(slot), levels[slot], rng, 0, memory[slot]) : human ? human(g.playerView(slot), slot, rng) : null;
-      if (!move) continue;
-      const { botDelayMs, ...input } = move;
+      // As the room does: it plays what it decided when it looked, if it still wants to move (a
+      // move it timed, botAnticipate, it judges afresh).
+      const fresh = ask(slot);
+      if (!fresh) continue;
+      const { botDelayMs, botAnticipate, ...input } = decided.botAnticipate ? fresh : decided;
       const before = JSON.stringify(g.hostView());
       g.onInput(slot, input);
       if (JSON.stringify(g.hostView()) === before) stats.refused++;
@@ -93,8 +99,9 @@ for (const id of BOT_GAMES.filter((x) => x !== 'battleship')) {
     for (const level of ['easy', 'normal', 'hard']) {
       const { view, stats } = play(id, [level, level === 'easy' ? 'hard' : 'easy'], { seed: level.length });
       assert.equal(view.phase, 'over', id + ' ' + level);
-      // (both move, but in Reaction Duel the quicker one may win every round before the other taps)
-      assert.ok(id === 'reaction-duel' ? stats.moves[0] + stats.moves[1] > 0 : stats.moves[0] > 0 && stats.moves[1] > 0, id + ' both moved');
+      // (both move in a turn-based game; in an action game one can win without having to: the
+      // quicker tap in Reaction Duel, a blob whose spot the ball keeps landing on in Volley Blobs)
+      assert.ok(id === 'reaction-duel' || REALTIME.includes(id) ? stats.moves[0] + stats.moves[1] > 0 : stats.moves[0] > 0 && stats.moves[1] > 0, id + ' ' + level + ' both moved: ' + JSON.stringify(stats) + ' ' + JSON.stringify(view.scores));
       if (!REALTIME.includes(id)) assert.equal(stats.refused, 0, id + ' every move taken'); // (a steer shows a tick later)
     }
   });
@@ -282,4 +289,45 @@ test('Word Hunt: a word that also reads somewhere else on the grid is still foun
     tried.add(m.a + '-' + m.b);
   }
   assert.ok(tried.has('0-6') && tried.has('0-2'), [...tried].join(' '));
+});
+
+test('the computer never reacts faster than a person could (Pong, Air Hockey, Tank Duel, Reaction Duel)', async () => {
+  const { REACTION } = await import('../server/games/bot-human.js');
+  const views = {
+    pong: { phase: 'play', you: 1, ball: { x: 8, y: 4.5, vx: 10, vy: 2 }, paddles: [4.5, 4.5] },
+    'air-hockey': { phase: 'play', you: 0, puck: { x: 5, y: 4, vx: -3, vy: 0 }, mallets: [{ x: 2, y: 4.5 }, { x: 14, y: 4.5 }] },
+    'reaction-duel': { phase: 'go', you: 0 },
+    tanks: { phase: 'play', you: 0, ready: true, field: { w: 16, h: 9 }, obstacles: [], shells: [], tanks: [{ x: 2, y: 4.5, angle: 0, alive: true }, { x: 14, y: 4.5, angle: Math.PI, alive: true }] },
+  };
+  for (const [id, view] of Object.entries(views)) {
+    for (const level of ['easy', 'normal', 'hard']) {
+      for (let i = 0; i < 200; i++) {
+        const m = getGame(id).bot(view, level, Math.random, 0, {});
+        assert.ok(m.botDelayMs >= REACTION[level].floor, id + ' ' + level + ' ' + m.botDelayMs);
+      }
+    }
+  }
+});
+
+test('Snake Battle: the computer really does take in your snake late (from the game\'s live views)', async () => {
+  const { laggedSight } = await import('../server/games/snake-bot.js');
+  const ctx = fakeCtx();
+  ctx.players.forEach((p) => (p.local = true));
+  const g = getGame('snake').create(ctx);
+  g.start();
+  g.onInput(0, { type: 'go' });
+  const memory = {};
+  let lagged = 0;
+  let looks = 0;
+  for (let i = 0; i < 400; i++) {
+    ctx.advance(16);
+    const v = g.playerView(0);
+    if (v.phase !== 'play') continue;
+    const them = v.snakes[1];
+    const snap = { body: them.body.map((c) => c.slice()), crashed: them.crashed };
+    const seen = laggedSight(memory, 'snake', v.round, v.snakes[0].body[0].join(), snap, 270, v.tickMs);
+    looks++;
+    if (seen.body[0].join() !== them.body[0].join()) lagged++;
+  }
+  assert.ok(looks > 50 && lagged / looks > 0.6, lagged + ' of ' + looks + ' looks were behind');
 });

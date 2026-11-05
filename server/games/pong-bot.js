@@ -1,18 +1,16 @@
 /**
  * The computer opponent for Pong (see `bot` in index.js). It works out where the ball will cross
- * its paddle's line (off the top and bottom walls) and moves there, a moment after it sees it.
+ * its paddle's line (off the top and bottom walls) and moves there, a human reaction time after it
+ * sees it (bot-human.js).
  * Each return it may misjudge it altogether (a miss you can win the point on):
  *   easy:   slow to react, misses about a third, and drifts back to the middle late.
  *   normal: quicker, misses about one in eight.
  *   hard:   quick, misses one in twenty-five, and hits with the paddle's edge to angle the ball.
  */
 import { FIELD } from './pong.js';
+import { reactionMs } from './bot-human.js';
 
-const LEVEL = {
-  easy: { react: [200, 320], miss: 0.3 },
-  normal: { react: [120, 200], miss: 0.12 },
-  hard: { react: [60, 110], miss: 0.04 },
-};
+const LEVEL = { easy: { miss: 0.3 }, normal: { miss: 0.12 }, hard: { miss: 0.04 } }; // (reactions: bot-human.js)
 
 export function pongBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];
@@ -48,6 +46,5 @@ export function pongBot(view, level, rng = Math.random, retries = 0, memory = {}
     if (level === 'easy') target = (view.paddles[me] + FIELD.h / 2) / 2; // only half way back
   }
   target = Math.min(FIELD.h, Math.max(0, target));
-  const [lo, hi] = L.react;
-  return { type: 'move', y: target / FIELD.h, botDelayMs: lo + rng() * (hi - lo) };
+  return { type: 'move', y: target / FIELD.h, botDelayMs: reactionMs(level, rng) };
 }

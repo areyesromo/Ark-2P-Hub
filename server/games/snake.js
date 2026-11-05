@@ -233,6 +233,7 @@ export class SnakeBattle {
       countdown: this.countdown(),
       timeLeft: this.timeLeft(),
       dir: this.snakes[slot].dir,
+      tickMs: this.tickMs, // (how fast the snakes go: one cell a tick)
       lengths: this.snakes.map((s) => s.body.length),
       ...this.arena(),
       result: this.result,

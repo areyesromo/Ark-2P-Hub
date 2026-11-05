@@ -336,8 +336,9 @@ export class Room {
   }
 
   /**
-   * The computer's move, if it has one: after a pause it looks again (the game may have moved
-   * on) and plays. One move is waiting at a time; stopping the game clears it with the timers.
+   * The computer's move, if it has one: it works it out when it sees the game, then plays it
+   * after the move's pause (its reaction time, or time to think), unless by then it no longer
+   * wants to move at all. One move is waiting at a time; stopping the game clears it.
    */
   driveBot() {
     const slot = this.botSlot;
@@ -372,9 +373,12 @@ export class Room {
       this.timers.delete(t);
       this.botTimer = null;
       if (this.generation !== generation || !this.game || !this.players[slot] || !this.players[slot].bot) return;
-      const move = think();
-      if (!move) return;
-      const { botDelayMs, ...input } = move;
+      // It plays what it worked out when it looked, a reaction time on (a person can't take in
+      // what happened since any quicker); a fresh look only checks it still wants to move. A move
+      // it saw coming and timed (botAnticipate: its own planned turn, say) is judged afresh.
+      const fresh = think();
+      if (!fresh) return;
+      const { botDelayMs, botAnticipate, ...input } = first.botAnticipate ? fresh : first;
       const key = JSON.stringify(input);
       this.botRetries = key === this.botLastMove ? (this.botRetries || 0) + 1 : 0;
       this.botLastMove = key;

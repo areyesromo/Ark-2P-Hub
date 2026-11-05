@@ -244,6 +244,21 @@ export class RallyTennis {
       winner: this.winner,
     };
   }
+
+  /**
+   * The computer opponent's view (see rally-tennis-bot.js): its own, plus what a player judges by
+   * watching the ball: how long until the right moment to swing, and where everyone is.
+   */
+  botView(slot) {
+    const s = this.shot;
+    const mine = this.phase === 'rally' && s && s.to === slot && !s.out && !s.swung;
+    return Object.assign(this.playerView(slot), {
+      positions: this.players.map((p) => p.x),
+      court: COURT,
+      shotId: s ? s.t0 : null,
+      swingInMs: mine ? s.tReach + TIMING.lagMs - this.ctx.now() : null,
+    });
+  }
 }
 
 export default {

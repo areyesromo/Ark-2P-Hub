@@ -376,6 +376,12 @@ export class AsteroidDuel {
       winner: this.winner,
     };
   }
+
+  /** The computer opponent's view: its own, plus the field the TV shows everyone (see asteroid-duel-bot.js). */
+  botView(slot) {
+    const v = this.hostView();
+    return Object.assign(this.playerView(slot), { field: v.field, ships: v.ships, bullets: v.bullets, rocks: v.rocks });
+  }
 }
 
 export default {

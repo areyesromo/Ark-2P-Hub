@@ -4,14 +4,16 @@
  * between the puck and the goal mouth.
  *   easy:   slow to react, unsteady, and only nudges the puck.
  *   normal: quicker, and strikes towards somewhere in your goal mouth (hard to read).
- *   hard:   the same, and much quicker to react: it gets there first.
+ *   hard:   the same, guards its goal tighter (right in line with the puck), reacts quicker (a
+ *           sharp player's reactions: bot-human.js), and goes where the puck will be by then.
  */
 import { FIELD } from './air-hockey.js';
+import { reactionMs } from './bot-human.js';
 
 const LEVEL = {
-  easy: { react: [220, 340], through: 0, lead: 0, wobble: 0.7, spread: 0 },
-  normal: { react: [130, 210], through: 1.1, lead: 0.1, wobble: 0.35, spread: 0.3 },
-  hard: { react: [50, 90], through: 1.1, lead: 0.1, wobble: 0.35, spread: 0.3 },
+  easy: { through: 0, lead: 0, wobble: 0.7, spread: 0, guard: 0.4 },
+  normal: { through: 1.1, lead: 0.1, wobble: 0.35, spread: 0.3, guard: 0.6 },
+  hard: { through: 1.1, lead: 0.22, wobble: 0.35, spread: 0.3, guard: 1 }, // (it leads by about its reaction time: where the puck will be when it gets there)
 };
 
 export function airHockeyBot(view, level, rng = Math.random) {
@@ -64,11 +66,10 @@ export function airHockeyBot(view, level, rng = Math.random) {
     // Guard the goal: in front of the mouth, lined up with the puck.
     tx = home + toward * 1.6;
     const lim = FIELD.goalH / 2;
-    ty = FIELD.h / 2 + Math.max(-lim, Math.min(lim, (level === 'easy' ? 0.4 : 0.8) * (py - FIELD.h / 2)));
+    ty = FIELD.h / 2 + Math.max(-lim, Math.min(lim, L.guard * (py - FIELD.h / 2)));
   }
   // (Easy's hand isn't steady.)
   tx += (rng() * 2 - 1) * L.wobble;
   ty += (rng() * 2 - 1) * L.wobble;
-  const [lo, hi] = L.react;
-  return { type: 'move', x: Math.max(0, Math.min(FIELD.w, tx)), y: Math.max(0, Math.min(FIELD.h, ty)), botDelayMs: lo + rng() * (hi - lo) };
+  return { type: 'move', x: Math.max(0, Math.min(FIELD.w, tx)), y: Math.max(0, Math.min(FIELD.h, ty)), botDelayMs: reactionMs(level, rng) };
 }

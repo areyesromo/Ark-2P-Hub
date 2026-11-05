@@ -589,6 +589,25 @@ export class MiniGolf {
   }
 }
 
+/**
+ * Where a putt from `from` ends up on `hole`, by the game's own physics (for the computer
+ * opponent, mini-golf-bot.js): { x, y, holed, water }. `millAngle`: the windmill's angle now.
+ */
+export function simulatePutt(hole, from, angle, power, millAngle = 0, maxMs = 4000) {
+  const sim = Object.create(MiniGolf.prototype);
+  Object.defineProperty(sim, 'hole', { value: hole });
+  sim.walls = wallsOf(hole);
+  sim.events = { putts: 0, walls: 0, bumpers: 0, splashes: 0, sunk: 0 };
+  sim.holeStart = 0;
+  const speed = hole.windmill ? hole.windmill.speed : 0;
+  const t0 = speed ? (millAngle / speed) * 1000 : 0;
+  const ball = { x: from[0], y: from[1], vx: Math.cos(angle) * power * PHYSICS.maxSpeed, vy: Math.sin(angle) * power * PHYSICS.maxSpeed, from: [from[0], from[1]], strokes: 1, holed: false };
+  sim.balls = [ball];
+  const sub = PHYSICS.tickMs / 1000 / PHYSICS.substeps;
+  for (let t = 0; t < maxMs && (ball.vx || ball.vy) && !ball.holed; t += sub * 1000) sim.physics(sub, t0 + t);
+  return { x: ball.x, y: ball.y, holed: ball.holed, water: ball.strokes > 1 };
+}
+
 export default {
   id: 'mini-golf',
   handheld: true, // everything's on your phone: no need to watch the TV
