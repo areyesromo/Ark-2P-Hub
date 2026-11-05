@@ -22,7 +22,7 @@ import { JUMP_MS as HURDLE_JUMP_MS } from './hurdle-dash.js';
 import { HIT_MS } from './laser-dodge.js';
 import { ASPECT, GRAB_R } from './pop-the-most.js';
 import { FLOW } from './pour-it.js';
-import { CATCH, LEAN_PER } from './stack-attack.js';
+import { CATCH, LEAN_PER, SPEED as SPEED_TRAY } from './stack-attack.js';
 import { adjacent, DOTS } from './mirror-me.js';
 import * as CANNON from './cannon-lob.js';
 import { FRONT_CONE } from './bumper-cars.js';
@@ -217,7 +217,7 @@ export const PLAYERS = {
   },
   'tug-of-war'({ el, L, rng, m, react, at }) {
     // One pull on each beat, off by a person's timing error.
-    if (!m.plan || el > m.plan.t + 60) {
+    if (!m.plan || el >= m.plan.t) { // (due: the next one's for the next beat)
       const k = Math.max(m.plan ? m.plan.k + 1 : 0, Math.ceil((el + react() * 0.5) / BEAT_MS));
       m.plan = { k, t: Math.max(0, k * BEAT_MS + gauss(rng) * L.timing) };
     }
@@ -265,7 +265,7 @@ export const PLAYERS = {
     if (!pick && up.length && rng() < L.slip * 0.5) pick = up[0];
     if (!pick) return null;
     m.id = pick.h.id;
-    return { type: 'whack', hole: pick.i, botDelayMs: t };
+    return { type: 'whack', hole: pick.i, botFor: pick.h.id, botDelayMs: t }; // (for that mole: not one up in its hole since)
   },
   fishing({ s, you, level, L, rng, react }) {
     const line = s.lines[you];
@@ -322,9 +322,9 @@ export const PLAYERS = {
       const dirs = ['up', 'down', 'left', 'right'];
       m.point = { n: s.n, early: rng() < L.slip * 0.6 ? 300 + rng() * 1200 : null, wrong: rng() < L.slip ? dirs[Math.floor(rng() * 4)] : null, ms: react() + 120 * L.think };
     }
-    if (s.stage === 'wait' && m.point.early !== null) return { type: 'slash', dir: 'up', botDelayMs: m.point.early };
+    if (s.stage === 'wait' && m.point.early !== null) return { type: 'slash', dir: 'up', botFor: 'wait' + s.n, botDelayMs: m.point.early }; // (not played once the arrow's up)
     if (s.stage !== 'go' || !s.dir) return null;
-    return { type: 'slash', dir: m.point.wrong || s.dir, botDelayMs: m.point.ms };
+    return { type: 'slash', dir: m.point.wrong || s.dir, botFor: 'go' + s.n, botDelayMs: m.point.ms };
   },
   'pour-it'({ s, you, L, rng, m, react }) {
     const g = s.glasses[you];
@@ -441,8 +441,14 @@ export const PLAYERS = {
     if (m.plan.chargeT === undefined || m.plan.chargeT < el - 500) m.plan.chargeT = el + 200;
     return { type: 'charge', t: Math.round(m.plan.chargeT), ...at(m.plan.chargeT) };
   },
-  'stack-attack'({ s, you, level, L, rng, react }) {
-    const tray = s.trays[you].x;
+  'stack-attack'({ s, you, el, level, L, rng, m, react }) {
+    // Where its tray will be when this move lands (it's sliding at the speed it last set: seen
+    // from how far it went since the last look), so it eases in rather than overshooting.
+    const now = s.trays[you].x;
+    const seen = m.tray && el > m.tray.el ? (now - m.tray.x) / (el - m.tray.el) : 0;
+    m.tray = { x: now, el };
+    const delay = react() * 0.7;
+    const tray = clamp(now + seen * delay, 0, 1);
     const crate = s.crates.filter((c) => c.left > 0).sort((a, b) => a.left - b.left)[0];
     if (!crate) return { type: 'move', x: 0, botDelayMs: react() };
     // Under it, and (Normal, Hard) a little off-centre the other way when the stack leans.
@@ -450,8 +456,9 @@ export const PLAYERS = {
     const lean = s.stacks[you].lean;
     const target = crate.x + clamp(lean / LEAN_PER, -0.7, 0.7) * CATCH * fix + gauss(rng) * L.aim * 0.5;
     const gap = target - tray;
-    const v = Math.abs(gap) < 0.01 ? 0 : clamp(gap / 0.06, -1, 1);
-    return { type: 'move', x: Math.round(v * 100) / 100, botDelayMs: react() * 0.7 };
+    // (enough speed to close the gap over about the time until its next move)
+    const v = Math.abs(gap) < 0.015 ? 0 : clamp(gap / (SPEED_TRAY * 0.35), -1, 1);
+    return { type: 'move', x: Math.round(v * 100) / 100, botDelayMs: delay };
   },
   'bumper-cars'({ s, you, L, rng, react }) {
     const me = s.cars[you];

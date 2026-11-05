@@ -294,3 +294,27 @@ test('the computer\'s own moves don\'t keep an empty room alive', (t) => {
   assert.equal(r.lastActive, quiet, 'not counted as someone here');
   r.dispose();
 });
+
+test('Stack Attack against the computer (through the room, its moves a reaction late): its tray settles under the crates, it doesn\'t swing wall to wall', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const { r } = room({ level: 'hard' });
+  r.startGame('party-minis');
+  r.handleInput(0, { type: 'setting', key: 'style', value: 'stack-attack' });
+  r.handleInput(0, { type: 'go' });
+  const g = r.game.game;
+  let landed = 0;
+  let caught = 0;
+  let seen = null;
+  for (let i = 0; i < 900 && g.phase !== 'result'; i++) {
+    t.mock.timers.tick(50);
+    if (g.phase !== 'play') continue;
+    const v = g.instance.view(null);
+    const e = v.events[1];
+    if (e && e.n !== (seen && seen.n) && e.kind === 'catch') caught++;
+    seen = e;
+    landed = Math.max(landed, v.crates.length ? v.crates[0].id - 1 : landed);
+  }
+  assert.ok(landed > 20, 'crates landed: ' + landed);
+  assert.ok(caught >= landed * 0.8, 'caught ' + caught + ' of ' + landed + ', toppled ' + g.instance.view(null).stacks[1].topples);
+  r.dispose();
+});

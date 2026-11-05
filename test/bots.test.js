@@ -544,3 +544,22 @@ test('the party games: with the computer in the other seat, the phone-only minig
   g.onInput(0, { type: 'go' });
   assert.deepEqual(g.hostView().localPlayers, [false, false]);
 });
+
+test('minigames: a move meant for one mole or one moment isn\'t played on the next (Whack-a-Mole, Sword Duel, Tug of War)', async () => {
+  const { PLAYERS } = await import('../server/games/minis/bots.js');
+  const base = (s, m = {}, el = 1000) => ({ s, you: 1, el, level: 'hard', L: { think: 1, slip: 0, timing: 0, aim: 0 }, rng: () => 0.5, m, react: () => 250, at: (t) => ({ botDelayMs: Math.max(0, t - el) }) });
+  // Whack-a-Mole: the whack names its mole (a new one up in the same hole isn't hit by it).
+  const holes = new Array(9).fill(null);
+  holes[4] = { id: 17, who: 'gold', left: 900 };
+  assert.equal(PLAYERS['whack-a-mole'](base({ holes })).botFor, 17);
+  // Sword Duel: jumping the gun is for the wait; it isn't played once the arrow's up.
+  const slip = { ...base({ stage: 'wait', n: 2, out: [false, false], dir: null }), L: { think: 1, slip: 1, timing: 0, aim: 0 }, rng: () => 0.01 };
+  const early = PLAYERS['sword-duel'](slip);
+  const go = PLAYERS['sword-duel']({ ...slip, s: { stage: 'go', n: 2, out: [false, false], dir: 'left' } });
+  assert.ok(early && go && early.botFor !== go.botFor, JSON.stringify([early, go]));
+  // Tug of War: once a beat's pull is due, the next is for the next beat (never the same one again).
+  const m = {};
+  const first = PLAYERS['tug-of-war'](base({}, m, 1000));
+  const again = PLAYERS['tug-of-war'](base({}, m, first.t + 1));
+  assert.ok(again.t >= first.t + 500, JSON.stringify([first, again]));
+});
