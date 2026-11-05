@@ -62,10 +62,11 @@ function nextTile(w, tx, ty) {
 
 export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];
-  if (!view || !L || view.phase !== 'play' || !view.heroes) return null;
+  if (!view || !L || !view.heroes) return null;
   const me = view.heroes[view.you];
   const mate = view.heroes[1 - view.you];
-  if (me.downed) return null;
+  // Between floors, on a retry, or down: hands off the controls (so it doesn't walk off later).
+  if (view.phase !== 'play' || me.downed) return view.phase === 'over' ? null : { type: 'move', x: 0, y: 0, special: false, botDelayMs: 200 };
   const map = view.map;
   const tileAt = (x, y) => (map[Math.floor(y)] || '')[Math.floor(x)];
   const cell = (b) => [Math.floor(b.x), Math.floor(b.y)];
@@ -94,13 +95,18 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
     const next = nextTile(walk, tx, ty);
     if (!next) return null;
     // (a raised spike tile next: wait for it to go down)
-    if ((map[next[1]] || '')[next[0]] === '^' && view.spikesUp) return stop(extra);
+    if ((map[next[1]] || '')[next[0]] === '^' && view.spikesUp && tileAt(me.x, me.y) !== '^') return stop(extra); // (already on them: keep going)
     return steer(next[0] + 0.5 - me.x, next[1] + 0.5 - me.y, extra);
   };
 
   // 1. The Warden's moves: out of the slam ring, out of the charge's lane.
   const warden = view.enemies.find((e) => e.kind === 'warden');
-  if (warden && warden.tele && rng() < L.dodge) {
+  // (whether it reacts to a warning in time is decided once a warning)
+  const tele = warden && warden.tele ? warden.tele.kind + ':' + warden.id + ':' + (memory.dungeonTeles || 0) : null;
+  if (!tele && memory.dungeonTele) memory.dungeonTeles = (memory.dungeonTeles || 0) + 1;
+  if (tele && (!memory.dungeonTele || memory.dungeonTele.key !== tele)) memory.dungeonTele = { key: tele, dodge: rng() < L.dodge };
+  if (!tele) memory.dungeonTele = null;
+  if (warden && warden.tele && memory.dungeonTele.dodge) {
     if (warden.tele.kind === 'slam' && Math.hypot(me.x - warden.x, me.y - warden.y) < WARDEN.slamR + 0.6) {
       return steer(me.x - warden.x, me.y - warden.y, shield(false) ? { special: false } : {});
     }
@@ -112,7 +118,7 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
       const side = ax * -dy + ay * dx;
       if (along > 0 && along < len + 1 && Math.abs(side) < 1.3) {
         // In its lane: the Fighter can take it on the shield (it stuns the Warden); the Healer steps aside.
-        if (fighter && level !== 'easy') return { type: 'move', x: r2(-dx * 0.1), y: r2(-dy * 0.1), special: true, botDelayMs: pace * 0.6 };
+        if (fighter && level !== 'easy') return { type: 'move', x: r2(-dx * 0.3), y: r2(-dy * 0.3), special: true, botDelayMs: pace * 0.6 }; // (facing it: the shield's at the front)
         const s = side >= 0 ? 1 : -1;
         return steer(-dy * s, dx * s);
       }
@@ -123,7 +129,7 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
   if (mate.downed) return goTo(mate.x, mate.y, shield(false) ? { special: false } : {}) || stop();
 
   // 3. The Healer's circle: someone hurt, the two of you close, and it's ready.
-  if (!fighter && me.healIn === 0 && (me.hp <= me.max / 2 || mate.hp <= mate.max / 2) && Math.hypot(mate.x - me.x, mate.y - me.y) < 1.5) {
+  if (!fighter && me.healIn === 0 && (me.hp <= me.max / 2 || (mate.hp <= mate.max / 2 && Math.hypot(mate.x - me.x, mate.y - me.y) < 1.5))) {
     return { type: 'special', on: true, botDelayMs: pace };
   }
   if (!fighter && me.healIn === 0 && mate.hp <= mate.max / 2) {
@@ -137,8 +143,14 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
     .filter(({ e, d }) => d < (e.kind === 'warden' ? 14 : 6.5) && walk.dist.has(cell(e).join()))
     .sort((a, b) => a.d - b.d);
   // Bones flying at it: up with the shield (the Fighter).
-  const bone = view.bones.find((b) => Math.hypot(b.x - me.x, b.y - me.y) < 2);
-  if (fighter && bone && level !== 'easy') return { type: 'move', x: r2((bone.x - me.x) * 0.05), y: r2((bone.y - me.y) * 0.05), special: true, botDelayMs: pace * 0.6 };
+  const before = memory.dungeonBones || [];
+  memory.dungeonBones = view.bones.map((b) => Math.hypot(b.x - me.x, b.y - me.y));
+  const bi = view.bones.findIndex((b, i) => memory.dungeonBones[i] < 2 && before[i] !== undefined && memory.dungeonBones[i] < before[i]); // (coming its way)
+  if (fighter && bi !== -1 && level !== 'easy') {
+    const b = view.bones[bi];
+    const d = memory.dungeonBones[bi] || 1;
+    return { type: 'move', x: r2(((b.x - me.x) / d) * 0.3), y: r2(((b.y - me.y) / d) * 0.3), special: true, botDelayMs: pace * 0.6 }; // (turned to it, shield up)
+  }
   if (seen.length) {
     const { e, d } = seen[0];
     const dx = e.x - me.x;
@@ -173,7 +185,7 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
   const mateOnPlate = tileAt(mate.x, mate.y) === 'P' && !mate.downed;
   if (gates.length) {
     // The far side of the gate: where the key (or the stairs) is, as if the gate were shut.
-    const goal = find('K')[0] || find('E')[0];
+    const goal = find('K')[0];
     const far = goal ? walkFrom(map, goal[0], goal[1], false, false).dist : new Map();
     const meFar = far.has(cell(me).join());
     const mateFar = far.has(cell(mate).join());
@@ -193,6 +205,16 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
         if (nearPlate) return goTo(nearPlate[0] + 0.5, nearPlate[1] + 0.5);
       }
       if (onPlate) return stop();
+    }
+    if (!goal) {
+      // The key's taken: the gate only matters while one of you is still on the other side of it.
+      const shut = walkFrom(map, mx, my, false, false);
+      if (!shut.dist.has(cell(mate).join())) {
+        if (onPlate) return stop();
+        if (mateOnPlate && view.gateOpen) return goTo(mate.x, mate.y) || stop();
+        const p = near(plates.filter(([x, y]) => shut.dist.has(x + ',' + y)));
+        if (p) return goTo(p[0] + 0.5, p[1] + 0.5);
+      }
     }
   }
   const doors = find('D');

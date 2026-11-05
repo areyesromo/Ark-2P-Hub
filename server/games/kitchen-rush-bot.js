@@ -80,7 +80,9 @@ function kitchenMap(layout, from) {
 
 export function kitchenRushBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];
-  if (!view || !L || view.phase !== 'play' || !view.chefs) return null;
+  if (!view || !L || !view.chefs) return null;
+  // Before and after the shift: hands off the controls.
+  if (view.phase !== 'play') return view.phase === 'over' ? null : { type: 'move', x: 0, y: 0, chop: false, botDelayMs: 200 };
   const me = view.chefs[view.you];
   const mate = view.chefs[1 - view.you];
   const here = [Math.floor(me.x), Math.floor(me.y)];
@@ -126,9 +128,10 @@ export function kitchenRushBot(view, level, rng = Math.random, retries = 0, memo
     } else if (holding.state === 'burnt') {
       act(nearest(tiles('X')) || freeCounter(false));
     } else if (k === 'meat' && holding.state !== 'cooked') {
-      act(nearest(tiles('S').filter(([x, y]) => !itemAt(x, y))) || (tiles('S').some(([x, y]) => K.reach(x, y)) ? null : freeCounter(true)));
+      // (no stove free: down on a counter for now, hands free for the burnt one)
+      act(nearest(tiles('S').filter(([x, y]) => !itemAt(x, y))) || freeCounter(!tiles('S').some(([x, y]) => K.reach(x, y))));
     } else if ((k === 'tomato' || k === 'lettuce') && holding.state === 'raw') {
-      act(nearest(tiles('C').filter(([x, y]) => !itemAt(x, y))) || (tiles('C').some(([x, y]) => K.reach(x, y)) ? null : freeCounter(true)));
+      act(nearest(tiles('C').filter(([x, y]) => !itemAt(x, y))) || freeCounter(!tiles('C').some(([x, y]) => K.reach(x, y))));
     } else {
       // Ready: onto a plate that wants it, else down by the plates (or over the middle).
       const want = plates.filter((p) => K.reach(p.x, p.y) && !p.contents.includes(k) && fits([...p.contents, k])).map((p) => [p.x, p.y]);
@@ -137,12 +140,16 @@ export function kitchenRushBot(view, level, rng = Math.random, retries = 0, memo
   } else {
     const myStations = (list) => list.filter((it) => K.reach(it.x, it.y));
     const burning = myStations(view.items.filter((it) => it.kind === 'meat' && it.state === 'cooked' && view.layout[it.y][it.x] === 'S' && (it.burn || 0) >= L.rescue));
-    const toChop = myStations(view.items.filter((it) => view.layout[it.y][it.x] === 'C' && it.state === 'raw'));
+    const burnt = myStations(view.items.filter((it) => it.state === 'burnt'));
+    // (a board you're chopping is yours: only one of you can chop it at once)
+    const yours = mate.chopping && mate.at ? mate.at.join() : null;
+    const toChop = myStations(view.items.filter((it) => view.layout[it.y][it.x] === 'C' && it.state === 'raw' && it.x + ',' + it.y !== yours));
     const done = myStations(plates.filter((p) => { const o = fits(p.contents); return o && sameDish(p.contents, o.needs); }));
     const counterPlates = plates.filter((p) => K.reach(p.x, p.y));
     const wanted = myStations(view.items.filter((it) => it.kind !== 'plate' && isReady(it) && counterPlates.some((p) => !p.contents.includes(it.kind) && fits([...p.contents, it.kind]))));
     if (burning.length) act([burning[0].x, burning[0].y]);
-    else if (toChop.length) goal = { at: [toChop[0].x, toChop[0].y], how: 'chop' };
+    else if (burnt.length) act(nearest(burnt.map((it) => [it.x, it.y]))); // (into the bin with it)
+    else if (toChop.length) goal = { at: [...nearest(toChop.map((it) => [it.x, it.y]))], how: 'chop' };
     else if (done.length && nearest(tiles('H'))) act([done[0].x, done[0].y]);
     else if (wanted.length) act(nearest(wanted.map((it) => [it.x, it.y])));
     else if (!plates.length && !(mate.held && mate.held.kind === 'plate') && nearest(tiles('P')) && orders.length) act(nearest(tiles('P')));

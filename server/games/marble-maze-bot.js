@@ -51,7 +51,9 @@ function costMap(map) {
 
 export function marbleMazeBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];
-  if (!view || !L || view.phase !== 'play' || !view.level || !view.marble) return null;
+  if (!view || !L || !view.level || !view.marble) return null;
+  // Falling, between mazes, or the countdown: hands off the board.
+  if (view.phase !== 'play') return view.phase === 'over' ? null : { type: 'move', x: 0, y: 0, botDelayMs: 150 };
   const map = view.level.map;
   if (!memory.marble || memory.marble.map !== map) memory.marble = { map, cost: costMap(map) };
   const { cost } = memory.marble;
@@ -86,6 +88,14 @@ export function marbleMazeBot(view, level, rng = Math.random, retries = 0, memor
   const y = Math.max(-1, Math.min(1, ((dy / d) * want - m.vy) * L.gain + wob()));
   const axis = view.axis || 'both';
   const r2 = (n) => Math.round(n * 100) / 100;
-  const move = axis === 'x' ? { x: r2(x), y: 0 } : axis === 'y' ? { x: 0, y: r2(y) } : { x: r2(x * 0.7), y: r2(y * 0.7) }; // (Shared: a hand, not the whole board)
+  // Shared: a hand, not the whole board, and it gives way when you're tilting harder than it
+  // (the board's lean beyond its own share is yours).
+  let share = 0.7;
+  if (axis === 'both' && memory.marbleSent) {
+    const yours = Math.hypot(view.tilt.x - memory.marbleSent.x, view.tilt.y - memory.marbleSent.y);
+    if (yours > 0.3) share = 0.25;
+  }
+  const move = axis === 'x' ? { x: r2(x), y: 0 } : axis === 'y' ? { x: 0, y: r2(y) } : { x: r2(x * share), y: r2(y * share) };
+  memory.marbleSent = move;
   return { type: 'move', ...move, botDelayMs: reactionMs(level, rng) * 0.6 * L.lag };
 }

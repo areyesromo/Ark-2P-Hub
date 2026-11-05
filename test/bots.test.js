@@ -586,3 +586,72 @@ test('Dungeon Duo: the computer fights, heals, revives, holds the gate and finds
   for (let seed = 1; seed <= 3; seed++) if (play('dungeon-duo', ['hard', 'normal'], { seed, settings: { difficulty: 1 } }).view.won) won++;
   assert.ok(won >= 2, 'won ' + won + ' of 3');
 });
+
+/** Run one game with the computer in seat 1 only (seat 0 does nothing), for `ms`. */
+function withTeammate(g, ctx, id, level, ms, memory = {}) {
+  const def = getGame(id);
+  let pending = null;
+  let now = 0;
+  while (now < ms) {
+    const move = def.bot(g.playerView(1), level, Math.random, 0, memory);
+    if (!move) pending = null;
+    else if (!pending) pending = { at: now + move.botDelayMs, move };
+    ctx.advance(16);
+    now += 16;
+    if (pending && pending.at <= now) {
+      const { move: m } = pending;
+      pending = null;
+      const fresh = def.bot(g.playerView(1), level, Math.random, 0, memory);
+      if (!fresh || (m.botFor !== undefined && fresh.botFor !== m.botFor)) continue;
+      const { botDelayMs, botFor, ...input } = m;
+      g.onInput(1, input);
+    }
+  }
+}
+
+test('Dungeon Duo: past the gate with the key, the computer opens the door (it doesn\'t go back to stand on a plate)', async () => {
+  const { DungeonDuo } = await import('../server/games/dungeon-duo.js');
+  const { FLOORS } = await import('../server/games/dungeon-duo-floors.js');
+  const ctx = fakeCtx();
+  ctx.players[1].bot = 'normal';
+  const g = new DungeonDuo(ctx, Math.random, [FLOORS[1]]);
+  g.start();
+  ctx.advance(3500);
+  // Both through the gate, the key in hand (you stand about).
+  g.map.forEach((row) => row.forEach((c, x) => { if (c === 'K' || 'skb'.includes(c)) row[x] = ' '; }));
+  g.enemies = [];
+  g.keys = 1;
+  Object.assign(g.heroes[0], { x: 10.5, y: 2.5 });
+  Object.assign(g.heroes[1], { x: 11.5, y: 2.5 });
+  withTeammate(g, ctx, 'dungeon-duo', 'normal', 25000);
+  assert.equal(g.events.doors, 1, 'the door: ' + JSON.stringify([g.heroes[1].x, g.heroes[1].y]));
+});
+
+test('Kitchen Rush: the computer clears burnt meat off the stoves (it doesn\'t stand there holding raw meat)', async () => {
+  const ctx = fakeCtx();
+  ctx.players[1].bot = 'hard';
+  const g = getGame('kitchen-rush').create(ctx);
+  g.start();
+  g.onInput(0, { type: 'go' });
+  const k = g.game;
+  ctx.advance(3500);
+  k.items['10,0'] = { kind: 'meat', state: 'burnt', cook: 99999 };
+  k.items['11,0'] = { kind: 'meat', state: 'burnt', cook: 99999 };
+  withTeammate(g, ctx, 'kitchen-rush', 'hard', 60000);
+  assert.ok(k.events.binned >= 1 && k.served >= 1, JSON.stringify({ binned: k.events.binned, served: k.served }));
+});
+
+test('co-op: between mazes and while down the computer lets go of the stick (no tilt left on, no walking off)', async () => {
+  const ctx = fakeCtx();
+  ctx.players[1].bot = 'hard';
+  const g = getGame('marble-maze').create(ctx);
+  g.start();
+  g.onInput(0, { type: 'go' });
+  const m = g.game;
+  ctx.advance(3500);
+  const memory = {}; // (the room keeps the computer's memory all game)
+  withTeammate(g, ctx, 'marble-maze', 'hard', 2000, memory);
+  m.endLevel(true); // (cleared: the result card)
+  withTeammate(g, ctx, 'marble-maze', 'hard', 1500, memory);
+  assert.deepEqual(m.controls[1], { x: 0, y: 0 });
+});
