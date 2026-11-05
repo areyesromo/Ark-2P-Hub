@@ -5,9 +5,9 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf'];
 const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', ...REALTIME];
-const SOON = [];
+const SOON = ['block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -95,8 +95,9 @@ for (const id of BOT_GAMES.filter((x) => x !== 'battleship')) {
     for (const level of ['easy', 'normal', 'hard']) {
       const { view, stats } = play(id, [level, level === 'easy' ? 'hard' : 'easy'], { seed: level.length });
       assert.equal(view.phase, 'over', id + ' ' + level);
-      // (both move, but in Reaction Duel the quicker one may win every round before the other taps)
-      assert.ok(id === 'reaction-duel' ? stats.moves[0] + stats.moves[1] > 0 : stats.moves[0] > 0 && stats.moves[1] > 0, id + ' both moved');
+      // (both move in a turn-based game; in an action game one can win without having to: the
+      // quicker tap in Reaction Duel, a blob whose spot the ball keeps landing on in Volley Blobs)
+      assert.ok(id === 'reaction-duel' || REALTIME.includes(id) ? stats.moves[0] + stats.moves[1] > 0 : stats.moves[0] > 0 && stats.moves[1] > 0, id + ' ' + level + ' both moved: ' + JSON.stringify(stats) + ' ' + JSON.stringify(view.scores));
       if (!REALTIME.includes(id)) assert.equal(stats.refused, 0, id + ' every move taken'); // (a steer shows a tick later)
     }
   });

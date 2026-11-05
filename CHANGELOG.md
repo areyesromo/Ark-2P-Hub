@@ -4,6 +4,16 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.25
+
+- 🤖 The computer now plays Volley Blobs, Brick Breaker Duel, Rally Tennis, Sumo, Asteroid Duel and
+  Mini Golf, at Easy, Normal or Hard.
+- 🤖 The computer reacts like a person in the action games: never faster than a quick player (on
+  Hard), with a person's spread of reaction times, a wobble in its aim and the odd misjudgement.
+- With the computer seated, the games it's learning next say ⏳ Coming soon: Falling Blocks Battle,
+  Bomb Duel, Kart Race, Tower Defence Duel, the card and word games, the party games, and a
+  teammate in the co-op games.
+
 ## 0.1.24
 
 - 🤖 The computer now plays the action games too: Pong, Air Hockey, Snake Battle, Light Cycles

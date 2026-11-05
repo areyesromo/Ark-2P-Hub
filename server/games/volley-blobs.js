@@ -327,6 +327,12 @@ export class VolleyBlobs {
       winner: this.winner,
     };
   }
+
+  /** The computer opponent's view: its own, plus the court the TV shows everyone (see volley-blobs-bot.js). */
+  botView(slot) {
+    const v = this.hostView();
+    return Object.assign(this.playerView(slot), { ball: v.ball, blobs: v.blobs, field: v.field, gravity: v.gravity, touches: v.touches });
+  }
 }
 
 export default {
