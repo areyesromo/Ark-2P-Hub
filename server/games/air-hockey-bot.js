@@ -43,11 +43,13 @@ export function airHockeyBot(view, level, rng = Math.random) {
       ty = py + (dy / d) * L.through;
     } else if (Math.abs(px - home) < FIELD.malletR) {
       // Against my end wall, where no mallet can get behind it.
-      if (py < FIELD.malletR || py > FIELD.h - FIELD.malletR) {
-        // In a corner pocket: stand off in front of the goal (out of its way) while the table
-        // drifts it back out (see AirHockey#unstick).
+      const corner = py < FIELD.malletR || py > FIELD.h - FIELD.malletR;
+      const mouth = Math.abs(py - FIELD.h / 2) < FIELD.goalH / 2;
+      if (corner || mouth) {
+        // In a corner pocket or my goal mouth (a hit there scores for them): stand off, out of
+        // its way, while the table drifts it back out (see AirHockey#unstick).
         tx = home + toward * 2.2;
-        ty = FIELD.h / 2;
+        ty = FIELD.h / 2 + (py > FIELD.h / 2 ? -2.2 : 2.2);
       } else {
         // Hit it into the wall: it comes back off it.
         tx = px;

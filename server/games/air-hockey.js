@@ -120,21 +120,23 @@ export class AirHockey {
   }
 
   /**
-   * A puck at rest in a corner pocket is beyond every mallet (none can get behind it to push it
-   * out), so after a moment the table's air drifts it back out towards the middle.
+   * A puck at rest in a corner pocket or a goal mouth, right against the end, is beyond every
+   * mallet (none can get behind it, and a hit from the front only knocks it in), so after a moment
+   * the table's air drifts it back out towards the middle (it stops short of the centre line).
    */
   unstick(dt) {
     const p = this.puck;
     const r = FIELD.malletR;
-    const pocket = (p.x < r || p.x > FIELD.w - r) && (p.y < r || p.y > FIELD.h - r);
+    const end = p.x < r || p.x > FIELD.w - r;
+    const pocket = end && (p.y < r || p.y > FIELD.h - r || Math.abs(p.y - FIELD.h / 2) < FIELD.goalH / 2);
     this.stuckFor = pocket && Math.hypot(p.vx, p.vy) < 1 ? (this.stuckFor || 0) + dt : 0;
     if (this.stuckFor < 0.8) return;
     this.stuckFor = 0;
     const dx = FIELD.w / 2 - p.x;
     const dy = FIELD.h / 2 - p.y;
     const d = Math.hypot(dx, dy);
-    p.vx = (dx / d) * 4;
-    p.vy = (dy / d) * 4;
+    p.vx = (dx / d) * 2.4;
+    p.vy = (dy / d) * 2.4;
   }
 
   /** The rails and end walls bounce the puck back onto the table (the goal mouths are open). */

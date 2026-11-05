@@ -194,3 +194,24 @@ test('the computer waits its own pause, works out a move once per position, and 
   assert.equal(r.botMemory.seen || 0, 1, 'forgotten (one look since)');
   r.dispose();
 });
+
+test('a move the computer no longer wants (the game moved on) is dropped, not played later', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const { r } = room();
+  r.startGame('rock-paper-scissors');
+  r.handleInput(0, { type: 'go' });
+  let want = true;
+  const def = { bot: () => (want ? { type: 'pick', choice: 'rock', botDelayMs: 5000 } : null) };
+  r.botDef = () => def;
+  r.botCache = null;
+  r.driveBot();
+  assert.ok(r.botTimer);
+  want = false;
+  r.botCache = null; // (the game moved on: a new view, so it thinks again)
+  r.pushGameViews();
+  assert.equal(r.botTimer, null, 'dropped');
+  want = true;
+  wait(t, 6000);
+  // (a fresh one was only scheduled by a later look)
+  r.dispose();
+});

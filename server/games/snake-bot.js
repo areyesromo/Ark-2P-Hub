@@ -4,7 +4,8 @@
  * left (a flood fill), and the nearest food it can get to first.
  *   easy:   avoids what's right in front of it, heads for food, and is sometimes late to turn.
  *   normal: checks it won't box itself in.
- *   hard:   quick, goes for food it can reach before you, and keeps away from your head.
+ *   hard:   quick, finds the way round to food, keeps away from your head, and once it's longer
+ *           it hems you in.
  */
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
@@ -34,14 +35,18 @@ export function snakeBot(view, level, rng = Math.random) {
       const room = flood(blocked, w, h, nx, ny, me.body.length * 2 + 10);
       score += room < me.body.length + 2 ? room * 50 - 1e6 : Math.min(room, 60) * 4; // don't box yourself in
     }
-    // The nearest food (Hard: one it gets to before you).
+    // The nearest food: as the crow flies, or (Hard) by the way round the bodies.
     let best = Infinity;
-    for (const [fx, fy] of food) {
-      const d = Math.abs(fx - nx) + Math.abs(fy - ny);
-      if (level === 'hard' && theirHead && Math.abs(fx - theirHead[0]) + Math.abs(fy - theirHead[1]) < d) continue;
-      best = Math.min(best, d);
-    }
+    if (level === 'hard') best = pathToFood(blocked, w, h, nx, ny, food);
+    else for (const [fx, fy] of food) best = Math.min(best, Math.abs(fx - nx) + Math.abs(fy - ny));
     if (best < Infinity) score -= best * 10;
+    // Hard, longer than you and close: it hems you in (the less room your head has, the better).
+    if (level === 'hard' && theirHead && me.body.length > them.body.length && Math.abs(theirHead[0] - nx) + Math.abs(theirHead[1] - ny) < 8) {
+      blocked[ny * w + nx] = 1;
+      const theirRoom = flood(blocked, w, h, theirHead[0], theirHead[1], 80);
+      blocked[ny * w + nx] = 0;
+      score += (80 - theirRoom) * 3;
+    }
     if (level === 'hard' && theirHead && Math.abs(theirHead[0] - nx) + Math.abs(theirHead[1] - ny) <= 1) score -= 5000; // a head-on
     if (dir === view.dir) score += 1; // (no needless wiggling)
     options.push({ dir, score: score + rng() * (level === 'easy' ? 15 : 0.5) });
@@ -50,6 +55,31 @@ export function snakeBot(view, level, rng = Math.random) {
   if (best.dir === view.dir) return null;
   const [lo, hi] = REACT[level];
   return { type: 'turn', dir: best.dir, botDelayMs: lo + rng() * (hi - lo) };
+}
+
+/** How many steps to the nearest food going round the bodies (Infinity: none it can reach). */
+function pathToFood(blocked, w, h, x, y, food) {
+  const want = new Set(food.map(([fx, fy]) => fy * w + fx));
+  if (!want.size) return Infinity;
+  const dist = new Int32Array(w * h).fill(-1);
+  const queue = [y * w + x];
+  dist[y * w + x] = 0;
+  for (let q = 0; q < queue.length; q++) {
+    const k = queue[q];
+    if (want.has(k)) return dist[k];
+    const cx = k % w;
+    const cy = (k - cx) / w;
+    for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const ax = cx + dx;
+      const ay = cy + dy;
+      if (ax < 0 || ay < 0 || ax >= w || ay >= h) continue;
+      const j = ay * w + ax;
+      if (dist[j] !== -1 || blocked[j]) continue;
+      dist[j] = dist[k] + 1;
+      queue.push(j);
+    }
+  }
+  return Infinity;
 }
 
 /** How many cells can be reached from (x, y), up to `cap`. */

@@ -2,16 +2,16 @@
  * The computer opponent for Tank Duel (see `bot` in index.js). It reads the field the TV shows.
  * With a clear line to you it turns to face you and fires; without one it drives round the cover
  * towards you (a path on a coarse grid); and it steps aside from shells coming its way.
- *   easy:   slow, fires when only roughly facing you, never dodges.
+ *   easy:   slow, fires when only roughly facing you (with a clear line), never dodges.
  *   normal: waits for a clear line and a closer aim, and dodges shells that are close.
  *   hard:   quick, aims tight, and dodges early.
  */
 import { TANK, SHELL } from './tanks.js';
 
 const LEVEL = {
-  easy: { react: [320, 520], aim: 0.5, dodge: 0, needLine: true },
-  normal: { react: [120, 200], aim: 0.14, dodge: 0.7, needLine: true },
-  hard: { react: [60, 110], aim: 0.07, dodge: 1.1, needLine: true },
+  easy: { react: [320, 520], aim: 0.5, dodge: 0 },
+  normal: { react: [120, 200], aim: 0.14, dodge: 0.7 },
+  hard: { react: [60, 110], aim: 0.07, dodge: 1.1 },
 };
 const CELL = 0.5;
 
@@ -52,15 +52,14 @@ export function tanksBot(view, level, rng = Math.random) {
   const dx = foe.x - me.x;
   const dy = foe.y - me.y;
   const clear = lineClear(me.x, me.y, foe.x, foe.y, walls);
-  if (clear || !L.needLine) {
+  if (clear) {
     const want = Math.atan2(dy, dx);
     const off = Math.abs(Math.atan2(Math.sin(want - me.angle), Math.cos(want - me.angle)));
-    if (off < L.aim && view.ready && (clear || rng() < 0.5)) return { type: 'fire', botDelayMs: pace };
-    if (clear) {
-      // Face them; close in a little, or back off a little when they're close.
-      const dist = Math.hypot(dx, dy);
-      return move(dx, dy, dist > 5 ? 0.6 : dist < 2.5 ? 0.16 : 0.25);
-    }
+    if (off < L.aim && view.ready) return { type: 'fire', botDelayMs: pace };
+    // Turn to face them (a tank faces the way it drives): closing in from afar, barely creeping
+    // up close.
+    const dist = Math.hypot(dx, dy);
+    return move(dx, dy, dist > 5 ? 0.6 : dist < 2.5 ? 0.16 : 0.25);
   }
   // No clear line: round the cover towards them.
   const step = route(me, foe, walls, w, h);

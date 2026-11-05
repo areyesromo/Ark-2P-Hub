@@ -360,6 +360,12 @@ export class Room {
       }
     };
     const first = think(); // (every view is a look, so it remembers what it saw: Memory Match)
+    if (!first && this.botTimer) {
+      // The game moved on and it no longer wants that move (a grid ended, the turn passed).
+      clearTimeout(this.botTimer);
+      this.timers.delete(this.botTimer);
+      this.botTimer = null;
+    }
     if (!first || this.botTimer) return;
     const generation = this.generation;
     const t = setTimeout(() => {

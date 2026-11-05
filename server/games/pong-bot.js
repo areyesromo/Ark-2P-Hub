@@ -31,20 +31,21 @@ export function pongBot(view, level, rng = Math.random, retries = 0, memory = {}
     y = ((y % (2 * span)) + 2 * span) % (2 * span);
     if (y > span) y = 2 * span - y;
     target = y + r;
-    // A slip of the same size for the whole approach (so it doesn't jitter), new each time it comes.
-    const key = Math.sign(b.vx) + ':' + Math.round(b.vx * 10);
-    if (!memory.pong || memory.pong.key !== key) {
+    // A slip of the same size for the whole approach (so it doesn't jitter), rolled afresh each
+    // time the ball turns towards it.
+    if (!memory.pong || !memory.pong.coming) {
       const side = rng() < 0.5 ? -1 : 1;
       const reach = FIELD.paddleH / 2 + FIELD.ballR; // further off than this and it misses
       const off = rng() < L.miss
         ? side * reach * (1.1 + rng() * 0.4) // misjudged: it goes past
         : level === 'hard' ? side * FIELD.paddleH * (0.25 + rng() * 0.15) // the edge
           : (rng() * 2 - 1) * reach * (level === 'easy' ? 0.8 : 0.6);
-      memory.pong = { key, off };
+      memory.pong = { coming: true, off };
     }
     target += memory.pong.off;
-  } else if (level === 'easy') {
-    target = (view.paddles[me] + FIELD.h / 2) / 2; // only half way back
+  } else {
+    if (memory.pong) memory.pong.coming = false;
+    if (level === 'easy') target = (view.paddles[me] + FIELD.h / 2) / 2; // only half way back
   }
   target = Math.min(FIELD.h, Math.max(0, target));
   const [lo, hi] = L.react;

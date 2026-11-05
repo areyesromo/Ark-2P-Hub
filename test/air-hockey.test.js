@@ -169,3 +169,17 @@ test('a puck resting in a corner pocket (out of every mallet\'s reach) drifts ba
   ctx.advance(PHYSICS.tickMs * 60);
   assert.equal(game.puck.x, 4);
 });
+
+test('a puck freed from a corner settles in that player\'s half, and one resting in a goal mouth drifts out too', () => {
+  const { ctx, game } = setup();
+  launch(game, { x: FIELD.puckR, y: FIELD.puckR, vx: 0, vy: 0 });
+  game.mallets[0] = { x: 3, y: 8, vx: 0, vy: 0 };
+  game.mallets[1] = { x: FIELD.w - 3, y: 8, vx: 0, vy: 0 };
+  for (let i = 0; i < 60 * 8; i++) ctx.advance(PHYSICS.tickMs);
+  assert.ok(game.puck.x < FIELD.w / 2, 'still in player 1\'s half: ' + game.puck.x.toFixed(2));
+  launch(game, { x: 0.5, y: FIELD.h / 2, vx: 0, vy: 0 });
+  game.mallets[0] = { x: 3, y: 1, vx: 0, vy: 0 };
+  for (let i = 0; i < 60 * 3; i++) ctx.advance(PHYSICS.tickMs);
+  assert.ok(game.puck.x > FIELD.malletR, 'out of the mouth: ' + game.puck.x.toFixed(2));
+  assert.deepEqual(game.scores, [0, 0]);
+});
