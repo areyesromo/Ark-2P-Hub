@@ -50,7 +50,7 @@
           host.drawn = key;
           host.el.querySelector('.mid').innerHTML = '<div class="len">Path of ' + s.length + '</div>' + grid(lit, -1, false);
           host.el.querySelectorAll('.mi-side').forEach(function (side, slot) {
-            const local = host.players[slot] && host.players[slot].local;
+            const local = host.players[slot] && host.players[slot].local && !host.players[slot].bot;
             side.innerHTML = '<div class="who">' + ArkMini.nameOf({ players: host.players }, slot) + '</div><div class="prog">' + progress(s, slot) + '</div>' +
               (local && s.stage === 'input' ? grid(-1, cursors[slot], false) : '');
           });

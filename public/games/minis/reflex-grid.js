@@ -34,7 +34,7 @@
   function drawHost() {
     if (!host || !host.s) return;
     host.grids.forEach(function (g, slot) {
-      const pad = host.players[slot] && host.players[slot].local;
+      const pad = host.players[slot] && host.players[slot].local && !host.players[slot].bot;
       showGrid(g, host.s, slot, pad ? cursors[slot] : -1);
     });
     host.scores.forEach(function (el, slot) { el.textContent = host.s.points[slot]; });

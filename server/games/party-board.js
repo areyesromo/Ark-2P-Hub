@@ -582,11 +582,18 @@ export class PartyBoard {
   }
 
   hostView() {
-    return Object.assign(this.view(null), { names: this.ctx.players.map((x) => x.name), localPlayers: this.ctx.players.map((x) => Boolean(x.local)) });
+    return Object.assign(this.view(null), { names: this.ctx.players.map((x) => x.name), localPlayers: this.ctx.players.map((x) => Boolean(x.local && !x.bot)) }); // (controllers on the TV: not the computer)
   }
 
   playerView(slot) {
     return Object.assign(this.view(slot), { you: slot, names: this.ctx.players.map((x) => x.name) });
+  }
+
+  /** What the computer player sees: its phone's view (in a minigame, with the minigame's clock). */
+  botView(slot) {
+    const v = this.playerView(slot);
+    if (v.mini && this.mini) v.mini = this.mini.botView(slot);
+    return v;
   }
 }
 

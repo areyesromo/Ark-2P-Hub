@@ -204,6 +204,11 @@ export class MiniGame {
   playerView(slot) {
     return Object.assign(this.view(slot), { you: slot });
   }
+
+  /** What the computer player sees: its phone's view, and the minigame's clock to the ms (the TV's). */
+  botView(slot) {
+    return Object.assign(this.playerView(slot), { elapsedMs: this.phase === 'play' ? this.ctx.now() - this.playAt : 0 });
+  }
 }
 
 /**

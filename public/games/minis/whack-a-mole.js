@@ -24,7 +24,7 @@
   function drawHost() {
     if (!host || !host.s) return;
     const s = host.s;
-    const cur = [0, 1].filter(function (p) { return host.players[p] && host.players[p].local; }).map(function (p) { return [cursors[p], p]; });
+    const cur = [0, 1].filter(function (p) { return host.players[p] && host.players[p].local && !host.players[p].bot; }).map(function (p) { return [cursors[p], p]; });
     host.el.querySelector('.mid').innerHTML = field(s, false, cur, host.seen);
     host.el.querySelector('.score.p1').textContent = s.points[0];
     host.el.querySelector('.score.p2').textContent = s.points[1];

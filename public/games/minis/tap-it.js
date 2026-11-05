@@ -46,7 +46,7 @@
         el.innerHTML = '<div class="mi-split"><div class="mi-side p1"></div><div class="mi-side p2"></div></div>';
         hostParts = [0, 1].map(function (s) {
           const side = el.querySelectorAll('.mi-side')[s];
-          const local = mctx.players[s] && mctx.players[s].local;
+          const local = mctx.players[s] && mctx.players[s].local && !mctx.players[s].bot; // (a controller: not the computer)
           return arena(side, mctx, local, s);
         });
       },
