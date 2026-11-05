@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.27
+
+- 🤖 The computer now plays Crazy Eights, Liar's Dice, Anagram Duel and Word Race, at Easy, Normal
+  or Hard. These need just your phone against it. It only knows its own cards and dice, plays the
+  odds, and takes a person's time to find words.
+- Crazy Eights: a hand where nothing's left to draw and neither of you can play now ends (it goes to
+  whoever holds fewer points) instead of passing back and forth for ever.
+
 ## 0.1.26
 
 - 🤖 The computer now plays Falling Blocks Battle, Bomb Duel, Kart Race and Kart Race 3D (races and

@@ -43,6 +43,10 @@ import { rallyTennisBot } from './rally-tennis-bot.js';
 import { sumoBot } from './sumo-bot.js';
 import { miniGolfBot } from './mini-golf-bot.js';
 import { blockBattleBot } from './block-battle-bot.js';
+import { crazyEightsBot } from './crazy-eights-bot.js';
+import { liarsDiceBot } from './liars-dice-bot.js';
+import { anagramDuelBot } from './anagram-duel-bot.js';
+import { wordRaceBot } from './word-race-bot.js';
 import { bombDuelBot } from './bomb-duel-bot.js';
 import { kartRaceBot } from './kart-race-bot.js';
 import { towerDuelBot } from './tower-duel-bot.js';
@@ -177,7 +181,7 @@ const GAMES = [
     ...timer('off', '15 s a question (12 s for the Dragon), faster hits harder'),
   }),
   withSetup(fakeOut, { rounds: { title: 'Rounds', values: [6, 4, 8], label: (n) => `${n} rounds` }, ...timer('timed', '60 s to write, 20 s to pick') }),
-  withSetup(crazyEights, {
+  withSetup({ ...crazyEights, bot: crazyEightsBot }, {
     actions: { title: 'Rules', values: [1, 0], label: (n) => (n ? 'Action cards (2, Jack, Q♠)' : 'Classic') },
     target: { title: 'Match', values: [100, 0, 200], label: (n) => (n ? `First to ${n}` : 'One hand') },
     ...timer('timed', '30 s a turn'),
@@ -191,8 +195,8 @@ const GAMES = [
     heroes: { title: 'Heroes', values: [0, 1], label: (n) => (n ? 'Player 1 the ✨ Healer, player 2 the 🛡️ Fighter' : 'Player 1 the 🛡️ Fighter, player 2 the ✨ Healer') },
     difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (more hearts, 5 continues, a weaker Warden)' : 'Normal (3 continues)') },
   }),
-  wordRace,
-  withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),
+  { ...wordRace, bot: wordRaceBot },
+  withSetup({ ...anagramDuel, bot: anagramDuelBot }, firstTo('Rounds to win', [5, 3, 7])),
   withSetup({ ...wordHunt, bot: wordHuntBot }, {
     mode: { title: 'Mode', values: ['shared', 'race'], label: (k) => (k === 'race' ? 'Race (two phones): your own board each, first to find every word' : 'Shared board: first to mark a word gets it') },
     size: { title: 'Grid', values: ['medium', 'small', 'large'], label: (k) => `${HUNT_SIZES[k].name} · ${HUNT_SIZES[k].words} words${k === 'small' ? ', across and down' : k === 'medium' ? ', diagonals too' : ', any way, even backwards'}` },
@@ -216,7 +220,7 @@ const GAMES = [
     controls: { title: 'Who tilts what', values: [1, 2], label: (n) => (n === 1 ? 'Split: one ↔, one ↕' : 'Shared: both steer') },
   }),
   withSetup(mindMeld, { rounds: { title: 'Rounds (you swap who gives the clue)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` }, ...timer('off', '90 s for the clue, 60 s to guess') }),
-  withSetup(liarsDice, {
+  withSetup({ ...liarsDice, bot: liarsDiceBot }, {
     tutorial: { title: 'How to play', values: [1, 0], label: (t) => (t ? '📖 Show a quick example round first' : 'Skip it, we know the rules') },
     dice: { title: 'Dice each', values: [5, 3, 4], label: (n) => `${n} dice` },
     wild: { title: 'Ones', values: [1, 0], label: (n) => (n ? 'Wild (count as any face)' : 'Just ones') },
@@ -245,7 +249,6 @@ export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
 
 /** Games the computer opponent is planned for: "⏳ Coming soon" in the lobby while it's seated. */
 const BOT_SOON = new Set([
-  'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', // next: the card and word games
   'party-board', 'party-minis', 'micro-mayhem', // the party games
   'kitchen-rush', 'dungeon-duo', 'marble-maze', // and a teammate in the co-op games
 ]);

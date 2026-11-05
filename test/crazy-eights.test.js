@@ -356,3 +356,26 @@ test('with no timer, calling the suit after an 8 waits for you too', () => {
   assert.equal(g.phase, 'play');
   assert.equal(g.turn, 1);
 });
+
+test('a hand nobody can go on with (no cards left to draw, and both pass) ends: fewer points in hand wins it', () => {
+  const { g } = game({ target: 0 });
+  // Nothing to draw, nothing under the top card to shuffle back, and neither hand fits the 5 of hearts.
+  table(g, { hands: [['KC', 'QC', 'JC'], ['3S', '4S']], top: '5H', deck: [] });
+  g.onInput(0, { type: 'draw' });
+  assert.equal(g.turn, 1, 'nothing to draw: the turn passes');
+  assert.equal(g.phase, 'play');
+  g.onInput(1, { type: 'draw' });
+  assert.equal(g.phase, 'over', 'stuck: the hand ends');
+  assert.equal(g.winner, 1, 'the fewer points left');
+  assert.equal(g.result.points, 30);
+  assert.equal(g.result.stuck, true);
+});
+
+test('a stuck count starts afresh after a card is played', () => {
+  const { g } = game({ target: 0 });
+  table(g, { hands: [['KC', '9H'], ['3S', '5S', '6D']], top: '5H', deck: [] });
+  g.onInput(0, { type: 'draw' }); // (nothing: passes)
+  play(g, 1, '5S');
+  g.onInput(0, { type: 'draw' }); // (nothing again)
+  assert.equal(g.phase, 'play', 'one pass since the last card: not stuck yet');
+});

@@ -6,8 +6,8 @@ import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
 const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel'];
-const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', ...REALTIME];
-const SOON = [ 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
+const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', ...REALTIME];
+const SOON = ['party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -366,4 +366,85 @@ test('Kart Race: in a balloon battle the computer beats someone sitting still, w
     const { view } = play('kart-race', ['normal', null], { seed, human, settings: { mode: 1 } });
     assert.equal(view.winner, 0, 'seed ' + seed);
   }
+});
+
+test('card and word games: Hard beats Easy', () => {
+  hardBeatsEasy('liars-dice', 6, 5);
+  hardBeatsEasy('anagram-duel', 6, 5);
+  hardBeatsEasy('word-race', 4, 4);
+});
+
+test('card and word games: the computer only sees what a player sees (its own dice, its own hand)', () => {
+  for (const id of ['crazy-eights', 'liars-dice', 'anagram-duel', 'word-race']) {
+    const ctx = fakeCtx();
+    ctx.players[1].bot = 'hard';
+    const g = getGame(id).create(ctx);
+    g.start();
+    if (g.hostView().phase === 'setup') g.onInput(0, { type: 'go' });
+    ctx.advance(4000);
+    assert.deepEqual(g.botView ? g.botView(1) : g.playerView(1), g.playerView(1), id);
+  }
+});
+
+test('Liar\'s Dice: the computer calls a bid its dice say can\'t be, and raises on one they make likely', () => {
+  const def = getGame('liars-dice');
+  const base = { phase: 'bidding', turn: 1, you: 1, wild: true, counts: [5, 5], total: 10, bids: [] };
+  // Nine 6s: it has none of them and no ones, so you'd need all nine... of your five.
+  const tall = { ...base, mine: [2, 2, 3, 4, 5], bid: { qty: 9, face: 6, by: 0 } };
+  tall.bids = [tall.bid];
+  for (const level of ['easy', 'normal', 'hard']) assert.equal(def.bot(tall, level, Math.random).type, 'liar', level);
+  // Two 4s, and it holds three (with a one): no doubt there, so it raises.
+  const sure = { ...base, mine: [1, 4, 4, 5, 6], bid: { qty: 2, face: 4, by: 0 } };
+  sure.bids = [sure.bid];
+  for (const level of ['normal', 'hard']) {
+    for (let i = 0; i < 20; i++) {
+      const m = def.bot(sure, level, Math.random);
+      assert.equal(m.type, 'bid', level);
+      assert.ok(m.qty > 2 || m.face > 4, 'a real raise');
+    }
+  }
+  // How to play: it reads it and presses Got it.
+  assert.equal(def.bot({ phase: 'howto', you: 1, ready: [true, false] }, 'hard', Math.random).type, 'ready');
+});
+
+test('Crazy Eights: the computer answers a 2 with a 2, keeps its 8 when something else fits, and calls its longest suit', () => {
+  const def = getGame('crazy-eights');
+  const base = { phase: 'play', turn: 1, you: 1, counts: [5, 5], actions: true, pending: 0 };
+  const two = def.bot({ ...base, pending: 2, pendingKind: '2', cards: ['2H', '9C'], playable: ['2H'] }, 'normal', Math.random);
+  assert.deepEqual([two.type, two.card], ['play', '2H']);
+  for (const level of ['normal', 'hard']) {
+    const m = def.bot({ ...base, cards: ['8S', '5H', 'KH', '3C'], playable: ['8S', '5H', 'KH'] }, level, Math.random);
+    assert.notEqual(m.card, '8S', level);
+  }
+  assert.equal(def.bot({ ...base, cards: ['8S', '3C'], playable: ['8S'] }, 'normal', Math.random).card, '8S', 'nothing else fits');
+  assert.equal(def.bot({ ...base, phase: 'suit', cards: ['2D', '5D', 'KD', '3C'] }, 'hard', Math.random).suit, 'D');
+  assert.equal(def.bot({ ...base, cards: ['3C'], playable: [] }, 'hard', Math.random).type, 'draw');
+});
+
+test('Anagram Duel: the computer takes a person\'s time to see the word (Hard sooner than Easy), and places the letters first', () => {
+  const def = getGame('anagram-duel');
+  const solveTime = (level) => {
+    const times = [];
+    for (let i = 0; i < 200; i++) {
+      const memory = {};
+      const view = { phase: 'play', round: 1, you: 1, letters: ['p', 'l', 'a', 'p', 'e'], progress: [0, 5], roundMs: 30000, timeLeft: 30000, feedback: null, lockedFor: 0 };
+      const m = def.bot(view, level, Math.random, 0, memory);
+      assert.equal(m.type, 'guess');
+      if (m.word === 'apple') times.push(m.botDelayMs);
+    }
+    times.sort((a, b) => a - b);
+    return times[Math.floor(times.length / 2)];
+  };
+  const easy = solveTime('easy');
+  const hard = solveTime('hard');
+  assert.ok(hard > 3000 && hard < 9000 && easy > hard * 2, 'hard ' + hard + ' easy ' + easy);
+  const first = def.bot({ phase: 'play', round: 1, you: 1, letters: ['p', 'l', 'a', 'p', 'e'], progress: [0, 0], roundMs: 30000, timeLeft: 30000, lockedFor: 0 }, 'hard', Math.random, 0, {});
+  assert.deepEqual([first.type, first.n], ['progress', 1]);
+});
+
+test('Word Race: the computer finds everyday words (Easy fewer than Hard), and traces them for real', () => {
+  const { g } = play('word-race', ['hard', 'easy'], { seed: 2 });
+  const words = g.result.tally.map((t) => t.length);
+  assert.ok(words[0] > words[1], JSON.stringify(words));
+  assert.ok(words[0] < 60 && words[1] >= 1, 'human-sized: ' + JSON.stringify(words));
 });

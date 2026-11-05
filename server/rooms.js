@@ -189,7 +189,7 @@ export class Room {
   /** A random game for the "🎲 Random" button: not the one just played, and playable by these players. */
   pickRandomGame(rng = Math.random) {
     const allLocal = this.players.every((p) => p && p.local);
-    const anyLocal = this.players.some((p) => p && p.local);
+    const anyLocal = this.players.some((p) => p && p.local && !p.bot); // (the computer isn't a controller: it plays phone-only games)
     const bot = this.botSlot !== -1;
     let pool = listGames().filter((g) => !(g.needsPhone && allLocal) && !(g.phoneOnly && anyLocal) && (!bot || g.vsComputer));
     if (pool.length > 1) pool = pool.filter((g) => g.id !== this.lastGameId);
@@ -201,7 +201,7 @@ export class Room {
     const def = getGame(gameId);
     if (!def) return { error: 'Unknown game.' };
     if (!this.readyToPlay) return { error: 'Waiting for two players.' };
-    if (def.phoneOnly && this.players.some((p) => p && p.local)) return { error: `${def.name} needs two phones.` };
+    if (def.phoneOnly && this.players.some((p) => p && p.local && !p.bot)) return { error: `${def.name} needs two phones.` };
     if (this.botSlot !== -1 && !def.bot) return { error: `${def.name} can't be played against the computer (yet).` };
 
     this.stopGame({ silent: true });
@@ -269,7 +269,8 @@ export class Room {
 
   handleInput(slot, input) {
     if (!this.game || !input || typeof input !== 'object') return;
-    this.touch();
+    // (the computer's own moves aren't someone here: they don't keep an empty room alive)
+    if (!(this.players[slot] && this.players[slot].bot)) this.touch();
     try {
       this.game.onInput(slot, input);
     } catch (err) {

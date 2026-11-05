@@ -75,6 +75,7 @@ export class CrazyEights {
     this.pendingKind = null;
     this.result = null;
     this.last = null;
+    this.passes = 0; // turns in a row with nothing to draw (two: nobody can go on)
     this.turn = (this.opener + this.hand - 1) % 2; // the players take turns to open a hand
     this.phase = 'play';
     this.turnStart();
@@ -128,6 +129,7 @@ export class CrazyEights {
     this.suit = rankOf(c) === '8' ? null : suitOf(c); // an 8's suit is whatever gets called
     this.last = { slot, card: c, kind: 'play' };
     this.events.plays++;
+    this.passes = 0;
     if (!this.hands[slot].length) return this.handOver(slot);
     if (rankOf(c) === '8') {
       this.events.eights++;
@@ -189,7 +191,12 @@ export class CrazyEights {
     const c = this.takeCard();
     this.events.draws++;
     this.last = { slot, kind: 'draw' };
-    if (!c) return this.next(); // nothing left anywhere: the turn passes
+    if (!c) {
+      // Nothing left anywhere: the turn passes. Both in a row, and nobody can go on: the hand
+      // ends, won by whoever's left holding fewer points.
+      if (++this.passes >= 2) return this.handOver(this.fewerPoints(), true);
+      return this.next();
+    }
     this.hands[slot].push(c);
     this.drew = c;
     this.ctx.update();
@@ -206,12 +213,20 @@ export class CrazyEights {
     this.next();
   }
 
-  handOver(slot) {
+  /** Who holds fewer points (then fewer cards; then the one who passed first). */
+  fewerPoints() {
+    const pts = this.hands.map((h) => h.reduce((sum, c) => sum + value(c), 0));
+    if (pts[0] !== pts[1]) return pts[0] < pts[1] ? 0 : 1;
+    if (this.hands[0].length !== this.hands[1].length) return this.hands[0].length < this.hands[1].length ? 0 : 1;
+    return 1 - this.turn;
+  }
+
+  handOver(slot, stuck = false) {
     if (this.timer) this.ctx.clearTimeout(this.timer);
     this.timer = null;
     const points = this.hands[1 - slot].reduce((sum, c) => sum + value(c), 0);
     this.scores[slot] += points;
-    this.result = { winner: slot, points, left: this.hands.map((h) => h.slice()) };
+    this.result = { winner: slot, points, left: this.hands.map((h) => h.slice()), ...(stuck ? { stuck: true } : {}) };
     if (!this.target || this.scores[slot] >= this.target) {
       this.winner = slot;
       this.phase = 'over';
