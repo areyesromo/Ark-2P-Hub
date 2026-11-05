@@ -745,7 +745,7 @@
       focus = Ark.stepVertical($('game-list').querySelectorAll('.game-card'), focus, btn === 'UP' ? -1 : 1);
     } else if (btn === 'A' || btn === 'START') {
       if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
-      else if (cards[focus].phoneOnly) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');
+      else if (cards[focus].phoneOnly && Ark.controllerSeated(state)) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');
       else if (Ark.botTag(state, cards[focus])) flashPad('🤖 ' + cards[focus].name + (cards[focus].botSoon ? ': the computer can\'t play it yet (coming soon).' : ' needs a person, not the computer.'));
       else socket.emit('lobby:start', { gameId: cards[focus].id }, function (res) {
         if (res && res.error) flashPad('⚠️ ' + res.error);

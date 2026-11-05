@@ -265,3 +265,20 @@ test('the computer\'s "refused" count starts afresh for a new match, and a move 
   assert.equal(r.botRetries, 0);
   r.dispose();
 });
+
+test('the computer isn\'t a controller: with a phone and the computer, phone-only games are on (not with a controller)', () => {
+  const { r } = room();
+  assert.ok(r.startGame('liars-dice').ok, 'one phone and the computer');
+  r.stopGame();
+  const picks = new Set();
+  for (let i = 0; i < 300; i++) picks.add(r.pickRandomGame());
+  assert.ok(picks.has('crazy-eights') || picks.has('liars-dice') || picks.has('anagram-duel') || picks.has('word-race'), 'phone-only games come up at random');
+  // A controller and the computer: nobody has a phone.
+  const pad = new Room('PAD', io, {});
+  pad.hostSockets.add('tv');
+  pad.seatPlayer('Pad', null, { local: true });
+  pad.seatBot('easy');
+  assert.match(pad.startGame('liars-dice').error, /phones/);
+  pad.dispose();
+  r.dispose();
+});

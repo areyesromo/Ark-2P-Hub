@@ -320,9 +320,9 @@
     }).join('') + (leave ? '<button class="ghost" data-bot-leave title="Send the computer away">✕</button>' : '') + '</span>';
   }
 
-  /** True when a controller (plugged into the TV) holds a seat: phone-only games are off then. */
+  /** True when a controller (plugged into the TV) holds a seat: phone-only games are off then (not for the computer's seat). */
   function controllerSeated(state) {
-    return Boolean(state && state.players && state.players.some(function (p) { return p && p.local; }));
+    return Boolean(state && state.players && state.players.some(function (p) { return p && p.local && !p.bot; }));
   }
 
   // ---- the TV lobby's layout change (QR code panel on / off) ----
