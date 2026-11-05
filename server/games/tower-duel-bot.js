@@ -8,7 +8,7 @@
  *   hard:   quicker, the same mix (cannons where most road is in reach, frost further down the
  *           road), upgrades its best towers, and sends early to build its income.
  */
-import { GRID, TOWERS, CREEPS, pathLength, pointAt, pathTiles } from './tower-duel.js';
+import { GRID, TOWERS, CREEPS, MAX_SENT, pathLength, pointAt, pathTiles } from './tower-duel.js';
 
 const LEVEL = {
   easy: { think: [3500, 6000], pick: 6, send: 0.15, reserve: 30 },
@@ -91,7 +91,8 @@ export function towerDuelBot(view, level, rng = Math.random) {
   if (me.gold >= L.reserve + 8 && rng() < L.send) {
     const theirTowers = them.towers.length;
     const pick = level === 'hard' && theirTowers < 4 ? 'swarm' : me.gold > 60 ? 'brute' : 'runner';
-    if (me.gold >= CREEPS[pick].cost + L.reserve) return { type: 'send', kind: pick, botDelayMs: wait };
+    const room = MAX_SENT - (them.coming || 0) >= (CREEPS[pick].count || 1); // (their road's queue isn't full)
+    if (room && me.gold >= CREEPS[pick].cost + L.reserve) return { type: 'send', kind: pick, botDelayMs: wait };
   }
   if (me.gold >= TOWERS[kind].cost + L.reserve) return build(kind);
   return null;

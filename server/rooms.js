@@ -213,7 +213,7 @@ export class Room {
 
     const ctx = {
       get players() {
-        return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}`, local: Boolean(p && p.local), ...(p && p.bot ? { bot: p.bot } : {}) }));
+        return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}`, local: Boolean(p && p.local), connected: Boolean(p && p.connected), ...(p && p.bot ? { bot: p.bot } : {}) }));
       },
       now: () => Date.now(),
       // The fastest lap on a track in this game's history (Kart Race), or null.
@@ -326,6 +326,8 @@ export class Room {
     if (this.lastPhase === 'over' && view.phase !== 'over') { // a rematch: the computer starts afresh
       this.botMemory = {};
       this.botCache = null;
+      this.botRetries = 0;
+      this.botLastMove = null;
     }
     this.lastPhase = view.phase;
     this.io.to(this.hostChannel).emit('game:view', { gameId, view });
@@ -378,7 +380,9 @@ export class Room {
       // it saw coming and timed (botAnticipate: its own planned turn, say) is judged afresh.
       const fresh = think();
       if (!fresh) return;
-      const { botDelayMs, botAnticipate, ...input } = first.botAnticipate ? fresh : first;
+      // A move meant for something that's gone (botFor: the piece it was for, say) isn't played.
+      if (first.botFor !== undefined && fresh.botFor !== first.botFor) return this.driveBot();
+      const { botDelayMs, botAnticipate, botFor, ...input } = first.botAnticipate ? fresh : first;
       const key = JSON.stringify(input);
       this.botRetries = key === this.botLastMove ? (this.botRetries || 0) + 1 : 0;
       this.botLastMove = key;

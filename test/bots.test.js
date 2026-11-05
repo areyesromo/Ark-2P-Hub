@@ -77,7 +77,8 @@ function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs
       // move it timed, botAnticipate, it judges afresh).
       const fresh = ask(slot);
       if (!fresh) continue;
-      const { botDelayMs, botAnticipate, ...input } = decided.botAnticipate ? fresh : decided;
+      if (decided.botFor !== undefined && fresh.botFor !== decided.botFor) continue;
+      const { botDelayMs, botAnticipate, botFor, ...input } = decided.botAnticipate ? fresh : decided;
       const before = JSON.stringify(g.hostView());
       g.onInput(slot, input);
       if (JSON.stringify(g.hostView()) === before) stats.refused++;
@@ -339,4 +340,30 @@ test('Kart Race: the computer fights a balloon battle too, and readies up after 
   assert.ok(stats.moves[0] > 0);
   assert.equal(view.phase, 'over');
   assert.ok(view.battle, 'a battle');
+});
+
+test('Bomb Duel: against someone standing still, the computer wins its rounds (it doesn\'t blow itself up)', () => {
+  for (const level of ['normal', 'hard']) {
+    let wins = 0;
+    for (let seed = 1; seed <= 3; seed++) {
+      const { view } = play('bomb-duel', [level, null], { seed, limitMs: 12 * 60 * 1000 });
+      if (view.winner === 0) wins++;
+    }
+    assert.ok(wins >= 2, level + ' won ' + wins + ' of 3');
+  }
+});
+
+test('Falling Blocks: the computer (even Easy) outlasts someone who never touches the controls', () => {
+  for (const level of ['easy', 'normal']) {
+    const { view } = play('block-battle', [level, null], { seed: 4 });
+    assert.equal(view.winner, 0, level);
+  }
+});
+
+test('Kart Race: in a balloon battle the computer beats someone sitting still, without getting stuck on the walls', () => {
+  for (let seed = 1; seed <= 3; seed++) {
+    const human = (v, slot) => ((v.phase === 'standings' || v.phase === 'setup') && !(v.ready || [])[slot] ? { type: 'go', botDelayMs: 500 } : null);
+    const { view } = play('kart-race', ['normal', null], { seed, human, settings: { mode: 1 } });
+    assert.equal(view.winner, 0, 'seed ' + seed);
+  }
 });

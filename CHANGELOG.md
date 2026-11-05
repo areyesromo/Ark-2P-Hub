@@ -9,6 +9,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - 🤖 The computer now plays Falling Blocks Battle, Bomb Duel, Kart Race and Kart Race 3D (races and
   balloon battles) and Tower Defence Duel, at Easy, Normal or Hard. In Kart Race it readies up on
   the menus once you have.
+- Kart Race: if a player's phone drops out on the setup or standings screen, the other no longer
+  waits for them to press Ready (they count as ready, as was always meant).
 
 ## 0.1.25
 

@@ -13,7 +13,7 @@ import { reactionMs } from './bot-human.js';
 
 // Thinking time for a new piece (ms), the gap between key taps, and how much it errs in judging spots.
 const LEVEL = {
-  easy: { think: 650, tap: [190, 300], slip: 3.5, look: false },
+  easy: { think: 650, tap: [190, 300], slip: 1.2, look: false },
   normal: { think: 380, tap: [120, 190], slip: 0.8, look: false },
   hard: { think: 230, tap: [85, 130], slip: 0, look: true },
 };
@@ -29,18 +29,23 @@ export function blockBattleBot(view, level, rng = Math.random, retries = 0, memo
   const p = view.piece;
   // A plan for this piece (worked out once, when it appears).
   let plan = memory.blocks && memory.blocks.no === p.no ? memory.blocks : null;
-  if (!plan) {
-    plan = memory.blocks = { no: p.no, target: choose(view, level, rng), fresh: true };
-  }
+  if (!plan) plan = memory.blocks = { no: p.no, target: choose(view, level, rng), spawn: JSON.stringify(p.cells), lastX: null, still: 0 };
+  // Every move says which piece it's for (one meant for a piece that's gone isn't played).
   const tap = L.tap[0] + rng() * (L.tap[1] - L.tap[0]);
-  const wait = plan.fresh ? L.think + reactionMs(level, rng) * 0.5 : tap; // (a moment to look at a new piece)
-  plan.fresh = false;
+  const untouched = JSON.stringify(p.cells) === plan.spawn; // (a moment to look at a new piece first)
+  const move = (m) => ({ ...m, piece: p.no, botFor: p.no, botDelayMs: untouched ? L.think + reactionMs(level, rng) * 0.5 : tap });
   const target = plan.target;
-  if (!target || retries >= 3) return { type: 'drop', botDelayMs: wait }; // (no spot, or it won't turn or slide there)
+  if (!target || retries >= 3) return move({ type: 'drop' }); // (no spot, or it won't turn there)
   const now = shapeOf(p.cells);
-  if (now.key !== target.key) return { type: 'rotate', dir: 1, botDelayMs: wait };
-  if (now.minX !== target.x) return { type: 'shift', dir: target.x < now.minX ? -1 : 1, botDelayMs: wait };
-  return { type: 'drop', botDelayMs: wait };
+  if (now.key !== target.key) return move({ type: 'rotate', dir: 1 });
+  if (now.minX !== target.x) {
+    // Something in the way of sliding there: no headway for a while, so it drops it where it is.
+    plan.still = now.minX === plan.lastX ? plan.still + 1 : 0;
+    plan.lastX = now.minX;
+    if (plan.still > 45) return move({ type: 'drop' });
+    return move({ type: 'shift', dir: target.x < now.minX ? -1 : 1 });
+  }
+  return move({ type: 'drop' });
 }
 
 /** A set of cells as a shape (normalised to its corner) and where its left edge is. */

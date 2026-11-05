@@ -43,17 +43,38 @@ export function kartRaceBot(view, level, rng = Math.random, retries = 0, memory 
     const p = r.ahead[i];
     steerTo = Math.atan2(p.y - k.y, p.x - k.x);
     turn = bend(r);
-  } else {
+  } else if (view.ring) {
     // A battle: balloons only pop to items, so with none it fetches some from a ? box; then
-    // after you, firing when you're ahead of it.
+    // after you, firing when you're ahead of it. It goes round the ring the shorter way (the
+    // arena is a ring round an island), straight at it once it's close.
+    const r = view.ring;
     const foe = view.karts[1 - me];
     const armed = k.items && k.items.length;
-    const boxes = view.boxes || [];
-    const box = !armed && boxes.length ? boxes.reduce((a, b) => (Math.hypot(b.x - k.x, b.y - k.y) < Math.hypot(a.x - k.x, a.y - k.y) ? b : a)) : null;
-    const to = box || foe;
-    steerTo = Math.atan2(to.y - k.y, to.x - k.x);
+    const ringGap = (s) => ((((s - r.s) % 1) + 1) % 1) * r.length; // forwards round the ring
+    const way = (s) => Math.min(ringGap(s), r.length - ringGap(s));
+    const box = !armed && r.boxes.length ? r.boxes.reduce((a, b) => (way(b.s) < way(a.s) ? b : a)) : null;
+    const to = box ? { x: box.x, y: box.y, s: box.s } : { x: foe.x, y: foe.y, s: r.foe };
+    if (Math.hypot(to.x - k.x, to.y - k.y) < 3.5) steerTo = Math.atan2(to.y - k.y, to.x - k.x);
+    else {
+      const pts = ringGap(to.s) <= r.length / 2 ? r.ahead : r.back;
+      const p = pts[Math.min(pts.length - 1, Math.max(1, Math.round(Math.abs(k.speed) / 2.2)))];
+      steerTo = Math.atan2(p.y - k.y, p.x - k.x);
+    }
     if (armed && Math.abs(angleDiff(Math.atan2(foe.y - k.y, foe.x - k.x), k.angle)) < 0.3 && Math.hypot(foe.x - k.x, foe.y - k.y) < 8) return { type: 'item', botDelayMs: pace };
-  }
+  } else return null;
+  // Stuck against a wall (on the gas but hardly moving for a second): back out, turning.
+  const stuck = memory.kartStuck || (memory.kartStuck = { since: null, until: 0 });
+  const now = view.raceMs || 0;
+  if (now < stuck.until) return { type: 'drive', steer: stuck.steer, gas: false, brake: true, drift: false, botDelayMs: pace };
+  if (Math.abs(k.speed) < 0.6) {
+    if (stuck.since === null) stuck.since = now;
+    else if (now - stuck.since > 1000) {
+      stuck.since = null;
+      stuck.until = now + 900;
+      stuck.steer = angleDiff(steerTo, k.angle) > 0 ? -1 : 1; // (reversing turns it the other way)
+      return { type: 'drive', steer: stuck.steer, gas: false, brake: true, drift: false, botDelayMs: pace };
+    }
+  } else stuck.since = null;
   const err = angleDiff(steerTo, k.angle);
   const steer = Math.max(-1, Math.min(1, err * 2.4 + (rng() * 2 - 1) * L.wobble));
   // Speed for the bend ahead: slower the sharper it is.
