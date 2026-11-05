@@ -5,9 +5,9 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel'];
 const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', ...REALTIME];
-const SOON = ['block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
+const SOON = [ 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -77,7 +77,8 @@ function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs
       // move it timed, botAnticipate, it judges afresh).
       const fresh = ask(slot);
       if (!fresh) continue;
-      const { botDelayMs, botAnticipate, ...input } = decided.botAnticipate ? fresh : decided;
+      if (decided.botFor !== undefined && fresh.botFor !== decided.botFor) continue;
+      const { botDelayMs, botAnticipate, botFor, ...input } = decided.botAnticipate ? fresh : decided;
       const before = JSON.stringify(g.hostView());
       g.onInput(slot, input);
       if (JSON.stringify(g.hostView()) === before) stats.refused++;
@@ -330,4 +331,39 @@ test('Snake Battle: the computer really does take in your snake late (from the g
     if (seen.body[0].join() !== them.body[0].join()) lagged++;
   }
   assert.ok(looks > 50 && lagged / looks > 0.6, lagged + ' of ' + looks + ' looks were behind');
+});
+
+test('Kart Race: the computer fights a balloon battle too, and readies up after you on the menus', () => {
+  // You (sitting still) say go on the standings; it readies after you.
+  const human = (v, slot) => ((v.phase === 'standings' || v.phase === 'setup') && !(v.ready || [])[slot] ? { type: 'go', botDelayMs: 500 } : null);
+  const { view, stats } = play('kart-race', ['hard', null], { seed: 2, human, settings: { mode: 1 } });
+  assert.ok(stats.moves[0] > 0);
+  assert.equal(view.phase, 'over');
+  assert.ok(view.battle, 'a battle');
+});
+
+test('Bomb Duel: against someone standing still, the computer wins its rounds (it doesn\'t blow itself up)', () => {
+  for (const level of ['normal', 'hard']) {
+    let wins = 0;
+    for (let seed = 1; seed <= 3; seed++) {
+      const { view } = play('bomb-duel', [level, null], { seed, limitMs: 12 * 60 * 1000 });
+      if (view.winner === 0) wins++;
+    }
+    assert.ok(wins >= 2, level + ' won ' + wins + ' of 3');
+  }
+});
+
+test('Falling Blocks: the computer (even Easy) outlasts someone who never touches the controls', () => {
+  for (const level of ['easy', 'normal']) {
+    const { view } = play('block-battle', [level, null], { seed: 4 });
+    assert.equal(view.winner, 0, level);
+  }
+});
+
+test('Kart Race: in a balloon battle the computer beats someone sitting still, without getting stuck on the walls', () => {
+  for (let seed = 1; seed <= 3; seed++) {
+    const human = (v, slot) => ((v.phase === 'standings' || v.phase === 'setup') && !(v.ready || [])[slot] ? { type: 'go', botDelayMs: 500 } : null);
+    const { view } = play('kart-race', ['normal', null], { seed, human, settings: { mode: 1 } });
+    assert.equal(view.winner, 0, 'seed ' + seed);
+  }
 });

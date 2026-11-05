@@ -327,7 +327,7 @@
       view = v;
       viewAt = performance.now();
       // A controller player's cursor (and its tower) from the start, not only after a press.
-      [0, 1].forEach(function (slot) { if (v.players[slot] && v.players[slot].local) cursor(slot, v); });
+      [0, 1].forEach(function (slot) { if (v.players[slot] && v.players[slot].local && !v.players[slot].bot) cursor(slot, v); }); // (not the computer's)
       renderHud(v);
       renderOverlay(v);
     },

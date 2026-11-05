@@ -57,7 +57,7 @@ test('against the computer, only games it can play start (and come up at random)
   const { r } = room();
   const vs = listGames().filter((g) => g.vsComputer).map((g) => g.id);
   assert.ok(vs.includes('battleship') && vs.includes('connect-four'));
-  assert.match(r.startGame('kart-race').error, /computer/);
+  assert.match(r.startGame('marble-maze').error, /computer/);
   for (let i = 0; i < 40; i++) assert.ok(vs.includes(r.pickRandomGame()));
   assert.ok(r.startGame('battleship').ok);
   r.dispose();
@@ -235,5 +235,33 @@ test('the computer answers what it saw a reaction time later, not sooner: the mo
   wait(t, 300);
   // ...it plays what it decided when it looked (a person can't take in the change that fast).
   assert.equal(r.game.game.picks[1], 'rock');
+  r.dispose();
+});
+
+test('the computer\'s "refused" count starts afresh for a new match, and a move meant for something that\'s gone isn\'t played', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const { r } = room();
+  r.startGame('rock-paper-scissors');
+  r.handleInput(0, { type: 'go' });
+  clearTimeout(r.botTimer);
+  r.botTimer = null;
+  // A move for "piece 1"; by the time it's due the game has moved on to piece 2.
+  let piece = 1;
+  const played = [];
+  const def = { bot: (view) => (view.phase === 'choose' && !view.yourPick ? { type: 'pick', choice: piece === 1 ? 'rock' : 'paper', botFor: piece, botDelayMs: 300 } : null) };
+  r.botDef = () => def;
+  r.botCache = null;
+  const handle = r.handleInput.bind(r);
+  r.handleInput = (slot, input) => { if (slot === 1) played.push(input.choice); handle(slot, input); };
+  r.driveBot();
+  wait(t, 100);
+  piece = 2;
+  r.botCache = null;
+  wait(t, 900);
+  assert.deepEqual(played, ['paper'], 'not the stale rock');
+  r.botRetries = 5;
+  r.lastPhase = 'over';
+  r.pushGameViews();
+  assert.equal(r.botRetries, 0);
   r.dispose();
 });

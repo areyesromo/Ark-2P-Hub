@@ -24,7 +24,7 @@ export const TIMING = {
   repeatDelayMs: 170, repeatMs: 50,
 };
 // Each piece in its box (n x n), first way up: [x, y] cells.
-const SHAPES = {
+export const SHAPES = {
   I: { n: 4, cells: [[0, 1], [1, 1], [2, 1], [3, 1]] },
   O: { n: 2, cells: [[0, 0], [1, 0], [0, 1], [1, 1]] },
   T: { n: 3, cells: [[1, 0], [0, 1], [1, 1], [2, 1]] },
@@ -350,6 +350,16 @@ export class BlockBattle {
       result: this.result,
       winner: this.winner,
     };
+  }
+
+  /** The computer opponent's view: its own, plus its well as the TV shows it and the keys it holds (see block-battle-bot.js). */
+  botView(slot) {
+    const w = this.wells[slot];
+    return Object.assign(this.playerView(slot), {
+      rows: w.rows,
+      piece: w.piece && !w.out ? { kind: w.piece.kind, n: SHAPES[w.piece.kind].n, cells: this.cellsOf(w.piece), no: w.used } : null,
+      held: { ...this.held[slot] },
+    });
   }
 }
 

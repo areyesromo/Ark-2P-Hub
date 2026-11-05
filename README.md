@@ -30,7 +30,9 @@ No one to play with? Games labelled **🤖 Vs computer** can be played against t
 Battleship (Classic and Ultimate), Connect Four, Checkers, Dots and Boxes, Mancala, Rock Paper
 Scissors, Memory Match, Dice Party, Quiz Battle, Reaction Duel, Pong, Air Hockey, Snake Battle,
 Light Cycles, Tank Duel, Word Hunt, Volley Blobs, Brick Breaker Duel, Rally Tennis, Sumo, Asteroid
-Duel, Mini Golf, and Trivia Quest (where it's your teammate). With a seat free,
+Duel, Mini Golf, Falling Blocks Battle, Bomb Duel, Kart Race (and 3D, races and balloon battles),
+Tower Defence Duel, and Trivia Quest (where it's your teammate). In Kart Race it readies up on the
+menus once you have. With a seat free,
 tap **Easy**, **Normal** or **Hard** under it on the TV (or on your phone's lobby, or press **LT**
 on a controller). While it's seated, the games it can't play are greyed out (the ones it's
 learning next say **⏳ Coming soon**). Easy makes mistakes and forgets, Normal plays sensibly, and

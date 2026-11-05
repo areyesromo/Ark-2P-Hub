@@ -1130,6 +1130,26 @@ export class KartRace {
   playerView(slot) {
     return Object.assign(this.common(), { you: slot });
   }
+
+  /**
+   * The computer opponent's view (see kart-race-bot.js): its own, plus what a driver reads off the
+   * road on the TV: points along the middle of the road ahead of its kart, and where it is on it.
+   */
+  botView(slot) {
+    const v = this.playerView(slot);
+    if (!this.karts || !this.track) return v;
+    const k = this.karts[slot];
+    const here = locate(this.track, k.x, k.y);
+    const len = this.track.length;
+    const along = (dir) => [1, 2, 3.5, 5, 7, 9.5].map((d) => pointAt(this.track, (((here.s + (dir * d) / len) % 1) + 1) % 1));
+    const ahead = along(1);
+    if (!this.battle) return Object.assign(v, { road: { s: here.s, off: here.d, length: len, ahead } });
+    // A battle arena is a ring round an island: the way round both ways, and where you and the
+    // ? boxes are on it.
+    const foe = this.karts[1 - slot];
+    const at = (x, y) => locate(this.track, x, y).s;
+    return Object.assign(v, { ring: { s: here.s, length: len, ahead, back: along(-1), foe: at(foe.x, foe.y), boxes: v.boxes.map((b) => ({ x: b.x, y: b.y, s: at(b.x, b.y) })) } });
+  }
 }
 
 export default {

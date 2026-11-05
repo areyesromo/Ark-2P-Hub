@@ -42,6 +42,10 @@ import { asteroidDuelBot } from './asteroid-duel-bot.js';
 import { rallyTennisBot } from './rally-tennis-bot.js';
 import { sumoBot } from './sumo-bot.js';
 import { miniGolfBot } from './mini-golf-bot.js';
+import { blockBattleBot } from './block-battle-bot.js';
+import { bombDuelBot } from './bomb-duel-bot.js';
+import { kartRaceBot } from './kart-race-bot.js';
+import { towerDuelBot } from './tower-duel-bot.js';
 const SEA_NAMES = Object.fromEntries(Object.entries(SEAS).map(([k, v]) => [k, v.name]));
 import sketchGuess from './sketch-guess.js';
 import connectFour from './connect-four.js';
@@ -88,7 +92,8 @@ import { withSetup } from './options.js';
  * quiz adds the answer there, for the computer to get right as often as its level says). The input
  * may carry botDelayMs, its pause before playing it (a reaction time: what it worked out when it
  * looked is what it plays then; with botAnticipate, a move it saw coming and timed, such as its
- * own planned turn, it judges afresh at that moment); memory is an object kept
+ * own planned turn, it judges afresh at that moment; with botFor, what it's for, such as a piece,
+ * it isn't played if that has changed by then); memory is an object kept
  * for the match (what it has seen, how you play); retries counts the times the same move came
  * back (the game refused it). The room seats it as a controller player (ctx.players[slot].bot
  * is its level) and plays its moves after a pause (Room#driveBot). Games without one can't be
@@ -129,7 +134,7 @@ const GAMES = [
   withSetup({ ...brickDuel, bot: brickDuelBot }, { rows: { title: 'Wall', values: [5, 3, 7], label: (n) => `${n} rows of bricks` } }),
   withSetup({ ...asteroidDuel, bot: asteroidDuelBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...rallyTennis, bot: rallyTennisBot }, firstTo('Games to win', [4, 3, 6])),
-  withSetup(blockBattle, firstTo(ROUNDS_WON, [2, 1, 3])),
+  withSetup({ ...blockBattle, bot: blockBattleBot }, firstTo(ROUNDS_WON, [2, 1, 3])),
   withSetup({ ...snake, bot: snakeBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...tanks, bot: tanksBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...sumo, bot: sumoBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
@@ -159,9 +164,9 @@ const GAMES = [
     lives: { title: 'Lives', values: [3, 5], label: (n) => `${n} lives` },
     pace: { title: 'Pace', values: ['normal', 'fast'], label: (p) => (p === 'fast' ? 'Fast (starts at speed 3)' : 'Normal') },
   }),
-  bombDuel,
-  kartRace,
-  kartRace3d,
+  { ...bombDuel, bot: bombDuelBot },
+  { ...kartRace, bot: kartRaceBot },
+  { ...kartRace3d, bot: kartRaceBot },
   withSetup({ ...quiz, bot: quizBot }, {
     questions: { title: 'Number of questions', values: [10, 5, 15, 20], label: (n) => String(n) },
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
@@ -181,7 +186,7 @@ const GAMES = [
     kitchen: { title: 'Kitchen', values: [0, 1, 2], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour'][n] },
     minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
-  withSetup(towerDuel, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
+  withSetup({ ...towerDuel, bot: towerDuelBot }, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
   withSetup(dungeonDuo, {
     heroes: { title: 'Heroes', values: [0, 1], label: (n) => (n ? 'Player 1 the ✨ Healer, player 2 the 🛡️ Fighter' : 'Player 1 the 🛡️ Fighter, player 2 the ✨ Healer') },
     difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (more hearts, 5 continues, a weaker Warden)' : 'Normal (3 continues)') },
@@ -240,8 +245,7 @@ export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
 
 /** Games the computer opponent is planned for: "⏳ Coming soon" in the lobby while it's seated. */
 const BOT_SOON = new Set([
-  'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', // next
-  'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', // then the card and word games
+  'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', // next: the card and word games
   'party-board', 'party-minis', 'micro-mayhem', // the party games
   'kitchen-rush', 'dungeon-duo', 'marble-maze', // and a teammate in the co-op games
 ]);
