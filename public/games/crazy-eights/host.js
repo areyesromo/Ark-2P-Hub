@@ -81,7 +81,8 @@
       }).join('');
       const head = v.phase === 'over'
         ? '🏆 ' + nameOf(v, v.winner) + ' wins' + (v.target ? ' <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>' : '') + '!'
-        : nameOf(v, r.winner) + ' is out! <strong>+' + r.points + '</strong>';
+        : r.stuck ? 'Nobody can go on: ' + nameOf(v, r.winner) + ' holds fewer points <strong>+' + r.points + '</strong>'
+          : nameOf(v, r.winner) + ' is out! <strong>+' + r.points + '</strong>';
       return '<div class="ce-end"><div class="head">' + head + '</div>' + hands +
         '<div class="sub">' + (v.phase === 'over' ? 'Rematch or head back to the lobby from your phones.' : 'Next hand coming up…') + '</div></div>';
     }

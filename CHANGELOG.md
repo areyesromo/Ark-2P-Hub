@@ -9,6 +9,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - 🤖 The computer now plays Crazy Eights, Liar's Dice, Anagram Duel and Word Race, at Easy, Normal
   or Hard. These need just your phone against it. It only knows its own cards and dice, plays the
   odds, and takes a person's time to find words.
+- Crazy Eights: a hand where nothing's left to draw and neither of you can play now ends (it goes to
+  whoever holds fewer points) instead of passing back and forth for ever.
 
 ## 0.1.26
 

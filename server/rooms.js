@@ -269,7 +269,8 @@ export class Room {
 
   handleInput(slot, input) {
     if (!this.game || !input || typeof input !== 'object') return;
-    this.touch();
+    // (the computer's own moves aren't someone here: they don't keep an empty room alive)
+    if (!(this.players[slot] && this.players[slot].bot)) this.touch();
     try {
       this.game.onInput(slot, input);
     } catch (err) {

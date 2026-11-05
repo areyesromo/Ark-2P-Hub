@@ -282,3 +282,15 @@ test('the computer isn\'t a controller: with a phone and the computer, phone-onl
   pad.dispose();
   r.dispose();
 });
+
+test('the computer\'s own moves don\'t keep an empty room alive', (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const { r } = room();
+  r.startGame('rock-paper-scissors');
+  r.handleInput(0, { type: 'go' });
+  const quiet = r.lastActive;
+  wait(t, 3000); // (it picks)
+  assert.ok(r.game.game.picks[1], 'it played');
+  assert.equal(r.lastActive, quiet, 'not counted as someone here');
+  r.dispose();
+});

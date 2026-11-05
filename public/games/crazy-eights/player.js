@@ -41,7 +41,7 @@
     }
     if (v.phase === 'handEnd') {
       const r = v.result;
-      return score + '<div class="ce-wait"><div class="outcome ' + (r.winner === me ? 'won">You\'re out! +' : 'lost">They\'re out: +') + r.points + '</div><p>Next hand coming up…</p></div>';
+      return score + '<div class="ce-wait"><div class="outcome ' + (r.winner === me ? 'won">' + (r.stuck ? 'Stuck: you hold fewer points. +' : 'You\'re out! +') : 'lost">' + (r.stuck ? 'Stuck: they hold fewer points. +' : 'They\'re out: +')) + r.points + '</div><p>' + (r.stuck ? 'No cards left to draw and nobody could play. ' : '') + 'Next hand coming up…</p></div>';
     }
     if (v.phase === 'suit' && mine) {
       return score + '<p class="msg">Call the suit:</p><div class="ce-suits">' + ['S', 'H', 'D', 'C'].map(function (s) {
