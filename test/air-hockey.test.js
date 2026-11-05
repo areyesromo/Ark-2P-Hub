@@ -142,3 +142,44 @@ test('first to WIN_SCORE wins, the loop stops, and rematch restarts', () => {
   assert.equal(game.phase, 'countdown');
   assert.deepEqual(game.scores, [0, 0]);
 });
+
+test('a mallet pressing the puck into a corner never pushes it off the table', () => {
+  const { ctx, game } = setup();
+  for (const [x, y] of [[FIELD.puckR, FIELD.puckR], [FIELD.puckR, FIELD.h - FIELD.puckR]]) {
+    launch(game, { x, y, vx: 0, vy: 0 });
+    game.mallets[0] = { x: 2, y: FIELD.h / 2, vx: 0, vy: 0 };
+    game.onInput(0, { type: 'move', x, y }); // drive straight at it
+    for (let i = 0; i < 60; i++) {
+      ctx.advance(PHYSICS.tickMs);
+      const p = game.puck;
+      assert.ok(p.x >= FIELD.puckR - 1e-9 && p.y >= FIELD.puckR - 1e-9 && p.y <= FIELD.h - FIELD.puckR + 1e-9, `on the table: ${p.x.toFixed(3)}, ${p.y.toFixed(3)}`);
+    }
+  }
+});
+
+test('a puck resting in a corner pocket (out of every mallet\'s reach) drifts back out', () => {
+  const { ctx, game } = setup();
+  launch(game, { x: FIELD.puckR, y: FIELD.h - FIELD.puckR, vx: 0, vy: 0 });
+  game.mallets[0] = { x: 3, y: 2, vx: 0, vy: 0 };
+  game.mallets[1] = { x: FIELD.w - 3, y: 2, vx: 0, vy: 0 };
+  for (let i = 0; i < 150; i++) ctx.advance(PHYSICS.tickMs); // 2.5 s
+  assert.ok(game.puck.x > FIELD.malletR + 0.05 || game.puck.y < FIELD.h - FIELD.malletR - 0.05, 'out of the pocket: ' + game.puck.x.toFixed(2) + ', ' + game.puck.y.toFixed(2));
+  // One just passing through isn't touched.
+  launch(game, { x: 4, y: 4, vx: 0, vy: 0 });
+  ctx.advance(PHYSICS.tickMs * 60);
+  assert.equal(game.puck.x, 4);
+});
+
+test('a puck freed from a corner settles in that player\'s half, and one resting in a goal mouth drifts out too', () => {
+  const { ctx, game } = setup();
+  launch(game, { x: FIELD.puckR, y: FIELD.puckR, vx: 0, vy: 0 });
+  game.mallets[0] = { x: 3, y: 8, vx: 0, vy: 0 };
+  game.mallets[1] = { x: FIELD.w - 3, y: 8, vx: 0, vy: 0 };
+  for (let i = 0; i < 60 * 8; i++) ctx.advance(PHYSICS.tickMs);
+  assert.ok(game.puck.x < FIELD.w / 2, 'still in player 1\'s half: ' + game.puck.x.toFixed(2));
+  launch(game, { x: 0.5, y: FIELD.h / 2, vx: 0, vy: 0 });
+  game.mallets[0] = { x: 3, y: 1, vx: 0, vy: 0 };
+  for (let i = 0; i < 60 * 3; i++) ctx.advance(PHYSICS.tickMs);
+  assert.ok(game.puck.x > FIELD.malletR, 'out of the mouth: ' + game.puck.x.toFixed(2));
+  assert.deepEqual(game.scores, [0, 0]);
+});

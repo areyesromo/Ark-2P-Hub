@@ -349,7 +349,7 @@ export class Room {
       try {
         if (!def || !def.bot || !this.game) return null;
         const view = this.game.botView ? this.game.botView(slot) : this.game.playerView(slot);
-        const key = JSON.stringify(view, (k, v) => (k === 'timeLeftMs' ? undefined : v)) + '|' + (this.botRetries || 0);
+        const key = JSON.stringify(view, (k, v) => (k === 'timeLeftMs' || k === 'timeLeft' ? undefined : v)) + '|' + (this.botRetries || 0);
         if (this.botCache && this.botCache.def === def && this.botCache.key === key) return this.botCache.move;
         const move = def.bot(view, this.players[slot].bot, Math.random, this.botRetries || 0, this.botMemory);
         this.botCache = { def, key, move };
@@ -360,6 +360,12 @@ export class Room {
       }
     };
     const first = think(); // (every view is a look, so it remembers what it saw: Memory Match)
+    if (!first && this.botTimer) {
+      // The game moved on and it no longer wants that move (a grid ended, the turn passed).
+      clearTimeout(this.botTimer);
+      this.timers.delete(this.botTimer);
+      this.botTimer = null;
+    }
     if (!first || this.botTimer) return;
     const generation = this.generation;
     const t = setTimeout(() => {

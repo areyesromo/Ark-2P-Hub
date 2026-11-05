@@ -5,8 +5,9 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel'];
-const SOON = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt'];
+const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', ...REALTIME];
+const SOON = [];
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
@@ -24,7 +25,19 @@ function seeded(seed) {
  * Play `id` with the computer in the seats given levels (null: nobody plays that seat, or `human`
  * gives its input), the way the room does: each move after its pause. Gives the game and stats.
  */
-function play(id, levels, { seed = 1, human = null, settings = {}, limitMs = 30 * 60 * 1000 } = {}) {
+function play(id, levels, opts = {}) {
+  // The games roll their own dice too (Math.random): seed those as well, so a test plays out the
+  // same every run.
+  const random = Math.random;
+  Math.random = seeded((opts.seed || 1) * 7919 + 1);
+  try {
+    return playSeeded(id, levels, opts);
+  } finally {
+    Math.random = random;
+  }
+}
+
+function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs = 30 * 60 * 1000 } = {}) {
   const def = getGame(id);
   const ctx = fakeCtx();
   ctx.players.forEach((p, slot) => {
@@ -49,7 +62,7 @@ function play(id, levels, { seed = 1, human = null, settings = {}, limitMs = 30 
       if (move) pending[slot] = { at: now + (move.botDelayMs ?? 1100), move };
     }
     const next = pending.filter(Boolean).map((p) => p.at);
-    const step = next.length ? Math.max(0, Math.min(...next) - now) : 500;
+    const step = next.length ? Math.max(0, Math.min(...next) - now) : REALTIME.includes(id) ? 16 : 500; // (the room asks on every update)
     ctx.advance(step);
     now += step;
     for (const slot of [0, 1]) {
@@ -82,7 +95,7 @@ for (const id of BOT_GAMES.filter((x) => x !== 'battleship')) {
       assert.equal(view.phase, 'over', id + ' ' + level);
       // (both move, but in Reaction Duel the quicker one may win every round before the other taps)
       assert.ok(id === 'reaction-duel' ? stats.moves[0] + stats.moves[1] > 0 : stats.moves[0] > 0 && stats.moves[1] > 0, id + ' both moved');
-      assert.equal(stats.refused, 0, id + ' every move taken');
+      if (!REALTIME.includes(id)) assert.equal(stats.refused, 0, id + ' every move taken'); // (a steer shows a tick later)
     }
   });
 }
@@ -216,4 +229,57 @@ test('Dice Party: the computer decides what to hold once a roll, and doesn\'t fl
     }
     assert.equal(undone, 0, level + ': ' + undone + ' of ' + holds + ' holds undone');
   }
+});
+
+test('action games and Word Hunt: Hard beats Easy, and every game ends', () => {
+  for (const id of REALTIME) hardBeatsEasy(id, 6, 4); // (the games roll their own dice: a few to be sure)
+});
+
+test('Pong: the computer still misses its share at full speed (a new roll each time the ball comes)', () => {
+  const def = getGame('pong');
+  for (const [level, lo, hi] of [['normal', 0.05, 0.25], ['hard', 0.005, 0.1]]) {
+    const memory = {};
+    let misses = 0;
+    const N = 600;
+    for (let i = 0; i < N; i++) {
+      // The same full-speed return every time, coming at the computer (slot 1), then going away.
+      const coming = { phase: 'play', you: 1, ball: { x: 8, y: 4.5, vx: 20, vy: 0 }, paddles: [4.5, 4.5] };
+      const m = def.bot(coming, level, Math.random, 0, memory);
+      if (Math.abs(m.y * 9 - 4.5) > 1.1 + 0.22) misses++;
+      def.bot({ ...coming, ball: { x: 8, y: 4.5, vx: -20, vy: 0 } }, level, Math.random, 0, memory);
+    }
+    assert.ok(misses / N > lo && misses / N < hi, level + ' missed ' + misses + ' of ' + N);
+  }
+});
+
+test('Snake Battle: Hard beats Normal', () => {
+  let wins = 0;
+  for (let seed = 1; seed <= 12; seed++) {
+    const flip = seed % 2;
+    const { view } = play('snake', flip ? ['normal', 'hard'] : ['hard', 'normal'], { seed });
+    if (view.winner === (flip ? 1 : 0)) wins++;
+  }
+  assert.ok(wins >= 7, 'Hard won ' + wins + ' of 12');
+});
+
+test('Air Hockey: the computer never knocks a still puck in its own goal mouth into its own goal', () => {
+  const def = getGame('air-hockey');
+  for (const level of ['easy', 'normal', 'hard']) {
+    for (const [x, y] of [[0.5, 4.5], [0.3, 4.0], [0.6, 3.5]]) {
+      const m = def.bot({ phase: 'play', you: 0, puck: { x, y, vx: 0, vy: 0 }, mallets: [{ x: 2, y: 4.5 }, { x: 14, y: 4.5 }] }, level, Math.random);
+      assert.ok(Math.hypot(m.x - x, m.y - y) > 1.5, level + ' keeps off it: ' + m.x.toFixed(2) + ', ' + m.y.toFixed(2));
+    }
+  }
+});
+
+test('Word Hunt: a word that also reads somewhere else on the grid is still found', () => {
+  const def = getGame('word-hunt');
+  // CAT reads across at the top (a chance spelling) and down the left (where it's hidden).
+  const grid = 'CAT' + 'AXX' + 'TXX';
+  const tried = new Set();
+  for (let i = 0; i < 40; i++) {
+    const m = def.bot({ phase: 'play', mode: 'shared', n: 3, grid, words: [{ word: 'CAT', by: null }] }, 'hard', Math.random, i);
+    tried.add(m.a + '-' + m.b);
+  }
+  assert.ok(tried.has('0-6') && tried.has('0-2'), [...tried].join(' '));
 });

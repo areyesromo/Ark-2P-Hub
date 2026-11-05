@@ -124,7 +124,7 @@
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
     $('games-hint').textContent = Ark.botSeat(state)
-      ? 'Games marked 🤖 Vs computer can be played against the computer (more are coming soon). Choose here, from your phone, or with a controller (D-pad + A).'
+      ? 'Games marked 🤖 Vs computer can be played against the computer. Choose here, from your phone, or with a controller (D-pad + A).'
       : state.readyToPlay
       ? 'Choose here, from either phone, or with a controller (D-pad + A).'
       : 'Games unlock once both players are in.';

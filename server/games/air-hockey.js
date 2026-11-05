@@ -110,8 +110,39 @@ export class AirHockey {
     p.vy *= keep;
     p.x += p.vx * dt;
     p.y += p.vy * dt;
+    this.walls();
+    if (p.x < -r) return this.goal(1);
+    if (p.x > FIELD.w + r) return this.goal(0);
 
-    // Side rails
+    this.mallets.forEach((m) => this.collide(m));
+    this.walls(); // (a mallet pinning the puck in a corner can't push it through the wall)
+    this.unstick(dt);
+  }
+
+  /**
+   * A puck at rest in a corner pocket or a goal mouth, right against the end, is beyond every
+   * mallet (none can get behind it, and a hit from the front only knocks it in), so after a moment
+   * the table's air drifts it back out towards the middle (it stops short of the centre line).
+   */
+  unstick(dt) {
+    const p = this.puck;
+    const r = FIELD.malletR;
+    const end = p.x < r || p.x > FIELD.w - r;
+    const pocket = end && (p.y < r || p.y > FIELD.h - r || Math.abs(p.y - FIELD.h / 2) < FIELD.goalH / 2);
+    this.stuckFor = pocket && Math.hypot(p.vx, p.vy) < 1 ? (this.stuckFor || 0) + dt : 0;
+    if (this.stuckFor < 0.8) return;
+    this.stuckFor = 0;
+    const dx = FIELD.w / 2 - p.x;
+    const dy = FIELD.h / 2 - p.y;
+    const d = Math.hypot(dx, dy);
+    p.vx = (dx / d) * 2.4;
+    p.vy = (dy / d) * 2.4;
+  }
+
+  /** The rails and end walls bounce the puck back onto the table (the goal mouths are open). */
+  walls() {
+    const p = this.puck;
+    const r = FIELD.puckR;
     if (p.y < r) {
       p.y = r;
       p.vy = Math.abs(p.vy) * PHYSICS.wallBounce;
@@ -119,8 +150,6 @@ export class AirHockey {
       p.y = FIELD.h - r;
       p.vy = -Math.abs(p.vy) * PHYSICS.wallBounce;
     }
-
-    // End walls: open where the goal is.
     const inMouth = Math.abs(p.y - FIELD.h / 2) < FIELD.goalH / 2;
     if (p.x < r && !inMouth) {
       p.x = r;
@@ -129,10 +158,6 @@ export class AirHockey {
       p.x = FIELD.w - r;
       p.vx = -Math.abs(p.vx) * PHYSICS.wallBounce;
     }
-    if (p.x < -r) return this.goal(1);
-    if (p.x > FIELD.w + r) return this.goal(0);
-
-    this.mallets.forEach((m) => this.collide(m));
   }
 
   /** Puck vs mallet: push the puck out, then bounce it off the (moving) mallet. */

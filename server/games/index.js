@@ -30,6 +30,12 @@ import { memoryMatchBot } from './memory-match-bot.js';
 import { diceBot } from './dice-party-bot.js';
 import { quizBot } from './quiz-bot.js';
 import { reactionDuelBot } from './reaction-duel-bot.js';
+import { pongBot } from './pong-bot.js';
+import { airHockeyBot } from './air-hockey-bot.js';
+import { snakeBot } from './snake-bot.js';
+import { tronBot } from './tron-bot.js';
+import { tanksBot } from './tanks-bot.js';
+import { wordHuntBot } from './word-hunt-bot.js';
 const SEA_NAMES = Object.fromEntries(Object.entries(SEAS).map(([k, v]) => [k, v.name]));
 import sketchGuess from './sketch-guess.js';
 import connectFour from './connect-four.js';
@@ -108,16 +114,16 @@ const timer = (usual, times) => ({
 const GAMES = [
   withSetup({ ...reactionDuel, bot: reactionDuelBot }, firstTo('Points to win', [3, 5, 7])),
   withSetup({ ...rockPaperScissors, bot: rpsBot }, firstTo('Points to win', [3, 5, 7])),
-  withSetup(pong, firstTo('Points to win', [5, 3, 7, 11])),
-  withSetup(tron, firstTo(ROUNDS_WON, [3, 2, 5])),
-  withSetup(airHockey, firstTo('Goals to win', [7, 5, 10])),
+  withSetup({ ...pong, bot: pongBot }, firstTo('Points to win', [5, 3, 7, 11])),
+  withSetup({ ...tron, bot: tronBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup({ ...airHockey, bot: airHockeyBot }, firstTo('Goals to win', [7, 5, 10])),
   withSetup(volleyBlobs, firstTo('Points to win', [7, 5, 11])),
   withSetup(brickDuel, { rows: { title: 'Wall', values: [5, 3, 7], label: (n) => `${n} rows of bricks` } }),
   withSetup(asteroidDuel, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(rallyTennis, firstTo('Games to win', [4, 3, 6])),
   withSetup(blockBattle, firstTo(ROUNDS_WON, [2, 1, 3])),
-  withSetup(snake, firstTo(ROUNDS_WON, [3, 2, 5])),
-  withSetup(tanks, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup({ ...snake, bot: snakeBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup({ ...tanks, bot: tanksBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(sumo, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup(partyBoard, {
     map: {
@@ -174,7 +180,7 @@ const GAMES = [
   }),
   wordRace,
   withSetup(anagramDuel, firstTo('Rounds to win', [5, 3, 7])),
-  withSetup(wordHunt, {
+  withSetup({ ...wordHunt, bot: wordHuntBot }, {
     mode: { title: 'Mode', values: ['shared', 'race'], label: (k) => (k === 'race' ? 'Race (two phones): your own board each, first to find every word' : 'Shared board: first to mark a word gets it') },
     size: { title: 'Grid', values: ['medium', 'small', 'large'], label: (k) => `${HUNT_SIZES[k].name} · ${HUNT_SIZES[k].words} words${k === 'small' ? ', across and down' : k === 'medium' ? ', diagonals too' : ', any way, even backwards'}` },
     ...firstTo('Grids to win', [2, 1, 3]),
@@ -225,7 +231,7 @@ export const CATEGORIES = ['competitive', 'board', 'casual'];
 export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
 
 /** Games the computer opponent is planned for: "⏳ Coming soon" in the lobby while it's seated. */
-const BOT_SOON = new Set(['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt']);
+const BOT_SOON = new Set([]); // (none right now: list a game's id here when one is planned)
 
 /** Games for the lobby, grouped by category (in CATEGORIES order) so lists and controller focus agree. */
 export function listGames() {
