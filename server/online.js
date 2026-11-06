@@ -1,3 +1,5 @@
+import { randomBytes } from 'node:crypto';
+
 /**
  * Online play: a friend somewhere else joins over the internet. The TV's 🌍 Invite online button
  * asks for it; this gives the room an internet address (the owner's own tunnel from Settings, or a
@@ -40,33 +42,54 @@ export class Online {
     };
   }
 
-  /** The TV invites someone online (on) or stops (off). */
+  /**
+   * The TV invites someone online (on) or stops (off). Each invite gets a fresh key that goes in the
+   * links: from the internet only someone with it gets in (a 4-letter room code is too easy to guess).
+   */
   async invite(room, on) {
     if (on && !this.allowed) return { error: 'Online play is turned off in Settings.' };
+    if (on && !room.online) room.onlineKey = randomBytes(8).toString('hex');
+    if (!on) room.onlineKey = null;
     room.online = Boolean(on);
-    if (on && !this.settings.tunnelUrl && this.tunnel.state.status !== 'on') this.tunnel.start();
+    if (on && this.tunnel.state.status === 'error') this.tunnel.stop(); // (Try again: a fresh start)
     await this.refresh();
-    this.sync();
     return { ok: true };
+  }
+
+  /** May this socket or request from the internet get into `room` (online, allowed, with its key)? */
+  admits(room, key) {
+    return Boolean(room && room.online && this.allowed && room.onlineKey && key === room.onlineKey);
   }
 
   /** Stop everything (Settings): every room's invite and the tunnel. */
   async stopAll() {
-    for (const room of this.rooms.rooms.values()) room.online = false;
+    for (const room of this.rooms.rooms.values()) {
+      room.online = false;
+      room.onlineKey = null;
+    }
     this.tunnel.stop();
     await this.refresh();
   }
 
-  /** No room online any more (one closed, or all stopped): the quick tunnel goes. */
+  /**
+   * The quick tunnel follows the rooms: running while one is online (started again if it dropped),
+   * gone when none is, or when your own address is set instead.
+   */
   sync() {
-    const any = [...this.rooms.rooms.values()].some((r) => r.online);
-    if (!any && this.tunnel.state.status !== 'off') this.tunnel.stop();
+    const any = this.allowed && [...this.rooms.rooms.values()].some((r) => r.online);
+    const want = any && !this.settings.tunnelUrl;
+    const status = this.tunnel.state.status;
+    if (!want && status !== 'off') this.tunnel.stop();
+    else if (want && status === 'off') this.tunnel.start();
   }
 
   /** Every online room's join details, from the address now in use; out to their screens. */
   async refresh() {
+    this.sync();
+    const seq = (this.seq = (this.seq || 0) + 1); // (a newer refresh wins over one still making QR codes)
     const base = this.address;
     for (const room of this.rooms.rooms.values()) {
+      if (seq !== this.seq) return;
       const was = JSON.stringify(room.onlineInfo || null);
       if (!room.online) {
         room.onlineInfo = null;
@@ -75,9 +98,10 @@ export class Online {
         const status = this.settings.tunnelUrl ? 'on' : t.status;
         const info = { status, error: status === 'error' ? t.error : null, url: null, watchUrl: null, qr: null };
         if (base) {
-          info.url = `${base}/play/?room=${room.code}`;
-          info.watchUrl = `${base}/host/?watch=${room.code}`;
+          info.url = `${base}/play/?room=${room.code}&k=${room.onlineKey}`;
+          info.watchUrl = `${base}/host/?watch=${room.code}&k=${room.onlineKey}`;
           info.qr = room.onlineInfo && room.onlineInfo.url === info.url ? room.onlineInfo.qr : await this.qr(info.url);
+          if (seq !== this.seq) return;
         }
         room.onlineInfo = info;
       }
@@ -88,11 +112,14 @@ export class Online {
 
 /**
  * Is this request (or socket) coming in over the internet (through a Cloudflare tunnel)?
- * cloudflared adds Cf-Connecting-Ip; the owner's own tunnel host counts too.
+ * cloudflared adds Cf-Connecting-Ip; with your own address set, its host, or a proxy's
+ * forwarding headers, count too.
  */
 export function overInternet(headers = {}, ownUrl = '') {
   if (headers['cf-connecting-ip']) return true;
   if (!ownUrl) return false;
+  // Your own tunnel through a proxy that rewrites Host (nginx's default): its forwarding headers.
+  if (headers['x-forwarded-for'] || headers['x-forwarded-host'] || headers.forwarded) return true;
   try {
     return String(headers.host || '').toLowerCase() === new URL(ownUrl).host.toLowerCase();
   } catch {

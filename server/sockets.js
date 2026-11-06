@@ -33,6 +33,9 @@ const reply = (ack, payload) => {
  *   player:kicked { reason, removed? }       (this phone lost its seat; `removed`: the TV took it away)
  *   player:ping   ack()                      (are you still there? see player:join)
  */
+/** From the internet: this many wrong tries (code or key) from one address, then a pause. */
+export const GUESSES = { max: 20, windowMs: 10 * 60 * 1000 };
+
 /** How long a phone gets to answer "still there?" before its seat counts as free. */
 export const PING_MS = 2500;
 
@@ -42,6 +45,37 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
     const s = player && player.socketId && io.sockets.sockets.get(player.socketId);
     if (!s) return Promise.resolve(false);
     return new Promise((resolve) => s.timeout(PING_MS).emit('player:ping', (err) => resolve(!err)));
+  }
+
+  // Wrong tries from the internet, by address (Cloudflare's Cf-Connecting-Ip).
+  const misses = new Map(); // ip -> { count, since }
+  const missKey = (socket) => String(socket.handshake.headers['cf-connecting-ip'] || socket.handshake.address || '?');
+  function tooManyMisses(socket) {
+    const m = misses.get(missKey(socket));
+    if (!m) return false;
+    if (Date.now() - m.since > GUESSES.windowMs) {
+      misses.delete(missKey(socket));
+      return false;
+    }
+    return m.count >= GUESSES.max;
+  }
+  function missed(socket) {
+    const k = missKey(socket);
+    const m = misses.get(k);
+    if (!m || Date.now() - m.since > GUESSES.windowMs) misses.set(k, { count: 1, since: Date.now() });
+    else m.count++;
+  }
+  /**
+   * From the internet, only a room that invited someone online, with that invite's key, can be
+   * joined or watched (and only so many wrong tries). The reason it can't, or null.
+   */
+  function shutOut(socket, target, key) {
+    if (!fromInternet(socket)) return null;
+    if (tooManyMisses(socket)) return 'Too many tries. Wait a few minutes and use the link from the TV.';
+    if (online && online.admits(target, key)) return null;
+    missed(socket);
+    if (online && !online.allowed) return 'Online play is turned off on this hub.';
+    return 'Use the invite link or QR code from the TV (this room hasn\'t invited anyone online).';
   }
 
   io.on('connection', (socket) => {
@@ -58,7 +92,11 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
         room.hostSockets.delete(socket.id);
         room.syncLocalPlayers();
       } else if (role === 'watch') {
+        // A remote screen leaving changes nothing for the room (and isn't someone there).
         socket.leave(room.hostChannel);
+        room = null;
+        role = null;
+        return;
       } else if (role === 'player') {
         socket.leave(room.playerChannel(slot));
         const p = room.players[slot];
@@ -163,8 +201,10 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
     });
 
     socket.on('player:join', async (data, ack) => {
-      const { code, name, token } = asObject(data);
+      const { code, name, token, key } = asObject(data);
       const target = rooms.get(code);
+      const no = shutOut(socket, target, key);
+      if (no) return reply(ack, { error: no });
       if (!target) return reply(ack, { error: 'No room with that code.' });
       let seat = target.seatPlayer(name, token);
       // Someone joins under the name of a phone that looks connected. A reloaded page
@@ -195,8 +235,12 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
     });
 
     socket.on('watch:join', (data, ack) => {
-      const target = rooms.get(asObject(data).code);
+      const { code, key } = asObject(data);
+      const target = rooms.get(code);
+      const no = shutOut(socket, target, key);
+      if (no) return reply(ack, { error: no });
       if (!target) return reply(ack, { error: 'No room with that code.' });
+      if (role === 'watch' && room === target) return reply(ack, { ok: true, code: target.code }); // (already watching)
       bindWatcher(target);
       reply(ack, { ok: true, code: target.code });
     });

@@ -1,7 +1,7 @@
 import { spawn as nodeSpawn } from 'node:child_process';
 
 /** The address a quick tunnel gets, as cloudflared prints it. */
-export const QUICK_URL = /https:\/\/[a-z0-9-]+\.trycloudflare\.com/;
+export const QUICK_URL = /https:\/\/(?!api\.)[a-z0-9-]+\.trycloudflare\.com/; // (api.trycloudflare.com is cloudflared's own, in its errors)
 /** How long to wait for the address before giving up. */
 export const START_MS = 30000;
 
@@ -68,23 +68,27 @@ export class Tunnel {
     });
     this.timer = this.setTimer(() => {
       if (this.child !== child || this.state.status === 'on') return;
-      this.stop();
+      this.kill();
       this.set({ status: 'error', error: 'No tunnel after 30 seconds. Is the hub online?' });
     }, START_MS);
   }
 
   stop() {
+    this.kill();
+    if (this.state.status !== 'off') this.set({ status: 'off' });
+  }
+
+  /** End cloudflared (if running), without saying so. */
+  kill() {
     this.clearTimer(this.timer);
     const child = this.child;
     this.child = null;
-    if (child) {
-      try {
-        child.kill();
-      } catch {
-        // (already gone)
-      }
+    if (!child) return;
+    try {
+      child.kill();
+    } catch {
+      // (already gone)
     }
-    if (this.state.status !== 'off') this.set({ status: 'off' });
   }
 
   why(err) {

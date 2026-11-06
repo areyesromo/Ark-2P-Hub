@@ -92,8 +92,8 @@ test('a room invites someone online: the tunnel starts, its address and QR reach
   cf.last().child.stderr.emit('data', 'https://quiet-fox.trycloudflare.com');
   await online.refresh();
   const info = a.publicState().online;
-  assert.equal(info.url, 'https://quiet-fox.trycloudflare.com/play/?room=' + a.code);
-  assert.equal(info.watchUrl, 'https://quiet-fox.trycloudflare.com/host/?watch=' + a.code);
+  assert.equal(info.url, 'https://quiet-fox.trycloudflare.com/play/?room=' + a.code + '&k=' + a.onlineKey);
+  assert.equal(info.watchUrl, 'https://quiet-fox.trycloudflare.com/host/?watch=' + a.code + '&k=' + a.onlineKey);
   assert.equal(info.qr, 'qr:' + info.url);
   assert.equal(b.publicState().online, null, 'only the room that invited');
   assert.equal(a.publicState().onlineAllowed, true);
@@ -111,7 +111,7 @@ test('your own tunnel address from Settings is used instead (no quick tunnel); t
   const a = rooms.create();
   await online.invite(a, true);
   assert.equal(cf.runs.length, 0);
-  assert.equal(a.publicState().online.url, 'https://ark.example.com/play/?room=' + a.code);
+  assert.equal(a.publicState().online.url, 'https://ark.example.com/play/?room=' + a.code + '&k=' + a.onlineKey);
   assert.equal(online.status().status, 'on');
   settings.setOnline({ allowed: false });
   assert.match((await online.invite(rooms.create(), true)).error, /turned off/);
@@ -130,6 +130,7 @@ test('over the internet: a tunnel\'s request is told apart (Cloudflare\'s header
 
 // ---- through the real server ----
 import { io as connect } from 'socket.io-client';
+const connectIo = connect;
 import { createApp } from '../server/app.js';
 
 async function server() {
@@ -207,4 +208,91 @@ test('Settings: online play on or off, your own https address (checked), and sto
   } finally {
     await s.close();
   }
+});
+
+// ---- from review: the internet gets only what it was invited to ----
+
+test('over the internet, Settings stays shut whatever the spelling (case, double slashes, %-encoding)', async () => {
+  const s = await server();
+  try {
+    for (const p of ['/API/admin/status', '/api/Admin/status', '/Api/Admin/online', '//admin/', '/%61dmin/', '/ADMIN/', '/Admin/index.html']) {
+      assert.equal((await fetch(s.url + p, { headers: tunnelHeaders })).status, 403, p);
+    }
+    const setup = await fetch(s.url + '/API/ADMIN/setup', { method: 'POST', headers: { ...tunnelHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ password: 'takeover' }) });
+    assert.equal(setup.status, 403, 'no taking over a hub without a password');
+  } finally {
+    await s.close();
+  }
+});
+
+test('over the internet, only the room that invited someone can be joined or watched, with its invite key; tries are limited', async () => {
+  const s = await server();
+  const open = [];
+  const connect = (...args) => { const c = connectIo(...args); open.push(c); return c; };
+  try {
+    const tv = connect(s.url, { transports: ['websocket'] });
+    const a = await emit(tv, 'host:create', { origin: s.url });
+    const tv2 = connect(s.url, { transports: ['websocket'] });
+    const b = await emit(tv2, 'host:create', { origin: s.url });
+    const roomA = s.app.rooms.get(a.code);
+    await s.app.online.invite(roomA, true); // (no cloudflared here: the invite still makes its key)
+    const key = roomA.onlineKey;
+    assert.match(key, /^[0-9a-f]{16}$/);
+    const outside = () => connect(s.url, { extraHeaders: tunnelHeaders, transports: ['websocket'] });
+    const o = outside();
+    assert.match((await emit(o, 'player:join', { code: b.code, name: 'Eve' })).error, /invite/, 'a room that didn\'t invite anyone');
+    assert.match((await emit(o, 'watch:join', { code: b.code })).error, /invite/);
+    assert.match((await emit(o, 'player:join', { code: a.code, name: 'Eve', key: 'wrong' })).error, /invite/, 'the right room, the wrong key');
+    assert.ok((await emit(o, 'watch:join', { code: a.code, key })).ok);
+    assert.ok((await emit(outside(), 'player:join', { code: a.code, name: 'Bob', key })).ok);
+    // At home, no key is needed.
+    assert.ok((await emit(connect(s.url, { transports: ['websocket'] }), 'player:join', { code: b.code, name: 'Ana' })).ok);
+    // Guessing: after a run of wrong tries from one address, it's refused for a while.
+    const g = outside();
+    for (let i = 0; i < 25; i++) await emit(g, 'watch:join', { code: 'QQQQ', key: 'x' });
+    assert.match((await emit(g, 'watch:join', { code: a.code, key })).error, /Too many/);
+    // Online play turned off in Settings: nobody gets in from outside, even with the key.
+    s.app.online.settings.setOnline({ allowed: false });
+    const elsewhere = connect(s.url, { extraHeaders: { 'cf-connecting-ip': '198.51.100.7' }, transports: ['websocket'] }); // (not the one that guessed)
+    assert.match((await emit(elsewhere, 'watch:join', { code: a.code, key })).error, /turned off/);
+  } finally {
+    open.forEach((c) => c.close());
+    await s.close();
+  }
+});
+
+test('the tunnel: cloudflared\'s own error (api.trycloudflare.com) isn\'t taken for the address', () => {
+  const cf = fakeCloudflared();
+  const t = new Tunnel({ port: 3000, spawn: cf.spawn, ...timers() });
+  t.start();
+  cf.last().child.stderr.emit('data', 'ERR failed to request quick Tunnel: Post "https://api.trycloudflare.com/tunnel": dial tcp: lookup api.trycloudflare.com: no such host\n');
+  assert.equal(t.state.status, 'starting');
+  cf.last().child.emit('exit', 1);
+  assert.equal(t.state.status, 'error');
+});
+
+test('the tunnel comes back if it drops while a room is online; your own address set stops the quick one; cleared, a quick one starts', async () => {
+  const { settings, cf, rooms, tunnel, online, dir } = setup();
+  const a = rooms.create();
+  await online.invite(a, true);
+  cf.last().child.stderr.emit('data', 'https://one-two.trycloudflare.com');
+  await online.refresh();
+  cf.last().child.emit('exit', 0); // (dropped)
+  await new Promise((r) => setImmediate(r));
+  assert.equal(cf.runs.length, 2, 'started again');
+  assert.equal(tunnel.state.status, 'starting');
+  settings.setOnline({ tunnelUrl: 'https://ark.example.com' });
+  await online.refresh();
+  assert.equal(tunnel.state.status, 'off', 'the quick tunnel goes');
+  assert.equal(a.publicState().online.url, 'https://ark.example.com/play/?room=' + a.code + '&k=' + a.onlineKey);
+  settings.setOnline({ tunnelUrl: '' });
+  await online.refresh();
+  assert.equal(cf.runs.length, 3, 'a quick one again');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('your own tunnel through a proxy that rewrites Host: its forwarding headers still mark it as from outside', () => {
+  assert.equal(overInternet({ host: '127.0.0.1:3000', 'x-forwarded-for': '203.0.113.9' }, 'https://ark.example.com'), true);
+  assert.equal(overInternet({ host: '127.0.0.1:3000', forwarded: 'for=203.0.113.9' }, 'https://ark.example.com'), true);
+  assert.equal(overInternet({ host: '192.168.1.5:3000' }, 'https://ark.example.com'), false);
 });

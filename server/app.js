@@ -84,10 +84,24 @@ export function createApp({
 
   // Over the internet (through a tunnel): Settings stays at home, and the TV page only opens as a
   // friend's remote screen (?watch=CODE), so nobody outside makes rooms on your hub.
+  // (the path as Express routes it: any case, %-encoding or doubled slashes)
+  const routed = (req) => {
+    let p = req.path;
+    try {
+      p = decodeURIComponent(p);
+    } catch {
+      // (not valid %-encoding: judged as it is)
+    }
+    return p.toLowerCase().replace(/\/{2,}/g, '/');
+  };
+  const fromOutside = (req) => overInternet(req.headers, settings.tunnelUrl);
+  const homeOnly = (req, res, next) => (fromOutside(req) ? res.status(403).send('Settings can only be opened at home, not over the internet.') : next());
   app.use((req, res, next) => {
-    if (!overInternet(req.headers, settings.tunnelUrl)) return next();
-    if (/^\/(api\/)?admin(\/|$)/.test(req.path)) return res.status(403).send('Settings can only be opened at home, not over the internet.');
-    if (/^\/host(\/|\/index\.html)?$/.test(req.path) && !req.query.watch) return res.redirect(302, '/play/');
+    if (!fromOutside(req)) return next();
+    const p = routed(req);
+    if (/^\/(api\/)?admin(\/|$)/.test(p)) return homeOnly(req, res, next);
+    if (/^\/host(\/|\/index(\.html)?)?$/.test(p) && !req.query.watch) return res.redirect(302, '/play/');
+    if (p === '/healthz') return res.json({ ok: true }); // (how many rooms there are stays at home)
     next();
   });
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
@@ -114,6 +128,7 @@ export function createApp({
   app.get('/api/profile-choices', (_req, res) => res.json({ avatars: AVATARS, colours: COLOURS }));
   app.use(
     '/api/admin',
+    homeOnly, // (and again here, exactly where Express routes it)
     adminRouter({
       settings,
       stats,

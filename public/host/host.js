@@ -5,6 +5,7 @@
   // A remote screen (/host/?watch=CODE): a friend somewhere else sees this TV, live, but can't
   // change anything (the server takes nothing from it).
   const WATCH = (String(location.search || '').match(/[?&]watch=([A-Za-z0-9]+)/) || [])[1] || null;
+  const WATCH_KEY = (String(location.search || '').match(/[?&]k=([0-9a-f]+)/) || [])[1] || null; // (the invite's key: over the internet it's needed)
   if (WATCH) document.body.classList.add('watching');
   const socket = io();
   const $ = (id) => document.getElementById(id);
@@ -56,7 +57,7 @@
     $('conn').textContent = 'Connected';
     $('conn').className = 'conn ok';
     if (WATCH) {
-      return socket.emit('watch:join', { code: WATCH }, function (res) {
+      return socket.emit('watch:join', { code: WATCH, key: WATCH_KEY }, function (res) {
         if (res && res.ok) return onRoom(res);
         $('conn').textContent = (res && res.error) || 'Room not found';
         $('conn').className = 'conn';

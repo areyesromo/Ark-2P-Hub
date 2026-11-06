@@ -46,6 +46,7 @@ export class Room {
     this.trophySeq = 0; // (each batch a new number, so the screens show each once)
     this.online = false; // invited someone over the internet (see online.js)
     this.onlineInfo = null; // and how they join: { status, error, url, watchUrl, qr }
+    this.onlineKey = null; // the invite's key, in its links (see Online#admits)
     this.onlineAllowed = () => false; // (Settings can turn online play off; the manager says)
     this.profiles = profiles; // avatars and colours (see profiles.js), optional
     this.hostToken = hostToken || newToken();
