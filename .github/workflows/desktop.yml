@@ -64,6 +64,16 @@ jobs:
             echo "Version must look like 0.2.0, got '$VERSION'"; exit 1
           fi
       - run: npm ci
+      - name: Get cloudflared (online play's quick tunnel)
+        shell: bash
+        run: |
+          mkdir -p desktop/bin
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            curl -fsSL -o desktop/bin/cloudflared.exe https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
+          else
+            curl -fsSL -o desktop/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
+            chmod +x desktop/bin/cloudflared
+          fi
       - name: Set the version
         if: github.event_name == 'workflow_dispatch'
         shell: bash

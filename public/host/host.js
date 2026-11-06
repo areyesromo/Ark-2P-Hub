@@ -2,6 +2,11 @@
 // and hands the stage to the current game's host renderer.
 (function () {
   const STORE_KEY = 'ark.host';
+  // A remote screen (/host/?watch=CODE): a friend somewhere else sees this TV, live, but can't
+  // change anything (the server takes nothing from it).
+  const WATCH = (String(location.search || '').match(/[?&]watch=([A-Za-z0-9]+)/) || [])[1] || null;
+  const WATCH_KEY = (String(location.search || '').match(/[?&]k=([0-9a-f]+)/) || [])[1] || null; // (the invite's key: over the internet it's needed)
+  if (WATCH) document.body.classList.add('watching');
   const socket = io();
   const $ = (id) => document.getElementById(id);
   Ark.watchVersion(socket, function (v) {
@@ -35,9 +40,9 @@
   }
 
   function onRoom(res) {
-    save({ code: res.code, hostToken: res.hostToken });
+    if (!WATCH) save({ code: res.code, hostToken: res.hostToken });
     roomCode = res.code;
-    restorePads(res.code);
+    if (!WATCH) restorePads(res.code);
     $('room-code').textContent = res.code;
     $('join-code').textContent = res.code;
     $('room-note-code').textContent = res.code;
@@ -51,6 +56,13 @@
   socket.on('connect', function () {
     $('conn').textContent = 'Connected';
     $('conn').className = 'conn ok';
+    if (WATCH) {
+      return socket.emit('watch:join', { code: WATCH, key: WATCH_KEY }, function (res) {
+        if (res && res.ok) return onRoom(res);
+        $('conn').textContent = (res && res.error) || 'Room not found';
+        $('conn').className = 'conn';
+      });
+    }
     const prev = saved();
     if (!prev) return createRoom();
     // Survive TV refreshes and server hiccups by reclaiming the same room.
@@ -101,6 +113,47 @@
     });
   }
 
+  /**
+   * Online play: the 🌍 Invite online button, then (while it's on) the internet QR code and the
+   * links for the friend's phone and their remote screen, with Stop. Compact once both seats are taken.
+   */
+  function renderOnline() {
+    const el = $('online');
+    const o = state.online;
+    if (WATCH || (!o && !state.onlineAllowed)) {
+      el.innerHTML = '';
+      return;
+    }
+    if (!o) {
+      el.innerHTML = '<button class="ghost" id="online-on">🌍 Invite someone online</button>';
+      return;
+    }
+    const full = state.players.every(function (p) { return p && !p.bot; });
+    const stop = '<button class="ghost" id="online-off">Stop</button>';
+    if (o.status === 'error') {
+      el.innerHTML = '<p class="online-msg">⚠ ' + Ark.escapeHtml(o.error || 'The tunnel didn\'t start.') + '</p><button class="ghost" id="online-on">Try again</button> ' + stop;
+      return;
+    }
+    if (!o.url) {
+      el.innerHTML = '<p class="online-msg">🌍 Opening an internet address… (a few seconds)</p>' + stop;
+      return;
+    }
+    el.innerHTML = '<div class="online-on">' +
+      (full || !o.qr ? '' : '<img class="online-qr" src="' + o.qr + '" alt="QR code to join over the internet">') +
+      '<div><strong>🌍 Online</strong>' +
+      '<p>Their phone: <span class="online-url">' + Ark.escapeHtml(o.url) + '</span></p>' +
+      '<p>Their screen: <span class="online-url">' + Ark.escapeHtml(o.watchUrl) + '</span></p>' + stop + '</div></div>';
+  }
+
+  $('online').addEventListener('click', function (e) {
+    const on = e.target.closest('#online-on');
+    const off = e.target.closest('#online-off');
+    if (!on && !off) return;
+    socket.emit('host:online', { on: Boolean(on) }, function (res) {
+      if (res && res.error) flashPad('⚠️ ' + res.error);
+    });
+  });
+
   const GROUPS = {
     competitive: '⚔️ Competitive <span>Head to head: one of you wins</span>',
     board: '🎲 Dice &amp; Board <span>Classic games, head to head</span>',
@@ -129,6 +182,7 @@
       ? 'Choose here, from either phone, or with a controller (D-pad + A).'
       : 'Games unlock once both players are in.';
     renderPadHint();
+    renderOnline();
     const h2h = Ark.h2hHtml(state.players, state.h2h);
     $('h2h').innerHTML = h2h;
     $('h2h').classList.toggle('hidden', !h2h);
@@ -149,7 +203,7 @@
       return (
         heading +
         '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag || Ark.practiceTag(state, g)) + Ark.gameLabels(g) + '</strong>' +
+        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag || Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
@@ -631,6 +685,7 @@
   }
 
   ArkPads.onChange(function (list) {
+    if (WATCH) return; // (a remote screen takes no controllers)
     connectedPads = list;
     // A controller unplugged in the lobby gives up its seat; mid-game it keeps it.
     if (state && state.phase !== 'playing') {
@@ -648,6 +703,7 @@
   // Real-time games read held buttons / sticks every frame via the renderer's
   // padPoll(); we only send when the resulting input changes.
   ArkPads.onFrame(function () {
+    if (WATCH) return;
     const r = current && current.renderer;
     if (!state || state.phase !== 'playing' || !r || !r.padPoll || !lastView || Ark.setup.isHub(lastView)) return;
     Object.keys(padSeats).forEach(function (idx) {
@@ -660,6 +716,7 @@
   });
 
   ArkPads.onPress(function (idx, btn) {
+    if (WATCH) return;
     if (newsOpen) {
       if (btn === 'A' || btn === 'B' || btn === 'START') closeNews();
       return;

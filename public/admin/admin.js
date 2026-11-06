@@ -40,9 +40,23 @@
     }).catch(function () { $('match-count').textContent = 'Unknown'; });
   }
 
+  /** Online play: the switch, your own address, and what's running now. */
+  function showOnline(d) {
+    if (!d || d.status === undefined) return;
+    $('online-allowed').checked = d.allowed !== false;
+    $('tunnel-url').value = d.ownUrl || '';
+    const what = d.ownUrl ? 'Using your own address.' : d.status === 'on' ? 'A quick tunnel is running: ' + d.url
+      : d.status === 'starting' ? 'A quick tunnel is starting…' : d.status === 'error' ? '⚠ ' + (d.error || 'The tunnel didn\'t start.') : 'Nothing is running.';
+    $('online-status').textContent = what + (d.rooms && d.rooms.length ? ' Rooms online: ' + d.rooms.join(', ') + '.' : '');
+  }
+  function loadOnline() {
+    api('GET', '/api/admin/online').then(showOnline);
+  }
+
   function showSettings() {
     show('settings');
     loadMatchCount();
+    loadOnline();
     $('join-url').value = status.joinUrl;
     $('detected').textContent = status.detected.base + (status.detected.guess ? ' (Docker-internal, phones probably can\'t reach it)' : '');
     if (status.envOverride) {
@@ -116,6 +130,19 @@
       $('stats-msg').textContent = r.ok ? 'Match history cleared.' : r.error || 'Something went wrong.';
       loadMatchCount();
     });
+  });
+
+  function onlineReply(r) {
+    if (r.status === 401) { setToken(''); return show('login'); }
+    $('online-msg').className = r.status === 200 ? 'msg ok' : 'msg err';
+    $('online-msg').textContent = r.status === 200 ? 'Saved.' : r.error || 'Something went wrong.';
+    showOnline(r);
+  }
+  $('online-save').addEventListener('click', function () {
+    api('PUT', '/api/admin/online', { allowed: $('online-allowed').checked, tunnelUrl: $('tunnel-url').value }).then(onlineReply);
+  });
+  $('online-stop').addEventListener('click', function () {
+    api('POST', '/api/admin/online/stop').then(onlineReply);
   });
 
   $('clear-trophies').addEventListener('click', function () {

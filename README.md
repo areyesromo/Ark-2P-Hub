@@ -275,6 +275,30 @@ each phone warns the first time. Choose **Advanced → Proceed** (Android) or
 https, set the join address in Settings (`/admin/`) to
 `https://<your-server>:3000`. Set `HTTPS=off` to serve plain http only.
 
+## Online play
+
+Your friend isn't in the same room? Press **🌍 Invite someone online** under the seats on the TV.
+The hub opens a temporary internet address (a free Cloudflare **quick tunnel**: no account, no
+setup; `cloudflared` comes with the Docker image and the desktop app) and shows a second QR code
+for their phone, plus a **remote screen** link (`/host/?watch=ROOM`) for a laptop or smart TV: it
+mirrors your TV live, but they can't press anything on it. It's https, so tilt and motion work on
+their phone too. **Stop** (or closing the room) takes the address down again.
+
+While someone's online, the game cards say which games play well that way: **🌍 Great online**
+for the ones that are all on the phone (📱 No TV needed), and **🐢 Best in the same room** for
+fast action games, where a moment's internet delay shows.
+
+Only the game pages go out over the internet: Settings (`/admin/`) and the leaderboard and
+trophies (your household's names and results) stay at home, nobody outside can open a room on
+your hub, and only the room that invited someone can be joined or watched, with
+the invite's own key (it's in the QR code and links; a new one each invite), after so many wrong
+tries from one address it waits a while. **Stop** (or turning online play off) sends whoever
+came in over the internet away again. In Settings, **Online play** can turn the button off, stop
+everything, or use **your own tunnel address** instead of a quick tunnel (if you already run a
+Cloudflare tunnel, or any https address, to the hub: point it at port 3000 and paste its
+address). Through a proxy of your own, keep the original Host (or send `X-Forwarded-Host`):
+that's how the hub tells internet visitors from home.
+
 ## Leaderboard and match history
 
 Every finished match (and every tournament won) is saved (in `stats.json` in the data folder, so it

@@ -329,6 +329,18 @@
   }
 
   /**
+   * While someone's playing over the internet (room state's `online`): which games play well that
+   * way (everything's on the phone) and which are best in the same room (fast action, where a
+   * moment's delay shows). '' otherwise.
+   */
+  function onlineTag(state, g) {
+    if (!state || !state.online || !state.online.url || g.id === 'random') return '';
+    if (g.fast) return ' <em class="tag online-slow" title="A moment\'s delay shows in fast games">🐢 Best in the same room</em>';
+    if (g.handheld) return ' <em class="tag online-good" title="Everything\'s on the phone">🌍 Great online</em>';
+    return '';
+  }
+
+  /**
    * New trophies (room state's `trophies`): a card that slides in for a few seconds. `slot`: only
    * that player's (a phone: `name` too, so a new player in the seat isn't shown the last one's), or
    * null for both (the TV). Each batch is shown once.
@@ -599,6 +611,7 @@
     botSeat: botSeat,
     botTag: botTag,
     practiceTag: practiceTag,
+    onlineTag: onlineTag,
     showTrophies: showTrophies,
     botLevelsHtml: botLevelsHtml,
     botLevelNames: BOT_LEVEL_NAMES,

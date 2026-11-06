@@ -19,6 +19,8 @@ import { Stats } from './stats.js';
 import { Profiles, AVATARS, COLOURS } from './profiles.js';
 import { Practice } from './practice.js';
 import { Trophies, TROPHIES } from './trophies.js';
+import { Tunnel } from './tunnel.js';
+import { Online, overInternet } from './online.js';
 
 const ROOT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
@@ -61,6 +63,10 @@ export function createApp({
   const practice = new Practice(dataDir);
   const trophies = new Trophies(dataDir);
   const rooms = new RoomManager(io, { stats, profiles, practice, trophies });
+  // Online play: a quick tunnel (or the owner's own address) for a friend somewhere else.
+  let online = null;
+  const tunnel = new Tunnel({ port: () => (listener.address() && listener.address().port) || port, onChange: () => online && online.refresh() });
+  online = new Online({ settings, tunnel, rooms, qr: (url) => QRCode.toDataURL(url, { margin: 1, width: 480 }).catch(() => null) });
 
   /** (Re)compute a room's join link + QR from the current settings. */
   async function refreshJoin(room) {
@@ -76,6 +82,30 @@ export function createApp({
     }
   }
 
+  // Over the internet (through a tunnel): Settings stays at home, and the TV page only opens as a
+  // friend's remote screen (?watch=CODE), so nobody outside makes rooms on your hub.
+  // (the path as Express routes it: any case, %-encoding or doubled slashes)
+  const routed = (req) => {
+    let p = req.path;
+    try {
+      p = decodeURIComponent(p);
+    } catch {
+      // (not valid %-encoding: judged as it is)
+    }
+    return path.posix.normalize(p.toLowerCase().replace(/\/{2,}/g, '/')); // (and "." / ".." resolved, as the static files are)
+  };
+  const fromOutside = (req) => overInternet(req.headers, settings.tunnelUrl);
+  const homeOnly = (req, res, next) => (fromOutside(req) ? res.status(403).send('Settings can only be opened at home, not over the internet.') : next());
+  app.use((req, res, next) => {
+    if (!fromOutside(req)) return next();
+    const p = routed(req);
+    if (/^\/(api\/)?admin(\/|$)/.test(p)) return homeOnly(req, res, next);
+    // The household's names and results (leaderboard, trophies) stay at home too.
+    if (/^\/(api\/)?(stats|trophies)(\/|$)/.test(p)) return res.status(403).send('The leaderboard and trophies are for the hub\'s home screens.');
+    if (/^\/host(\/|\/index(\.html)?)?$/.test(p) && !req.query.watch) return res.redirect(302, '/play/');
+    if (/^\/healthz\/?$/.test(p)) return res.json({ ok: true }); // (how many rooms there are stays at home)
+    next();
+  });
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
   app.get('/version', (_req, res) => res.json(VERSION));
   app.get('/whats-new.json', (req, res) => {
@@ -100,11 +130,13 @@ export function createApp({
   app.get('/api/profile-choices', (_req, res) => res.json({ avatars: AVATARS, colours: COLOURS }));
   app.use(
     '/api/admin',
+    homeOnly, // (and again here, exactly where Express routes it)
     adminRouter({
       settings,
       stats,
       trophies,
       practice,
+      online,
       publicUrl,
       detectedJoin: () => resolveJoin({ port }),
       // New join address: refresh every open room so TVs show the new QR right away.
@@ -131,7 +163,7 @@ export function createApp({
   // update's new art and code show straight away instead of an old cached copy.
   app.use(express.static(PUBLIC_DIR, { extensions: ['html'], setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
 
-  registerSocketHandlers(io, rooms, { refreshJoin });
+  registerSocketHandlers(io, rooms, { refreshJoin, online, fromInternet: (socket) => overInternet(socket.handshake.headers, settings.tunnelUrl) });
 
   const sweeper = setInterval(() => rooms.sweep(), 60 * 1000);
   sweeper.unref();
@@ -141,6 +173,7 @@ export function createApp({
     httpServer,
     io,
     rooms,
+    online,
     https,
     // Fails (e.g. EADDRINUSE: the port is taken) instead of hanging.
     listen: () =>
@@ -155,6 +188,7 @@ export function createApp({
     close: () =>
       new Promise((resolve) => {
         clearInterval(sweeper);
+        online.shutdown();
         for (const room of rooms.rooms.values()) room.dispose();
         if (listener !== httpServer) listener.close();
         io.close(() => resolve());

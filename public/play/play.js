@@ -54,6 +54,9 @@
   // ---- join ------------------------------------------------------------
 
   const urlCode = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
+  // Joining over the internet: the invite's key, from the TV's link (kept with the seat, so the
+  // phone gets back in after it sleeps). At home it isn't needed.
+  const inviteKey = new URLSearchParams(location.search).get('k') || (session && session.key) || null;
   $('code').value = urlCode || (session && session.code) || '';
   $('name').value = (session && session.name) || '';
   if (urlCode) setTimeout(function () { $('name').focus(); }, 50);
@@ -65,7 +68,7 @@
     attempt = attempt || 0;
     clearTimeout(rejoinTimer);
     $('join-btn').disabled = true;
-    socket.emit('player:join', { code: code, name: name, token: token }, function (res) {
+    socket.emit('player:join', { code: code, name: name, token: token, key: inviteKey }, function (res) {
       $('join-btn').disabled = false;
       // Rejoining after a restart: the room comes back once the TV reconnects, so keep trying a while.
       if (silent && res && /No room/.test(res.error || '') && attempt < REJOIN_TRIES) {
@@ -79,7 +82,7 @@
         showJoin();
         return;
       }
-      saveSession({ code: res.code, token: res.token, name: res.name });
+      saveSession({ code: res.code, token: res.token, name: res.name, key: inviteKey });
       me = { slot: res.slot, name: res.name, code: res.code };
       $('me-conn').textContent = '';
       $('join-error').textContent = '';
@@ -205,7 +208,7 @@
       return (
         heading +
         '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (off ? ' class="phone-only"' : '') + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : botTag ? ' ' + botTag : ' ' + Ark.practiceTag(state, g)) + Ark.gameLabels(g) + '</strong>' +
+        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : botTag ? ' ' + botTag : ' ' + Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
