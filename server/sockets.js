@@ -15,6 +15,8 @@ const reply = (ack, payload) => {
  *   game:input    { type, ... }              (players only, game-specific)
  *   bot:join      { level }                  -> ack { ok, slot } | { error }  (the computer takes the free seat, or changes level)
  *   bot:leave                                -> ack { ok }  (the computer gives up its seat)
+ *   host:online   { on }                     -> ack { ok } | { error }  (the TV invites someone over the internet, see online.js)
+ *   watch:join    { code }                   -> ack { ok, code } | { error }  (a remote screen: sees what the TV sees, can't play)
  *
  * Controllers plugged into the TV (host only):
  *   pad:join      { name, token? }           -> ack { ok, slot, token, name }
@@ -34,7 +36,7 @@ const reply = (ack, payload) => {
 /** How long a phone gets to answer "still there?" before its seat counts as free. */
 export const PING_MS = 2500;
 
-export function registerSocketHandlers(io, rooms, { refreshJoin }) {
+export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, fromInternet = () => false }) {
   /** Does this seated phone still answer? */
   function answers(player) {
     const s = player && player.socketId && io.sockets.sockets.get(player.socketId);
@@ -55,6 +57,8 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
         socket.leave(room.hostChannel);
         room.hostSockets.delete(socket.id);
         room.syncLocalPlayers();
+      } else if (role === 'watch') {
+        socket.leave(room.hostChannel);
       } else if (role === 'player') {
         socket.leave(room.playerChannel(slot));
         const p = room.players[slot];
@@ -114,7 +118,21 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
       room.sendSnapshot(socket, 'player', slot);
     }
 
+    /** A remote screen: in the room for the TV's view, but nothing it says changes anything. */
+    function bindWatcher(target) {
+      detach();
+      room = target;
+      role = 'watch';
+      socket.join(room.allChannel);
+      socket.join(room.hostChannel);
+      room.sendSnapshot(socket, 'host');
+    }
+
+    /** What a remote screen may not do (it only watches): the reason, or null. */
+    const watching = () => (role === 'watch' ? 'This is a remote screen: it can watch, not play.' : null);
+
     socket.on('host:create', async (data, ack) => {
+      if (fromInternet(socket)) return reply(ack, { error: 'A room can only be opened on the TV at home, not over the internet.' });
       const { origin } = asObject(data);
       const target = rooms.create();
       target.hostOrigin = typeof origin === 'string' ? origin : null;
@@ -124,6 +142,7 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
     });
 
     socket.on('host:resume', async (data, ack) => {
+      if (fromInternet(socket)) return reply(ack, { error: 'A room can only be opened on the TV at home, not over the internet.' });
       const { code, hostToken, origin } = asObject(data);
       let target = rooms.get(code);
       if (target && target.hostToken !== hostToken) return reply(ack, { error: 'Room not found.' });
@@ -175,30 +194,47 @@ export function registerSocketHandlers(io, rooms, { refreshJoin }) {
       reply(ack, { ok: true });
     });
 
+    socket.on('watch:join', (data, ack) => {
+      const target = rooms.get(asObject(data).code);
+      if (!target) return reply(ack, { error: 'No room with that code.' });
+      bindWatcher(target);
+      reply(ack, { ok: true, code: target.code });
+    });
+
+    socket.on('host:online', async (data, ack) => {
+      if (role !== 'host' || !online) return reply(ack, { error: 'Only the TV can invite someone online.' });
+      reply(ack, await online.invite(room, Boolean(asObject(data).on)));
+    });
+
     socket.on('lobby:start', (data, ack) => {
       if (!room) return reply(ack, { error: 'Not in a room.' });
+      if (watching()) return reply(ack, { error: watching() });
       reply(ack, room.startGame(asObject(data).gameId));
     });
 
     socket.on('lobby:return', (_data, ack) => {
+      if (watching()) return reply(ack, { error: watching() });
       if (room && room.game) room.stopGame();
       reply(ack, { ok: true });
     });
 
     socket.on('lobby:tournament', (data, ack) => {
       if (!room) return reply(ack, { error: 'Not in a room.' });
+      if (watching()) return reply(ack, { error: watching() });
       reply(ack, room.setTournament(asObject(data)));
     });
 
     // The computer opponent, from the TV or a seated phone (for a game with no TV at all).
     socket.on('bot:join', (data, ack) => {
       if (!room || (role === 'player' && slot === null)) return reply(ack, { error: 'Not in a room.' });
+      if (watching()) return reply(ack, { error: watching() });
       room.touch();
       reply(ack, room.seatBot(asObject(data).level));
     });
 
     socket.on('bot:leave', (data, ack) => {
       if (!room) return reply(ack, { error: 'Not in a room.' });
+      if (watching()) return reply(ack, { error: watching() });
       const seat = room.botSlot;
       if (seat !== -1) room.removePlayer(seat);
       reply(ack, { ok: true });

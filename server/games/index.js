@@ -260,6 +260,12 @@ const BOT_SOON = new Set([
 ]);
 
 /** Games for the lobby, grouped by category (in CATEGORIES order) so lists and controller focus agree. */
+/** Fast action games: over the internet a moment's delay shows, so they're best in the same room. */
+const FAST = new Set([
+  'pong', 'air-hockey', 'snake', 'tron', 'tanks', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo',
+  'bomb-duel', 'kart-race', 'kart-race-3d', 'block-battle', 'reaction-duel', 'micro-mayhem',
+]);
+
 export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
@@ -275,6 +281,7 @@ export function listGames() {
       motion: Boolean(motion), // lobby label: 🤸 Motion
       vsComputer: Boolean(bot), // lobby label: 🤖 Vs computer (a `bot` plays the other seat: see Room#driveBot)
       botSoon: !bot && BOT_SOON.has(id), // the computer can't play it yet, but will: "⏳ Coming soon"
+      fast: FAST.has(id), // played over the internet: "🐢 Best in the same room" (a moment's delay shows)
       // The TV's background music for this game (see public/host/music.js).
       music: MUSIC_MOODS.includes(music) ? music : category === 'casual' ? 'casual' : 'action',
     }));

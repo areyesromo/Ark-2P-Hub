@@ -16,8 +16,11 @@ const FAILURE_WINDOW_MS = 15 * 60 * 1000;
  *   PUT  /api/admin/settings   { joinUrl }  -> { joinUrl } (Bearer token)
  *   POST /api/admin/stats/reset              -> { ok }     (Bearer token) wipe match history
  *   POST /api/admin/trophies/reset           -> { ok }     (Bearer token) wipe trophies and practice records
+ *   GET  /api/admin/online                   -> Online#status() (Bearer token) online play: on or off, the address, the tunnel
+ *   PUT  /api/admin/online   { allowed?, tunnelUrl? } -> Online#status() (Bearer token)
+ *   POST /api/admin/online/stop              -> Online#status() (Bearer token) stop the tunnel and every room's invite
  */
-export function adminRouter({ settings, stats, trophies = null, practice = null, publicUrl, detectedJoin, onJoinUrlChange }) {
+export function adminRouter({ settings, stats, trophies = null, practice = null, online = null, publicUrl, detectedJoin, onJoinUrlChange }) {
   const router = express.Router();
   router.use(express.json({ limit: '4kb' }));
 
@@ -109,6 +112,37 @@ export function adminRouter({ settings, stats, trophies = null, practice = null,
     if (!authed(req)) return res.status(401).json({ error: 'Please log in again.' });
     if (stats) stats.reset();
     res.json({ ok: true });
+  });
+
+  // Online play (see online.js).
+  router.get('/online', (req, res) => {
+    if (!authed(req)) return res.status(401).json({ error: 'Please log in again.' });
+    res.json(online ? online.status() : { allowed: false });
+  });
+
+  router.put('/online', async (req, res) => {
+    if (!authed(req)) return res.status(401).json({ error: 'Please log in again.' });
+    if (!online) return res.status(404).json({ error: 'Online play isn\'t available here.' });
+    const body = req.body || {};
+    let tunnelUrl;
+    if (body.tunnelUrl !== undefined) {
+      try {
+        tunnelUrl = normalizeJoinUrl(body.tunnelUrl);
+      } catch {
+        return res.status(400).json({ error: "That doesn't look like an address. Example: https://ark.example.com" });
+      }
+      if (tunnelUrl && !tunnelUrl.startsWith('https://')) return res.status(400).json({ error: 'Use an https:// address (phones need it for the motion games).' });
+    }
+    settings.setOnline({ allowed: typeof body.allowed === 'boolean' ? body.allowed : undefined, tunnelUrl });
+    if (!settings.onlineAllowed) await online.stopAll();
+    else await online.refresh();
+    res.json(online.status());
+  });
+
+  router.post('/online/stop', async (req, res) => {
+    if (!authed(req)) return res.status(401).json({ error: 'Please log in again.' });
+    if (online) await online.stopAll();
+    res.json(online ? online.status() : { allowed: false });
   });
 
   router.post('/trophies/reset', (req, res) => {

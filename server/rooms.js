@@ -44,6 +44,9 @@ export class Room {
     this.trophies = trophies; // each player's trophies (see trophies.js), optional
     this.trophyNews = null; // the trophies the last game earned, for the screens: { n, at, list }
     this.trophySeq = 0; // (each batch a new number, so the screens show each once)
+    this.online = false; // invited someone over the internet (see online.js)
+    this.onlineInfo = null; // and how they join: { status, error, url, watchUrl, qr }
+    this.onlineAllowed = () => false; // (Settings can turn online play off; the manager says)
     this.profiles = profiles; // avatars and colours (see profiles.js), optional
     this.hostToken = hostToken || newToken();
     this.hostSockets = new Set();
@@ -303,6 +306,8 @@ export class Room {
       h2h: this.headToHead(),
       tournament: this.tournament.view(),
       knownNames: this.stats ? this.stats.knownNames() : [],
+      online: this.onlineInfo,
+      onlineAllowed: this.onlineAllowed(),
       trophies: this.trophyNews && { n: this.trophyNews.n, list: this.trophyNews.list, ageMs: Date.now() - this.trophyNews.at }, // (old news isn't shown on a reload)
       // With the computer seated: the person's practice records, for the game cards.
       practice: this.botSlot !== -1 && this.practice ? this.practice.recordsFor((this.players.find((p) => p && !p.bot) || {}).name) : null,
@@ -551,6 +556,7 @@ export class RoomManager {
       hostToken = null;
     }
     const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, practice: this.practice, trophies: this.trophies, hostToken: isValidToken(hostToken) ? hostToken : null });
+    room.onlineAllowed = () => Boolean(this.online && this.online.allowed);
     this.rooms.set(code, room);
     return room;
   }
@@ -576,6 +582,7 @@ export class RoomManager {
         removed++;
       }
     }
+    if (removed && this.online) this.online.sync(); // (the last room online gone: the tunnel goes too)
     return removed;
   }
 }

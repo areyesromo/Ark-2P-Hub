@@ -19,6 +19,8 @@
     h2 { font-size: 1.3rem; }
     form, .card { display: flex; flex-direction: column; gap: 14px; }
     label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; color: var(--muted); }
+    label.check { flex-direction: row; align-items: center; gap: 10px; color: var(--text); }
+    label.check input { width: 1.2em; height: 1.2em; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; }
     .row button { flex: 1; }
     p { margin: 0; line-height: 1.45; }
@@ -71,6 +73,19 @@
       <p class="msg" id="settings-msg"></p>
       <p class="muted note">Leave it empty ("Automatic") to use the address the TV opened, or a detected one.
         Detected right now: <code id="detected"></code></p>
+      <h2 style="margin-top:12px">Online play</h2>
+      <p class="muted">The TV's <strong>🌍 Invite someone online</strong> button opens a temporary internet address
+        (a free Cloudflare quick tunnel) so a friend somewhere else can join from their phone, with a remote
+        screen to watch the TV. Only the game pages go out: this Settings page stays at home.</p>
+      <label class="check"><input type="checkbox" id="online-allowed"> Allow inviting someone online</label>
+      <label>Your own tunnel address (optional)
+        <input id="tunnel-url" placeholder="https://ark.example.com" autocomplete="off" autocapitalize="off" spellcheck="false">
+      </label>
+      <p class="muted note">Already run a Cloudflare tunnel (or another https address) to this hub? Put its address
+        here and the button uses it instead of a quick tunnel.</p>
+      <div class="row"><button type="button" class="primary" id="online-save">Save</button><button type="button" class="ghost" id="online-stop">Stop online play now</button></div>
+      <p class="muted note" id="online-status">…</p>
+      <p class="msg" id="online-msg"></p>
       <h2 style="margin-top:12px">Match history</h2>
       <p class="muted"><span id="match-count">…</span> · see the <a href="/stats/">leaderboard</a>. Clearing it can't be undone.</p>
       <div class="row"><button type="button" class="ghost" id="clear-stats">Clear match history</button></div>

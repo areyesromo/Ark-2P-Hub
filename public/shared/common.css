@@ -201,6 +201,8 @@ em.label.motion { color: var(--warn); border-color: var(--warn); }
 em.label.bot { color: var(--p2); border-color: var(--p2); }
 em.tag.soon { color: var(--warn); }
 em.tag.practice { color: var(--good); }
+em.tag.online-good { color: var(--good); }
+em.tag.online-slow { color: var(--muted); }
 
 /* A trophy unlocked: a card that slides in at the top right (see Ark.showTrophies). */
 .trophy-card {

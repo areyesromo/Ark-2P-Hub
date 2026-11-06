@@ -218,3 +218,19 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 .seat .who .nm { overflow: hidden; text-overflow: ellipsis; }
 .seat-avatar { padding: 0; border: 0; background: none; font-size: 1.4rem; cursor: pointer; border-radius: 50%; }
 .lobby.full .seat-avatar { font-size: 1.1rem; }
+
+/* Online play (see renderOnline): the invite button, then the internet QR code and links. */
+.online { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; }
+.online:empty { display: none; }
+.online-msg { margin: 0; color: var(--muted); }
+.online-on { display: flex; gap: 1rem; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); padding: 0.75rem 1rem; text-align: left; }
+.online-on p { margin: 0.25rem 0; color: var(--muted); font-size: var(--fs-sm); }
+.online-qr { width: 120px; height: 120px; border-radius: var(--r-sm); background: #fff; padding: 4px; }
+.online-url { color: var(--text); font-weight: 700; word-break: break-all; }
+
+/* A remote screen (/host/?watch=CODE): it shows the TV, nothing to press. */
+body.watching #to-lobby, body.watching #quit, body.watching .kick, body.watching .bot-levels,
+body.watching .icon-btn, body.watching .update-banner, body.watching .seat-avatar { pointer-events: none; }
+body.watching #to-lobby, body.watching #quit, body.watching .kick, body.watching .bot-levels, body.watching .icon-btn,
+body.watching .join, body.watching .pad-hint, body.watching .update-banner, body.watching .whats-new { display: none !important; }
+body.watching .game-list { pointer-events: none; }

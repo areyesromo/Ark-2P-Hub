@@ -163,6 +163,9 @@ async function start() {
   const dataDir = path.join(app.getPath('userData'), 'data');
   // Packaged, three.js's add-ons sit beside the app (see electron-builder.yml).
   if (app.isPackaged) process.env.ARK_THREE_ADDONS = path.join(process.resourcesPath, 'three-addons');
+  // Online play's quick tunnel: the cloudflared the build put beside the app (see desktop.yml).
+  const cloudflared = path.join(process.resourcesPath || '', 'bin', process.platform === 'win32' ? 'cloudflared.exe' : 'cloudflared');
+  if (app.isPackaged && !process.env.CLOUDFLARED && fs.existsSync(cloudflared)) process.env.CLOUDFLARED = cloudflared;
   log('graphics', {
     features: app.getGPUFeatureStatus(),
     ozonePlatform: app.commandLine.getSwitchValue('ozone-platform') || '(default)',

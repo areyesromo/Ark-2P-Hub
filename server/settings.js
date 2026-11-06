@@ -44,6 +44,25 @@ export class Settings {
     this.save();
   }
 
+  /** Online play (the TV's 🌍 Invite online button): on unless turned off in Settings. */
+  get onlineAllowed() {
+    return this.data.onlineAllowed !== false;
+  }
+
+  /** An internet address of the owner's own (their own tunnel or domain), used instead of a quick tunnel. */
+  get tunnelUrl() {
+    return this.data.tunnelUrl || '';
+  }
+
+  setOnline({ allowed, tunnelUrl } = {}) {
+    if (typeof allowed === 'boolean') this.data.onlineAllowed = allowed;
+    if (typeof tunnelUrl === 'string') {
+      if (tunnelUrl) this.data.tunnelUrl = tunnelUrl;
+      else delete this.data.tunnelUrl;
+    }
+    this.save();
+  }
+
   get passwordFromEnv() {
     return Boolean(this.envPassword);
   }

@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.31
+
+- 🌍 Online play: press Invite someone online on the TV and a friend somewhere else can join from
+  their phone, with a remote screen link to watch your TV from theirs. No account or setup (a
+  free Cloudflare quick tunnel); Settings can turn it off or use your own tunnel address.
+- While someone's online, the game cards show which games play great that way and which are
+  best in the same room.
+
 ## 0.1.30
 
 - 🏆 Trophies: 25 achievements for each player, from your first win and a clean sweep to beating
