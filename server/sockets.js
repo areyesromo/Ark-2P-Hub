@@ -60,6 +60,7 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
     return m.count >= GUESSES.max;
   }
   function missed(socket) {
+    if (misses.size > 1000) for (const [k, m] of misses) if (Date.now() - m.since > GUESSES.windowMs) misses.delete(k); // (old tries go)
     const k = missKey(socket);
     const m = misses.get(k);
     if (!m || Date.now() - m.since > GUESSES.windowMs) misses.set(k, { count: 1, since: Date.now() });
@@ -71,11 +72,18 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
    */
   function shutOut(socket, target, key) {
     if (!fromInternet(socket)) return null;
+    if (online && online.admits(target, key)) return null; // (the invite's key always gets in, whatever others tried)
     if (tooManyMisses(socket)) return 'Too many tries. Wait a few minutes and use the link from the TV.';
-    if (online && online.admits(target, key)) return null;
     missed(socket);
     if (online && !online.allowed) return 'Online play is turned off on this hub.';
     return 'Use the invite link or QR code from the TV (this room hasn\'t invited anyone online).';
+  }
+
+  // Stop (or online play turned off): whoever came into that room over the internet goes.
+  if (online) {
+    online.onShutOut = (target) => {
+      for (const s of io.sockets.sockets.values()) if (s.data.leaveOnline) s.data.leaveOnline(target);
+    };
   }
 
   io.on('connection', (socket) => {
@@ -111,6 +119,16 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
       role = null;
       slot = null;
     }
+
+    /** Online play stopped for `target`: a phone or remote screen that came in over the internet leaves it. */
+    socket.data.leaveOnline = (target) => {
+      if (room !== target || !fromInternet(socket)) return;
+      if (role === 'watch') return socket.disconnect(true);
+      if (role !== 'player') return;
+      const seat = slot;
+      socket.data.unseat({ reason: 'The TV stopped online play.', removed: true });
+      target.removePlayer(seat);
+    };
 
     /** Another socket took this one's seat (or the TV removed it): stop acting for that player. */
     socket.data.unseat = (msg) => {

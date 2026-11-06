@@ -16,6 +16,14 @@ export class Online {
     this.rooms = rooms;
     this.qr = qr; // (url) -> data URL of a QR code
     rooms.online = this; // (rooms ask whether online play is allowed)
+    this.closing = false;
+    this.onShutOut = () => {}; // (room) -> send away whoever came in to it over the internet (sockets.js sets it)
+  }
+
+  /** The hub is shutting down: the tunnel goes, and nothing starts it again. */
+  shutdown() {
+    this.closing = true;
+    this.tunnel.stop();
   }
 
   get allowed() {
@@ -51,6 +59,7 @@ export class Online {
     if (on && !room.online) room.onlineKey = randomBytes(8).toString('hex');
     if (!on) room.onlineKey = null;
     room.online = Boolean(on);
+    if (!on) this.onShutOut(room); // (Stop: the friend and their screen go too)
     if (on && this.tunnel.state.status === 'error') this.tunnel.stop(); // (Try again: a fresh start)
     await this.refresh();
     return { ok: true };
@@ -64,6 +73,7 @@ export class Online {
   /** Stop everything (Settings): every room's invite and the tunnel. */
   async stopAll() {
     for (const room of this.rooms.rooms.values()) {
+      if (room.online) this.onShutOut(room);
       room.online = false;
       room.onlineKey = null;
     }
@@ -76,11 +86,11 @@ export class Online {
    * gone when none is, or when your own address is set instead.
    */
   sync() {
-    const any = this.allowed && [...this.rooms.rooms.values()].some((r) => r.online);
+    const any = !this.closing && this.allowed && [...this.rooms.rooms.values()].some((r) => r.online);
     const want = any && !this.settings.tunnelUrl;
     const status = this.tunnel.state.status;
     if (!want && status !== 'off') this.tunnel.stop();
-    else if (want && status === 'off') this.tunnel.start();
+    else if (want && status === 'off') this.tunnel.startSoon();
   }
 
   /** Every online room's join details, from the address now in use; out to their screens. */
@@ -112,17 +122,21 @@ export class Online {
 
 /**
  * Is this request (or socket) coming in over the internet (through a Cloudflare tunnel)?
- * cloudflared adds Cf-Connecting-Ip; with your own address set, its host, or a proxy's
- * forwarding headers, count too.
+ * cloudflared adds Cf-Connecting-Ip; with your own address set, its host counts too (as it came,
+ * or forwarded: X-Forwarded-Host, Forwarded host=).
  */
 export function overInternet(headers = {}, ownUrl = '') {
   if (headers['cf-connecting-ip']) return true;
   if (!ownUrl) return false;
-  // Your own tunnel through a proxy that rewrites Host (nginx's default): its forwarding headers.
-  if (headers['x-forwarded-for'] || headers['x-forwarded-host'] || headers.forwarded) return true;
+  let own;
   try {
-    return String(headers.host || '').toLowerCase() === new URL(ownUrl).host.toLowerCase();
+    own = new URL(ownUrl).host.toLowerCase();
   } catch {
     return false;
   }
+  // Its host: as the request came, or as a proxy that rewrites Host passes it on (a home proxy's
+  // X-Forwarded-For alone doesn't count: that's how https at home often works).
+  const fwd = /(?:^|[;,\s])host="?([^;,"\s]+)/i.exec(String(headers.forwarded || ''));
+  const hosts = [headers.host, String(headers['x-forwarded-host'] || '').split(',')[0], fwd && fwd[1]];
+  return hosts.some((h) => String(h || '').trim().toLowerCase() === own);
 }

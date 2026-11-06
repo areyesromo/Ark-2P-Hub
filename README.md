@@ -288,13 +288,15 @@ While someone's online, the game cards say which games play well that way: **�
 for the ones that are all on the phone (📱 No TV needed), and **🐢 Best in the same room** for
 fast action games, where a moment's internet delay shows.
 
-Only the game pages go out over the internet: Settings (`/admin/`) refuses, nobody outside can
-open a room on your hub, and only the room that invited someone can be joined or watched, with
+Only the game pages go out over the internet: Settings (`/admin/`) and the leaderboard and
+trophies (your household's names and results) stay at home, nobody outside can open a room on
+your hub, and only the room that invited someone can be joined or watched, with
 the invite's own key (it's in the QR code and links; a new one each invite), after so many wrong
-tries from one address it waits a while. In Settings, **Online play** can turn the button off, stop
+tries from one address it waits a while. **Stop** (or turning online play off) sends whoever
+came in over the internet away again. In Settings, **Online play** can turn the button off, stop
 everything, or use **your own tunnel address** instead of a quick tunnel (if you already run a
 Cloudflare tunnel, or any https address, to the hub: point it at port 3000 and paste its
-address). Through a proxy of your own, keep its `X-Forwarded-For` header (or the original Host):
+address). Through a proxy of your own, keep the original Host (or send `X-Forwarded-Host`):
 that's how the hub tells internet visitors from home.
 
 ## Leaderboard and match history

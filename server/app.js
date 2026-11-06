@@ -92,7 +92,7 @@ export function createApp({
     } catch {
       // (not valid %-encoding: judged as it is)
     }
-    return p.toLowerCase().replace(/\/{2,}/g, '/');
+    return path.posix.normalize(p.toLowerCase().replace(/\/{2,}/g, '/')); // (and "." / ".." resolved, as the static files are)
   };
   const fromOutside = (req) => overInternet(req.headers, settings.tunnelUrl);
   const homeOnly = (req, res, next) => (fromOutside(req) ? res.status(403).send('Settings can only be opened at home, not over the internet.') : next());
@@ -100,8 +100,10 @@ export function createApp({
     if (!fromOutside(req)) return next();
     const p = routed(req);
     if (/^\/(api\/)?admin(\/|$)/.test(p)) return homeOnly(req, res, next);
+    // The household's names and results (leaderboard, trophies) stay at home too.
+    if (/^\/(api\/)?(stats|trophies)(\/|$)/.test(p)) return res.status(403).send('The leaderboard and trophies are for the hub\'s home screens.');
     if (/^\/host(\/|\/index(\.html)?)?$/.test(p) && !req.query.watch) return res.redirect(302, '/play/');
-    if (p === '/healthz') return res.json({ ok: true }); // (how many rooms there are stays at home)
+    if (/^\/healthz\/?$/.test(p)) return res.json({ ok: true }); // (how many rooms there are stays at home)
     next();
   });
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
@@ -186,7 +188,7 @@ export function createApp({
     close: () =>
       new Promise((resolve) => {
         clearInterval(sweeper);
-        tunnel.stop();
+        online.shutdown();
         for (const room of rooms.rooms.values()) room.dispose();
         if (listener !== httpServer) listener.close();
         io.close(() => resolve());

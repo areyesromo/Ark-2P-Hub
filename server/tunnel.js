@@ -4,6 +4,10 @@ import { spawn as nodeSpawn } from 'node:child_process';
 export const QUICK_URL = /https:\/\/(?!api\.)[a-z0-9-]+\.trycloudflare\.com/; // (api.trycloudflare.com is cloudflared's own, in its errors)
 /** How long to wait for the address before giving up. */
 export const START_MS = 30000;
+/** A tunnel that drops: wait this long before starting it again; this many drops in DROP_WINDOW_MS and it gives up. */
+export const RETRY_MS = 3000;
+export const MAX_DROPS = 5;
+export const DROP_WINDOW_MS = 2 * 60 * 1000;
 
 /**
  * A Cloudflare quick tunnel (https://<random>.trycloudflare.com) to this hub, for playing with
@@ -24,6 +28,8 @@ export class Tunnel {
     this.clearTimer = clearTimer;
     this.child = null;
     this.timer = null;
+    this.soon = null; // (a start waiting out RETRY_MS after a drop)
+    this.drops = []; // when it last dropped (see MAX_DROPS)
     this.state = { status: 'off', url: null, error: null };
   }
 
@@ -63,8 +69,12 @@ export class Tunnel {
       if (this.child !== child) return;
       this.child = null;
       this.clearTimer(this.timer);
-      // (it stopped by itself: an error if it never got going)
-      this.set(this.state.status === 'on' ? { status: 'off' } : { status: 'error', error: 'The tunnel stopped before it was ready. Is the hub online?' });
+      // (it stopped by itself: an error if it never got going; dropping over and over, it gives up)
+      if (this.state.status !== 'on') return this.set({ status: 'error', error: 'The tunnel stopped before it was ready. Is the hub online?' });
+      const now = Date.now();
+      this.drops = this.drops.filter((t) => now - t < DROP_WINDOW_MS).concat(now);
+      if (this.drops.length >= MAX_DROPS) return this.set({ status: 'error', error: 'The tunnel keeps dropping. Check the hub\'s internet connection, then try again.' });
+      this.set({ status: 'off' });
     });
     this.timer = this.setTimer(() => {
       if (this.child !== child || this.state.status === 'on') return;
@@ -73,7 +83,21 @@ export class Tunnel {
     }, START_MS);
   }
 
+  /** Start, but after a pause if it only just dropped (so a failing tunnel isn't restarted in a tight loop). */
+  startSoon() {
+    if (this.child || this.soon) return;
+    const last = this.drops[this.drops.length - 1];
+    if (!last || Date.now() - last > 10000) return this.start();
+    this.soon = this.setTimer(() => {
+      this.soon = null;
+      this.start();
+    }, RETRY_MS);
+  }
+
   stop() {
+    this.clearTimer(this.soon);
+    this.soon = null;
+    this.drops = [];
     this.kill();
     if (this.state.status !== 'off') this.set({ status: 'off' });
   }

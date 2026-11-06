@@ -78,9 +78,10 @@ function setup({ own = '' } = {}) {
   const cf = fakeCloudflared();
   const rooms = new RoomManager(io, {});
   let online;
-  const tunnel = new Tunnel({ port: 3000, spawn: cf.spawn, onChange: () => online && online.refresh(), ...timers() });
+  const tm = timers();
+  const tunnel = new Tunnel({ port: 3000, spawn: cf.spawn, onChange: () => online && online.refresh(), ...tm });
   online = new Online({ settings, tunnel, rooms, qr: async (url) => 'qr:' + url });
-  return { settings, cf, rooms, tunnel, online, dir };
+  return { settings, cf, rooms, tunnel, online, dir, tm };
 }
 
 test('a room invites someone online: the tunnel starts, its address and QR reach the room, and it stops with the last invite', async () => {
@@ -250,7 +251,8 @@ test('over the internet, only the room that invited someone can be joined or wat
     // Guessing: after a run of wrong tries from one address, it's refused for a while.
     const g = outside();
     for (let i = 0; i < 25; i++) await emit(g, 'watch:join', { code: 'QQQQ', key: 'x' });
-    assert.match((await emit(g, 'watch:join', { code: a.code, key })).error, /Too many/);
+    assert.match((await emit(g, 'watch:join', { code: a.code, key: 'still-wrong' })).error, /Too many/);
+    assert.ok((await emit(g, 'watch:join', { code: a.code, key })).ok, 'the right key still gets in');
     // Online play turned off in Settings: nobody gets in from outside, even with the key.
     s.app.online.settings.setOnline({ allowed: false });
     const elsewhere = connect(s.url, { extraHeaders: { 'cf-connecting-ip': '198.51.100.7' }, transports: ['websocket'] }); // (not the one that guessed)
@@ -272,13 +274,14 @@ test('the tunnel: cloudflared\'s own error (api.trycloudflare.com) isn\'t taken 
 });
 
 test('the tunnel comes back if it drops while a room is online; your own address set stops the quick one; cleared, a quick one starts', async () => {
-  const { settings, cf, rooms, tunnel, online, dir } = setup();
+  const { settings, cf, rooms, tunnel, online, dir, tm } = setup();
   const a = rooms.create();
   await online.invite(a, true);
   cf.last().child.stderr.emit('data', 'https://one-two.trycloudflare.com');
   await online.refresh();
   cf.last().child.emit('exit', 0); // (dropped)
   await new Promise((r) => setImmediate(r));
+  tm.list.find((t) => t.ms === 3000).fn(); // (after a pause)
   assert.equal(cf.runs.length, 2, 'started again');
   assert.equal(tunnel.state.status, 'starting');
   settings.setOnline({ tunnelUrl: 'https://ark.example.com' });
@@ -291,8 +294,93 @@ test('the tunnel comes back if it drops while a room is online; your own address
   fs.rmSync(dir, { recursive: true, force: true });
 });
 
-test('your own tunnel through a proxy that rewrites Host: its forwarding headers still mark it as from outside', () => {
-  assert.equal(overInternet({ host: '127.0.0.1:3000', 'x-forwarded-for': '203.0.113.9' }, 'https://ark.example.com'), true);
-  assert.equal(overInternet({ host: '127.0.0.1:3000', forwarded: 'for=203.0.113.9' }, 'https://ark.example.com'), true);
+test('your own tunnel through a proxy that rewrites Host: the forwarded host still marks it as from outside', () => {
+  assert.equal(overInternet({ host: '127.0.0.1:3000', 'x-forwarded-host': 'ark.example.com' }, 'https://ark.example.com'), true);
   assert.equal(overInternet({ host: '192.168.1.5:3000' }, 'https://ark.example.com'), false);
+});
+
+// ---- from the second review ----
+
+test('shutting the hub down stops the tunnel for good (it isn\'t started again on the way out)', async () => {
+  const { cf, rooms, tunnel, online, dir } = setup();
+  const a = rooms.create();
+  await online.invite(a, true);
+  cf.last().child.stderr.emit('data', 'https://bye-bye.trycloudflare.com');
+  await online.refresh();
+  online.shutdown();
+  await new Promise((r) => setImmediate(r));
+  assert.equal(cf.runs.length, 1, 'no new cloudflared');
+  assert.equal(tunnel.state.status, 'off');
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('a tunnel that keeps dropping waits before starting again, and gives up after a few drops', async () => {
+  const cf = fakeCloudflared();
+  const tm = timers();
+  const t = new Tunnel({ port: 3000, spawn: cf.spawn, ...tm });
+  t.start();
+  cf.last().child.stderr.emit('data', 'https://drop-1.trycloudflare.com');
+  cf.last().child.emit('exit', 0);
+  t.startSoon();
+  assert.equal(cf.runs.length, 1, 'not straight away');
+  const wait = tm.list.find((x) => x.ms >= 2000);
+  assert.ok(wait, 'a pause before the next start');
+  wait.fn();
+  assert.equal(cf.runs.length, 2);
+  for (let i = 0; i < 6; i++) {
+    cf.last().child.stderr.emit('data', 'https://drop-x.trycloudflare.com');
+    cf.last().child.emit('exit', 0);
+    if (t.state.status === 'error') break;
+    t.start();
+  }
+  assert.equal(t.state.status, 'error');
+  assert.match(t.state.error, /keeps dropping/);
+});
+
+test('your own tunnel: only a forwarded host matching your address counts as outside (a home proxy\'s X-Forwarded-For doesn\'t)', () => {
+  assert.equal(overInternet({ host: 'ark.lan', 'x-forwarded-for': '192.168.1.20' }, 'https://ark.example.com'), false);
+  assert.equal(overInternet({ host: '127.0.0.1:3000', 'x-forwarded-host': 'ark.example.com' }, 'https://ark.example.com'), true);
+  assert.equal(overInternet({ host: '127.0.0.1:3000', forwarded: 'for=203.0.113.9;host=ark.example.com;proto=https' }, 'https://ark.example.com'), true);
+});
+
+test('over the internet: no household data (leaderboard, trophies, health) and no Settings files by any path', async () => {
+  const s = await server();
+  try {
+    for (const p of ['/api/stats', '/api/trophies', '/api/trophies/Ana', '/stats/', '/trophies/', '/./admin/', '/x/../admin/', '/%2e/admin/', '/./admin/admin.js']) {
+      const r = await fetch(s.url + p, { headers: tunnelHeaders });
+      assert.equal(r.status, 403, p);
+    }
+    for (const p of ['/healthz', '/healthz/']) assert.deepEqual(await (await fetch(s.url + p, { headers: tunnelHeaders })).json(), { ok: true }, p);
+  } finally {
+    await s.close();
+  }
+});
+
+test('Stop (and online off) sends away whoever came in over the internet; the right key always gets in, whatever strangers tried', async () => {
+  const s = await server();
+  const open = [];
+  const connect = (...args) => { const c = connectIo(...args); open.push(c); return c; };
+  try {
+    const tv = connect(s.url, { transports: ['websocket'] });
+    const a = await emit(tv, 'host:create', { origin: s.url });
+    const room = s.app.rooms.get(a.code);
+    await emit(tv, 'host:online', { on: true });
+    const key = room.onlineKey;
+    // A stranger guesses from the friend's address (a proxy that shares one address): the friend still gets in.
+    const g = connect(s.url, { extraHeaders: tunnelHeaders, transports: ['websocket'] });
+    for (let i = 0; i < 25; i++) await emit(g, 'watch:join', { code: a.code, key: 'nope' });
+    const friend = connect(s.url, { extraHeaders: tunnelHeaders, transports: ['websocket'] });
+    const kicked = new Promise((r) => friend.on('player:kicked', r));
+    assert.ok((await emit(friend, 'player:join', { code: a.code, name: 'Pal', key })).ok);
+    const screen = connect(s.url, { extraHeaders: tunnelHeaders, transports: ['websocket'] });
+    assert.ok((await emit(screen, 'watch:join', { code: a.code, key })).ok);
+    const gone = new Promise((r) => screen.on('disconnect', r));
+    await emit(tv, 'host:online', { on: false });
+    await kicked;
+    await gone;
+    assert.equal(room.players.filter(Boolean).length, 0, 'their seat is free again');
+  } finally {
+    open.forEach((c) => c.close());
+    await s.close();
+  }
 });
