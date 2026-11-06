@@ -537,37 +537,42 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 ## Roadmap ideas
 
-**The plan: 2D on the Pi, 3D on Steam**
+**The plan: 2D on the Pi, 3D on the desktop (and maybe Steam)**
 
 The hub keeps running on a Raspberry Pi (Docker + the browser) with the **2D** Party Board: light,
-no 3D engine needed. The **3D** board becomes the desktop experience, built for a Steam Deck as the
-minimum and a gaming PC as typical, with the graphics turned all the way up:
+no 3D engine needed. The **3D** board is the desktop experience, built for a Steam Deck as the
+minimum and a gaming PC as typical:
 
-1. **Desktop app**: Electron (Node + Chromium) wraps the hub: it starts the server inside the app
-   and opens the TV screen full-screen; phones still join with the QR code. A Windows installer and
-   a Linux AppImage (Steam Deck: add it to Steam as a non-Steam game; the Deck's controls are a
-   gamepad, so the Deck can be P1). Big 3D assets ship inside the app, not in the Pi's Docker image.
+1. ✅ **Desktop app**: Electron wraps the hub (the server inside the app, the TV screen
+   full-screen, phones still join with the QR code); a Windows installer and a Linux AppImage for
+   the Steam Deck, updating itself from GitHub releases.
 2. **High graphics** in the app: real shadows, glow on emissive parts (lava, furnaces, pumpkins),
    fog and mist, full-resolution textures, the full-detail characters; plus each map's environment
    model (`env-<map>.glb`, with `space_NN` anchors, `path_` / `pedestal` nodes and animated parts;
    see [`docs/party-board-art/`](docs/party-board-art/README.md)).
-3. **Steam**: Steamworks (achievements, overlay), Steam Deck verification (readable at 1280×800, full
-   controller support), the store page. Optional later: online rooms (a relay so friends can join
-   from anywhere, as Jackbox does) and Remote Play Together.
+3. **Steam, later** (it needs the Steam Direct fee, so not while it's in development): Steamworks
+   (the hub's 🏆 trophies would become its achievements, one for one), the overlay, Remote Play
+   Together, Steam Deck verification (readable at 1280×800, full controller support), the store page.
 
-**Wishlist: 3D and more co-op**
+**Done lately**: 🤖 a computer opponent (Easy, Normal, Hard) in every game that can have one, and a
+teammate in the co-op games; 🏆 trophies and practice records; 🌍 online play through a quick
+tunnel, with a remote screen.
 
-The Pi 4's GPU handles WebGL, so these would use three.js like Marble Maze
-(served by the hub at `/vendor/three/`, no internet needed), steered with the
-joystick, D-pad or tilt pads:
+**Next up: more to play together**
 
-- **3D Bowling**: swipe or tilt to roll; ten frames, highest score wins.
-- **Tower Stack 3D** (co-op or versus): drop blocks to build the tallest tower before it topples.
-- **Kitchen Rush** (co-op): an Overcooked-style kitchen; chop, cook and serve orders before they expire.
-- **Trivia Quest** (co-op): beat a monster together with the quiz questions.
-- **More minigames**.
-- **HD 3D models and textures** for the 3D board and minigames (part of the desktop plan above): richer scenery and the full-detail characters, with shadows turned back on (`scene3d(el, { shadows: true })`).
-- **Crazy Eights**: a secret hand of cards on your phone.
+- **More co-op content**: Dungeon Duo has three floors, Marble Maze five mazes, Kitchen Rush three
+  kitchens and four recipes; each could use more (new floors and enemies, mazes with moving parts,
+  kitchens and dishes).
+- **Online, without the TV's computer**: a relay (as Jackbox does) so phones anywhere can play with
+  nothing running at home; for now online play goes through the hub.
+- **The computer, tuned**: in Bumper Cars, Fishing, Penalty Shootout and Crazy Eights its levels
+  barely differ (partly the luck in those games), and two of it rarely beat Dungeon Duo's Warden on
+  the Normal quest.
+- **3D Bowling** as a game of its own (ten frames; Bowling Bash is the two-roll minigame), a
+  co-op **Tower Stack**, and **more minigames**.
+- **HD 3D models and textures** for the 3D board and minigames (part of the desktop plan above):
+  richer scenery and the full-detail characters, with shadows turned back on
+  (`scene3d(el, { shadows: true })`).
 
 **More content**
 
