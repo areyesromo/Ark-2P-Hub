@@ -307,6 +307,54 @@
     return g.botSoon ? '<em class="tag soon">⏳ Coming soon</em>' : '<em class="tag">🧑 Needs a person</em>';
   }
 
+  /**
+   * With the computer seated, your practice against it on a game card: a tick for each level
+   * you've beaten (the co-op games: your best stars with it as your teammate). '' otherwise.
+   */
+  function practiceTag(state, g) {
+    if (!botSeat(state) || !state.practice || !g.vsComputer) return '';
+    const rec = state.practice[g.id];
+    if (!rec) return '';
+    const bits = Object.keys(BOT_LEVEL_NAMES).map(function (k) {
+      const r = rec[k];
+      if (!r) return k[0].toUpperCase() + '·';
+      if (r.maxStars) return k[0].toUpperCase() + ' ' + (r.bestStars || 0) + '⭐';
+      return k[0].toUpperCase() + (r.wins ? '✓' : '·');
+    });
+    const title = Object.keys(BOT_LEVEL_NAMES).map(function (k) {
+      const r = rec[k];
+      return BOT_LEVEL_NAMES[k] + ': ' + (!r ? 'not tried' : r.maxStars ? 'best ' + (r.bestStars || 0) + ' of ' + r.maxStars + ' stars' : r.wins + ' won of ' + r.played);
+    }).join(', ');
+    return '<em class="tag practice" title="Practice: ' + escapeHtml(title) + '">🤖 ' + bits.join(' ') + '</em>';
+  }
+
+  /**
+   * New trophies (room state's `trophies`): a card that slides in for a few seconds. `slot`: only
+   * that player's (a phone), or null for both (the TV). Each batch is shown once.
+   */
+  let trophySeen = null;
+  function showTrophies(state, slot) {
+    const news = state && state.trophies;
+    if (!news || news.n === trophySeen) return;
+    trophySeen = news.n;
+    const list = news.list.filter(function (t) { return slot === null || slot === undefined || t.slot === slot; });
+    if (!list.length) return;
+    let card = document.querySelector('.trophy-card');
+    if (!card) {
+      card = document.createElement('div');
+      card.className = 'trophy-card';
+      document.body.appendChild(card);
+    }
+    card.innerHTML = '<div class="head">🏆 ' + (list.length > 1 ? 'Trophies' : 'Trophy') + ' unlocked!</div>' + list.map(function (t) {
+      return '<div class="row"><span class="icon">' + t.icon + '</span><span><strong>' + escapeHtml(t.name) + '</strong>' +
+        (slot === null || slot === undefined ? '<br><span class="who">' + escapeHtml(t.player) + '</span>' : '') + '</span></div>';
+    }).join('');
+    card.classList.remove('out');
+    card.classList.add('in');
+    clearTimeout(card.timer);
+    card.timer = setTimeout(function () { card.classList.remove('in'); card.classList.add('out'); }, 4500 + 1200 * list.length);
+  }
+
   /** The computer's seat, if it's playing: { slot, level }, or null. */
   function botSeat(state) {
     const p = state && state.players ? state.players.find(function (x) { return x && x.bot; }) : null;
@@ -548,6 +596,8 @@
     gameLabels: gameLabels,
     botSeat: botSeat,
     botTag: botTag,
+    practiceTag: practiceTag,
+    showTrophies: showTrophies,
     botLevelsHtml: botLevelsHtml,
     botLevelNames: BOT_LEVEL_NAMES,
     register: register,

@@ -121,10 +121,21 @@
     }).join('') + '</tbody></table>';
   }
 
-  function render(d) {
-    profiles = d.profiles || {};
+  /** Who has which trophies (each name's whole set is on its own page). */
+  function trophiesPanel(t) {
+    if (!t || !t.players.length) return '';
+    return '<section class="panel"><h2>🏆 Trophies</h2><table><tbody>' + t.players.map(function (p) {
+      return '<tr><td><a href="/trophies/?name=' + encodeURIComponent(p.name) + '">' + av(p.name) + '<strong>' + esc(p.name) + '</strong></a></td>' +
+        '<td class="num"><strong>' + p.count + '</strong> <span class="muted">/ ' + t.total + '</span></td>' +
+        '<td class="icons">' + p.icons.join(' ') + '</td></tr>';
+    }).join('') + '</tbody></table></section>';
+  }
+
+  function render(d, t) {
+    profiles = Object.assign({}, (t && t.profiles) || {}, d.profiles || {});
     if (!d.total) {
-      $('content').innerHTML = '<div class="panel empty">🏆 No matches yet.<br>Finish a game and it shows up here.</div>';
+      $('content').innerHTML = '<div class="panel empty">🏆 No matches yet.<br>Finish a game and it shows up here.</div>' +
+        (t && t.players.length ? '<div class="grid" style="margin-top:20px">' + trophiesPanel(t) + '</div>' : '');
       return;
     }
     $('content').innerHTML =
@@ -132,6 +143,7 @@
       '<section class="panel"><h2>👑 Players</h2>' + playersTable(d.players) + '</section>' +
       '<section class="panel"><h2>⚔️ Rivalries</h2>' + rivalriesTable(d.rivalries) + '</section>' +
       '<section class="panel"><h2>🎮 Games</h2>' + gamesTable(d.games) + '</section>' +
+      trophiesPanel(t) +
       (d.tournaments && d.tournaments.length ? '<section class="panel"><h2>🏆 Tournaments</h2>' + tournamentsTable(d.tournaments) + '</section>' : '') +
       (d.lapRecords && d.lapRecords.length ? '<section class="panel"><h2>⏱️ Kart lap records</h2>' + lapsTable(d.lapRecords) + '</section>' : '') +
       (d.bestStarts && d.bestStarts.length ? '<section class="panel"><h2>⚡ Kart best starts</h2>' + startsTable(d.bestStarts) + '</section>' : '') +
@@ -142,8 +154,10 @@
       'The history can be cleared in <a href="/admin/">Settings</a>.</p>';
   }
 
-  fetch('/api/stats')
-    .then(function (r) { return r.json(); })
-    .then(render)
+  Promise.all([
+    fetch('/api/stats').then(function (r) { return r.json(); }),
+    fetch('/api/trophies').then(function (r) { return r.json(); }).catch(function () { return null; }),
+  ])
+    .then(function (both) { render(both[0], both[1]); })
     .catch(function () { $('content').innerHTML = '<p class="empty">Could not load the leaderboard.</p>'; });
 })();

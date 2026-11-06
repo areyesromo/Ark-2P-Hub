@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.30
+
+- 🏆 Trophies: 25 achievements for each player, from your first win and a clean sweep to beating
+  the Stone Warden, a perfect Trivia Quest and beating the Hard computer in every game. A card
+  slides in on the TV and your phone when you earn one; see them all from the leaderboard or
+  🏆 My trophies in your phone's ⋯ menu.
+- 🤖 Practice: with the computer seated, each game card shows the levels you've beaten it on (or
+  your best stars with it as your teammate). It still stays out of the leaderboard.
+
 ## 0.1.29
 
 - 🤖 The computer is now a teammate in the co-op games: Kitchen Rush (it cooks, plates up and
