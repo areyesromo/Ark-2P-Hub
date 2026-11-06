@@ -281,7 +281,7 @@
   socket.on('room:state', function (s) {
     state = s;
     if (me) applyState();
-    if (me) Ark.showTrophies(s, me.slot); // (your new trophies)
+    if (me) Ark.showTrophies(s, me.slot, me.name); // (your new trophies)
   });
 
   // Your avatar and colour, in the header (your P1 / P2 colour stays the phone's, as in the games).

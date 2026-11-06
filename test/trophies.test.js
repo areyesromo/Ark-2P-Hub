@@ -62,9 +62,9 @@ test('practice records: played, won and drawn per game and level, best stars in 
   p.record({ name: 'Ana', game: 'marble-maze', level: 'hard', stars: 7, maxStars: 9 });
   p.record({ name: 'Ana', game: 'marble-maze', level: 'hard', stars: 4, maxStars: 9 });
   p.record({ name: 'Ana', game: 'pong', level: 'genius', result: 'win' });
-  assert.deepEqual(p.recordsFor('ANA').pong, { normal: { played: 2, wins: 1, draws: 1 } });
+  assert.deepEqual({ ...p.recordsFor('ANA').pong }, { normal: { played: 2, wins: 1, draws: 1 } });
   assert.equal(p.recordsFor('Ana')['marble-maze'].hard.bestStars, 7);
-  assert.deepEqual(p.recordsFor('Ben'), {});
+  assert.equal(Object.keys(p.recordsFor('Ben')).length, 0);
 });
 
 test('the room: a game against the computer goes to practice (not the history) and earns trophies, shown on the screens', () => {
@@ -105,5 +105,58 @@ test('the room: two people both get theirs (a co-op game for both, a win for the
   assert.ok(list.some((x) => x.player === 'Ana' && x.id === 'first-game'));
   assert.ok(!list.some((x) => x.player === 'Ana' && x.id === 'first-win'));
   assert.equal(r.publicState().practice, null, 'no practice cards without the computer');
+  r.dispose();
+});
+
+test('names that are words in JavaScript (constructor, __proto__, toString) are just names', () => {
+  const t = new Trophies(null);
+  const p = new Practice(null);
+  for (const name of ['Constructor', '__proto__', 'toString', 'hasOwnProperty']) {
+    assert.doesNotThrow(() => t.check(name, { ...base, won: true }), name);
+    assert.equal(t.forName(name).count >= 1, true, name);
+    assert.doesNotThrow(() => p.record({ name, game: 'pong', level: 'easy', result: 'win' }), name);
+    assert.equal(p.recordsFor(name).pong.easy.wins, 1, name);
+  }
+  assert.equal(({}).name, undefined, 'nothing leaked onto every object');
+  assert.equal(new Trophies(null).forName('valueOf').count, 0);
+});
+
+test('Clean sweep: not in the games whose score is what you have left (lives, dice)', () => {
+  const t = new Trophies(null);
+  for (const game of ['micro-mayhem', 'liars-dice', 'tower-duel']) {
+    const ids = t.check('P-' + game, { ...base, game, won: true, view: { scores: [3, 0], lives: [2, 0], startLives: 3 } }).map((x) => x.id);
+    assert.ok(!ids.includes('clean-sweep'), game);
+  }
+});
+
+test('the counting trophies keep their own tally (not just the match history\'s last 2000)', () => {
+  const t = new Trophies(null);
+  const stats = new Stats(null);
+  for (let i = 0; i < 10; i++) {
+    t.note('Ana', { game: 'g' + i, won: true, rival: 'Ben' });
+    stats.matches.length = 0; // (the history forgot them)
+  }
+  const c = contextFor('Ana', { stats, practice: new Practice(null), trophies: t });
+  assert.equal(c.played.size, 10);
+  assert.equal(c.winsVsPeople, 10);
+  assert.equal(c.bestRivalWins, 10);
+});
+
+test('a trophy card is news once: each batch a new number (a new game too), gone when a seat changes hands, and stale after a while', () => {
+  const r = new Room('TRO3', io, { stats: new Stats(null), practice: new Practice(null), trophies: new Trophies(null) });
+  r.hostSockets.add('tv');
+  r.seatPlayer('Ana', null).player.connected = true;
+  r.seatPlayer('Ben', null).player.connected = true;
+  r.gameId = 'connect-four';
+  r.recordResult({ phase: 'over', winner: 0, scores: [1, 0] });
+  const first = r.publicState().trophies.n;
+  r.startGame('pong');
+  r.stopGame();
+  r.gameId = 'connect-four';
+  r.recordResult({ phase: 'over', winner: 1, scores: [0, 1] });
+  assert.ok(r.publicState().trophies.n > first, 'a new number after a new game');
+  assert.ok(r.publicState().trophies.ageMs >= 0);
+  r.removePlayer(1);
+  assert.equal(r.publicState().trophies, null, 'Ben left: not for whoever sits down next');
   r.dispose();
 });

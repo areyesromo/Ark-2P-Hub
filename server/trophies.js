@@ -14,6 +14,10 @@ import { nameKey } from './stats.js';
  * games the computer plays) }.
  */
 const stars = (e) => Number(e.view.stars) || 0;
+// Games whose score is what you've got left (lives, dice), not points: the loser always ends on 0.
+const LEFT_SCORES = new Set(['micro-mayhem', 'liars-dice', 'tower-duel']);
+/** A lookup keyed by player names: no inherited keys, so a player called "constructor" is just a name. */
+const table = () => Object.create(null);
 const perfect = (e) => Number(e.view.maxStars) > 0 && stars(e) === Number(e.view.maxStars);
 
 export const TROPHIES = [
@@ -24,7 +28,7 @@ export const TROPHIES = [
   { id: 'seen-it-all', icon: '🌍', name: 'Seen it all', how: 'Play every game', test: (e) => e.played.size >= e.allGames },
   // Against each other
   { id: 'first-win', icon: '🥇', name: 'First win', how: 'Win a game against a person', test: (e) => !e.bot && e.won },
-  { id: 'clean-sweep', icon: '🧹', name: 'Clean sweep', how: 'Win a game against a person without them scoring', test: (e) => !e.bot && e.won && Array.isArray(e.view.scores) && e.view.scores[e.slot] > 0 && e.view.scores[1 - e.slot] === 0 },
+  { id: 'clean-sweep', icon: '🧹', name: 'Clean sweep', how: 'Win a game against a person without them scoring', test: (e) => !e.bot && e.won && !LEFT_SCORES.has(e.game) && Array.isArray(e.view.scores) && e.view.scores[e.slot] > 0 && e.view.scores[1 - e.slot] === 0 },
   { id: 'all-rounder', icon: '🎯', name: 'All-rounder', how: 'Win 10 different games against people', test: (e) => e.wonVsPeople.size >= 10 },
   { id: 'veteran', icon: '🏅', name: 'Veteran', how: 'Win 50 games against people', test: (e) => e.winsVsPeople >= 50 },
   { id: 'nemesis', icon: '⚔️', name: 'Nemesis', how: 'Win 10 games against the same rival', test: (e) => e.bestRivalWins >= 10 },
@@ -48,8 +52,12 @@ export const TROPHIES = [
   { id: 'dream-team', icon: '🤝', name: 'Dream team', how: 'Every star in a co-op game with the computer as your teammate', test: (e) => Boolean(e.bot) && e.category === 'casual' && perfect(e) },
 ];
 
-/** What a check needs about a player, from their history and practice records (see TROPHIES). */
-export function contextFor(name, { stats = null, practice = null } = {}) {
+/**
+ * What a check needs about a player (see TROPHIES): their match history (stats.js keeps only the
+ * last 2000 matches, so the trophies keep their own tally too, and the two are merged) and their
+ * practice records.
+ */
+export function contextFor(name, { stats = null, practice = null, trophies = null } = {}) {
   const k = nameKey(name);
   const played = new Set();
   const wonVsPeople = new Set();
@@ -65,6 +73,13 @@ export function contextFor(name, { stats = null, practice = null } = {}) {
       const rival = nameKey(m.players[1 - i]);
       rivals.set(rival, (rivals.get(rival) || 0) + 1);
     }
+  }
+  const tally = trophies ? trophies.tallyFor(name) : null;
+  if (tally) {
+    tally.played.forEach((g) => played.add(g));
+    tally.won.forEach((g) => wonVsPeople.add(g));
+    winsVsPeople = Math.max(winsVsPeople, tally.wins);
+    for (const [rival, n] of Object.entries(tally.rivals)) rivals.set(rival, Math.max(rivals.get(rival) || 0, n));
   }
   const hardWins = new Set();
   for (const [game, levels] of Object.entries(practice ? practice.recordsFor(name) : {})) {
@@ -82,13 +97,59 @@ export class Trophies {
   }
 
   load() {
-    if (!this.file) return {};
+    const out = table();
+    if (!this.file) return out;
     try {
       const data = JSON.parse(fs.readFileSync(this.file, 'utf8'));
-      return data && typeof data.players === 'object' && data.players ? data.players : {};
+      // (only well-formed entries: a hand-edited or half-written file doesn't trip the checks)
+      for (const [k, p] of Object.entries((data && data.players) || {})) {
+        if (!p || typeof p !== 'object') continue;
+        out[k] = this.entry(String(p.name || k), p);
+      }
     } catch {
-      return {};
+      // (unreadable: start afresh, as stats.json does)
     }
+    return out;
+  }
+
+  /** A player's entry, from what was saved (or blank). */
+  entry(name, p = {}) {
+    const got = table();
+    for (const [id, at] of Object.entries(p.got && typeof p.got === 'object' ? p.got : {})) if (Number.isFinite(at)) got[id] = at;
+    const t = p.tally && typeof p.tally === 'object' ? p.tally : {};
+    const rivals = table();
+    for (const [k, n] of Object.entries(t.rivals && typeof t.rivals === 'object' ? t.rivals : {})) if (Number.isFinite(n)) rivals[k] = n;
+    return {
+      name,
+      got,
+      tally: { played: Array.isArray(t.played) ? t.played.slice() : [], won: Array.isArray(t.won) ? t.won.slice() : [], wins: Number(t.wins) || 0, rivals },
+    };
+  }
+
+  /** The player's entry, made if new. */
+  player(name) {
+    const k = nameKey(name);
+    if (!this.players[k]) this.players[k] = this.entry(name);
+    this.players[k].name = name; // latest spelling wins
+    return this.players[k];
+  }
+
+  /** Count a game a person played against a person (won: and won it, against `rival`). */
+  note(name, { game, won = false, rival = null }) {
+    if (!nameKey(name) || typeof game !== 'string') return;
+    const t = this.player(name).tally;
+    if (!t.played.includes(game)) t.played.push(game);
+    if (!won) return;
+    t.wins++;
+    if (!t.won.includes(game)) t.won.push(game);
+    const r = nameKey(rival);
+    if (r) t.rivals[r] = (t.rivals[r] || 0) + 1;
+  }
+
+  /** A player's own tally (see note), or null. */
+  tallyFor(name) {
+    const p = this.players[nameKey(name)];
+    return p ? p.tally : null;
   }
 
   save() {
@@ -105,10 +166,8 @@ export class Trophies {
 
   /** The trophies `name` has just earned with this result (e: see TROPHIES), saved; [] if none. */
   check(name, e) {
-    const k = nameKey(name);
-    if (!k) return [];
-    const p = (this.players[k] = this.players[k] || { name, got: {} });
-    p.name = name;
+    if (!nameKey(name)) return [];
+    const p = this.player(name);
     const fresh = TROPHIES.filter((t) => !p.got[t.id] && safeTest(t, e));
     if (!fresh.length) return [];
     const at = Date.now();
@@ -141,7 +200,7 @@ export class Trophies {
   }
 
   reset() {
-    this.players = {};
+    this.players = table();
     this.save();
   }
 }

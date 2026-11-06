@@ -330,14 +330,16 @@
 
   /**
    * New trophies (room state's `trophies`): a card that slides in for a few seconds. `slot`: only
-   * that player's (a phone), or null for both (the TV). Each batch is shown once.
+   * that player's (a phone: `name` too, so a new player in the seat isn't shown the last one's), or
+   * null for both (the TV). Each batch is shown once.
    */
   let trophySeen = null;
-  function showTrophies(state, slot) {
+  function showTrophies(state, slot, name) {
     const news = state && state.trophies;
     if (!news || news.n === trophySeen) return;
     trophySeen = news.n;
-    const list = news.list.filter(function (t) { return slot === null || slot === undefined || t.slot === slot; });
+    if (news.ageMs > 20000) return; // (a page reloaded since: old news)
+    const list = news.list.filter(function (t) { return slot === null || slot === undefined || (t.slot === slot && (!name || t.player === name)); });
     if (!list.length) return;
     let card = document.querySelector('.trophy-card');
     if (!card) {

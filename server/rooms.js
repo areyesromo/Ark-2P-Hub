@@ -42,7 +42,8 @@ export class Room {
     this.stats = stats; // match history (see stats.js), optional
     this.practice = practice; // records against the computer (see practice.js), optional
     this.trophies = trophies; // each player's trophies (see trophies.js), optional
-    this.trophyNews = null; // the trophies the last game earned, for the screens: { n, list }
+    this.trophyNews = null; // the trophies the last game earned, for the screens: { n, at, list }
+    this.trophySeq = 0; // (each batch a new number, so the screens show each once)
     this.profiles = profiles; // avatars and colours (see profiles.js), optional
     this.hostToken = hostToken || newToken();
     this.hostSockets = new Set();
@@ -179,6 +180,7 @@ export class Room {
   removePlayer(slot) {
     if (!this.players[slot]) return;
     this.players[slot] = null;
+    this.trophyNews = null; // (their trophies aren't news for whoever sits down next)
     this.tournament.reset();
     if (this.game) this.stopGame();
     else this.broadcastState();
@@ -301,7 +303,7 @@ export class Room {
       h2h: this.headToHead(),
       tournament: this.tournament.view(),
       knownNames: this.stats ? this.stats.knownNames() : [],
-      trophies: this.trophyNews,
+      trophies: this.trophyNews && { n: this.trophyNews.n, list: this.trophyNews.list, ageMs: Date.now() - this.trophyNews.at }, // (old news isn't shown on a reload)
       // With the computer seated: the person's practice records, for the game cards.
       practice: this.botSlot !== -1 && this.practice ? this.practice.recordsFor((this.players.find((p) => p && !p.bot) || {}).name) : null,
     };
@@ -474,8 +476,13 @@ export class Room {
     const list = [];
     this.players.forEach((p, slot) => {
       if (!p || p.bot) return;
+      // (a game between two people counts towards the trophies' own tally of games and wins)
+      if (!bot) {
+        const rival = this.players[1 - slot];
+        this.trophies.note(p.name, { game: def.id, won: category !== 'casual' && view.winner === slot, rival: rival && rival.name });
+      }
       const e = {
-        ...contextFor(p.name, { stats: this.stats, practice: this.practice }),
+        ...contextFor(p.name, { stats: this.stats, practice: this.practice, trophies: this.trophies }),
         game: def.id, category, view, slot, bot, title: title && title.slot === slot ? title : null,
         won: category !== 'casual' && view.winner === slot,
         draw: category !== 'casual' && view.winner !== 0 && view.winner !== 1,
@@ -485,7 +492,7 @@ export class Room {
       for (const t of this.trophies.check(p.name, e)) list.push({ ...t, slot, player: p.name });
     });
     if (!list.length) return;
-    this.trophyNews = { n: (this.trophyNews ? this.trophyNews.n : 0) + 1, list };
+    this.trophyNews = { n: ++this.trophySeq, at: Date.now(), list };
     this.broadcastState();
   }
 
