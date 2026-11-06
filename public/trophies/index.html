@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/shared/icon.svg">
+  <title>Ark 2P Hub · Trophies</title>
+  <link rel="stylesheet" href="/shared/common.css">
+  <style>
+    body { overflow-y: auto; }
+    main { max-width: 1100px; margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    h1 { font-size: var(--fs-xl); margin: 0; }
+    .who { display: flex; align-items: center; gap: 10px; font-size: var(--fs-lg); font-weight: 800; }
+    .count { color: var(--warn); }
+    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr)); gap: 12px; }
+    .trophy { display: flex; gap: 12px; align-items: center; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); padding: 12px; }
+    .trophy .icon { font-size: var(--fs-2xl); line-height: 1; }
+    .trophy strong { display: block; }
+    .trophy .how { color: var(--muted); font-size: var(--fs-sm); }
+    .trophy .when { color: var(--good); font-size: var(--fs-sm); }
+    .trophy.locked { opacity: 0.55; }
+    .trophy.locked .icon { filter: grayscale(1); }
+    .empty { color: var(--muted); text-align: center; padding: 48px 16px; font-size: var(--fs-md); }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1 class="brand"><span class="p1">ARK</span> <span class="p2">2P</span> HUB <span class="muted">· Trophies</span></h1>
+      <a class="btn ghost" id="back" href="/stats/">← Back</a>
+    </header>
+    <div id="content"><p class="empty">Loading…</p></div>
+  </main>
+  <script src="/shared/common.js"></script>
+  <script src="/trophies/trophies.js"></script>
+</body>
+</html>

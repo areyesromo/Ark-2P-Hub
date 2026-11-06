@@ -118,6 +118,15 @@
     });
   });
 
+  $('clear-trophies').addEventListener('click', function () {
+    if (!window.confirm('Clear everyone\'s trophies and practice records? This can\'t be undone.')) return;
+    api('POST', '/api/admin/trophies/reset').then(function (r) {
+      if (r.status === 401) { setToken(''); return show('login'); }
+      $('trophies-msg').className = r.ok ? 'msg ok' : 'msg err';
+      $('trophies-msg').textContent = r.ok ? 'Trophies and practice records cleared.' : r.error || 'Something went wrong.';
+    });
+  });
+
     $('logout').addEventListener('click', function () {
     api('POST', '/api/admin/logout').then(function () { setToken(''); show('login'); });
   });

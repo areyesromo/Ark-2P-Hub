@@ -17,6 +17,8 @@ import { Settings } from './settings.js';
 import { adminRouter } from './admin.js';
 import { Stats } from './stats.js';
 import { Profiles, AVATARS, COLOURS } from './profiles.js';
+import { Practice } from './practice.js';
+import { Trophies, TROPHIES } from './trophies.js';
 
 const ROOT_DIR = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
@@ -56,7 +58,9 @@ export function createApp({
   const settings = new Settings(dataDir, { envPassword: adminPassword });
   const stats = new Stats(dataDir);
   const profiles = new Profiles(dataDir);
-  const rooms = new RoomManager(io, { stats, profiles });
+  const practice = new Practice(dataDir);
+  const trophies = new Trophies(dataDir);
+  const rooms = new RoomManager(io, { stats, profiles, practice, trophies });
 
   /** (Re)compute a room's join link + QR from the current settings. */
   async function refreshJoin(room) {
@@ -83,6 +87,15 @@ export function createApp({
     const board = stats.leaderboard();
     res.json({ ...board, profiles: profiles.forNames(board.players.map((p) => p.name)) });
   });
+  // Trophies: who has how many (the stats page), and one player's whole set (their trophies page).
+  app.get('/api/trophies', (_req, res) => {
+    const players = trophies.summary();
+    res.json({ players, total: TROPHIES.length, profiles: profiles.forNames(players.map((p) => p.name)) });
+  });
+  app.get('/api/trophies/:name', (req, res) => {
+    const name = String(req.params.name || '').slice(0, 40);
+    res.json({ ...trophies.forName(name), profile: profiles.get(name) });
+  });
   // What a profile can be: the avatars and colours to pick from.
   app.get('/api/profile-choices', (_req, res) => res.json({ avatars: AVATARS, colours: COLOURS }));
   app.use(
@@ -90,6 +103,8 @@ export function createApp({
     adminRouter({
       settings,
       stats,
+      trophies,
+      practice,
       publicUrl,
       detectedJoin: () => resolveJoin({ port }),
       // New join address: refresh every open room so TVs show the new QR right away.

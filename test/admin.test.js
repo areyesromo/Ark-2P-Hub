@@ -107,6 +107,20 @@ test('setup, login and changing the join address updates the TV QR live', async 
   tv.close();
 });
 
+test('trophies: everyone\'s count, one player\'s whole set (locked ones too), and a reset behind the password', async () => {
+  let r = await api('GET', '/api/trophies');
+  assert.equal(r.status, 200);
+  assert.deepEqual(r.body.players, []);
+  assert.ok(r.body.total >= 20);
+  r = await api('GET', '/api/trophies/' + encodeURIComponent('Ana'));
+  assert.equal(r.body.count, 0);
+  assert.equal(r.body.trophies.length, r.body.total);
+  assert.ok(r.body.trophies.every((t) => t.how && t.at === null));
+  assert.equal((await api('POST', '/api/admin/trophies/reset')).status, 401);
+  const { body: login } = await api('POST', '/api/admin/login', { password: 'letmein' });
+  assert.deepEqual((await api('POST', '/api/admin/trophies/reset', null, login.token)).body, { ok: true });
+});
+
 test('login is rate limited after repeated wrong passwords', async () => {
   let last;
   for (let i = 0; i < 11; i++) last = await api('POST', '/api/admin/login', { password: `wrong${i}` });

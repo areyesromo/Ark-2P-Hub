@@ -205,7 +205,7 @@
       return (
         heading +
         '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (off ? ' class="phone-only"' : '') + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : botTag ? ' ' + botTag : '') + Ark.gameLabels(g) + '</strong>' +
+        '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : botTag ? ' ' + botTag : ' ' + Ark.practiceTag(state, g)) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
@@ -281,6 +281,7 @@
   socket.on('room:state', function (s) {
     state = s;
     if (me) applyState();
+    if (me) Ark.showTrophies(s, me.slot, me.name); // (your new trophies)
   });
 
   // Your avatar and colour, in the header (your P1 / P2 colour stays the phone's, as in the games).
@@ -308,6 +309,10 @@
   }
   $('me-avatar').addEventListener('click', openPicker);
   $('profile-btn').addEventListener('click', openPicker);
+  // Your trophies: every one, the ones you've got lit (a page of its own, back here after).
+  $('trophies-btn').addEventListener('click', function () {
+    if (me) location.href = '/trophies/?name=' + encodeURIComponent(me.name);
+  });
 
   function applyState() {
     const s = state;

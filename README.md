@@ -286,6 +286,24 @@ player per game, and recent matches. Players are matched by name (ignoring
 capitals), so use the same name each time. Settings (`/admin/`) can clear the
 history.
 
+## Trophies and practice
+
+**🏆 Trophies** are each player's own achievements (by name, like the leaderboard), 25 of them:
+playing 10, 25 or every game; your first win, a clean sweep (they never score), 10 different games
+won, 50 wins, 10 wins over the same rival, a best-of-7 tournament; feats like a Kart Race cup, a
+Party Board win, Micro Mayhem without losing a life, beating the Stone Warden (and with every
+star), three stars in Kitchen Rush's Rush Hour, a perfect nine-star Trivia Quest, every star in
+Marble Maze, Bomb Squad (five bombs) or Mind Meld; and practice ones: beating the computer, on
+Hard, on Hard in 10 games and in every game, and every star in a co-op game with it as your
+teammate. A card slides in on the TV (and on your phone) when you earn one. The leaderboard
+lists who has how many; tap a name (or **🏆 My trophies** in a phone's ⋯ menu) for the whole set,
+with the ones still to earn greyed out and how to get them.
+
+**🤖 Practice**: games against the computer stay out of the leaderboard and match history, but
+your own record against it is kept (in `practice.json`): while it's seated, each game card shows
+the levels you've beaten (**🤖 E✓ N✓ H·**), or your best stars with it as your teammate in the
+co-op games. Settings (`/admin/`) can clear the trophies and practice records.
+
 ## Quick start
 
 ### Desktop app (Steam Deck, Linux, Windows)

@@ -149,7 +149,7 @@
       return (
         heading +
         '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
-        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag) + Ark.gameLabels(g) + '</strong>' +
+        '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag || Ark.practiceTag(state, g)) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
       );
@@ -357,6 +357,7 @@
       if (s.phase === 'playing' && state.phase !== 'playing') ArkSound.play('start');
     }
     state = s;
+    Ark.showTrophies(s, null); // (anyone's new trophies)
     reconcilePads();
     // What's new is a lobby thing (see showNews).
     if (s.phase === 'playing' && newsOpen) closeNews();

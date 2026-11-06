@@ -2,6 +2,7 @@ import { randomBytes, randomInt } from 'node:crypto';
 import { getGame, listGames } from './games/index.js';
 import { Tournament } from './tournament.js';
 import { defaultProfile } from './profiles.js';
+import { contextFor } from './trophies.js';
 
 export const MAX_PLAYERS = 2;
 const NAME_MAX = 16;
@@ -35,10 +36,14 @@ const isValidToken = (t) => typeof t === 'string' && /^[0-9a-f]{32}$/.test(t);
  * views, the room pushes them out.
  */
 export class Room {
-  constructor(code, io, { stats = null, profiles = null, hostToken = null } = {}) {
+  constructor(code, io, { stats = null, profiles = null, practice = null, trophies = null, hostToken = null } = {}) {
     this.code = code;
     this.io = io;
     this.stats = stats; // match history (see stats.js), optional
+    this.practice = practice; // records against the computer (see practice.js), optional
+    this.trophies = trophies; // each player's trophies (see trophies.js), optional
+    this.trophyNews = null; // the trophies the last game earned, for the screens: { n, at, list }
+    this.trophySeq = 0; // (each batch a new number, so the screens show each once)
     this.profiles = profiles; // avatars and colours (see profiles.js), optional
     this.hostToken = hostToken || newToken();
     this.hostSockets = new Set();
@@ -175,6 +180,7 @@ export class Room {
   removePlayer(slot) {
     if (!this.players[slot]) return;
     this.players[slot] = null;
+    this.trophyNews = null; // (their trophies aren't news for whoever sits down next)
     this.tournament.reset();
     if (this.game) this.stopGame();
     else this.broadcastState();
@@ -205,6 +211,7 @@ export class Room {
     if (this.botSlot !== -1 && !def.bot) return { error: `${def.name} can't be played against the computer (yet).` };
 
     this.stopGame({ silent: true });
+    this.trophyNews = null; // (last game's: gone with the new one)
     this.lastPhase = null;
     this.lastGameId = def.id;
     const generation = ++this.generation;
@@ -296,6 +303,9 @@ export class Room {
       h2h: this.headToHead(),
       tournament: this.tournament.view(),
       knownNames: this.stats ? this.stats.knownNames() : [],
+      trophies: this.trophyNews && { n: this.trophyNews.n, list: this.trophyNews.list, ageMs: Date.now() - this.trophyNews.at }, // (old news isn't shown on a reload)
+      // With the computer seated: the person's practice records, for the game cards.
+      practice: this.botSlot !== -1 && this.practice ? this.practice.recordsFor((this.players.find((p) => p && !p.bot) || {}).name) : null,
     };
   }
 
@@ -402,14 +412,34 @@ export class Room {
   recordResult(view) {
     const def = getGame(this.gameId);
     const category = def.category || 'competitive';
+    let title = null; // a series just won (for the Champion trophy)
     if (category !== 'casual' && this.tournament.record({ game: def.name, winner: view.winner })) {
       const t = this.tournament;
-      if (t.champion !== null && this.stats && this.botSlot === -1) { // (not a series against the computer)
-        this.stats.recordTournament({ players: this.players.map((p, slot) => (p ? p.name : `Player ${slot + 1}`)), winner: t.champion, wins: t.wins.slice(), bestOf: t.bestOf });
+      if (t.champion !== null && this.botSlot === -1) { // (not a series against the computer)
+        title = { slot: t.champion, bestOf: t.bestOf };
+        if (this.stats) this.stats.recordTournament({ players: this.players.map((p, slot) => (p ? p.name : `Player ${slot + 1}`)), winner: t.champion, wins: t.wins.slice(), bestOf: t.bestOf });
       }
       this.broadcastState();
     }
-    if (!this.stats || this.botSlot !== -1) return; // (games against the computer aren't in anyone's stats)
+    this.recordMatch(def, category, view);
+    this.awardTrophies(def, category, view, title);
+  }
+
+  /** The match history (two people), or the person's practice record (against the computer). */
+  recordMatch(def, category, view) {
+    const bot = this.botSlot !== -1 ? this.players[this.botSlot] : null;
+    if (bot) {
+      // Practice: never in anyone's stats or the leaderboard.
+      const slot = 1 - this.botSlot;
+      const me = this.players[slot];
+      if (!this.practice || !me) return;
+      const won = view.winner === slot;
+      const result = category === 'casual' ? {} : { result: won ? 'win' : view.winner === 0 || view.winner === 1 ? 'loss' : 'draw' };
+      const stars = category === 'casual' ? { stars: Number(view.stars) || 0, maxStars: Number(view.maxStars) || 0 } : {};
+      this.practice.record({ name: me.name, game: def.id, level: bot.bot, ...result, ...stars });
+      return;
+    }
+    if (!this.stats) return;
     const match = {
       game: def.id,
       gameName: def.name,
@@ -436,6 +466,34 @@ export class Room {
       if (reactions.length) match.reactions = reactions;
     }
     this.stats.record(match);
+  }
+
+  /** Each person's new trophies for this result, onto the screens. */
+  awardTrophies(def, category, view, title) {
+    if (!this.trophies) return;
+    const bot = this.botSlot !== -1 ? this.players[this.botSlot].bot : null;
+    const games = listGames();
+    const list = [];
+    this.players.forEach((p, slot) => {
+      if (!p || p.bot) return;
+      // (a game between two people counts towards the trophies' own tally of games and wins)
+      if (!bot) {
+        const rival = this.players[1 - slot];
+        this.trophies.note(p.name, { game: def.id, won: category !== 'casual' && view.winner === slot, rival: rival && rival.name });
+      }
+      const e = {
+        ...contextFor(p.name, { stats: this.stats, practice: this.practice, trophies: this.trophies }),
+        game: def.id, category, view, slot, bot, title: title && title.slot === slot ? title : null,
+        won: category !== 'casual' && view.winner === slot,
+        draw: category !== 'casual' && view.winner !== 0 && view.winner !== 1,
+        allGames: games.length,
+        botGames: games.filter((g) => g.vsComputer && (g.category || 'competitive') !== 'casual').map((g) => g.id),
+      };
+      for (const t of this.trophies.check(p.name, e)) list.push({ ...t, slot, player: p.name });
+    });
+    if (!list.length) return;
+    this.trophyNews = { n: ++this.trophySeq, at: Date.now(), list };
+    this.broadcastState();
   }
 
   /** Games for the lobby: within each category, the most recently played first. */
@@ -471,10 +529,12 @@ export class Room {
 }
 
 export class RoomManager {
-  constructor(io, { stats = null, profiles = null } = {}) {
+  constructor(io, { stats = null, profiles = null, practice = null, trophies = null } = {}) {
     this.io = io;
     this.stats = stats;
     this.profiles = profiles;
+    this.practice = practice;
+    this.trophies = trophies;
     this.rooms = new Map();
   }
 
@@ -490,7 +550,7 @@ export class RoomManager {
       } while (this.rooms.has(code));
       hostToken = null;
     }
-    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, hostToken: isValidToken(hostToken) ? hostToken : null });
+    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, practice: this.practice, trophies: this.trophies, hostToken: isValidToken(hostToken) ? hostToken : null });
     this.rooms.set(code, room);
     return room;
   }
