@@ -206,3 +206,23 @@ test('the gate stays shut until the marble rolls over the button, then stays ope
   game.respawn();
   assert.equal(game.hostView().gateOpen, true, 'still open after starting again');
 });
+
+test('left in the sliding block\'s groove, the marble is squashed (a fall, back to the start); a new maze shuts the gate again', () => {
+  const lvl = parseLevel(LEVELS.find((l) => l.name === 'Sliding door'));
+  const { ctx, game } = on('Sliding door', lvl.movers[0].x1 + 0.5, lvl.movers[0].y + 0.5);
+  let squashed = false;
+  for (let i = 0; i < 600 && !squashed; i++) {
+    run(ctx, PHYSICS.tickMs);
+    if (game.phase === 'fall') squashed = game.hostView().fallBy === 'block';
+  }
+  assert.ok(squashed, 'squashed');
+  assert.equal(game.falls, 1);
+  const g2 = on('Conveyor belts', 1.5, 1.5).game;
+  g2.gateOpen = true;
+  g2.nextLevel();
+  assert.equal(g2.level.name, 'Button and gate');
+  assert.equal(g2.gateOpen, false);
+  // A one-cell track can't break the sums.
+  const one = parseLevel({ name: 't', map: ['#####', '#S=G#', '#####'] });
+  assert.equal(one.movers.length, 1);
+});

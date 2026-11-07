@@ -35,7 +35,7 @@ export const WARDEN = {
 export const ENEMIES = {
   slime: { hp: 3, speed: 1.3, damage: 1, aggro: 7 },
   bat: { hp: 1, speed: 2.6, damage: 1, aggro: 8 },
-  bigslime: { hp: 5, speed: 1, damage: 1, aggro: 7 }, // splits into two slimes when it's beaten
+  bigslime: { hp: 5, speed: 1, damage: 1, aggro: 7, r: 0.45 }, // splits into two slimes when it's beaten
   // Skeletons keep about `keepAway` from you and throw a bone now and then, if they can see you.
   skeleton: { hp: 3, speed: 1.5, damage: 1, aggro: 8, keepAway: 3.5, throwEveryMs: 2000, boneSpeed: 5, boneMs: 2500 },
   warden: { hp: WARDEN.hp[0], speed: WARDEN.speed, damage: 1, aggro: 99 },
@@ -115,7 +115,8 @@ export class DungeonDuo {
     this.map.forEach((row, y) => row.forEach((c, x) => {
       if (c === 'S') starts.push([x + 0.5, y + 0.5]);
       if (ENEMY_LETTERS[c]) this.spawnEnemy(ENEMY_LETTERS[c], x + 0.5, y + 0.5);
-      if (c === 'S' || ENEMY_LETTERS[c]) row[x] = ' ';
+      // (an enemy out on the ice stands on ice)
+      if (c === 'S' || ENEMY_LETTERS[c]) row[x] = row[x - 1] === '~' && row[x + 1] === '~' ? '~' : ' ';
     }));
     this.bossFloor = this.enemies.some((e) => e.kind === 'warden');
     const roles = this.swap ? ['healer', 'fighter'] : ['fighter', 'healer'];
@@ -133,6 +134,7 @@ export class DungeonDuo {
       Object.assign(e, { hp, max: hp, r: WARDEN.r, summoned: false, face: [0, 1], tele: null, detourUntil: 0, side: 1 });
       this.wardenMove(e, 'walk');
     }
+    if (kind === 'bigslime') e.r = ENEMIES.bigslime.r;
     this.enemies.push(e);
     return e;
   }

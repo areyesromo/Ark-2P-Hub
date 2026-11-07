@@ -93,7 +93,12 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
     }
     return { type: 'move', ...turn(sx, sy), ...extra, botDelayMs: pace * (onIce ? 0.4 : 0.6) };
   };
-  const stop = (extra = {}) => ({ type: 'move', x: 0, y: 0, ...extra, botDelayMs: pace * 0.6 });
+  // (on ice, stopping means pushing against the slide)
+  const stop = (extra = {}) => {
+    const v = Math.hypot(me.vx || 0, me.vy || 0);
+    if (tileAt(me.x, me.y) === '~' && v > 0.3) return { type: 'move', x: r2(-me.vx / v), y: r2(-me.vy / v), ...extra, botDelayMs: pace * 0.4 };
+    return { type: 'move', x: 0, y: 0, ...extra, botDelayMs: pace * 0.6 };
+  };
   const fighter = me.role === 'fighter';
   const shield = (on) => fighter && on !== me.blocking;
   // (routes go over the spikes: it waits at their edge while they're up, rather than giving up)

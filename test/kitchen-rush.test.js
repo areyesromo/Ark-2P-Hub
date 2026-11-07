@@ -522,3 +522,17 @@ test('Food Truck: the hatch moves between its two windows; the shut one takes no
   assert.equal(g.served, 1);
   assert.equal(shift({ kitchen: 0 }).g.hostView().hatch, null, 'one hatch elsewhere: always open');
 });
+
+test('Food Truck: a plate scoops cheese straight from its crate (like a bun); the hatch stops swapping once the shift is over', () => {
+  const { ctx, g } = shift({ kitchen: 3, minutes: 2 });
+  g.chefs[0].held = { kind: 'plate', contents: ['bun', 'meat'] };
+  take(g, 0, 'Q');
+  assert.deepEqual(g.chefs[0].held.contents, ['bun', 'meat', 'cheese']);
+  take(g, 0, 'Q');
+  assert.deepEqual(g.chefs[0].held.contents, ['bun', 'meat', 'cheese'], 'no doubles');
+  ctx.advance(2 * 60000 + 1000);
+  assert.equal(g.phase, 'over');
+  const at = g.hostView().hatch;
+  ctx.advance(TIMING.hatchMs * 3 + 500);
+  assert.deepEqual(g.hostView().hatch, at);
+});

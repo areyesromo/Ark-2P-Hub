@@ -303,7 +303,7 @@ export class KitchenRush {
     const h = c.held;
     if (CRATES[ch]) {
       if (!h) c.held = { kind: CRATES[ch], state: 'raw' };
-      else if (h.kind === 'plate' && ch === 'B' && !h.contents.includes('bun')) h.contents.push('bun');
+      else if (h.kind === 'plate' && (ch === 'B' || ch === 'Q') && !h.contents.includes(CRATES[ch])) h.contents.push(CRATES[ch]); // (ready as they come)
       else return;
       this.events.picked++;
     } else if (ch === 'P') {
@@ -350,7 +350,8 @@ export class KitchenRush {
     if (!this.kitchen.movingHatch) return null;
     const windows = [];
     this.layout.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'H') windows.push([x, y]); }));
-    const since = this.phase === 'play' || this.phase === 'over' ? this.ctx.now() - (this.playAt || 0) : 0;
+    // (it stops where it was when the shift ended)
+    const since = this.phase === 'play' ? this.ctx.now() - (this.playAt || 0) : this.phase === 'over' ? (this.overAt || 0) - (this.playAt || 0) : 0;
     return windows[Math.floor(since / TIMING.hatchMs) % windows.length];
   }
 
@@ -373,6 +374,7 @@ export class KitchenRush {
     if (this.timer) this.ctx.clearTimeout(this.timer);
     this.timer = null;
     this.phase = 'over';
+    this.overAt = this.ctx.now();
     this.ctx.update();
   }
 

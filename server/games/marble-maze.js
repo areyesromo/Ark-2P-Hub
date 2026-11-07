@@ -225,6 +225,7 @@ export class MarbleMaze {
     const t = this.phase === 'intro' || this.startedAt == null ? 0 : (this.ctx.now() - this.startedAt) / 1000;
     return this.level.movers.map((mv) => {
       const span = mv.x1 - mv.x0;
+      if (!span) return { x: mv.x0, y: mv.y }; // (a one-cell track: it stays put)
       const d = (t * MOVER.speed) % (2 * span);
       return { x: mv.x0 + (d <= span ? d : 2 * span - d), y: mv.y };
     });
@@ -314,6 +315,7 @@ export class MarbleMaze {
       this.falls++;
       this.fallBy = 'block';
       m.vx = m.vy = 0;
+      m.z = 1; // (gone: not left showing inside the block)
       return this.enter('fall', TIMING.fallMs);
     }
     const { button } = this.level;

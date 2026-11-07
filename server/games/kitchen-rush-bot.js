@@ -124,6 +124,7 @@ export function kitchenRushBot(view, level, rng = Math.random, retries = 0, memo
         const ready = view.items.filter((it) => missing.includes(it.kind) && isReady(it) && K.reach(it.x, it.y)).map((it) => [it.x, it.y]);
         if (ready.length) act(nearest(ready));
         else if (missing.includes('bun') && nearest(tiles('B'))) act(nearest(tiles('B')));
+        else if (missing.includes('cheese') && nearest(tiles('Q'))) act(nearest(tiles('Q'))); // (scooped straight onto the plate)
       } else if (holding.contents.length && nearest(tiles('X'))) act(nearest(tiles('X'))); // (nobody wants this: empty it)
       if (!goal) act(freeCounter(!K.reach(...(tiles('H')[0] || [0, 0]))));
     } else if (holding.state === 'burnt') {

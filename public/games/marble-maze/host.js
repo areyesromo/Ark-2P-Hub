@@ -66,7 +66,10 @@
   function buildBoard(level) {
     if (gl.board) {
       gl.scene.remove(gl.board);
-      gl.board.traverse(function (o) { if (o.geometry) o.geometry.dispose(); });
+      gl.board.traverse(function (o) {
+        if (o.geometry) o.geometry.dispose();
+        if (o.material) o.material.dispose();
+      });
     }
     const w = level.w;
     const h = level.h;

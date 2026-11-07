@@ -912,3 +912,34 @@ test('the iron door opens for good once you\'re both on the two levers at the sa
   ctx.advance(500);
   assert.ok(!g.solid(ix + 0.5, iy + 0.5), 'stays open');
 });
+
+test('the Ice Caves: the big slimes stand on ice (the lake has no holes where they started), and they\'re bigger', () => {
+  const { g } = dungeon();
+  g.floor = 2;
+  g.load();
+  FLOORS[2].map.forEach((row, y) => [...row].forEach((c, x) => {
+    if (c === 'm' && row[x - 1] === '~' && row[x + 1] === '~') assert.equal(g.map[y][x], '~', 'ice at ' + x + ',' + y);
+  }));
+  const big = g.enemies.find((e) => e.kind === 'bigslime');
+  assert.ok(big.r > 0.3, 'a bigger body');
+});
+
+test('the Armory again after a retry: the iron door is back, the levers up, the arrows on a fresh beat; no slide carried over', () => {
+  const { ctx, g } = dungeon();
+  g.floor = 3;
+  g.load();
+  g.play();
+  g.leversPulled = true;
+  g.heroes[0].vx = 3;
+  g.heroes.forEach((h) => { h.hp = 0; h.downed = true; });
+  ctx.advance(TICK * 2);
+  assert.equal(g.phase, 'retry');
+  ctx.advance(TIMING.retryMs + 50);
+  assert.equal(g.phase, 'play');
+  assert.equal(g.leversPulled, false);
+  assert.ok(find(g, 'I'), 'the door is back');
+  assert.equal(g.heroes[0].vx, 0);
+  assert.equal(g.bones.length, 0);
+  ctx.advance(ARROWS.everyMs - 300);
+  assert.equal(g.bones.filter((b) => b.kind === 'arrow').length, 0, 'not before the beat');
+});
