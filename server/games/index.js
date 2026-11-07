@@ -43,6 +43,7 @@ import { rallyTennisBot } from './rally-tennis-bot.js';
 import { sumoBot } from './sumo-bot.js';
 import { miniGolfBot } from './mini-golf-bot.js';
 import { tenPinBot } from './ten-pin-bot.js';
+import { towerStackBot } from './tower-stack-bot.js';
 import { blockBattleBot } from './block-battle-bot.js';
 import { crazyEightsBot } from './crazy-eights-bot.js';
 import { liarsDiceBot } from './liars-dice-bot.js';
@@ -65,6 +66,7 @@ import anagramDuel from './anagram-duel.js';
 import wordHunt, { SIZES as HUNT_SIZES } from './word-hunt.js';
 import miniGolf from './mini-golf.js';
 import tenPin from './ten-pin.js';
+import towerStack from './tower-stack.js';
 import bombDuel from './bomb-duel.js';
 import kartRace from './kart-race.js';
 import kartRace3d from './kart-race-3d.js';
@@ -201,6 +203,9 @@ const GAMES = [
     minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
   withSetup({ ...towerDuel, bot: towerDuelBot }, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
+  withSetup({ ...towerStack, bot: towerStackBot }, {
+    difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (slower blocks, 5 lives, an easier perfect)' : 'Normal (3 lives)') },
+  }),
   withSetup({ ...dungeonDuo, bot: dungeonDuoBot }, {
     heroes: { title: 'Heroes', values: [0, 1], label: (n) => (n ? 'Player 1 the ✨ Healer, player 2 the 🛡️ Fighter' : 'Player 1 the 🛡️ Fighter, player 2 the ✨ Healer') },
     difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (more hearts, 5 continues, a weaker Warden)' : 'Normal (3 continues)') },

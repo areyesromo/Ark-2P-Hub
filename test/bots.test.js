@@ -5,10 +5,10 @@ import assert from 'node:assert/strict';
 import { getGame, listGames } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
 
-const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
+const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze', 'tower-stack'];
 const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'ten-pin', ...REALTIME];
 const SOON = [];
-const COOP = ['kitchen-rush', 'dungeon-duo', 'marble-maze']; // (the computer as your teammate: nobody to beat)
+const COOP = ['kitchen-rush', 'dungeon-duo', 'marble-maze', 'tower-stack']; // (the computer as your teammate: nobody to beat)
 
 /** A seeded rng (mulberry32). */
 function seeded(seed) {
