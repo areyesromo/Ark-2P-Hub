@@ -660,3 +660,72 @@ test('Kitchen Rush: the computer cooks in the Food Truck too (cheese, and the wi
   const { view } = play('kitchen-rush', ['hard', 'hard'], { seed: 5, settings: { kitchen: 3 } });
   assert.ok(view.served >= 6 && view.stars >= 2, 'served ' + view.served + ', stars ' + view.stars);
 });
+
+test('Penalty Shootout: Hard and Normal learn your habits (where you kick, where you dive); Easy doesn\'t', async () => {
+  const { miniBot } = await import('../server/games/minis/bots.js');
+  // As keeper against a kicker who always goes left (0): how often it dives there by the last kicks.
+  const saves = (level) => {
+    let n = 0;
+    for (let seed = 1; seed <= 40; seed++) {
+      const rng = seeded(seed);
+      const memory = {};
+      const view = (kick, last) => ({ mini: { id: 'penalty', kind: 'party' }, phase: 'play', you: 1, count: 1, elapsedMs: 1000, state: { kick, kicker: 0, stage: 'pick', picked: [false, false], mine: null, last, goals: [0, 0], taken: [kick - 1, 0] } });
+      let last = null;
+      let move = null;
+      for (let kick = 1; kick <= 9; kick += 2) {
+        move = miniBot(view(kick, last), level, rng, memory);
+        last = { kicker: 0, shot: 0, dive: move.side, goal: move.side !== 0 };
+      }
+      if (move.side === 0) n++;
+    }
+    return n / 40;
+  };
+  const hard = saves('hard');
+  const easy = saves('easy');
+  assert.ok(hard >= 0.6, 'hard dives the way you always kick: ' + hard);
+  assert.ok(easy < 0.45, 'easy: ' + easy);
+});
+
+test('Dungeon Duo: two of the computer (Hard) can beat the Warden on Normal (the Fighter keeps out of its touch)', async () => {
+  const { DungeonDuo } = await import('../server/games/dungeon-duo.js');
+  const { FLOORS } = await import('../server/games/dungeon-duo-floors.js');
+  const def = getGame('dungeon-duo');
+  let won = 0;
+  for (let seed = 1; seed <= 8; seed++) {
+    const ctx = fakeCtx();
+    ctx.players.forEach((p) => { p.local = true; p.bot = 'hard'; });
+    const rng = seeded(seed);
+    const g = new DungeonDuo(ctx, rng, [FLOORS[FLOORS.length - 1]]);
+    g.start();
+    const mem = [{}, {}];
+    const pend = [null, null];
+    let now = 0;
+    while (g.phase !== 'over' && now < 240000) {
+      for (const s of [0, 1]) {
+        const m = def.bot(g.playerView(s), 'hard', rng, 0, mem[s]);
+        if (!m) pend[s] = null;
+        else if (!pend[s]) pend[s] = { at: now + m.botDelayMs, m };
+      }
+      ctx.advance(16);
+      now += 16;
+      for (const s of [0, 1]) {
+        if (!pend[s] || pend[s].at > now) continue;
+        const { botDelayMs, botFor, botAnticipate, ...input } = pend[s].m;
+        pend[s] = null;
+        g.onInput(s, input);
+      }
+    }
+    if (g.won) won++;
+  }
+  assert.ok(won >= 3, 'won ' + won + ' of 8'); // (the old Fighter, standing in its touch, won none)
+});
+
+test('Penalty Shootout: each kick is counted once (a show view and the next pick view both carry it), so one kick is no habit', async () => {
+  const { miniBot } = await import('../server/games/minis/bots.js');
+  const memory = {};
+  const last = { kicker: 0, shot: 0, dive: 2, goal: true };
+  const v = (kick, stage) => ({ mini: { id: 'penalty', kind: 'party' }, phase: 'play', you: 1, count: 1, elapsedMs: 1000, state: { kick, kicker: kick % 2 ? 0 : 1, stage, picked: [false, false], mine: null, last, goals: [1, 0], taken: [1, 0] } });
+  miniBot(v(1, 'show'), 'hard', () => 0.1, memory);
+  miniBot(v(2, 'pick'), 'hard', () => 0.1, memory);
+  assert.deepEqual(memory.mini.seen.kicks, [1, 0, 0]);
+});

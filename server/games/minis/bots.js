@@ -25,7 +25,7 @@ import { FLOW } from './pour-it.js';
 import { CATCH, LEAN_PER, SPEED as SPEED_TRAY } from './stack-attack.js';
 import { adjacent, DOTS } from './mirror-me.js';
 import * as CANNON from './cannon-lob.js';
-import { FRONT_CONE } from './bumper-cars.js';
+import { FRONT_CONE, MAX_SPEED as MAX_CAR_SPEED } from './bumper-cars.js';
 
 /** A person at each level: timing error (ms sd), aim wobble, slips, mashing rate, thinking pace. */
 const SKILL = {
@@ -247,12 +247,29 @@ export const PLAYERS = {
     }
     return { type: 'bowl', aim: m.roll.aim, power: m.roll.power, botDelayMs: m.roll.ms };
   },
-  penalty({ s, you, level, L, rng, m }) {
+  penalty({ s, you, level, rng, L, m }) {
+    // It remembers where you've kicked and dived this shootout (from each kick's result).
+    // (each kick once: counted by how many have been taken, as a result stays on show into the next kick)
+    m.seen = m.seen || { kicks: [0, 0, 0], dives: [0, 0, 0], n: 0 };
+    const taken = s.taken[0] + s.taken[1];
+    if (s.last && m.seen.n !== taken) {
+      m.seen.n = taken;
+      if (s.last.kicker !== you && s.last.shot !== null) m.seen.kicks[s.last.shot]++;
+      if (s.last.kicker === you) m.seen.dives[s.last.dive]++;
+    }
     if (s.stage !== 'pick' || s.picked[you]) return null;
     if (!m.kick || m.kick.n !== s.kick) {
-      // Any of the three, kicking or diving (Easy leans to its favourite side).
-      const fav = level === 'easy' && rng() < 0.4;
-      m.kick = { n: s.kick, side: fav ? 2 : Math.floor(rng() * 3), ms: (900 + rng() * 1600) * L.think };
+      const kicking = s.kicker === you;
+      // Hard (and Normal, less often) plays your habits: as keeper, it dives where you kick most;
+      // as kicker, it shoots away from where you dive most. Easy just leans to its favourite side.
+      const read = { easy: 0, normal: 0.45, hard: 0.85 }[level] || 0;
+      const counts = kicking ? m.seen.dives : m.seen.kicks;
+      const top = [0, 1, 2].filter((x) => counts[x] === Math.max(...counts));
+      const most = top[Math.floor(rng() * top.length)]; // (a tie: either)
+      let side = Math.floor(rng() * 3);
+      if (Math.max(...counts) >= 2 && rng() < read) side = kicking ? [0, 1, 2].filter((x) => x !== most)[Math.floor(rng() * 2)] : most;
+      else if (level === 'easy' && rng() < 0.4) side = 2;
+      m.kick = { n: s.kick, side, ms: (900 + rng() * 1600) * L.think };
     }
     return { type: 'pick', side: m.kick.side, botDelayMs: m.kick.ms };
   },
@@ -385,7 +402,8 @@ export const PLAYERS = {
   },
   'safe-cracker'({ s, L, rng, m, react }) {
     if (s.locked || s.opened >= 3) return null;
-    // Turn a notch at a time, listening; on the click, try it.
+    // Turn a notch at a time, listening; on the click, try it. (Which way is a guess: the long way
+    // round is at most 30 notches, so turning back on a hunch never pays.)
     if (s.click) return { type: 'try', botDelayMs: react() };
     m.dir = m.dir || {};
     if (!m.dir[s.opened]) m.dir[s.opened] = rng() < 0.5 ? -1 : 1;
@@ -460,14 +478,34 @@ export const PLAYERS = {
     const v = Math.abs(gap) < 0.015 ? 0 : clamp(gap / (SPEED_TRAY * 0.35), -1, 1);
     return { type: 'move', x: Math.round(v * 100) / 100, botDelayMs: delay };
   },
-  'bumper-cars'({ s, you, L, rng, react }) {
+  'bumper-cars'({ s, you, level, el, L, rng, m, react }) {
     const me = s.cars[you];
     const foe = s.cars[1 - you];
+    // Where its rival's heading (from where it saw it last), for Normal and Hard to lead it.
+    // (over a tenth of a second or more: the cars move in steps, and it may look between them)
+    if (!m.prev) m.prev = { x: foe.x, y: foe.y, t: el };
+    if (el - m.prev.t >= 100) {
+      const cap = MAX_CAR_SPEED * 1.5;
+      m.v = { x: clamp(((foe.x - m.prev.x) * 1000) / (el - m.prev.t), -cap, cap), y: clamp(((foe.y - m.prev.y) * 1000) / (el - m.prev.t), -cap, cap) };
+      m.prev = { x: foe.x, y: foe.y, t: el };
+    }
+    const fvx = m.v ? m.v.x : 0;
+    const fvy = m.v ? m.v.y : 0;
+    // Hard keeps its nose to a rival coming at its side or back (a head-on bump scores nothing).
+    const toFoe = Math.atan2(foe.y - me.y, foe.x - me.x);
+    const near = Math.hypot(foe.x - me.x, foe.y - me.y);
+    const coming = (fvx * (me.x - foe.x) + fvy * (me.y - foe.y)) / (near || 1) > 2;
+    const exposed = Math.abs(Math.atan2(Math.sin(toFoe - me.h), Math.cos(toFoe - me.h))) > FRONT_CONE;
+    if (level === 'hard' && !me.spinning && !foe.spinning && coming && exposed && near < 3.2) {
+      const wob = gauss(rng) * L.aim * 3;
+      return { type: 'move', x: Math.cos(toFoe + wob), y: Math.sin(toFoe + wob), botDelayMs: react() * 0.6 };
+    }
     // Their side or back: if it's in front of their nose, round them first.
     const toMe = Math.atan2(me.y - foe.y, me.x - foe.x);
     const facing = Math.abs(Math.atan2(Math.sin(toMe - foe.h), Math.cos(toMe - foe.h))) < FRONT_CONE + 0.3;
-    let tx = foe.x;
-    let ty = foe.y;
+    const lead = { easy: 0, normal: 0.35, hard: 0.55 }[level] || 0;
+    let tx = foe.x + fvx * lead;
+    let ty = foe.y + fvy * lead;
     if (facing && !foe.spinning) {
       const side = Math.sin(toMe - foe.h) > 0 ? 1 : -1;
       tx += Math.cos(foe.h + side * Math.PI / 2) * 1.6;

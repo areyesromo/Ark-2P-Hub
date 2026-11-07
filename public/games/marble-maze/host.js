@@ -14,7 +14,7 @@
   let threeReady = null;
   /** three.js, loaded the first time the game is shown. */
   function loadThree() {
-    if (!threeReady) threeReady = import('/vendor/three/three.module.min.js').then(function (m) { THREE = m; });
+    if (!threeReady) threeReady = Promise.all([import('/vendor/three/three.module.min.js'), Ark.loadScript('/shared/hd3d.js')]).then(function (m) { THREE = m[0]; });
     return threeReady;
   }
 
@@ -212,6 +212,7 @@
     const W = Math.max(1, Math.floor(r.width));
     const H = Math.max(1, Math.floor(r.height));
     gl.renderer.setSize(W, H);
+    gl.hd.setSize(W, H);
     gl.camera.aspect = W / H;
     const size = gl.size || { w: 13, h: 9 };
     const fit = Math.max(size.h * 1.15, (size.w * 1.1) / gl.camera.aspect);
@@ -271,7 +272,7 @@
       gl.button.material.color.setHex(v.gateOpen ? 0x22c55e : 0xdc2626);
       gl.button.material.emissive.setHex(v.gateOpen ? 0x15803d : 0x7f1d1d);
     }
-    gl.renderer.render(gl.scene, gl.camera);
+    gl.hd.render();
     els.clock.textContent = time(v.phase === 'play' || v.phase === 'fall' ? v.elapsedMs + (performance.now() - viewAt) : v.elapsedMs);
   }
 
@@ -364,6 +365,7 @@
         if (root !== mounted) return;
         try {
           setupGl();
+          gl.hd = window.ArkHD.create(THREE, gl.renderer, gl.scene, gl.camera); // (the TV's HD button: glow, reflections, sharper shadows)
         } catch (e) {
           els.overlay.innerHTML = '<div class="panel"><div class="title">3D isn\'t available</div><p>This browser couldn\'t start WebGL.</p></div>';
           return;
@@ -390,6 +392,7 @@
       if (fit) fit.disconnect();
       fit = null;
       if (gl) {
+        if (gl.hd) gl.hd.dispose();
         gl.renderer.dispose();
         if (gl.renderer.forceContextLoss) gl.renderer.forceContextLoss();
       }
