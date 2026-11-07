@@ -59,8 +59,8 @@ export const TIMING = {
   floorClearMs: 2500,
   parMsPerFloor: 3 * 60000, // a good time: this long a floor
 };
-const R = 0.3; // half a hero's (or enemy's) width
-const TOUCH = 0.65; // an enemy this close hurts
+export const R = 0.3; // half a hero's (or enemy's) width
+export const TOUCH = 0.65; // an enemy this close hurts
 const KNOCKBACK = 0.6; // how far the shield shoves an enemy
 const REVIVE_RANGE = 1.4; // from a safe tile beside spikes, too
 const ENEMY_LETTERS = { s: 'slime', m: 'bigslime', b: 'bat', k: 'skeleton', W: 'warden' };

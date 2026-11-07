@@ -9,6 +9,10 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - ✨ HD graphics in the 3D games: lava, lanterns, sparks and the goal ring glow, shiny things
   (bowling balls, marbles, metal) catch the light, and shadows are much sharper. The new HD
   button in the TV's top bar switches a slower TV to the standard look.
+- 🤖 The computer plays smarter where its levels barely differed: in Penalty Shootout Hard learns
+  your habits (where you kick, where you dive), in Bumper Cars it leads you and turns to face a
+  ram, in Crazy Eights it remembers the suits you had to draw on, and as Dungeon Duo's Fighter it
+  stays out of the Warden's reach while it swings.
 
 ## 0.1.34
 

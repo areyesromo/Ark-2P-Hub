@@ -379,3 +379,20 @@ test('a stuck count starts afresh after a card is played', () => {
   g.onInput(0, { type: 'draw' }); // (nothing again)
   assert.equal(g.phase, 'play', 'one pass since the last card: not stuck yet');
 });
+
+test('the computer remembers the suit you drew on (you had none): Hard switches play into it, and calls it with an 8', async () => {
+  const { crazyEightsBot } = await import('../server/games/crazy-eights-bot.js');
+  const memory = {};
+  const base = { you: 1, phase: 'play', actions: true, counts: [5, 4], drew: false, pending: 0 };
+  // You couldn't follow hearts: you drew.
+  crazyEightsBot({ ...base, turn: 1, suit: 'H', top: '5H', last: { slot: 0, kind: 'draw' }, cards: ['5C', '9H', 'KD', '3H'], playable: ['5C', '9H', '3H'] }, 'hard', () => 0.5, 0, memory);
+  // Its turn on clubs: a club, or the 5 of hearts' twin... It holds 5H? No: it can go to hearts with 5H (same rank).
+  const m = crazyEightsBot({ ...base, turn: 1, suit: 'C', top: '5C', last: { slot: 0, kind: 'play', card: '5C' }, cards: ['5H', '9C', 'KC', 'QC'], playable: ['5H', '9C', 'KC', 'QC'] }, 'hard', () => 0.5, 0, memory);
+  assert.equal(m.card, '5H', 'back to hearts, which you have none of');
+  const s = crazyEightsBot({ ...base, phase: 'suit', turn: 1, suit: null, top: '8S', last: { slot: 1, kind: 'play', card: '8S' }, cards: ['2H', '9C', 'KC', 'QC'] }, 'hard', () => 0.5, 0, memory);
+  assert.equal(s.suit, 'H', 'calls the suit you lack');
+  // Seen you play a heart since: it forgets.
+  crazyEightsBot({ ...base, turn: 0, suit: 'H', top: '7H', last: { slot: 0, kind: 'play', card: '7H' }, cards: ['5H'], playable: [] }, 'hard', () => 0.5, 0, memory);
+  const s2 = crazyEightsBot({ ...base, phase: 'suit', turn: 1, suit: null, top: '8S', last: { slot: 1, kind: 'play', card: '8S' }, cards: ['2H', '9C', 'KC', 'QC'] }, 'hard', () => 0.5, 0, memory);
+  assert.equal(s2.suit, 'C', 'its longest again');
+});

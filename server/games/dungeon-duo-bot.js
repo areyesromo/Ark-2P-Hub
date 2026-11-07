@@ -14,7 +14,7 @@
  *   normal: steady.
  *   hard:   quick, and dodges the Warden early.
  */
-import { HEROES, WARDEN } from './dungeon-duo.js';
+import { HEROES, WARDEN, TOUCH, R } from './dungeon-duo.js';
 import { reactionMs } from './bot-human.js';
 
 const LEVEL = {
@@ -176,6 +176,10 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
     // In range: turn to it and strike, in one motion (Easy a beat slower to swing).
     const strike = { type: 'attack', botDelayMs: 60 + (1 - L.attack) * 500 };
     if (fighter) {
+      // The Warden hurts on touch: swing from just outside it (its sword reaches further), and
+      // step back when it walks in (stunned, it's harmless: go in close).
+      const touch = TOUCH + (e.r || R) - R + 0.15;
+      if (e.kind === 'warden' && e.state !== 'stunned' && d < touch && level !== 'easy') return steer(-dx, -dy, off);
       if (d > reach * 0.85) return goTo(e.x, e.y, off) || steer(dx, dy, off);
       if (facing && me.readyIn === 0) return strike;
       return { type: 'move', ...turn(dx / (d || 1), dy / (d || 1), 0.3), ...off, botDelayMs: facing ? pace * 0.6 : 40 };

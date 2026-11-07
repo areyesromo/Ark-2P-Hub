@@ -5,19 +5,36 @@
  * its high cards first, answers a 2 with a 2, and calls the suit it's longest in.
  *   easy:   any card that fits, 8s whenever, and a suit call that's sometimes a guess.
  *   normal: the above.
- *   hard:   the above, and saves its 2s and Q♠ for when you're close to going out.
+ *   hard:   the above, saves its 2s and Q♠ for when you're close to going out, and remembers
+ *           the suits you drew on (you had none): it steers play into them and calls them with an 8.
  */
 import { SUITS, rankOf, suitOf, value } from './crazy-eights.js';
 
 const THINK = { easy: [1600, 3200], normal: [1200, 2600], hard: [1000, 2200] };
 
-export function crazyEightsBot(view, level, rng = Math.random) {
-  if (!view || !THINK[level] || view.turn !== view.you || !Array.isArray(view.cards)) return null;
+export function crazyEightsBot(view, level, rng = Math.random, retries = 0, memory = {}) {
+  if (!view || !THINK[level] || !Array.isArray(view.cards)) return null;
+  // What it's seen you do (Hard): a draw means you had nothing in that suit; a card played in a
+  // suit means you have it after all.
+  if (level === 'hard' && view.last && view.last.slot === 1 - view.you) {
+    const key = JSON.stringify(view.last) + ':' + view.suit + ':' + (view.counts || []).join();
+    if (memory.eightsSeen !== key) {
+      memory.eightsSeen = key;
+      memory.lacks = memory.lacks || {};
+      if (view.last.kind === 'draw' && view.suit) memory.lacks[view.suit] = true;
+      if (view.last.kind === 'play' && view.last.card) delete memory.lacks[suitOf(view.last.card)];
+    }
+  }
+  const lacks = level === 'hard' ? memory.lacks || {} : {};
+  if (view.turn !== view.you) return null;
   const [lo, hi] = THINK[level];
   const wait = lo + rng() * (hi - lo);
   const hand = view.cards;
   const longest = () => {
     const count = (s) => hand.filter((c) => suitOf(c) === s && rankOf(c) !== '8').length;
+    // (Hard: a suit you have none of, if it holds any, before its longest)
+    const theirs = SUITS.filter((s) => lacks[s] && count(s) > 0);
+    if (theirs.length) return theirs.reduce((best, s) => (count(s) > count(best) ? s : best), theirs[0]);
     return SUITS.reduce((best, s) => (count(s) > count(best) ? s : best), SUITS[0]);
   };
   if (view.phase === 'suit') {
@@ -44,6 +61,7 @@ export function crazyEightsBot(view, level, rng = Math.random) {
   const scored = plain.map((c) => {
     const r = rankOf(c);
     let v = inSuit(suitOf(c)) * 2 + value(c) / 10; // stay in its long suit; shed points
+    if (lacks[suitOf(c)] && suitOf(c) !== view.suit) v += 6; // (Hard: into a suit you have none of: you'll have to draw)
     if (view.actions && (r === '2' || c === 'QS')) v += level === 'hard' ? (foeCards <= 3 ? 6 : -2) : 1; // (Hard: kept for your last cards)
     if (view.actions && r === 'J' && plain.length > 1) v += 2; // (a Jack: another go, with something to follow)
     return { c, v: v + rng() * 0.5 };
