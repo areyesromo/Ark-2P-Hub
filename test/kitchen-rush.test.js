@@ -51,7 +51,7 @@ function take(g, slot, crate) {
 }
 
 test('the kitchens: 14 × 8, walled in, every station reachable from the floor; Split really is split, with a counter to pass things over', () => {
-  assert.deepEqual(KITCHENS.map((k) => k.name), ['Diner', 'Split', 'Rush Hour']);
+  assert.deepEqual(KITCHENS.map((k) => k.name), ['Diner', 'Split', 'Rush Hour', 'Food Truck']);
   for (const k of KITCHENS) {
     assert.equal(k.layout.length, SIZE.h, k.name);
     for (const row of k.layout) assert.equal(row.length, SIZE.w, k.name + ': ' + row);
@@ -479,5 +479,60 @@ test('in the lobby: a co-op game (casual), with the kitchen and the shift length
   assert.ok(!def.phoneOnly);
   const setup = JSON.stringify(def.create(fakeCtx()).hostView());
   assert.ok(setup.includes('"kitchen"') && setup.includes('"minutes"'));
-  assert.ok(setup.includes('Diner') && setup.includes('Split') && setup.includes('Rush Hour'));
+  assert.ok(setup.includes('Diner') && setup.includes('Split') && setup.includes('Rush Hour') && setup.includes('Food Truck'));
+});
+
+test('Food Truck: cheese from its crate (ready as it is), and its own menu: cheeseburgers and the deluxe', () => {
+  const { g } = shift({ kitchen: 3 });
+  assert.deepEqual(RECIPES.cheeseburger, ['bun', 'meat', 'cheese']);
+  assert.deepEqual(RECIPES.deluxe, ['bun', 'meat', 'cheese', 'lettuce', 'tomato']);
+  take(g, 0, 'Q');
+  assert.deepEqual(held(g, 0), { kind: 'cheese', state: 'raw' });
+  // Straight onto a plate (no chopping or cooking).
+  const counter = [4, 3]; // (the counter in the middle of the truck)
+  g.items[counter.join()] = { kind: 'plate', contents: ['bun', 'meat'] };
+  stand(g, 0, counter);
+  act(g, 0);
+  assert.deepEqual(g.items[counter.join()].contents, ['bun', 'meat', 'cheese']);
+  // Orders come from its own menu (the old ones and the cheese ones).
+  for (let i = 0; i < 40; i++) g.addOrder(g.ctx.now());
+  const kinds = new Set(g.orders.map((o) => o.recipe));
+  assert.ok([...kinds].every((r) => KITCHENS[3].menu.includes(r)));
+  assert.ok(KITCHENS[3].menu.includes('cheeseburger') && KITCHENS[3].menu.includes('deluxe'));
+  assert.ok(!KITCHENS[0].menu || !KITCHENS[0].menu.includes('deluxe'), 'the other kitchens keep their menu');
+});
+
+test('Food Truck: the hatch moves between its two windows; the shut one takes nothing', () => {
+  const { ctx, g } = shift({ kitchen: 3 });
+  const windows = [];
+  g.layout.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'H') windows.push([x, y]); }));
+  assert.equal(windows.length, 2);
+  const open = g.hostView().hatch;
+  assert.ok(windows.some((w) => w.join() === open.join()));
+  const shut = windows.find((w) => w.join() !== open.join());
+  g.orders = [{ id: 99, recipe: 'cheeseburger', born: ctx.now(), until: ctx.now() + 60000 }];
+  g.chefs[0].held = { kind: 'plate', contents: ['bun', 'meat', 'cheese'] };
+  stand(g, 0, shut);
+  act(g, 0);
+  assert.equal(g.served, 0, 'not at the shut window');
+  ctx.advance(TIMING.hatchMs);
+  assert.deepEqual(g.hostView().hatch, shut, 'now this one is open');
+  stand(g, 0, shut);
+  act(g, 0);
+  assert.equal(g.served, 1);
+  assert.equal(shift({ kitchen: 0 }).g.hostView().hatch, null, 'one hatch elsewhere: always open');
+});
+
+test('Food Truck: a plate scoops cheese straight from its crate (like a bun); the hatch stops swapping once the shift is over', () => {
+  const { ctx, g } = shift({ kitchen: 3, minutes: 2 });
+  g.chefs[0].held = { kind: 'plate', contents: ['bun', 'meat'] };
+  take(g, 0, 'Q');
+  assert.deepEqual(g.chefs[0].held.contents, ['bun', 'meat', 'cheese']);
+  take(g, 0, 'Q');
+  assert.deepEqual(g.chefs[0].held.contents, ['bun', 'meat', 'cheese'], 'no doubles');
+  ctx.advance(2 * 60000 + 1000);
+  assert.equal(g.phase, 'over');
+  const at = g.hostView().hatch;
+  ctx.advance(TIMING.hatchMs * 3 + 500);
+  assert.deepEqual(g.hostView().hatch, at);
 });

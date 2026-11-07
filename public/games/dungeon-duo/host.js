@@ -65,7 +65,7 @@
     if (v.phase === 'countdown') {
       const boss = v.enemies.some(function (e) { return e.kind === 'warden'; });
       html = '<div class="big">' + (v.countdown || '') + '</div><div class="sub">' + esc(v.floorName) + ': ' +
-        (boss ? 'beat the Stone Warden. Get out of its ring before it slams; a shield (or a wall) stops its charge' : 'find the key, open the door, take the stairs down together') + '</div>';
+        (boss ? 'beat the Stone Warden. Get out of its ring before it slams; a shield (or a wall) stops its charge' : v.floorTip ? esc(v.floorTip) : 'find the key, open the door, take the stairs down together') + '</div>';
     } else if (v.phase === 'retry') {
       html = '<div class="big">💀</div><div class="sub">You both went down. Back to the start of the floor (' + v.continues + ' continue' + (v.continues === 1 ? '' : 's') + ' left)</div>';
     } else if (v.phase === 'floorClear') {
@@ -176,7 +176,22 @@
     floorMesh.receiveShadow = true;
     level.add(floorMesh);
     const walls = [];
-    v.map.forEach(function (row, y) { for (let x = 0; x < W; x++) if (row[x] === '#') walls.push([x, y]); });
+    // (arrow traps are walls too, with a slot in them: see buildThings)
+    v.map.forEach(function (row, y) { for (let x = 0; x < W; x++) if (row[x] === '#' || row[x] === '>' || row[x] === '<') walls.push([x, y]); });
+    // Ice: a glassy pale-blue sheet over the stone.
+    const ice = [];
+    v.map.forEach(function (row, y) { for (let x = 0; x < W; x++) if (row[x] === '~') ice.push([x, y]); });
+    if (ice.length) {
+      const iceMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(1, 1), mat(0xbae6fd, { roughness: 0.08, metalness: 0.3, transparent: true, opacity: 0.85 }), ice.length);
+      const mi = new THREE.Matrix4();
+      const flat = new THREE.Matrix4().makeRotationX(-Math.PI / 2);
+      ice.forEach(function (p, i) {
+        mi.makeTranslation(p[0] + 0.5 - W / 2, 0.004, p[1] + 0.5 - H / 2).multiply(flat);
+        iceMesh.setMatrixAt(i, mi);
+      });
+      iceMesh.receiveShadow = true;
+      level.add(iceMesh);
+    }
     const wallMesh = new THREE.InstancedMesh(new THREE.BoxGeometry(1, WALL_H, 1), mat(0x57534e), walls.length);
     wallMesh.castShadow = wallMesh.receiveShadow = true;
     const m = new THREE.Matrix4();
@@ -242,6 +257,34 @@
           pit.rotation.x = -Math.PI / 2;
           pit.position.set(px, 0.005, pz);
           things.add(pit);
+        } else if (c === '>' || c === '<') {
+          // An arrow trap: a dark slot with a red rim on the side it fires from.
+          const dir = c === '>' ? 1 : -1;
+          const slot = new THREE.Mesh(new THREE.BoxGeometry(0.06, 0.18, 0.5), mat(0x0c0a09, { emissive: 0x7f1d1d, emissiveIntensity: 0.8 }));
+          slot.position.set(px + dir * 0.5, WALL_H * 0.4, pz);
+          things.add(slot);
+        } else if (c === 'l') {
+          // A lever: a post and a handle, thrown once you've both pulled them.
+          const base = new THREE.Mesh(new THREE.BoxGeometry(0.5, 0.12, 0.5), mat(0x44403c));
+          base.position.set(px, 0.06, pz);
+          const handle = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.7, 8), mat(0x9ca3af, { metalness: 0.7, roughness: 0.3 }));
+          handle.position.set(0, 0.35, 0);
+          const knob = new THREE.Mesh(new THREE.SphereGeometry(0.1, 10, 8), mat(v.leversPulled ? 0x22c55e : 0xdc2626));
+          knob.position.set(0, 0.72, 0);
+          const arm = new THREE.Group();
+          arm.add(handle, knob);
+          arm.position.set(px, 0.1, pz);
+          arm.rotation.z = v.leversPulled ? -0.7 : 0.7;
+          things.add(base, arm);
+        } else if (c === 'I') {
+          const iron = new THREE.Mesh(new THREE.BoxGeometry(0.96, WALL_H * 0.95, 0.96), mat(0x374151, { metalness: 0.8, roughness: 0.35 }));
+          iron.position.set(px, WALL_H * 0.475, pz);
+          things.add(iron);
+          for (let i = 0; i < 3; i++) {
+            const band = new THREE.Mesh(new THREE.BoxGeometry(1.0, 0.08, 1.0), mat(0x1f2937, { metalness: 0.8 }));
+            band.position.set(px, WALL_H * (0.2 + i * 0.3), pz);
+            things.add(band);
+          }
         } else if (c === 'P') {
           const plate = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.05, 0.7), plateMat);
           plate.position.set(px, 0.025, pz);
@@ -329,10 +372,12 @@
   function makeEnemy(kind) {
     const g = new THREE.Group();
     const parts = { group: g, kind: kind };
-    if (kind === 'slime') {
-      const blob = new THREE.Mesh(new THREE.SphereGeometry(0.32, 14, 10), mat(0x4ade80, { transparent: true, opacity: 0.88, roughness: 0.3 }));
+    if (kind === 'slime' || kind === 'bigslime') {
+      // (a big slime: twice the size and a deeper green; it splits into two of the small ones)
+      const big = kind === 'bigslime';
+      const blob = new THREE.Mesh(new THREE.SphereGeometry(big ? 0.5 : 0.32, 14, 10), mat(big ? 0x16a34a : 0x4ade80, { transparent: true, opacity: 0.88, roughness: 0.3 }));
       blob.scale.set(1, 0.65, 1);
-      blob.position.y = 0.22;
+      blob.position.y = big ? 0.32 : 0.22;
       g.add(blob);
       parts.body = blob;
     } else if (kind === 'warden') {
@@ -472,7 +517,7 @@
       if (!p.shown || v.phase !== 'play') p.shown = { x: tx, z: tz }; // no gliding back across the walls on a retry
       p.shown.x += (tx - p.shown.x) * k;
       p.shown.z += (tz - p.shown.z) * k;
-      if (e.kind === 'slime') {
+      if (e.kind === 'slime' || e.kind === 'bigslime') {
         const bob = Math.sin(t / 180 + e.id);
         p.body.scale.set(1 + bob * 0.08, 0.65 - bob * 0.08, 1 + bob * 0.08);
         p.group.position.set(p.shown.x, 0, p.shown.z);
@@ -546,7 +591,11 @@
       if (!b.visible) return;
       const [x, z] = at(bones[i].x, bones[i].y);
       b.position.set(x, 0.5, z);
-      b.rotation.y = t / 70;
+      // An arrow flies straight and long; a bone spins.
+      const arrow = bones[i].kind === 'arrow';
+      b.rotation.y = arrow ? 0 : t / 70;
+      b.scale.set(arrow ? 1.7 : 1, 1, 1);
+      b.material.color.setHex(arrow ? 0xa16207 : 0xf5f5f4);
     });
     while (gl.circles.length < v.circles.length) {
       const c = new THREE.Mesh(new THREE.CircleGeometry(1, 32), new THREE.MeshBasicMaterial({ color: 0x4ade80, transparent: true, opacity: 0.3 }));

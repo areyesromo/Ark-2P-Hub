@@ -100,10 +100,10 @@ scans in from the lobby takes its seat.
 | --- | --- |
 | **Sketch & Guess** | One of you picks a secret word (easy, medium or hard, from 400) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a "so close!"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw. |
 | **Bomb Squad** | A co-op bomb-defusal game for two phones. One of you has the bomb on your phone, the other has the defusal manual on theirs, and neither may look at the other's screen. The defuser describes, the expert finds the rules and says what to do. Seven kinds of module: **wires** to cut, a **button** to tap or hold, **symbols** to press in order, **password** letter wheels, **Simon** (press the colours the manual's table gives for each flash; it changes with strikes), a **maze** with invisible walls (the green markers say which maze it is) and **switches** set by their lights. **Every bomb comes with a freshly dealt rulebook** (the edition code is on both phones), so there's no learning the manual by heart. Three strikes or the timer running out and it goes 💥. The TV shows the countdown, strikes and which modules are done. You swap roles every bomb and collect stars (more for time to spare). Easy, Normal, Hard or Expert (2 to 6 modules), 1, 3 or 5 bombs. |
-| **Marble Maze** | Co-op in 3D: a marble on a wooden maze board that you tilt together. One of you tilts it left and right, the other forwards and back (or pick *Shared* and both steer everything). Roll it to the green goal without dropping it down a hole (down one, it's back to the start). Phones use the 🕹️ joystick, ✛ D-pad or 📱 tilt pad; controllers use the stick. Stars for each maze: three within par time. Five mazes, from *First roll* to *The gauntlet*. 🤖 With the computer as your teammate: it tilts its half (or, in Shared, lends a hand), steering round the holes; Easy lets the marble run a bit fast. |
+| **Marble Maze** | Co-op in 3D: a marble on a wooden maze board that you tilt together. One of you tilts it left and right, the other forwards and back (or pick *Shared* and both steer everything). Roll it to the green goal without dropping it down a hole (down one, it's back to the start). Phones use the 🕹️ joystick, ✛ D-pad or 📱 tilt pad; controllers use the stick. Stars for each maze: three within par time. Eight mazes, from *First roll* to *The gauntlet*, plus three with moving parts: *Sliding door* (an orange block slides along a groove: cross while it's away, or it squashes you), *Conveyor belts* (they push the marble the way their arrows point) and *Button and gate* (roll over the red button to open the red gate). 🤖 With the computer as your teammate: it tilts its half (or, in Shared, lends a hand), steering round the holes, waiting for the sliding block and heading for the button first; Easy lets the marble run a bit fast. |
 | **Trivia Quest** | Co-op quiz: the two of you against three monsters in a row, a 🦠 Goo Blob, a 🗿 Stone Golem and the 🐉 Dragon, each with a health bar, while you share a row of ❤️ hearts. Every turn is a question from the Quiz Battle bank (mixed or one topic); you both answer secretly on your phones (talk it over first: that's the point) and it's revealed when you've both answered (there's no timer unless you pick **Timed** in setup: then 15 s a question, 12 s against the Dragon, and the faster a right answer comes the harder it hits). A right answer hits the monster, and both right is a ⚡ **team strike** for half as much again; every wrong or missing answer costs a heart. Beat a monster for up to ⭐⭐⭐ (3 with no hearts lost against it, 2 with one, 1 otherwise), so a perfect quest is 9 ⭐; run out of hearts and the quest ends with the stars you have. Each of you has one 💡 **50/50** per quest: it takes two wrong answers off your own phone. Rematches don't repeat the last quest's questions. |
-| **Kitchen Rush** | Co-op cooking, seen from above on the TV: two chefs (in your colours) serve the orders before they run out. Walk with your phone's pad (joystick, D-pad or tilt) or a controller's stick; **ACTION** picks up, puts down and serves whatever you're facing, and you hold **CHOP** at a chopping board. Tomatoes and lettuce need chopping, meat cooks on a stove (and **burns** if you leave it), buns are ready as they are: put them on a plate and hand it in at the hatch. Order tickets come in along the top (🍔 burger, 🍔🥬 lettuce burger, 🍔🥬🍅 the works, 🥗 salad), each with its own timer: a dish served earns coins plus a tip for speed, an order that runs out costs some. Three kitchens: the open **Diner**, **Split** (buns, meat and stoves on one side, the vegetables, plates and hatch on the other: pass things over the counter) and **Rush Hour** (split, with orders coming faster). Stars at the end of the shift by the coins earned, with targets set by how many orders the shift brings (shown on the TV). 🤖 With the computer as your teammate: it takes whatever job helps most (meat off before it burns, chopping, plating up, serving, fetching what the orders still need), counts what you're carrying so it doesn't double up, and in the Split kitchen passes things over the middle. |
-| **Dungeon Duo** | Co-op dungeon crawl in 3D: a 🛡️ **Fighter** and a ✨ **Healer** fight their way down three floors together. Walk with your phone's pad (joystick, D-pad or tilt) or a controller's stick. **ATTACK** swings the Fighter's sword at whatever is in front, or fires one of the Healer's bolts. **SPECIAL** is the Fighter's shield (hold it: hits from the front are blocked and enemies shoved back, but you walk slower) or the Healer's healing circle (a heart a second for anyone standing in it, then a wait before the next). Enemies hurt on touch: slimes, bats and skeletons that throw bones from a distance. At no hearts you're down, and your partner revives you by standing beside you; both down and it's back to the start of the floor, which costs a continue. **The Cellar**: find the key, open the door, take the stairs together. **The Crypt**: spikes that go up and down, a gate that only stays open while one of you stands on a plate, and skeletons. **The Warden's Hall**: the Stone Warden. Get out of its red ring before it slams, step out of its lane when it charges (a wall, or a raised shield, stuns it for a moment), and watch out for the help it calls at half health. Beat it to win. Stars for finishing, few retries and a good time. 🤖 With the computer as your teammate (the Fighter or the Healer, whichever you aren't): it fights, heals you, comes to revive you, dodges the Warden, holds the plate for you at a gate, fetches the key and waits for you on the stairs. |
+| **Kitchen Rush** | Co-op cooking, seen from above on the TV: two chefs (in your colours) serve the orders before they run out. Walk with your phone's pad (joystick, D-pad or tilt) or a controller's stick; **ACTION** picks up, puts down and serves whatever you're facing, and you hold **CHOP** at a chopping board. Tomatoes and lettuce need chopping, meat cooks on a stove (and **burns** if you leave it), buns are ready as they are: put them on a plate and hand it in at the hatch. Order tickets come in along the top (🍔 burger, 🍔🥬 lettuce burger, 🍔🥬🍅 the works, 🥗 salad, and in the Food Truck 🧀 cheeseburger and the deluxe with everything), each with its own timer: a dish served earns coins plus a tip for speed, an order that runs out costs some. Four kitchens: the open **Diner**, **Split** (buns, meat and stoves on one side, the vegetables, plates and hatch on the other: pass things over the counter), **Rush Hour** (split, with orders coming faster) and the **Food Truck** (a narrow kitchen with a cheese crate, and two serving hatches that take turns: only the open one takes dishes). Stars at the end of the shift by the coins earned, with targets set by how many orders the shift brings (shown on the TV). 🤖 With the computer as your teammate: it takes whatever job helps most (meat off before it burns, chopping, plating up, serving, fetching what the orders still need), counts what you're carrying so it doesn't double up, and in the Split kitchen passes things over the middle. |
+| **Dungeon Duo** | Co-op dungeon crawl in 3D: a 🛡️ **Fighter** and a ✨ **Healer** fight their way down five floors together (or three, for a short quest). Walk with your phone's pad (joystick, D-pad or tilt) or a controller's stick. **ATTACK** swings the Fighter's sword at whatever is in front, or fires one of the Healer's bolts. **SPECIAL** is the Fighter's shield (hold it: hits from the front are blocked and enemies shoved back, but you walk slower) or the Healer's healing circle (a heart a second for anyone standing in it, then a wait before the next). Enemies hurt on touch: slimes, bats and skeletons that throw bones from a distance. At no hearts you're down, and your partner revives you by standing beside you; both down and it's back to the start of the floor, which costs a continue. **The Cellar**: find the key, open the door, take the stairs together. **The Crypt**: spikes that go up and down, a gate that only stays open while one of you stands on a plate, and skeletons. **The Ice Caves**: a frozen lake you slide on, and big slimes that split in two when you beat them. **The Armory**: arrow traps that fire across the hall on a beat (the shield stops them), and an iron door that opens once you're both standing on its two levers at the same time. **The Warden's Hall**: the Stone Warden. Get out of its red ring before it slams, step out of its lane when it charges (a wall, or a raised shield, stuns it for a moment), and watch out for the help it calls at half health. Beat it to win. Stars for finishing, few retries and a good time. 🤖 With the computer as your teammate (the Fighter or the Healer, whichever you aren't): it fights, heals you, comes to revive you, dodges the Warden, holds the plate for you at a gate, takes the other lever, steers against the slide on ice, fetches the key and waits for you on the stairs. |
 | **Mind Meld** | Co-op guessing on a scale, Wavelength-style. The TV shows a scale like *Cold ↔ Hot*; the clue-giver's phone shows a secret target on it, and they type a clue ("tea"). The other turns the dial (drag it on the phone, or the stick on a controller) and locks in: dead on is ⭐⭐⭐, close is ⭐⭐ or ⭐. 60 scales; you swap who gives the clue every round (a controller player always guesses). |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7. |
 
@@ -130,10 +130,10 @@ starts). The numbers above are the defaults; you can change, for example:
 | Battleship | Classic or ⚡ Ultimate, the sea for Ultimate (Open Sea, Archipelago, Reef, Frozen Strait, Fog Bank, Volcano or any), and 15, 30 or 60 s per shot, or no timer (placing and firing wait for you) |
 | Sketch & Guess | 4, 6, 8 or 10 rounds |
 | Bomb Squad | Easy (2 modules), Normal (3), Hard (4) or Expert (6), and 1, 3 or 5 bombs |
-| Marble Maze | 1, 3 or all 5 mazes; split (one ↔, one ↕) or shared controls |
+| Marble Maze | 1, 3, 5 or all 8 mazes; split (one ↔, one ↕) or shared controls |
 | Trivia Quest | The topic (mixed or one category), Easy (7 hearts), Normal (5) or Hard (3), and no timer (the usual: a question waits for you both) or timed (15 s a question, 12 s for the Dragon, and faster hits harder) |
-| Kitchen Rush | The kitchen (Diner, Split or Rush Hour) and a 2, 3 or 4 minute shift |
-| Dungeon Duo | Who's the Fighter and who's the Healer; Normal (3 continues) or Easy (more hearts, 5 continues, a weaker Warden) |
+| Kitchen Rush | The kitchen (Diner, Split, Rush Hour or Food Truck) and a 2, 3 or 4 minute shift |
+| Dungeon Duo | Who's the Fighter and who's the Healer; Normal (3 continues) or Easy (more hearts, 5 continues, a weaker Warden); the full quest (5 floors) or a short one (3) |
 | Mind Meld | 4, 6, 8 or 10 rounds; no timer (the usual) or timed (90 s for the clue, 60 s to guess) |
 | Liar's Dice | The how-to-play example round first, or skip it; 5, 3 or 4 dice each; ones wild or not |
 | Dice Party | Full game (13 rounds) or quick (6); the screen: TV, or 📱 Handheld (the whole scorecard on your phone, no TV needed) |
@@ -537,37 +537,42 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 ## Roadmap ideas
 
-**The plan: 2D on the Pi, 3D on Steam**
+**The plan: 2D on the Pi, 3D on the desktop (and maybe Steam)**
 
 The hub keeps running on a Raspberry Pi (Docker + the browser) with the **2D** Party Board: light,
-no 3D engine needed. The **3D** board becomes the desktop experience, built for a Steam Deck as the
-minimum and a gaming PC as typical, with the graphics turned all the way up:
+no 3D engine needed. The **3D** board is the desktop experience, built for a Steam Deck as the
+minimum and a gaming PC as typical:
 
-1. **Desktop app**: Electron (Node + Chromium) wraps the hub: it starts the server inside the app
-   and opens the TV screen full-screen; phones still join with the QR code. A Windows installer and
-   a Linux AppImage (Steam Deck: add it to Steam as a non-Steam game; the Deck's controls are a
-   gamepad, so the Deck can be P1). Big 3D assets ship inside the app, not in the Pi's Docker image.
+1. ✅ **Desktop app**: Electron wraps the hub (the server inside the app, the TV screen
+   full-screen, phones still join with the QR code); a Windows installer and a Linux AppImage for
+   the Steam Deck, updating itself from GitHub releases.
 2. **High graphics** in the app: real shadows, glow on emissive parts (lava, furnaces, pumpkins),
    fog and mist, full-resolution textures, the full-detail characters; plus each map's environment
    model (`env-<map>.glb`, with `space_NN` anchors, `path_` / `pedestal` nodes and animated parts;
    see [`docs/party-board-art/`](docs/party-board-art/README.md)).
-3. **Steam**: Steamworks (achievements, overlay), Steam Deck verification (readable at 1280×800, full
-   controller support), the store page. Optional later: online rooms (a relay so friends can join
-   from anywhere, as Jackbox does) and Remote Play Together.
+3. **Steam, later** (it needs the Steam Direct fee, so not while it's in development): Steamworks
+   (the hub's 🏆 trophies would become its achievements, one for one), the overlay, Remote Play
+   Together, Steam Deck verification (readable at 1280×800, full controller support), the store page.
 
-**Wishlist: 3D and more co-op**
+**Done lately**: 🤖 a computer opponent (Easy, Normal, Hard) in every game that can have one, and a
+teammate in the co-op games; 🏆 trophies and practice records; 🌍 online play through a quick
+tunnel, with a remote screen.
 
-The Pi 4's GPU handles WebGL, so these would use three.js like Marble Maze
-(served by the hub at `/vendor/three/`, no internet needed), steered with the
-joystick, D-pad or tilt pads:
+**Next up: more to play together**
 
-- **3D Bowling**: swipe or tilt to roll; ten frames, highest score wins.
-- **Tower Stack 3D** (co-op or versus): drop blocks to build the tallest tower before it topples.
-- **Kitchen Rush** (co-op): an Overcooked-style kitchen; chop, cook and serve orders before they expire.
-- **Trivia Quest** (co-op): beat a monster together with the quiz questions.
-- **More minigames**.
-- **HD 3D models and textures** for the 3D board and minigames (part of the desktop plan above): richer scenery and the full-detail characters, with shadows turned back on (`scene3d(el, { shadows: true })`).
-- **Crazy Eights**: a secret hand of cards on your phone.
+- **More co-op content**: Dungeon Duo has three floors, Marble Maze five mazes, Kitchen Rush three
+  kitchens and four recipes; each could use more (new floors and enemies, mazes with moving parts,
+  kitchens and dishes).
+- **Online, without the TV's computer**: a relay (as Jackbox does) so phones anywhere can play with
+  nothing running at home; for now online play goes through the hub.
+- **The computer, tuned**: in Bumper Cars, Fishing, Penalty Shootout and Crazy Eights its levels
+  barely differ (partly the luck in those games), and two of it rarely beat Dungeon Duo's Warden on
+  the Normal quest.
+- **3D Bowling** as a game of its own (ten frames; Bowling Bash is the two-roll minigame), a
+  co-op **Tower Stack**, and **more minigames**.
+- **HD 3D models and textures** for the 3D board and minigames (part of the desktop plan above):
+  richer scenery and the full-detail characters, with shadows turned back on
+  (`scene3d(el, { shadows: true })`).
 
 **More content**
 

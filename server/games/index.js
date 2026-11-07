@@ -195,13 +195,14 @@ const GAMES = [
     ...timer('timed', '30 s a turn'),
   }),
   withSetup({ ...kitchenRush, bot: kitchenRushBot }, {
-    kitchen: { title: 'Kitchen', values: [0, 1, 2], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour'][n] },
+    kitchen: { title: 'Kitchen', values: [0, 1, 2, 3], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour', 'Food Truck (cheese, a moving hatch)'][n] },
     minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
   withSetup({ ...towerDuel, bot: towerDuelBot }, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
   withSetup({ ...dungeonDuo, bot: dungeonDuoBot }, {
     heroes: { title: 'Heroes', values: [0, 1], label: (n) => (n ? 'Player 1 the ✨ Healer, player 2 the 🛡️ Fighter' : 'Player 1 the 🛡️ Fighter, player 2 the ✨ Healer') },
     difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (more hearts, 5 continues, a weaker Warden)' : 'Normal (3 continues)') },
+    quest: { title: 'Quest', values: [5, 3], label: (n) => (n === 5 ? 'Full: 5 floors (with the Ice Caves and the Armory)' : 'Short: 3 floors') },
   }),
   { ...wordRace, bot: wordRaceBot },
   withSetup({ ...anagramDuel, bot: anagramDuelBot }, firstTo('Rounds to win', [5, 3, 7])),
@@ -224,7 +225,7 @@ const GAMES = [
     bombs: { title: 'Bombs (you swap roles each one)', values: [3, 1, 5], label: (n) => (n === 1 ? 'One bomb' : `${n} bombs`) },
   }),
   withSetup({ ...marbleMaze, bot: marbleMazeBot }, {
-    levels: { title: 'Mazes', values: [3, 5, 1], label: (n) => (n === 1 ? 'One maze' : n === MAZE_LEVELS.length ? `All ${n} mazes` : `${n} mazes`) },
+    levels: { title: 'Mazes', values: [3, 8, 5, 1], label: (n) => (n === 1 ? 'One maze' : n === MAZE_LEVELS.length ? `All ${n} mazes` : `${n} mazes`) },
     controls: { title: 'Who tilts what', values: [1, 2], label: (n) => (n === 1 ? 'Split: one ↔, one ↕' : 'Shared: both steer') },
   }),
   withSetup(mindMeld, { rounds: { title: 'Rounds (you swap who gives the clue)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` }, ...timer('off', '90 s for the clue, 60 s to guess') }),
