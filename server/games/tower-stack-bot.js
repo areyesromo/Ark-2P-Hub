@@ -7,8 +7,6 @@
  *   normal: mostly close.
  *   hard:   nearly always perfect.
  */
-import { STACK } from './tower-stack.js';
-
 const LEVEL = {
   easy: { sd: 110, see: 700 },
   normal: { sd: 45, see: 500 },
@@ -27,6 +25,6 @@ export function towerStackBot(view, level, rng = Math.random, retries = 0, memor
   let next = amp;
   while (next < earliest) next += 2 * amp;
   const waitMs = ((next - d) / speed) * 1000;
-  // (the game reads the block where it was STACK.lagMs before the drop arrives)
-  return { type: 'drop', botDelayMs: Math.max(0, waitMs + STACK.lagMs + gauss(rng) * L.sd), botFor: view.height + ':' + view.lives };
+  // (the game takes the computer's drop as it comes: no time to get there)
+  return { type: 'drop', botDelayMs: Math.max(0, waitMs + gauss(rng) * L.sd), botFor: view.height + ':' + view.lives };
 }

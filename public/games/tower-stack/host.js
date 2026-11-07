@@ -32,10 +32,13 @@
   }
 
   /** A floor's colour: round the rainbow slowly as the tower grows. */
+  const hues = {};
   function floorColor(i) {
-    const c = new THREE.Color();
-    c.setHSL(((i * 0.023) + 0.55) % 1, 0.55, 0.55);
-    return c;
+    if (!hues[i]) {
+      hues[i] = new THREE.Color();
+      hues[i].setHSL(((i * 0.023) + 0.55) % 1, 0.55, 0.55);
+    }
+    return hues[i];
   }
 
   function offsetAt(ms, speed, amp) {
@@ -74,10 +77,11 @@
     els.overlay.classList.toggle('hidden', !html);
   }
 
-  function render(v) {
+  /** A new view; `meta.ageMs`: how long it waited for this renderer to load (the block slid on meanwhile). */
+  function render(v, meta) {
     const prev = view;
     view = v;
-    viewAt = performance.now();
+    viewAt = performance.now() - ((meta && meta.ageMs) || 0);
     if (!els) return;
     renderHud(v);
     renderOverlay(v);
@@ -288,6 +292,7 @@
       if (gl) {
         gl.scene.traverse(function (o) {
           if (o.material) o.material.dispose();
+          if (o.geometry && o.geometry !== gl.geo) o.geometry.dispose();
         });
         gl.geo.dispose();
         gl.renderer.dispose();

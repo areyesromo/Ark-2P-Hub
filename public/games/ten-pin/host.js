@@ -98,10 +98,11 @@
     els.overlay.classList.toggle('hidden', !html);
   }
 
-  function render(v) {
+  /** A new view; `meta.ageMs`: how long it waited for this renderer to load. */
+  function render(v, meta) {
     if (!play || !v.roll || v.roll.id !== play.id) {
       // (from as far in as the roll already is: a TV that reloads mid-roll picks it up there)
-      play = v.roll ? { id: v.roll.id, roll: v.roll, start: performance.now() - (v.roll.at || 0), fallAt: {}, fresh: v.next ? v.next.fresh : true, count: v.standing.length } : null;
+      play = v.roll ? { id: v.roll.id, roll: v.roll, start: performance.now() - (v.roll.at || 0) - ((meta && meta.ageMs) || 0), fallAt: {}, fresh: v.next ? v.next.fresh : true, count: v.standing.length } : null;
     }
     view = v;
     if (!els) return;

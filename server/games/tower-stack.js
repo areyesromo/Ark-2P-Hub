@@ -19,7 +19,8 @@ export const STACK = {
   grow: 0.5, // a perfect drop on a streak of three or more grows the block back this much
   lives: [3, 5],
   targets: [[15, 35, 60], [10, 25, 40]], // floors for 1, 2 and 3 stars ([normal, easy])
-  lagMs: 80, // where the block was this long before the drop arrived (the time for it to get here)
+  lagMs: 80, // where the block was this long before a phone's tap arrived (the time for it to get here) ...
+  localLagMs: 20, // ... and a controller's press, made at the TV (here almost at once)
 };
 export const TIMING = { introMs: 3000, settleMs: 450, missMs: 1100 };
 
@@ -99,11 +100,15 @@ export class TowerStack {
   onInput(slot, input) {
     if ((slot !== 0 && slot !== 1) || !input || typeof input !== 'object') return;
     if (input.type === 'rematch' && this.phase === 'over') return this.start();
-    if (input.type === 'drop' && this.phase === 'drop' && slot === this.turn) this.drop();
+    if (input.type === 'drop' && this.phase === 'drop' && slot === this.turn) {
+      // (the computer's drop is here the moment it makes it)
+      const p = this.ctx.players[slot] || {};
+      this.drop(p.bot ? 0 : p.local ? STACK.localLagMs : STACK.lagMs);
+    }
   }
 
-  drop() {
-    const off = this.offsetNow(STACK.lagMs);
+  drop(lag = STACK.lagMs) {
+    const off = this.offsetNow(lag);
     const a = this.axis;
     const [k0, k1] = a === 'x' ? ['x0', 'x1'] : ['z0', 'z1'];
     const top = this.top();
@@ -111,14 +116,16 @@ export class TowerStack {
     this.drops++;
     const lo = Math.max(top[k0], block[k0]);
     const hi = Math.min(top[k1], block[k1]);
-    if (hi - lo < STACK.minWidth) {
+    // (a drop inside the perfect window is perfect, however narrow the tower's got)
+    const perfect = Math.abs(off) <= Math.min(this.perfectWindow, (top[k1] - top[k0]) / 2);
+    if (!perfect && hi - lo < STACK.minWidth) {
       // Off the tower altogether: it falls, a life goes, and the same floor again.
       this.lives--;
       this.combo = 0;
       this.last = { kind: 'miss', piece: rect(block), n: this.drops };
       return this.enter('settle', TIMING.missMs, () => (this.lives > 0 ? this.nextBlock() : this.finish()));
     }
-    if (Math.abs(off) <= this.perfectWindow) {
+    if (perfect) {
       // Near enough dead on: it snaps into place whole, and a streak grows it back.
       this.combo++;
       this.perfects++;
@@ -170,7 +177,6 @@ export class TowerStack {
       size: STACK.size,
       // For the room's history (a co-op game: the team's stars).
       stars: this.phase === 'over' ? this.stars() : 0,
-      starsSoFar: this.stars(),
       maxStars: 3,
     };
   }

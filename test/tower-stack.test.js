@@ -157,6 +157,7 @@ test('the computer drops on its turn as the block crosses the middle: Hard nearl
     let n = 0;
     for (let s = 0; s < 30; s++) {
       const { ctx, g } = game();
+      ctx.players[0].bot = level; // (seated as the computer)
       let seed = s + 1;
       const rng = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
       ctx.advance(Math.floor(rng() * 900)); // (somewhere along its slide)
@@ -173,4 +174,33 @@ test('the computer drops on its turn as the block crosses the middle: Hard nearl
   const easy = rate('easy');
   assert.ok(hard >= 22, 'hard ' + hard + '/30');
   assert.ok(easy < hard, 'easy ' + easy);
+});
+
+test('a controller on the TV is judged on time (its press arrives at once); a phone gets the time its tap takes to arrive', () => {
+  const { ctx, g } = game();
+  ctx.players[0].local = true; // (a controller: pressed at the TV)
+  waitFor(ctx, g, 0);
+  ctx.advance(STACK.localLagMs);
+  g.onInput(0, { type: 'drop' });
+  assert.equal(g.hostView().last.kind, 'perfect');
+  assert.ok(STACK.localLagMs < STACK.lagMs);
+});
+
+test('a cut on the other side keeps the overlap there too; on a narrow tower a drop inside the perfect window is perfect, not a miss', () => {
+  const { ctx, g } = game();
+  waitFor(ctx, g, -1.5);
+  ctx.advance(STACK.lagMs);
+  g.onInput(0, { type: 'drop' });
+  const top = g.top();
+  assert.ok(Math.abs(top.x0 - -3) < 0.01 && Math.abs(top.x1 - (3 - 1.5)) < 0.12, JSON.stringify(top));
+  assert.ok(g.hostView().last.piece.x1 <= -3 + 0.01, 'the piece off the left');
+  ctx.advance(TIMING.settleMs + 1);
+  // A sliver of a tower: 0.2 wide along the way the next block slides.
+  const next = (g.height() + 1) % 2 === 0 ? 'x' : 'z'; // (the way the block after it slides)
+  g.floors.push(next === 'x' ? { x0: 0, x1: 0.2, z0: -3, z1: 3, kind: 'cut' } : { x0: -3, x1: 3, z0: 0, z1: 0.2, kind: 'cut' });
+  g.nextBlock();
+  waitFor(ctx, g, 0.1);
+  ctx.advance(STACK.lagMs);
+  g.onInput(g.turn, { type: 'drop' });
+  assert.equal(g.hostView().last.kind, 'perfect');
 });

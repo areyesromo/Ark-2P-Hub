@@ -24,6 +24,7 @@
   let state = null;
   let current = null; // { gameId, renderer } mounted on the stage
   let pendingView = null;
+  let pendingAt = 0; // (when it came: a game that animates on its own clock needs its age)
   let lastView = null; // newest view of the current game (controllers map buttons against it)
   let roomCode = null;
   let lobbyDrawn = false; // the lobby's first layout appears as it is, later changes animate
@@ -391,7 +392,7 @@
       stage.innerHTML = '';
       mounting.renderer = renderer;
       renderer.mount(stage, { players: state.players });
-      if (pendingView) renderer.update(pendingView);
+      if (pendingView) renderer.update(pendingView, { ageMs: performance.now() - pendingAt });
       pendingView = null;
       renderPadFooter();
     }).catch(function (err) {
@@ -450,7 +451,10 @@
     if (setup !== wasSetup) renderPadFooter();
     if (setup) return; // the game hasn't started: the hub shows its setup screen
     if (current.renderer) current.renderer.update(msg.view);
-    else pendingView = msg.view;
+    else {
+      pendingView = msg.view;
+      pendingAt = performance.now();
+    }
   });
 
   // ---- the hub's setup screen ------------------------------------------
