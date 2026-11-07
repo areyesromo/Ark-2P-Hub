@@ -25,7 +25,7 @@ import { FLOW } from './pour-it.js';
 import { CATCH, LEAN_PER, SPEED as SPEED_TRAY } from './stack-attack.js';
 import { adjacent, DOTS } from './mirror-me.js';
 import * as CANNON from './cannon-lob.js';
-import { FRONT_CONE } from './bumper-cars.js';
+import { FRONT_CONE, MAX_SPEED as MAX_CAR_SPEED } from './bumper-cars.js';
 
 /** A person at each level: timing error (ms sd), aim wobble, slips, mashing rate, thinking pace. */
 const SKILL = {
@@ -249,9 +249,11 @@ export const PLAYERS = {
   },
   penalty({ s, you, level, rng, L, m }) {
     // It remembers where you've kicked and dived this shootout (from each kick's result).
+    // (each kick once: counted by how many have been taken, as a result stays on show into the next kick)
     m.seen = m.seen || { kicks: [0, 0, 0], dives: [0, 0, 0], n: 0 };
-    if (s.last && m.seen.n !== s.kick) {
-      m.seen.n = s.kick;
+    const taken = s.taken[0] + s.taken[1];
+    if (s.last && m.seen.n !== taken) {
+      m.seen.n = taken;
       if (s.last.kicker !== you && s.last.shot !== null) m.seen.kicks[s.last.shot]++;
       if (s.last.kicker === you) m.seen.dives[s.last.dive]++;
     }
@@ -260,9 +262,10 @@ export const PLAYERS = {
       const kicking = s.kicker === you;
       // Hard (and Normal, less often) plays your habits: as keeper, it dives where you kick most;
       // as kicker, it shoots away from where you dive most. Easy just leans to its favourite side.
-      const read = { easy: 0, normal: 0.4, hard: 0.7 }[level] || 0;
+      const read = { easy: 0, normal: 0.45, hard: 0.85 }[level] || 0;
       const counts = kicking ? m.seen.dives : m.seen.kicks;
-      const most = counts.indexOf(Math.max(...counts));
+      const top = [0, 1, 2].filter((x) => counts[x] === Math.max(...counts));
+      const most = top[Math.floor(rng() * top.length)]; // (a tie: either)
       let side = Math.floor(rng() * 3);
       if (Math.max(...counts) >= 2 && rng() < read) side = kicking ? [0, 1, 2].filter((x) => x !== most)[Math.floor(rng() * 2)] : most;
       else if (level === 'easy' && rng() < 0.4) side = 2;
@@ -479,13 +482,15 @@ export const PLAYERS = {
     const me = s.cars[you];
     const foe = s.cars[1 - you];
     // Where its rival's heading (from where it saw it last), for Normal and Hard to lead it.
-    let fvx = 0;
-    let fvy = 0;
-    if (m.prev && el > m.prev.t) {
-      fvx = ((foe.x - m.prev.x) * 1000) / (el - m.prev.t);
-      fvy = ((foe.y - m.prev.y) * 1000) / (el - m.prev.t);
+    // (over a tenth of a second or more: the cars move in steps, and it may look between them)
+    if (!m.prev) m.prev = { x: foe.x, y: foe.y, t: el };
+    if (el - m.prev.t >= 100) {
+      const cap = MAX_CAR_SPEED * 1.5;
+      m.v = { x: clamp(((foe.x - m.prev.x) * 1000) / (el - m.prev.t), -cap, cap), y: clamp(((foe.y - m.prev.y) * 1000) / (el - m.prev.t), -cap, cap) };
+      m.prev = { x: foe.x, y: foe.y, t: el };
     }
-    if (!m.prev || el - m.prev.t > 120) m.prev = { x: foe.x, y: foe.y, t: el };
+    const fvx = m.v ? m.v.x : 0;
+    const fvy = m.v ? m.v.y : 0;
     // Hard keeps its nose to a rival coming at its side or back (a head-on bump scores nothing).
     const toFoe = Math.atan2(foe.y - me.y, foe.x - me.x);
     const near = Math.hypot(foe.x - me.x, foe.y - me.y);

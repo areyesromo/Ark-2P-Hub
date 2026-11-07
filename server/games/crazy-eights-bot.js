@@ -16,13 +16,18 @@ export function crazyEightsBot(view, level, rng = Math.random, retries = 0, memo
   if (!view || !THINK[level] || !Array.isArray(view.cards)) return null;
   // What it's seen you do (Hard): a draw means you had nothing in that suit; a card played in a
   // suit means you have it after all.
+  // (a new hand: a fresh deal for you too, so it starts over)
+  if (memory.lacksHand !== view.hand) {
+    memory.lacksHand = view.hand;
+    memory.lacks = {};
+  }
   if (level === 'hard' && view.last && view.last.slot === 1 - view.you) {
     const key = JSON.stringify(view.last) + ':' + view.suit + ':' + (view.counts || []).join();
     if (memory.eightsSeen !== key) {
       memory.eightsSeen = key;
       memory.lacks = memory.lacks || {};
       if (view.last.kind === 'draw' && view.suit) memory.lacks[view.suit] = true;
-      if (view.last.kind === 'play' && view.last.card) delete memory.lacks[suitOf(view.last.card)];
+      if (view.last.kind === 'play' && view.last.card && rankOf(view.last.card) !== '8') delete memory.lacks[suitOf(view.last.card)];
     }
   }
   const lacks = level === 'hard' ? memory.lacks || {} : {};
@@ -61,7 +66,7 @@ export function crazyEightsBot(view, level, rng = Math.random, retries = 0, memo
   const scored = plain.map((c) => {
     const r = rankOf(c);
     let v = inSuit(suitOf(c)) * 2 + value(c) / 10; // stay in its long suit; shed points
-    if (lacks[suitOf(c)] && suitOf(c) !== view.suit) v += 6; // (Hard: into a suit you have none of: you'll have to draw)
+    if (lacks[suitOf(c)]) v += 6; // (Hard: into, or kept in, a suit you have none of: you'll have to draw)
     if (view.actions && (r === '2' || c === 'QS')) v += level === 'hard' ? (foeCards <= 3 ? 6 : -2) : 1; // (Hard: kept for your last cards)
     if (view.actions && r === 'J' && plain.length > 1) v += 2; // (a Jack: another go, with something to follow)
     return { c, v: v + rng() * 0.5 };

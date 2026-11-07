@@ -669,7 +669,7 @@ test('Penalty Shootout: Hard and Normal learn your habits (where you kick, where
     for (let seed = 1; seed <= 40; seed++) {
       const rng = seeded(seed);
       const memory = {};
-      const view = (kick, last) => ({ mini: { id: 'penalty', kind: 'party' }, phase: 'play', you: 1, count: 1, elapsedMs: 1000, state: { kick, kicker: 0, stage: 'pick', picked: [false, false], mine: null, last, goals: [0, 0], taken: [0, 0] } });
+      const view = (kick, last) => ({ mini: { id: 'penalty', kind: 'party' }, phase: 'play', you: 1, count: 1, elapsedMs: 1000, state: { kick, kicker: 0, stage: 'pick', picked: [false, false], mine: null, last, goals: [0, 0], taken: [kick - 1, 0] } });
       let last = null;
       let move = null;
       for (let kick = 1; kick <= 9; kick += 2) {
@@ -691,7 +691,7 @@ test('Dungeon Duo: two of the computer (Hard) can beat the Warden on Normal (the
   const { FLOORS } = await import('../server/games/dungeon-duo-floors.js');
   const def = getGame('dungeon-duo');
   let won = 0;
-  for (let seed = 1; seed <= 4; seed++) {
+  for (let seed = 1; seed <= 8; seed++) {
     const ctx = fakeCtx();
     ctx.players.forEach((p) => { p.local = true; p.bot = 'hard'; });
     const rng = seeded(seed);
@@ -717,5 +717,15 @@ test('Dungeon Duo: two of the computer (Hard) can beat the Warden on Normal (the
     }
     if (g.won) won++;
   }
-  assert.ok(won >= 2, 'won ' + won + ' of 4');
+  assert.ok(won >= 3, 'won ' + won + ' of 8'); // (the old Fighter, standing in its touch, won none)
+});
+
+test('Penalty Shootout: each kick is counted once (a show view and the next pick view both carry it), so one kick is no habit', async () => {
+  const { miniBot } = await import('../server/games/minis/bots.js');
+  const memory = {};
+  const last = { kicker: 0, shot: 0, dive: 2, goal: true };
+  const v = (kick, stage) => ({ mini: { id: 'penalty', kind: 'party' }, phase: 'play', you: 1, count: 1, elapsedMs: 1000, state: { kick, kicker: kick % 2 ? 0 : 1, stage, picked: [false, false], mine: null, last, goals: [1, 0], taken: [1, 0] } });
+  miniBot(v(1, 'show'), 'hard', () => 0.1, memory);
+  miniBot(v(2, 'pick'), 'hard', () => 0.1, memory);
+  assert.deepEqual(memory.mini.seen.kicks, [1, 0, 0]);
 });

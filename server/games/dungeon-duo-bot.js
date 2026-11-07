@@ -179,7 +179,14 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
       // The Warden hurts on touch: swing from just outside it (its sword reaches further), and
       // step back when it walks in (stunned, it's harmless: go in close).
       const touch = TOUCH + (e.r || R) - R + 0.15;
-      if (e.kind === 'warden' && e.state !== 'stunned' && d < touch && level !== 'easy') return steer(-dx, -dy, off);
+      if (e.kind === 'warden' && e.state !== 'stunned' && d < touch && level !== 'easy') {
+        if (facing && me.readyIn === 0) return strike; // (a swing first, while it's there)
+        // (back, if there's floor behind it; against a wall, stand and fight)
+        const bx = me.x - (dx / (d || 1)) * 0.6;
+        const by = me.y - (dy / (d || 1)) * 0.6;
+        const t = tileAt(bx, by);
+        if (t && !SOLID.has(t) && t !== 'G') return steer(-dx, -dy, off);
+      }
       if (d > reach * 0.85) return goTo(e.x, e.y, off) || steer(dx, dy, off);
       if (facing && me.readyIn === 0) return strike;
       return { type: 'move', ...turn(dx / (d || 1), dy / (d || 1), 0.3), ...off, botDelayMs: facing ? pace * 0.6 : 40 };

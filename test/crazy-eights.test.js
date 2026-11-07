@@ -396,3 +396,15 @@ test('the computer remembers the suit you drew on (you had none): Hard switches 
   const s2 = crazyEightsBot({ ...base, phase: 'suit', turn: 1, suit: null, top: '8S', last: { slot: 1, kind: 'play', card: '8S' }, cards: ['2H', '9C', 'KC', 'QC'] }, 'hard', () => 0.5, 0, memory);
   assert.equal(s2.suit, 'C', 'its longest again');
 });
+
+test('the computer forgets your missing suits at a new hand, and keeps you in one you lack rather than switching away', async () => {
+  const { crazyEightsBot } = await import('../server/games/crazy-eights-bot.js');
+  const memory = {};
+  const base = { you: 1, phase: 'play', actions: true, counts: [5, 4], drew: false, pending: 0, hand: 1 };
+  crazyEightsBot({ ...base, turn: 1, suit: 'H', top: '9H', last: { slot: 0, kind: 'draw' }, cards: ['3H', '9C', '4C', '6C'], playable: ['3H', '9C'] }, 'hard', () => 0.5, 0, memory);
+  const stay = crazyEightsBot({ ...base, turn: 1, suit: 'H', top: '9H', last: { slot: 0, kind: 'draw' }, cards: ['3H', '9C', '4C', '6C'], playable: ['3H', '9C'] }, 'hard', () => 0.5, 0, memory);
+  assert.equal(stay.card, '3H', 'stays in hearts, which you have none of');
+  // A new hand: a fresh deal for you too.
+  const next = crazyEightsBot({ ...base, hand: 2, turn: 1, suit: 'D', top: '5D', last: null, cards: ['4H', '7H', 'KD', '4D', '9D', 'QD', '2C'], playable: ['KD', '4D', '9D', 'QD', '4H'] }, 'hard', () => 0.5, 0, memory);
+  assert.notEqual(next.card, '4H');
+});
