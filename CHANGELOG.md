@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.35
+
+- ✨ HD graphics in the 3D games: lava, lanterns, sparks and the goal ring glow, shiny things
+  (bowling balls, marbles, metal) catch the light, and shadows are much sharper. The new HD
+  button in the TV's top bar switches a slower TV to the standard look.
+
 ## 0.1.34
 
 - 🏗️ New co-op game: Tower Stack. Take turns dropping sliding blocks onto one tower in 3D:

@@ -393,7 +393,8 @@
    */
   function scene3d(el, opts) {
     opts = opts || {};
-    return three().then(function (THREE) {
+    return Promise.all([three(), Ark.loadScript('/shared/hd3d.js')]).then(function (loaded) {
+      const THREE = loaded[0];
       const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
       renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, opts.maxPixelRatio || 2));
       // Soft shadows from the sun, for every mesh with castShadow / receiveShadow set;
@@ -416,6 +417,9 @@
       sc.left = sc.bottom = -12;
       sc.right = sc.top = 12;
       scene.add(sun);
+      // HD (the TV's HD button): glow, studio reflections, sharper shadows. A view that draws
+      // itself (split screen) gets all but the glow.
+      const hd = window.ArkHD.create(THREE, renderer, scene, camera, { post: !opts.draw });
       const frames = [];
       let w = 0;
       let h = 0;
@@ -427,12 +431,13 @@
           w = W;
           h = H;
           renderer.setSize(W, H, false);
+          hd.setSize(W, H);
           camera.aspect = W / H;
           camera.updateProjectionMatrix();
         }
         frames.forEach(function (fn) { fn(); });
         if (opts.draw) opts.draw(renderer, scene, w, h);
-        else renderer.render(scene, camera);
+        else hd.render();
       });
       return {
         THREE: THREE,
@@ -442,6 +447,7 @@
         onFrame: function (fn) { frames.push(fn); },
         dispose: function () {
           cancelAnimationFrame(raf);
+          hd.dispose();
           renderer.dispose();
           renderer.forceContextLoss(); // free the GL context now, not at garbage collection
           if (renderer.domElement.parentNode) renderer.domElement.parentNode.removeChild(renderer.domElement);

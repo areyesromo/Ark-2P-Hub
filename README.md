@@ -255,6 +255,19 @@ turns music on and off separately from the sound effects (remembered on that
 TV). A new game picks its mood with `music: 'action' | 'thinking' |
 'casual'` (by default competitive games get action, casual games casual).
 
+### HD graphics
+
+The 3D games (the 3D Party Board, Kart Race 3D, Dungeon Duo, Marble Maze, Bowling, Tower Stack and
+the 3D minigames) draw in **HD** by default:
+- **Glow:** what's meant to glow does (lava, lanterns, the goal ring, sparks, the players' rings).
+- **Reflections:** soft studio reflections on the shiny things (balls, marbles, metal).
+- **Shadows:** four times sharper.
+
+The colours stay exactly as before. The **HD** button in the TV's top bar switches that TV to
+**SD** (standard, the lighter look) for a slower screen, and back; it's remembered on that TV. HD
+is made for a Steam Deck and up. The code is in `public/shared/hd3d.js`: a 3D renderer draws
+through `ArkHD.create(...)`, and a material can opt in or out of the glow with `userData.glow`.
+
 ## Tournament
 
 Play a series across games: in the lobby (TV or either phone) pick
@@ -552,8 +565,8 @@ minimum and a gaming PC as typical:
 1. ✅ **Desktop app**: Electron wraps the hub (the server inside the app, the TV screen
    full-screen, phones still join with the QR code); a Windows installer and a Linux AppImage for
    the Steam Deck, updating itself from GitHub releases.
-2. **High graphics** in the app: real shadows, glow on emissive parts (lava, furnaces, pumpkins),
-   fog and mist, full-resolution textures, the full-detail characters; plus each map's environment
+2. **High graphics** in the app: ✅ the HD look (glow on what glows, reflections, sharper shadows,
+   per TV); still to come: fog and mist, full-resolution textures, the full-detail characters; plus each map's environment
    model (`env-<map>.glb`, with `space_NN` anchors, `path_` / `pedestal` nodes and animated parts;
    see [`docs/party-board-art/`](docs/party-board-art/README.md)).
 3. **Steam, later** (it needs the Steam Direct fee, so not while it's in development): Steamworks

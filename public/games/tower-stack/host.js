@@ -11,7 +11,7 @@
   let THREE = null;
   let threeReady = null;
   function loadThree() {
-    if (!threeReady) threeReady = import('/vendor/three/three.module.min.js').then(function (m) { THREE = m; });
+    if (!threeReady) threeReady = Promise.all([import('/vendor/three/three.module.min.js'), Ark.loadScript('/shared/hd3d.js')]).then(function (m) { THREE = m[0]; });
     return threeReady;
   }
 
@@ -223,7 +223,7 @@
     gl.camera.lookAt(0, gl.camY - (over ? 0 : 3), 0);
     gl.sun.position.set(8, gl.camY + 14, 6);
     gl.sun.target.position.set(0, gl.camY - 4, 0);
-    gl.renderer.render(gl.scene, gl.camera);
+    gl.hd.render();
   }
 
   function resize() {
@@ -232,6 +232,7 @@
     const W = Math.max(1, Math.floor(r.width));
     const Hh = Math.max(1, Math.floor(r.height));
     gl.renderer.setSize(W, Hh);
+    gl.hd.setSize(W, Hh);
     gl.camera.aspect = W / Hh;
     gl.camera.updateProjectionMatrix();
   }
@@ -261,6 +262,7 @@
         if (root !== mounted) return;
         try {
           setupGl();
+          gl.hd = window.ArkHD.create(THREE, gl.renderer, gl.scene, gl.camera); // (the TV's HD button: glow, reflections, sharper shadows)
           resize();
           if (view) syncTower(view, null);
         } catch (e) {
@@ -295,6 +297,7 @@
           if (o.geometry && o.geometry !== gl.geo) o.geometry.dispose();
         });
         gl.geo.dispose();
+        if (gl.hd) gl.hd.dispose();
         gl.renderer.dispose();
         if (gl.renderer.forceContextLoss) gl.renderer.forceContextLoss();
       }

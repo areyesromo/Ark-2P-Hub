@@ -337,6 +337,23 @@
   ArkMusic.onChange(renderMusicButton);
   renderMusicButton();
 
+  // The 3D games' graphics on this TV: HD (glow, reflections, sharper shadows) or standard (for
+  // a slower TV). Kept on this device; a game in 3D on screen starts again in the new look.
+  function renderGraphicsButton() {
+    if (!window.ArkHD) return $('graphics').classList.add('hidden'); // (the 3D helper didn't load)
+    const hd = window.ArkHD.level() === 'hd';
+    $('graphics').textContent = hd ? 'HD' : 'SD';
+    $('graphics').classList.toggle('off', !hd);
+    $('graphics').title = hd ? '3D graphics: HD (glow, reflections, sharp shadows). Click for standard, lighter for a slower TV' : '3D graphics: standard. Click for HD';
+  }
+  $('graphics').addEventListener('click', function () {
+    if (!window.ArkHD) return;
+    window.ArkHD.set(window.ArkHD.level() === 'hd' ? 'standard' : 'hd');
+    renderGraphicsButton();
+    if (state && state.phase === 'playing') location.reload(); // (the 3D scene is made again, in the new look)
+  });
+  renderGraphicsButton();
+
   function updateMusic() {
     let mood = 'lobby';
     if (state && state.phase === 'playing' && lastView && lastView.phase !== 'setup' && lastView.phase !== 'over') {

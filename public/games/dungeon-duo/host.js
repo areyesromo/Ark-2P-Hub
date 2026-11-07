@@ -12,7 +12,7 @@
   let THREE = null;
   let threeReady = null;
   function loadThree() {
-    if (!threeReady) threeReady = import('/vendor/three/three.module.min.js').then(function (m) { THREE = m; });
+    if (!threeReady) threeReady = Promise.all([import('/vendor/three/three.module.min.js'), Ark.loadScript('/shared/hd3d.js')]).then(function (m) { THREE = m[0]; });
     return threeReady;
   }
 
@@ -637,6 +637,7 @@
     const W = Math.max(1, Math.floor(r.width));
     const H = Math.max(1, Math.floor(r.height));
     gl.renderer.setSize(W, H);
+    gl.hd.setSize(W, H);
     gl.camera.aspect = W / H;
     gl.camera.updateProjectionMatrix();
   }
@@ -647,7 +648,7 @@
     lastFrame = t;
     if (!gl || !view) return;
     syncScene(view, dt, t);
-    gl.renderer.render(gl.scene, gl.camera);
+    gl.hd.render();
   }
 
   function render(v) {
@@ -710,6 +711,7 @@
         if (root !== mounted) return;
         try {
           setupGl();
+          gl.hd = window.ArkHD.create(THREE, gl.renderer, gl.scene, gl.camera); // (the TV's HD button: glow, reflections, sharper shadows)
           resize();
         } catch (e) {
           els.overlay.innerHTML = '<div class="sub">3D isn\'t available: this browser couldn\'t start WebGL.</div>';
@@ -738,6 +740,7 @@
       if (fit) fit.disconnect();
       fit = null;
       if (gl) {
+        if (gl.hd) gl.hd.dispose();
         gl.renderer.dispose();
         if (gl.renderer.forceContextLoss) gl.renderer.forceContextLoss();
       }

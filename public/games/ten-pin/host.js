@@ -14,7 +14,7 @@
   let THREE = null;
   let threeReady = null;
   function loadThree() {
-    if (!threeReady) threeReady = import('/vendor/three/three.module.min.js').then(function (m) { THREE = m; });
+    if (!threeReady) threeReady = Promise.all([import('/vendor/three/three.module.min.js'), Ark.loadScript('/shared/hd3d.js')]).then(function (m) { THREE = m[0]; });
     return threeReady;
   }
 
@@ -391,7 +391,7 @@
     Object.keys(want).forEach(function (key) { gl.cam[key] += (want[key] - gl.cam[key]) * k; });
     gl.camera.position.set(gl.cam.x, gl.cam.y, gl.cam.z);
     gl.camera.lookAt(gl.cam.lx, 0, gl.cam.lz);
-    gl.renderer.render(gl.scene, gl.camera);
+    gl.hd.render();
   }
 
   function resize() {
@@ -400,6 +400,7 @@
     const W = Math.max(1, Math.floor(r.width));
     const H = Math.max(1, Math.floor(r.height));
     gl.renderer.setSize(W, H);
+    gl.hd.setSize(W, H);
     gl.camera.aspect = W / H;
     gl.camera.updateProjectionMatrix();
   }
@@ -487,6 +488,7 @@
         if (root !== mounted) return;
         try {
           setupGl();
+          gl.hd = window.ArkHD.create(THREE, gl.renderer, gl.scene, gl.camera); // (the TV's HD button: glow, reflections, sharper shadows)
           resize();
         } catch (e) {
           els.overlay.innerHTML = '<div class="sub">3D isn\'t available: this browser couldn\'t start WebGL.</div>';
@@ -520,6 +522,7 @@
           if (o.material && o.material.map) o.material.map.dispose();
           if (o.material) o.material.dispose();
         });
+        if (gl.hd) gl.hd.dispose();
         gl.renderer.dispose();
         if (gl.renderer.forceContextLoss) gl.renderer.forceContextLoss();
       }
