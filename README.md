@@ -77,6 +77,7 @@ scans in from the lobby takes its seat.
 | **Anagram Duel** | Both phones get the same five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). The first real word wins the round, and any real word counts, not only the one they came from. A wrong word locks you out for a second and a half, so tapping at random doesn't pay. Nobody in 30 seconds: no point, and the TV shows the word. The TV shows the letters and how far along each of you is (how many letters, not which). First to 5 rounds (or 3, or 7). 🤖 Against the computer: it takes a person's time to see each word (some come quicker than others), about 15 s on Easy, 9 on Normal, 5 on Hard. |
 | **Word Hunt** | One word search on the TV and both phones, with the list of words to find. Drag from a word's first letter to its last (or tap both): the first to mark a word gets it, in their colour, and it's crossed off for both. Find more than half the words and the grid is yours; after 3 minutes, whoever has more takes it. 8 × 8 hides 7 words across and down, 10 × 10 hides 9 with diagonals too, and 12 × 12 hides 11 any way, even backwards; the words nobody found are outlined at the end. Works with controllers too (a cursor each on the TV). First to 2 grids (or 1, or 3). **Race** mode (two phones): the same grid, but your own copy each on your phone. You can both find every word, your finds stay on your phone (the TV and your rival only see how many you have), and the first to find them all takes the grid; when time's up, more words takes it. |
 | **Mini Golf** | Both of you play the same hole at once (the balls roll through each other). Pull back anywhere on your phone and let go to putt: the further you pull, the harder the shot; the phone shows the hole too. 15 holes with walls, bumpers, sand, water (a stroke penalty, back where you shot from), a moat and a windmill. 8 shots per hole, then you pick up and score 9; 90 s per hole. Pick 3, 6, 9, 12 or 15 holes before you start. Fewest strokes wins. |
+| **Bowling** | Ten-pin bowling in 3D: ten frames on one lane, taking turns a frame at a time, with the score card along the top of the TV. On your phone, drag the ball to where you stand, then swipe it up the lane: the swipe's angle aims, its speed is the power, and a curve in it puts spin on the ball, which hooks once it's off the oil near the pins. With motion (the https page) you can swing the phone instead. Real pin action: the pins knock each other over, so the pocket (just beside the head pin) strikes most and a straight hit on the head pin leaves splits. Strikes and spares score as in a real game, with bonus balls in the 10th frame; the higher total wins. Pick 10 frames or a quick 5, and bumpers for no gutter balls. 🤖 Vs the computer: it curves into the pocket and goes after what's left for the spare; Easy throws wide and now and then into the gutter, Hard rarely misses its line. |
 | **Connect Four** | The classic: drop discs into a 7×6 grid and line up four (across, down or diagonally) before your rival. Tap a column on your phone, which shows the board too. 20 s per move (a random column if you run out); who starts swaps every round. First to 3 rounds. |
 | **Memory Match** | A grid of face-down picture cards on the TV and your phone. Take turns flipping two: a pair is yours and you go again, otherwise they turn back over (remember them!) and it's your rival's go. Most pairs wins. **Race** mode (two phones): the same cards on each phone, and you both flip at once on your own board (a mismatch stays up until your next flip); the first to clear every pair wins, and the TV shows only how many pairs each of you has. |
 | **Micro Mayhem** | WarioWare-style: tiny games of 3-4 seconds, both of you at once. A big order flashes up (TAP IT! STOP IT! SHAKE IT! ODD ONE OUT! COUNT 'EM! SWIPE IT! DON'T TOUCH! QUICK MATH!) and you have a moment to do it on your phone or controller. Miss one and you lose a ❤️; every 5 games the speed goes up. Last one with lives wins (both out at once: sudden death). 🤖 Against the computer: it reacts and times its taps like a person, and now and then slips (a tap on DON'T TOUCH!). |
@@ -148,6 +149,7 @@ starts). The numbers above are the defaults; you can change, for example:
 | Anagram Duel | First to 3, 5 or 7 rounds |
 | Word Hunt | Shared board or Race (your own board each), grid size (8 × 8, 10 × 10 or 12 × 12) and first to 1, 2 or 3 grids |
 | Mini Golf | 3, 6, 9, 12 or 15 holes |
+| Bowling | 10 frames or a quick 5; bumpers (no gutter balls) or none |
 | Bomb Duel | Also how many crates |
 | Kart Race | 🏁 Race or 🎈 Battle. Race: track (or a mix), 3, 5 or 8 laps, one race, best of 3 or a 🏆 cup (4 tracks, most wins), items on or off. Battle: arena (or a mix), one round, best of 3 or first to 3. Each player's racer and tyres |
 | Kart Race 3D | As Kart Race |
@@ -204,6 +206,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Dungeon Duo | **Left stick** or **D-pad** to walk, **A** attacks, **B** is your special (hold it for the Fighter's shield, press it for the Healer's circle) | Your hearts are on the TV; the Warden's next move shows as a red ring or lane on the floor first |
 | Battleship | **D-pad** aims at the enemy grid on the TV, **A** fires | A controller player's fleet is placed at random, since the TV can't keep it secret · Ultimate: **←→** and **A** pick a commander, **LB** / **RB** choose the shot, a skill or the special, **Y** turns a line (or the side a torpedo comes from). |
 | Mini Golf | **Left stick** aims (or **←→** turns the aim), hold **A** / **RT** to charge, let go to putt | The power meter swings up and down while you hold, so let go at the right moment. Setup: **←→** picks the holes, **A** starts; at the end **A** rematches and **Y** changes the holes |
+| Bowling | **Left stick** or **D-pad ←→** moves where you stand, **↑↓** turns your aim, hold **A** / **RT** for power, let go to bowl | The power meter swings up and down while you hold; push the stick sideways as you let go for spin. **A** rematches at the end |
 | Connect Four | **D-pad** ← → (or the stick) moves your disc over the columns, **A** or **↓** drops it | |
 | Party Board | **← →** pick an answer, **A** confirms (roll, buy, use an item, stop the slot) | Minigames play as below |
 | Micro Mayhem, Party Minigames | Follow the order: **A** taps / stops / pumps / fires / whacks / reels, **A B X Y** are Simon's green / red / blue / yellow, **D-pad** picks and swipes (◀ ▶ on the Glass Bridge), the **stick** steers the Tap it! cursor, the Coin Grab runner and the Ice Rink Sumo puck, and wiggles to shake | **A** is Ready on the *Next up* card and rematch at the end |
@@ -312,12 +315,12 @@ history.
 
 ## Trophies and practice
 
-**🏆 Trophies** are each player's own achievements (by name, like the leaderboard), 25 of them:
+**🏆 Trophies** are each player's own achievements (by name, like the leaderboard), 27 of them:
 playing 10, 25 or every game; your first win, a clean sweep (they never score), 10 different games
 won, 50 wins, 10 wins over the same rival, a best-of-7 tournament; feats like a Kart Race cup, a
 Party Board win, Micro Mayhem without losing a life, beating the Stone Warden (and with every
 star), three stars in Kitchen Rush's Rush Hour, a perfect nine-star Trivia Quest, every star in
-Marble Maze, Bomb Squad (five bombs) or Mind Meld; and practice ones: beating the computer, on
+Marble Maze, Bomb Squad (five bombs) or Mind Meld, a Turkey (three strikes in a row) and a perfect 300 in Bowling; and practice ones: beating the computer, on
 Hard, on Hard in 10 games and in every game, and every star in a co-op game with it as your
 teammate. A card slides in on the TV (and on your phone) when you earn one. The leaderboard
 lists who has how many; tap a name (or **🏆 My trophies** in a phone's ⋯ menu) for the whole set,
@@ -556,20 +559,17 @@ minimum and a gaming PC as typical:
 
 **Done lately**: 🤖 a computer opponent (Easy, Normal, Hard) in every game that can have one, and a
 teammate in the co-op games; 🏆 trophies and practice records; 🌍 online play through a quick
-tunnel, with a remote screen.
+tunnel, with a remote screen; more co-op content (Dungeon Duo's Ice Caves and Armory, Marble Maze's
+moving parts, Kitchen Rush's Food Truck); 🎳 Bowling, ten-pin in 3D.
 
 **Next up: more to play together**
 
-- **More co-op content**: Dungeon Duo has three floors, Marble Maze five mazes, Kitchen Rush three
-  kitchens and four recipes; each could use more (new floors and enemies, mazes with moving parts,
-  kitchens and dishes).
 - **Online, without the TV's computer**: a relay (as Jackbox does) so phones anywhere can play with
   nothing running at home; for now online play goes through the hub.
 - **The computer, tuned**: in Bumper Cars, Fishing, Penalty Shootout and Crazy Eights its levels
   barely differ (partly the luck in those games), and two of it rarely beat Dungeon Duo's Warden on
   the Normal quest.
-- **3D Bowling** as a game of its own (ten frames; Bowling Bash is the two-roll minigame), a
-  co-op **Tower Stack**, and **more minigames**.
+- A co-op **Tower Stack**, and **more minigames**.
 - **HD 3D models and textures** for the 3D board and minigames (part of the desktop plan above):
   richer scenery and the full-detail characters, with shadows turned back on
   (`scene3d(el, { shadows: true })`).

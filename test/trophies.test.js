@@ -160,3 +160,12 @@ test('a trophy card is news once: each batch a new number (a new game too), gone
   assert.equal(r.publicState().trophies, null, 'Ben left: not for whoever sits down next');
   r.dispose();
 });
+
+test('Bowling: a Turkey for three strikes in a row (your own), a Perfect game for 300 over ten frames', () => {
+  const t = new Trophies(null);
+  const ids = (name, e) => t.check(name, { ...base, game: 'ten-pin', ...e }).map((x) => x.id);
+  assert.ok(ids('A', { slot: 1, view: { bestStreak: [0, 3], perfect: [false, false], frames: 10 } }).includes('turkey'));
+  assert.ok(!ids('B', { slot: 0, view: { bestStreak: [2, 3], perfect: [false, false], frames: 10 } }).includes('turkey'), 'the other player\'s strikes');
+  assert.ok(ids('C', { view: { bestStreak: [12, 0], perfect: [true, false], frames: 10 } }).includes('perfect-game'));
+  assert.ok(!ids('D', { view: { bestStreak: [7, 0], perfect: [true, false], frames: 5 } }).includes('perfect-game'), 'not in a 5-frame game');
+});

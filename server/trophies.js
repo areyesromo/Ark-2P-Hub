@@ -43,6 +43,8 @@ export const TROPHIES = [
   { id: 'dragon-slayer', icon: '🐉', name: 'Dragon slayer', how: 'A perfect nine-star Trivia Quest', test: (e) => e.game === 'trivia-quest' && stars(e) >= 9 },
   { id: 'marble-master', icon: '🎱', name: 'Marble master', how: 'All five mazes with every star', test: (e) => e.game === 'marble-maze' && stars(e) >= 15 },
   { id: 'cool-head', icon: '💣', name: 'Cool head', how: 'Every star on five bombs in Bomb Squad', test: (e) => e.game === 'bomb-squad' && Number(e.view.maxStars) >= 15 && perfect(e) },
+  { id: 'turkey', icon: '🦃', name: 'Turkey', how: 'Three strikes in a row in Bowling', test: (e) => e.game === 'ten-pin' && Array.isArray(e.view.bestStreak) && e.view.bestStreak[e.slot] >= 3 },
+  { id: 'perfect-game', icon: '🎳', name: 'Perfect game', how: 'Bowl a 300 (twelve strikes in a row)', test: (e) => e.game === 'ten-pin' && e.view.frames === 10 && Array.isArray(e.view.perfect) && e.view.perfect[e.slot] === true },
   { id: 'on-the-same-page', icon: '🧠', name: 'On the same page', how: 'Every star in a game of Mind Meld', test: (e) => e.game === 'mind-meld' && perfect(e) },
   // Practice against the computer
   { id: 'sparring', icon: '🤖', name: 'Sparring partner', how: 'Beat the computer', test: (e) => Boolean(e.bot) && e.won },
