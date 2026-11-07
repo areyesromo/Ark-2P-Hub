@@ -8,7 +8,9 @@
 // camera); and draws with hd.render() (resizing with hd.setSize(w, h), and hd.dispose() at the
 // end). The glow loads a moment after the scene starts; until then it draws as standard.
 (function () {
+  if (window.ArkHD) return; // (loaded already: by the TV page, then again by a game)
   const KEY = 'ark.graphics';
+  let active = 0; // HD scenes on screen now (the TV's HD button reloads only if there are)
 
   function level() {
     try {
@@ -38,6 +40,9 @@
         import('/vendor/three-addons/environments/RoomEnvironment.js'),
       ]).then(function (m) {
         return { EffectComposer: m[0].EffectComposer, RenderPass: m[1].RenderPass, UnrealBloomPass: m[2].UnrealBloomPass, ShaderPass: m[3].ShaderPass, OutputPass: m[4].OutputPass, RoomEnvironment: m[5].RoomEnvironment };
+      }).catch(function (err) {
+        addons = null; // (a blip: the next scene tries again)
+        throw err;
       });
     }
     return addons;
@@ -56,6 +61,7 @@
       return Math.max(e.r, e.g, e.b) * (m.emissiveIntensity === undefined ? 1 : m.emissiveIntensity) >= 0.5;
     }
     if (m.isMeshBasicMaterial || m.isSpriteMaterial || m.isPointsMaterial) {
+      if (m.map) return false; // (a picture: a label, an icon, an emoji; white is just its tint)
       const c = m.color;
       return Boolean(c) && Math.max(c.r, c.g, c.b) >= 0.8 && (m.opacity === undefined || m.opacity >= 0.3);
     }
@@ -71,8 +77,8 @@
 
   /**
    * HD for one renderer and scene. opts: bloom ({ strength, radius }), env (how much the studio
-   * reflections light the scene, 0 for none), post (false: reflections and shadows but no glow
-   * pass, for a split-screen view that draws itself).
+   * reflections light the scene, 0 for none), post (false: the reflections only, for a
+   * split-screen view that draws itself and keeps its own shadows).
    */
   function create(THREE, renderer, scene, camera, opts) {
     opts = opts || {};
@@ -84,12 +90,18 @@
       // (none)
     }
     const hd = level() === 'hd';
+    active++;
+    let counted = true;
+    const uncount = function () {
+      if (counted) active--;
+      counted = false;
+    };
     const out = {
       hd: hd,
       composer: null,
       render: function () { renderer.render(scene, camera); },
       setSize: function () {},
-      dispose: function () {},
+      dispose: uncount,
     };
     if (!hd) return out;
     let disposed = false;
@@ -98,7 +110,16 @@
     let frame = 0;
     let envTex = null;
     let glowPass = null;
+    // The glow pass's stand-ins: black (it hides what's behind, as the real thing would), black
+    // seen from both sides, and nothing at all (a see-through thing: what's in it still glows).
     const black = new THREE.MeshBasicMaterial({ color: 0x000000 });
+    const black2 = new THREE.MeshBasicMaterial({ color: 0x000000, side: THREE.DoubleSide });
+    const none = new THREE.MeshBasicMaterial({ colorWrite: false, depthWrite: false });
+    const swapped = [];
+    const hidden = [];
+    let envScene = null;
+    let envTarget = null;
+    let setBackground = false;
     /** Every light that casts a shadow gets a sharper one (lights added later too). */
     function sharpenShadows() {
       scene.traverse(function (o) {
@@ -110,34 +131,54 @@
         }
       });
     }
-    /** The glow pass: everything that doesn't glow drawn black (and see-through things hidden). */
+    /** A material's glow, looked at again every half second (a pulsing lava's can change). */
+    function glowsNow(m) {
+      const c = m.userData && m.userData.hdGlow;
+      if (c && frame - c[0] < 30) return c[1];
+      const g = glows(m);
+      if (m.userData) m.userData.hdGlow = [frame, g];
+      return g;
+    }
+    function stand(o) {
+      const mats = Array.isArray(o.material) ? o.material : [o.material];
+      if (mats.some(glowsNow)) return;
+      const shown = mats.filter(function (m) { return m.visible !== false; });
+      if (!shown.length || !o.isMesh) {
+        hidden.push(o); // (invisible anyway, or a sprite, line or point that doesn't glow)
+        return;
+      }
+      swapped.push(o, o.material);
+      if (shown.some(function (m) { return m.transparent || m.alphaTest > 0; })) o.material = none;
+      else o.material = shown.some(function (m) { return m.side !== THREE.FrontSide; }) ? black2 : black;
+    }
+    /**
+     * The glow pass: everything that doesn't glow drawn black, so it still hides what's behind it,
+     * fading into black fog (far-off glow fades as the real thing does). Everything is put back
+     * afterwards, whatever happens.
+     */
     function renderGlow() {
-      const swapped = [];
-      const hidden = [];
-      scene.traverseVisible(function (o) {
-        if (!o.material) return;
-        const mats = Array.isArray(o.material) ? o.material : [o.material];
-        if (mats.some(glows)) return;
-        if (o.isMesh && !mats.some(function (m) { return m.transparent; })) {
-          swapped.push([o, o.material]);
-          o.material = black;
-        } else {
-          hidden.push(o);
-        }
-      });
-      hidden.forEach(function (o) { o.visible = false; });
+      swapped.length = 0;
+      hidden.length = 0;
+      scene.traverseVisible(function (o) { if (o.material) stand(o); });
+      for (let i = 0; i < hidden.length; i++) hidden[i].visible = false;
       const bg = scene.background;
-      const fog = scene.fog;
-      scene.background = null;
-      scene.fog = null;
+      const fogColor = scene.fog ? scene.fog.color.clone() : null;
       const clear = renderer.getClearAlpha();
-      renderer.setClearAlpha(0);
-      glowPass.render();
-      renderer.setClearAlpha(clear);
-      scene.background = bg;
-      scene.fog = fog;
-      hidden.forEach(function (o) { o.visible = true; });
-      swapped.forEach(function (p) { p[0].material = p[1]; });
+      const autoShadows = renderer.shadowMap.autoUpdate;
+      try {
+        scene.background = null;
+        if (scene.fog) scene.fog.color.setRGB(0, 0, 0);
+        renderer.setClearAlpha(0);
+        renderer.shadowMap.autoUpdate = false; // (the main pass draws the shadows: once a frame is enough)
+        glowPass.render();
+      } finally {
+        renderer.shadowMap.autoUpdate = autoShadows;
+        renderer.setClearAlpha(clear);
+        scene.background = bg;
+        if (fogColor) scene.fog.color.copy(fogColor);
+        for (let i = 0; i < hidden.length; i++) hidden[i].visible = true;
+        for (let i = 0; i < swapped.length; i += 2) swapped[i].material = swapped[i + 1];
+      }
     }
     out.setSize = function (W, H) {
       w = W;
@@ -156,9 +197,16 @@
       out.composer.render();
     };
     out.dispose = function () {
+      uncount();
       disposed = true;
-      black.dispose();
-      if (envTex) envTex.dispose();
+      [black, black2, none].forEach(function (m) { m.dispose(); });
+      if (envTex) {
+        envTex.dispose();
+        if (envTarget) envTarget.dispose();
+        if (envScene && envScene.dispose) envScene.dispose();
+        if (scene.environment === envTex) scene.environment = null;
+      }
+      if (setBackground) scene.background = null;
       [glowPass, out.composer].forEach(function (c) {
         if (!c) return;
         c.passes.forEach(function (p) { if (p.dispose) p.dispose(); });
@@ -171,7 +219,9 @@
       // their own lighting).
       if (opts.env !== 0) {
         const pmrem = new THREE.PMREMGenerator(renderer);
-        envTex = pmrem.fromScene(new A.RoomEnvironment(), 0.04).texture;
+        envScene = new A.RoomEnvironment();
+        envTarget = pmrem.fromScene(envScene, 0.04);
+        envTex = envTarget.texture;
         pmrem.dispose();
         scene.environment = envTex;
         scene.environmentIntensity = opts.env === undefined ? 0.2 : opts.env;
@@ -179,7 +229,10 @@
       if (opts.post === false) return;
       // A scene that only has the renderer's clear colour behind it: make that its background
       // (drawn into the pipeline below, a clear colour would come out paler than it is).
-      if (!scene.background && renderer.getClearAlpha() === 1) scene.background = renderer.getClearColor(new THREE.Color());
+      if (!scene.background && renderer.getClearAlpha() === 1) {
+        scene.background = renderer.getClearColor(new THREE.Color());
+        setBackground = true;
+      }
       const target = function () { return new THREE.WebGLRenderTarget(1, 1, { type: THREE.HalfFloatType, samples: 4 }); };
       // The glow: just the glowing parts, blurred out (into its own target, not the screen) ...
       const b = opts.bloom || {};
@@ -203,5 +256,5 @@
     return out;
   }
 
-  window.ArkHD = { level: level, set: set, create: create, glows: glows };
+  window.ArkHD = { level: level, set: set, create: create, glows: glows, active: function () { return active; } };
 })();

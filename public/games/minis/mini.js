@@ -418,7 +418,7 @@
       sc.right = sc.top = 12;
       scene.add(sun);
       // HD (the TV's HD button): glow, studio reflections, sharper shadows. A view that draws
-      // itself (split screen) gets all but the glow.
+      // itself (split screen) gets the reflections.
       const hd = window.ArkHD.create(THREE, renderer, scene, camera, { post: !opts.draw });
       const frames = [];
       let w = 0;

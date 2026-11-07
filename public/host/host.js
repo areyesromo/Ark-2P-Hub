@@ -350,7 +350,7 @@
     if (!window.ArkHD) return;
     window.ArkHD.set(window.ArkHD.level() === 'hd' ? 'standard' : 'hd');
     renderGraphicsButton();
-    if (state && state.phase === 'playing') location.reload(); // (the 3D scene is made again, in the new look)
+    if (window.ArkHD.active() > 0) location.reload(); // (a 3D scene on screen: made again, in the new look)
   });
   renderGraphicsButton();
 

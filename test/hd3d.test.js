@@ -48,3 +48,22 @@ test('only what is meant to glow glows: strong emissive colours and bright unlit
   assert.equal(glows({ color: c(0.2, 0.2, 0.2), userData: { glow: true } }), true, 'told to');
   assert.equal(glows(null), false);
 });
+
+test('a textured sprite or unlit picture (a label, an icon, an emoji) doesn\'t glow, white as its colour is; it can opt in', () => {
+  const { ArkHD } = load();
+  const white = { r: 1, g: 1, b: 1 };
+  assert.equal(ArkHD.glows({ isSpriteMaterial: true, color: white, map: {} }), false, 'a name tag');
+  assert.equal(ArkHD.glows({ isMeshBasicMaterial: true, color: white, map: {} }), false, 'a picture on a plane');
+  assert.equal(ArkHD.glows({ isSpriteMaterial: true, color: white, map: {}, userData: { glow: true } }), true);
+  assert.equal(ArkHD.glows({ isMeshBasicMaterial: true, color: white, visible: false }), false, 'invisible');
+});
+
+test('the HD script loaded twice (the TV page and a game) keeps the first copy', () => {
+  const window = {};
+  const ctx = { window, localStorage: { getItem: () => null, setItem() {} } };
+  const src = fs.readFileSync('public/shared/hd3d.js', 'utf8');
+  vm.runInNewContext(src, ctx);
+  const first = window.ArkHD;
+  vm.runInNewContext(src, ctx);
+  assert.equal(window.ArkHD, first);
+});
