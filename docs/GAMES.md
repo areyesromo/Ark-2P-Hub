@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (44)
+## Games (45)
 
 ### ⚔️ Competitive (32)
 
@@ -58,12 +58,13 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mancala | `mancala` | Sow stones around the bowls. End in your store to go again; end in an empty bowl of yours to capture across. Fullest store wins. | `server/games/mancala-bot.js`, `server/games/mancala.js`, `public/games/mancala/`, `test/mancala.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party-bot.js`, `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
-### 🤝 Co-op & casual (7)
+### 🤝 Co-op & casual (8)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
 | Trivia Quest | `trivia-quest` | Co-op quiz: answer together to bring down three monsters (Goo Blob, Stone Golem, Dragon). Right answers hit, both right is a team strike; every wrong answer costs a shared heart. | `server/games/trivia-quest.js`, `server/games/quiz.js`, `server/games/quiz-bot.js`, `server/games/quiz-questions.js`, `public/games/quiz/style.css`, `public/games/trivia-quest/`, `test/trivia-quest.test.js` |
 | Kitchen Rush | `kitchen-rush` | Co-op cooking: chop, cook, plate up and serve the orders before they run out. Three kitchens, one of them split down the middle. | `server/games/kitchen-rush-bot.js`, `server/games/kitchen-rush.js`, `public/games/kitchen-rush/`, `test/kitchen-rush.test.js` |
+| Tower Stack | `tower-stack` | Co-op stacking in 3D: take turns dropping sliding blocks onto one tower. What hangs over gets cut off, so line them up and see how high you can go. | `server/games/tower-stack-bot.js`, `server/games/tower-stack.js`, `public/games/tower-stack/`, `test/tower-stack.test.js` |
 | Dungeon Duo | `dungeon-duo` | Co-op dungeon crawl in 3D: a Fighter and a Healer fight their way down through the floors together. Revive each other, find the keys, beat the boss. | `server/games/dungeon-duo-bot.js`, `server/games/dungeon-duo-floors.js`, `server/games/dungeon-duo.js`, `public/games/dungeon-duo/`, `test/bots.test.js`, `test/dungeon-duo.test.js` |
 | Bomb Squad | `bomb-squad` | Co-op: one of you has a bomb on your phone, the other has the manual (new rules every bomb). Talk it through and defuse it before the timer runs out. Swap every bomb. | `server/games/bomb-squad-modules.js`, `server/games/bomb-squad.js`, `public/games/bomb-squad/`, `test/bomb-squad.test.js` |
 | Marble Maze | `marble-maze` | Co-op 3D: tilt the board together to roll the marble to the goal. One of you tilts left and right, the other forwards and back. Mind the holes! | `server/games/marble-maze-bot.js`, `server/games/marble-maze.js`, `public/games/marble-maze/`, `test/marble-maze.test.js` |

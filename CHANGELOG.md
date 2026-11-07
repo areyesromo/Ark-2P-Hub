@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.34
+
+- 🏗️ New co-op game: Tower Stack. Take turns dropping sliding blocks onto one tower in 3D:
+  whatever hangs over is cut off, a dead-on drop keeps it whole, and three in a row grows it back.
+  Stars for how high you get, with the computer as your teammate if you like.
+
 ## 0.1.33
 
 - 🎳 New game: Bowling. Ten-pin in 3D with real pin action: drag the ball to where you stand,
