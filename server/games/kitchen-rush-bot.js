@@ -18,8 +18,8 @@ const LEVEL = {
   hard: { pace: 1, hands: 0.85, dawdle: 0, rescue: 0.05 },
 };
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-const CRATE = { bun: 'B', meat: 'M', tomato: 'T', lettuce: 'L' };
-const isReady = (it) => it.kind === 'bun' || (it.kind === 'meat' ? it.state === 'cooked' : it.kind !== 'plate' && it.state === 'chopped');
+const CRATE = { bun: 'B', meat: 'M', tomato: 'T', lettuce: 'L', cheese: 'Q' };
+const isReady = (it) => it.kind === 'bun' || it.kind === 'cheese' || (it.kind === 'meat' ? it.state === 'cooked' : it.kind !== 'plate' && it.state === 'chopped');
 const sameDish = (a, b) => a.slice().sort().join() === b.slice().sort().join();
 
 /** The kitchen as a grid: which floor cells this chef can walk to, and how to get places. */
@@ -89,6 +89,7 @@ export function kitchenRushBot(view, level, rng = Math.random, retries = 0, memo
   const K = kitchenMap(view.layout, here);
   const itemAt = (x, y) => view.items.find((it) => it.x === x && it.y === y);
   const tiles = (c) => {
+    if (c === 'H' && view.hatch) return [view.hatch]; // (the Food Truck: only the open window)
     const out = [];
     view.layout.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === c) out.push([x, y]); }));
     return out;

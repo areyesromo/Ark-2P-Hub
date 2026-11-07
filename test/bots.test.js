@@ -655,3 +655,8 @@ test('co-op: between mazes and while down the computer lets go of the stick (no 
   withTeammate(g, ctx, 'marble-maze', 'hard', 1500, memory);
   assert.deepEqual(m.controls[1], { x: 0, y: 0 });
 });
+
+test('Kitchen Rush: the computer cooks in the Food Truck too (cheese, and the window that\'s open)', () => {
+  const { view } = play('kitchen-rush', ['hard', 'hard'], { seed: 5, settings: { kitchen: 3 } });
+  assert.ok(view.served >= 6 && view.stars >= 2, 'served ' + view.served + ', stars ' + view.stars);
+});

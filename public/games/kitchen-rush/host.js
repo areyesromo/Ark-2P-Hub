@@ -7,9 +7,9 @@
   const esc = Ark.escapeHtml;
   const DEADZONE = 0.25;
   // Order tickets: the dish, and what goes on the plate.
-  const DISH = { plain: '🍔', lettuce: '🍔', works: '🍔', salad: '🥗' };
-  const DISH_NAME = { plain: 'Burger', lettuce: 'Lettuce burger', works: 'The works', salad: 'Salad' };
-  const ICON = { bun: '🍞', meat: '🥩', lettuce: '🥬', tomato: '🍅' };
+  const DISH = { plain: '🍔', lettuce: '🍔', works: '🍔', salad: '🥗', cheeseburger: '🍔', deluxe: '🍔' };
+  const DISH_NAME = { plain: 'Burger', lettuce: 'Lettuce burger', works: 'The works', salad: 'Salad', cheeseburger: 'Cheeseburger', deluxe: 'The deluxe' };
+  const ICON = { bun: '🍞', meat: '🥩', lettuce: '🥬', tomato: '🍅', cheese: '🧀' };
 
   let root = null;
   let top = null;
@@ -89,7 +89,7 @@
       const n = item.contents.length;
       item.contents.forEach(function (c, i) {
         const a = (i / Math.max(1, n)) * Math.PI * 2 - Math.PI / 2;
-        food(g, { kind: c, state: c === 'meat' ? 'cooked' : c === 'bun' ? 'raw' : 'chopped' }, x + (n > 1 ? Math.cos(a) * s * 0.17 : 0), y + (n > 1 ? Math.sin(a) * s * 0.17 : 0), s * 0.42);
+        food(g, { kind: c, state: c === 'meat' ? 'cooked' : c === 'bun' || c === 'cheese' ? 'raw' : 'chopped' }, x + (n > 1 ? Math.cos(a) * s * 0.17 : 0), y + (n > 1 ? Math.sin(a) * s * 0.17 : 0), s * 0.42);
       });
       return;
     }
@@ -100,6 +100,19 @@
       g.fill();
       circle(g, x - s * 0.12, y - s * 0.08, s * 0.04, '#fef3c7');
       circle(g, x + s * 0.1, y - s * 0.1, s * 0.04, '#fef3c7');
+      return;
+    }
+    if (k === 'cheese') {
+      // A wedge of cheese, with its holes.
+      g.fillStyle = '#facc15';
+      g.beginPath();
+      g.moveTo(x - s * 0.38, y + s * 0.26);
+      g.lineTo(x + s * 0.38, y + s * 0.26);
+      g.lineTo(x + s * 0.3, y - s * 0.24);
+      g.closePath();
+      g.fill();
+      circle(g, x + s * 0.12, y + s * 0.08, s * 0.06, '#ca8a04');
+      circle(g, x - s * 0.1, y + s * 0.16, s * 0.05, '#ca8a04');
       return;
     }
     if (k === 'meat') {
@@ -153,7 +166,7 @@
     g.stroke();
   }
 
-  const CRATE = { B: 'bun', M: 'meat', T: 'tomato', L: 'lettuce' };
+  const CRATE = { B: 'bun', M: 'meat', T: 'tomato', L: 'lettuce', Q: 'cheese' };
 
   function drawTile(g, ch, x, y) {
     if (ch === ' ') {
@@ -259,6 +272,18 @@
     g.setTransform(1, 0, 0, 1, 0, 0);
     g.drawImage(floor.canvas, 0, 0);
     g.setTransform(k, 0, 0, k, 0, 0);
+    // The Food Truck: its other window is shut (the hatch moves between them).
+    if (v.hatch) {
+      v.layout.forEach(function (row, y) {
+        for (let x = 0; x < row.length; x++) {
+          if (row[x] !== 'H' || (x === v.hatch[0] && y === v.hatch[1])) continue;
+          g.fillStyle = '#57534e';
+          g.fillRect(x + 0.05, y + 0.05, 0.9, 0.9);
+          g.fillStyle = '#44403c';
+          for (let i = 0; i < 4; i++) g.fillRect(x + 0.05, y + 0.12 + i * 0.22, 0.9, 0.08); // (a roller shutter)
+        }
+      });
+    }
     // What's on the stations, and how it's coming along.
     v.items.forEach(function (it) {
       const cx = it.x + 0.5;

@@ -195,7 +195,7 @@ const GAMES = [
     ...timer('timed', '30 s a turn'),
   }),
   withSetup({ ...kitchenRush, bot: kitchenRushBot }, {
-    kitchen: { title: 'Kitchen', values: [0, 1, 2], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour'][n] },
+    kitchen: { title: 'Kitchen', values: [0, 1, 2, 3], label: (n) => ['Diner', 'Split (pass it over)', 'Rush Hour', 'Food Truck (cheese, a moving hatch)'][n] },
     minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
   withSetup({ ...towerDuel, bot: towerDuelBot }, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),

@@ -6,9 +6,9 @@
   Ark.loadCss('/shared/move-pad.css');
   const padReady = Ark.loadScript('/shared/move-pad.js');
   const SEND_EVERY_MS = 50;
-  const ICON = { bun: '🍞', meat: '🥩', lettuce: '🥬', tomato: '🍅', plate: '🍽️' };
+  const ICON = { bun: '🍞', meat: '🥩', lettuce: '🥬', tomato: '🍅', cheese: '🧀', plate: '🍽️' };
   const STATE = { raw: 'raw', chopped: 'chopped', cooked: 'cooked', burnt: 'burnt!' };
-  const DISH = { plain: '🍔', lettuce: '🍔🥬', works: '🍔🥬🍅', salad: '🥗' };
+  const DISH = { plain: '🍔', lettuce: '🍔🥬', works: '🍔🥬🍅', salad: '🥗', cheeseburger: '🍔🧀', deluxe: '🍔🧀🥬🍅' };
 
   let root = null;
   let stick = null;
@@ -50,7 +50,7 @@
   function heldText(h) {
     if (!h) return 'Hands free';
     if (h.kind === 'plate') return '🍽️ Plate' + (h.contents.length ? ': ' + h.contents.map(function (c) { return ICON[c]; }).join(' ') : ' (empty)');
-    return ICON[h.kind] + ' ' + h.kind + (h.kind === 'bun' ? ' (ready)' : ' (' + STATE[h.state] + ')');
+    return ICON[h.kind] + ' ' + h.kind + (h.kind === 'bun' || h.kind === 'cheese' ? ' (ready)' : ' (' + STATE[h.state] + ')');
   }
 
   function clock(ms) {

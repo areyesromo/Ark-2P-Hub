@@ -47,6 +47,24 @@ export const KITCHENS = [
 ];
 // Rush Hour: the split kitchen, with orders coming faster and running out sooner.
 KITCHENS.push({ ...KITCHENS[1], name: 'Rush Hour' });
+// A long, narrow truck: everything along one side, and the hatch moves between its two windows
+// (the open one swaps every TIMING.hatchMs). Its menu has cheese.
+KITCHENS.push({
+  name: 'Food Truck',
+  layout: [
+    '##############',
+    '##BMQTLPCCSS##',
+    '#           X#',
+    '#   ####     #',
+    '#           ##',
+    '##H#######H###',
+    '##############',
+    '##############',
+  ],
+  spawn: [[3.5, 2.5], [9.5, 4.5]],
+  movingHatch: true,
+  menu: ['plain', 'lettuce', 'salad', 'cheeseburger', 'deluxe'],
+});
 
 /** What each order needs on the plate. */
 export const RECIPES = {
@@ -54,8 +72,12 @@ export const RECIPES = {
   lettuce: ['bun', 'meat', 'lettuce'],
   works: ['bun', 'meat', 'lettuce', 'tomato'],
   salad: ['lettuce', 'tomato'],
+  cheeseburger: ['bun', 'meat', 'cheese'], // (Food Truck)
+  deluxe: ['bun', 'meat', 'cheese', 'lettuce', 'tomato'],
 };
-const CRATES = { B: 'bun', M: 'meat', T: 'tomato', L: 'lettuce' };
+/** What a kitchen's orders come from (the Food Truck has its own menu). */
+const MENU = ['plain', 'lettuce', 'works', 'salad'];
+const CRATES = { B: 'bun', M: 'meat', T: 'tomato', L: 'lettuce', Q: 'cheese' };
 
 export const TIMING = {
   tickMs: 1000 / 30,
@@ -63,8 +85,9 @@ export const TIMING = {
   chopMs: 2000,
   cookMs: 5000,
   burnMs: 8000, // after it's cooked
-  orderMs: [60000, 60000, 45000], // how long an order waits (by kitchen)
-  orderEveryMs: [20000, 20000, 13000], // a new order this often
+  orderMs: [60000, 60000, 45000, 55000], // how long an order waits (by kitchen)
+  orderEveryMs: [20000, 20000, 13000, 17000], // a new order this often
+  hatchMs: 20000, // the Food Truck's hatch moves to its other window this often
 };
 export const COINS = { dish: 20, tip: 10, missed: 10 };
 export const MAX_ORDERS = 4;
@@ -93,7 +116,7 @@ export function starsFor(coins, targets) {
 
 /** Is this ingredient ready for the plate? */
 function ready(item) {
-  if (item.kind === 'bun') return true;
+  if (item.kind === 'bun' || item.kind === 'cheese') return true; // (as they come)
   if (item.kind === 'meat') return item.state === 'cooked';
   return item.kind !== 'plate' && item.state === 'chopped';
 }
@@ -173,6 +196,7 @@ export class KitchenRush {
       if (now >= this.phaseEnds) {
         this.phase = 'play';
         this.phaseEnds = now + this.minutes * 60000;
+        this.playAt = now; // (the Food Truck's hatch moves from here)
         this.nextOrderAt = now + TIMING.orderEveryMs[this.k];
         this.addOrder(now);
         this.addOrder(now);
@@ -201,7 +225,7 @@ export class KitchenRush {
   }
 
   addOrder(now) {
-    const names = Object.keys(RECIPES);
+    const names = this.kitchen.menu || MENU;
     const recipe = names[Math.floor(this.rng() * names.length)];
     this.orders.push({ id: this.nextId++, recipe, born: now, until: now + TIMING.orderMs[this.k] });
   }
@@ -292,6 +316,8 @@ export class KitchenRush {
       else c.held = null;
       this.events.binned++;
     } else if (ch === 'H') {
+      const open = this.openHatch();
+      if (open && (open[0] !== at[0] || open[1] !== at[1])) return; // (the Food Truck's other window: shut)
       if (!h || h.kind !== 'plate' || !h.contents.length) return;
       this.serve(c);
     } else if (ch === '#' || ch === 'C' || ch === 'S') {
@@ -317,6 +343,15 @@ export class KitchenRush {
       } else return;
     } else return;
     this.ctx.update();
+  }
+
+  /** The Food Truck's open window ([x, y]), swapping every TIMING.hatchMs; null in a kitchen whose hatches always serve. */
+  openHatch() {
+    if (!this.kitchen.movingHatch) return null;
+    const windows = [];
+    this.layout.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === 'H') windows.push([x, y]); }));
+    const since = this.phase === 'play' || this.phase === 'over' ? this.ctx.now() - (this.playAt || 0) : 0;
+    return windows[Math.floor(since / TIMING.hatchMs) % windows.length];
   }
 
   /** The plate at the hatch: the order it matches (the one closest to running out) is served. */
@@ -389,6 +424,7 @@ export class KitchenRush {
         if (item.kind === 'meat' && item.state === 'cooked' && item.cook) out.burn = r2(Math.min(1, (item.cook - TIMING.cookMs) / TIMING.burnMs));
         return out;
       }),
+      hatch: this.openHatch(), // (the Food Truck: which window serves now; null: every hatch does)
       orders: this.orders.map((o) => ({ id: o.id, recipe: o.recipe, needs: RECIPES[o.recipe], left: r2(Math.max(0, o.until - now) / (o.until - o.born)) })),
       coins: this.coins,
       served: this.served,
