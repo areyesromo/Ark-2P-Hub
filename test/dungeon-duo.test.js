@@ -2,7 +2,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
-import { DungeonDuo, HEROES, ENEMIES, TIMING, CONTINUES, SPIKES, WARDEN, starsFor } from '../server/games/dungeon-duo.js';
+import { DungeonDuo, HEROES, ENEMIES, TIMING, CONTINUES, SPIKES, WARDEN, ICE, ARROWS, starsFor } from '../server/games/dungeon-duo.js';
 import { FLOORS } from '../server/games/dungeon-duo-floors.js';
 import { getGame } from '../server/games/index.js';
 
@@ -53,7 +53,7 @@ test('every floor is 20 × 12, walled in, with two starts; on each, every key, d
         for (const [dx, dy] of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
           const c = f.map[y + dy][x + dx];
           const k = x + dx + ',' + (y + dy);
-          if (seen.has(k) || c === '#' || (!doors && c === 'D') || (!gates && c === 'G')) continue;
+          if (seen.has(k) || c === '#' || c === '>' || c === '<' || (!doors && (c === 'D' || c === 'I')) || (!gates && c === 'G')) continue;
           seen.add(k);
           todo.push([x + dx, y + dy]);
         }
@@ -67,6 +67,7 @@ test('every floor is 20 × 12, walled in, with two starts; on each, every key, d
       if (c === 'P') assert.ok(shut.has(x + ',' + y) || gated.has(x + ',' + y), f.name + ': a plate reachable');
       if (c === 'K') assert.ok(gated.has(x + ',' + y), f.name + ': the key reachable before any door');
       if (c === 'E' || c === 'W') assert.ok(open.has(x + ',' + y), f.name + ': ' + c + ' reachable');
+      if (c === 'l') assert.ok(gated.has(x + ',' + y), f.name + ': a lever reachable before the iron door');
     }));
     // A gate needs a plate on the side you start, so one of you can hold it open.
     if (f.map.join('').includes('G')) assert.ok(f.map.some((row, y) => [...row].some((c, x) => c === 'P' && shut.has(x + ',' + y))), f.name + ': a plate before the gate');
@@ -550,7 +551,7 @@ const warden = (g) => g.enemies.find((e) => e.kind === 'warden');
 
 test('the Stone Warden waits on the last floor: big, with lots of health (less on Easy)', () => {
   const last = FLOORS[FLOORS.length - 1];
-  assert.equal(FLOORS.length, 3);
+  assert.equal(FLOORS.length, 5);
   assert.ok(last.map.join('').includes('W'), 'the boss is on the last floor');
   assert.ok(!last.map.join('').includes('E'), 'no stairs: beating it is the way out');
   const { g } = dungeon({ floors: HALL });
@@ -796,4 +797,118 @@ test('in the lobby: a co-op game (casual) with motion controls, the heroes and d
   const setup = JSON.stringify(def.create(fakeCtx()).hostView());
   assert.ok(setup.includes('"heroes"') && setup.includes('"difficulty"'));
   assert.ok(setup.includes('Fighter') && setup.includes('Healer') && setup.includes('Easy'));
+});
+
+// ---- The Ice Caves and the Armory ----
+
+test('five floors: the Ice Caves and the Armory before the Warden; a short quest skips them', () => {
+  assert.deepEqual(FLOORS.map((f) => f.name), ['The Cellar', 'The Crypt', 'The Ice Caves', 'The Armory', "The Warden's Hall"]);
+  for (const c of '~m') assert.ok(FLOORS[2].map.join('').includes(c), 'ice caves: ' + c);
+  for (const c of '>lI') assert.ok(FLOORS[3].map.join('').includes(c), 'armory: ' + c);
+  assert.equal(FLOORS[3].map.join('').split('l').length - 1, 2, 'two levers');
+  const full = new DungeonDuo(fakeCtx(), () => 0.5);
+  assert.equal(full.floors.length, 5);
+  const ctx = fakeCtx();
+  ctx.settings = { quest: 3 };
+  const short = new DungeonDuo(ctx, () => 0.5);
+  assert.deepEqual(short.floors.map((f) => f.name), ['The Cellar', 'The Crypt', "The Warden's Hall"]);
+  assert.deepEqual(getGame('dungeon-duo').create(fakeCtx()).options.quest, [5, 3]);
+});
+
+test('ice: you keep sliding after you let go, and turn slowly; off the ice you stop at once', () => {
+  const { ctx, g } = dungeon({ floors: room([
+    '####################',
+    '#SS~~~~~~~~~~~~~~~~#',
+    '#                  #',
+    '####################',
+  ]) });
+  put(g, 0, 3, 1);
+  g.onInput(0, { type: 'move', x: 1, y: 0 });
+  ctx.advance(1000);
+  const x1 = g.heroes[0].x;
+  g.onInput(0, { type: 'move', x: 0, y: 0 });
+  ctx.advance(300);
+  assert.ok(g.heroes[0].x > x1 + 0.3, 'still sliding: ' + x1 + ' -> ' + g.heroes[0].x);
+  // Off the ice: let go and you stand still.
+  put(g, 0, 3, 2);
+  g.onInput(0, { type: 'move', x: 1, y: 0 });
+  ctx.advance(500);
+  g.onInput(0, { type: 'move', x: 0, y: 0 });
+  ctx.advance(TICK);
+  const x2 = g.heroes[0].x;
+  ctx.advance(300);
+  assert.equal(g.heroes[0].x, x2);
+  // Into a wall on the ice: you stop dead, no sliding through it.
+  put(g, 0, 17, 1);
+  g.onInput(0, { type: 'move', x: 1, y: 0 });
+  ctx.advance(1500);
+  assert.ok(g.heroes[0].x < 19, 'stopped by the wall');
+  assert.ok(ICE.grip > 0);
+});
+
+test('a big slime splits into two small ones when it\'s beaten', () => {
+  const { ctx, g } = dungeon({ floors: room([
+    '####################',
+    '#SS m              #',
+    '#                  #',
+    '####################',
+  ]) });
+  const big = g.enemies.find((e) => e.kind === 'bigslime');
+  assert.ok(big, 'the m is a big slime');
+  assert.ok(ENEMIES.bigslime.hp > ENEMIES.slime.hp);
+  big.hp = 1;
+  g.damageEnemy(big, 2, ctx.now());
+  const small = g.enemies.filter((e) => e.kind === 'slime');
+  assert.equal(small.length, 2);
+  assert.ok(small.every((e) => !g.blocked(e.x, e.y)), 'on open floor');
+  assert.notEqual(small[0].id, small[1].id);
+});
+
+test('arrow traps fire on a beat along their row; an arrow hurts, and the shield blocks it from the front', () => {
+  const { ctx, g } = dungeon({ floors: room([
+    '####################',
+    '>       SS         #',
+    '#                  #',
+    '####################',
+  ]) });
+  put(g, 0, 10, 2);
+  put(g, 1, 6, 1);
+  ctx.advance(ARROWS.everyMs + 50);
+  assert.ok(g.bones.some((b) => b.kind === 'arrow'), 'fired');
+  assert.ok(g.hostView().bones.some((b) => b.kind === 'arrow' && b.vx > 0), 'the TV sees it flying right');
+  ctx.advance(2000);
+  assert.ok(g.heroes[1].hp < g.heroes[1].max, 'hit the hero in the row');
+  // The Fighter facing the trap with the shield up: blocked.
+  const before = g.events.blocked;
+  put(g, 0, 6, 1, -1, 0);
+  put(g, 1, 10, 2);
+  g.onInput(0, { type: 'special', on: true });
+  const hp = g.heroes[0].hp;
+  ctx.advance(ARROWS.everyMs + 1500);
+  assert.equal(g.heroes[0].hp, hp);
+  assert.ok(g.events.blocked > before);
+  // The trap is a wall: you can't walk into it.
+  assert.ok(g.solid(0.5, 1.5));
+});
+
+test('the iron door opens for good once you\'re both on the two levers at the same time', () => {
+  const { ctx, g } = dungeon({ floors: room([
+    '####################',
+    '#SS l      l  I  E #',
+    '#             #    #',
+    '####################',
+  ]) });
+  const [ix, iy] = find(g, 'I');
+  assert.ok(g.solid(ix + 0.5, iy + 0.5), 'shut');
+  put(g, 0, 4, 1);
+  ctx.advance(500);
+  assert.ok(g.solid(ix + 0.5, iy + 0.5), 'one lever isn\'t enough');
+  put(g, 1, 11, 1);
+  ctx.advance(TICK * 2);
+  assert.ok(!g.solid(ix + 0.5, iy + 0.5), 'open');
+  assert.equal(g.hostView().leversPulled, true);
+  put(g, 0, 2, 2);
+  put(g, 1, 3, 2);
+  ctx.advance(500);
+  assert.ok(!g.solid(ix + 0.5, iy + 0.5), 'stays open');
 });

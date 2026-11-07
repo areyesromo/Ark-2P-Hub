@@ -35,10 +35,15 @@ export const WARDEN = {
 export const ENEMIES = {
   slime: { hp: 3, speed: 1.3, damage: 1, aggro: 7 },
   bat: { hp: 1, speed: 2.6, damage: 1, aggro: 8 },
+  bigslime: { hp: 5, speed: 1, damage: 1, aggro: 7 }, // splits into two slimes when it's beaten
   // Skeletons keep about `keepAway` from you and throw a bone now and then, if they can see you.
   skeleton: { hp: 3, speed: 1.5, damage: 1, aggro: 8, keepAway: 3.5, throwEveryMs: 2000, boneSpeed: 5, boneMs: 2500 },
   warden: { hp: WARDEN.hp[0], speed: WARDEN.speed, damage: 1, aggro: 99 },
 };
+/** Ice: how quickly your feet grip (a share of the way to where you're steering, a second); you slide. */
+export const ICE = { grip: 1.6 };
+/** Arrow traps (> and < in a wall): all fire together on a beat, straight along their row. */
+export const ARROWS = { everyMs: 2000, speed: 7, damage: 1, flyMs: 5000 };
 /** Spikes: down for a while, then up (and hurting) for a moment, all together. */
 export const SPIKES = { downMs: 2000, upMs: 1000, damage: 1 };
 export const CONTINUES = [3, 5];
@@ -58,7 +63,7 @@ const R = 0.3; // half a hero's (or enemy's) width
 const TOUCH = 0.65; // an enemy this close hurts
 const KNOCKBACK = 0.6; // how far the shield shoves an enemy
 const REVIVE_RANGE = 1.4; // from a safe tile beside spikes, too
-const ENEMY_LETTERS = { s: 'slime', b: 'bat', k: 'skeleton', W: 'warden' };
+const ENEMY_LETTERS = { s: 'slime', m: 'bigslime', b: 'bat', k: 'skeleton', W: 'warden' };
 
 /** Stars for a quest: finishing, few retries (one at most), and a good time. */
 export function starsFor({ won, retries, ms, par }) {
@@ -70,7 +75,8 @@ export class DungeonDuo {
   constructor(ctx, rng = Math.random, floors = FLOORS) {
     this.ctx = ctx;
     this.rng = rng;
-    this.floors = floors;
+    // A short quest: the first two floors and the Warden.
+    this.floors = floors === FLOORS && settingOf(ctx, 'quest', 5) === 3 ? FLOORS.filter((f) => !f.long) : floors;
     this.easy = settingOf(ctx, 'difficulty', 0) === 1;
     this.swap = settingOf(ctx, 'heroes', 0) === 1; // player 1 is the Healer
     this.timer = null;
@@ -82,7 +88,7 @@ export class DungeonDuo {
     this.retries = 0;
     this.floor = 0;
     this.won = false;
-    this.events = { hits: 0, kills: 0, hurt: 0, blocked: 0, heals: 0, downs: 0, revives: 0, keys: 0, doors: 0, thrown: 0, slams: 0, charges: 0, summons: 0 };
+    this.events = { hits: 0, kills: 0, hurt: 0, blocked: 0, heals: 0, downs: 0, revives: 0, keys: 0, doors: 0, thrown: 0, slams: 0, charges: 0, summons: 0, arrows: 0, splits: 0, levers: 0 };
     this.startedAt = null;
     this.finishedMs = 0;
     this.controls = [{ x: 0, y: 0, special: false }, { x: 0, y: 0, special: false }];
@@ -102,7 +108,9 @@ export class DungeonDuo {
     this.circles = [];
     this.keys = 0;
     this.gateOpen = false;
-    this.floorAt = this.ctx.now(); // the spikes' rhythm starts here
+    this.leversPulled = false;
+    this.arrowBeat = 0;
+    this.floorAt = this.ctx.now(); // the spikes' (and arrows') rhythm starts here
     const starts = [];
     this.map.forEach((row, y) => row.forEach((c, x) => {
       if (c === 'S') starts.push([x + 0.5, y + 0.5]);
@@ -113,7 +121,7 @@ export class DungeonDuo {
     const roles = this.swap ? ['healer', 'fighter'] : ['fighter', 'healer'];
     this.heroes = roles.map((role, slot) => {
       const max = HEROES[role].hp[this.easy ? 1 : 0];
-      return { role, x: starts[slot][0], y: starts[slot][1], face: [0, 1], hp: max, max, downed: false, revive: 0, invulnUntil: 0, blockUntil: 0, readyAt: 0, healAt: 0, blocking: false };
+      return { role, x: starts[slot][0], y: starts[slot][1], vx: 0, vy: 0, face: [0, 1], hp: max, max, downed: false, revive: 0, invulnUntil: 0, blockUntil: 0, readyAt: 0, healAt: 0, blocking: false };
     });
   }
 
@@ -132,6 +140,7 @@ export class DungeonDuo {
   /** Into play: the Warden's first walk (and the spikes' rhythm) start now, not during the wait before. */
   play() {
     this.floorAt = this.ctx.now();
+    this.arrowBeat = 0;
     for (const e of this.enemies) if (e.kind === 'warden') this.wardenMove(e, 'walk');
     this.enter('play', 0);
   }
@@ -181,9 +190,11 @@ export class DungeonDuo {
     }
     if (this.phase !== 'play') return;
     this.updateGate();
+    this.levers();
     this.heroes.forEach((h, slot) => this.walkHero(h, this.controls[slot], dt));
     this.moveEnemies(dt, now);
     this.moveShots(dt, now);
+    this.fireArrows(now);
     this.moveBones(dt, now);
     this.spikes();
     this.heal(now);
@@ -201,7 +212,7 @@ export class DungeonDuo {
     const row = this.map[Math.floor(y)];
     if (!row) return true;
     const c = row[Math.floor(x)];
-    return c === '#' || c === 'D' || (c === 'G' && !this.gateOpen) || c === undefined;
+    return c === '#' || c === 'D' || c === 'I' || c === '>' || c === '<' || (c === 'G' && !this.gateOpen) || c === undefined;
   }
 
   /** The tiles a body's corners are on. */
@@ -219,6 +230,30 @@ export class DungeonDuo {
     const onPlate = this.heroes.some((h) => h.downed || this.map[Math.floor(h.y)][Math.floor(h.x)] === 'P');
     const inGate = this.gateOpen && [...this.heroes, ...this.enemies].some((b) => this.corners(b).includes('G'));
     this.gateOpen = onPlate || inGate;
+  }
+
+  /** The iron door (I) opens for good once you're both on the levers (l) at the same time. */
+  levers() {
+    if (this.leversPulled) return;
+    const on = this.heroes.filter((h) => !h.downed && this.map[Math.floor(h.y)][Math.floor(h.x)] === 'l');
+    if (on.length < 2 || (Math.floor(on[0].x) === Math.floor(on[1].x) && Math.floor(on[0].y) === Math.floor(on[1].y))) return;
+    this.leversPulled = true;
+    this.events.levers++;
+    this.map.forEach((row) => row.forEach((c, x) => { if (c === 'I') row[x] = ' '; }));
+    this.ctx.update();
+  }
+
+  /** Every arrow trap fires on the beat, out of the wall along its row. */
+  fireArrows(now) {
+    const beat = Math.floor((now - this.floorAt) / ARROWS.everyMs);
+    if (beat <= this.arrowBeat) return;
+    this.arrowBeat = beat;
+    this.map.forEach((row, y) => row.forEach((c, x) => {
+      if (c !== '>' && c !== '<') return;
+      const dir = c === '>' ? 1 : -1;
+      this.bones.push({ kind: 'arrow', x: x + 0.5 + dir * 0.6, y: y + 0.5, vx: dir * ARROWS.speed, vy: 0, damage: ARROWS.damage, until: now + ARROWS.flyMs });
+      this.events.arrows++;
+    }));
   }
 
   spikesUp() {
@@ -269,12 +304,30 @@ export class DungeonDuo {
 
   walkHero(h, ctl, dt) {
     h.blocking = h.role === 'fighter' && ctl.special && !h.downed;
-    if (h.downed || (!ctl.x && !ctl.y)) return;
+    if (h.downed) {
+      h.vx = h.vy = 0;
+      return;
+    }
     const len = Math.hypot(ctl.x, ctl.y);
     if (len > 0.2) h.face = [ctl.x / len, ctl.y / len];
     const def = HEROES[h.role];
-    const d = ((h.blocking ? def.blockSpeed : def.speed) * dt) / 1000;
-    const bump = this.slide(h, ctl.x * d, ctl.y * d);
+    const speed = h.blocking ? def.blockSpeed : def.speed;
+    // On ice your feet barely grip: you get going slowly and keep sliding once you let go.
+    if (this.map[Math.floor(h.y)][Math.floor(h.x)] === '~') {
+      const k = Math.min(1, (ICE.grip * dt) / 1000);
+      h.vx += (ctl.x * speed - h.vx) * k;
+      h.vy += (ctl.y * speed - h.vy) * k;
+    } else {
+      h.vx = ctl.x * speed;
+      h.vy = ctl.y * speed;
+    }
+    if (!h.vx && !h.vy) return;
+    const [sx, sy] = [h.x, h.y];
+    const [dx, dy] = [(h.vx * dt) / 1000, (h.vy * dt) / 1000];
+    const bump = this.slide(h, dx, dy);
+    // (stopped by a wall: that way's speed is gone)
+    if (Math.abs(h.x - sx - dx) > 1e-6) h.vx = 0;
+    if (Math.abs(h.y - sy - dy) > 1e-6) h.vy = 0;
     // Walking into a locked door with a key opens it.
     if (bump && this.map[bump[1]][bump[0]] === 'D' && this.keys > 0) {
       this.keys--;
@@ -481,6 +534,12 @@ export class DungeonDuo {
     if (e.hp > 0) return;
     this.enemies.splice(this.enemies.indexOf(e), 1);
     this.events.kills++;
+    if (e.kind === 'bigslime') {
+      // It splits in two, either side of where it was (on open floor).
+      this.events.splits++;
+      const spots = [[-0.45, 0], [0.45, 0], [0, -0.45], [0, 0.45], [0, 0]].map(([dx, dy]) => [e.x + dx, e.y + dy]).filter(([x, y]) => !this.blocked(x, y));
+      for (const [x, y] of [spots[0], spots[1] || spots[0]]) this.spawnEnemy('slime', x, y);
+    }
   }
 
   /** Healing circles: a heart a second to anyone on their feet standing in one. */
@@ -674,10 +733,11 @@ export class DungeonDuo {
       floor: this.floor,
       floors: this.floors.length,
       floorName: this.floors[this.floor].name,
+      floorTip: this.floors[this.floor].tip || null,
       map: this.map.map((row) => row.join('')),
       countdown: this.phase === 'countdown' ? Math.ceil(Math.max(0, this.phaseEnds - now) / 1000) : 0,
       heroes: this.heroes.map((h) => ({
-        role: h.role, x: r2(h.x), y: r2(h.y), face: [r2(h.face[0]), r2(h.face[1])], hp: h.hp, max: h.max, downed: h.downed,
+        role: h.role, x: r2(h.x), y: r2(h.y), vx: r2(h.vx), vy: r2(h.vy), face: [r2(h.face[0]), r2(h.face[1])], hp: h.hp, max: h.max, downed: h.downed,
         revive: h.downed ? r2(h.revive / TIMING.reviveMs) : 0, hurt: now < h.invulnUntil, blocking: h.blocking,
         swing: h.swungAt && now - h.swungAt < 200, readyIn: Math.max(0, h.readyAt - now), healIn: h.role === 'healer' ? Math.max(0, h.healAt - now) : 0,
       })),
@@ -689,7 +749,8 @@ export class DungeonDuo {
         return Object.assign(o, { r: e.r, state: e.state, face: [r2(e.face[0]), r2(e.face[1])], tele: e.tele && Object.assign({ left }, e.tele, e.tele.dx === undefined ? {} : { dx: r2(e.tele.dx), dy: r2(e.tele.dy), len: r2(e.tele.len) }) });
       }),
       shots: this.shots.map((s) => ({ x: r2(s.x), y: r2(s.y) })),
-      bones: this.bones.map((b) => ({ x: r2(b.x), y: r2(b.y) })),
+      bones: this.bones.map((b) => (b.kind ? { kind: b.kind, x: r2(b.x), y: r2(b.y), vx: r2(b.vx) } : { x: r2(b.x), y: r2(b.y) })),
+      leversPulled: this.leversPulled,
       spikesUp: this.spikesUp(),
       gateOpen: this.gateOpen,
       circles: this.circles.map((c) => ({ x: r2(c.x), y: r2(c.y), r: c.r, left: r2((c.until - now) / TIMING.circleMs) })),

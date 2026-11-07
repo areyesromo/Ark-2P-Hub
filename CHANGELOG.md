@@ -4,6 +4,16 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.32
+
+- 🏰 Dungeon Duo: two new floors before the Warden. The Ice Caves (a frozen lake you slide on, and
+  big slimes that split in two) and the Armory (arrow traps on a beat, and an iron door that needs
+  you both on its levers at once). Pick a short 3-floor quest in the setup if you're in a hurry.
+- 🎱 Marble Maze: three new mazes with moving parts: a sliding block, conveyor belts, and a button
+  that opens a gate.
+- 🍔 Kitchen Rush: a fourth kitchen, the Food Truck, with a cheese crate, two new dishes (the
+  cheeseburger and the deluxe) and serving hatches that take turns.
+
 ## 0.1.31
 
 - 🌍 Online play: press Invite someone online on the TV and a friend somewhere else can join from

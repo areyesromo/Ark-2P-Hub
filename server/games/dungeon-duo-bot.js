@@ -23,7 +23,7 @@ const LEVEL = {
   hard: { lag: 0.8, attack: 1, wobble: 0.05, dodge: 1 },
 };
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
-const SOLID = new Set(['#', 'D']);
+const SOLID = new Set(['#', 'D', 'I', '>', '<']);
 
 /** A walk (breadth first) over the floor's tiles from (x, y): { dist, prev }. */
 function walkFrom(map, x, y, gateOpen, spikesUp) {
@@ -79,9 +79,19 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
     const a = wob();
     return { x: r2((x * Math.cos(a) - y * Math.sin(a)) * k), y: r2((x * Math.sin(a) + y * Math.cos(a)) * k) };
   };
+  const onIce = tileAt(me.x, me.y) === '~';
   const steer = (dx, dy, extra = {}) => {
     const d = Math.hypot(dx, dy) || 1;
-    return { type: 'move', ...turn(dx / d, dy / d), ...extra, botDelayMs: pace * 0.6 };
+    let [sx, sy] = [dx / d, dy / d];
+    if (onIce) {
+      // On ice: steer against the slide (aim for a gentle speed the right way, and correct for the drift).
+      const want = Math.min(1.6, d * 1.5);
+      sx = sx * want + (sx * want - (me.vx || 0));
+      sy = sy * want + (sy * want - (me.vy || 0));
+      const n = Math.hypot(sx, sy);
+      if (n > 1) [sx, sy] = [sx / n, sy / n];
+    }
+    return { type: 'move', ...turn(sx, sy), ...extra, botDelayMs: pace * (onIce ? 0.4 : 0.6) };
   };
   const stop = (extra = {}) => ({ type: 'move', x: 0, y: 0, ...extra, botDelayMs: pace * 0.6 });
   const fighter = me.role === 'fighter';
@@ -215,6 +225,17 @@ export function dungeonDuoBot(view, level, rng = Math.random, retries = 0, memor
         const p = near(plates.filter(([x, y]) => shut.dist.has(x + ',' + y)));
         if (p) return goTo(p[0] + 0.5, p[1] + 0.5);
       }
+    }
+  }
+  // The iron door: one of us on each lever at once. It takes the lever you're not going for.
+  const levers = find('l');
+  if (!view.leversPulled && levers.length === 2 && find('I').length) {
+    const dTo = (b, [x, y]) => Math.hypot(b.x - x - 0.5, b.y - y - 0.5);
+    const yours = mate.downed ? null : levers.slice().sort((a, b) => dTo(mate, a) - dTo(mate, b))[0];
+    const mine = levers.find((l) => l !== yours) || levers[0];
+    if (walk.dist.has(mine.join())) {
+      if (mx === mine[0] && my === mine[1]) return stop();
+      return goTo(mine[0] + 0.5, mine[1] + 0.5) || stop();
     }
   }
   const doors = find('D');
