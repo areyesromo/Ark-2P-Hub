@@ -100,7 +100,8 @@
 
   function render(v) {
     if (!play || !v.roll || v.roll.id !== play.id) {
-      play = v.roll ? { id: v.roll.id, roll: v.roll, start: performance.now(), fallAt: {}, slot: v.turn, fresh: v.next ? v.next.fresh : true, count: v.standing.length } : null;
+      // (from as far in as the roll already is: a TV that reloads mid-roll picks it up there)
+      play = v.roll ? { id: v.roll.id, roll: v.roll, start: performance.now() - (v.roll.at || 0), fallAt: {}, fresh: v.next ? v.next.fresh : true, count: v.standing.length } : null;
     }
     view = v;
     if (!els) return;
@@ -363,20 +364,20 @@
     const pad = pads[v.turn];
     const aiming = v.phase === 'aim' && pad && pad.active;
     gl.aim.visible = !!aiming;
-    let meter = '';
+    let meter = false;
+    let spin = '';
     if (aiming) {
       const a = (pad.aim || 0) * 0.045;
       gl.aim.position.set(ball.x + Math.sin(a) * 2.2, 0.003, -(ball.z + Math.cos(a) * 2.2));
       gl.aim.rotation.z = -a;
       if (pad.charging) {
-        const p = powerOf(pad);
-        meter = '<div class="tp-meter"><span style="height:' + Math.round(p * 100) + '%"></span></div>' + (Math.abs(pad.spin || 0) > 0.05 ? '<div class="tp-spin">' + (pad.spin > 0 ? 'Spin ↪' : '↩ Spin') + '</div>' : '');
+        meter = true;
+        els.meterFill.style.height = Math.round(powerOf(pad) * 100) + '%';
+        if (Math.abs(pad.spin || 0) > 0.05) spin = pad.spin > 0 ? 'Spin ↪' : '↩ Spin';
       }
     }
-    if (meter !== els.meter.dataset.key) {
-      els.meter.dataset.key = meter;
-      els.meter.innerHTML = meter;
-    }
+    els.meter.classList.toggle('hidden', !meter);
+    if (els.spin.textContent !== spin) els.spin.textContent = spin;
     // The camera: behind the bowler, then after the ball, then by the pins.
     let want;
     if (v.phase === 'intro' || v.phase === 'over') want = { x: 0.9, y: 2.4, z: 3.8, lx: 0, lz: -12 };
@@ -475,9 +476,11 @@
       colors = [css.getPropertyValue('--p1').trim() || '#22d3ee', css.getPropertyValue('--p2').trim() || '#f472b6'];
       root = document.createElement('div');
       root.className = 'tp-host';
-      root.innerHTML = '<div class="tp-top"></div><div class="tp-arena"><div class="tp-banner-box"></div><div class="tp-meter-box"></div><div class="tp-over hidden"></div></div>';
+      root.innerHTML = '<div class="tp-top"></div><div class="tp-arena"><div class="tp-banner-box"></div><div class="tp-meter-box hidden"><div class="tp-meter"><span></span></div><div class="tp-spin"></div></div><div class="tp-over hidden"></div></div>';
       el.appendChild(root);
       els = { card: root.querySelector('.tp-top'), arena: root.querySelector('.tp-arena'), overlay: root.querySelector('.tp-over'), banner: root.querySelector('.tp-banner-box'), meter: root.querySelector('.tp-meter-box') };
+      els.meterFill = els.meter.querySelector('.tp-meter span');
+      els.spin = els.meter.querySelector('.tp-spin');
       const mounted = root;
       loadThree().then(function () {
         if (root !== mounted) return;

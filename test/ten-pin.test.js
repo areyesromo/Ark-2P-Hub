@@ -225,6 +225,7 @@ test('in the lobby: Bowling, with the length and bumpers to pick, and a computer
 test('the computer bowls on its turn (and only then), better on Hard than on Easy', () => {
   const { g } = game();
   assert.equal(tenPinBot(g.playerView(1), 'hard', seeded(1), 0, {}), null, 'not its turn');
+  g.onInput(0, tenPinBot(g.playerView(0), 'hard', seeded(1), 0, {})); // (to its spot)
   const m = tenPinBot(g.playerView(0), 'hard', seeded(1), 0, {});
   assert.equal(m.type, 'throw');
   for (const k of ['stance', 'aim', 'power', 'spin']) assert.ok(Number.isFinite(m[k]), k);
@@ -233,6 +234,7 @@ test('the computer bowls on its turn (and only then), better on Hard than on Eas
     for (let s = 1; s <= 12; s++) {
       const r = seeded(s);
       const t = tenPinBot(g.playerView(0), level, r, 0, {});
+      if (t.type === 'stance') { g.onInput(0, t); s--; continue; } // (to its spot first)
       sum += rollBall(t, rackPins(), { rng: r }).down.length;
     }
     return sum / 12;
@@ -241,4 +243,55 @@ test('the computer bowls on its turn (and only then), better on Hard than on Eas
   const hard = avg('hard');
   assert.ok(hard > easy + 0.8, 'hard ' + hard + ' vs easy ' + easy);
   assert.ok(hard >= 8, 'hard ' + hard);
+});
+
+test('a second tap while the ball rolls is ignored (one roll, one timer)', () => {
+  const { ctx, g } = game();
+  g.onInput(0, { type: 'throw', stance: 0, aim: 0, power: 0.8, spin: 0 });
+  const id = g.rollId;
+  g.onInput(0, { type: 'throw', stance: 0, aim: 0, power: 0.8, spin: 0 });
+  assert.equal(g.rollId, id);
+  assert.equal(ctx.pendingTimers(), 1);
+});
+
+test('the last frame: after a strike and 4, the third ball faces what the 4 left; after a spare, a fresh rack', () => {
+  const { ctx, g } = game({ frames: 5 });
+  g.balls = [[10, 10, 10, 10], [10, 10, 10, 10]];
+  const plan = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9], [0, 1, 2, 3]];
+  g.rollFn = (t, pins) => { const want = plan.shift() || []; return { down: pins.filter((p) => want.includes(p.i)).map((p) => p.i), standing: pins.filter((p) => !want.includes(p.i)), gutter: false, frames: [{ t: 0, b: [0, 0], p: [] }], ms: 1500 }; };
+  bowl(ctx, g); // strike: a fresh rack
+  assert.equal(g.turn, 0);
+  assert.equal(g.pins.length, 10);
+  bowl(ctx, g); // 4 down
+  assert.equal(g.turn, 0);
+  assert.equal(g.pins.length, 6, 'the six the 4 left');
+  bowl(ctx, g);
+  assert.equal(g.turn, 1, 'then the other player');
+  // A spare in the last frame: the bonus ball at a fresh rack.
+  plan.push([0, 1, 2], [3, 4, 5, 6, 7, 8, 9]);
+  bowl(ctx, g);
+  bowl(ctx, g);
+  assert.equal(g.turn, 1);
+  assert.equal(g.pins.length, 10);
+});
+
+test('the roll in the view: how far in it is (a TV that reloads catches up), and the phones don\'t get its frames', () => {
+  const { ctx, g } = game();
+  g.onInput(0, { type: 'throw', stance: 0, aim: 0, power: 0.8, spin: 0 });
+  assert.equal(g.hostView().roll.at, 0);
+  ctx.advance(700);
+  assert.equal(g.hostView().roll.at, 700);
+  const p = g.playerView(0).roll;
+  assert.ok(p && p.id && p.frames === undefined, 'no frames on the phone');
+});
+
+test('the computer steps to its spot first (so the TV shows where it bowls from), then throws', () => {
+  const { g } = game();
+  g.turn = 1;
+  const m = tenPinBot(g.playerView(1), 'hard', seeded(1), 0, {});
+  assert.equal(m.type, 'stance');
+  g.onInput(1, m);
+  const t = tenPinBot(g.playerView(1), 'hard', seeded(1), 0, {});
+  assert.equal(t.type, 'throw');
+  assert.equal(t.stance, g.hostView().stance);
 });

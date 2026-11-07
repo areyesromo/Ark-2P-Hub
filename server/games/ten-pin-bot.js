@@ -42,7 +42,7 @@ export const POCKET = { stance: 0.25, aim: 0.4, power: 0.75, spin: -0.5 };
  */
 export function bestThrow(pins, { stance = 0, bumpers = false } = {}) {
   const full = pins.length === 10;
-  if (full && stance === POCKET.stance) return { ...POCKET };
+  if (full) return { ...POCKET }; // (from wherever: a full search would hold the server up for a second)
   const key = (full ? 'full' : pins.map((p) => p.i + ':' + p.x.toFixed(2) + ':' + p.z.toFixed(2)).join(',')) + '|' + stance + '|' + bumpers;
   if (cache.has(key)) return cache.get(key);
   const spins = full ? [-0.3, -0.5] : [0];
@@ -83,6 +83,8 @@ export function tenPinBot(view, level, rng = Math.random, retries = 0, memory = 
   const mean = pins.reduce((s, p) => s + p.x, 0) / (pins.length || 1);
   const stance = pins.length === 10 ? 0.25 : r2(clamp(-mean * 0.8, -0.3, 0.3));
   const t = bestThrow(pins, { stance, bumpers: view.bumpers });
+  // First to its spot (so the TV shows where it bowls from), then the throw.
+  if (Math.abs(view.stance - t.stance) > 0.005) return { type: 'stance', x: t.stance, botDelayMs: 500 * L.think };
   return {
     type: 'throw',
     stance: t.stance,

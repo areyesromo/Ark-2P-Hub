@@ -139,6 +139,8 @@
   function swingStart(e) {
     e.preventDefault();
     if (!myTurn() || !window.ArkMotion) return;
+    els.swing.setPointerCapture(e.pointerId); // (its let-go comes here even off the button)
+    if (swing) swing.stop();
     ArkMotion.ask();
     const readings = [];
     swing = { readings: readings, t0: performance.now(), stop: ArkMotion.on(function (r) { readings.push({ t: performance.now(), r: r }); if (readings.length > 120) readings.shift(); }) };
@@ -223,6 +225,9 @@
     if (!myTurn() && v.phase !== 'rolling') els.tip.textContent = v.phase === 'over' ? '' : 'Watch the TV.';
     if (!myTurn() && !drag && v.phase !== 'rolling') placeBall(stanceToPx(v.stance));
     els.lane.classList.toggle('waiting', !myTurn());
+    // (their turn: their ball, in their colour, where they stand)
+    els.ball.classList.toggle('p' + (me + 1), v.turn === me);
+    els.ball.classList.toggle('p' + (them + 1), v.turn !== me);
     els.swing.classList.toggle('hidden', !myTurn() || !window.ArkMotion || !ArkMotion.live());
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
     els.last.textContent = lastText(v);

@@ -70,7 +70,9 @@ export class TenPin {
     if (this.phase !== 'aim' || slot !== this.turn) return;
     if (input.type === 'stance') {
       if (!num(input.x)) return;
-      this.stances[slot] = r3(clamp(input.x, -LANE.maxStance, LANE.maxStance));
+      const x = r3(clamp(input.x, -LANE.maxStance, LANE.maxStance));
+      if (x === this.stances[slot]) return;
+      this.stances[slot] = x;
       return this.ctx.update();
     }
     if (input.type === 'throw') {
@@ -85,6 +87,7 @@ export class TenPin {
       this.lastThrow = t;
       this.roll = this.rollFn(t, this.pins);
       this.rollId++;
+      this.rollAt = this.ctx.now();
       this.enter('rolling', this.roll.ms + TIMING.afterMs, () => this.settle());
     }
   }
@@ -118,9 +121,8 @@ export class TenPin {
     }
     // The frame's over: the other player's turn (if they've a frame to bowl).
     const other = 1 - slot;
-    const nextPlayer = !this.card(other).done ? other : !this.card(slot).done ? slot : null;
-    if (nextPlayer === null) return this.finish();
-    this.turn = nextPlayer;
+    if (this.card(other).done) return this.finish(); // (players alternate frames, so both are done)
+    this.turn = other;
     this.pins = rackPins();
     this.enter('aim');
   }
@@ -142,7 +144,8 @@ export class TenPin {
       stance: this.stances[this.turn],
       standing: this.pins,
       next: cards[this.turn].next,
-      roll: this.phase === 'rolling' && this.roll ? { id: this.rollId, frames: this.roll.frames, ms: this.roll.ms, gutter: this.roll.gutter, throw: this.lastThrow } : null,
+      // (`at`: how far into the roll it is now, so a TV that reloads mid-roll picks it up there)
+      roll: this.phase === 'rolling' && this.roll ? { id: this.rollId, frames: this.roll.frames, ms: this.roll.ms, at: this.ctx.now() - this.rollAt, gutter: this.roll.gutter, throw: this.lastThrow } : null,
       last: this.last,
       cards,
       scores: cards.map((c) => c.total),
@@ -159,7 +162,10 @@ export class TenPin {
   }
 
   playerView(slot) {
-    return Object.assign(this.view(), { you: slot });
+    const v = this.view();
+    // (the phones don't play the roll back: no need for its frames)
+    if (v.roll) v.roll = { id: v.roll.id, ms: v.roll.ms, at: v.roll.at, gutter: v.roll.gutter };
+    return Object.assign(v, { you: slot });
   }
 }
 
@@ -167,7 +173,7 @@ export class TenPin {
 function isSplit(standing) {
   if (standing.some((p) => p.i === 0)) return false;
   const xs = standing.map((p) => p.x).sort((a, b) => a - b);
-  for (let k = 1; k < xs.length; k++) if (xs[k] - xs[k - 1] > 0.35) return true;
+  for (let k = 1; k < xs.length; k++) if (xs[k] - xs[k - 1] > 0.29) return true; // (a pin's gap or more: the 4-6, the 7-10)
   return false;
 }
 
