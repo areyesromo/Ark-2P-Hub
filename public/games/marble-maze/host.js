@@ -126,6 +126,64 @@
         }
       }
     });
+    // The moving parts: sliding blocks on their grooves, belts, the button and its gate.
+    gl.movers = [];
+    gl.belts = [];
+    gl.gates = [];
+    gl.button = null;
+    const BELT = { '>': [1, 0], '<': [-1, 0], '^': [0, -1], v: [0, 1] };
+    const groove = new THREE.MeshStandardMaterial({ color: 0x5b3a1e, roughness: 0.9 });
+    const beltMat = new THREE.MeshStandardMaterial({ color: 0x1f2937, roughness: 0.6 });
+    const arrowMat = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xb45309, emissiveIntensity: 0.5 });
+    const arrowShape = new THREE.Shape();
+    arrowShape.moveTo(-0.16, -0.2); arrowShape.lineTo(0.12, 0); arrowShape.lineTo(-0.16, 0.2); arrowShape.lineTo(-0.06, 0); arrowShape.lineTo(-0.16, -0.2);
+    const arrowGeo = new THREE.ShapeGeometry(arrowShape);
+    level.map.forEach(function (row, y) {
+      for (let x = 0; x < row.length; x++) {
+        const c = row[x];
+        const px = x + 0.5 - w / 2;
+        const pz = y + 0.5 - h / 2;
+        if (c === '=') {
+          const g = new THREE.Mesh(new THREE.PlaneGeometry(1, 0.5), groove);
+          g.rotation.x = -Math.PI / 2;
+          g.position.set(px, 0.004, pz);
+          board.add(g);
+          if (row[x - 1] !== '=') {
+            const block = new THREE.Mesh(new THREE.BoxGeometry(0.96, WALL_H, 0.96),
+              new THREE.MeshStandardMaterial({ color: 0xea580c, roughness: 0.4, metalness: 0.2 }));
+            block.castShadow = block.receiveShadow = true;
+            block.position.set(px, WALL_H / 2, pz);
+            board.add(block);
+            gl.movers.push(block);
+          }
+        } else if (BELT[c]) {
+          const plate = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), beltMat);
+          plate.rotation.x = -Math.PI / 2;
+          plate.position.set(px, 0.003, pz);
+          plate.receiveShadow = true;
+          const arrow = new THREE.Mesh(arrowGeo, arrowMat);
+          arrow.rotation.x = -Math.PI / 2;
+          arrow.rotation.z = -Math.atan2(BELT[c][1], BELT[c][0]);
+          arrow.position.set(px, 0.008, pz);
+          board.add(plate, arrow);
+          gl.belts.push({ mesh: arrow, x: px, z: pz, d: BELT[c] });
+        } else if (c === 'b') {
+          const btn = new THREE.Mesh(new THREE.CylinderGeometry(0.32, 0.36, 0.12, 28),
+            new THREE.MeshStandardMaterial({ color: 0xdc2626, emissive: 0x7f1d1d, emissiveIntensity: 0.6 }));
+          btn.position.set(px, 0.06, pz);
+          btn.castShadow = true;
+          board.add(btn);
+          gl.button = btn;
+        } else if (c === 'D') {
+          const gate = new THREE.Mesh(new THREE.BoxGeometry(1, WALL_H, 0.3),
+            new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.35, metalness: 0.4 }));
+          gate.position.set(px, WALL_H / 2, pz);
+          gate.castShadow = true;
+          board.add(gate);
+          gl.gates.push(gate);
+        }
+      }
+    });
     const marble = new THREE.Mesh(new THREE.SphereGeometry(MARBLE_R, 32, 20),
       new THREE.MeshPhysicalMaterial({ color: 0xcbd5e1, metalness: 0.65, roughness: 0.18, clearcoat: 1, clearcoatRoughness: 0.1 }));
     // A stripe so you can see it roll.
@@ -189,6 +247,27 @@
     }
     gl.marble.visible = shown.z < 0.95;
     if (gl.goal) gl.goal.scale.setScalar(1 + 0.08 * Math.sin(t / 220));
+    // Sliding blocks follow the server; belt arrows creep along; the gate sinks once it's open.
+    (v.movers || []).forEach(function (mv, i) {
+      const b = gl.movers[i];
+      if (!b) return;
+      const tx = mv.x + 0.5 - gl.size.w / 2;
+      b.position.x += (tx - b.position.x) * k;
+    });
+    const creep = ((t / 1000) * 0.8) % 1 - 0.5;
+    gl.belts.forEach(function (b) {
+      b.mesh.position.x = b.x + b.d[0] * creep * 0.6;
+      b.mesh.position.z = b.z + b.d[1] * creep * 0.6;
+    });
+    gl.gates.forEach(function (g) {
+      const y = v.gateOpen ? -WALL_H / 2 + 0.01 : WALL_H / 2;
+      g.position.y += (y - g.position.y) * Math.min(1, dt * 5);
+    });
+    if (gl.button) {
+      gl.button.position.y = v.gateOpen ? 0.02 : 0.06;
+      gl.button.material.color.setHex(v.gateOpen ? 0x22c55e : 0xdc2626);
+      gl.button.material.emissive.setHex(v.gateOpen ? 0x15803d : 0x7f1d1d);
+    }
     gl.renderer.render(gl.scene, gl.camera);
     els.clock.textContent = time(v.phase === 'play' || v.phase === 'fall' ? v.elapsedMs + (performance.now() - viewAt) : v.elapsedMs);
   }
@@ -198,9 +277,9 @@
   function overlayHtml(v) {
     if (v.phase === 'intro') {
       return '<div class="panel"><div class="title">Maze ' + (v.levelIndex + 1) + ' · ' + esc(v.level.name) + '</div>' +
-        '<p>Par ' + time(v.level.parMs) + ' for ⭐⭐⭐</p><div class="count">' + v.countdown + '</div></div>';
+        (v.level.tip ? '<p>' + esc(v.level.tip) + '</p>' : '') + '<p>Par ' + time(v.level.parMs) + ' for ⭐⭐⭐</p><div class="count">' + v.countdown + '</div></div>';
     }
-    if (v.phase === 'fall') return '<div class="banner">🕳️ Down the hole! Back to the start…</div>';
+    if (v.phase === 'fall') return '<div class="banner">' + (v.fallBy === 'block' ? '💥 Squashed! Back to the start…' : '🕳️ Down the hole! Back to the start…') + '</div>';
     if (v.phase === 'clear' && v.result) {
       return v.result.cleared
         ? '<div class="panel won"><div class="title">🎉 Made it!</div><p>' + time(v.result.ms) + (v.result.falls ? ' · ' + v.result.falls + ' fall' + (v.result.falls > 1 ? 's' : '') : '') + '</p><div class="stars">' + stars(v.result.stars) + '</div></div>'

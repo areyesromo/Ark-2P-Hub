@@ -55,7 +55,7 @@ function autopilot(game) {
 }
 
 test('every maze parses and can be solved without crossing a hole', () => {
-  assert.equal(LEVELS.length, 5);
+  assert.equal(LEVELS.length, 8);
   for (const l of LEVELS) {
     const p = parseLevel(l);
     assert.ok(l.map.every((r) => r.length === p.w), l.name + ': rectangular');
@@ -135,4 +135,74 @@ test('falling down a hole: the marble sinks, then starts again; running out of t
   ctx.advance(TIMING.levelMs + 40);
   assert.equal(game.phase, 'clear');
   assert.deepEqual([game.result.cleared, game.result.stars], [false, 0]);
+});
+
+// ---- the mazes with moving parts ----
+import { MOVER, CONVEYOR } from '../server/games/marble-maze.js';
+
+/** A game on maze `name`, in play, with the marble put at (x, y), still. */
+function on(name, x, y) {
+  const ctx = fakeCtx();
+  ctx.settings = { levels: 8 };
+  const game = new MarbleMaze(ctx);
+  game.start();
+  while (game.level.name !== name) game.nextLevel();
+  ctx.advance(TIMING.introMs + 20);
+  run(ctx, 20);
+  assert.equal(game.phase, 'play');
+  Object.assign(game.marble, { x, y, vx: 0, vy: 0 });
+  return { ctx, game };
+}
+
+test('the new mazes: a sliding wall, conveyor belts, a button that opens a gate (and every one solvable)', () => {
+  const names = LEVELS.map((l) => l.name);
+  for (const n of ['Sliding door', 'Conveyor belts', 'Button and gate']) assert.ok(names.includes(n), n);
+  const p = (n) => parseLevel(LEVELS.find((l) => l.name === n));
+  assert.equal(p('Sliding door').movers.length, 1);
+  assert.ok(Object.keys(p('Conveyor belts').conveyors).length > 10);
+  const gate = p('Button and gate');
+  assert.ok(gate.button && gate.gates.length);
+  // Its par counts the trip to the button first.
+  assert.ok(gate.path > shortestPath(LEVELS.find((l) => l.name === 'Button and gate').map), 'via the button');
+});
+
+test('the sliding wall moves back and forth along its track, and the marble can\'t go through it', () => {
+  const { ctx, game } = on('Sliding door', 9.5, 2.5);
+  const xs = [];
+  for (let i = 0; i < 40; i++) { xs.push(game.hostView().movers[0].x); run(ctx, 100); }
+  assert.ok(Math.max(...xs) - Math.min(...xs) > 4, 'it travels: ' + Math.min(...xs) + '..' + Math.max(...xs));
+  // Wherever it is, the marble's never inside it.
+  for (let i = 0; i < 200; i++) {
+    game.onInput(0, { type: 'move', x: 0, y: 0 });
+    game.onInput(1, { type: 'move', x: 0, y: 1 });
+    run(ctx, PHYSICS.tickMs);
+    const mv = game.hostView().movers[0];
+    const m = game.marble;
+    const inside = m.x > mv.x && m.x < mv.x + 1 && m.y > mv.y && m.y < mv.y + 1;
+    assert.ok(!inside || game.phase !== 'play', 'never inside the wall');
+  }
+  assert.ok(MOVER.speed > 0);
+});
+
+test('a conveyor belt carries the marble its way, with nobody tilting', () => {
+  const { ctx, game } = on('Conveyor belts', 3.5, 1.5);
+  run(ctx, 600);
+  assert.ok(game.marble.vx > 0.5, 'pushed right: ' + game.marble.vx);
+  assert.ok(CONVEYOR.accel > 0);
+});
+
+test('the gate stays shut until the marble rolls over the button, then stays open (a fall too)', () => {
+  const lvl = parseLevel(LEVELS.find((l) => l.name === 'Button and gate'));
+  const [gx, gy] = lvl.gates[0];
+  const { ctx, game } = on('Button and gate', gx + 0.5, gy - 0.5);
+  assert.equal(game.hostView().gateOpen, false);
+  game.onInput(1, { type: 'move', x: 0, y: 1 });
+  run(ctx, 1500);
+  assert.ok(game.marble.y < gy, 'stopped at the gate');
+  Object.assign(game.marble, { x: lvl.button[0] + 0.5, y: lvl.button[1] + 0.5, vx: 0, vy: 0 });
+  game.onInput(1, { type: 'move', x: 0, y: 0 });
+  run(ctx, 100);
+  assert.equal(game.hostView().gateOpen, true);
+  game.respawn();
+  assert.equal(game.hostView().gateOpen, true, 'still open after starting again');
 });

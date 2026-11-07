@@ -18,15 +18,20 @@ const LEVEL = {
 };
 const DIRS = [[1, 0], [-1, 0], [0, 1], [0, -1]];
 
-/** Steps from every open cell to the goal (round walls and holes, and dearer next to a hole). */
-function costMap(map) {
+const BELT = { '>': [1, 0], '<': [-1, 0], '^': [0, -1], v: [0, 1] };
+
+/**
+ * Steps from every open cell to `to` (the goal, or the button while its gate is shut), round walls,
+ * holes and a shut gate, dearer next to a hole and against a belt.
+ */
+function costMap(map, to = 'G', gateOpen = true) {
   const h = map.length;
   const w = map[0].length;
   const at = (x, y) => (map[y] || '')[x];
   const nearHole = (x, y) => DIRS.some(([dx, dy]) => at(x + dx, y + dy) === 'O') || [[1, 1], [1, -1], [-1, 1], [-1, -1]].some(([dx, dy]) => at(x + dx, y + dy) === 'O');
   const cost = Array.from({ length: h }, () => new Array(w).fill(Infinity));
   let goal = null;
-  map.forEach((r, y) => [...r].forEach((c, x) => { if (c === 'G') goal = [x, y]; }));
+  map.forEach((r, y) => [...r].forEach((c, x) => { if (c === to) goal = [x, y]; }));
   if (!goal) return cost;
   // (a small Dijkstra: the maps are tiny)
   cost[goal[1]][goal[0]] = 0;
@@ -38,8 +43,11 @@ function costMap(map) {
       const nx = x + dx;
       const ny = y + dy;
       const c = at(nx, ny);
-      if (!c || c === '#' || c === 'O') continue;
-      const step = 1 + (nearHole(nx, ny) ? 3 : 0);
+      if (!c || c === '#' || c === 'O' || (c === 'D' && !gateOpen)) continue;
+      // (walking back from the goal: going nx,ny -> x,y against its belt is hard work)
+      const belt = BELT[c];
+      const against = !belt ? 0 : belt[0] === -dx && belt[1] === -dy ? 0 : belt[0] === dx && belt[1] === dy ? 8 : 2;
+      const step = 1 + (nearHole(nx, ny) ? 3 : 0) + against;
       if (cost[y][x] + step < cost[ny][nx]) {
         cost[ny][nx] = cost[y][x] + step;
         open.push([nx, ny]);
@@ -55,7 +63,10 @@ export function marbleMazeBot(view, level, rng = Math.random, retries = 0, memor
   // Falling, between mazes, or the countdown: hands off the board.
   if (view.phase !== 'play') return view.phase === 'over' ? null : { type: 'move', x: 0, y: 0, botDelayMs: 150 };
   const map = view.level.map;
-  if (!memory.marble || memory.marble.map !== map) memory.marble = { map, cost: costMap(map) };
+  // A shut gate: the button first.
+  const hasButton = map.some((r) => r.includes('b'));
+  const to = hasButton && !view.gateOpen ? 'b' : 'G';
+  if (!memory.marble || memory.marble.map !== map || memory.marble.to !== to) memory.marble = { map, to, cost: costMap(map, to, !hasButton || view.gateOpen) };
   const { cost } = memory.marble;
   const m = view.marble;
   // The point to head for: a few cells down the cheapest way from here.
@@ -70,6 +81,13 @@ export function marbleMazeBot(view, level, rng = Math.random, retries = 0, memor
     if (!best) break;
     cx = best.x;
     cy = best.y;
+  }
+  // A sliding block on the row ahead: wait on this side until it's gone past.
+  for (const b of view.movers || []) {
+    if (cy === b.y && Math.floor(m.y) !== b.y && Math.abs(b.x + 0.5 - (cx + 0.5)) < 2.6) {
+      cx = Math.floor(m.x);
+      cy = Math.floor(m.y);
+    }
   }
   const tx = cx + 0.5;
   const ty = cy + 0.5;
