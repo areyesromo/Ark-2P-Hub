@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (43)
+## Games (44)
 
-### ⚔️ Competitive (31)
+### ⚔️ Competitive (32)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -42,6 +42,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Anagram Duel | `anagram-duel` | Same five mixed-up letters for both of you: the first to make a word with all of them takes the round. | `server/games/anagram-duel-bot.js`, `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js` |
 | Word Hunt | `word-hunt` | One word search, two hunters: mark a hidden word first and it's yours. Find more than half to take the grid. | `server/games/word-hunt-bot.js`, `server/games/word-hunt-words.js`, `server/games/word-hunt.js`, `public/games/word-hunt/`, `test/word-hunt.test.js` |
 | Mini Golf | `mini-golf` | Same hole, same time: pull back and putt on your phone. Walls, bumpers, sand, water and a windmill. Fewest strokes wins. | `server/games/mini-golf-bot.js`, `server/games/mini-golf.js`, `public/games/mini-golf/`, `test/mini-golf.test.js` |
+| Bowling | `ten-pin` | Ten-pin bowling in 3D: swipe the ball down the lane, curve it into the pocket, and bowl strikes and spares over ten frames. | `server/games/ten-pin-bot.js`, `server/games/ten-pin-roll.js`, `server/games/ten-pin.js`, `public/games/ten-pin/`, `test/ten-pin.test.js` |
 | Draw Duel | `draw-duel` | A shape flashes up, then vanishes. Redraw it from memory on your phone; the closest match scores the most. 5 rounds. | `server/games/draw-duel.js`, `server/games/draw-shapes.js`, `server/games/shape-library.js`, `public/games/draw-duel/`, `test/draw-duel.test.js`, `test/sounds.test.js` |
 | Battleship | `battleship` | Hide your fleet on your phone, then take turns firing at the enemy grid. Sink every ship to win. Or Ultimate: commanders, shaped ships, skills and new seas. | `server/games/battleship-bot.js`, `server/games/battleship-ultimate.js`, `server/games/battleship.js`, `public/games/battleship/`, `test/battleship-bot.test.js`, `test/battleship-ultimate.test.js`, `test/battleship.test.js`, `test/sounds.test.js` |
 | Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four-bot.js`, `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |

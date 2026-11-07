@@ -42,6 +42,7 @@ import { asteroidDuelBot } from './asteroid-duel-bot.js';
 import { rallyTennisBot } from './rally-tennis-bot.js';
 import { sumoBot } from './sumo-bot.js';
 import { miniGolfBot } from './mini-golf-bot.js';
+import { tenPinBot } from './ten-pin-bot.js';
 import { blockBattleBot } from './block-battle-bot.js';
 import { crazyEightsBot } from './crazy-eights-bot.js';
 import { liarsDiceBot } from './liars-dice-bot.js';
@@ -63,6 +64,7 @@ import wordRace from './word-race.js';
 import anagramDuel from './anagram-duel.js';
 import wordHunt, { SIZES as HUNT_SIZES } from './word-hunt.js';
 import miniGolf from './mini-golf.js';
+import tenPin from './ten-pin.js';
 import bombDuel from './bomb-duel.js';
 import kartRace from './kart-race.js';
 import kartRace3d from './kart-race-3d.js';
@@ -212,6 +214,10 @@ const GAMES = [
     ...firstTo('Grids to win', [2, 1, 3]),
   }),
   { ...miniGolf, bot: miniGolfBot },
+  withSetup({ ...tenPin, bot: tenPinBot }, {
+    frames: { title: 'Game length', values: [10, 5], label: (n) => (n === 10 ? '10 frames (a full game)' : '5 frames (a quick one)') },
+    bumpers: { title: 'Bumpers', values: [0, 1], label: (b) => (b ? '🛡️ Bumpers up: no gutter balls' : 'No bumpers') },
+  }),
   withSetup(drawDuel, { rounds: { title: 'Shapes to draw', values: [5, 3, 7, 10], label: (n) => `${n} rounds` }, ...timer('timed', '20 s to draw') }),
   withSetup({ ...battleship, bot: battleshipBot }, {
     mode: { title: 'Mode', values: ['classic', 'ultimate'], label: (k) => (k === 'ultimate' ? '⚡ Ultimate: commanders, shaped ships and skills' : 'Classic: 5 ships, one shot a turn') },

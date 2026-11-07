@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.33
+
+- 🎳 New game: Bowling. Ten-pin in 3D with real pin action: drag the ball to where you stand,
+  swipe it up the lane, and curve the swipe for a hook into the pocket (or swing the phone). Ten
+  frames or a quick five, bumpers if you want them, and a computer opponent.
+- 🏆 Two new trophies: a Turkey (three strikes in a row) and a Perfect game (300).
+
 ## 0.1.32
 
 - 🏰 Dungeon Duo: two new floors before the Warden. The Ice Caves (a frozen lake you slide on, and
