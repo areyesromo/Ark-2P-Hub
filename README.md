@@ -580,8 +580,6 @@ moving parts, Kitchen Rush's Food Truck); 🎳 Bowling, ten-pin in 3D; 🏗️ T
 
 **Next up: more to play together**
 
-- **Online, without the TV's computer**: a relay (as Jackbox does) so phones anywhere can play with
-  nothing running at home; for now online play goes through the hub.
 - **More minigames**, and more co-op games in the spirit of Tower Stack.
 - **HD 3D models and textures** for the 3D board and minigames (part of the desktop plan above):
   richer scenery and the full-detail characters, with shadows turned back on
