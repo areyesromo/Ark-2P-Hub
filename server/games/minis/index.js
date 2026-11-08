@@ -34,6 +34,10 @@ import cannonLob from './cannon-lob.js';
 import stackAttack from './stack-attack.js';
 import bumperCars from './bumper-cars.js';
 import paintGrab from './paint-grab.js';
+import drumBeat from './drum-beat.js';
+import musicalChairs from './musical-chairs.js';
+import archery from './archery.js';
+import curling from './curling.js';
 
 export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath];
-export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe, cannonLob, stackAttack, bumperCars, paintGrab];
+export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe, cannonLob, stackAttack, bumperCars, paintGrab, drumBeat, musicalChairs, archery, curling];

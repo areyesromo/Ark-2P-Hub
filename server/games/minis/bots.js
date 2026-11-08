@@ -26,6 +26,9 @@ import { CATCH, LEAN_PER, SPEED as SPEED_TRAY } from './stack-attack.js';
 import { adjacent, DOTS } from './mirror-me.js';
 import * as CANNON from './cannon-lob.js';
 import { FRONT_CONE, MAX_SPEED as MAX_CAR_SPEED } from './bumper-cars.js';
+import * as DRUM from './drum-beat.js';
+import * as ARCHERY from './archery.js';
+import * as CURL from './curling.js';
 
 /** A person at each level: timing error (ms sd), aim wobble, slips, mashing rate, thinking pace. */
 const SKILL = {
@@ -543,6 +546,85 @@ export const PLAYERS = {
     m.tile = { c: target.c, r: target.r };
     const dir = unit(target.c + 0.5 - me.x + gauss(rng) * L.aim * 3, target.r + 0.5 - me.y + gauss(rng) * L.aim * 3);
     return { type: 'move', x: dir.x, y: dir.y, botDelayMs: react() * 0.7 };
+  },
+  'drum-beat'({ s, you, el, L, rng, m, at }) {
+    // The next note it hasn't hit, timed with a person's error (now and then the wrong lane).
+    const mine = new Set(s.hits[you]);
+    m.plan = m.plan || {};
+    const i = s.chart.findIndex((n, k) => !mine.has(k) && !(m.plan[k] && m.plan[k].sent) && n.t > el - DRUM.WINDOWS.good + 20);
+    if (i === -1) return null;
+    const n = s.chart[i];
+    if (!m.plan[i]) m.plan[i] = { t: Math.max(0, n.t + gauss(rng) * L.timing), lane: rng() < L.slip ? (n.lane + 1) % s.lanes : n.lane };
+    const p = m.plan[i];
+    if (el > p.t + 25) {
+      p.sent = true; // (its moment's gone, hit or not: on to the next)
+      return null;
+    }
+    return { type: 'hit', lane: p.lane, t: Math.round(p.t), botFor: 'note' + i, ...at(p.t) };
+  },
+  'musical-chairs'({ s, you, el, L, rng, m, react }) {
+    if (s.sat[you] || el < s.trippedUntil[you] || s.stage === 'done') return null;
+    const r = (m.rounds = m.rounds || {});
+    if (!r[s.round]) r[s.round] = { rt: react(), fooled: rng() < L.slip * 3 };
+    if (s.stage === 'stopped') return { type: 'sit', rt: Math.round(r[s.round].rt), botDelayMs: r[s.round].rt, botFor: 'stop' + s.round };
+    // A dip in the music fools it now and then (Easy most).
+    if (s.stage === 'dip' && r[s.round].fooled) {
+      r[s.round].fooled = false;
+      return { type: 'sit', rt: Math.round(r[s.round].rt), botDelayMs: r[s.round].rt, botFor: 'dip' + s.round };
+    }
+    return null;
+  },
+  archery({ s, you, el, L, rng, m, react, at }) {
+    const n = s.arrows[you].length;
+    if (n >= s.arrowsEach) return null;
+    // Each arrow: aim off for the wind (not quite right), draw, then let go in the steady spell,
+    // at a moment the sight's near still (Hard picks it well; Easy any time it's steady).
+    if (!m.arrow || m.arrow.n !== n) m.arrow = { n, x: -s.wind + gauss(rng) * L.aim * 4, y: gauss(rng) * L.aim * 3, shot: null };
+    const a = m.arrow;
+    const aim = s.aims[you];
+    if (Math.abs(aim.x - a.x) > 0.01 || Math.abs(aim.y - a.y) > 0.01) return { type: 'aim', x: Math.round(a.x * 1000) / 1000, y: Math.round(a.y * 1000) / 1000, botDelayMs: react() };
+    const drawnAt = s.drawnAt[you];
+    if (drawnAt === null) {
+      const t = el + react();
+      return { type: 'draw', on: true, t: Math.round(t), ...at(t) };
+    }
+    if (a.shot === null) {
+      const from = drawnAt + 1300;
+      const to = drawnAt + 3200;
+      let best = from + rng() * (to - from);
+      if (L.timing < 60) {
+        for (let t = from; t < to; t += 20) if (Math.hypot(...ARCHERY.swayAt(t, s.seeds[you], drawnAt)) < Math.hypot(...ARCHERY.swayAt(best, s.seeds[you], drawnAt))) best = t;
+      }
+      a.shot = Math.max(el + 30, best + gauss(rng) * L.timing);
+    }
+    return { type: 'shoot', t: Math.round(a.shot), botFor: 'arrow' + n, ...at(a.shot) };
+  },
+  curling({ s, you, el, L, rng, m, react }) {
+    if (s.turn !== you) return null;
+    if (s.phase === 'aim') {
+      // Draw to the button; Hard knocks out a rival stone sitting nearer the button than its own.
+      const d = (st) => Math.hypot(st.x, st.z - CURL.SHEET.button);
+      const near = s.stones.slice().sort((p, q) => d(p) - d(q))[0];
+      let x = 0;
+      let z = CURL.SHEET.button;
+      let power = (Math.sqrt(2 * CURL.ICE.decel * z) - CURL.THROW.minSpeed) / (CURL.THROW.maxSpeed - CURL.THROW.minSpeed);
+      if (near && near.slot !== you && d(near) < CURL.SHEET.house && L.timing < 60) {
+        x = near.x;
+        z = near.z;
+        power = 1;
+      }
+      const aim = Math.atan2(x, z) / CURL.THROW.maxAngle + gauss(rng) * L.aim * 5;
+      return { type: 'throw', aim: Math.round(aim * 1000) / 1000, power: Math.round(clamp(power + gauss(rng) * L.aim * 1.2, 0, 1) * 1000) / 1000, curl: 0, botDelayMs: (1500 + rng() * 1500) * L.think };
+    }
+    // Sliding: sweep while its stone looks like stopping short of the button.
+    const mine = s.stones.filter((st) => st.slot === you && st.moving).sort((p, q) => q.z - p.z)[0];
+    if (!mine) return null;
+    let v = 0;
+    if (m.prev && el > m.prev.t + 80) v = ((mine.z - m.prev.z) * 1000) / (el - m.prev.t);
+    if (!m.prev || el > m.prev.t + 80) m.prev = { z: mine.z, t: el };
+    const stopsAt = mine.z + (v * v) / (2 * CURL.ICE.decel);
+    if (v > 0 && stopsAt < CURL.SHEET.button - 0.2) return { type: 'sweep', botDelayMs: (1000 / L.rate) * (0.8 + rng() * 0.4) };
+    return null;
   },
 };
 

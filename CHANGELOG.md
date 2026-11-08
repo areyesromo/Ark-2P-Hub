@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.36
+
+- 🥁 Four new minigames, in Party Minigames and on the Party Board: Drum Beat (hit the notes on the
+  beat), Musical Chairs (sit first when the music stops, but don't fall for a dip), Archery (steady
+  the bow and allow for the wind, in 3D) and Curling (slide, curl and sweep to the button, in 3D).
+
 ## 0.1.35
 
 - ✨ HD graphics in the 3D games: lava, lanterns, sparks and the goal ring glow, shiny things
