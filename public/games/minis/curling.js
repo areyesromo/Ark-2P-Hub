@@ -85,6 +85,16 @@
     h.camZ += (want - h.camZ) * 0.12;
     // A controller player's aim: a line down the ice (and the power, while they hold A).
     const pad = s.phase === 'aim' ? pads[s.turn] : null;
+    // The throw clock, counting down on the TV.
+    if (s.phase === 'aim' && !pad) {
+      const left = Math.max(0, Math.ceil((s.throwBy - h.mctx.t()) / 1000));
+      const note = h.box.querySelector('.mi-curl-note');
+      const txt = '⏱ ' + left + 's to throw';
+      if (left <= 10 && note.dataset.left !== txt) {
+        note.dataset.left = txt;
+        note.textContent = txt;
+      }
+    }
     if (!h.aim) {
       h.aim = new T.Mesh(new T.PlaneGeometry(0.03, 8), new T.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.6 }));
       h.aim.rotation.x = -Math.PI / 2;
@@ -210,9 +220,12 @@
     // Controllers: aim with the stick, hold A for power (the meter swings), let go to throw (the
     // stick sideways then is curl); while it slides, each press of A is a sweep.
     padPoll: function (pad, s, slot) {
-      if (!pads[slot]) pads[slot] = { aim: 0, charging: false, t0: 0, n: 0 };
+      if (!pads[slot]) pads[slot] = { aim: 0, charging: false, t0: 0, n: 0, armed: false };
       const p = pads[slot];
       const held = pad.held.indexOf('A') !== -1 || pad.held.indexOf('RT') !== -1;
+      // (A still down from pressing Ready doesn't start a throw: let go first)
+      if (!held) p.armed = true;
+      if (!p.armed) return null;
       const sx = Math.abs(pad.stick.x) > 0.2 ? pad.stick.x : 0;
       if (s.phase === 'sliding' && s.turn === slot) {
         if (held && !p.wasHeld) {

@@ -36,7 +36,7 @@ test('the eighth batch: two 2D and two 3D party minigames, in the party list', (
   for (const [m, look] of [[drumBeat, '2d'], [musicalChairs, '2d'], [archery, '3d'], [curling, '3d']]) {
     assert.equal(m.kind, 'party');
     assert.equal(m.look, look, m.id);
-    assert.ok(m.howTo && m.order && m.durationMs <= 50000, m.id);
+    assert.ok(m.howTo && m.order && m.durationMs <= 80000, m.id);
     assert.ok(PARTIES.includes(m), m.id + ' is in PARTIES');
   }
 });
@@ -51,20 +51,22 @@ test('drum beat: the same chart for both of you; a hit on time scores more than 
   assert.deepEqual(inst.view(1).chart, s.chart);
   const n0 = s.chart[0];
   const n1 = s.chart[1];
-  ctx.advance(n0.t + DRUM_WINDOWS.good); // (a phone's time can't run ahead of the game's)
-  inst.onInput(0, { type: 'hit', lane: n0.lane, t: n0.t + 10 });
-  inst.onInput(1, { type: 'hit', lane: n0.lane, t: n0.t + DRUM_WINDOWS.good - 5 });
+  // (a phone's press is judged as it arrives, less the 80 ms it takes to get here)
+  ctx.advance(n0.t + 80 + 10);
+  inst.onInput(0, { type: 'hit', lane: n0.lane });
+  ctx.advance(DRUM_WINDOWS.good - 15);
+  inst.onInput(1, { type: 'hit', lane: n0.lane });
   let v = inst.view(0);
   assert.equal(v.last[0], 'perfect');
   assert.equal(v.last[1], 'good');
   assert.ok(v.score[0] > v.score[1]);
   // The same note again: already hit.
   const before = v.score[0];
-  inst.onInput(0, { type: 'hit', lane: n0.lane, t: n0.t + 20 });
+  inst.onInput(0, { type: 'hit', lane: n0.lane });
   assert.equal(inst.view(0).score[0], before);
   // A lane with no note near: a miss, the streak broken.
-  ctx.advance(n1.t - ctx.now());
-  inst.onInput(0, { type: 'hit', lane: (n1.lane + 1) % LANES, t: n1.t });
+  ctx.advance(n1.t + 80 - ctx.now());
+  inst.onInput(0, { type: 'hit', lane: (n1.lane + 1) % LANES });
   v = inst.view(0);
   assert.equal(v.last[0], 'miss');
   assert.equal(v.combo[0], 0);
@@ -75,9 +77,9 @@ test('drum beat: a streak of perfects pays more; the higher score wins once the 
   const { inst, ctx, ended } = run(drumBeat);
   const chart = inst.view(0).chart;
   chart.forEach((n, i) => {
-    ctx.advance(n.t - ctx.now());
-    inst.onInput(0, { type: 'hit', lane: n.lane, t: n.t });
-    if (i < 5) inst.onInput(1, { type: 'hit', lane: n.lane, t: n.t });
+    ctx.advance(n.t + 80 - ctx.now());
+    inst.onInput(0, { type: 'hit', lane: n.lane });
+    if (i < 5) inst.onInput(1, { type: 'hit', lane: n.lane });
   });
   const v = inst.view(0);
   assert.ok(v.score[0] > chart.length * 3, 'streak bonus: ' + v.score[0]);
@@ -96,10 +98,12 @@ test('musical chairs: when the music stops, the first to sit wins the round; sit
   // Wait for the stop.
   for (let i = 0; i < 200 && inst.view(0).stage !== 'stopped'; i++) ctx.advance(50);
   assert.equal(inst.view(0).stage, 'stopped');
-  inst.onInput(1, { type: 'sit', rt: 320 });
-  inst.onInput(0, { type: 'sit', rt: 250 });
+  ctx.advance(300);
+  inst.onInput(0, { type: 'sit' });
+  ctx.advance(60);
+  inst.onInput(1, { type: 'sit' });
   ctx.advance(CHAIR_TIMING.graceMs + 10);
-  assert.equal(inst.view(0).last.winner, 0, 'the quicker reaction');
+  assert.equal(inst.view(0).last.winner, 0, 'the quicker one');
   assert.deepEqual(inst.view(0).wins, [1, 0]);
 });
 
@@ -108,8 +112,9 @@ test('musical chairs: a fake stop (the music dips and comes back) catches anyone
   let rounds = 0;
   for (let i = 0; i < 4000 && !ended(); i++) {
     const s = inst.view(0);
-    if (s.stage === 'stopped' && !s.sat[0]) {
-      inst.onInput(0, { type: 'sit', rt: 200 });
+    if (s.stage === 'stopped' && !s.sat[0] && !s.sat[1]) {
+      ctx.advance(250);
+      inst.onInput(0, { type: 'sit' });
       rounds++;
     }
     ctx.advance(25);
@@ -129,7 +134,6 @@ test('musical chairs: a fake stop (the music dips and comes back) catches anyone
 // ---- Archery ----
 
 test('archery: the aim wobbles less while you hold the bow drawn (then more as your arms tire); rings score 10 down to 0', () => {
-  assert.ok(Math.hypot(...swayAt(1000, 1, -Infinity)) > Math.hypot(...swayAt(1000, 1, 0)) * 0 || true);
   const amp = (t, drawnAt) => Math.max(...[0, 100, 200, 300, 400, 500].map((d) => Math.hypot(...swayAt(t + d, 1, drawnAt))));
   assert.ok(amp(2000, 500) < amp(2000, 1950) * 0.6, 'steadier after a moment held');
   assert.ok(amp(8000, 500) > amp(2000, 500), 'tired after a long hold');
@@ -193,4 +197,100 @@ test('curling: curl bends the stone; stones knock each other; the stone nearest 
   assert.deepEqual(ended(), { winner: 0 });
   assert.equal(STONES, 2);
   assert.ok(STONE_R > 0.1);
+});
+
+// ---- the computer, driven as the room drives it (it looks when a view goes out, one move waiting) ----
+
+async function roomBot(def, levels, seed = 1, maxMs = 80000, players) {
+  const { miniBot } = await import('../server/games/minis/bots.js');
+  const ctx = fakeCtx();
+  let ended = null;
+  const inputs = [[], []];
+  const waiting = [null, null];
+  let rng = seeded(seed * 7 + 1);
+  let inst = null;
+  const view = (slot) => ({ mini: { id: def.id, kind: def.kind }, phase: 'play', you: slot, count: 1, elapsedMs: ctx.now(), state: inst.view(slot) });
+  const think = (slot) => (levels[slot] ? miniBot(view(slot), levels[slot], rng, mem[slot]) : null);
+  const mem = [{}, {}];
+  function drive(slot) {
+    const first = think(slot);
+    if (!first && waiting[slot]) {
+      ctx.clearTimeout(waiting[slot]);
+      waiting[slot] = null;
+    }
+    if (!first || waiting[slot]) return;
+    waiting[slot] = ctx.setTimeout(() => {
+      waiting[slot] = null;
+      const fresh = think(slot);
+      if (!fresh) return;
+      if (first.botFor !== undefined && fresh.botFor !== first.botFor) return drive(slot);
+      const { botDelayMs, botFor, ...input } = first;
+      inputs[slot].push(input);
+      inst.onInput(slot, input);
+      drive(slot);
+    }, Math.max(0, first.botDelayMs));
+  }
+  const api = {
+    players: players || ctx.players.map((p, i) => ({ ...p, bot: levels[i], local: true })), rng: seeded(seed), speed: 1, now: () => ctx.now(), elapsed: () => ctx.now(),
+    update() { if (inst && !ended) { drive(0); drive(1); } },
+    setTimeout: ctx.setTimeout, clearTimeout: ctx.clearTimeout,
+    end(r) { if (!ended) ended = r; },
+  };
+  inst = def.create(api);
+  inst.start();
+  api.update();
+  ctx.advance(maxMs);
+  return { inst, inputs, ended };
+}
+
+test('the computer, driven as the room does it: Drum Beat keeps playing after a miss, Curling sweeps, Musical Chairs falls for a dip', async () => {
+  for (const seed of [1, 2, 3, 4]) {
+    const { inst } = await roomBot(drumBeat, ['easy', null], seed);
+    const presses = inst.view(0).hits[0].length;
+    assert.ok(presses > inst.view(0).chart.length * 0.6, 'seed ' + seed + ': hit ' + presses + ' of ' + inst.view(0).chart.length);
+  }
+  let swept = 0;
+  for (let seed = 1; seed <= 4; seed++) {
+    const c = await roomBot(curling, ['easy', 'easy'], seed);
+    swept += c.inputs[0].concat(c.inputs[1]).filter((i) => i.type === 'sweep').length;
+  }
+  assert.ok(swept > 0, 'it swept (when its stone was stopping short)');
+  let trips = 0;
+  for (let seed = 1; seed <= 30; seed++) {
+    const m = await roomBot(musicalChairs, ['easy', null], seed, 50000);
+    trips += m.inputs[0].filter((i) => i.type === 'sit').length - m.inst.view(0).wins[0];
+  }
+  assert.ok(trips > 0, 'Easy falls for a dip now and then');
+});
+
+test('curling: who throws first is drawn at random (the last stone is an edge); the minigame has time for four slides', () => {
+  const firsts = new Set();
+  for (let seed = 1; seed <= 8; seed++) firsts.add(run(curling, seed * 104729).inst.view(0).turn);
+  assert.deepEqual([...firsts].sort(), [0, 1]);
+  assert.ok(curling.durationMs >= 70000);
+});
+
+test('timing is judged as the press arrives (allowing for the trip from a phone), so it matches the TV', () => {
+  // A phone press arriving 80 ms after the note crossed the line is on time.
+  const { inst, ctx } = run(drumBeat);
+  const n0 = inst.view(0).chart[0];
+  ctx.advance(n0.t + 80);
+  inst.onInput(0, { type: 'hit', lane: n0.lane, t: 0 }); // (a phone's own clock: ignored)
+  assert.equal(inst.view(0).last[0], 'perfect');
+  // Musical Chairs: a sit that arrives well after the stop counts, whatever the phone thought.
+  const m = run(musicalChairs);
+  for (let i = 0; i < 200 && m.inst.view(0).stage !== 'stopped'; i++) m.ctx.advance(50);
+  m.ctx.advance(300);
+  m.inst.onInput(0, { type: 'sit', rt: -1 });
+  assert.equal(m.inst.view(0).sat[0], true, 'sat, not tripped');
+});
+
+test('curling: 15 seconds to throw, or that stone is lost and the turn passes (nobody waits forever)', () => {
+  const { inst, ctx } = run(curling, 104729);
+  const first = inst.view(0).turn;
+  ctx.advance(15100);
+  const v = inst.view(0);
+  assert.equal(v.turn, 1 - first);
+  assert.equal(v.thrown[first], 1, 'that stone is gone');
+  assert.equal(v.stones.length, 0);
 });

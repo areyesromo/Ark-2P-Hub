@@ -12,6 +12,7 @@ export const STONES = 2; // each
 export const THROW = { minSpeed: 4.5, maxSpeed: 7.3, maxAngle: 0.04 };
 export const ICE = { decel: 0.8, swept: 0.8, sweepMs: 300, curl: 0.12 };
 export const TICK_MS = 50;
+export const THROW_MS = 15000; // to throw, or that stone is lost and the turn passes
 const SUB = 5; // physics steps a tick
 
 const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
@@ -19,20 +20,39 @@ const num = (v) => typeof v === 'number' && Number.isFinite(v);
 const r3 = (n) => Math.round(n * 1000) / 1000;
 
 export default {
-  id: 'curling', kind: 'party', look: '3d', name: 'Curling', order: 'SLIDE AND SWEEP!', howTo: 'Swipe to throw (curve it for curl), then tap SWEEP to carry it further. Nearest the middle wins', durationMs: 50000,
+  id: 'curling', kind: 'party', look: '3d', name: 'Curling', order: 'SLIDE AND SWEEP!', howTo: 'Swipe to throw (curve it for curl), then tap SWEEP to carry it further. Nearest the middle wins', durationMs: 75000,
   create(api) {
     let stones = []; // { slot, x, z, vx, vz, spin, moving }
     const thrown = [0, 0];
-    let turn = 0;
+    let turn = api.rng() < 0.5 ? 0 : 1; // (who throws first is drawn: the last stone is an edge)
     let phase = 'aim'; // 'aim' | 'sliding' | 'done'
     const sweptAt = [-Infinity, -Infinity];
     let timer = null;
+    let clock = null; // the throw clock (see THROW_MS)
+    let throwBy = 0; // (when it runs out, for the screens)
     let done = false;
+
+    /** Your turn: the throw clock starts. */
+    function yourThrow() {
+      phase = 'aim';
+      if (clock) api.clearTimeout(clock);
+      throwBy = api.elapsed() + THROW_MS;
+      clock = api.setTimeout(() => {
+        // Too long: that stone is lost, and it's the other's turn (or the end).
+        clock = null;
+        thrown[turn]++;
+        if (thrown[0] + thrown[1] >= 2 * STONES) return finish();
+        turn = thrown[1 - turn] < STONES ? 1 - turn : turn;
+        yourThrow();
+        api.update();
+      }, THROW_MS);
+    }
 
     function finish() {
       if (done) return;
       done = true;
       if (timer) api.clearTimeout(timer);
+      if (clock) api.clearTimeout(clock);
       phase = 'done';
       // The stone nearest the button (in the house or not), if any are left.
       const d = (s) => Math.hypot(s.x, s.z - SHEET.button);
@@ -100,13 +120,13 @@ export default {
       }
       // All still: the next throw, or the end.
       if (thrown[0] + thrown[1] >= 2 * STONES) return finish();
-      turn = 1 - turn;
-      phase = 'aim';
+      turn = thrown[1 - turn] < STONES ? 1 - turn : turn; // (a lost stone can leave one player two in a row)
+      yourThrow();
       api.update();
     }
 
     return {
-      start() {},
+      start: yourThrow,
       onInput(slot, input) {
         if (done || (slot !== 0 && slot !== 1)) return;
         if (input.type === 'sweep') {
@@ -120,12 +140,14 @@ export default {
         stones.push({ slot, thrownBy: slot, live: true, x: 0, z: 0, vx: Math.sin(a) * speed, vz: Math.cos(a) * speed, spin: clamp(input.curl, -1, 1), moving: true });
         thrown[slot]++;
         phase = 'sliding';
+        if (clock) api.clearTimeout(clock);
+        clock = null;
         if (!timer) timer = api.setTimeout(tick, TICK_MS);
         api.update();
       },
       onTimeUp: finish,
       view: () => ({
-        phase, turn, thrown, stonesEach: STONES, sheet: SHEET, stoneR: STONE_R,
+        phase, turn, thrown, stonesEach: STONES, sheet: SHEET, stoneR: STONE_R, throwBy,
         moving: stones.some((s) => s.moving),
         stones: stones.map((s) => ({ slot: s.slot, x: r3(s.x), z: r3(s.z), moving: s.moving })),
         sweeping: [0, 1].map((s) => api.elapsed() - sweptAt[s] < ICE.sweepMs),

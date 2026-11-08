@@ -1,9 +1,9 @@
 // Musical Chairs: the music plays while you both circle one chair. When it stops, SIT: the quicker
 // one gets the chair and the round. Sit while it's still playing and you trip (a moment you can't
 // sit). From the second round the music can dip (a short pause, then it plays on): sit then and you
-// trip too. First to 3 rounds. Each screen times its own reaction from when it showed the stop
-// (`rt`; -1: sat before it saw the stop), so network lag costs nobody.
-import { T_SLACK_MS } from './runner.js';
+// trip too. First to 3 rounds. The music and the stop are on the TV, so a sit is judged as it arrives
+// (allowing for the trip from a phone or a controller): before the stop, a trip; after, the quicker.
+import { lagFor } from './runner.js';
 
 export const TIMING = { musicMinMs: 2500, musicMaxMs: 6500, dipMs: 450, tripMs: 900, graceMs: 300, noSitMs: 3000, betweenMs: 1800 };
 export const WINS = 3;
@@ -79,15 +79,14 @@ export default {
         if (done || input.type !== 'sit' || (slot !== 0 && slot !== 1)) return;
         const now = api.elapsed();
         if (stage === 'done' || sat[slot] !== null || now < trippedUntil[slot]) return;
-        const early = stage === 'music' || stage === 'dip' || (typeof input.rt === 'number' && input.rt < 0);
+        const since = now - stopAt - lagFor(api.players && api.players[slot]);
+        const early = stage === 'music' || stage === 'dip' || since < 0;
         if (early) {
           // Sat with the music still on: down you go, for a moment.
           trippedUntil[slot] = now + TIMING.tripMs;
           return api.update();
         }
-        const since = now - stopAt;
-        const rt = typeof input.rt === 'number' && Number.isFinite(input.rt) && input.rt <= since + T_SLACK_MS ? input.rt : since;
-        sat[slot] = Math.round(rt);
+        sat[slot] = Math.round(since);
         if (sat[0] !== null && sat[1] !== null) return decide();
         clear();
         later(decide, TIMING.graceMs); // a slower network may still bring a quicker sit

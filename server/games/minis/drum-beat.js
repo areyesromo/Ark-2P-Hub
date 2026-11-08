@@ -1,8 +1,9 @@
 // Drum Beat: notes fall down three lanes to a beat; hit each lane as its note crosses the line.
 // Both of you play the same chart side by side. Dead on is perfect (3), a little off is good (1),
 // a wrong lane or a note let past breaks your streak; every ten in a row adds one to each hit.
-// The higher score once the chart's played wins.
-import { plausibleT } from './runner.js';
+// The higher score once the chart's played wins. A press is judged as it arrives (allowing for the
+// trip from a phone or a controller), so it matches the notes on the TV.
+import { lagFor } from './runner.js';
 
 export const LANES = 3;
 export const WINDOWS = { perfect: 60, good: 130 }; // ms either side of the note
@@ -54,7 +55,7 @@ export default {
       onInput(slot, input) {
         if (done || input.type !== 'hit' || (slot !== 0 && slot !== 1)) return;
         if (!Number.isInteger(input.lane) || input.lane < 0 || input.lane >= LANES) return;
-        const at = plausibleT(input.t, api.elapsed());
+        const at = api.elapsed() - lagFor(api.players && api.players[slot]);
         sweep(slot, at);
         // The nearest note in that lane, not yet hit, near enough.
         let best1 = -1;

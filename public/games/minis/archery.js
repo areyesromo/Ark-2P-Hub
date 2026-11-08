@@ -194,7 +194,12 @@
           mctx.vibrate(30);
         };
         drawBtn.addEventListener('pointerup', release);
-        drawBtn.addEventListener('pointercancel', release);
+        // (a cancelled touch lowers the bow rather than shooting)
+        drawBtn.addEventListener('pointercancel', function () {
+          if (!drawBtn.classList.contains('on')) return;
+          drawBtn.classList.remove('on');
+          mctx.send({ type: 'draw', on: false });
+        });
         // Tilt to aim, where the phone can (the https page).
         Ark.loadScript('/shared/motion.js').then(function () {
           if (phone !== p || !window.ArkMotion) return;
@@ -251,9 +256,12 @@
     phone: phoneApi(),
     // Controllers: the stick moves the sight, hold A to draw, let go to shoot.
     padPoll: function (pad, s, slot) {
-      if (!pads[slot]) pads[slot] = { x: s.aims[slot].x, y: s.aims[slot].y, drawn: false, key: '' };
+      if (!pads[slot]) pads[slot] = { x: s.aims[slot].x, y: s.aims[slot].y, drawn: false, key: '', armed: false };
       const p = pads[slot];
       const held = pad.held.indexOf('A') !== -1 || pad.held.indexOf('RT') !== -1;
+      // (A still down from pressing Ready doesn't draw: let go first)
+      if (!held) p.armed = true;
+      if (!p.armed) return null;
       if (held && !p.drawn) {
         p.drawn = true;
         return { type: 'draw', on: true };
@@ -266,10 +274,13 @@
       const sy = Math.abs(pad.stick.y) > 0.2 ? pad.stick.y : 0;
       p.x = Math.max(-1.6, Math.min(1.6, p.x + sx * 0.02));
       p.y = Math.max(-1.6, Math.min(1.6, p.y + sy * 0.02));
-      const key = p.x.toFixed(2) + ',' + p.y.toFixed(2);
+      // (sent in steps of 0.05: smooth enough, without a message every frame)
+      const qx = Math.round(p.x * 20) / 20;
+      const qy = Math.round(p.y * 20) / 20;
+      const key = qx + ',' + qy;
       if (key === p.key) return null;
       p.key = key;
-      return { type: 'aim', x: Math.round(p.x * 100) / 100, y: Math.round(p.y * 100) / 100 };
+      return { type: 'aim', x: qx, y: qy };
     },
     sounds: function (prev, s) {
       const shot = [0, 1].some(function (i) { return s.arrows[i].length > prev.arrows[i].length; });

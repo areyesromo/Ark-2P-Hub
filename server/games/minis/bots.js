@@ -551,27 +551,26 @@ export const PLAYERS = {
     // The next note it hasn't hit, timed with a person's error (now and then the wrong lane).
     const mine = new Set(s.hits[you]);
     m.plan = m.plan || {};
-    const i = s.chart.findIndex((n, k) => !mine.has(k) && !(m.plan[k] && m.plan[k].sent) && n.t > el - DRUM.WINDOWS.good + 20);
-    if (i === -1) return null;
-    const n = s.chart[i];
-    if (!m.plan[i]) m.plan[i] = { t: Math.max(0, n.t + gauss(rng) * L.timing), lane: rng() < L.slip ? (n.lane + 1) % s.lanes : n.lane };
-    const p = m.plan[i];
-    if (el > p.t + 25) {
-      p.sent = true; // (its moment's gone, hit or not: on to the next)
-      return null;
+    for (let i = 0; i < s.chart.length; i++) {
+      const n = s.chart[i];
+      if (mine.has(i) || n.t < el - DRUM.WINDOWS.good) continue;
+      if (!m.plan[i]) m.plan[i] = { t: Math.max(0, n.t + gauss(rng) * L.timing), lane: rng() < L.slip ? (n.lane + 1) % s.lanes : n.lane };
+      const p = m.plan[i];
+      if (el > p.t + 25) continue; // (its moment's gone, hit or not: on to the next)
+      return { type: 'hit', lane: p.lane, t: Math.round(p.t), botFor: 'note' + i, ...at(p.t) };
     }
-    return { type: 'hit', lane: p.lane, t: Math.round(p.t), botFor: 'note' + i, ...at(p.t) };
+    return null;
   },
   'musical-chairs'({ s, you, el, L, rng, m, react }) {
-    if (s.sat[you] || el < s.trippedUntil[you] || s.stage === 'done') return null;
+    if (s.sat[you] || s.stage === 'done') return null;
     const r = (m.rounds = m.rounds || {});
     if (!r[s.round]) r[s.round] = { rt: react(), fooled: rng() < L.slip * 3 };
-    if (s.stage === 'stopped') return { type: 'sit', rt: Math.round(r[s.round].rt), botDelayMs: r[s.round].rt, botFor: 'stop' + s.round };
+    const tripped = Math.max(0, s.trippedUntil[you] - el);
+    if (tripped) r[s.round].fooled = false; // (fell for it once: that'll do)
+    // Stopped: sit, a reaction later (or once it's back on its feet).
+    if (s.stage === 'stopped') return { type: 'sit', rt: Math.round(r[s.round].rt), botDelayMs: tripped + r[s.round].rt, botFor: 'stop' + s.round };
     // A dip in the music fools it now and then (Easy most).
-    if (s.stage === 'dip' && r[s.round].fooled) {
-      r[s.round].fooled = false;
-      return { type: 'sit', rt: Math.round(r[s.round].rt), botDelayMs: r[s.round].rt, botFor: 'dip' + s.round };
-    }
+    if (s.stage === 'dip' && r[s.round].fooled && !tripped) return { type: 'sit', rt: Math.round(r[s.round].rt), botDelayMs: r[s.round].rt, botFor: 'dip' + s.round };
     return null;
   },
   archery({ s, you, el, L, rng, m, react, at }) {
@@ -619,9 +618,10 @@ export const PLAYERS = {
     // Sliding: sweep while its stone looks like stopping short of the button.
     const mine = s.stones.filter((st) => st.slot === you && st.moving).sort((p, q) => q.z - p.z)[0];
     if (!mine) return null;
-    let v = 0;
-    if (m.prev && el > m.prev.t + 80) v = ((mine.z - m.prev.z) * 1000) / (el - m.prev.t);
+    // (its speed from looks a moment apart; between them, the last one it worked out)
+    if (m.prev && el > m.prev.t + 80) m.v = ((mine.z - m.prev.z) * 1000) / (el - m.prev.t);
     if (!m.prev || el > m.prev.t + 80) m.prev = { z: mine.z, t: el };
+    const v = m.v || 0;
     const stopsAt = mine.z + (v * v) / (2 * CURL.ICE.decel);
     if (v > 0 && stopsAt < CURL.SHEET.button - 0.2) return { type: 'sweep', botDelayMs: (1000 / L.rate) * (0.8 + rng() * 0.4) };
     return null;
