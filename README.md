@@ -556,7 +556,7 @@ TV, touch strip on the phone), `reaction-duel` for timing games and
 
 ## Roadmap ideas
 
-**The plan: 2D on the Pi, 3D on the desktop (and maybe Steam)**
+**The plan: 2D on the Pi, 3D on the desktop**
 
 The hub keeps running on a Raspberry Pi (Docker + the browser) with the **2D** Party Board: light,
 no 3D engine needed. The **3D** board is the desktop experience, built for a Steam Deck as the
@@ -569,9 +569,6 @@ minimum and a gaming PC as typical:
    per TV); still to come: fog and mist, full-resolution textures, the full-detail characters; plus each map's environment
    model (`env-<map>.glb`, with `space_NN` anchors, `path_` / `pedestal` nodes and animated parts;
    see [`docs/party-board-art/`](docs/party-board-art/README.md)).
-3. **Steam, later** (it needs the Steam Direct fee, so not while it's in development): Steamworks
-   (the hub's 🏆 trophies would become its achievements, one for one), the overlay, Remote Play
-   Together, Steam Deck verification (readable at 1280×800, full controller support), the store page.
 
 **Done lately**: 🤖 a computer opponent (Easy, Normal, Hard) in every game that can have one, and a
 teammate in the co-op games; 🏆 trophies and practice records; 🌍 online play through a quick

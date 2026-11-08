@@ -15,3 +15,12 @@ friends join from their phones anywhere.
   relay for a fixed short address (no Cloudflare tunnel). It still needs the home hub and still needs a server.
 - Parked because it needs a paid server. Today online play works through the hub's own Cloudflare quick tunnel
   (free), while the hub is on.
+
+## Steam
+
+A store page and Steamworks: the hub's 🏆 trophies as Steam achievements (one for one), the Steam overlay,
+Remote Play Together, and Steam Deck verification (readable at 1280×800, full controller support).
+
+- Parked because of the Steam Direct fee ($100 a game), not worth paying while the game is in development.
+  Today the desktop app runs on the Steam Deck as a non-Steam game (see `docs/STEAM-DECK.md`), and each
+  release already ships Steam library artwork.
