@@ -495,3 +495,47 @@
 .mi-sa-lean i { position: absolute; top: -0.3rem; bottom: -0.3rem; width: 0.5rem; left: calc(50% - 0.25rem + var(--lean, 0) * 50%); border-radius: var(--r-pill); background: var(--good); transition: left 0.2s; }
 .mi-sa-lean.danger i { background: var(--bad); }
 .mi-side .mi-sa-h { position: absolute; top: 0.4rem; right: 0.8rem; font-size: var(--fs-lg); }
+
+/* ---- Drum Beat ---- */
+.mi-drum { position: absolute; inset: 0; display: flex; flex-direction: column; }
+.mi-drum .names { display: flex; justify-content: center; gap: 4rem; font-size: 1.4rem; font-weight: 900; padding: 0.4rem; }
+.mi-drum canvas { flex: 1; min-height: 0; width: 100%; display: block; }
+.mi-drum-phone .msg { font-size: 1.1rem; font-weight: 800; min-height: 2.6em; }
+.mi-drum-phone .pads { flex: 1; width: 100%; display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; }
+.mi-drum-phone .pad { border-radius: var(--radius); background: var(--lane); opacity: 0.85; touch-action: none; user-select: none; -webkit-user-select: none; min-height: 240px; }
+.mi-drum-phone .pad.flash { animation: mi-drum-flash 0.18s ease-out; }
+@keyframes mi-drum-flash { from { filter: brightness(1.8); transform: scale(0.96); } }
+
+/* ---- Musical Chairs ---- */
+.mi-chairs { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.mi-chairs .ring { position: absolute; width: 70vmin; height: 30vmin; border: 3px dashed var(--line); border-radius: 50%; }
+.mi-chairs .chair { font-size: 7rem; z-index: 1; }
+.mi-chairs .walker { position: absolute; left: 50%; top: 50%; font-size: 1.6rem; font-weight: 900; padding: 0.3rem 0.8rem; border-radius: var(--r-pill); background: var(--panel); border: 2px solid var(--line); z-index: 2; transition: transform 0.15s; }
+.mi-chairs .walker.tripped::after { content: ' 💫'; }
+.mi-chairs .notes { position: absolute; top: 12%; font-size: 2.5rem; animation: mi-notes 1.2s ease-in-out infinite alternate; }
+.mi-chairs[data-stage='stopped'] .notes, .mi-chairs[data-stage='done'] .notes { visibility: hidden; }
+.mi-chairs[data-stage='dip'] .notes { opacity: 0.25; animation: none; }
+.mi-chairs .big { position: absolute; top: 18%; font-size: 4.5rem; font-weight: 900; color: var(--warn); text-shadow: 0 4px 18px rgba(0, 0, 0, 0.7); }
+.mi-chairs .score { position: absolute; bottom: 6%; font-size: 1.4rem; font-weight: 800; color: var(--muted); }
+@keyframes mi-notes { to { transform: translateY(-14px) rotate(6deg); } }
+.mi-sit.go { background: var(--good); color: var(--on-good); }
+
+/* ---- Archery ---- */
+.mi-wind { position: absolute; top: 3rem; left: 50%; transform: translateX(-50%); font-size: 1.4rem; font-weight: 900; padding: 0.2rem 0.9rem; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.45); z-index: 1; }
+.mi-archery-phone { justify-content: flex-start; }
+.mi-archery-phone .msg { font-size: 1.05rem; font-weight: 800; }
+.mi-archery-phone canvas.sight { flex: 1; width: 100%; min-height: 280px; touch-action: none; }
+.mi-archery-phone .row { width: 100%; display: flex; gap: 10px; }
+.mi-archery-phone .draw { min-height: 120px; touch-action: none; user-select: none; -webkit-user-select: none; }
+.mi-archery-phone .draw.on { background: var(--me); color: var(--on-bright); }
+.mi-archery-phone .tilt.on { background: var(--me); color: var(--on-bright); }
+
+/* ---- Curling ---- */
+.mi-curl-phone { justify-content: flex-start; }
+.mi-curl-phone .msg { font-size: 1.05rem; font-weight: 800; min-height: 2.6em; }
+.mi-curl-phone .sheet { position: relative; flex: 1; width: 55%; min-height: 320px; border-radius: 14px 14px 0 0; background: linear-gradient(#e0f2fe, #bae6fd); box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.2); touch-action: none; overflow: hidden; }
+.mi-curl-phone .sheet::before { content: ''; position: absolute; top: 18px; left: 50%; width: 90px; height: 90px; margin-left: -45px; border-radius: 50%; background: radial-gradient(#f8fafc 0 12%, #dc2626 12% 35%, #f8fafc 35% 62%, #2563eb 62%); opacity: 0.8; }
+.mi-curl-phone .sheet .stone { position: absolute; bottom: 28px; left: 50%; width: 40px; height: 40px; margin-left: -20px; border-radius: 50%; background: radial-gradient(var(--me) 0 45%, #9ca3af 46%); box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4); }
+.mi-curl-phone .sheet .hint { position: absolute; bottom: 80px; left: 0; right: 0; color: #0f172a; font-weight: 900; }
+.mi-curl-phone .sheet.waiting { opacity: 0.5; }
+.mi-curl-phone .sweep { min-height: 140px; touch-action: none; user-select: none; -webkit-user-select: none; }

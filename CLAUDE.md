@@ -63,3 +63,9 @@ style from `play.css`: give your Rematch button `class="primary rematch"` and on
    This goes for any change players notice (hub, desktop app), not only games.
 
 Commit messages: `Game Name: what changed, in plain words` (for example `Kart Race: smaller Star glow for the bigger karts`).
+
+## Bucket list
+
+`docs/BUCKET-LIST.md` holds ideas the owner has parked for later (paid services, big maybes). Read it back only
+when asked for it ("what's on the bucket list?"). Never include its items when suggesting what to build next or
+answering "what else can we do"; add to it when the owner parks an idea.

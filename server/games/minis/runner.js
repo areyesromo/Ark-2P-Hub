@@ -16,6 +16,15 @@ export const TIMING = { introMicroMs: 1500, readyMaxMs: 8000, resultMicroMs: 150
 export const T_SLACK_MS = 150;
 
 /**
+ * For a game cued on the TV: how long a press takes to reach the server from `player`, so it's
+ * judged at the moment it was made. A phone over the wifi, a controller at the TV, the computer
+ * (here at once).
+ */
+export function lagFor(player) {
+  return !player ? 80 : player.bot ? 0 : player.local ? 20 : 80;
+}
+
+/**
  * The time to judge an input at: the phone's own `t` (ms since it saw play
  * start), so a slow network doesn't cost you, unless it's not believable.
  */

@@ -71,7 +71,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (35)
+## Minigames (39)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -113,6 +113,10 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Stack Attack | `stack-attack` | party | 2D | Slide your tray (joystick / tilt / stick) to catch the crates. Catch them in the middle or the stack leans and topples! | `server/games/minis/stack-attack.js`, `public/games/minis/stack-attack.js`, `test/minis-party6.test.js` |
 | Bumper Cars | `bumper-cars` | party | 3D | Steer (joystick / stick) and ram your rival in the side or from behind. Head-on doesn't count! | `server/games/minis/bumper-cars.js`, `public/games/minis/bumper-cars.js`, `test/minis-party7.test.js` |
 | Paint Grab | `paint-grab` | party | 3D | Move (joystick / stick) to paint the tiles your colour. Grab the paint buckets for a big splash! | `server/games/minis/paint-grab.js`, `public/games/minis/paint-grab.js`, `test/minis-party7.test.js` |
+| Drum Beat | `drum-beat` | party | 2D | Tap a lane as its note hits the line (controller: X / A / B or ← ↓ →) | `server/games/minis/drum-beat.js`, `public/games/minis/drum-beat.js`, `test/minis-party8.test.js` |
+| Musical Chairs | `musical-chairs` | party | 2D | SIT (or A) when the music stops. Too soon and you trip! | `server/games/minis/musical-chairs.js`, `public/games/minis/musical-chairs.js`, `test/minis-party8.test.js` |
+| Archery | `archery` | party | 3D | Aim, hold DRAW to steady the bow, let go to shoot. Mind the wind (controller: stick aims, hold A) | `server/games/minis/archery.js`, `public/games/minis/archery.js`, `test/minis-party8.test.js` |
+| Curling | `curling` | party | 3D | Swipe to throw (curve it for curl), then tap SWEEP to carry it further. Nearest the middle wins | `server/games/minis/curling.js`, `public/games/minis/curling.js`, `test/minis-party8.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->
