@@ -52,16 +52,18 @@ test('reaction: spin first, then a win in first place, else none', () => {
   assert.equal(R.reaction(null, 1), null);
 });
 
-test('moves: steering, arms up when spun, a left fist pump when winning', () => {
-  assert.deepEqual(R.moves(null, 0.2, 0.3, 0), { column: 0.2, armL: 0, armR: 0, headYaw: 0.3 });
+test('moves: hands follow the wheel, arms up when spun, a left fist pump when winning', () => {
+  // Turning right (clockwise for the driver) lifts the left hand and lowers the right.
+  const drive = R.moves(null, 0.2, 0.3, 0);
+  assert.ok(Math.abs(drive.armL - 0.2 * R.ARM_PER_STEER) < 1e-12);
+  assert.ok(Math.abs(drive.armR + 0.2 * R.ARM_PER_STEER) < 1e-12);
+  assert.equal(drive.headYaw, 0.3);
   const spin = R.moves('spin', 0.2, 0.3, 0);
   assert.equal(spin.armL, 2.2);
   assert.equal(spin.armR, 2.2);
-  assert.equal(spin.column, 0);
   const win = R.moves('win', 0.2, 0.3, 0);
   assert.equal(win.armR, 0);
   assert.ok(win.armL >= 1.6);
-  assert.equal(win.column, 0);
 });
 
 test('bob is 0 when stopped on flat road', () => {

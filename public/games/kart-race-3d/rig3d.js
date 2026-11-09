@@ -5,7 +5,7 @@
 // right. A positive turn rate means turning right; angles here carry that sign, and the caller sets
 // rotation.y = -angle (a positive rotation.y turns towards the left).
 (function () {
-  const STEER_MAX = (25 * Math.PI) / 180; // front wheels (and the steering wheel) at most this far
+  const STEER_MAX = (25 * Math.PI) / 180; // the front wheels turn at most this far
   const HEAD_MAX = (30 * Math.PI) / 180; // the driver looks at most this far into a bend
   const TELEPORT = 3; // a move longer than this in one frame is a jump (respawn, Swap), not driving
   const STEER_PER_TURN = 0.25; // radians of steering per radian-a-second of turning
@@ -13,6 +13,9 @@
   const TOP_SPEED = 8.5; // the server's KART.maxSpeed: the bob is full from here up
   const BOB = { amp: 0.02, period: 60, dropGain: 0.4, dropMax: 0.05 };
   const ARMS_UP = 2.2; // a shoulder turn that puts the hands over the head
+  // Hands on the wheel: turning right (clockwise for the driver) lifts the left hand and lowers the
+  // right, each arm turning at its shoulder by this much per radian of steering.
+  const ARM_PER_STEER = 0.6;
   const clamp = (v, max) => Math.max(-max, Math.min(max, v));
 
   /** How fast the kart is turning, in radians a second (positive: to the right). */
@@ -51,14 +54,14 @@
   }
 
   /**
-   * The driver's pose: the steering column's turn, each arm's raise at the shoulder (positive lifts
-   * the hand) and the head's turn. Spun out: arms up, head shaking. Won: the left fist pumps.
+   * The driver's pose: each arm's raise at the shoulder (positive lifts the hand) and the head's
+   * turn. Driving: the hands follow the wheel. Spun out: arms up, head shaking. Won: the left fist pumps.
    */
   function moves(react, steer, head, now) {
-    if (react === 'spin') return { column: 0, armL: ARMS_UP, armR: ARMS_UP, headYaw: 0.35 * Math.sin(now / 70) };
-    if (react === 'win') return { column: 0, armL: 1.6 + 0.6 * Math.abs(Math.sin(now / 180)), armR: 0, headYaw: 0 };
-    return { column: steer, armL: 0, armR: 0, headYaw: head };
+    if (react === 'spin') return { armL: ARMS_UP, armR: ARMS_UP, headYaw: 0.35 * Math.sin(now / 70) };
+    if (react === 'win') return { armL: 1.6 + 0.6 * Math.abs(Math.sin(now / 180)), armR: 0, headYaw: 0 };
+    return { armL: steer * ARM_PER_STEER, armR: -steer * ARM_PER_STEER, headYaw: head };
   }
 
-  globalThis.KRRig = { STEER_MAX, HEAD_MAX, TELEPORT, turnRate, roll, steerGoal, headGoal, ease, bob, reaction, moves };
+  globalThis.KRRig = { STEER_MAX, HEAD_MAX, TELEPORT, ARM_PER_STEER, turnRate, roll, steerGoal, headGoal, ease, bob, reaction, moves };
 })();
