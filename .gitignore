@@ -6,3 +6,5 @@ desktop/bin/cloudflared*
 # Concept art and reference sheets for the 3D games (large; kept out of git)
 asset-references/
 .kart-ui-*.txt
+# The ChatGPT art handoff (REQUEST.md / HANDOFF.md): working notes, edited by both assistants
+shared/claude-chatgpt/
