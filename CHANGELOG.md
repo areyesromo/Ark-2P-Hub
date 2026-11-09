@@ -17,6 +17,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - 🦖 Kart Race 3D: Rex now races as a real 3D kart and driver. His wheels spin and steer, he
   turns the wheel, looks into bends, throws his arms up when he spins out and pumps his fist
   when he wins.
+- 🏜️ Kart Race 3D: Sunset Canyon Rally now races through its canyon: red rock cliffs and mesas,
+  two rock arches over the road, a dam in the distance and the festival paddock by the start.
 
 ## 0.1.36
 
