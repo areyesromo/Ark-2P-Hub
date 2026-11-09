@@ -221,3 +221,30 @@ test('disposing the world frees the canyon once', () => {
   world.dispose();
   for (const [thing, n] of calls) assert.equal(n, 1, thing.type);
 });
+
+test('the dam faces the track across the north, with its lake behind it', () => {
+  const { group } = page().KRCanyon.build(THREE, view);
+  let dam = null;
+  group.traverse((o) => { if (o.userData.piece === 'dam') dam = o; });
+  group.updateMatrixWorld(true);
+  const box = new THREE.Box3().setFromObject(dam);
+  assert.ok(box.max.x - box.min.x > box.max.z - box.min.z, 'wider across than deep');
+  assert.ok(box.max.z < 0, 'beyond the north edge: ' + box.max.z);
+  // The overview camera (kart3d.js) draws to 200 units: keep the lake well inside that.
+  assert.ok(box.min.z > -66, 'lake not too far back: ' + box.min.z);
+  const meshes = dam.children.filter((o) => o.isMesh);
+  const z = (m) => new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).z;
+  const wall = meshes[0];
+  const falls = meshes.filter((m) => m.geometry.type === 'PlaneGeometry' && m.material.transparent !== undefined && m !== wall && Math.abs(z(m) - z(wall)) < 5);
+  assert.ok(falls.length === 2 && falls.every((f) => z(f) > z(wall)), 'the falls are on the track side');
+});
+
+test('dispose also frees the rocks instance buffers', () => {
+  const built = page().KRCanyon.build(THREE, view);
+  let rocks = null;
+  built.group.traverse((o) => { if (o.isInstancedMesh) rocks = o; });
+  let freed = 0;
+  rocks.dispose = () => { freed++; };
+  built.dispose();
+  assert.equal(freed, 1);
+});

@@ -206,7 +206,8 @@
   }
 
   /**
-   * The pieces: each returns a THREE.Object3D at the origin, facing +x (the way the road runs), with
+   * The pieces: each returns a THREE.Object3D at the origin, facing +x (the way the road runs; the
+   * dam faces +z, south, towards the track), with
    * userData.piece naming it. `mat(color)` gives a material shared within the build. A ComfyUI model
    * can replace any of these later.
    */
@@ -237,8 +238,9 @@
         fall.position.set((s * d.w) / 7, d.h * 0.4, 2.05);
         o.add(fall);
       });
-      const lake = new THREE.Mesh(new THREE.PlaneGeometry(d.w + 20, 40).rotateX(-Math.PI / 2), mat(COLORS.water));
-      lake.position.set(0, d.h * 0.8, -22);
+      // (shallow: the overview camera between races draws only so far)
+      const lake = new THREE.Mesh(new THREE.PlaneGeometry(d.w + 20, 30).rotateX(-Math.PI / 2), mat(COLORS.water));
+      lake.position.set(0, d.h * 0.8, -17);
       o.add(lake);
       return o;
     },
@@ -307,7 +309,7 @@
         slabs({ x: a.x - Math.sin(a.angle) * o * s, y: a.y + Math.cos(a.angle) * o * s, r: a.legR, h: obj.userData.legs + a.legR }, rnd, all);
       });
     });
-    place(PIECES.dam(THREE, l.dam, mat), 'dam', l.dam.x, l.dam.y, -Math.PI / 2); // facing the track (south, +y)
+    place(PIECES.dam(THREE, l.dam, mat), 'dam', l.dam.x, l.dam.y, 0); // (built facing the track already)
     let tents = 0;
     let flags = 0;
     l.paddock.forEach(function (p) {
@@ -337,6 +339,7 @@
         const done = new Set();
         group.traverse(function (o) {
           if (!o.isMesh) return;
+          if (o.isInstancedMesh) o.dispose(); // its per-copy buffers on the GPU
           [o.geometry].concat(o.material).forEach(function (t) {
             if (done.has(t)) return;
             done.add(t);
