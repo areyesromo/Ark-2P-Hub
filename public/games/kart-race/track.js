@@ -93,9 +93,24 @@
     return best;
   }
 
+  /**
+   * How many points a track's centre line gets: SAMPLES for the small tracks (every 2D track and
+   * arena), and about one every 0.3 units round a bigger loop, so "samples apart" means the same
+   * distance on any track.
+   */
+  function samplesFor(points) {
+    let perimeter = 0;
+    for (let i = 0; i < points.length; i++) {
+      const a = points[i];
+      const b = points[(i + 1) % points.length];
+      perimeter += Math.hypot(b[0] - a[0], b[1] - a[1]);
+    }
+    return perimeter <= 120 ? SAMPLES : Math.round(perimeter / 0.3);
+  }
+
   /** Everything about a track's road: the centre line and its cumulative length. */
   function build(points) {
-    const line = centreLine(points);
+    const line = centreLine(points, samplesFor(points));
     const cum = [0];
     for (let i = 1; i <= line.length; i++) {
       const a = line[i - 1];
@@ -260,5 +275,5 @@
     return line.map(function (p, i) { return (i ? 'L' : 'M') + p[0].toFixed(2) + ' ' + p[1].toFixed(2); }).join('') + 'Z';
   }
 
-  globalThis.ArkKartTrack = { SAMPLES: SAMPLES, MIN_RADIUS: MIN_RADIUS, centreLine: centreLine, tightest: tightest, build: build, locate: locate, pointAt: pointAt, outline: outline, svgPath: svgPath, locateNear: locateNear, sideAt: sideAt, barriers: barriers, edgeLines: edgeLines, BARRIER: BARRIER };
+  globalThis.ArkKartTrack = { SAMPLES: SAMPLES, samplesFor: samplesFor, MIN_RADIUS: MIN_RADIUS, centreLine: centreLine, tightest: tightest, build: build, locate: locate, pointAt: pointAt, outline: outline, svgPath: svgPath, locateNear: locateNear, sideAt: sideAt, barriers: barriers, edgeLines: edgeLines, BARRIER: BARRIER };
 })();

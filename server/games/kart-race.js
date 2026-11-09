@@ -64,7 +64,7 @@ export const REACTION_MAX_MS = 2000;
 // The starting grid: two karts a row, rows this far apart along the road, either side of the middle.
 export const GRID = { rowGap: 2.6, side: 0.75 };
 export const TIMING = { countdownMs: LIGHTS.count * LIGHTS.stepMs + LIGHTS.holdMax, finishMs: 3500 };
-export const SAMPLES = Road.SAMPLES; // points on each track's centre line
+export const SAMPLES = Road.SAMPLES; // points on a small track's centre line (a big one has more: Road.samplesFor)
 const NEAR_SPAN = 8; // how far along the road (in samples) a kart can get in one tick, with room to spare
 export const CUT_JUMP = 0.05; // progress (fraction of a lap) gained in one tick that can only be a shortcut
 
@@ -419,7 +419,7 @@ export class KartRace {
         bestLap: null,
         laps: 0,
         progress: p.p,
-        seg: Math.round(p.p * SAMPLES) % SAMPLES, // the centre-line sample it is nearest (see near())
+        seg: Math.round(p.p * this.track.line.length) % this.track.line.length, // the centre-line sample it is nearest (see near())
         balloons: BATTLE.balloons, // battle only
         halfway: false,
         boostUntil: 0,
@@ -896,7 +896,7 @@ export class KartRace {
       // rejoins further on is it a shortcut.
       if (where.d > this.track.width / 2) return;
       const back = pointAt(this.track, was);
-      Object.assign(k, { x: back.x, y: back.y, angle: back.angle, speed: 0, cutAt: now, seg: Math.round(was * SAMPLES) % SAMPLES });
+      Object.assign(k, { x: back.x, y: back.y, angle: back.angle, speed: 0, cutAt: now, seg: Math.round(was * this.track.line.length) % this.track.line.length });
       this.events.cuts++;
       return;
     }
