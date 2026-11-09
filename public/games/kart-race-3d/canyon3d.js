@@ -177,5 +177,175 @@
     };
   }
 
-  window.KRCanyon = { layout: layout };
+  // ---- the pieces ----
+
+  const COLORS = {
+    rock: [0xc2410c, 0xea580c, 0xb45309, 0x9a3412, 0xd97706], // the rock's bands, bottom up
+    concrete: 0xd6d3d1,
+    water: 0x22b8cf,
+    fall: 0xe0f7fa,
+    teal: 0x14b8a6,
+    yellow: 0xfacc15,
+    wood: 0x8b5a2b,
+  };
+  const SLAB_H = 2.5; // a rock is a stack of slabs about this tall, each a little narrower than the one below
+  const TAPER = 0.9;
+
+  /**
+   * A rock as slabs: [{ x, y (field), base, r, h, turn, color }]. Every slab is drawn from one shared
+   * cylinder in one instanced mesh, so all the canyon's rock costs a single draw call.
+   */
+  function slabs(rock, rnd, out) {
+    const n = Math.max(1, Math.round(rock.h / SLAB_H));
+    const h = rock.h / n;
+    let r = rock.r;
+    for (let i = 0; i < n; i++) {
+      out.push({ x: rock.x, y: rock.y, base: i * h, r: r, h: h, turn: rnd() * Math.PI, color: COLORS.rock[(i + Math.floor(rnd() * 2)) % COLORS.rock.length] });
+      r *= TAPER;
+    }
+  }
+
+  /**
+   * The pieces: each returns a THREE.Object3D at the origin, facing +x (the way the road runs), with
+   * userData.piece naming it. `mat(color)` gives a material shared within the build. A ComfyUI model
+   * can replace any of these later.
+   */
+  const PIECES = {
+    /** A rock arch across the road: the half ring over the top (its legs are rock slabs, see build). */
+    arch: function (THREE, a, mat) {
+      const o = new THREE.Group();
+      const R = a.inner / 2 + a.legR; // from the middle of the road to each leg's centre
+      const tube = a.legR * 0.9;
+      const lift = Math.max(0, a.clear - (R - tube)); // the underside over the road at `clear`
+      const ring = new THREE.Mesh(new THREE.TorusGeometry(R, tube, 8, 18, Math.PI).rotateY(Math.PI / 2), mat(COLORS.rock[1]));
+      ring.position.y = lift;
+      o.add(ring);
+      o.userData.legs = lift; // how tall the legs stand under the ring
+      return o;
+    },
+    /** The dam, facing the track (+z): the wall, two towers, the lake behind and two waterfalls. */
+    dam: function (THREE, d, mat) {
+      const o = new THREE.Group();
+      const wall = new THREE.Mesh(new THREE.BoxGeometry(d.w, d.h, 4), mat(COLORS.concrete));
+      wall.position.y = d.h / 2;
+      o.add(wall);
+      [-1, 1].forEach(function (s) {
+        const tower = new THREE.Mesh(new THREE.BoxGeometry(4, d.h + 4, 6), mat(COLORS.concrete));
+        tower.position.set((s * d.w) / 4, (d.h + 4) / 2, 0);
+        o.add(tower);
+        const fall = new THREE.Mesh(new THREE.PlaneGeometry(4, d.h * 0.8), mat(COLORS.fall));
+        fall.position.set((s * d.w) / 7, d.h * 0.4, 2.05);
+        o.add(fall);
+      });
+      const lake = new THREE.Mesh(new THREE.PlaneGeometry(d.w + 20, 40).rotateX(-Math.PI / 2), mat(COLORS.water));
+      lake.position.set(0, d.h * 0.8, -22);
+      o.add(lake);
+      return o;
+    },
+    /** A round festival tent: a drum and a pointed roof, in teal or yellow. */
+    tent: function (THREE, t, mat) {
+      const o = new THREE.Group();
+      const drum = new THREE.Mesh(new THREE.CylinderGeometry(1.5, 1.5, 1.6, 10), mat(0xf8fafc));
+      drum.position.y = 0.8;
+      const roof = new THREE.Mesh(new THREE.ConeGeometry(1.8, 1.4, 10), mat(t.index % 2 ? COLORS.yellow : COLORS.teal));
+      roof.position.y = 2.3;
+      o.add(drum, roof);
+      return o;
+    },
+    /** The paddock's canopy: a flat teal roof on four posts. */
+    canopy: function (THREE, c, mat) {
+      const o = new THREE.Group();
+      const roof = new THREE.Mesh(new THREE.BoxGeometry(5, 0.3, 3), mat(COLORS.teal));
+      roof.position.y = 2.6;
+      o.add(roof);
+      const post = new THREE.CylinderGeometry(0.12, 0.12, 2.6, 6);
+      [[-2.3, -1.3], [2.3, -1.3], [-2.3, 1.3], [2.3, 1.3]].forEach(function (p) {
+        const m = new THREE.Mesh(post, mat(COLORS.wood));
+        m.position.set(p[0], 1.3, p[1]);
+        o.add(m);
+      });
+      return o;
+    },
+    /** A flag on a pole, teal or yellow. */
+    flag: function (THREE, f, mat) {
+      const o = new THREE.Group();
+      const pole = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.06, 4, 6), mat(COLORS.wood));
+      pole.position.y = 2;
+      const cloth = new THREE.Mesh(new THREE.PlaneGeometry(1.1, 0.6), mat(f.index % 2 ? COLORS.yellow : COLORS.teal));
+      cloth.position.set(0.6, 3.6, 0);
+      o.add(pole, cloth);
+      return o;
+    },
+  };
+
+  function build(THREE, view) {
+    const l = layout(view);
+    if (!l) return null;
+    const group = new THREE.Group();
+    group.name = 'canyon';
+    const mats = new Map();
+    const mat = function (color) {
+      if (!mats.has(color)) mats.set(color, new THREE.MeshLambertMaterial({ color: color, side: THREE.DoubleSide }));
+      return mats.get(color);
+    };
+    const place = function (obj, name, x, y, angle) {
+      obj.userData.piece = name;
+      obj.position.set(x, 0, y); // field (x, y) is scene (x, z)
+      obj.rotation.y = -(angle || 0);
+      group.add(obj);
+      return obj;
+    };
+
+    const rnd = random(SEED + 1);
+    const all = [];
+    l.rocks.forEach(function (r) { slabs(r, rnd, all); });
+    l.arches.forEach(function (a) {
+      const obj = place(PIECES.arch(THREE, a, mat), 'arch', a.x, a.y, a.angle);
+      // The legs: rock either side of the road, up to the ring.
+      const o = a.inner / 2 + a.legR;
+      [-1, 1].forEach(function (s) {
+        slabs({ x: a.x - Math.sin(a.angle) * o * s, y: a.y + Math.cos(a.angle) * o * s, r: a.legR, h: obj.userData.legs + a.legR }, rnd, all);
+      });
+    });
+    place(PIECES.dam(THREE, l.dam, mat), 'dam', l.dam.x, l.dam.y, -Math.PI / 2); // facing the track (south, +y)
+    let tents = 0;
+    let flags = 0;
+    l.paddock.forEach(function (p) {
+      const index = p.kind === 'tent' ? tents++ : p.kind === 'flag' ? flags++ : 0;
+      place(PIECES[p.kind](THREE, { index: index }, mat), p.kind, p.x, p.y, p.angle);
+    });
+
+    // Every slab of rock in one instanced mesh, each with its own size, turn and band colour.
+    const slab = new THREE.CylinderGeometry(1, 1, 1, 9).translate(0, 0.5, 0);
+    const rockMat = new THREE.MeshLambertMaterial({ color: 0xffffff, flatShading: true });
+    const rocks = new THREE.InstancedMesh(slab, rockMat, all.length);
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+    const up = new THREE.Vector3(0, 1, 0);
+    const c = new THREE.Color();
+    all.forEach(function (s, i) {
+      m.compose(new THREE.Vector3(s.x, s.base, s.y), q.setFromAxisAngle(up, s.turn), new THREE.Vector3(s.r, s.h, s.r));
+      rocks.setMatrixAt(i, m);
+      rocks.setColorAt(i, c.setHex(s.color));
+    });
+    rocks.userData.piece = 'rock';
+    group.add(rocks);
+
+    return {
+      group: group,
+      dispose: function () {
+        const done = new Set();
+        group.traverse(function (o) {
+          if (!o.isMesh) return;
+          [o.geometry].concat(o.material).forEach(function (t) {
+            if (done.has(t)) return;
+            done.add(t);
+            t.dispose();
+          });
+        });
+      },
+    };
+  }
+
+  window.KRCanyon = { layout: layout, build: build, PIECES: PIECES };
 })();

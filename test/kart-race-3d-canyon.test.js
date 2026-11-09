@@ -4,6 +4,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
+import * as THREE from 'three';
 import '../public/games/kart-race/track.js';
 import { buildTrack } from '../server/games/kart-race.js';
 import { TRACKS_3D } from '../server/games/kart-tracks-3d.js';
@@ -108,4 +109,67 @@ test('boulders keep clear of the paddock', () => {
   for (const b of l.rocks.filter((r) => r.kind === 'boulder')) {
     for (const p of l.paddock) assert.ok(Math.hypot(b.x - p.x, b.y - p.y) >= 3 + b.r - 1e-6, JSON.stringify([b, p]));
   }
+});
+
+/** Everything drawn in a group: its meshes, with each one's triangles (an instanced mesh: per copy, times its copies). */
+function drawn(group) {
+  const meshes = [];
+  group.traverse((o) => {
+    if (!o.isMesh) return;
+    const g = o.geometry;
+    const tris = (g.index ? g.index.count : g.attributes.position.count) / 3;
+    meshes.push({ o, tris: tris * (o.isInstancedMesh ? o.count : 1) });
+  });
+  return meshes;
+}
+
+test('build gives nothing without scenery', () => {
+  assert.equal(page().KRCanyon.build(THREE, { ...view, track: { points: sunset.points } }), null);
+});
+
+test('the canyon is one group with every rock in one instanced mesh', () => {
+  const c = page();
+  const { group } = c.KRCanyon.build(THREE, view);
+  assert.equal(group.name, 'canyon');
+  const inst = drawn(group).filter((m) => m.o.isInstancedMesh);
+  assert.equal(inst.length, 1);
+  assert.ok(inst[0].o.count > 100, String(inst[0].o.count));
+  const pieces = {};
+  group.traverse((o) => { if (o.userData.piece) pieces[o.userData.piece] = (pieces[o.userData.piece] || 0) + 1; });
+  assert.equal(pieces.dam, 1);
+  assert.equal(pieces.arch, 2);
+  assert.ok(pieces.tent >= 1 && pieces.canopy >= 1 && pieces.flag >= 1, JSON.stringify(pieces));
+});
+
+test('the canyon stays within its draw-call and triangle budget', () => {
+  const meshes = drawn(page().KRCanyon.build(THREE, view).group);
+  const tris = meshes.reduce((n, m) => n + m.tris, 0);
+  assert.ok(meshes.length <= 40, 'draw calls ' + meshes.length);
+  assert.ok(tris <= 80000, 'triangles ' + tris);
+});
+
+test('pieces stand where the layout says', () => {
+  const c = page();
+  const arches = c.KRCanyon.layout(view).arches;
+  const objs = [];
+  c.KRCanyon.build(THREE, view).group.traverse((o) => { if (o.userData.piece === 'arch') objs.push(o); });
+  arches.forEach((a, i) => {
+    assert.ok(Math.abs(objs[i].position.x - a.x) < 1e-6 && Math.abs(objs[i].position.z - a.y) < 1e-6);
+    assert.ok(Math.abs(objs[i].rotation.y + a.angle) < 1e-9);
+  });
+});
+
+test('dispose frees each geometry and material once', () => {
+  const built = page().KRCanyon.build(THREE, view);
+  const calls = new Map();
+  built.group.traverse((o) => {
+    if (!o.isMesh) return;
+    for (const thing of [o.geometry].concat(o.material)) {
+      if (calls.has(thing)) continue;
+      calls.set(thing, 0);
+      thing.dispose = () => calls.set(thing, calls.get(thing) + 1);
+    }
+  });
+  built.dispose();
+  for (const [thing, n] of calls) assert.equal(n, 1, thing.type);
 });
