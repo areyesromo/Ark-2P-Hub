@@ -143,7 +143,7 @@ test("item odds: the front half rolls the leader's odds, the back half the catch
 
 /** Everyone out of the way at the start of the lap, except the karts a test uses. */
 function clearRoad(game, except) {
-  game.karts.forEach((k, i) => { if (!except.includes(i)) placeAt(game, i, 0.05 + i * 0.004); });
+  game.karts.forEach((k, i) => { if (!except.includes(i)) placeAt(game, i, 0.05 + i * 0.04); }); // well apart: no bumps
 }
 
 test('karts bump in a pack: three in a pile all end up apart', () => {
@@ -261,4 +261,39 @@ test("a computer's lap sets no record and doesn't crash", () => {
   assert.doesNotThrow(() => game.lapCheck(game.karts[3], 3, ctx.now()));
   assert.equal(game.karts[3].laps, 1);
   assert.equal(game.record, record);
+});
+
+test('a computer racer that has finished is a ghost: nobody bumps it', () => {
+  const { ctx, game } = field(6);
+  clearRoad(game, [2, 4]);
+  placeAt(game, 2, 0.5);
+  placeAt(game, 4, 0.5);
+  game.karts[4].finishedAt = ctx.now();
+  const before = { x: game.karts[4].x, y: game.karts[4].y };
+  const bumps = game.events.bumps;
+  ctx.advance(17);
+  assert.equal(game.events.bumps, bumps);
+  assert.ok(Math.hypot(game.karts[4].x - before.x, game.karts[4].y - before.y) < 1e-9, 'not pushed');
+});
+
+test('targets skip karts that have finished', () => {
+  const { game } = field(6);
+  knownOrder(game); // kart 6 finished (1st), kart 3 2nd, kart 1 3rd
+  assert.equal(game.targetOf(3), 1, 'nobody racing ahead: the kart just behind');
+  assert.equal(game.targetOf(1), 3);
+});
+
+test('a Seeker keeps the kart it was fired at, whatever the places do after', () => {
+  const { ctx, game } = field(6);
+  clearRoad(game, [2, 6]);
+  placeAt(game, 2, 0.5);
+  placeAt(game, 6, 0.5 + 3 / game.track.length);
+  game.karts[2].items = ['seeker'];
+  useItem(game, 2, ctx.now());
+  const shot = game.shots.find((s) => s.kind === 'seeker');
+  assert.equal(shot.target, 6);
+  placeAt(game, 7, 0.5 + 1.5 / game.track.length); // now kart 7 is the one just ahead
+  assert.equal(game.targetOf(2), 7);
+  ctx.advance(17);
+  assert.equal(shot.target, 6);
 });

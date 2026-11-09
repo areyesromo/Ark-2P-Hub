@@ -835,10 +835,14 @@ export class KartRace {
     useItem(this, slot, this.ctx.now());
   }
 
-  /** The karts bump off each other: every pair. */
+  /** The karts bump off each other: every pair. A computer racer that has finished is a ghost (it
+   * would otherwise sit past the line, unspinnable, in everyone's way until the players finish). */
   bump() {
+    const ghost = (k) => k.cpu && k.finishedAt !== null;
     for (let i = 0; i < this.karts.length; i++) {
-      for (let j = i + 1; j < this.karts.length; j++) this.bumpPair(this.karts[i], this.karts[j]);
+      for (let j = i + 1; j < this.karts.length; j++) {
+        if (!ghost(this.karts[i]) && !ghost(this.karts[j])) this.bumpPair(this.karts[i], this.karts[j]);
+      }
     }
   }
 
@@ -1067,11 +1071,18 @@ export class KartRace {
     return ranks;
   }
 
-  /** Who kart i's Freeze, Swap or Seeker goes for: the kart just ahead of it, or 2nd if it leads. */
+  /**
+   * Who kart i's Freeze, Swap or Seeker goes for: the nearest kart still racing ahead of it, else the
+   * nearest one behind (a kart that has finished is out of reach); with nobody racing, the next place.
+   */
   targetOf(i) {
     const ranks = this.positions();
-    const want = ranks[i] === 1 ? 2 : ranks[i] - 1;
-    return ranks.indexOf(want);
+    const racing = this.karts.map((k, j) => j).filter((j) => j !== i && this.karts[j].finishedAt === null);
+    const ahead = racing.filter((j) => ranks[j] < ranks[i]);
+    const behind = racing.filter((j) => ranks[j] > ranks[i]);
+    if (ahead.length) return ahead.reduce((a, b) => (ranks[b] > ranks[a] ? b : a));
+    if (behind.length) return behind.reduce((a, b) => (ranks[b] < ranks[a] ? b : a));
+    return ranks.indexOf(ranks[i] === 1 ? 2 : ranks[i] - 1);
   }
 
   common() {
