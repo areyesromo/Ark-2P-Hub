@@ -104,3 +104,74 @@ test('1v1 is untouched', () => {
   assert.equal(game.hostView().cupPoints, null);
   assert.equal(game.hostView().karts[0].cpu, false);
 });
+
+// ---- edge cases ----
+
+import { kartRaceBot } from '../server/games/kart-race-bot.js';
+import { placeAt } from './helpers-kart.js';
+
+test("a dropped player's kart coasts and the cup goes on", () => {
+  const { ctx, game } = cup({ laps: 3 });
+  ctx.players[1].connected = false;
+  game.finishLine(0, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  assert.equal(game.phase, 'standings');
+  assert.ok(game.points[1] >= 1, 'the dropped player still scores their place');
+  game.onInput(0, { type: 'go' }); // (the dropped player counts as ready)
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.equal(game.race, 2);
+  assert.equal(game.phase, 'race');
+});
+
+test('a rematch starts a fresh cup', () => {
+  const { ctx, game } = cup();
+  for (let r = 0; r < 5; r++) endWith(ctx, game, [2, 4, 1, 3, 5, 6, 7, 8]);
+  assert.equal(game.phase, 'over');
+  game.onInput(0, { type: 'rematch' });
+  game.onInput(1, { type: 'rematch' });
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.equal(game.race, 1);
+  assert.deepEqual(game.points, [0, 0, 0, 0, 0, 0, 0, 0]);
+  assert.deepEqual(game.gridOrder(8), [2, 3, 4, 5, 6, 7, 0, 1]);
+  assert.equal(game.cpuRacers.length, 6);
+  assert.equal(game.karts.length, 8);
+});
+
+test('switching back to 1v1 on the setup screen', () => {
+  const ctx = fakeCtx();
+  const game = new KartRace3D(ctx, () => 0.5);
+  game.start();
+  for (const [key, value] of Object.entries({ track: 3, races: 3, field: 1, cpu: 'hard' })) game.onInput(0, { type: 'setting', key, value });
+  game.onInput(0, { type: 'setting', key: 'field', value: 0 });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  assert.equal(game.karts.length, 2);
+  assert.equal(game.settings.track, 3);
+  assert.equal(game.settings.races, 3);
+  assert.equal(game.track.name, game.tracks[2].name);
+});
+
+test('the seat computer in an 8-kart Cup scores like a player', () => {
+  const { ctx, game } = cup({ laps: 3 });
+  const memory = {};
+  for (let ms = 0; ms < 400000 && game.phase !== 'standings'; ms += 17) {
+    const move = kartRaceBot(game.botView(1), 'normal', () => 0.5, 0, memory);
+    if (move && move.type === 'drive') game.onInput(1, { type: 'drive', steer: move.steer, gas: move.gas, brake: move.brake, drift: move.drift });
+    ctx.advance(17);
+  }
+  assert.equal(game.phase, 'standings');
+  assert.notEqual(game.karts[1].finishedAt, null);
+  assert.ok(game.points[1] > 0);
+  assert.equal(game.scores[1], game.points[1]);
+});
+
+test('a computer stuck against a wall backs out', () => {
+  const { ctx, game } = cup({ laps: 3 });
+  const k = game.karts[3];
+  placeAt(game, 3, 0.4, 3.2); // at the road's right edge…
+  k.angle += Math.PI / 2; // …facing the wall
+  const from = k.laps + k.progress;
+  for (let ms = 0; ms < 10000; ms += 17) ctx.advance(17);
+  assert.ok(k.laps + k.progress > from + 10 / game.track.length, 'it got going again');
+});
