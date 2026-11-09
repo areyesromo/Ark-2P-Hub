@@ -91,6 +91,7 @@
   let sent = '';
   let tiltNote = '';
   let restored = false; // sent this phone's remembered racer and tyres yet?
+  let threeD = false;
 
   const clamp = function (x) { return Math.max(-1, Math.min(1, x)); };
   const dead = function (x) { return Math.abs(x) < DEAD ? 0 : x; };
@@ -370,7 +371,7 @@
     if (v.phase === 'setup') {
       const ready = v.ready || [false, false];
       const wait = ready[me] ? 'Ready ✓ Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: press Ready when you are.' : 'Pick the settings (either of you can), then press Ready.';
-      return '<span class="big">🏎️ Kart Race</span><br>' + wait;
+      return '<span class="big">🏎️ Kart Race' + (threeD ? ' 3D' : '') + '</span><br>' + wait;
     }
     const ready = v.ready || [false, false];
     const waiting = function (what) {
@@ -434,6 +435,11 @@
     els.speed.classList.toggle('charged', k.driftCharge >= 1);
     els.kmh.textContent = (v.battle ? '' : '🟡 ' + (k.coins || 0) + ' · ') + (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH) + ' km/h';
     els.lap.textContent = v.battle ? '' : (k.lapMs !== null ? '⏱ ' + clock(k.lapMs) : '') + (k.lastLap ? ' · last ' + clock(k.lastLap) : '') + (k.bestLap ? ' · best ' + clock(k.bestLap) : '');
+    if (threeD) {
+      els.drift.classList.toggle('charged', k.driftCharge >= 1);
+      els.drift.style.setProperty('--charge', Math.round(Math.max(0, Math.min(1, k.driftCharge || 0)) * 100) + '%');
+      els.drift.querySelector('small').textContent = k.driftCharge >= 1 ? 'Release for boost' : k.drifting ? 'Charging boost' : 'Hold through a bend';
+    }
   }
 
   /** Lay the controls out for the chosen layout and how the phone is held. */
@@ -488,7 +494,7 @@
     // The item button: the next item big, the two after it small (or 🌟 while Gold Turbo lasts).
     const items = (k && k.items) || [];
     const gold = Boolean(k && k.gold);
-    els.item.innerHTML = gold ? '<span class="now">🌟</span>' : items.length ? '<span class="now">' + itemIcon(items[0]) + '</span><span class="next">' + items.slice(1).map(itemIcon).join('') + '</span>' : '—';
+    els.item.innerHTML = (gold ? '<span class="now">🌟</span>' : items.length ? '<span class="now">' + itemIcon(items[0]) + '</span><span class="next">' + items.slice(1).map(itemIcon).join('') + '</span>' : '—') + (threeD ? '<small>' + (gold ? 'Boost again' : items.length ? esc(itemName(items[0])) : 'Collect a ? box') + '</small>' : '');
     // A screen reader would only read out the emoji (or "dash" for —): say what the button does.
     els.item.setAttribute('aria-label', gold ? 'Boost (Gold Turbo)'
       : items.length ? 'Use ' + itemName(items[0]) + (items.length > 1 ? ', then ' + items.slice(1).map(itemName).join(', ') : '')
@@ -501,111 +507,119 @@
     if (between) release();
   }
 
-  Ark.register('player', 'kart-race', {
-    // Setup, the leaderboard between races and the end screen are menus: pinch zoom stays on.
-    zoomable: function (v) { return v.phase === 'setup' || v.phase === 'standings' || v.phase === 'over'; },
-    mount: function (el, a) {
-      api = a;
-      host = el;
-      root = document.createElement('div');
-      root.className = 'kr-phone';
-      root.innerHTML =
-        '<div class="status"></div>' +
-        '<div class="kr-setup-box"></div>' +
+  /** The phone renderer. `opts.threeD` (Kart Race 3D): its own title, item names and drift guidance. */
+  function make(opts) {
+    opts = opts || {};
+    return {
+      // Setup, the leaderboard between races and the end screen are menus: pinch zoom stays on.
+      zoomable: function (v) { return v.phase === 'setup' || v.phase === 'standings' || v.phase === 'over'; },
+      mount: function (el, a) {
+        api = a;
+        threeD = Boolean(opts.threeD);
+        host = el;
+        root = document.createElement('div');
+        root.className = 'kr-phone' + (threeD ? ' kr3d-phone' : '');
+        root.innerHTML =
+          '<div class="status"></div>' +
+          '<div class="kr-setup-box"></div>' +
 
-        '<div class="ark-setup kr-prefs hidden"></div>' +
-        '<button class="primary go hidden">Ready</button>' +
-        '<div class="ark-setup kr-picks hidden"></div>' +
-        '<div class="kr-controls">' +
-        '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
-        '<div class="kr-steer"></div>' +
-        '<div class="kr-bottom"><button class="kr-btn item">🎁</button><button class="kr-btn drift">DRIFT</button>' +
-        '<button class="kr-btn brake">BRAKE<small>hold: reverse</small></button><button class="kr-btn gas">GAS</button></div>' +
-        '</div>' +
-        '<button class="primary rematch hidden">Rematch</button>' +
-        '<button class="ghost change hidden">Change settings</button>';
-      el.appendChild(root);
-      els = {
-        status: root.querySelector('.status'),
-        setup: root.querySelector('.kr-setup-box'),
-        picks: root.querySelector('.kr-picks'),
-        prefs: root.querySelector('.kr-prefs'),
-        go: root.querySelector('.go'),
-        controls: root.querySelector('.kr-controls'),
-        steer: root.querySelector('.kr-steer'),
-        brake: root.querySelector('.brake'),
-        gas: root.querySelector('.gas'),
-        drift: root.querySelector('.drift'),
-        bottom: root.querySelector('.kr-bottom'),
-        speed: root.querySelector('.kr-speed'),
-        bar: root.querySelector('.kr-speed i'),
-        kmh: root.querySelector('.kmh'),
-        lap: root.querySelector('.lapt'),
-        item: root.querySelector('.item'),
-        rematch: root.querySelector('.rematch'),
-        change: root.querySelector('.change'),
-      };
-      els.prefs.addEventListener('click', function (e) {
-        const s = e.target.closest('[data-style]');
-        const l = e.target.closest('[data-layout]');
-        if (s) {
-          setStyle(s.getAttribute('data-style'));
-          if (style === 'tilt') startTilt(true);
+          '<div class="ark-setup kr-prefs hidden"></div>' +
+          '<button class="primary go hidden">Ready</button>' +
+          '<div class="ark-setup kr-picks hidden"></div>' +
+          '<div class="kr-controls">' +
+          '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
+          '<div class="kr-steer"></div>' +
+          '<div class="kr-bottom"><button class="kr-btn item">🎁</button><button class="kr-btn drift">DRIFT</button>' +
+          '<button class="kr-btn brake">BRAKE<small>hold: reverse</small></button><button class="kr-btn gas">GAS</button></div>' +
+          '</div>' +
+          '<button class="primary rematch hidden">Rematch</button>' +
+          '<button class="ghost change hidden">Change settings</button>';
+        el.appendChild(root);
+        if (threeD) root.querySelector('.drift').innerHTML = 'DRIFT<small>Hold through a bend</small>';
+        els = {
+          status: root.querySelector('.status'),
+          setup: root.querySelector('.kr-setup-box'),
+          picks: root.querySelector('.kr-picks'),
+          prefs: root.querySelector('.kr-prefs'),
+          go: root.querySelector('.go'),
+          controls: root.querySelector('.kr-controls'),
+          steer: root.querySelector('.kr-steer'),
+          brake: root.querySelector('.brake'),
+          gas: root.querySelector('.gas'),
+          drift: root.querySelector('.drift'),
+          bottom: root.querySelector('.kr-bottom'),
+          speed: root.querySelector('.kr-speed'),
+          bar: root.querySelector('.kr-speed i'),
+          kmh: root.querySelector('.kmh'),
+          lap: root.querySelector('.lapt'),
+          item: root.querySelector('.item'),
+          rematch: root.querySelector('.rematch'),
+          change: root.querySelector('.change'),
+        };
+        els.prefs.addEventListener('click', function (e) {
+          const s = e.target.closest('[data-style]');
+          const l = e.target.closest('[data-layout]');
+          if (s) {
+            setStyle(s.getAttribute('data-style'));
+            if (style === 'tilt') startTilt(true);
+          }
+          if (l) {
+            layout = l.getAttribute('data-layout');
+            store(LAYOUT_KEY, layout);
+            renderPrefs();
+            applyLayout();
+          }
+        });
+        window.addEventListener('resize', applyLayout);
+        if (window.ResizeObserver) {
+          fit = new ResizeObserver(applyLayout); // e.g. the hub's menu opening above us
+          fit.observe(el);
         }
-        if (l) {
-          layout = l.getAttribute('data-layout');
-          store(LAYOUT_KEY, layout);
-          renderPrefs();
-          applyLayout();
-        }
-      });
-      window.addEventListener('resize', applyLayout);
-      if (window.ResizeObserver) {
-        fit = new ResizeObserver(applyLayout); // e.g. the hub's menu opening above us
-        fit.observe(el);
-      }
-      buildSteer();
-      renderPrefs();
-      if (style === 'tilt') startTilt(false);
-      applyLayout();
-      holdButton(els.brake, 'brake');
-      holdButton(els.gas, 'gas');
-      holdButton(els.drift, 'drift');
-      els.item.addEventListener('pointerdown', function (e) {
-        e.preventDefault();
-        const mine = view && view.karts && view.karts[view.you];
-        if (!mine || !(mine.gold || (mine.items && mine.items.length))) return;
-        api.send({ type: 'item' });
-        api.vibrate(30);
-      });
-      Ark.setup.bind(els.setup, api);
-      els.picks.addEventListener('click', function (e) {
-        const r = e.target.closest('[data-racer]');
-        const t = e.target.closest('[data-tyre]');
-        if (r) {
-          store(RACER_KEY, r.getAttribute('data-racer'));
-          api.send({ type: 'racer', id: r.getAttribute('data-racer') });
-        }
-        if (t) {
-          store(TYRE_KEY, t.getAttribute('data-tyre'));
-          api.send({ type: 'tyre', id: t.getAttribute('data-tyre') });
-        }
-      });
-      els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
-      els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });
-      els.change.addEventListener('click', function () { api.send({ type: 'setup' }); });
-    },
-    update: render,
-    unmount: function () {
-      window.removeEventListener('resize', applyLayout);
-      if (fit) fit.disconnect();
-      stopTilt();
-      root = els = view = host = fit = null;
-      held.left = held.right = held.brake = held.gas = held.drift = false;
-      analog = 0;
-      stickBrake = stickGas = false;
-      sent = textKey = '';
-      restored = false;
-    },
-  });
+        buildSteer();
+        renderPrefs();
+        if (style === 'tilt') startTilt(false);
+        applyLayout();
+        holdButton(els.brake, 'brake');
+        holdButton(els.gas, 'gas');
+        holdButton(els.drift, 'drift');
+        els.item.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          const mine = view && view.karts && view.karts[view.you];
+          if (!mine || !(mine.gold || (mine.items && mine.items.length))) return;
+          api.send({ type: 'item' });
+          api.vibrate(30);
+        });
+        Ark.setup.bind(els.setup, api);
+        els.picks.addEventListener('click', function (e) {
+          const r = e.target.closest('[data-racer]');
+          const t = e.target.closest('[data-tyre]');
+          if (r) {
+            store(RACER_KEY, r.getAttribute('data-racer'));
+            api.send({ type: 'racer', id: r.getAttribute('data-racer') });
+          }
+          if (t) {
+            store(TYRE_KEY, t.getAttribute('data-tyre'));
+            api.send({ type: 'tyre', id: t.getAttribute('data-tyre') });
+          }
+        });
+        els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
+        els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });
+        els.change.addEventListener('click', function () { api.send({ type: 'setup' }); });
+      },
+      update: render,
+      unmount: function () {
+        window.removeEventListener('resize', applyLayout);
+        if (fit) fit.disconnect();
+        stopTilt();
+        root = els = view = host = fit = null;
+        held.left = held.right = held.brake = held.gas = held.drift = false;
+        analog = 0;
+        stickBrake = stickGas = false;
+        sent = textKey = '';
+        restored = false;
+      },
+    };
+  }
+  window.ArkKartPhone = { make: make };
+  Ark.register('player', 'kart-race', make({}));
 })();

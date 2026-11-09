@@ -48,15 +48,18 @@ test('the 2D Kart Race TV exposes make() and still registers kart-race', () => {
   assert.deepEqual(Object.keys(registered[0].r), Object.keys(window.ArkKartTV.make({})));
 });
 
-test("Kart Race 3D's phone is the Kart Race phone", () => {
+test("Kart Race 3D's phone opts into its presentation and keeps the shared input renderer", async () => {
   const marker = Promise.resolve({ mount() {} });
   const asked = [];
   const { Ark, registered } = arkStub({ loadRenderer: (kind, id) => (asked.push([kind, id]), marker) });
-  vm.runInNewContext(fs.readFileSync('public/games/kart-race-3d/player.js', 'utf8'), { Ark, window: {} });
+  const phone = { mount() {} };
+  let options;
+  vm.runInNewContext(fs.readFileSync('public/games/kart-race-3d/player.js', 'utf8'), { Ark, window: { ArkKartPhone: { make(opts) { options = opts; return phone; } } } });
   assert.deepEqual(asked, [['player', 'kart-race']]);
   assert.equal(registered.length, 1);
   assert.equal(registered[0].id, 'kart-race-3d');
-  assert.equal(registered[0].r, marker);
+  assert.equal(await registered[0].r, phone);
+  assert.equal(options.threeD, true);
 });
 
 test("Kart Race 3D's TV is the Kart Race TV with a stage: sounds, pad hooks and all", async () => {
@@ -65,6 +68,10 @@ test("Kart Race 3D's TV is the Kart Race TV with a stage: sounds, pad hooks and 
   const context = vm.createContext({ Ark, window, setTimeout, performance, requestAnimationFrame() {}, cancelAnimationFrame() {} });
   // Loading the Kart Race TV runs it in the same page; its own helpers never arrive.
   Ark.loadScript = (src) => {
+    if (src === '/games/kart-race-3d/ui.js') {
+      vm.runInContext(fs.readFileSync('public' + src, 'utf8'), context);
+      return Promise.resolve();
+    }
     if (src !== '/games/kart-race/host.js') return new Promise(() => {});
     vm.runInContext(fs.readFileSync('public' + src, 'utf8'), context);
     return Promise.resolve();

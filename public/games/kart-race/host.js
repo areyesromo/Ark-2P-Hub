@@ -67,6 +67,7 @@
   let arena = null;
   let canvas = null;
   let stage = null; // the 3D race in Kart Race 3D (see make), in place of the canvas
+  let presentation = null; // opt-in: the 2D game keeps its own HUD and menus
   let overlay = null;
   let raf = null;
   let view = null;
@@ -225,6 +226,7 @@
   }
 
   function renderHud(v) {
+    if (presentation) return presentation.hud(v, hud);
     let html = '';
     if (v.karts && v.battle) {
       const bside = function (slot) {
@@ -307,7 +309,14 @@
 
   function renderOverlay(v) {
     let html = '';
-    if (v.phase === 'setup') {
+    if (presentation) {
+      html = presentation.overlay(v, {
+        settings: function () { return Ark.setup.html(v, rowsFor(v), settingsFocus(v)); },
+        preview: function () { return previewHtml(v, v.settings.track); },
+        picks: function () { return picksHtml(v); },
+        board: function () { return boardHtml(v); },
+      });
+    } else if (v.phase === 'setup') {
       html = '<div class="panel kr-setup"><div class="title">🏎️ Kart Race</div><div class="kr-setup-row">' + Ark.setup.html(v, rowsFor(v), settingsFocus(v)) + '<div class="kr-setup-col">' + previewHtml(v, v.settings.track) + picksHtml(v) + '</div></div>' +
         '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re ready: the lights come on when you both are.</div></div>';
     } else if (v.phase === 'countdown') {
@@ -901,7 +910,7 @@
 
   /**
    * The TV renderer. `opts.stage` (Kart Race 3D) draws the race in place of the 2D canvas:
-   * { mount(arenaEl), update(view), unmount() }; the HUD and overlays stay the same.
+   * { mount(arenaEl), update(view), unmount() }. An optional presentation draws its HUD and menus.
    */
   function make(opts) {
     opts = opts || {};
@@ -941,6 +950,7 @@
       padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
       padPoll: padPoll,
       pad: function (btn, v, slot) {
+        if (stage && stage.pad && stage.pad(btn)) return null;
         if (v.phase === 'setup') {
           if (!pads[slot]) pads[slot] = { row: 0 };
           const settings = rowsFor(v);
@@ -954,6 +964,7 @@
           if (view) {
             overlayKey = '';
             renderOverlay(view);
+            if (presentation && presentation.focus) presentation.focus(overlay, slot);
           }
           return input;
         }
@@ -978,6 +989,7 @@
         overlay = root.querySelector('.kr-overlay');
         // This renderer's own stage (or none: the 2D canvas), whichever game mounted last.
         stage = opts.stage || null;
+        presentation = opts.presentation || null;
         if (stage) stage.mount(arena);
         else raf = requestAnimationFrame(draw);
       },
@@ -1009,6 +1021,8 @@
       unmount: function () {
         if (stage) stage.unmount();
         stage = null;
+        if (presentation) presentation.dispose();
+        presentation = null;
         cancelAnimationFrame(raf);
         root = hud = arena = canvas = overlay = view = shown = line = barrier = barrierPic = lastBalloons = null;
         bursts = [];
