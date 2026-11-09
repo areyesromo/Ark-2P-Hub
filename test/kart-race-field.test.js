@@ -194,3 +194,45 @@ test("a Magnet's slipstream works behind any kart", () => {
   k.magnetUntil = ctx.now() + 10000;
   assert.equal(game.slipstream(k, ctx.now()), ITEMS.slipSpeed);
 });
+
+test('Thunder shrinks every other kart', () => {
+  const { ctx, game } = field(6);
+  game.karts[4].items = ['thunder'];
+  useItem(game, 4, ctx.now());
+  game.karts.forEach((k, i) => assert.equal(k.shrinkUntil > ctx.now(), i !== 4, `kart ${i}`));
+});
+
+test('Freeze and Swap go for the kart just ahead', () => {
+  const { ctx, game } = field(6);
+  knownOrder(game);
+  game.karts[1].items = ['freeze'];
+  useItem(game, 1, ctx.now());
+  game.karts.forEach((k, i) => assert.equal(k.freezeUntil > ctx.now(), i === 3, `freeze, kart ${i}`));
+  game.karts[1].items = ['swap', 'banana'];
+  game.karts[3].items = ['star'];
+  useItem(game, 1, ctx.now());
+  assert.deepEqual(game.karts[1].items, ['star']);
+  assert.deepEqual(game.karts[3].items, ['banana']);
+});
+
+test("the leader's Freeze goes back to second", () => {
+  const { ctx, game } = field(6);
+  knownOrder(game);
+  Object.assign(game.karts[6], { finishedAt: null, laps: 2 }); // still racing, out in front
+  game.karts[6].items = ['freeze'];
+  useItem(game, 6, ctx.now());
+  game.karts.forEach((k, i) => assert.equal(k.freezeUntil > ctx.now(), i === 3, `kart ${i}`));
+});
+
+test('a Seeker chases the kart ahead and never its thrower', () => {
+  const { ctx, game } = field(6);
+  clearRoad(game, [2, 6]);
+  placeAt(game, 2, 0.5);
+  placeAt(game, 6, 0.5 + 3 / game.track.length);
+  assert.equal(game.targetOf(2), 6);
+  game.karts[2].items = ['seeker'];
+  useItem(game, 2, ctx.now());
+  for (let n = 0; n < 60; n++) ctx.advance(17);
+  assert.ok(game.karts[6].spinUntil > 0, 'kart 6 was hit');
+  assert.equal(game.karts[2].spinUntil, 0, 'never its thrower');
+});

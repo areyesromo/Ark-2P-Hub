@@ -126,7 +126,8 @@ function zap(game, rival, now) {
 /** The player in this slot pressed ITEM. */
 export function useItem(game, slot, now) {
   const k = game.karts[slot];
-  const rival = game.karts[1 - slot];
+  // Freeze and Swap go for the kart just ahead (2nd if you lead); with two karts, the rival.
+  const rival = game.karts[game.targetOf(slot)];
   if (game.phase !== 'race' || k.finishedAt !== null || now < k.spinUntil) return;
   // Gold Turbo: every press boosts while it lasts, and the rest of the queue waits.
   if (now < k.goldUntil) {
@@ -152,8 +153,10 @@ export function useItem(game, slot, now) {
   else if (kind === 'magnet') k.magnetUntil = now + ITEMS.magnetMs;
   else if (kind === 'hover') k.hoverUntil = now + ITEMS.hoverMs;
   else if (kind === 'thunder') {
-    if (zap(game, rival, now)) {
-      rival.shrinkUntil = now + ITEMS.thunderMs;
+    // Every other kart shrinks.
+    for (const o of game.karts) {
+      if (o === k || !zap(game, o, now)) continue;
+      o.shrinkUntil = now + ITEMS.thunderMs;
       game.events.zapped++;
     }
   } else if (kind === 'freeze') {
@@ -244,8 +247,8 @@ export function stepShots(game, dt, now) {
     }
     const speed = s.speed || (s.kind === 'bouncer' ? ITEMS.bouncerSpeed : ITEMS.seekerSpeed);
     if (s.kind === 'seeker') {
-      // Follow the road; close to the rival, straight at them.
-      const rival = game.karts[1 - s.owner];
+      // Follow the road; close to its target (the kart just ahead of the thrower), straight at them.
+      const rival = game.karts[game.targetOf(s.owner)];
       const w = Road.locateNear(game.track, s.x, s.y, s.seg, 8, game.roadHalf * 3);
       s.seg = w.i;
       // (Only a rival on the same stretch: not one just across a barrier.)
