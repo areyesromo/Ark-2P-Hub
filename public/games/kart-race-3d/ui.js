@@ -7,6 +7,19 @@
     return Math.floor(tenths / 600) + ':' + String(Math.floor(tenths / 10) % 60).padStart(2, '0') + '.' + tenths % 10;
   }
   function player(v, slot) { return v.players[slot].name; }
+  /** Anyone in the race by kart: a player's name, or a computer racer's. */
+  function racerName(v, i) { return i < 2 ? player(v, i) : (v.karts[i] && v.karts[i].name) || 'CPU'; }
+  function ordinal(n) { return n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th'); }
+  /** The 8-kart Cup's table after the latest race: everyone by points, with this race's place and score. */
+  function cupTable(v) {
+    const last = v.history[v.history.length - 1];
+    const prev = v.history[v.history.length - 2];
+    const order = v.cupPoints.map(function (p, i) { return i; }).sort(function (a, b) { return v.cupPoints[b] - v.cupPoints[a] || a - b; });
+    return '<table class="kr3d-cup"><thead><tr><th></th><th>Driver</th><th>Race</th><th>+</th><th>Points</th></tr></thead><tbody>' + order.map(function (i, n) {
+      const got = last.points[i] - (prev && prev.points ? prev.points[i] : 0);
+      return '<tr class="kr3d-cup-row ' + (i < 2 ? 'p' + (i + 1) : 'cpu') + '"><td>' + (n + 1) + '</td><td>' + esc(racerName(v, i)) + (i < 2 ? '' : ' <small>CPU</small>') + '</td><td>' + ordinal(last.places[i]) + '</td><td>+' + got + '</td><td class="kr3d-total">' + v.cupPoints[i] + '</td></tr>';
+    }).join('') + '</tbody></table>';
+  }
   function item(kind) { return window.ArkKartItems && window.ArkKartItems[kind]; }
   function alertFor(k) {
     if (k.jumped) return 'Jump start · 1 s penalty';
@@ -54,8 +67,8 @@
             '<div class="kr3d-alert" role="status"></div>' +
             '<div class="kr3d-driver-bottom"><div class="kr3d-speed"><strong></strong><small>km/h</small><span class="kr3d-coins"></span><span class="kr3d-laptime"></span></div>' +
             '<div class="kr3d-drift"><span></span><div><i></i></div></div><div class="kr3d-item"></div></div>' +
-            '<div class="kr3d-driving-hint"></div></section>';
-        }).join('') + '</div><div class="kr3d-map"><svg aria-label="Course map: P1 and P2 positions" role="img"><path class="kr3d-map-road"/><path class="kr3d-map-line"/><path class="kr3d-map-start"/>' +
+            '<ol class="kr3d-order" aria-label="Running order"></ol><div class="kr3d-driving-hint"></div></section>';
+        }).join('') + '</div><div class="kr3d-map"><svg aria-label="Course map: P1 and P2 positions" role="img"><path class="kr3d-map-road"/><path class="kr3d-map-line"/><path class="kr3d-map-start"/><g class="kr3d-map-cpus"></g>' +
         [0, 1].map(function (s) { return '<g class="p' + (s + 1) + '"><circle r="1.4"/><text text-anchor="middle" dy=".4">' + (s + 1) + '</text></g>'; }).join('') + '</svg><span>P1 / P2 · course map</span></div>';
       nodes = [0, 1].map(function (s) { return el.querySelectorAll('.kr3d-driver')[s]; });
       mapKey = '';
@@ -94,6 +107,10 @@
         const k = v.karts[slot];
         svg.querySelector('.p' + (slot + 1)).setAttribute('transform', 'translate(' + k.x + ' ' + k.y + ')');
       });
+      // The computer racers: small plain dots under the players'.
+      svg.querySelector('.kr3d-map-cpus').innerHTML = v.karts.slice(2).map(function (k) {
+        return '<circle class="cpu" cx="' + k.x + '" cy="' + k.y + '" r="' + v.field.w / 40 + '"/>';
+      }).join('');
     }
     return {
       focus: function (overlay, slot) {
@@ -107,11 +124,20 @@
         if (element !== el) build(el);
         el.querySelector('.kr3d-course').textContent = v.track.name;
         el.querySelector('.kr3d-clock').textContent = v.battle ? Math.ceil(v.battle.msLeft / 1000) + ' s' : clock(v.raceMs);
-        el.querySelector('.kr3d-series').textContent = v.cup ? 'CUP · ' + (v.suddenDeath ? 'SUDDEN DEATH' : v.race + ' / 4') : v.races > 1 ? 'ROUND ' + v.race + ' · ' + v.scores.join(' : ') : v.battle ? 'BALLOON BATTLE' : 'HEAD TO HEAD';
+        const field = v.karts.length;
+        el.querySelector('.kr3d-series').textContent = v.cupPoints ? 'CUP · RACE ' + v.race + ' / 5' : v.cup ? 'CUP · ' + (v.suddenDeath ? 'SUDDEN DEATH' : v.race + ' / 4') : v.races > 1 ? 'ROUND ' + v.race + ' · ' + v.scores.join(' : ') : v.battle ? 'BALLOON BATTLE' : 'HEAD TO HEAD';
         nodes.forEach(function (node, slot) {
           const k = v.karts[slot];
           node.querySelector('.kr3d-name').textContent = player(v, slot);
-          node.querySelector('.kr3d-position').textContent = v.battle ? k.balloons + ' 🎈' : v.positions[slot] === 1 ? '1st' : '2nd';
+          node.querySelector('.kr3d-position').textContent = v.battle ? k.balloons + ' 🎈' : field > 2 ? ordinal(v.positions[slot]) + ' / ' + field : v.positions[slot] === 1 ? '1st' : '2nd';
+          // A pack: everyone in race order, the two players picked out.
+          const order = node.querySelector('.kr3d-order');
+          order.hidden = field <= 2;
+          if (field > 2) {
+            order.innerHTML = v.positions.map(function (rank, i) { return { rank: rank, i: i }; }).sort(function (a, b) { return a.rank - b.rank; }).map(function (r) {
+              return '<li class="' + (r.i < 2 ? 'p' + (r.i + 1) + (r.i === slot ? ' me' : '') : 'cpu') + '"><b>' + r.rank + '</b> ' + esc(racerName(v, r.i)) + '</li>';
+            }).join('');
+          }
           node.querySelector('.kr3d-lap').textContent = v.battle ? 'OF ' + v.battle.balloons : k.finished ? 'FINISHED' : 'LAP ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps;
           const alert = node.querySelector('.kr3d-alert');
           alert.textContent = alertFor(k);
@@ -139,7 +165,7 @@
         map(v, el);
       },
       overlay: function (v, h) {
-        if (v.phase === 'setup') return '<div class="panel kr3d-setup"><header><div><span class="kr3d-eyebrow">TWO DRIVERS. ONE FINISH LINE.</span><h1>Kart Race <em>3D</em></h1><p>Choose your ride. Make the grid yours.</p></div><span class="kr3d-tag">' + (v.settings.mode ? 'BALLOON BATTLE' : 'SPLIT-SCREEN RACING') + '</span></header><div class="kr3d-setup-grid"><section class="kr3d-rules"><h2>Race settings</h2>' + h.settings().replace(/<button /g, '<button tabindex="-1" aria-disabled="true" ') + '</section><section class="kr3d-track"><span class="kr3d-eyebrow">' + (v.settings.mode ? 'THE ARENA' : 'THE CIRCUIT') + '</span>' + h.preview() + '</section></div><section class="kr3d-garage">' + h.picks() + '</section>' + ready(v) + '<footer>' + esc(prompt(v)) + '</footer></div>';
+        if (v.phase === 'setup') return '<div class="panel kr3d-setup"><header><div><span class="kr3d-eyebrow">TWO DRIVERS. ONE FINISH LINE.</span><h1>Kart Race <em>3D</em></h1><p>Choose your ride. Make the grid yours.</p></div><span class="kr3d-tag">' + (v.settings.field === 1 ? '8-KART CUP' : v.settings.mode ? 'BALLOON BATTLE' : 'SPLIT-SCREEN RACING') + '</span></header><div class="kr3d-setup-grid"><section class="kr3d-rules"><h2>Race settings</h2>' + h.settings().replace(/<button /g, '<button tabindex="-1" aria-disabled="true" ') + '</section><section class="kr3d-track"><span class="kr3d-eyebrow">' + (v.settings.field === 1 ? 'THE CUP' : v.settings.mode ? 'THE ARENA' : 'THE CIRCUIT') + '</span>' + h.preview() + '</section></div><section class="kr3d-garage">' + h.picks() + '</section>' + ready(v) + '<footer>' + esc(prompt(v)) + '</footer></div>';
         if (v.phase === 'countdown') {
           let lights = '';
           for (let i = 1; i <= 5; i++) lights += '<span class="light' + (v.lights >= i ? ' on' : '') + '"></span>';
@@ -147,6 +173,15 @@
         }
         if (v.phase === 'race') return v.newRecord ? '<div class="banner kr3d-record">NEW LAP RECORD · ' + esc(player(v, v.newRecord.slot)) + ' · ' + clock(v.newRecord.ms) + '</div>' : '';
         if (v.phase === 'finish' && v.result) return '<div class="banner kr3d-finish"><span class="kr3d-eyebrow">' + (v.battle ? 'ROUND COMPLETE' : 'CHEQUERED FLAG') + '</span><h2>' + (v.result.draw ? 'A level finish' : esc(player(v, v.result.winner)) + ' takes it!') + '</h2><p>' + (v.result.draw ? 'Draw round · play again' : v.battle ? 'The balloons have spoken.' : clock(v.result.time)) + '</p></div>';
+        if ((v.phase === 'standings' || v.phase === 'over') && v.cupPoints) {
+          // The 8-kart Cup: the table, and at the end who won (and any computer that out-scored you both).
+          const done = v.phase === 'over';
+          const top = v.cupPoints.indexOf(Math.max.apply(null, v.cupPoints));
+          return '<div class="panel kr3d-summary"><span class="kr3d-eyebrow">' + (done ? 'THE PODIUM' : 'CUP · AFTER RACE ' + v.race + ' OF 5') + '</span><h1>' + (done ? esc(player(v, v.winner)) + ' wins the cup' : 'The cup table') + '</h1>' +
+            (done && top > 1 ? '<p class="kr3d-cpu-top">' + esc(racerName(v, top)) + ' (CPU) topped the table</p>' : '') +
+            '<div class="kr3d-table-wrap">' + cupTable(v) + '</div>' +
+            (!done && v.next ? '<p class="kr3d-next">NEXT · ' + esc(v.next.track) + '</p>' : '') + ready(v) + '<footer>' + esc(prompt(v)) + '</footer></div>';
+        }
         if (v.phase === 'standings' || v.phase === 'over') {
           const over = v.phase === 'over';
           const title = over ? esc(player(v, v.winner)) + (v.cup ? ' wins the cup' : ' wins the match') : v.cup ? 'Cup standings' : 'Round complete';

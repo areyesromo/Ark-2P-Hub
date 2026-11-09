@@ -384,6 +384,18 @@
     const waiting = function (what) {
       return ready[me] ? 'Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: ' + what : what;
     };
+    if ((v.phase === 'standings' || v.phase === 'over') && v.cupPoints) {
+      // Kart Race 3D's 8-kart Cup: where you came, both your points and your place in the table.
+      const pts = v.cupPoints;
+      const table = 1 + pts.filter(function (p, i) { return p > pts[me] || (p === pts[me] && i < me); }).length;
+      const them = esc(v.players[1 - me] ? v.players[1 - me].name : 'Them');
+      const line = 'You: ' + pts[me] + ' pts · ' + them + ': ' + pts[1 - me] + ' pts · ' + ordinal(table) + ' in the table';
+      if (v.phase === 'over') {
+        return '<span class="big ' + (v.winner === me ? 'won">You win the cup! 🏆' : 'lost">They win the cup') + '</span><br>' + line + '<br>' + waiting('press Rematch for another cup.');
+      }
+      const place = v.history[v.history.length - 1].places[me];
+      return '<span class="big">Race ' + v.race + ': ' + ordinal(place) + '</span><br>' + line + '<br>Next: ' + esc(v.next.track) + ' · ' + waiting('press Ready for the next race.');
+    }
     if (v.phase === 'standings') {
       const last = v.history[v.history.length - 1];
       if (v.battle || last.winner === null) {
@@ -413,7 +425,7 @@
       return '<span class="big">' + balloonsHtml(k.balloons, of) + '</span><br>Them ' + balloonsHtml(v.karts[1 - me].balloons, of) + ' · ⏱ ' + Math.floor(secs / 60) + ':' + ('0' + (secs % 60)).slice(-2) +
         (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : k.spin ? ' · <span class="lost">💥 Popped!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
     }
-    const pos = v.positions[me] === 1 ? '1st' : '2nd';
+    const pos = v.karts.length > 2 ? ordinal(v.positions[me]) + ' of ' + v.karts.length : v.positions[me] === 1 ? '1st' : '2nd';
     if (v.phase === 'countdown') {
       let dots = '';
       for (let i = 1; i <= 5; i++) dots += '<i class="' + (v.lights >= i ? 'on' : '') + '"></i>';
@@ -424,6 +436,10 @@
         (v.newRecord && v.newRecord.slot === me ? '<br><span class="won">⏱️ New lap record!</span>' : '');
     }
     return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : v.newRecord && v.newRecord.slot === me ? ' · <span class="won">⏱️ New lap record!</span>' : k.reaction !== null && k.reaction !== undefined ? ' · <span class="won">⚡ Reaction ' + (k.reaction / 1000).toFixed(2) + ' s</span>' : k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
+  }
+
+  function ordinal(n) {
+    return n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
   }
 
   function clock(ms) {
@@ -475,7 +491,7 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.newRecord && v.newRecord.slot, v.history && v.history.length, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result,
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.newRecord && v.newRecord.slot, v.history && v.history.length, v.cupPoints, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result,
       v.battle && v.karts && [v.karts[0].balloons, v.karts[1].balloons, Math.ceil(v.battle.msLeft / 1000)]]);
     if (key === textKey) return;
     textKey = key;

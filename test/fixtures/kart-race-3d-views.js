@@ -37,3 +37,39 @@ export function kartViews() {
   }
   return views;
 }
+
+/**
+ * Real server views from an 8-kart Cup: a race (player 1 placed 3rd), the table after race 1
+ * (places by kart [3, 5, 1, 2, 4, 6, 7, 8]) and the end of a cup.
+ */
+export function kartCupViews() {
+  const views = {};
+  const save = (key, g) => { views[key] = JSON.parse(JSON.stringify(g.hostView())); };
+  const ctx = fakeCtx(['Sergio', 'Alex']);
+  const g = kartRace3d.create(ctx);
+  g.start();
+  g.onInput(0, { type: 'setting', key: 'field', value: 1 });
+  g.onInput(0, { type: 'go' });
+  save('setup', g);
+  g.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  const places = [3, 5, 1, 2, 4, 6, 7, 8];
+  // Racing, in that order: further round the lap for a better place.
+  places.forEach((rank, i) => { g.karts[i].progress = 0.9 - rank * 0.1; });
+  save('race', g);
+  const end = (order) => {
+    g.result = { winner: order[0] < order[1] ? 0 : 1, time: 60000 };
+    order.forEach((rank, i) => { g.karts[i].finishedAt = rank; });
+    g.endRace();
+  };
+  end(places);
+  save('standings', g);
+  for (let r = 1; r < 5; r++) {
+    g.onInput(0, { type: 'go' });
+    g.onInput(1, { type: 'go' });
+    ctx.advance(TIMING.countdownMs + 50);
+    end(places);
+  }
+  save('over', g);
+  return views;
+}
