@@ -91,3 +91,52 @@ test("the next race keeps each kart's held controls, all eight", () => {
   assert.equal(game.karts.length, 8);
   assert.equal(game.karts[5].gas, true);
 });
+
+/** A known running order: kart 6 finished, kart 3 a lap up, kart 1 near the end of lap 1, the rest spread behind. */
+function knownOrder(game) {
+  [0, 2, 4, 5, 7].forEach((i, n) => placeAt(game, i, 0.3 - n * 0.05));
+  placeAt(game, 3, 0.2, 1);
+  placeAt(game, 1, 0.9);
+  placeAt(game, 6, 0.1, 3);
+  game.karts[6].finishedAt = 1;
+}
+
+test('places 1 to 8 by laps and progress, finished karts first', () => {
+  const { game } = field(6);
+  knownOrder(game);
+  const ranks = game.positions();
+  assert.equal(ranks[6], 1);
+  assert.equal(ranks[3], 2);
+  assert.equal(ranks[1], 3);
+  assert.deepEqual([0, 2, 4, 5, 7].map((i) => ranks[i]), [4, 5, 6, 7, 8]);
+  assert.deepEqual([...ranks].sort((a, b) => a - b), [1, 2, 3, 4, 5, 6, 7, 8]);
+});
+
+test('two karts: places as before', () => {
+  const { game } = field(0);
+  placeAt(game, 0, 0.3);
+  placeAt(game, 1, 0.3);
+  assert.deepEqual(game.positions(), [1, 2]);
+  placeAt(game, 1, 0.4);
+  assert.deepEqual(game.positions(), [2, 1]);
+});
+
+test('targets: the kart just ahead, or just behind for the leader', () => {
+  const { game } = field(6);
+  knownOrder(game);
+  assert.equal(game.targetOf(1), 3);
+  assert.equal(game.targetOf(6), 3);
+  assert.equal(game.targetOf(0), 1);
+  const two = field(0).game;
+  assert.equal(two.targetOf(0), 1);
+  assert.equal(two.targetOf(1), 0);
+});
+
+test("item odds: the front half rolls the leader's odds, the back half the catch-up ones", () => {
+  const { game } = field(6);
+  knownOrder(game);
+  game.rng = () => 0.999; // the last kind in each table
+  assert.notEqual(Object.keys(ODDS.first).at(-1), Object.keys(ODDS.second).at(-1));
+  assert.equal(game.rollItem(0), Object.keys(ODDS.first).at(-1), 'rank 4 of 8: the front half');
+  assert.equal(game.rollItem(2), Object.keys(ODDS.second).at(-1), 'rank 5 of 8: the back half');
+});

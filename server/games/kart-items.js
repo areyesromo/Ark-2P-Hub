@@ -75,7 +75,8 @@ export const ODDS = {
 
 /** A random item for the kart in this slot, by its place. */
 export function rollItem(game, slot) {
-  const odds = game.battle ? ODDS.battle : game.positions()[slot] === 1 ? ODDS.first : ODDS.second;
+  // The front half of the field (with two: the leader) gets the leader's odds; the back half the catch-up ones.
+  const odds = game.battle ? ODDS.battle : game.positions()[slot] <= game.karts.length / 2 ? ODDS.first : ODDS.second;
   const kinds = Object.keys(odds);
   let r = game.rng() * kinds.reduce((sum, k) => sum + odds[k], 0);
   for (const kind of kinds) {

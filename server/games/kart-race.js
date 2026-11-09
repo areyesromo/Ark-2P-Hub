@@ -1047,10 +1047,20 @@ export class KartRace {
 
   /** Who's ahead: more laps, then further along this lap; a finished kart beats an unfinished one. */
   positions() {
-    if (this.battle) return this.karts[0].balloons >= this.karts[1].balloons ? [1, 2] : [2, 1];
-    const score = (k) => (k.finishedAt !== null ? 1e9 - k.finishedAt : k.laps + k.progress);
-    const [a, b] = this.karts.map(score);
-    return a >= b ? [1, 2] : [2, 1];
+    // Finished karts first (earliest first), then by laps and progress; a battle by balloons left.
+    // A dead heat goes to the lower kart index (player 1 before player 2, as ever).
+    const score = (k) => (this.battle ? k.balloons : k.finishedAt !== null ? 1e9 - k.finishedAt : k.laps + k.progress);
+    const order = this.karts.map((k, i) => ({ i, s: score(k) })).sort((a, b) => b.s - a.s || a.i - b.i);
+    const ranks = [];
+    order.forEach((o, n) => { ranks[o.i] = n + 1; });
+    return ranks;
+  }
+
+  /** Who kart i's Freeze, Swap or Seeker goes for: the kart just ahead of it, or 2nd if it leads. */
+  targetOf(i) {
+    const ranks = this.positions();
+    const want = ranks[i] === 1 ? 2 : ranks[i] - 1;
+    return ranks.indexOf(want);
   }
 
   common() {
