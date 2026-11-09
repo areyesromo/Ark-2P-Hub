@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { readGlb, nodeNames, triangles, bounds, imageSize } from './helpers-glb.js';
+import { readGlb, nodeNames, triangles, bounds, imageSize, floats } from './helpers-glb.js';
 
 const DIR = 'public/games/kart-race-3d/models/';
 const node = (json, name) => json.nodes.find((n) => n.name === name);
@@ -63,4 +63,21 @@ test('each model has one 1024 texture and stays small', () => {
     assert.equal(size.height, 1024, file);
     assert.ok(fs.statSync(DIR + file).size < 1.5e6, file);
   }
+});
+
+/** Every texture coordinate of a node's mesh, as glTF has them (v runs down from the top). */
+function uvs(json, bin, name) {
+  const mesh = json.meshes[node(json, name).mesh];
+  return mesh.primitives.flatMap((p) => floats(json, bin, p.attributes.TEXCOORD_0));
+}
+
+test("the kart's wheels are painted from their own part of the texture", () => {
+  // The wheel area is the texture's bottom-right quarter-strip: u 0.5-1, v 0.75-1 (glTF's v runs down).
+  const { json, bin } = readGlb(DIR + 'rex-kart.glb');
+  const inWheels = ([u, v]) => u >= 0.5 - 1e-4 && v >= 0.75 - 1e-4;
+  for (const w of ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr']) {
+    const all = uvs(json, bin, w);
+    assert.ok(all.length > 0 && all.every(inWheels), w);
+  }
+  assert.ok(!uvs(json, bin, 'body').some(inWheels), 'the body keeps out of the wheel area');
 });
