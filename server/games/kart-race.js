@@ -18,6 +18,7 @@ import { loadSettings, applySetting } from './options.js';
 import '../../public/games/kart-race/track.js';
 import '../../public/games/kart-race/racers.js';
 import { ITEMS, ODDS, rollItem, useItem, effects, hazardCheck, stepShots } from './kart-items.js';
+import { driveKart, driveDelayMs } from './kart-race-bot.js';
 
 export { ITEMS, ODDS };
 
@@ -61,6 +62,15 @@ export const JUMP = { stallMs: 1000, graceMs: 600 };
 // REACTION_MAX_MS isn't a reaction any more, so it isn't shown.
 export const REACTION_SHOW_MS = 3000;
 export const REACTION_MAX_MS = 2000;
+/**
+ * Computer racers (the 8-kart Cup's): each decides every `thinkMs` (see driveKart) and its hands
+ * follow a person's reaction time later. Each holds a lane (sideways from the road's middle: the outer
+ * one on its side of the grid) and,
+ * with a kart within `passGap` straight ahead of it, moves to the next free lane over for `passMs`
+ * (lanes 2.4 apart: two 1-wide karts side by side don't rub).
+ */
+export const CPU = { thinkMs: 100, lanes: [-2.4, 0, 2.4], passGap: 4, closeGap: 2.2, roomGap: 1.8, passMs: 1500, sway: 0.1 };
+
 // The starting grid: two karts a row, rows this far apart along the road, either side of the middle.
 export const GRID = { rowGap: 2.6, side: 0.75 };
 export const TIMING = { countdownMs: LIGHTS.count * LIGHTS.stepMs + LIGHTS.holdMax, finishMs: 3500 };
@@ -204,7 +214,7 @@ export function buildTrack(index, list = TRACKS) {
   const coins = coinSpots(def, rows, def.coins || COINS.perLap, big ? 2.45 / road.length : COINS.clear);
   // The barriers either side of the road (shared down the middle where two stretches run close).
   return {
-    index, name: def.name, points: def.points, width, out, field: def.field || FIELD, rows, boxOffsets: def.boxOffsets || ITEMS.offsets,
+    index, name: def.name, points: def.points, width, out, field: def.field || FIELD, rows, boxOffsets: def.boxOffsets || ITEMS.offsets, grid: def.grid || GRID,
     cutJump: big ? 3.5 / road.length : CUT_JUMP, boosts: def.boosts, coins, ...road, edge: Road.barriers(road, width / 2, out),
   };
 }
@@ -213,7 +223,7 @@ export function buildTrack(index, list = TRACKS) {
 export function buildArena(i) {
   const def = ARENAS[i];
   const road = Road.build(def.points);
-  return { index: TRACKS.length + i, arena: i, name: def.name, points: def.points, width: def.width, out: def.out, field: FIELD, cutJump: CUT_JUMP, boosts: [], boxes: def.boxes, coins: [], ...road, edge: Road.barriers(road, def.width / 2, def.out) };
+  return { index: TRACKS.length + i, arena: i, name: def.name, points: def.points, width: def.width, out: def.out, field: FIELD, cutJump: CUT_JUMP, grid: GRID, boosts: [], boxes: def.boxes, coins: [], ...road, edge: Road.barriers(road, def.width / 2, def.out) };
 }
 
 /** Where a point is relative to the track: progress 0..1 along the lap, distance from the centre line, the nearest point on it. */
@@ -418,15 +428,20 @@ export class KartRace {
         return { ...at, angle: at.angle + slot * Math.PI, p: slot * 0.5 };
       }
       const j = order.indexOf(slot);
-      const p = 0.012 + ((rows - 1 - Math.floor(j / 2)) * GRID.rowGap) / this.track.length;
-      return { ...pointAt(this.track, p, j % 2 ? GRID.side : -GRID.side), p };
+      const g = this.track.grid;
+      const p = 0.012 + ((rows - 1 - Math.floor(j / 2)) * g.rowGap) / this.track.length;
+      return { ...pointAt(this.track, p, j % 2 ? g.side : -g.side), p };
     };
+    const homeLane = (slot) => (order.indexOf(slot) % 2 ? CPU.lanes[CPU.lanes.length - 1] : CPU.lanes[0]);
     this.karts = field.map((pick, slot) => {
       const p = grid(slot);
       const was = before ? before[slot] || null : null;
       return {
         racer: pick.racer,
         cpu: pick.cpu || null, // a computer racer (karts 0 and 1 are always the players)
+        // …and what drives it: its own memory, its lane, and the inputs on their way to its hands.
+        // Its lane: the outer one on its side of the grid, so nobody cuts across; the middle is for passing.
+        driver: pick.cpu ? { memory: { sway: pick.cpu.sway || 0 }, home: homeLane(slot), lane: homeLane(slot), laneUntil: 0, nextAt: 0, queue: [] } : null,
         tyre: pick.tyre,
         car: Racers.physics(pick.racer, pick.tyre), // this racer's driving numbers
         x: p.x,
@@ -516,6 +531,7 @@ export class KartRace {
       this.enter('race', 0);
     }
     if (this.phase === 'race' || this.phase === 'finish') {
+      this.driveComputers(now);
       this.karts.forEach((k) => this.drive(k, dt, now));
       this.bump();
       this.karts.forEach((k) => this.coinCheck(k, now));
@@ -532,6 +548,71 @@ export class KartRace {
     }
     this.frame++;
     if (this.phase !== before || this.frame % PHYSICS.sendEvery === 0) this.ctx.update();
+  }
+
+  /** The computer racers' hands: decide now and then, act a reaction time later (see CPU). */
+  driveComputers(now) {
+    this.karts.forEach((k, i) => {
+      const d = k.driver;
+      if (!d) return;
+      if (k.finishedAt !== null) {
+        k.gas = k.brake = k.drift = false; // over the line: coast
+        d.queue = [];
+        return;
+      }
+      while (d.queue.length && d.queue[0].at <= now) {
+        const move = d.queue.shift().move;
+        if (move.type === 'item') useItem(this, i, now);
+        else {
+          k.steer = Math.max(-1, Math.min(1, move.steer));
+          k.gas = move.gas;
+          k.brake = move.brake;
+          k.drift = move.drift;
+        }
+      }
+      if (now < d.nextAt) return;
+      d.nextAt = now + CPU.thinkMs;
+      // A slower kart just ahead in its line: over to the nearest free lane for a while.
+      if (now >= d.laneUntil) d.lane = d.home;
+      const c = Math.cos(k.angle);
+      const s = Math.sin(k.angle);
+      const along = (o) => (o.x - k.x) * c + (o.y - k.y) * s;
+      const mine = this.offset(k);
+      // (A kart all but touching counts whatever its speed: two locked nose to tail would rub forever.)
+      const ahead = this.karts.filter((o) => o !== k && along(o) > 0 && along(o) < CPU.passGap && Math.abs(this.offset(o) - mine) < 1.2);
+      const close = ahead.some((o) => along(o) < CPU.closeGap);
+      const blocked = close || ahead.some((o) => o.speed < k.speed - 0.3);
+      if (blocked && now >= d.laneUntil) {
+        const free = (lane) => !this.karts.some((o) => o !== k && Math.abs(along(o)) < 2.5 && Math.abs(this.offset(o) - lane) < 1.4);
+        const others = CPU.lanes.filter((l) => l !== d.lane && free(l));
+        if (others.length) {
+          d.lane = others.reduce((a, b) => (Math.abs(b - d.lane) < Math.abs(a - d.lane) ? b : a));
+          d.laneUntil = now + CPU.passMs;
+        }
+      }
+      // A kart right alongside and too close: give it room (steer a little away) until clear.
+      let line = d.lane;
+      const beside = this.karts.filter((o) => o !== k && Math.abs(along(o)) < CPU.closeGap && Math.abs(this.offset(o) - mine) < CPU.roomGap);
+      if (beside.length) {
+        const o = beside.reduce((a, b) => (Math.abs(this.offset(b) - mine) < Math.abs(this.offset(a) - mine) ? b : a));
+        const away = mine >= this.offset(o) ? 1 : -1;
+        line = Math.max(-this.track.width / 2 + 0.8, Math.min(this.track.width / 2 - 0.8, mine + away * CPU.roomGap));
+      }
+      const move = driveKart(this.botView(i), k.cpu.level, this.rng, d.memory, line);
+      // Right on someone's tail with nowhere to go: ease off until there's a gap.
+      if (move && move.type === 'drive' && close && now >= d.laneUntil) {
+        move.gas = false;
+        move.drift = false;
+      }
+      if (move) d.queue.push({ at: now + driveDelayMs(k.cpu.level, this.rng), move });
+    });
+  }
+
+  /** How far right of the road's middle kart k is (negative: left of it). */
+  offset(k) {
+    const w = this.near(k);
+    const v = Road.sideAt(this.track.line, w.i, 1);
+    return (k.x - w.px) * v[0] + (k.y - w.py) * v[1];
   }
 
   drive(k, dt, now) {

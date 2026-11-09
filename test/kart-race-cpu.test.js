@@ -57,7 +57,87 @@ test('a lane shifts the line the driver takes', () => {
   const { game } = race3d();
   const v = game.botView(0);
   const steer = (lane) => driveKart(v, 'hard', () => 0.5, {}, lane).steer;
-  assert.ok(Math.sign(steer(2)) !== Math.sign(steer(-2)) && steer(2) !== 0, `${steer(-2)} ${steer(2)}`);
-  const mid = steer(0);
-  assert.ok(mid > Math.min(steer(-2), steer(2)) && mid < Math.max(steer(-2), steer(2)), String(mid));
+  // Further right a lane, further right it steers (full lock is the limit).
+  assert.ok(steer(-1) < steer(1), `${steer(-1)} ${steer(1)}`);
+  assert.ok(steer(-1) <= steer(0) && steer(0) <= steer(1), `${steer(-1)} ${steer(0)} ${steer(1)}`);
+});
+
+// ---- the race loop drives the computer racers ----
+
+import { race8, placeAt } from './helpers-kart.js';
+import { CPU, pointAt } from '../server/games/kart-race.js';
+import { TRACKS_3D } from '../server/games/kart-tracks-3d.js';
+
+/** Race on until every computer has a lap (or the time is up), noting the longest any sat still. */
+function runLap(ctx, game, maxMs = 90000) {
+  const still = new Map();
+  let worst = 0;
+  for (let ms = 0; ms < maxMs; ms += 17) {
+    ctx.advance(17);
+    for (let i = 2; i < game.karts.length; i++) {
+      const k = game.karts[i];
+      if (ms > 5000 && Math.abs(k.speed) < 0.5 && k.finishedAt === null) still.set(i, (still.get(i) || 0) + 17);
+      else still.set(i, 0);
+      worst = Math.max(worst, still.get(i));
+    }
+    if (game.karts.slice(2).every((k) => k.laps >= 1)) break;
+  }
+  return worst;
+}
+
+TRACKS_3D.forEach((def, t) => {
+  test(`six computers lap ${def.name} without getting stuck`, () => {
+    const { ctx, game } = race8({ track: t + 1 });
+    assert.equal(game.karts.length, 8);
+    const worst = runLap(ctx, game);
+    game.karts.slice(2).forEach((k, n) => assert.ok(k.laps >= 1, `computer ${n + 2} has no lap`));
+    assert.ok(worst <= 4000, `a computer sat still for ${worst} ms`);
+  });
+});
+
+test('no pile-up at the start', () => {
+  const { ctx, game } = race8({ track: 2 });
+  const from = game.karts.map((k) => k.progress);
+  for (let ms = 0; ms < 8000; ms += 17) ctx.advance(17);
+  for (let i = 2; i < 8; i++) {
+    const moved = (((game.karts[i].progress - from[i]) % 1) + 1) % 1 * game.track.length + game.karts[i].laps * game.track.length;
+    assert.ok(moved >= 25, `computer ${i} moved only ${moved.toFixed(1)}`);
+  }
+});
+
+test('a computer passes a stopped kart in its lane', () => {
+  const { ctx, game } = race8({ track: 2 });
+  // The straightest bit of Speedway Oval: where the heading changes least over the next 12 units.
+  const L = game.track.length;
+  let best = { p: 0, turn: Infinity };
+  for (let p = 0.15; p < 0.8; p += 0.01) { // (well away from the line, which only counts once halfway round)
+    const turn = Math.abs(Math.atan2(Math.sin(pointAt(game.track, p + 12 / L).angle - pointAt(game.track, p).angle), Math.cos(pointAt(game.track, p + 12 / L).angle - pointAt(game.track, p).angle)));
+    if (turn < best.turn) best = { p, turn };
+  }
+  game.karts.forEach((k, i) => { if (i !== 0 && i !== 2) placeAt(game, i, (best.p + 0.5 + i * 0.03) % 1); });
+  const lane = CPU.lanes[0];
+  placeAt(game, 2, best.p, lane);
+  placeAt(game, 0, best.p + 6 / L, lane);
+  game.karts[2].driver.lane = lane;
+  for (let ms = 0; ms < 5000; ms += 17) ctx.advance(17);
+  const along = (k) => k.laps + k.progress; // (it may cross the line)
+  assert.ok(along(game.karts[2]) > along(game.karts[0]), `${along(game.karts[2])} vs ${along(game.karts[0])}`);
+});
+
+test('Easy is slower than Normal, Normal slower than Hard', () => {
+  const lap = (level) => {
+    const { ctx, game } = race8({ track: 2, level });
+    runLap(ctx, game, 120000);
+    const laps = game.karts.slice(2).map((k) => k.bestLap).filter((x) => x !== null);
+    return laps.reduce((a, b) => a + b, 0) / laps.length;
+  };
+  const [easy, normal, hard] = ['easy', 'normal', 'hard'].map(lap);
+  assert.ok(easy > normal && normal > hard, `easy ${easy} normal ${normal} hard ${hard}`);
+});
+
+test("the players' karts are never driven by the race", () => {
+  const { ctx, game } = race8({ track: 2 });
+  const at = game.karts.slice(0, 2).map((k) => [k.x, k.y]);
+  for (let ms = 0; ms < 10000; ms += 17) ctx.advance(17);
+  game.karts.slice(0, 2).forEach((k, i) => assert.ok(Math.hypot(k.x - at[i][0], k.y - at[i][1]) < 0.5, `player ${i + 1} moved`));
 });
