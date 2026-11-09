@@ -102,3 +102,115 @@ test('Kart Race keeps its six tracks', () => {
   game.start();
   assert.equal(game.hostView().trackNames.length, 6);
 });
+
+// ---- Kart Race 3D's five big tracks ----
+
+import { TRACKS_3D } from '../server/games/kart-tracks-3d.js';
+import kartRace3dDef, { KartRace3D } from '../server/games/kart-race-3d.js';
+import { kartRaceBot } from '../server/games/kart-race-bot.js';
+import { GRID } from '../server/games/kart-race.js';
+
+const NAMES_3D = ['Sunset Canyon Rally', 'Speedway Oval', 'Grand Prix Circuit', 'Serpent Pass', 'Zigzag Ridge'];
+
+/** Do segments p1-p2 and q1-q2 cross? */
+function crosses(p1, p2, q1, q2) {
+  const side = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+  return side(p1, p2, q1) * side(p1, p2, q2) < 0 && side(q1, q2, p1) * side(q1, q2, p2) < 0;
+}
+
+test('Kart Race 3D lists the five big tracks; Kart Race keeps its six', () => {
+  assert.deepEqual(TRACKS_3D.map((t) => t.name), NAMES_3D);
+  const game = kartRace3dDef.create(fakeCtx());
+  game.start();
+  assert.deepEqual(game.hostView().trackNames, NAMES_3D);
+  assert.deepEqual(game.options.track, [0, 1, 2, 3, 4, 5]);
+  assert.equal(new KartRace(fakeCtx()).tracks.length, 6);
+});
+
+TRACKS_3D.forEach((def, i) => {
+  const t = buildTrack(i, TRACKS_3D);
+  const L = t.line;
+  const n = L.length;
+
+  test(`${def.name}: a big track (road 7, field 128 x 72)`, () => {
+    assert.equal(t.width, 7);
+    assert.deepEqual(t.field, { w: 128, h: 72 });
+  });
+
+  test(`${def.name}: a clean loop on its field`, () => {
+    const margin = t.width / 2 + t.out + 1;
+    for (const [x, y] of L) assert.ok(x >= margin && x <= t.field.w - margin && y >= margin && y <= t.field.h - margin, `${x.toFixed(1)},${y.toFixed(1)} too near the edge`);
+    for (let a = 0; a < n; a += 2) {
+      for (let b = a + 20; b < n; b += 2) {
+        if (n - (b - a) < 20) continue;
+        assert.ok(!crosses(L[a], L[(a + 2) % n], L[b], L[(b + 2) % n]), `crosses itself at samples ${a} and ${b}`);
+      }
+    }
+    assert.ok(Road.tightest(L).r >= Road.MIN_RADIUS);
+  });
+
+  test(`${def.name}: boxes, coins and boost pads on the road`, () => {
+    const spots = [];
+    for (const p of t.rows) for (const off of t.boxOffsets) spots.push(pointAt(t, p, off));
+    for (const [p, off] of t.coins) spots.push(pointAt(t, p, off));
+    for (const [p, off] of t.boosts) spots.push(pointAt(t, p, off));
+    for (const s of spots) assert.ok(locate(t, s.x, s.y).d <= t.width / 2 + 1e-6, 'off the road');
+    assert.ok(t.coins.length >= 40, `${t.coins.length} coins`);
+    assert.ok(t.rows.length >= 3, `${t.rows.length} rows of boxes`);
+  });
+
+  test(`${def.name}: an 8-kart grid fits on the road at the start`, () => {
+    const rows = 4;
+    const spots = [];
+    for (let j = 0; j < 8; j++) {
+      const p = 0.012 + ((rows - 1 - Math.floor(j / 2)) * GRID.rowGap) / t.length;
+      spots.push(pointAt(t, p, j % 2 ? GRID.side : -GRID.side));
+    }
+    for (const s of spots) assert.ok(locate(t, s.x, s.y).d <= t.width / 2, 'grid spot off the road');
+    for (let a = 0; a < 8; a++) for (let b = a + 1; b < 8; b++) assert.ok(Math.hypot(spots[a].x - spots[b].x, spots[a].y - spots[b].y) >= 1.4, 'grid spots too close');
+  });
+
+  test(`${def.name}: a Normal driver laps in 40-60 s`, () => {
+    const ctx = fakeCtx();
+    const game = new KartRace3D(ctx, () => 0.5);
+    game.start();
+    for (const [key, value] of Object.entries({ track: i + 1, laps: 3, items: 0 })) game.onInput(0, { type: 'setting', key, value });
+    game.onInput(0, { type: 'go' });
+    game.onInput(1, { type: 'go' });
+    ctx.advance(TIMING.countdownMs + 50);
+    assert.equal(game.track.name, def.name);
+    const memory = [{}, {}];
+    for (let ms = 0; ms < 120000 && game.karts[0].bestLap === null; ms += 17) {
+      for (const slot of [0, 1]) {
+        const move = kartRaceBot(game.botView(slot), 'normal', () => 0.5, 0, memory[slot]);
+        if (move && move.type === 'drive') game.onInput(slot, { type: 'drive', steer: move.steer, gas: move.gas, brake: move.brake, drift: move.drift });
+      }
+      ctx.advance(17);
+    }
+    const lap = game.karts[0].bestLap;
+    assert.ok(lap !== null && lap >= 40000 && lap <= 60000, `lap ${lap}`);
+  });
+});
+
+test('a 4-race cup in Kart Race 3D uses five different tracks', () => {
+  const ctx = fakeCtx();
+  const game = kartRace3dDef.create(ctx);
+  game.start();
+  game.onInput(0, { type: 'setting', key: 'races', value: 4 });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  const seen = [];
+  // Player 1 wins races 1 and 3, player 2 races 2 and 4: 2-2, then a sudden death.
+  for (const winner of [0, 1, 0, 1, 0]) {
+    ctx.advance(TIMING.countdownMs + 50);
+    seen.push(game.track.name);
+    game.finishLine(winner, ctx.now());
+    ctx.advance(TIMING.finishMs + 100);
+    if (game.phase === 'standings') {
+      game.onInput(0, { type: 'go' });
+      game.onInput(1, { type: 'go' });
+    }
+  }
+  assert.equal(game.phase, 'over');
+  assert.equal(new Set(seen).size, 5, seen.join(', '));
+});
