@@ -2,7 +2,8 @@
 // the parts the game moves, the size the game expects, and the triangle and texture budgets.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { readGlb, nodeNames, triangles, bounds } from './helpers-glb.js';
+import fs from 'node:fs';
+import { readGlb, nodeNames, triangles, bounds, imageSize } from './helpers-glb.js';
 
 const DIR = 'public/games/kart-race-3d/models/';
 const node = (json, name) => json.nodes.find((n) => n.name === name);
@@ -51,4 +52,15 @@ test('the head pivot is above the shoulders; the left arm is on the left', () =>
   const r = node(json, 'arm_r').translation;
   assert.ok(head[1] > l[1] - 0.05, `${head} ${l}`);
   assert.ok(l[2] < 0 && r[2] > 0, `${l} ${r}`);
+});
+
+test('each model has one 1024 texture and stays small', () => {
+  for (const file of ['rex-kart.glb', 'rex.glb']) {
+    const { json, bin } = readGlb(DIR + file);
+    assert.equal((json.images || []).length, 1, file);
+    const size = imageSize(json, bin, 0);
+    assert.equal(size.width, 1024, file);
+    assert.equal(size.height, 1024, file);
+    assert.ok(fs.statSync(DIR + file).size < 1.5e6, file);
+  }
 });

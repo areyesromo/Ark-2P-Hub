@@ -196,7 +196,7 @@ def render_views(objs, out, textured=False, size=512):
     to out_<view>.png: clay shading, or the texture with textured=True."""
     scn = bpy.context.scene
     tints = {'wheel': (0.9, 0.35, 0.3, 1), 'head': (0.3, 0.6, 0.9, 1), 'arm': (0.35, 0.8, 0.4, 1)}
-    for o in objs:  # the moving parts in their own colours, to see the cuts
+    for o in [] if textured else objs:  # the moving parts in their own colours, to see the cuts
         o.color = next((c for k, c in tints.items() if o.name.startswith(k)), (0.8, 0.78, 0.74, 1))
     hidden = [o for o in scn.objects if o.type == 'MESH' and o not in objs]
     for o in hidden:
