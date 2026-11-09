@@ -79,12 +79,14 @@
       const dt = lastFrame ? Math.min(100, now - lastFrame) : 16;
       lastFrame = now;
       if (things && view) things.update(view, now);
-      const poses = split() ? smooth.at(now) : null;
+      // The karts keep moving while the finish shows (the winner celebrates); the chase cameras
+      // only while the screen is split.
+      const poses = view && view.karts ? smooth.at(now) : null;
       if (!poses) return;
       poses.forEach(function (pose, i) {
-        if (karts[i]) karts[i].set(pose, view.karts[i], now);
+        if (karts[i] && view.karts[i]) karts[i].set(pose, view.karts[i], now, view.positions && view.positions[i]);
       });
-      aim(poses, dt);
+      if (split()) aim(poses, dt);
     }
 
     function setWorld(v) {
@@ -118,7 +120,7 @@
           // Players wear their colour; a computer racer its own kart's.
           const player = slot < 2;
           const color = player ? colors[slot] : window.ArkKartRacers.racer(want).stripe;
-          karts[slot] = window.KRKarts.make(gl.THREE, want, color, player && v.karts.length > 2 ? 'P' + (slot + 1) : null);
+          karts[slot] = window.KRKarts.make(gl.THREE, want, color, player && v.karts.length > 2 ? 'P' + (slot + 1) : null, player);
           gl.scene.add(karts[slot].obj);
         }
       }

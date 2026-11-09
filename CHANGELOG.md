@@ -14,6 +14,9 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   Zigzag Ridge.
 - 🏁 Kart Race 3D has an 8-kart Cup: you two and six computer racers, five races on the big
   tracks, points for every place, and the leader starts at the back.
+- 🦖 Kart Race 3D: Rex now races as a real 3D kart and driver. His wheels spin and steer, he
+  turns the wheel, looks into bends, throws his arms up when he spins out and pumps his fist
+  when he wins.
 
 ## 0.1.36
 
