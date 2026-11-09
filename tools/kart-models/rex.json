@@ -242,7 +242,13 @@
   "views": {
     "kart": "asset-references/v4/parts/rex/kart",
     "rex": "asset-references/v4/parts/rex/rex",
-    "alignment": "asset-references/v4/parts/rex/alignment.json"
+    "alignment": "asset-references/v4/parts/rex/alignment.json",
+    "kartWheel": {
+      "view": "left",
+      "x": 285,
+      "y": 800,
+      "r": 116
+    }
   },
   "atlas": {
     "kart": {
@@ -280,6 +286,12 @@
         0,
         0,
         0.5,
+        0.25
+      ],
+      "wheel": [
+        0.5,
+        0,
+        1,
         0.25
       ]
     },

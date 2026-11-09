@@ -64,3 +64,19 @@ export function imageSize(json, bin, i) {
   }
   return null;
 }
+
+/** The numbers of float accessor i, as [[a, b, ...], ...] (one entry per element). */
+export function floats(json, bin, i) {
+  const a = json.accessors[i];
+  const view = json.bufferViews[a.bufferView];
+  const size = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 }[a.type];
+  const stride = view.byteStride || size * 4;
+  const start = (view.byteOffset || 0) + (a.byteOffset || 0);
+  const out = [];
+  for (let n = 0; n < a.count; n++) {
+    const e = [];
+    for (let k = 0; k < size; k++) e.push(bin.readFloatLE(start + n * stride + k * 4));
+    out.push(e);
+  }
+  return out;
+}
