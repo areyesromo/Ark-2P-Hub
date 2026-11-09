@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.37
+
+- 🏎️ Kart Race 3D has a new garage, player-by-player racing HUD, a course map, clearer item and
+  drift-boost displays, and a podium with times and ready states. Phone controls show item names
+  and when to release a charged drift. Loading now has feedback and retry (controller X).
+
 ## 0.1.36
 
 - 🥁 Four new minigames, in Party Minigames and on the Party Board: Drum Beat (hit the notes on the
