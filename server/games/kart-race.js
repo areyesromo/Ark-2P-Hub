@@ -921,6 +921,7 @@ export class KartRace {
 
   /** A lap of `ms`: a new track record? (The first lap on a track with none just sets it.) */
   recordCheck(slot, ms, now) {
+    if (slot > 1) return; // records are the players' (a computer racer's laps don't count)
     const name = this.ctx.players[slot].name;
     if (!this.record) {
       this.record = this.seriesRecords[this.track.name] = { name, ms };
@@ -935,7 +936,8 @@ export class KartRace {
   finishLine(slot, now) {
     const k = this.karts[slot];
     k.finishedAt = now;
-    if (this.phase === 'race') {
+    // Only the players decide a race: a computer racer across the line has just finished.
+    if (this.phase === 'race' && slot < 2) {
       // First across the line wins the race; the other gets a moment to finish too.
       this.result = { winner: slot, time: now - this.raceStart };
       this.scores[slot]++;

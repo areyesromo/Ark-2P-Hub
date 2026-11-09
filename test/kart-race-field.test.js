@@ -236,3 +236,29 @@ test('a Seeker chases the kart ahead and never its thrower', () => {
   assert.ok(game.karts[6].spinUntil > 0, 'kart 6 was hit');
   assert.equal(game.karts[2].spinUntil, 0, 'never its thrower');
 });
+
+test("a computer crossing the line first doesn't end the race", () => {
+  const { ctx, game } = field(6);
+  const scores = [...game.scores];
+  game.finishLine(4, ctx.now());
+  assert.equal(game.phase, 'race');
+  assert.equal(game.result, null);
+  assert.deepEqual(game.scores, scores);
+  assert.notEqual(game.karts[4].finishedAt, null);
+  assert.equal(game.positions()[4], 1);
+  // Then the first player across wins it, as today.
+  game.finishLine(1, ctx.now());
+  assert.equal(game.phase, 'finish');
+  assert.equal(game.result.winner, 1);
+  assert.equal(game.scores[1], scores[1] + 1);
+});
+
+test("a computer's lap sets no record and doesn't crash", () => {
+  const { ctx, game } = field(6);
+  const record = game.record;
+  placeAt(game, 3, 0.02);
+  Object.assign(game.karts[3], { progress: 0.99, halfway: true });
+  assert.doesNotThrow(() => game.lapCheck(game.karts[3], 3, ctx.now()));
+  assert.equal(game.karts[3].laps, 1);
+  assert.equal(game.record, record);
+});
