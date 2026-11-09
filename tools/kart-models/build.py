@@ -36,7 +36,7 @@ for a in json.load(open(os.path.join(ROOT, cfg['views']['alignment']))):
 def colour(name, objs):
     """UVs and the texture: the first pass, or with --texture, <dir>/<name>.png painted over the guide."""
     meshes = [o for o in objs if o.type == 'MESH']
-    painted = os.path.join(opts.texture, name + '.png') if opts.texture else None
+    painted = os.path.join(os.path.abspath(opts.texture), name + '.png') if opts.texture else None  # (Blender won't read a relative path)
     paint.paint(meshes, cfg['atlas'][name], os.path.join(ROOT, cfg['views'][name]), align[name], name, TEX, painted)
 
 
