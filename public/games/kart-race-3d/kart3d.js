@@ -35,6 +35,8 @@
       if (split()) {
         renderer.setScissorTest(true);
         cams.forEach(function (cam, i) {
+          // Each half shows the other player's tag, never its own (right in front of its camera).
+          karts.forEach(function (k, j) { if (k && k.marker) k.marker.visible = j !== i; });
           const x = i * Math.floor(w / 2);
           renderer.setViewport(x, 0, Math.floor(w / 2), h);
           renderer.setScissor(x, 0, Math.floor(w / 2), h);
@@ -100,8 +102,10 @@
       gl.camera.lookAt(f.w / 2, 0, f.h / 2);
     }
 
+    /** One kart per racer in the view (two, or eight in the Cup): the players' with a P1 / P2 tag. */
     function setKarts(v) {
-      [0, 1].forEach(function (slot) {
+      const n = Math.max(karts.length, v.karts ? v.karts.length : 0);
+      for (let slot = 0; slot < n; slot++) {
         const k = v.karts && v.karts[slot];
         const want = k ? k.racer : null;
         if (karts[slot] && karts[slot].racer !== want) {
@@ -110,10 +114,14 @@
           karts[slot] = null;
         }
         if (want && !karts[slot]) {
-          karts[slot] = window.KRKarts.make(gl.THREE, want, colors[slot]);
+          // Players wear their colour; a computer racer its own kart's.
+          const player = slot < 2;
+          const color = player ? colors[slot] : window.ArkKartRacers.racer(want).stripe;
+          karts[slot] = window.KRKarts.make(gl.THREE, want, color, player && v.karts.length > 2 ? 'P' + (slot + 1) : null);
           gl.scene.add(karts[slot].obj);
         }
-      });
+      }
+      karts.length = v.karts ? Math.max(2, v.karts.length) : karts.length;
     }
 
     return window.ArkMini.scene3d(el, { fov: 50, maxPixelRatio: 1, draw: draw }).then(function (g) {
