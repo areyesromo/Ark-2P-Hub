@@ -4,7 +4,8 @@
 // sets its ? box rows (about every 60 units of lap, as fractions of the lap), five boxes across
 // (the middle one a double), its coins and its boost pads ([fraction of the lap, offset]).
 
-const BIG = { width: 7, field: { w: 128, h: 72 }, boxOffsets: [-2.4, -1.2, 0, 1.2, 2.4] };
+// A roomy grid for a pack of eight: rows 4 apart, 1.6 either side of the middle.
+const BIG = { width: 7, field: { w: 128, h: 72 }, boxOffsets: [-2.4, -1.2, 0, 1.2, 2.4], grid: { rowGap: 4, side: 1.6 } };
 
 /** A layout drawn across the whole field, shrunk by `k` round its middle to bring a lap to 40-60 s. */
 const around = (points, k) => points.map(([x, y]) => [64 + (x - 64) * k, 36 + (y - 36) * k]);
@@ -27,7 +28,8 @@ export const TRACKS_3D = [
     ...BIG,
     name: 'Speedway Oval',
     // Speedway's oval, with a chicane on the top straight to break up the pack.
-    points: [[20, 36], [28, 16], [50, 12], [58, 18], [66, 12], [100, 16], [108, 36], [100, 56], [64, 60], [28, 56]],
+    // The grid is on the bottom straight (heading west), not on a bend.
+    points: around([[64, 60], [28, 56], [20, 36], [28, 16], [50, 12], [58, 18], [66, 12], [100, 16], [108, 36], [100, 56]], 0.84),
     rows: [0.12, 0.38, 0.6, 0.88],
     coins: 67,
     boosts: [[0.24, 0], [0.74, 0]],
@@ -37,7 +39,8 @@ export const TRACKS_3D = [
     name: 'Grand Prix Circuit',
     // A long back straight, a chicane on the right (gentler than Grand Prix's: a pack takes it
     // side by side) and a wiggle along the bottom.
-    points: around([[54, 14.8], [68, 18], [88, 12], [112, 16], [114, 34], [106, 41], [112, 58], [80, 60], [56, 52], [32, 60], [14, 52], [18, 34], [14, 16], [40, 12]], 0.62),
+    // The grid is on the top straight.
+    points: around([[68, 18], [88, 12], [112, 16], [114, 34], [106, 41], [112, 58], [80, 60], [56, 52], [32, 60], [14, 52], [18, 34], [14, 16], [40, 12], [54, 14.8]], 0.62),
     rows: [0.2, 0.4, 0.7],
     coins: 55,
     boosts: [[0.95, 0], [0.48, 0]],
@@ -46,7 +49,8 @@ export const TRACKS_3D = [
     ...BIG,
     name: 'Serpent Pass',
     // Serpent's loop, with one more wiggle on the top run.
-    points: around([[16, 20], [36, 12], [56, 20], [72, 12], [84, 19], [96, 12], [112, 24], [108, 48], [88, 60], [68, 52], [48, 60], [24, 56], [12, 40]], 0.85),
+    // The grid on the gentlest stretch of the top run (it's wiggles all the way round).
+    points: around([[56, 20], [72, 12], [84, 19], [96, 12], [112, 24], [108, 48], [88, 60], [68, 52], [48, 60], [24, 56], [12, 40], [16, 20], [36, 12]], 0.85),
     rows: [0.15, 0.45, 0.62, 0.92],
     coins: 76,
     boosts: [[0.33, 0], [0.83, 0]],

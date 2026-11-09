@@ -80,16 +80,17 @@ test('a battle is always two karts, whatever the entrants', () => {
   assert.equal(game.karts.length, 2);
 });
 
-test("the next race keeps each kart's held controls, all eight", () => {
+test("the next race keeps a player's held controls, with all eight karts", () => {
+  // (Phones only send changes: GAS still held stays held. The computers' own drivers set theirs.)
   const { ctx, game } = field(6, { races: 3 });
-  game.karts[5].gas = true;
+  game.onInput(1, { type: 'drive', steer: 0, gas: true, brake: false, drift: false });
   game.finishLine(0, ctx.now());
   ctx.advance(TIMING.finishMs + 100);
   assert.equal(game.phase, 'standings');
   game.onInput(0, { type: 'go' });
   game.onInput(1, { type: 'go' });
   assert.equal(game.karts.length, 8);
-  assert.equal(game.karts[5].gas, true);
+  assert.equal(game.karts[1].gas, true);
 });
 
 /** A known running order: kart 6 finished, kart 3 a lap up, kart 1 near the end of lap 1, the rest spread behind. */
