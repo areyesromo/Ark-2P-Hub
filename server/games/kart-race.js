@@ -349,8 +349,25 @@ export class KartRace {
       const j = Math.floor(this.rng() * (i + 1));
       [this.cupTracks[i], this.cupTracks[j]] = [this.cupTracks[j], this.cupTracks[i]];
     }
+    this.onBegin();
     this.newRace();
     this.loop();
+  }
+
+  /** A new series is starting (Kart Race 3D's 8-kart Cup picks its computer racers here). */
+  onBegin() {}
+
+  /** A race has just ended and is in the history (the 8-kart Cup scores its points here). */
+  onRaceEnd() {}
+
+  /** Who won the series (the last race's winner takes it; the 8-kart Cup goes by points). */
+  matchWinner() {
+    return this.result.winner;
+  }
+
+  /** Kart Race 3D's 8-kart Cup (see kart-race-3d.js): never in Kart Race. */
+  get cup8() {
+    return false;
   }
 
   get winScore() {
@@ -360,12 +377,12 @@ export class KartRace {
 
   /** A cup: four races on four different tracks, the most wins takes it (2-2: sudden death). */
   get cup() {
-    return !this.battle && this.settings.races === 4;
+    return !this.battle && !this.cup8 && this.settings.races === 4;
   }
 
   /** A balloon battle in an arena (see BATTLE), not a race. */
   get battle() {
-    return this.settings.mode === 1;
+    return this.settings.mode === 1 && !this.cup8;
   }
 
   /** The track for race number `race` (a cup's own list; Mixed: random, not the last one). */
@@ -375,7 +392,7 @@ export class KartRace {
       const others = ARENAS.map((_, i) => i).filter((i) => i !== this.lastTrack);
       return others[Math.floor(this.rng() * others.length)];
     }
-    if (this.cup) return this.cupTracks[race - 1];
+    if (this.cup || this.cup8) return this.cupTracks[race - 1];
     if (this.settings.track > 0) return this.settings.track - 1;
     const others = this.tracks.map((_, i) => i).filter((i) => i !== this.lastTrack);
     return others[Math.floor(this.rng() * others.length)];
@@ -403,7 +420,7 @@ export class KartRace {
     if (this.battle) {
       // An arena always has its boxes: items are what pop the balloons.
       for (const [p, off, double] of this.track.boxes) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0, double: Boolean(double) });
-    } else if (this.settings.items) {
+    } else if (this.settings.items || this.cup8) {
       // The middle box of each row is a gold double box (two items).
       for (const p of this.track.rows) for (const off of this.track.boxOffsets) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0, double: off === 0 });
     }
@@ -1067,11 +1084,12 @@ export class KartRace {
       best: this.karts.map((k) => k.bestLap), // each kart's best lap (for the lap records)
       react: this.karts.map((k) => (k.reactionMs !== null && k.reactionMs <= REACTION_MAX_MS ? k.reactionMs : null)), // starts
     });
+    this.onRaceEnd();
     this.stopLoop();
     this.phaseEnds = null;
     this.ready = [false, false];
     if (this.seriesOver()) {
-      this.winner = this.result.winner;
+      this.winner = this.matchWinner();
       this.phase = 'over';
     } else {
       this.phase = 'standings'; // the leaderboard, until you're both ready for the next race
@@ -1210,7 +1228,8 @@ export class KartRace {
       arenaWidth: ARENAS[0].width,
       kartR: KART.r,
       wallOut: this.track ? this.track.out : WALL.out,
-      itemsOn: Boolean(this.settings.items) || this.battle,
+      itemsOn: Boolean(this.settings.items) || this.battle || this.cup8,
+      cupPoints: this.cup8 ? this.points : null, // the 8-kart Cup's table, every kart
       // Battle: the clock counts down.
       battle: this.battle && racing ? { msLeft: this.raceStart ? Math.max(0, BATTLE.ms - (this.result ? this.result.time : now - this.raceStart)) : BATTLE.ms, balloons: BATTLE.balloons } : null,
       maxSpeed: KART.maxSpeed,
@@ -1232,6 +1251,8 @@ export class KartRace {
             speed: Math.round(k.speed * 100) / 100,
             laps: k.laps,
             racer: k.racer,
+            cpu: Boolean(k.cpu),
+            ...(k.cpu ? { name: Racers.racer(k.racer).name } : {}),
             tyre: k.tyre,
             coins: k.coins,
             top: k.car.maxSpeed + k.coins * COINS.perCoin, // this kart's top speed (its speedometer's red line)
@@ -1278,7 +1299,7 @@ export class KartRace {
       record: racing && this.record ? { name: this.record.name, ms: this.record.ms } : null,
       newRecord: racing && this.newRecord && now - this.newRecord.at < REACTION_SHOW_MS ? { slot: this.newRecord.slot, name: this.newRecord.name, ms: this.newRecord.ms } : null,
       lapTimes: (this.history || []).flatMap((h) => (h.best || []).map((ms, slot) => ({ track: h.track, slot, ms })).filter((l) => l.ms !== null)),
-      cup: this.cup,
+      cup: this.cup || this.cup8,
       suddenDeath: this.cup && this.race > 4 && this.phase !== 'standings',
       // On the leaderboard between races: what's next.
       next: this.phase === 'standings' ? { race: this.race + 1, track: (this.battle ? ARENAS : this.tracks)[this.nextIndex].name, suddenDeath: this.cup && this.race >= 4 } : null,
