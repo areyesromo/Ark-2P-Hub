@@ -51,8 +51,15 @@
     { key: 'arena', title: 'Arena', fmt: function (n) { return n === 0 ? 'Mixed' : arenaNames[n - 1] || 'Arena ' + n; } },
     { key: 'races', title: 'Rounds', fmt: function (n) { return n === 1 ? 'One round' : n === 4 ? 'First to 3' : 'Best of ' + n; } },
   ];
+  // Kart Race 3D: 1v1 or the 8-kart Cup (you two and six computer racers, five races on the big
+  // tracks: only the computers' level and the laps to pick).
+  const FIELD = { key: 'field', title: 'Field', fmt: function (n) { return n ? '🏁 8-kart Cup' : '⚔️ 1v1'; } };
+  const CPU_LEVEL = { key: 'cpu', title: 'Computer', fmt: function (s) { return { easy: 'Easy', normal: 'Normal', hard: 'Hard' }[s] || s; } };
+  const CUP8_ROWS = [FIELD, CPU_LEVEL, ROWS[2]];
   function rowsFor(v) {
-    return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (!v.options || !v.options.field) return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (v.settings.field === 1) return CUP8_ROWS;
+    return [FIELD].concat(v.settings.mode ? BATTLE_ROWS : ROWS);
   }
   const BALLOON_POP_MS = 450;
   Ark.loadScript('/games/kart-race/items.js').then(function () { hudKey = ''; });
@@ -261,6 +268,8 @@
 
   /** A little map of a track (or a ? for Mixed) for the setup screen; in a battle, of the arena. */
   function previewHtml(v, n) {
+    // Kart Race 3D's 8-kart Cup: all five big tracks, one race each.
+    if (v.settings.field === 1) return '<div class="kr-preview mixed"><span>🏁</span><div>The Cup: five races, one on each big track</div></div>';
     if (v.settings.mode) {
       const a = v.settings.arena;
       if (a === 0) return '<div class="kr-preview mixed"><span>🎲</span><div>Mixed: a different arena each round</div></div>';
@@ -1036,6 +1045,6 @@
     };
   }
 
-  window.ArkKartTV = { make: make };
+  window.ArkKartTV = { make: make, rowsFor: rowsFor };
   Ark.register('host', 'kart-race', make({}));
 })();
