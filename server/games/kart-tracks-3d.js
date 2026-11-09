@@ -22,7 +22,8 @@ export const TRACKS_3D = [
     rows: [0.15, 0.42, 0.6, 0.78],
     coins: 61,
     boosts: [[0.3, 0], [0.85, 0]],
-    features: { arches: [0.396, 0.85] }, // the Arch Sweep and the Mining Cut, where the road runs under rock (scenery: PR 4)
+    scenery: 'canyon', // red rock cliffs and mesas, a dam, the festival paddock (public/games/kart-race-3d/canyon3d.js)
+    features: { arches: [0.396, 0.85] }, // the Arch Sweep and the Mining Cut, where the road runs under rock
   },
   {
     ...BIG,

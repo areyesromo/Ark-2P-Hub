@@ -234,3 +234,26 @@ test("Kart Race 3D's tagline speaks of its own big tracks", () => {
   assert.match(kartRace3dDef.tagline, /big tracks/i);
   assert.doesNotMatch(kartRace3dDef.tagline, /Same racers, tracks/);
 });
+
+test("Sunset Canyon's view carries its canyon scenery", () => {
+  const { game } = racingOn(KartRace3D, { track: 1 }); // (setting 0 is Mixed; n is track n - 1)
+  assert.equal(game.track.name, 'Sunset Canyon Rally');
+  assert.deepEqual(game.hostView().track.scenery, { kind: 'canyon', arches: [0.396, 0.85] });
+});
+
+test('other big tracks have no scenery', () => {
+  const { game } = racingOn(KartRace3D, { track: 2 });
+  assert.equal(game.track.name, 'Speedway Oval');
+  assert.equal(game.hostView().track.scenery, null);
+});
+
+test("the 2D game's tracks have no scenery", () => {
+  const { game } = racingOn(KartRace, { track: 1 });
+  assert.equal(game.hostView().track.scenery, null);
+});
+
+test('a battle arena has no scenery', () => {
+  const { game } = racingOn(KartRace3D, { mode: 1 });
+  assert.ok(game.battle);
+  assert.equal(game.hostView().track.scenery, null);
+});
