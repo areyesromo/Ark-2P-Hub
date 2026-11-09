@@ -216,6 +216,7 @@ export function buildTrack(index, list = TRACKS) {
   return {
     index, name: def.name, points: def.points, width, out, field: def.field || FIELD, rows, boxOffsets: def.boxOffsets || ITEMS.offsets, grid: def.grid || GRID,
     cutJump: big ? 3.5 / road.length : CUT_JUMP, boosts: def.boosts, coins, ...road, edge: Road.barriers(road, width / 2, out),
+    scenery: def.scenery || null, features: def.features || null, // the TV's look (Kart Race 3D's canyon)
   };
 }
 
@@ -1243,7 +1244,7 @@ export class KartRace {
       winScore: this.winScore,
       winner: this.winner,
       result: this.result,
-      track: this.track ? { index: this.track.index, name: this.track.name, points: this.track.points, boosts: this.track.boosts.map(([p, off]) => pointAt(this.track, p, off)), start: this.battle ? null : pointAt(this.track, 0), arena: this.battle } : null,
+      track: this.track ? { index: this.track.index, name: this.track.name, points: this.track.points, boosts: this.track.boosts.map(([p, off]) => pointAt(this.track, p, off)), start: this.battle ? null : pointAt(this.track, 0), arena: this.battle, scenery: this.track.scenery ? { kind: this.track.scenery, arches: (this.track.features && this.track.features.arches) || [] } : null } : null,
       karts: racing
         ? this.karts.map((k) => ({
             x: Math.round(k.x * 100) / 100,

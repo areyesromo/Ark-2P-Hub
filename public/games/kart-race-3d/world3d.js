@@ -1,10 +1,12 @@
 // Kart Race 3D's track: grass, the road, red and white kerbs, striped tyre walls, boost pads and the
 // start line, all built from the same lines the server drives on (track.js), so what you see is what
-// you hit. KRWorld.build(THREE, view) -> { group, segments, dispose() }.
+// you hit. A track with canyon scenery (Sunset Canyon Rally) gets sand, orange and white barriers and
+// its canyon (canyon3d.js). KRWorld.build(THREE, view) -> { group, segments, dispose() }.
 (function () {
   const WALL_H = 0.5;
   const KERB = 0.25; // kerb width, just outside the road's edge
-  const COLORS = { grass: 0x3f8f3a, road: 0x3b3f46, wall: 0xf1f5f9 };
+  const COLORS = { grass: 0x3f8f3a, sand: 0xd9a066, road: 0x3b3f46, wall: 0xf1f5f9 };
+  const STRIPES = { plain: ['#ef4444', '#f1f5f9'], canyon: ['#f97316', '#f8fafc'] }; // barriers and kerbs
 
   /** A small repeating canvas texture (stripes, chequers, chevrons). */
   function canvasTexture(THREE, w, h, draw) {
@@ -19,11 +21,11 @@
     return tex;
   }
 
-  function stripes(THREE) {
+  function stripes(THREE, a, b) {
     return canvasTexture(THREE, 2, 1, function (g) {
-      g.fillStyle = '#ef4444';
+      g.fillStyle = a;
       g.fillRect(0, 0, 1, 1);
-      g.fillStyle = '#f1f5f9';
+      g.fillStyle = b;
       g.fillRect(1, 0, 1, 1);
     });
   }
@@ -79,11 +81,12 @@
     const edge = Road.barriers(road, v.trackWidth / 2, v.wallOut);
     const half = v.trackWidth / 2;
     const f = v.field;
-    const stripeTex = stripes(THREE);
+    const canyon = v.track.scenery && v.track.scenery.kind === 'canyon';
+    const stripeTex = stripes(THREE, ...(canyon ? STRIPES.canyon : STRIPES.plain));
     const wallMat = new THREE.MeshLambertMaterial({ map: stripeTex, side: THREE.DoubleSide });
 
-    // Grass under everything, well past the field's edge.
-    const ground = new THREE.Mesh(new THREE.PlaneGeometry(f.w + 60, f.h + 60).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: COLORS.grass }));
+    // Grass (or the canyon's sand) under everything, well past the field's edge.
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(f.w + 60, f.h + 60).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: canyon ? COLORS.sand : COLORS.grass }));
     ground.position.set(f.w / 2, -0.02, f.h / 2);
     group.add(ground);
 
@@ -148,10 +151,17 @@
       group.add(decal(THREE, new THREE.MeshLambertMaterial({ map: cheq }), 0.5, v.trackWidth, v.track.start, 0.02));
     }
 
-    return {
+    // The canyon's own group, freed by its own dispose (not twice by the traverse below).
+    const scenery = canyon && window.KRCanyon ? window.KRCanyon.build(THREE, v) : null;
+
+    const world = {
       group: group,
       segments: G.wallSegments(road, edge, f),
       dispose: function () {
+        if (scenery) {
+          group.remove(scenery.group);
+          scenery.dispose();
+        }
         group.traverse(function (o) {
           if (o.geometry) o.geometry.dispose();
           if (o.material) {
@@ -161,6 +171,8 @@
         });
       },
     };
+    if (scenery) group.add(scenery.group);
+    return world;
   }
 
   window.KRWorld = { build: build };
