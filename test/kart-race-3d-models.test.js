@@ -33,3 +33,22 @@ test('the front-left wheel is front and left (left is -z)', () => {
   assert.ok(fl[0] > 0 && fl[2] < 0, String(fl));
   assert.ok(rr[0] < 0 && rr[2] > 0, String(rr));
 });
+
+test('rex.glb has its parts', () => {
+  const { json } = readGlb(DIR + 'rex.glb');
+  for (const name of ['torso', 'head', 'arm_l', 'arm_r']) assert.ok(nodeNames(json).includes(name), name);
+});
+
+test('rex.glb is within budget', () => {
+  const { json } = readGlb(DIR + 'rex.glb');
+  assert.ok(triangles(json) <= 8000, String(triangles(json)));
+});
+
+test('the head pivot is above the shoulders; the left arm is on the left', () => {
+  const { json } = readGlb(DIR + 'rex.glb');
+  const head = node(json, 'head').translation;
+  const l = node(json, 'arm_l').translation;
+  const r = node(json, 'arm_r').translation;
+  assert.ok(head[1] > l[1] - 0.05, `${head} ${l}`);
+  assert.ok(l[2] < 0 && r[2] > 0, `${l} ${r}`);
+});
