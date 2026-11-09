@@ -123,12 +123,12 @@ export const COINS = { max: 15, perCoin: 0.05, r: 0.35, respawnMs: 8000, spinLos
  * boxes or the start line), alternately left and right of the centre, so each one is its own
  * grab and you weave to collect a run of them. [[progress, offset], ...]
  */
-export function coinSpots(def) {
-  const near = (a, b) => Math.abs(((a - b + 1.5) % 1) - 0.5) < COINS.clear + 0.005;
+export function coinSpots(def, rows = ITEMS.rows, perLap = COINS.perLap, clear = COINS.clear) {
+  const near = (a, b) => Math.abs(((a - b + 1.5) % 1) - 0.5) < clear + 0.005;
   const spots = [];
-  for (let i = 0; i < COINS.perLap; i++) {
-    const p = (i + 0.5) / COINS.perLap;
-    if (near(p, 0) || def.boosts.some(([b]) => near(p, b)) || ITEMS.rows.some((r) => near(p, r))) continue;
+  for (let i = 0; i < perLap; i++) {
+    const p = (i + 0.5) / perLap;
+    if (near(p, 0) || def.boosts.some(([b]) => near(p, b)) || rows.some((r) => near(p, r))) continue;
     spots.push([p, spots.length % 2 ? -COINS.side : COINS.side]);
   }
   return spots;
@@ -186,18 +186,34 @@ export function centreLine(points, n = SAMPLES) {
 }
 
 /** Everything the game and the screens need about a track. */
-export function buildTrack(index) {
-  const def = TRACKS[index];
+/** Tracks longer than this round are big ones (Kart Race 3D's); every 2D track is shorter. */
+export const BIG_LAP = 120;
+
+/**
+ * A track from `list` (the game's own: see KartRace.tracks), with its own size: road width, verge,
+ * field, ? box rows, coins. On a big track the distances that are fractions of a lap (a shortcut's
+ * jump, the coins' clear space) are kept to the same length in units as on a small one.
+ */
+export function buildTrack(index, list = TRACKS) {
+  const def = list[index];
   const road = Road.build(def.points);
+  const width = def.width || TRACK_WIDTH;
+  const out = def.out || WALL.out;
+  const rows = def.rows || ITEMS.rows;
+  const big = road.length > BIG_LAP;
+  const coins = coinSpots(def, rows, def.coins || COINS.perLap, big ? 2.45 / road.length : COINS.clear);
   // The barriers either side of the road (shared down the middle where two stretches run close).
-  return { index, name: def.name, points: def.points, width: TRACK_WIDTH, out: WALL.out, boosts: def.boosts, coins: coinSpots(def), ...road, edge: Road.barriers(road, TRACK_WIDTH / 2, WALL.out) };
+  return {
+    index, name: def.name, points: def.points, width, out, field: def.field || FIELD, rows, boxOffsets: def.boxOffsets || ITEMS.offsets,
+    cutJump: big ? 3.5 / road.length : CUT_JUMP, boosts: def.boosts, coins, ...road, edge: Road.barriers(road, width / 2, out),
+  };
 }
 
 /** An arena, built like a track (its index follows the tracks', so every screen tells them apart). */
 export function buildArena(i) {
   const def = ARENAS[i];
   const road = Road.build(def.points);
-  return { index: TRACKS.length + i, arena: i, name: def.name, points: def.points, width: def.width, out: def.out, boosts: [], boxes: def.boxes, coins: [], ...road, edge: Road.barriers(road, def.width / 2, def.out) };
+  return { index: TRACKS.length + i, arena: i, name: def.name, points: def.points, width: def.width, out: def.out, field: FIELD, cutJump: CUT_JUMP, boosts: [], boxes: def.boxes, coins: [], ...road, edge: Road.barriers(road, def.width / 2, def.out) };
 }
 
 /** Where a point is relative to the track: progress 0..1 along the lap, distance from the centre line, the nearest point on it. */
@@ -368,7 +384,7 @@ export class KartRace {
       for (const [p, off, double] of this.track.boxes) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0, double: Boolean(double) });
     } else if (this.settings.items) {
       // The middle box of each row is a gold double box (two items).
-      for (const p of ITEMS.rows) for (const off of ITEMS.offsets) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0, double: off === 0 });
+      for (const p of this.track.rows) for (const off of this.track.boxOffsets) this.boxes.push({ ...pointAt(this.track, p, off), backAt: 0, double: off === 0 });
     }
     this.bananas = [];
     this.webs = [];
@@ -643,9 +659,9 @@ export class KartRace {
     }
     // The edge of the field, in case a track runs close to it.
     if (k.x + ox < r) { k.x = r - ox; hit = [-1, 0]; }
-    if (k.x + ox > FIELD.w - r) { k.x = FIELD.w - r - ox; hit = [1, 0]; }
+    if (k.x + ox > this.field.w - r) { k.x = this.field.w - r - ox; hit = [1, 0]; }
     if (k.y + oy < r) { k.y = r - oy; hit = [0, -1]; }
-    if (k.y + oy > FIELD.h - r) { k.y = FIELD.h - r - oy; hit = [0, 1]; }
+    if (k.y + oy > this.field.h - r) { k.y = this.field.h - r - oy; hit = [0, 1]; }
     return hit;
   }
 
@@ -796,7 +812,7 @@ export class KartRace {
   }
 
   get field() {
-    return FIELD;
+    return this.track ? this.track.field : FIELD;
   }
 
   /** How much faster a kart's coins make it. */
@@ -890,7 +906,7 @@ export class KartRace {
     const p = where.s;
     const was = k.progress;
     const jump = ((p - was + 1.5) % 1) - 0.5; // forwards, across the line or not
-    if (jump > CUT_JUMP) {
+    if (jump > this.track.cutJump) {
       // Out on the grass the nearest bit of road can be a later stretch: hold
       // the progress until the kart is back on the tarmac, and only if it
       // rejoins further on is it a shortcut.
@@ -1092,7 +1108,7 @@ export class KartRace {
       phase: this.phase,
       settings: this.settings,
       options: OPTIONS,
-      field: FIELD,
+      field: this.field,
       trackWidth: this.track ? this.track.width : TRACK_WIDTH,
       trackNames: TRACKS.map((t) => t.name),
       trackPoints: this.phase === 'setup' ? TRACKS.map((t) => t.points) : null, // for the previews
