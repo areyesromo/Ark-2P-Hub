@@ -1,0 +1,17 @@
+{
+  "kart": {
+    "src": "asset-references/v4/models/rex/r002_kart_raw.glb",
+    "forward": "+z",
+    "length": 1.75,
+    "voxel": 0.006,
+    "wheels": {
+      "fl": { "hub": [0.345, 0.231, -0.455], "radius": 0.231, "width": 0.25 },
+      "fr": { "hub": [0.345, 0.231, 0.455], "radius": 0.231, "width": 0.25 },
+      "rl": { "hub": [-0.553, 0.243, -0.455], "radius": 0.24, "width": 0.25 },
+      "rr": { "hub": [-0.553, 0.243, 0.455], "radius": 0.24, "width": 0.25 }
+    },
+    "seat": [-0.2, 0.36, 0],
+    "column": { "at": [0.147, 0.593, 0], "axis": [-0.7, 0.7, 0] },
+    "budget": { "body": 8400, "wheel": 400 }
+  }
+}
