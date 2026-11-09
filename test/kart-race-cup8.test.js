@@ -175,3 +175,22 @@ test('a computer stuck against a wall backs out', () => {
   for (let ms = 0; ms < 10000; ms += 17) ctx.advance(17);
   assert.ok(k.laps + k.progress > from + 10 / game.track.length, 'it got going again');
 });
+
+test("during a Cup race's finish window the scores are still the cup points", () => {
+  const { ctx, game } = cup({ laps: 3 });
+  game.finishLine(0, ctx.now());
+  assert.equal(game.phase, 'finish');
+  assert.deepEqual(game.hostView().scores, [game.points[0], game.points[1]]);
+});
+
+test('computer racers start every race with their hands off the controls', () => {
+  const { ctx, game } = cup({ laps: 3 });
+  for (let ms = 0; ms < 5000; ms += 17) ctx.advance(17); // racing: the computers have GAS down
+  assert.ok(game.karts.slice(2).some((k) => k.gas));
+  game.finishLine(0, ctx.now());
+  ctx.advance(TIMING.finishMs + 100);
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  assert.equal(game.phase, 'countdown');
+  game.karts.slice(2).forEach((k, n) => assert.ok(!k.gas && !k.brake && !k.drift && k.steer === 0, `computer ${n + 2}`));
+});

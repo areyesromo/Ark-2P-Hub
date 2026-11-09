@@ -51,7 +51,8 @@
 
     /** Move each half's camera toward its kart, never behind a wall. */
     function aim(poses, dt) {
-      poses.forEach(function (pose, i) {
+      // One camera per player (karts 0 and 1); any computer racers are just in the picture.
+      poses.slice(0, cams.length).forEach(function (pose, i) {
         const k = view.karts[i];
         const goal = G.chase(pose, view.battle ? CAM.battle : CAM);
         const fov = CAM.fov + (k && k.boosting ? BOOST_FOV : 0);

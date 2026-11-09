@@ -452,7 +452,8 @@ export class KartRace {
     const homeLane = (slot) => (order.indexOf(slot) % 2 ? CPU.lanes[CPU.lanes.length - 1] : CPU.lanes[0]);
     this.karts = field.map((pick, slot) => {
       const p = grid(slot);
-      const was = before ? before[slot] || null : null;
+      // (A player's held controls carry over; a computer racer starts with its hands off.)
+      const was = before && !pick.cpu ? before[slot] || null : null;
       return {
         racer: pick.racer,
         cpu: pick.cpu || null, // a computer racer (karts 0 and 1 are always the players)
@@ -1069,7 +1070,7 @@ export class KartRace {
     if (this.phase === 'race' && slot < 2) {
       // First across the line wins the race; the other gets a moment to finish too.
       this.result = { winner: slot, time: now - this.raceStart };
-      this.scores[slot]++;
+      if (!this.cup8) this.scores[slot]++; // (the 8-kart Cup's scores are its points: see onRaceEnd)
       this.enter('finish', TIMING.finishMs);
     }
   }
