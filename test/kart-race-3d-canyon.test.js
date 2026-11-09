@@ -173,3 +173,51 @@ test('dispose frees each geometry and material once', () => {
   built.dispose();
   for (const [thing, n] of calls) assert.equal(n, 1, thing.type);
 });
+
+/** A page with the world builder and the canyon; `fills` records every canvas colour painted. */
+function worldPage() {
+  const fills = [];
+  const g2d = { fillRect() {}, beginPath() {}, moveTo() {}, lineTo() {}, stroke() {}, set fillStyle(v) { fills.push(v); }, strokeStyle: '', lineWidth: 1 };
+  const context = vm.createContext({ ArkKartTrack: Road, Math, document: { createElement: () => ({ width: 0, height: 0, getContext: () => g2d }) } });
+  context.window = context;
+  for (const f of ['geom3d.js', 'canyon3d.js', 'world3d.js']) vm.runInContext(fs.readFileSync('public/games/kart-race-3d/' + f, 'utf8'), context);
+  return { win: context, fills };
+}
+
+const worldView = (scenery) => ({
+  ...view,
+  track: { points: sunset.points, boosts: [], start: Road.pointAt(road, 0), scenery },
+});
+
+test("Sunset Canyon's world has the canyon, sand and orange barriers", () => {
+  const { win, fills } = worldPage();
+  const world = win.KRWorld.build(THREE, worldView({ kind: 'canyon', arches: [0.396, 0.85] }));
+  assert.ok(world.group.getObjectByName('canyon'));
+  assert.equal(world.group.children[0].material.color.getHex(), 0xd9a066);
+  assert.ok(fills.includes('#f97316'), fills.join());
+});
+
+test("other tracks' worlds are unchanged", () => {
+  const { win, fills } = worldPage();
+  const world = win.KRWorld.build(THREE, worldView(null));
+  assert.equal(world.group.getObjectByName('canyon'), undefined);
+  assert.equal(world.group.children[0].material.color.getHex(), 0x3f8f3a);
+  assert.ok(fills.includes('#ef4444'));
+  assert.ok(!fills.includes('#f97316'));
+});
+
+test('disposing the world frees the canyon once', () => {
+  const { win } = worldPage();
+  const world = win.KRWorld.build(THREE, worldView({ kind: 'canyon', arches: [0.396, 0.85] }));
+  const calls = new Map();
+  world.group.getObjectByName('canyon').traverse((o) => {
+    if (!o.isMesh) return;
+    for (const thing of [o.geometry].concat(o.material)) {
+      if (calls.has(thing)) continue;
+      calls.set(thing, 0);
+      thing.dispose = () => calls.set(thing, calls.get(thing) + 1);
+    }
+  });
+  world.dispose();
+  for (const [thing, n] of calls) assert.equal(n, 1, thing.type);
+});
