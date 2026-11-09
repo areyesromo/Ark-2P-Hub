@@ -6,6 +6,8 @@
     '/games/kart-race/racers.js',
     '/games/kart-race-3d/geom3d.js',
     '/games/kart-race-3d/world3d.js',
+    '/games/kart-race-3d/rig3d.js',
+    '/games/kart-race-3d/models3d.js',
     '/games/kart-race-3d/karts3d.js',
     '/games/kart-race-3d/things3d.js',
     '/games/kart-race-3d/kart3d.js',

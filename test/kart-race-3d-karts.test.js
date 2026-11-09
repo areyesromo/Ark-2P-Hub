@@ -90,3 +90,133 @@ test('a failed load rejects and logs once', async () => {
   await assert.rejects(win.KRModels.get(THREE, 'rex'));
   assert.equal(errors.length, 1);
 });
+
+/** A kart on a page, and a promise that settles once its model has had the chance to arrive. */
+function kart(opts = {}) {
+  const p = page(opts.loader);
+  const k = p.win.KRKarts.make(THREE, opts.racer || 'rex', opts.color || '#ff0000', null, Boolean(opts.player));
+  const ready = async () => {
+    try { await p.win.KRModels.get(THREE, 'rex'); } catch { /* a failed load */ }
+    await flush();
+  };
+  return { ...p, k, ready };
+}
+
+/** Drive `n` frames 16 ms apart: forward by dx a frame, turning by da a frame. */
+function drive(k, n, { dx = 0.1, da = 0.02, kart: view = {}, place } = {}) {
+  let pose = { x: 0, y: 0, angle: 0 };
+  for (let i = 0; i < n; i++) {
+    pose = { x: pose.x + dx * Math.cos(pose.angle), y: pose.y + dx * Math.sin(pose.angle), angle: pose.angle + da };
+    k.set(pose, view, 1000 + i * 16, place);
+  }
+}
+
+test('a kart shows the placeholder until the model loads', async () => {
+  const { k, ready } = kart();
+  assert.ok(k.obj.getObjectByName('placeholder'));
+  assert.equal(k.obj.getObjectByName('wheel_fl'), undefined);
+  await ready();
+  assert.ok(k.obj.getObjectByName('wheel_fl'));
+  assert.ok(k.obj.getObjectByName('head'));
+  assert.equal(k.obj.getObjectByName('placeholder'), undefined);
+});
+
+test('a racer without a model keeps the placeholder', async () => {
+  const { k, ready } = kart({ racer: 'dash' });
+  await ready();
+  assert.ok(k.obj.getObjectByName('placeholder'));
+});
+
+test('a failed load keeps the placeholder', async () => {
+  const { k, ready } = kart({ loader: async () => { throw new Error('404'); } });
+  await ready();
+  assert.equal(k.obj.getObjectByName('wheel_fl'), undefined);
+  assert.ok(k.obj.getObjectByName('placeholder'));
+});
+
+test('a kart disposed before its model loads never swaps', async () => {
+  const { k, ready } = kart();
+  k.dispose();
+  await ready();
+  assert.equal(k.obj.getObjectByName('wheel_fl'), undefined);
+});
+
+test('turning right steers the front wheels right; every wheel rolls forward', async () => {
+  const { k, ready } = kart();
+  await ready();
+  drive(k, 20);
+  const o = (n) => k.obj.getObjectByName(n);
+  assert.ok(o('wheel_fl').rotation.y < 0, String(o('wheel_fl').rotation.y));
+  assert.ok(o('wheel_fr').rotation.y < 0);
+  assert.equal(o('wheel_rr').rotation.y, 0);
+  assert.ok(o('wheel_rr').rotation.z < 0, String(o('wheel_rr').rotation.z));
+  assert.ok(o('wheel_fl').rotation.z < 0);
+});
+
+test('reversing rolls the wheels backwards', async () => {
+  const { k, ready } = kart();
+  await ready();
+  drive(k, 10, { dx: -0.1, da: 0 });
+  assert.ok(k.obj.getObjectByName('wheel_rl').rotation.z > 0);
+});
+
+test('the head looks into the bend and the hands follow the wheel', async () => {
+  const { k, ready } = kart();
+  await ready();
+  drive(k, 20);
+  const o = (n) => k.obj.getObjectByName(n);
+  assert.ok(o('head').rotation.y < 0, String(o('head').rotation.y));
+  assert.ok(o('arm_l').rotation.z > 0, 'left hand up when turning right');
+  assert.ok(o('arm_r').rotation.z < 0, 'right hand down');
+});
+
+test('spinning out puts both arms up', async () => {
+  const { k, ready } = kart();
+  await ready();
+  drive(k, 1, { kart: { spin: true } });
+  assert.ok(Math.abs(k.obj.getObjectByName('arm_l').rotation.z - 2.2) < 1e-9);
+  assert.ok(Math.abs(k.obj.getObjectByName('arm_r').rotation.z - 2.2) < 1e-9);
+});
+
+test('winning pumps the left fist', async () => {
+  const { k, ready } = kart();
+  await ready();
+  drive(k, 1, { da: 0, kart: { finished: true }, place: 1 });
+  assert.ok(k.obj.getObjectByName('arm_l').rotation.z >= 1.6);
+  assert.equal(k.obj.getObjectByName('arm_r').rotation.z, 0);
+});
+
+test('disposing a kart keeps the model the other karts share', async () => {
+  const { win, ready } = kart();
+  await ready();
+  const model = await win.KRModels.get(THREE, 'rex');
+  let freed = 0;
+  for (const root of [model.kart, model.driver]) {
+    root.traverse((o) => {
+      if (o.isMesh) {
+        o.geometry.dispose = () => freed++;
+        o.material.dispose = () => freed++;
+      }
+    });
+  }
+  const a = win.KRKarts.make(THREE, 'rex', '#ff0000', null, true);
+  const b = win.KRKarts.make(THREE, 'rex', '#00ff00', null, false);
+  await flush();
+  a.dispose();
+  assert.equal(freed, 0);
+  assert.ok(b.obj.getObjectByName('wheel_fl'));
+});
+
+test("a player's kart gets a ring in its colour; a computer's doesn't", async () => {
+  const ring = (k) => {
+    let found = null;
+    k.obj.traverse((o) => { if (o.isMesh && o.geometry.type === 'RingGeometry') found = o; });
+    return found;
+  };
+  const p = kart({ player: true });
+  await p.ready();
+  assert.equal(ring(p.k).material.color.getHex(), 0xff0000);
+  const c = kart({ player: false });
+  await c.ready();
+  assert.equal(ring(c.k), null);
+});

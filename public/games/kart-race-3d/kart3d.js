@@ -82,7 +82,7 @@
       const poses = split() ? smooth.at(now) : null;
       if (!poses) return;
       poses.forEach(function (pose, i) {
-        if (karts[i]) karts[i].set(pose, view.karts[i], now);
+        if (karts[i]) karts[i].set(pose, view.karts[i], now, view.positions && view.positions[i]);
       });
       aim(poses, dt);
     }
@@ -118,7 +118,7 @@
           // Players wear their colour; a computer racer its own kart's.
           const player = slot < 2;
           const color = player ? colors[slot] : window.ArkKartRacers.racer(want).stripe;
-          karts[slot] = window.KRKarts.make(gl.THREE, want, color, player && v.karts.length > 2 ? 'P' + (slot + 1) : null);
+          karts[slot] = window.KRKarts.make(gl.THREE, want, color, player && v.karts.length > 2 ? 'P' + (slot + 1) : null, player);
           gl.scene.add(karts[slot].obj);
         }
       }

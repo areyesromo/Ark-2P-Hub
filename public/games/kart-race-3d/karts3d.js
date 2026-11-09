@@ -1,7 +1,11 @@
-// Kart Race 3D's karts: until a racer has a 3D model, a placeholder built from its kart shape
-// (the 2D outlines) in the racer's colour, with wheels and a driver in the player's colour. It
-// leans into bends, spins out and shrinks. A player's kart can carry a floating label ("P1") so you can
-// find it in a pack. KRKarts.make(THREE, racerId, color, label?) -> { obj, set(pose, k, now), dispose() }.
+// Kart Race 3D's karts. A racer with a 3D model (Rex, see models3d.js) drives it once it has loaded:
+// the wheels roll and the front pair steer, the driver's hands follow the wheel, his head looks into
+// bends, and he reacts (arms up in a spin-out, a fist pump for a win; the maths is in rig3d.js).
+// Until then, and for every other racer, a placeholder built from its kart shape (the 2D outlines)
+// in the racer's colour, with wheels and a driver in the player's colour. Every kart leans into
+// bends, spins out and shrinks. A player's kart can carry a floating label ("P1") so you can find it
+// in a pack. KRKarts.make(THREE, racerId, color, label?, player?) ->
+// { obj, racer, marker, set(pose, k, now, place?), dispose() }.
 (function () {
   // The 2D kart outlines (public/games/kart-race/host.js SHAPES), nose at +x.
   const SHAPES = {
@@ -39,8 +43,8 @@
     return sprite;
   }
 
-  function make(THREE, racerId, color, label) {
-    const racer = window.ArkKartRacers.racer(racerId);
+  /** The placeholder kart: the racer's outline extruded, four wheels, and a driver in `color`. */
+  function placeholder(THREE, racer, color) {
     const pts = SHAPES[racer.shape] || SHAPES.classic;
     const xs = pts.map(function (p) { return p[0]; });
     const s = LENGTH / (Math.max.apply(null, xs) - Math.min.apply(null, xs));
@@ -48,60 +52,158 @@
     const shape = new THREE.Shape(pts.map(function (p) { return new THREE.Vector2((p[0] - mid) * s, p[1] * s); }));
     const bodyGeo = new THREE.ExtrudeGeometry(shape, { depth: 0.3, bevelEnabled: false });
     bodyGeo.rotateX(-Math.PI / 2); // the outline lies flat, extruded upward
+    const wheelGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.14, 12);
+    wheelGeo.rotateX(Math.PI / 2);
+    const torsoGeo = new THREE.BoxGeometry(0.3, 0.3, 0.36);
+    const headGeo = new THREE.SphereGeometry(0.22, 16, 12);
     const mats = [
       new THREE.MeshLambertMaterial({ color: racer.stripe }),
       new THREE.MeshLambertMaterial({ color: 0x1f2937 }),
       new THREE.MeshLambertMaterial({ color: color }),
     ];
-    const body = new THREE.Group(); // leans and spins inside obj
+    const group = new THREE.Group();
+    group.name = 'placeholder';
     const shell = new THREE.Mesh(bodyGeo, mats[0]);
     shell.position.y = 0.12;
-    body.add(shell);
-    const wheelGeo = new THREE.CylinderGeometry(0.18, 0.18, 0.14, 12);
-    wheelGeo.rotateX(Math.PI / 2);
+    group.add(shell);
     [[0.55, 0.42], [0.55, -0.42], [-0.55, 0.42], [-0.55, -0.42]].forEach(function (w) {
       const m = new THREE.Mesh(wheelGeo, mats[1]);
       m.position.set(w[0], 0.18, w[1]);
-      body.add(m);
+      group.add(m);
     });
-    const torsoGeo = new THREE.BoxGeometry(0.3, 0.3, 0.36);
     const torso = new THREE.Mesh(torsoGeo, mats[0]);
     torso.position.set(-0.15, 0.55, 0);
-    body.add(torso);
-    const headGeo = new THREE.SphereGeometry(0.22, 16, 12);
+    group.add(torso);
     const head = new THREE.Mesh(headGeo, mats[2]);
     head.position.set(-0.15, 0.9, 0);
-    body.add(head);
+    group.add(head);
+    return {
+      group: group,
+      top: 0.9 + 0.22, // the head's top, for the tag
+      dispose: function () {
+        [bodyGeo, wheelGeo, torsoGeo, headGeo].forEach(function (g) { g.dispose(); });
+        mats.forEach(function (m) { m.dispose(); });
+      },
+    };
+  }
+
+  /**
+   * The racer's 3D model, cloned from the loaded one (the clones share its geometry and texture):
+   * the kart, the driver on its seat, and the parts that move. `top`: the driver's head height.
+   */
+  function rig(THREE, model) {
+    const kart = model.kart.clone(true);
+    const driver = model.driver.clone(true);
+    const seat = kart.getObjectByName('seat');
+    if (seat) driver.position.copy(seat.position);
+    const group = new THREE.Group();
+    group.add(kart, driver);
+    const part = function (root, name) { return root.getObjectByName(name); };
+    const parts = {
+      wheels: ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr'].map(function (n) { return part(kart, n); }).filter(Boolean),
+      front: ['wheel_fl', 'wheel_fr'].map(function (n) { return part(kart, n); }).filter(Boolean),
+      head: part(driver, 'head'),
+      armL: part(driver, 'arm_l'),
+      armR: part(driver, 'arm_r'),
+    };
+    const base = {
+      headY: parts.head ? parts.head.position.y : 0,
+      headYaw: parts.head ? parts.head.rotation.y : 0,
+      armL: parts.armL ? parts.armL.rotation.z : 0,
+      armR: parts.armR ? parts.armR.rotation.z : 0,
+    };
+    group.updateMatrixWorld(true);
+    const top = new THREE.Box3().setFromObject(driver).max.y;
+    return { group: group, parts: parts, base: base, wheelRadius: model.wheelRadius, top: top };
+  }
+
+  /**
+   * A racer's kart. `player`: a player's kart, which gets a ring in their colour under it once the
+   * 3D model shows (the model wears the racer's own colours). set(pose, k, now, place): `place` is
+   * the kart's 1-based place in the race, for the win reaction.
+   */
+  function make(THREE, racerId, color, label, player) {
+    const racer = window.ArkKartRacers.racer(racerId);
+    const body = new THREE.Group(); // leans and spins inside obj
+    let stand = placeholder(THREE, racer, color);
+    body.add(stand.group);
     const obj = new THREE.Group();
     obj.add(body);
     const marker = label ? tag(THREE, label, color) : null;
     if (marker) {
-      marker.position.set(-0.15, 0.9 + 0.22 + 0.9, 0); // above the head
+      marker.position.set(-0.15, stand.top + 0.9, 0); // above the head
       obj.add(marker); // (not in the body: it doesn't lean or spin)
     }
+    let model = null; // the racer's 3D model, once it has loaded
+    let ring = null;
+    let gone = false;
 
-    let last = null; // { angle, t }: for how fast it's turning
+    const loading = window.KRModels && window.KRModels.get(THREE, racer.id);
+    if (loading) {
+      loading.then(function (m) {
+        if (gone) return;
+        model = rig(THREE, m);
+        body.remove(stand.group);
+        stand.dispose();
+        stand = null;
+        body.add(model.group);
+        if (marker) marker.position.set(-0.15, model.top + 0.45, 0);
+        if (player) {
+          ring = new THREE.Mesh(
+            new THREE.RingGeometry(0.95, 1.05, 48),
+            new THREE.MeshBasicMaterial({ color: color, transparent: true, opacity: 0.85, side: THREE.DoubleSide })
+          );
+          ring.rotation.x = -Math.PI / 2;
+          ring.position.y = 0.02;
+          obj.add(ring); // (not in the body: it doesn't lean or spin)
+        }
+      }, function () { /* no model: the placeholder stays (models3d.js logged why) */ });
+    }
+
+    const R = window.KRRig;
+    let last = null; // the last frame { pose, t, h }: for turning, rolling and the road's height
     let lean = 0;
+    let steer = 0;
+    let look = 0;
     return {
       obj: obj,
       racer: racerId,
       marker: marker,
-      set: function (pose, k, now) {
-        obj.position.set(pose.x, window.ArkKartGeom.heightAt(pose.x, pose.y), pose.y);
+      set: function (pose, k, now, place) {
+        const h = window.ArkKartGeom.heightAt(pose.x, pose.y);
+        obj.position.set(pose.x, h, pose.y);
         obj.rotation.y = -pose.angle; // field y is scene z
-        if (last && now > last.t) {
-          const d = Math.atan2(Math.sin(pose.angle - last.angle), Math.cos(pose.angle - last.angle));
-          const goal = Math.max(-LEAN.max, Math.min(LEAN.max, (d / (now - last.t)) * 1000 * LEAN.perTurn));
-          lean += (goal - lean) * 0.2;
-        }
-        last = { angle: pose.angle, t: now };
+        const dt = last ? now - last.t : 0;
+        const rate = last ? R.turnRate(last.pose, pose, dt) : 0;
+        if (dt > 0) lean = R.ease(lean, Math.max(-LEAN.max, Math.min(LEAN.max, rate * LEAN.perTurn)));
         body.rotation.x = lean;
         body.rotation.y = k && k.spin ? ((now % SPIN_MS) / SPIN_MS) * Math.PI * 2 : 0;
         obj.scale.setScalar(k && k.shrunk ? 0.7 : 1);
+        if (model) {
+          const p = model.parts;
+          const rolled = last ? R.roll(last.pose, pose, model.wheelRadius) : 0;
+          p.wheels.forEach(function (w) { w.rotation.z -= rolled; }); // rolling forward is a negative turn
+          steer = R.ease(steer, R.steerGoal(rate));
+          look = R.ease(look, R.headGoal(rate));
+          p.front.forEach(function (w) { w.rotation.y = -steer; });
+          const m = R.moves(R.reaction(k, place), steer, look, now);
+          if (p.armL) p.armL.rotation.z = model.base.armL + m.armL;
+          if (p.armR) p.armR.rotation.z = model.base.armR + m.armR;
+          if (p.head) {
+            p.head.rotation.y = model.base.headYaw - m.headYaw;
+            const speed = dt > 0 ? (Math.hypot(pose.x - last.pose.x, pose.y - last.pose.y) / dt) * 1000 : 0;
+            p.head.position.y = model.base.headY + R.bob(speed, last ? h - last.h : 0, now);
+          }
+        }
+        last = { pose: pose, t: now, h: h };
       },
       dispose: function () {
-        [bodyGeo, wheelGeo, torsoGeo, headGeo].forEach(function (g) { g.dispose(); });
-        mats.forEach(function (m) { m.dispose(); });
+        gone = true;
+        if (stand) stand.dispose(); // (a model's clones share the loaded geometry: never freed here)
+        if (ring) {
+          ring.geometry.dispose();
+          ring.material.dispose();
+        }
         if (marker) {
           marker.material.map.dispose();
           marker.material.dispose();
