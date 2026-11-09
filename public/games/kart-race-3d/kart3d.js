@@ -46,6 +46,7 @@
         });
         renderer.setScissorTest(false);
       } else {
+        karts.forEach(function (k) { if (k && k.marker) k.marker.visible = true; }); // the overview shows both tags
         renderer.setViewport(0, 0, w, h);
         renderer.render(scene, gl.camera);
       }

@@ -1011,12 +1011,13 @@
         arenaNames = v.arenaNames || arenaNames;
         // The mode changed the settings rows (5 for a race, 3 for a battle): a controller on its
         // racer or tyres row stays there, one on a settings row stays on the list.
-        if (view && v.settings && view.settings && v.settings.mode !== view.settings.mode) {
+        // The settings rows changed (Mode, or Kart Race 3D's Field): a controller on its racer or
+        // tyres row stays there, one on a settings row stays on the list.
+        if (view && v.settings && view.settings && rowsFor(view).length !== rowsFor(v).length) {
           const was = rowsFor(view).length;
           const now = rowsFor(v).length;
           Object.keys(pads).forEach(function (slot) {
-            const row = pads[slot].row || 0;
-            pads[slot].row = row >= was ? now + (row - was) : Math.min(row, now - 1);
+            pads[slot].row = remapRow(pads[slot].row || 0, was, now);
           });
           overlayKey = '';
         }
@@ -1045,6 +1046,11 @@
     };
   }
 
-  window.ArkKartTV = { make: make, rowsFor: rowsFor };
+  /** A controller's setup row when the settings rows go from `was` to `now` (racer and tyres follow them). */
+  function remapRow(row, was, now) {
+    return row >= was ? now + (row - was) : Math.min(row, now - 1);
+  }
+
+  window.ArkKartTV = { make: make, rowsFor: rowsFor, remapRow: remapRow };
   Ark.register('host', 'kart-race', make({}));
 })();

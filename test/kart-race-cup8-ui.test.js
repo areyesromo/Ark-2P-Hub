@@ -89,7 +89,7 @@ function phoneStatus(view, me) {
   const p = window.ArkKartPhone.make({ threeD: true });
   const host = new Element();
   p.mount(host, { send() {}, vibrate() {} });
-  p.update({ ...view, you: me });
+  p.update(view.you === undefined ? { ...view, you: me } : view);
   return host.child.querySelector('.status').innerHTML;
 }
 
@@ -98,7 +98,49 @@ test('the phone: your place out of eight, then both your points', () => {
   assert.match(phoneStatus(v.race, 0), /3rd of 8/);
   const between = phoneStatus(v.standings, 0);
   assert.match(between, /You: 6 pts/);
-  assert.match(between, /Alex: 4 pts/);
+  assert.match(between, /Them: 4 pts/); // (a phone's view carries no names)
   assert.match(between, /3rd in the table/);
   assert.match(phoneStatus(v.over, 1), /You: 20 pts/);
+});
+
+test("the phone's cup screens work from a real phone view (no player list in it)", () => {
+  const v = kartCupViews();
+  assert.equal(v['standings-phone'].players, undefined);
+  const between = phoneStatus(v['standings-phone'], 0);
+  assert.match(between, /You: 6 pts/);
+  assert.match(between, /Them: 4 pts/);
+  assert.match(between, /3rd in the table/);
+  assert.match(phoneStatus(v['over-phone'], 1), /You: 20 pts · Them: 30 pts/);
+});
+
+test('in a Cup the finish says where you came, not that the first player home won', () => {
+  const v = kartCupViews();
+  assert.match(ui().overlay(v.finish, helpers), /Sergio finishes 3rd/);
+  assert.doesNotMatch(ui().overlay(v.finish, helpers), /takes it/);
+  assert.match(phoneStatus(v['finish-phone'], 0), /You finish 3rd of 8/);
+});
+
+test('a Cup says race, not round, even with Battle left picked', () => {
+  const v = kartCupViews().standings;
+  v.settings.mode = 1;
+  assert.match(ui().overlay(v, helpers), /next race/);
+  assert.doesNotMatch(ui().overlay(v, helpers), /next round/);
+});
+
+// ---- the TV's controllers when the rows change ----
+
+test("a TV controller keeps its place when Field changes the rows: racer stays racer", () => {
+  const window = {};
+  const Ark = { escapeHtml: String, loadCss() {}, loadScript: () => new Promise(() => {}), register() {}, setup: {} };
+  vm.runInNewContext(fs.readFileSync('public/games/kart-race/host.js', 'utf8'), { Ark, window, setTimeout, performance, requestAnimationFrame() {}, cancelAnimationFrame() {} });
+  const remap = window.ArkKartTV.remapRow;
+  // 1v1 race (6 setting rows) to the Cup (3): Racer (6) and Tyres (7) stay Racer (3) and Tyres (4);
+  // a settings row stays on the list.
+  assert.equal(remap(6, 6, 3), 3);
+  assert.equal(remap(7, 6, 3), 4);
+  assert.equal(remap(4, 6, 3), 2);
+  assert.equal(remap(1, 6, 3), 1);
+  // And back: Racer (3) is Racer (6) again, not Laps.
+  assert.equal(remap(3, 3, 6), 6);
+  assert.equal(remap(2, 3, 6), 2);
 });

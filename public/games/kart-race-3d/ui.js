@@ -40,7 +40,7 @@
   }
   function prompt(v) {
     if (v.phase === 'setup') return 'Phone: choose your racer & tyres, then Ready · Controller: ↑↓ select · ←→ change · A ready';
-    if (v.phase === 'standings') return 'Phone: Ready for the next ' + (v.settings.mode ? 'round' : 'race') + ' · Controller: A ready';
+    if (v.phase === 'standings') return 'Phone: Ready for the next ' + (v.battle ? 'round' : 'race') + ' · Controller: A ready';
     return 'Phone: Rematch or Change settings · Controller: A rematch · Y settings · Hub menu: lobby';
   }
   function resultCards(v) {
@@ -172,6 +172,8 @@
           return '<div class="panel kr3d-countdown"><span class="kr3d-eyebrow">GET READY</span><div class="lights gantry">' + lights + '</div><h2>Lights out. Then GAS.</h2><p>Early starts cost a 1-second penalty.</p></div>';
         }
         if (v.phase === 'race') return v.newRecord ? '<div class="banner kr3d-record">NEW LAP RECORD · ' + esc(player(v, v.newRecord.slot)) + ' · ' + clock(v.newRecord.ms) + '</div>' : '';
+        // The 8-kart Cup: the first player home may not have won (computers can be ahead): their place.
+        if (v.phase === 'finish' && v.result && v.cupPoints) return '<div class="banner kr3d-finish"><span class="kr3d-eyebrow">CHEQUERED FLAG</span><h2>' + esc(player(v, v.result.winner)) + ' finishes ' + ordinal(v.positions[v.result.winner]) + '</h2><p>' + clock(v.result.time) + '</p></div>';
         if (v.phase === 'finish' && v.result) return '<div class="banner kr3d-finish"><span class="kr3d-eyebrow">' + (v.battle ? 'ROUND COMPLETE' : 'CHEQUERED FLAG') + '</span><h2>' + (v.result.draw ? 'A level finish' : esc(player(v, v.result.winner)) + ' takes it!') + '</h2><p>' + (v.result.draw ? 'Draw round · play again' : v.battle ? 'The balloons have spoken.' : clock(v.result.time)) + '</p></div>';
         if ((v.phase === 'standings' || v.phase === 'over') && v.cupPoints) {
           // The 8-kart Cup: the table, and at the end who won (and any computer that out-scored you both).

@@ -57,6 +57,15 @@ export function kartCupViews() {
   // Racing, in that order: further round the lap for a better place.
   places.forEach((rank, i) => { g.karts[i].progress = 0.9 - rank * 0.1; });
   save('race', g);
+  // The finish: two computers over the line first, then player 1 (3rd).
+  g.karts[2].finishedAt = ctx.now() - 2000;
+  g.karts[3].finishedAt = ctx.now() - 1000;
+  g.finishLine(0, ctx.now());
+  save('finish', g);
+  views['finish-phone'] = JSON.parse(JSON.stringify(g.playerView(0)));
+  g.phase = 'race'; // (back, so the race can be ended with set places below)
+  g.result = null;
+  [0, 2, 3].forEach((i) => { g.karts[i].finishedAt = null; });
   const end = (order) => {
     g.result = { winner: order[0] < order[1] ? 0 : 1, time: 60000 };
     order.forEach((rank, i) => { g.karts[i].finishedAt = rank; });
@@ -64,6 +73,7 @@ export function kartCupViews() {
   };
   end(places);
   save('standings', g);
+  views['standings-phone'] = JSON.parse(JSON.stringify(g.playerView(0)));
   for (let r = 1; r < 5; r++) {
     g.onInput(0, { type: 'go' });
     g.onInput(1, { type: 'go' });
@@ -71,5 +81,6 @@ export function kartCupViews() {
     end(places);
   }
   save('over', g);
+  views['over-phone'] = JSON.parse(JSON.stringify(g.playerView(1)));
   return views;
 }

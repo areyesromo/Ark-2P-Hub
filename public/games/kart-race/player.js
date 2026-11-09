@@ -388,7 +388,7 @@
       // Kart Race 3D's 8-kart Cup: where you came, both your points and your place in the table.
       const pts = v.cupPoints;
       const table = 1 + pts.filter(function (p, i) { return p > pts[me] || (p === pts[me] && i < me); }).length;
-      const them = esc(v.players[1 - me] ? v.players[1 - me].name : 'Them');
+      const them = 'Them'; // (a phone's view has no player list)
       const line = 'You: ' + pts[me] + ' pts · ' + them + ': ' + pts[1 - me] + ' pts · ' + ordinal(table) + ' in the table';
       if (v.phase === 'over') {
         return '<span class="big ' + (v.winner === me ? 'won">You win the cup! 🏆' : 'lost">They win the cup') + '</span><br>' + line + '<br>' + waiting('press Rematch for another cup.');
@@ -430,6 +430,10 @@
       let dots = '';
       for (let i = 1; i <= 5; i++) dots += '<i class="' + (v.lights >= i ? 'on' : '') + '"></i>';
       return '<span class="big kr-lights">' + dots + '</span><br>' + (k.jumped ? '<span class="lost">Jump start! 1 s penalty</span>' : 'Wait for the lights to go out, then GAS') + '<br>' + esc(v.track.name) + ' · ' + v.laps + ' laps';
+    }
+    if (v.phase === 'finish' && v.cupPoints) {
+      // The 8-kart Cup: the first player home may not have won (computers can be ahead): where you came.
+      return '<span class="big' + (k.finished ? '">🏁 You finish ' : '">Finish it! ') + pos + '</span>';
     }
     if (v.phase === 'finish' && v.result) {
       return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>' +
@@ -507,7 +511,7 @@
     const standings = v.phase === 'standings';
     els.go.classList.toggle('hidden', !setup && !standings);
     const ready = Boolean(v.ready && v.ready[v.you]);
-    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : standings ? 'Ready for the next ' + (v.settings.mode ? 'round' : 'race') : 'Ready';
+    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : standings ? 'Ready for the next ' + (v.battle ? 'round' : 'race') : 'Ready';
     els.go.classList.toggle('on', ready && (setup || standings));
     els.controls.classList.toggle('hidden', between || standings);
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
