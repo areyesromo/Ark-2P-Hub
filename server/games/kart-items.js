@@ -75,7 +75,8 @@ export const ODDS = {
 
 /** A random item for the kart in this slot, by its place. */
 export function rollItem(game, slot) {
-  const odds = game.battle ? ODDS.battle : game.positions()[slot] === 1 ? ODDS.first : ODDS.second;
+  // The front half of the field (with two: the leader) gets the leader's odds; the back half the catch-up ones.
+  const odds = game.battle ? ODDS.battle : game.positions()[slot] <= game.karts.length / 2 ? ODDS.first : ODDS.second;
   const kinds = Object.keys(odds);
   let r = game.rng() * kinds.reduce((sum, k) => sum + odds[k], 0);
   for (const kind of kinds) {
@@ -125,7 +126,8 @@ function zap(game, rival, now) {
 /** The player in this slot pressed ITEM. */
 export function useItem(game, slot, now) {
   const k = game.karts[slot];
-  const rival = game.karts[1 - slot];
+  // Freeze and Swap go for the kart just ahead (2nd if you lead); with two karts, the rival.
+  const rival = game.karts[game.targetOf(slot)];
   if (game.phase !== 'race' || k.finishedAt !== null || now < k.spinUntil) return;
   // Gold Turbo: every press boosts while it lasts, and the rest of the queue waits.
   if (now < k.goldUntil) {
@@ -151,8 +153,10 @@ export function useItem(game, slot, now) {
   else if (kind === 'magnet') k.magnetUntil = now + ITEMS.magnetMs;
   else if (kind === 'hover') k.hoverUntil = now + ITEMS.hoverMs;
   else if (kind === 'thunder') {
-    if (zap(game, rival, now)) {
-      rival.shrinkUntil = now + ITEMS.thunderMs;
+    // Every other kart shrinks.
+    for (const o of game.karts) {
+      if (o === k || !zap(game, o, now)) continue;
+      o.shrinkUntil = now + ITEMS.thunderMs;
       game.events.zapped++;
     }
   } else if (kind === 'freeze') {
@@ -170,7 +174,9 @@ export function useItem(game, slot, now) {
     const life = kind === 'bouncer' ? ITEMS.bouncerMs : ITEMS.seekerMs;
     // Always faster than the kart that fired it (a boosting kart would run into its own Bouncer).
     const speed = Math.max(kind === 'bouncer' ? ITEMS.bouncerSpeed : ITEMS.seekerSpeed, Math.max(0, k.speed) + 3);
-    game.shots.push({ kind, x: k.x + Math.cos(k.angle) * ahead, y: k.y + Math.sin(k.angle) * ahead, angle: k.angle, speed, owner: slot, bornAt: now, until: now + life, seg: k.seg });
+    // A Seeker locks on to the kart it was fired at (see targetOf), whatever the places do after.
+    const target = kind === 'seeker' ? game.targetOf(slot) : undefined;
+    game.shots.push({ kind, x: k.x + Math.cos(k.angle) * ahead, y: k.y + Math.sin(k.angle) * ahead, angle: k.angle, speed, owner: slot, target, bornAt: now, until: now + life, seg: k.seg });
     game.events.fired++;
   } else if (kind === 'bomb') {
     // Lobbed ahead along your own road (the way you're facing along it), landing on the tarmac.
@@ -243,8 +249,8 @@ export function stepShots(game, dt, now) {
     }
     const speed = s.speed || (s.kind === 'bouncer' ? ITEMS.bouncerSpeed : ITEMS.seekerSpeed);
     if (s.kind === 'seeker') {
-      // Follow the road; close to the rival, straight at them.
-      const rival = game.karts[1 - s.owner];
+      // Follow the road; close to its target (the kart just ahead of the thrower), straight at them.
+      const rival = game.karts[s.target === undefined ? game.targetOf(s.owner) : s.target];
       const w = Road.locateNear(game.track, s.x, s.y, s.seg, 8, game.roadHalf * 3);
       s.seg = w.i;
       // (Only a rival on the same stretch: not one just across a barrier.)
