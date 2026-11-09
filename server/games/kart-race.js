@@ -1123,6 +1123,7 @@ export class KartRace {
       trackWidth: this.track ? this.track.width : TRACK_WIDTH,
       trackNames: this.tracks.map((t) => t.name),
       trackPoints: this.phase === 'setup' ? this.tracks.map((t) => t.points) : null, // for the previews
+      trackSizes: this.phase === 'setup' ? this.tracks.map((t) => ({ field: t.field || FIELD, width: t.width || TRACK_WIDTH })) : null, // …drawn at each track's own size
       arenaNames: ARENAS.map((a) => a.name),
       arenaPoints: this.phase === 'setup' ? ARENAS.map((a) => a.points) : null,
       arenaWidth: ARENAS[0].width,

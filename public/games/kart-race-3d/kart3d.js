@@ -5,7 +5,7 @@
 (function () {
   const SKY = 0x9bd4f5;
   const BOOST_FOV = 8; // extra field of view on a boost
-  const OVERVIEW = { up: 24, back: 15 }; // the camera between races, south of the field centre
+  const OVERVIEW = { up: 0.75, back: 0.83 }; // the camera between races, south of the field centre (× its width, height)
 
   function create(el) {
     const G = window.ArkKartGeom;
@@ -95,7 +95,7 @@
       if (world) gl.scene.add(world.group);
       // Between races, look over the whole field.
       const f = v.field;
-      gl.camera.position.set(f.w / 2, OVERVIEW.up, f.h / 2 + OVERVIEW.back);
+      gl.camera.position.set(f.w / 2, f.w * OVERVIEW.up, f.h / 2 + f.h * OVERVIEW.back);
       gl.camera.lookAt(f.w / 2, 0, f.h / 2);
     }
 

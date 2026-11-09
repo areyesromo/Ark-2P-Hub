@@ -214,3 +214,14 @@ test('a 4-race cup in Kart Race 3D uses five different tracks', () => {
   assert.equal(game.phase, 'over');
   assert.equal(new Set(seen).size, 5, seen.join(', '));
 });
+
+test("the setup view sends each track's own field and road width, for the previews", () => {
+  const game = kartRace3dDef.create(fakeCtx());
+  game.start();
+  const v = game.hostView();
+  assert.equal(v.trackSizes.length, 5);
+  for (const s of v.trackSizes) assert.deepEqual(s, { field: { w: 128, h: 72 }, width: 7 });
+  const two = new KartRace(fakeCtx());
+  two.start();
+  assert.deepEqual(two.hostView().trackSizes[0], { field: { w: 32, h: 18 }, width: 3.4 });
+});
