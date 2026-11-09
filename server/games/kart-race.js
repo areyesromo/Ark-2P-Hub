@@ -280,9 +280,19 @@ export class KartRace {
     this.ctx = ctx;
     this.rng = rng;
     this.timer = null;
-    this.settings = loadSettings(ctx, OPTIONS);
+    this.settings = loadSettings(ctx, this.options);
     // Each player's racer and tyres (kept from match to match; changed on the setup and end screens).
     this.picks = Racers.DEFAULT_RACERS.map((racer) => ({ racer, tyre: Racers.DEFAULT_TYRE }));
+  }
+
+  /** The tracks this game races on (Kart Race 3D has its own big ones). */
+  get tracks() {
+    return TRACKS;
+  }
+
+  /** The setup choices (a game with a different number of tracks has its own Track row). */
+  get options() {
+    return OPTIONS;
   }
 
   /**
@@ -324,7 +334,7 @@ export class KartRace {
     this.nextIndex = null;
     this.ready = [false, false];
     // A cup's tracks: five different ones (four races and a sudden death), shuffled.
-    this.cupTracks = TRACKS.map((_, i) => i);
+    this.cupTracks = this.tracks.map((_, i) => i);
     for (let i = this.cupTracks.length - 1; i > 0; i--) {
       const j = Math.floor(this.rng() * (i + 1));
       [this.cupTracks[i], this.cupTracks[j]] = [this.cupTracks[j], this.cupTracks[i]];
@@ -357,7 +367,7 @@ export class KartRace {
     }
     if (this.cup) return this.cupTracks[race - 1];
     if (this.settings.track > 0) return this.settings.track - 1;
-    const others = TRACKS.map((_, i) => i).filter((i) => i !== this.lastTrack);
+    const others = this.tracks.map((_, i) => i).filter((i) => i !== this.lastTrack);
     return others[Math.floor(this.rng() * others.length)];
   }
 
@@ -367,7 +377,8 @@ export class KartRace {
     const index = this.nextIndex ?? this.pickTrack(this.race);
     this.nextIndex = null;
     this.lastTrack = index;
-    this.track = this.battle ? buildArena(index) : buildTrack(index);
+    // (An arena is numbered after this game's tracks, so the screens tell them apart.)
+    this.track = this.battle ? { ...buildArena(index), index: this.tracks.length + index } : buildTrack(index, this.tracks);
     this.result = null;
     // This track's lap record (from the stats, if the room keeps any): shown on the TV, and
     // beating it is news.
@@ -1023,7 +1034,7 @@ export class KartRace {
       return;
     }
     if (this.phase === 'setup') {
-      if (input.type === 'setting' && applySetting(this.ctx, OPTIONS, this.settings, input.key, input.value)) {
+      if (input.type === 'setting' && applySetting(this.ctx, this.options, this.settings, input.key, input.value)) {
         this.ready = [false, false]; // you both agreed to the old settings
         this.ctx.update();
       }
@@ -1107,11 +1118,11 @@ export class KartRace {
     return {
       phase: this.phase,
       settings: this.settings,
-      options: OPTIONS,
+      options: this.options,
       field: this.field,
       trackWidth: this.track ? this.track.width : TRACK_WIDTH,
-      trackNames: TRACKS.map((t) => t.name),
-      trackPoints: this.phase === 'setup' ? TRACKS.map((t) => t.points) : null, // for the previews
+      trackNames: this.tracks.map((t) => t.name),
+      trackPoints: this.phase === 'setup' ? this.tracks.map((t) => t.points) : null, // for the previews
       arenaNames: ARENAS.map((a) => a.name),
       arenaPoints: this.phase === 'setup' ? ARENAS.map((a) => a.points) : null,
       arenaWidth: ARENAS[0].width,
@@ -1188,7 +1199,7 @@ export class KartRace {
       cup: this.cup,
       suddenDeath: this.cup && this.race > 4 && this.phase !== 'standings',
       // On the leaderboard between races: what's next.
-      next: this.phase === 'standings' ? { race: this.race + 1, track: (this.battle ? ARENAS : TRACKS)[this.nextIndex].name, suddenDeath: this.cup && this.race >= 4 } : null,
+      next: this.phase === 'standings' ? { race: this.race + 1, track: (this.battle ? ARENAS : this.tracks)[this.nextIndex].name, suddenDeath: this.cup && this.race >= 4 } : null,
       lights: this.phase === 'countdown' ? Math.min(LIGHTS.count, Math.floor((now - this.lightsFrom) / LIGHTS.stepMs)) : 0,
       ready: this.ready || [false, false],
     };

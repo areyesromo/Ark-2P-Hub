@@ -3,7 +3,8 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import '../public/games/kart-race/track.js';
-import { TRACKS, ARENAS, buildTrack, buildArena, coinSpots, CUT_JUMP, pointAt, locate } from '../server/games/kart-race.js';
+import { KartRace, TRACKS, ARENAS, OPTIONS, TIMING, buildTrack, buildArena, coinSpots, CUT_JUMP, pointAt, locate } from '../server/games/kart-race.js';
+import { fakeCtx } from './helpers.js';
 import { ITEMS } from '../server/games/kart-items.js';
 
 const Road = globalThis.ArkKartTrack;
@@ -48,4 +49,56 @@ test('2D tracks: same coins, rows and shortcut threshold as before', () => {
     assert.equal(t.width, 3.4, def.name);
     assert.deepEqual(t.field, { w: 32, h: 18 }, def.name);
   });
+});
+
+/** A game with its own two big tracks. */
+class Big extends KartRace {
+  get tracks() {
+    return [BIG, { ...BIG, name: 'Test Loop 2' }];
+  }
+  get options() {
+    return { ...OPTIONS, track: [0, 1, 2] };
+  }
+}
+
+/** A race on game class G, settings applied, lights out. */
+function racingOn(G, settings = {}, ctx = fakeCtx()) {
+  const game = new G(ctx, () => 0.5);
+  game.start();
+  for (const [key, value] of Object.entries(settings)) game.onInput(0, { type: 'setting', key, value });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  return { ctx, game };
+}
+
+test('a game races on its own track list', () => {
+  const { game } = racingOn(Big, { track: 1 });
+  assert.equal(game.track.name, 'Test Loop');
+  const v = game.hostView();
+  assert.deepEqual(v.trackNames, ['Test Loop', 'Test Loop 2']);
+  assert.equal(v.field.w, 128);
+  assert.equal(v.trackWidth, 7);
+});
+
+test("a saved track the game doesn't have falls back to Mixed", () => {
+  const ctx = fakeCtx();
+  ctx.saved = { settings: { track: 6 } };
+  assert.equal(new Big(ctx).settings.track, 0);
+});
+
+test("a kart at the big field's edge is held by the big field", () => {
+  const { ctx, game } = racingOn(Big, { track: 1 });
+  const k = game.karts[0];
+  const here = locate(game.track, 120, 36);
+  Object.assign(k, { x: 120, y: 36, angle: 0, speed: 8, gas: true, progress: here.s, seg: Math.round(here.s * game.track.line.length) % game.track.line.length });
+  for (let n = 0; n < 120; n++) ctx.advance(17);
+  assert.ok(k.x <= 128 && k.x > 32, String(k.x));
+});
+
+test('Kart Race keeps its six tracks', () => {
+  const game = new KartRace(fakeCtx());
+  assert.equal(game.tracks, TRACKS);
+  game.start();
+  assert.equal(game.hostView().trackNames.length, 6);
 });
