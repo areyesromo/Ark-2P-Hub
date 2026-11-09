@@ -149,6 +149,10 @@ TRACKS_3D.forEach((def, i) => {
     assert.ok(Road.tightest(L).r >= Road.MIN_RADIUS);
   });
 
+  test(`${def.name}: no bend tighter than half the road (its inside edge would fold over)`, () => {
+    assert.ok(Road.tightest(L).r >= t.width / 2, `r ${Road.tightest(L).r.toFixed(2)}`);
+  });
+
   test(`${def.name}: boxes, coins and boost pads on the road`, () => {
     const spots = [];
     for (const p of t.rows) for (const off of t.boxOffsets) spots.push(pointAt(t, p, off));
@@ -224,4 +228,9 @@ test("the setup view sends each track's own field and road width, for the previe
   const two = new KartRace(fakeCtx());
   two.start();
   assert.deepEqual(two.hostView().trackSizes[0], { field: { w: 32, h: 18 }, width: 3.4 });
+});
+
+test("Kart Race 3D's tagline speaks of its own big tracks", () => {
+  assert.match(kartRace3dDef.tagline, /big tracks/i);
+  assert.doesNotMatch(kartRace3dDef.tagline, /Same racers, tracks/);
 });

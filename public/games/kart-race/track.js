@@ -4,6 +4,8 @@
 (function () {
   const SAMPLES = 240; // points on each track's centre line
   const MIN_RADIUS = 1.7; // no corner tighter than this (a kart at medium speed turns about 1.5)
+  const MIN_RADIUS_BIG = 4; // …on a big track, more than half its road (7 wide), or the inside edge folds over
+  const BIG = 120; // a control loop longer than this round is a big track (Kart Race 3D's)
 
   /** A closed centripetal Catmull-Rom curve through the points (no cusps or spikes), `perSeg` points per span. */
   function spline(points, perSeg) {
@@ -66,10 +68,11 @@
    * tighter than MIN_RADIUS eased out (smoothed just there, a little at a time).
    */
   function centreLine(points, n) {
-    n = n || SAMPLES;
+    n = n || samplesFor(points);
+    const minR = perimeterOf(points) <= BIG ? MIN_RADIUS : MIN_RADIUS_BIG;
     let line = resample(spline(points, 24), n);
     for (let pass = 0; pass < 150; pass++) {
-      const tight = line.map(function (_, i) { return radiusAt(line, i) < MIN_RADIUS; });
+      const tight = line.map(function (_, i) { return radiusAt(line, i) < minR; });
       if (tight.indexOf(true) === -1) break;
       line = resample(line.map(function (p, i) {
         let near = false;
@@ -99,13 +102,19 @@
    * distance on any track.
    */
   function samplesFor(points) {
+    const perimeter = perimeterOf(points);
+    return perimeter <= BIG ? SAMPLES : Math.round(perimeter / 0.3);
+  }
+
+  /** Round the control points' loop. */
+  function perimeterOf(points) {
     let perimeter = 0;
     for (let i = 0; i < points.length; i++) {
       const a = points[i];
       const b = points[(i + 1) % points.length];
       perimeter += Math.hypot(b[0] - a[0], b[1] - a[1]);
     }
-    return perimeter <= 120 ? SAMPLES : Math.round(perimeter / 0.3);
+    return perimeter;
   }
 
   /** Everything about a track's road: the centre line and its cumulative length. */

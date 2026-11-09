@@ -23,6 +23,6 @@ export default {
   id: 'kart-race-3d',
   motion: true, // phones can tilt or move to play (with buttons or a joystick as well)
   name: 'Kart Race 3D',
-  tagline: 'Kart Race in 3D: split-screen, a chase camera behind each kart. Same racers, tracks, items and battles. Best on a PC or Steam Deck.',
+  tagline: 'Kart Race in 3D: split-screen, a chase camera behind each kart, on five big tracks built for 3D. Same racers, items and battles. Best on a PC or Steam Deck.',
   create: (ctx) => new KartRace3D(ctx),
 };

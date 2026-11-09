@@ -16,11 +16,12 @@ export const TRACKS_3D = [
     // From the concept art's top-down map: the start on the bottom straight heading west, the
     // Festival Paddock corner, up to the Arch Sweep, the S-bends past the dam, down through the
     // Mining Cut and back along the bottom.
-    points: around([[36, 61.3], [17.6, 59.8], [13.4, 46], [15.3, 30.6], [23, 23.7], [33, 23], [42.9, 25.3], [53.6, 24.5], [62.8, 16.9], [72.8, 10], [88, 8.4], [101.9, 10.7], [107.2, 21.4], [103.4, 32.2], [99.6, 39.8], [107.2, 44.4], [110.3, 53.6], [107.2, 60.5], [84.3, 61.3], [61.3, 61.3]], 0.78),
+    // The grid is at the far end of the bottom straight, so a pack spreads out before the paddock corner.
+    points: around([[84.3, 61.3], [61.3, 61.3], [36, 61.3], [17.6, 59.8], [13.4, 46], [15.3, 30.6], [23, 23.7], [33, 23], [42.9, 25.3], [53.6, 24.5], [62.8, 16.9], [72.8, 10], [88, 8.4], [101.9, 10.7], [107.2, 21.4], [103.4, 32.2], [99.6, 39.8], [107.2, 44.4], [110.3, 53.6], [107.2, 60.5]], 0.72),
     rows: [0.15, 0.42, 0.6, 0.78],
     coins: 61,
     boosts: [[0.3, 0], [0.85, 0]],
-    features: { arches: [0.217, 0.676] }, // the Arch Sweep and the Mining Cut, where the road runs under rock (scenery: PR 4)
+    features: { arches: [0.396, 0.85] }, // the Arch Sweep and the Mining Cut, where the road runs under rock (scenery: PR 4)
   },
   {
     ...BIG,
@@ -36,7 +37,7 @@ export const TRACKS_3D = [
     name: 'Grand Prix Circuit',
     // A long back straight, a chicane on the right (gentler than Grand Prix's: a pack takes it
     // side by side) and a wiggle along the bottom.
-    points: around([[54, 14.8], [68, 18], [88, 12], [112, 16], [114, 34], [106, 41], [112, 58], [80, 60], [56, 52], [32, 60], [14, 52], [18, 34], [14, 16], [40, 12]], 0.66),
+    points: around([[54, 14.8], [68, 18], [88, 12], [112, 16], [114, 34], [106, 41], [112, 58], [80, 60], [56, 52], [32, 60], [14, 52], [18, 34], [14, 16], [40, 12]], 0.62),
     rows: [0.2, 0.4, 0.7],
     coins: 55,
     boosts: [[0.95, 0], [0.48, 0]],
@@ -45,7 +46,7 @@ export const TRACKS_3D = [
     ...BIG,
     name: 'Serpent Pass',
     // Serpent's loop, with one more wiggle on the top run.
-    points: around([[16, 20], [36, 12], [56, 20], [72, 12], [84, 19], [96, 12], [112, 24], [108, 48], [88, 60], [68, 52], [48, 60], [24, 56], [12, 40]], 0.88),
+    points: around([[16, 20], [36, 12], [56, 20], [72, 12], [84, 19], [96, 12], [112, 24], [108, 48], [88, 60], [68, 52], [48, 60], [24, 56], [12, 40]], 0.85),
     rows: [0.15, 0.45, 0.62, 0.92],
     coins: 76,
     boosts: [[0.33, 0], [0.83, 0]],
