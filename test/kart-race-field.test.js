@@ -140,3 +140,57 @@ test("item odds: the front half rolls the leader's odds, the back half the catch
   assert.equal(game.rollItem(0), Object.keys(ODDS.first).at(-1), 'rank 4 of 8: the front half');
   assert.equal(game.rollItem(2), Object.keys(ODDS.second).at(-1), 'rank 5 of 8: the back half');
 });
+
+/** Everyone out of the way at the start of the lap, except the karts a test uses. */
+function clearRoad(game, except) {
+  game.karts.forEach((k, i) => { if (!except.includes(i)) placeAt(game, i, 0.05 + i * 0.004); });
+}
+
+test('karts bump in a pack: three in a pile all end up apart', () => {
+  const { ctx, game } = field(6);
+  clearRoad(game, [2, 3, 4]);
+  for (const i of [2, 3, 4]) placeAt(game, i, 0.5);
+  const bumps = game.events.bumps;
+  ctx.advance(17);
+  const [a, b, c] = [2, 3, 4].map((i) => game.karts[i]);
+  for (const [p, q] of [[a, b], [a, c], [b, c]]) assert.ok(Math.hypot(p.x - q.x, p.y - q.y) > 0, 'apart');
+  assert.ok(game.events.bumps - bumps >= 2, 'every touching pair counts');
+});
+
+test('a ? box reached by three karts goes to the nearest; a three-way dead heat takes turns', () => {
+  const { ctx, game } = field(6);
+  clearRoad(game, [2, 3, 4]);
+  const at = pointAt(game.track, 0.5);
+  const box = { x: at.x, y: at.y, angle: at.angle, double: false, backAt: 0 };
+  game.boxes = [box];
+  // Three karts round the box at the same distance, each pointing away from it.
+  const ring = (dist) => [2, 3, 4].forEach((i, n) => {
+    const a = (n * 2 * Math.PI) / 3;
+    Object.assign(game.karts[i], { x: box.x + Math.cos(a) * dist, y: box.y + Math.sin(a) * dist, angle: a, items: [] });
+  });
+  const got = [];
+  for (let n = 0; n < 3; n++) {
+    ring(0.6);
+    box.backAt = 0;
+    game.boxCheck(ctx.now());
+    got.push([2, 3, 4].find((i) => game.karts[i].items.length));
+  }
+  assert.deepEqual([...got].sort(), [2, 3, 4], 'each tied kart gets it once');
+  ring(0.6);
+  game.karts[3].x = box.x + (game.karts[3].x - box.x) * 0.8; // kart 3 a little nearer
+  game.karts[3].y = box.y + (game.karts[3].y - box.y) * 0.8;
+  box.backAt = 0;
+  game.boxCheck(ctx.now());
+  assert.equal(game.karts[3].items.length, 1);
+  assert.equal(game.karts[2].items.length + game.karts[4].items.length, 0);
+});
+
+test("a Magnet's slipstream works behind any kart", () => {
+  const { ctx, game } = field(6);
+  clearRoad(game, [0, 5]);
+  placeAt(game, 0, 0.5);
+  const k = game.karts[0];
+  Object.assign(game.karts[5], { x: k.x + Math.cos(k.angle) * 3, y: k.y + Math.sin(k.angle) * 3 });
+  k.magnetUntil = ctx.now() + 10000;
+  assert.equal(game.slipstream(k, ctx.now()), ITEMS.slipSpeed);
+});

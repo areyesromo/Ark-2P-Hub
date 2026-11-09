@@ -680,8 +680,8 @@ export class KartRace {
   }
 
   /**
-   * ? boxes (a Magnet reaches further). Both karts at once: a box they reach in the same tick goes
-   * to the nearer one (a dead heat to each in turn), not always to player 1.
+   * ? boxes (a Magnet reaches further). Karts that reach one in the same tick: it goes to the
+   * nearest (a dead heat to each of the tied karts in turn), not always to player 1.
    */
   boxCheck(now) {
     for (const box of this.boxes) {
@@ -694,8 +694,9 @@ export class KartRace {
         if (!far) near.push({ slot, d });
       });
       if (!near.length) continue;
-      const tie = near.length === 2 && Math.abs(near[0].d - near[1].d) < 1e-9;
-      const slot = tie ? (this.boxTies = (this.boxTies || 0) + 1) % 2 : near.reduce((a, b) => (b.d < a.d ? b : a)).slot;
+      const best = Math.min(...near.map((n) => n.d));
+      const tied = near.filter((n) => n.d - best < 1e-9);
+      const slot = tied.length > 1 ? tied[(this.boxTies = (this.boxTies || 0) + 1) % tied.length].slot : tied[0].slot;
       const k = this.karts[slot];
       box.backAt = now + ITEMS.respawnMs;
       for (let n = Math.min(box.double ? 2 : 1, ITEMS.maxHeld - k.items.length); n > 0; n--) k.items.push(this.rollItem(slot));
@@ -763,14 +764,16 @@ export class KartRace {
     return rollItem(this, slot);
   }
 
-  /** With a Magnet, close behind the rival: their slipstream pulls you along. */
+  /** With a Magnet, close behind any kart: its slipstream pulls you along. */
   slipstream(k, now) {
     if (now >= k.magnetUntil) return 0;
-    const rival = this.karts.find((o) => o !== k);
-    const dx = rival.x - k.x;
-    const dy = rival.y - k.y;
-    const ahead = dx * Math.cos(k.angle) + dy * Math.sin(k.angle) > 0;
-    return ahead && Math.hypot(dx, dy) < ITEMS.slipR ? ITEMS.slipSpeed : 0;
+    const behind = this.karts.some((o) => {
+      if (o === k) return false;
+      const dx = o.x - k.x;
+      const dy = o.y - k.y;
+      return dx * Math.cos(k.angle) + dy * Math.sin(k.angle) > 0 && Math.hypot(dx, dy) < ITEMS.slipR;
+    });
+    return behind ? ITEMS.slipSpeed : 0;
   }
 
   /** Half a kart's length: how far behind it things are dropped, and ahead of it shots start. */
@@ -832,9 +835,15 @@ export class KartRace {
     useItem(this, slot, this.ctx.now());
   }
 
-  /** The karts bump off each other. */
+  /** The karts bump off each other: every pair. */
   bump() {
-    const [a, b] = this.karts;
+    for (let i = 0; i < this.karts.length; i++) {
+      for (let j = i + 1; j < this.karts.length; j++) this.bumpPair(this.karts[i], this.karts[j]);
+    }
+  }
+
+  /** Two karts that touch push apart. */
+  bumpPair(a, b) {
     // Where the two capsules come closest; they push apart along that line.
     const [ax, ay, bx, by, d] = spinesClosest(a, b);
     const min = KART.r * 2;
