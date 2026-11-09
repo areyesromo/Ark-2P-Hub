@@ -79,12 +79,14 @@
       const dt = lastFrame ? Math.min(100, now - lastFrame) : 16;
       lastFrame = now;
       if (things && view) things.update(view, now);
-      const poses = split() ? smooth.at(now) : null;
+      // The karts keep moving while the finish shows (the winner celebrates); the chase cameras
+      // only while the screen is split.
+      const poses = view && view.karts ? smooth.at(now) : null;
       if (!poses) return;
       poses.forEach(function (pose, i) {
-        if (karts[i]) karts[i].set(pose, view.karts[i], now, view.positions && view.positions[i]);
+        if (karts[i] && view.karts[i]) karts[i].set(pose, view.karts[i], now, view.positions && view.positions[i]);
       });
-      aim(poses, dt);
+      if (split()) aim(poses, dt);
     }
 
     function setWorld(v) {

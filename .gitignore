@@ -8,3 +8,6 @@ asset-references/
 .kart-ui-*.txt
 # The ChatGPT art handoff (REQUEST.md / HANDOFF.md): working notes, edited by both assistants
 shared/claude-chatgpt/
+
+# Python bytecode (tools/kart-models runs in Blender)
+__pycache__/
