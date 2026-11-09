@@ -28,11 +28,32 @@ export function kartRaceBot(view, level, rng = Math.random, retries = 0, memory 
   if (view.phase !== 'race' || !view.karts) return memory.kartDriving ? stop(memory) : null;
   const k = view.karts[me];
   if (k.finished) return memory.kartDriving ? stop(memory) : null;
-  const pace = reactionMs(level, rng) * 0.6; // (steering is a running correction: a bit quicker than a fresh reaction)
+  const pace = driveDelayMs(level, rng);
+  const move = driveKart(view, level, rng, memory, 0);
+  return move ? { ...move, botDelayMs: pace } : null;
+}
+
+/** How long a driving decision takes to reach the wheel. */
+export function driveDelayMs(level, rng = Math.random) {
+  return reactionMs(level, rng) * 0.6; // (steering is a running correction: a bit quicker than a fresh reaction)
+}
+
+/**
+ * Drive kart `view.you` for a moment, racing (or battling) like a player: shared by the computer
+ * opponent above and the computer racers in an 8-kart Cup (kart-race.js driveComputers). `lane`:
+ * how far right of the road's middle to hold (negative: left), so a pack doesn't drive in single
+ * file. `memory.sway` (a computer racer's own style, about ±0.1) makes it a little wobblier and
+ * later on the brakes, or steadier and earlier. Returns a drive or item input, or null.
+ */
+export function driveKart(view, level, rng, memory, lane = 0) {
+  const L = LEVEL[level];
+  const me = view.you;
+  const k = view.karts[me];
+  const sway = memory.sway || 0;
   // Items: Easy whenever; the others on a straight, or a banana with you behind.
   if (k.items && k.items.length && rng() < (level === 'easy' ? 0.05 : 0.03)) {
     const straight = !view.road || Math.abs(bend(view.road)) < 0.25;
-    if (level === 'easy' || straight) return { type: 'item', botDelayMs: pace };
+    if (level === 'easy' || straight) return { type: 'item' };
   }
   let steerTo;
   let turn = 0;
@@ -40,7 +61,8 @@ export function kartRaceBot(view, level, rng = Math.random, retries = 0, memory 
     // A point ahead on the road, further the faster it goes.
     const r = view.road;
     const i = Math.min(r.ahead.length - 1, Math.max(1, Math.round((Math.abs(k.speed) / 2.2) * L.look)));
-    const p = r.ahead[i];
+    const a = r.ahead[i];
+    const p = { x: a.x - Math.sin(a.angle) * lane, y: a.y + Math.cos(a.angle) * lane }; // in its lane
     steerTo = Math.atan2(p.y - k.y, p.x - k.x);
     turn = bend(r);
   } else if (view.ring) {
@@ -60,31 +82,31 @@ export function kartRaceBot(view, level, rng = Math.random, retries = 0, memory 
       const p = pts[Math.min(pts.length - 1, Math.max(1, Math.round(Math.abs(k.speed) / 2.2)))];
       steerTo = Math.atan2(p.y - k.y, p.x - k.x);
     }
-    if (armed && Math.abs(angleDiff(Math.atan2(foe.y - k.y, foe.x - k.x), k.angle)) < 0.3 && Math.hypot(foe.x - k.x, foe.y - k.y) < 8) return { type: 'item', botDelayMs: pace };
+    if (armed && Math.abs(angleDiff(Math.atan2(foe.y - k.y, foe.x - k.x), k.angle)) < 0.3 && Math.hypot(foe.x - k.x, foe.y - k.y) < 8) return { type: 'item' };
   } else return null;
   // Stuck against a wall (on the gas but hardly moving for a second): back out, turning.
   const stuck = memory.kartStuck || (memory.kartStuck = { since: null, until: 0 });
   const now = view.raceMs || 0;
-  if (now < stuck.until) return { type: 'drive', steer: stuck.steer, gas: false, brake: true, drift: false, botDelayMs: pace };
+  if (now < stuck.until) return { type: 'drive', steer: stuck.steer, gas: false, brake: true, drift: false };
   if (Math.abs(k.speed) < 0.6) {
     if (stuck.since === null) stuck.since = now;
     else if (now - stuck.since > 1000) {
       stuck.since = null;
       stuck.until = now + 900;
       stuck.steer = angleDiff(steerTo, k.angle) > 0 ? -1 : 1; // (reversing turns it the other way)
-      return { type: 'drive', steer: stuck.steer, gas: false, brake: true, drift: false, botDelayMs: pace };
+      return { type: 'drive', steer: stuck.steer, gas: false, brake: true, drift: false };
     }
   } else stuck.since = null;
   const err = angleDiff(steerTo, k.angle);
-  const steer = Math.max(-1, Math.min(1, err * 2.4 + (rng() * 2 - 1) * L.wobble));
+  const steer = Math.max(-1, Math.min(1, err * 2.4 + (rng() * 2 - 1) * L.wobble * (1 + sway)));
   // Speed for the bend ahead: slower the sharper it is.
   const top = k.top || view.maxSpeed || 8.5;
-  const want = top * (1 - Math.min(0.65, Math.abs(turn) * 0.75)) * (Math.abs(turn) > 0.2 ? L.corner : 1);
+  const want = top * (1 - Math.min(0.65, Math.abs(turn) * 0.75)) * (Math.abs(turn) > 0.2 ? L.corner * (1 + sway * 0.3) : 1);
   const fast = k.speed > want + 0.4;
   const drift = L.drift && Math.abs(turn) > 0.7 && k.speed > top * 0.55;
   const input = { type: 'drive', steer: Math.round(steer * 20) / 20, gas: !fast || drift, brake: fast && !drift, drift };
   memory.kartDriving = true;
-  return { ...input, botDelayMs: pace };
+  return input;
 }
 
 /** How much the road bends over the next stretch (radians). */
