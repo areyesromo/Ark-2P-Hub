@@ -12,6 +12,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - 🏜️ Kart Race 3D races on five big new tracks built for 3D, with a road twice as wide and laps
   of about a minute: Sunset Canyon Rally, Speedway Oval, Grand Prix Circuit, Serpent Pass and
   Zigzag Ridge.
+- 🏁 Kart Race 3D has an 8-kart Cup: you two and six computer racers, five races on the big
+  tracks, points for every place, and the leader starts at the back.
 
 ## 0.1.36
 

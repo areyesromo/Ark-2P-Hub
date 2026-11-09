@@ -51,8 +51,15 @@
     { key: 'arena', title: 'Arena', fmt: function (n) { return n === 0 ? 'Mixed' : arenaNames[n - 1] || 'Arena ' + n; } },
     { key: 'races', title: 'Rounds', fmt: function (n) { return n === 1 ? 'One round' : n === 4 ? 'First to 3' : 'Best of ' + n; } },
   ];
+  // Kart Race 3D: 1v1 or the 8-kart Cup (you two and six computer racers, five races on the big
+  // tracks: only the computers' level and the laps to pick).
+  const FIELD = { key: 'field', title: 'Field', fmt: function (n) { return n ? '🏁 8-kart Cup' : '⚔️ 1v1'; } };
+  const CPU_LEVEL = { key: 'cpu', title: 'Computer', fmt: function (s) { return { easy: 'Easy', normal: 'Normal', hard: 'Hard' }[s] || s; } };
+  const CUP8_ROWS = [FIELD, CPU_LEVEL, ROWS[2]];
   function rowsFor(v) {
-    return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (!v.options || !v.options.field) return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (v.settings.field === 1) return CUP8_ROWS;
+    return [FIELD].concat(v.settings.mode ? BATTLE_ROWS : ROWS);
   }
   const BALLOON_POP_MS = 450;
   Ark.loadScript('/games/kart-race/items.js').then(function () { hudKey = ''; });
@@ -261,6 +268,8 @@
 
   /** A little map of a track (or a ? for Mixed) for the setup screen; in a battle, of the arena. */
   function previewHtml(v, n) {
+    // Kart Race 3D's 8-kart Cup: all five big tracks, one race each.
+    if (v.settings.field === 1) return '<div class="kr-preview mixed"><span>🏁</span><div>The Cup: five races, one on each big track</div></div>';
     if (v.settings.mode) {
       const a = v.settings.arena;
       if (a === 0) return '<div class="kr-preview mixed"><span>🎲</span><div>Mixed: a different arena each round</div></div>';
@@ -1002,12 +1011,13 @@
         arenaNames = v.arenaNames || arenaNames;
         // The mode changed the settings rows (5 for a race, 3 for a battle): a controller on its
         // racer or tyres row stays there, one on a settings row stays on the list.
-        if (view && v.settings && view.settings && v.settings.mode !== view.settings.mode) {
+        // The settings rows changed (Mode, or Kart Race 3D's Field): a controller on its racer or
+        // tyres row stays there, one on a settings row stays on the list.
+        if (view && v.settings && view.settings && rowsFor(view).length !== rowsFor(v).length) {
           const was = rowsFor(view).length;
           const now = rowsFor(v).length;
           Object.keys(pads).forEach(function (slot) {
-            const row = pads[slot].row || 0;
-            pads[slot].row = row >= was ? now + (row - was) : Math.min(row, now - 1);
+            pads[slot].row = remapRow(pads[slot].row || 0, was, now);
           });
           overlayKey = '';
         }
@@ -1036,6 +1046,11 @@
     };
   }
 
-  window.ArkKartTV = { make: make };
+  /** A controller's setup row when the settings rows go from `was` to `now` (racer and tyres follow them). */
+  function remapRow(row, was, now) {
+    return row >= was ? now + (row - was) : Math.min(row, now - 1);
+  }
+
+  window.ArkKartTV = { make: make, rowsFor: rowsFor, remapRow: remapRow };
   Ark.register('host', 'kart-race', make({}));
 })();

@@ -196,3 +196,24 @@
 @media (prefers-reduced-motion: reduce) {
   .kr3d-phone *, .kr-3d * { animation: none !important; transition: none !important; }
 }
+
+/* The 8-kart Cup: the running order down each half's outer edge, the computers on the course map,
+   and the cup's points table. */
+.kr3d-order { position: absolute; top: 6.4rem; margin: 0; padding: .3rem; list-style: none; background: var(--panel); border-radius: var(--r-sm); font-size: var(--fs-sm); line-height: 1.5; max-width: 9rem; }
+.kr3d-order[hidden] { display: none; }
+.kr3d-driver.p1 .kr3d-order { left: .8rem; }
+.kr3d-driver.p2 .kr3d-order { right: .8rem; }
+.kr3d-order li { padding: 0 .4rem; border-radius: var(--r-sm); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kr3d-order li b { display: inline-block; min-width: 1.1em; color: var(--text); }
+.kr3d-order li.p1 { color: var(--p1); font-weight: 800; }
+.kr3d-order li.p2 { color: var(--p2); font-weight: 800; }
+.kr3d-order li.me { background: var(--bg); }
+.kr3d-map .kr3d-map-cpus circle { fill: var(--muted); stroke: var(--bg); stroke-width: .2; }
+.kr3d-cup { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.kr3d-cup th { color: var(--muted); font-weight: 800; text-align: left; padding: .3rem .5rem; }
+.kr3d-cup td { padding: .3rem .5rem; border-top: 1px solid var(--line); }
+.kr3d-cup td small { color: var(--muted); font-weight: 800; }
+.kr3d-cup .kr3d-total { font-weight: 900; font-variant-numeric: tabular-nums; }
+.kr3d-cup tr.p1 td { color: var(--p1); font-weight: 800; }
+.kr3d-cup tr.p2 td { color: var(--p2); font-weight: 800; }
+.kr3d-cpu-top { color: var(--muted); margin: .2rem 0 .6rem; }

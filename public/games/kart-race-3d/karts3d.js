@@ -1,6 +1,7 @@
 // Kart Race 3D's karts: until a racer has a 3D model, a placeholder built from its kart shape
 // (the 2D outlines) in the racer's colour, with wheels and a driver in the player's colour. It
-// leans into bends, spins out and shrinks. KRKarts.make(THREE, racerId, color) -> { obj, set(pose, k, now), dispose() }.
+// leans into bends, spins out and shrinks. A player's kart can carry a floating label ("P1") so you can
+// find it in a pack. KRKarts.make(THREE, racerId, color, label?) -> { obj, set(pose, k, now), dispose() }.
 (function () {
   // The 2D kart outlines (public/games/kart-race/host.js SHAPES), nose at +x.
   const SHAPES = {
@@ -15,7 +16,30 @@
   const LEAN = { max: 0.15, perTurn: 0.06 }; // roll in a bend: radians per radian-a-second of turning
   const SPIN_MS = 600; // a spin-out turns the kart once round in this long
 
-  function make(THREE, racerId, color) {
+  /** A label floating over a kart: the text on a rounded tag in `color`, always facing the camera. */
+  function tag(THREE, text, color) {
+    const c = document.createElement('canvas');
+    c.width = 128;
+    c.height = 64;
+    const g = c.getContext('2d');
+    g.fillStyle = color;
+    g.beginPath();
+    g.roundRect(4, 4, 120, 56, 18);
+    g.fill();
+    g.fillStyle = '#0b0d17';
+    g.font = 'bold 40px sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.fillText(text, 64, 34);
+    const tex = new THREE.CanvasTexture(c);
+    tex.colorSpace = THREE.SRGBColorSpace;
+    const sprite = new THREE.Sprite(new THREE.SpriteMaterial({ map: tex, depthTest: false }));
+    sprite.scale.set(0.9, 0.45, 1);
+    sprite.renderOrder = 10; // drawn over the karts in front of it
+    return sprite;
+  }
+
+  function make(THREE, racerId, color, label) {
     const racer = window.ArkKartRacers.racer(racerId);
     const pts = SHAPES[racer.shape] || SHAPES.classic;
     const xs = pts.map(function (p) { return p[0]; });
@@ -50,12 +74,18 @@
     body.add(head);
     const obj = new THREE.Group();
     obj.add(body);
+    const marker = label ? tag(THREE, label, color) : null;
+    if (marker) {
+      marker.position.set(-0.15, 0.9 + 0.22 + 0.9, 0); // above the head
+      obj.add(marker); // (not in the body: it doesn't lean or spin)
+    }
 
     let last = null; // { angle, t }: for how fast it's turning
     let lean = 0;
     return {
       obj: obj,
       racer: racerId,
+      marker: marker,
       set: function (pose, k, now) {
         obj.position.set(pose.x, window.ArkKartGeom.heightAt(pose.x, pose.y), pose.y);
         obj.rotation.y = -pose.angle; // field y is scene z
@@ -72,6 +102,10 @@
       dispose: function () {
         [bodyGeo, wheelGeo, torsoGeo, headGeo].forEach(function (g) { g.dispose(); });
         mats.forEach(function (m) { m.dispose(); });
+        if (marker) {
+          marker.material.map.dispose();
+          marker.material.dispose();
+        }
       },
     };
   }

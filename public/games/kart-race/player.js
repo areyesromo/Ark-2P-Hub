@@ -26,8 +26,15 @@
     { key: 'arena', title: 'Arena', fmt: function (n) { return n === 0 ? 'Mixed' : arenaNames[n - 1] || 'Arena ' + n; } },
     { key: 'races', title: 'Rounds', fmt: function (n) { return n === 1 ? 'One round' : n === 4 ? 'First to 3' : 'Best of ' + n; } },
   ];
+  // Kart Race 3D: 1v1 or the 8-kart Cup (you two and six computer racers, five races on the big
+  // tracks: only the computers' level and the laps to pick).
+  const FIELD = { key: 'field', title: 'Field', fmt: function (n) { return n ? '🏁 8-kart Cup' : '⚔️ 1v1'; } };
+  const CPU_LEVEL = { key: 'cpu', title: 'Computer', fmt: function (s) { return { easy: 'Easy', normal: 'Normal', hard: 'Hard' }[s] || s; } };
+  const CUP8_ROWS = [FIELD, CPU_LEVEL, ROWS[2]];
   function rowsFor(v) {
-    return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (!v.options || !v.options.field) return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (v.settings.field === 1) return CUP8_ROWS;
+    return [FIELD].concat(v.settings.mode ? BATTLE_ROWS : ROWS);
   }
 
   /** 🎈🎈🎈, popped ones faded. */
@@ -377,6 +384,18 @@
     const waiting = function (what) {
       return ready[me] ? 'Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: ' + what : what;
     };
+    if ((v.phase === 'standings' || v.phase === 'over') && v.cupPoints) {
+      // Kart Race 3D's 8-kart Cup: where you came, both your points and your place in the table.
+      const pts = v.cupPoints;
+      const table = 1 + pts.filter(function (p, i) { return p > pts[me] || (p === pts[me] && i < me); }).length;
+      const them = 'Them'; // (a phone's view has no player list)
+      const line = 'You: ' + pts[me] + ' pts · ' + them + ': ' + pts[1 - me] + ' pts · ' + ordinal(table) + ' in the table';
+      if (v.phase === 'over') {
+        return '<span class="big ' + (v.winner === me ? 'won">You win the cup! 🏆' : 'lost">They win the cup') + '</span><br>' + line + '<br>' + waiting('press Rematch for another cup.');
+      }
+      const place = v.history[v.history.length - 1].places[me];
+      return '<span class="big">Race ' + v.race + ': ' + ordinal(place) + '</span><br>' + line + '<br>Next: ' + esc(v.next.track) + ' · ' + waiting('press Ready for the next race.');
+    }
     if (v.phase === 'standings') {
       const last = v.history[v.history.length - 1];
       if (v.battle || last.winner === null) {
@@ -406,17 +425,25 @@
       return '<span class="big">' + balloonsHtml(k.balloons, of) + '</span><br>Them ' + balloonsHtml(v.karts[1 - me].balloons, of) + ' · ⏱ ' + Math.floor(secs / 60) + ':' + ('0' + (secs % 60)).slice(-2) +
         (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : k.spin ? ' · <span class="lost">💥 Popped!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
     }
-    const pos = v.positions[me] === 1 ? '1st' : '2nd';
+    const pos = v.karts.length > 2 ? ordinal(v.positions[me]) + ' of ' + v.karts.length : v.positions[me] === 1 ? '1st' : '2nd';
     if (v.phase === 'countdown') {
       let dots = '';
       for (let i = 1; i <= 5; i++) dots += '<i class="' + (v.lights >= i ? 'on' : '') + '"></i>';
       return '<span class="big kr-lights">' + dots + '</span><br>' + (k.jumped ? '<span class="lost">Jump start! 1 s penalty</span>' : 'Wait for the lights to go out, then GAS') + '<br>' + esc(v.track.name) + ' · ' + v.laps + ' laps';
+    }
+    if (v.phase === 'finish' && v.cupPoints) {
+      // The 8-kart Cup: the first player home may not have won (computers can be ahead): where you came.
+      return '<span class="big' + (k.finished ? '">🏁 You finish ' : '">Finish it! ') + pos + '</span>';
     }
     if (v.phase === 'finish' && v.result) {
       return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>' +
         (v.newRecord && v.newRecord.slot === me ? '<br><span class="won">⏱️ New lap record!</span>' : '');
     }
     return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : v.newRecord && v.newRecord.slot === me ? ' · <span class="won">⏱️ New lap record!</span>' : k.reaction !== null && k.reaction !== undefined ? ' · <span class="won">⚡ Reaction ' + (k.reaction / 1000).toFixed(2) + ' s</span>' : k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
+  }
+
+  function ordinal(n) {
+    return n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
   }
 
   function clock(ms) {
@@ -468,7 +495,7 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.newRecord && v.newRecord.slot, v.history && v.history.length, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result,
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.newRecord && v.newRecord.slot, v.history && v.history.length, v.cupPoints, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result,
       v.battle && v.karts && [v.karts[0].balloons, v.karts[1].balloons, Math.ceil(v.battle.msLeft / 1000)]]);
     if (key === textKey) return;
     textKey = key;
@@ -484,7 +511,7 @@
     const standings = v.phase === 'standings';
     els.go.classList.toggle('hidden', !setup && !standings);
     const ready = Boolean(v.ready && v.ready[v.you]);
-    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : standings ? 'Ready for the next ' + (v.settings.mode ? 'round' : 'race') : 'Ready';
+    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : standings ? 'Ready for the next ' + (v.battle ? 'round' : 'race') : 'Ready';
     els.go.classList.toggle('on', ready && (setup || standings));
     els.controls.classList.toggle('hidden', between || standings);
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
@@ -620,6 +647,6 @@
       },
     };
   }
-  window.ArkKartPhone = { make: make };
+  window.ArkKartPhone = { make: make, rowsFor: rowsFor };
   Ark.register('player', 'kart-race', make({}));
 })();
