@@ -83,6 +83,12 @@
         const half = v.trackWidth / 2;
         svg.querySelector('.kr3d-map-start').setAttribute('d', 'M' + (p[0] - dy / len * half) + ',' + (p[1] + dx / len * half) + 'L' + (p[0] + dy / len * half) + ',' + (p[1] - dx / len * half));
         svg.querySelector('.kr3d-map-start').style.display = v.battle ? 'none' : '';
+        // The dots and their numbers in proportion to the field (1.4 and 2 on Kart Race's 32-wide one).
+        svg.querySelectorAll('circle').forEach(function (c) { c.setAttribute('r', v.field.w / 23); });
+        svg.querySelectorAll('text').forEach(function (t) {
+          t.style.fontSize = v.field.w / 16 + 'px';
+          t.setAttribute('dy', v.field.w / 80);
+        });
       }
       [0, 1].forEach(function (slot) {
         const k = v.karts[slot];

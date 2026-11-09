@@ -272,11 +272,15 @@
     }
     if (n === 0) return '<div class="kr-preview mixed"><span>🎲</span><div>Mixed: a different track each race</div></div>';
     if (!Road || !v.trackPoints) return '';
-    if (!previews[n]) previews[n] = Road.svgPath(Road.centreLine(v.trackPoints[n - 1]));
-    const f = v.field;
+    // Each track at its own size (Kart Race 3D's big ones too), cached by name: Kart Race and Kart
+    // Race 3D share this script, and their track number n isn't the same track.
+    const name = trackNames[n - 1] || '';
+    if (!previews['t' + name]) previews['t' + name] = Road.svgPath(Road.centreLine(v.trackPoints[n - 1]));
+    const size = (v.trackSizes && v.trackSizes[n - 1]) || { field: v.field, width: v.trackWidth };
+    const f = size.field;
     return '<div class="kr-preview"><svg viewBox="0 0 ' + f.w + ' ' + f.h + '"><rect width="' + f.w + '" height="' + f.h + '" rx="0.8"/>' +
-      '<path class="kerb" d="' + previews[n] + '" stroke-width="' + (v.trackWidth + 0.5) + '"/>' +
-      '<path class="road" d="' + previews[n] + '" stroke-width="' + v.trackWidth + '"/></svg><div>' + esc(trackNames[n - 1] || '') + '</div></div>';
+      '<path class="kerb" d="' + previews['t' + name] + '" stroke-width="' + (size.width + 0.5) + '"/>' +
+      '<path class="road" d="' + previews['t' + name] + '" stroke-width="' + size.width + '"/></svg><div>' + esc(name) + '</div></div>';
   }
 
   /** The leaderboard: one row per race (track, winner, both times), then the wins. */

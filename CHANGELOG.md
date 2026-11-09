@@ -9,6 +9,9 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - 🏎️ Kart Race 3D has a new garage, player-by-player racing HUD, a course map, clearer item and
   drift-boost displays, and a podium with times and ready states. Phone controls show item names
   and when to release a charged drift. Loading now has feedback and retry (controller X).
+- 🏜️ Kart Race 3D races on five big new tracks built for 3D, with a road twice as wide and laps
+  of about a minute: Sunset Canyon Rally, Speedway Oval, Grand Prix Circuit, Serpent Pass and
+  Zigzag Ridge.
 
 ## 0.1.36
 

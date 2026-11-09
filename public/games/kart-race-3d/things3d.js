@@ -16,14 +16,14 @@
       group.add(m);
       kinds[key] = m;
     };
-    add('boxes', new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshNormalMaterial(), 40);
-    add('doubles', new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshLambertMaterial({ color: 0xfbbf24 }), 20);
-    add('coins', new THREE.CylinderGeometry(0.2, 0.2, 0.06, 16).rotateX(Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xfacc15 }), 80);
-    add('bananas', new THREE.CapsuleGeometry(0.1, 0.3, 4, 8).rotateZ(Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xfde047 }), 20);
+    add('boxes', new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshNormalMaterial(), 80);
+    add('doubles', new THREE.BoxGeometry(0.5, 0.5, 0.5), new THREE.MeshLambertMaterial({ color: 0xfbbf24 }), 30);
+    add('coins', new THREE.CylinderGeometry(0.2, 0.2, 0.06, 16).rotateX(Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xfacc15 }), 200);
+    add('bananas', new THREE.CapsuleGeometry(0.1, 0.3, 4, 8).rotateZ(Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xfde047 }), 40);
     add('webs', new THREE.CircleGeometry(0.6, 16).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0xf1f5f9, transparent: true, opacity: 0.7 }), 10);
     add('oils', new THREE.CircleGeometry(0.7, 16).rotateX(-Math.PI / 2), new THREE.MeshLambertMaterial({ color: 0x1e1b4b, transparent: true, opacity: 0.8 }), 10);
-    add('shots', new THREE.SphereGeometry(0.25, 12, 8), new THREE.MeshLambertMaterial({ color: 0xffffff }), 10);
-    add('blasts', new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.55 }), 6);
+    add('shots', new THREE.SphereGeometry(0.25, 12, 8), new THREE.MeshLambertMaterial({ color: 0xffffff }), 20);
+    add('blasts', new THREE.SphereGeometry(1, 16, 12), new THREE.MeshBasicMaterial({ color: 0xf97316, transparent: true, opacity: 0.55 }), 10);
     const color = new THREE.Color();
 
     /** Place one kind's instances: each item gives { x, y, h, spin, scale, color }. */
