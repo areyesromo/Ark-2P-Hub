@@ -8,6 +8,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - 🛞 Kart Race 3D: Rex's 3D wheels look like his kart's wheels now, with a black tyre, a yellow rim and a
   red hub, and they stay clean as they spin.
+- 👀 Kart Race 3D: look behind you and glance left or right while you drive: hold Look back on
+  the phone, or use a controller's right stick.
 
 ## 0.1.37
 
