@@ -36,7 +36,7 @@ export function kartRaceBot(view, level, rng = Math.random, retries = 0, memory 
   const k = view.karts[me];
   if (k.finished) return memory.kartDriving ? stop(memory) : null;
   const pace = driveDelayMs(level, rng);
-  const move = driveKart(view, level, rng, memory, 0);
+  const move = driveKart(view, level, rng, memory, 0, true);
   return move ? { ...move, botDelayMs: pace } : null;
 }
 
@@ -52,7 +52,7 @@ export function driveDelayMs(level, rng = Math.random) {
  * file. `memory.sway` (a computer racer's own style, about ±0.1) makes it a little wobblier and
  * later on the brakes, or steadier and earlier. Returns a drive or item input, or null.
  */
-export function driveKart(view, level, rng, memory, lane = 0) {
+export function driveKart(view, level, rng, memory, lane = 0, giveRoom = false) {
   const L = LEVEL[level];
   const me = view.you;
   const k = view.karts[me];
@@ -67,14 +67,15 @@ export function driveKart(view, level, rng, memory, lane = 0) {
   if (view.road) {
     // A point ahead on the road, further the faster it goes.
     const r = view.road;
-    // (On a big road, at least 5 ahead even when slow: a point 1 ahead of a kart off the middle,
+    // (On a big road, the point 5 ahead or further even when slow: a point 1 ahead of a kart off the middle,
     // as on the grid, is a sharp angle away, and it would weave there.)
     const nearest = r.length > BIG_ROAD ? 3 : 1;
     const i = Math.min(r.ahead.length - 1, Math.max(nearest, Math.round((Math.abs(k.speed) / 2.2) * L.look)));
     const a = r.ahead[i];
-    // On a big road, keep to its own side of a kart alongside: two aiming at the same point grind
-    // together, and every bump costs speed.
-    if (r.length > BIG_ROAD) lane += besideShift(view, k, a.angle);
+    // The seat computer on a big road keeps to its own side of a kart alongside: two aiming at the
+    // same point grind together, and every bump costs speed. (The Cup's racers get their line,
+    // room included, from driveComputers.)
+    if (giveRoom && r.length > BIG_ROAD) lane += besideShift(view, k, a.angle);
     const p = { x: a.x - Math.sin(a.angle) * lane, y: a.y + Math.cos(a.angle) * lane }; // in its lane
     steerTo = Math.atan2(p.y - k.y, p.x - k.x);
     turn = bend(r);
@@ -121,7 +122,7 @@ export function driveKart(view, level, rng, memory, lane = 0) {
   if (big) {
     // Off the gas above its pace (it coasts down, keeping a boost's speed for a while); on the
     // brakes only for a bend it can't turn at this speed.
-    const bendLimit = bigRoadBend(view.road, turn, L, sway);
+    const bendLimit = bigRoadBend(view.road, turn, k.turnRate || TURN_RATE, L, sway);
     brake = k.speed > bendLimit + 0.4 && !drift;
     gas = !brake && (k.speed < top * L.pace * (1 + sway * 0.1) || drift);
   } else {
@@ -135,10 +136,6 @@ export function driveKart(view, level, rng, memory, lane = 0) {
   return input;
 }
 
-/**
- * On a big road, the fastest it can take the bend ahead: the road's curvature at this speed against
- * a kart's turn rate, with the level's margin (no limit on a straight).
- */
 /** Sideways room to give a kart alongside (within 2 ahead or behind, 2.5 across): 2 away from it. */
 function besideShift(view, k, roadAngle) {
   const sx = -Math.sin(roadAngle);
@@ -155,11 +152,15 @@ function besideShift(view, k, roadAngle) {
   return shift;
 }
 
-function bigRoadBend(road, turn, L, sway) {
+/**
+ * On a big road, the fastest it can take the bend ahead: the road's curvature against this racer's
+ * turn rate, with the level's margin (no limit on a straight).
+ */
+function bigRoadBend(road, turn, rate, L, sway) {
   const a = road.ahead[0];
   const b = road.ahead[road.ahead.length - 1];
   const curve = Math.abs(turn) / (Math.hypot(b.x - a.x, b.y - a.y) || 1); // radians a unit of road
-  return curve > 1e-6 ? (TURN_RATE * L.corner * (1 + sway * 0.3)) / curve : Infinity;
+  return curve > 1e-6 ? (rate * L.corner * (1 + sway * 0.3)) / curve : Infinity;
 }
 
 /** How much the road bends over the next stretch (radians). */

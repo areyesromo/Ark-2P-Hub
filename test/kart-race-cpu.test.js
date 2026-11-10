@@ -207,3 +207,24 @@ TRACKS_3D.forEach((def, t) => {
     assert.ok(laps.hard < laps.normal && laps.normal < laps.easy, JSON.stringify(laps));
   });
 });
+
+test('two seat computers side by side on a big road give each other room instead of grinding', () => {
+  // Same racer, same driving: both aim at the same middle, and used to rub along at a crawl.
+  const ctx = fakeCtx();
+  const game = new KartRace3D(ctx, () => 0.5);
+  game.start();
+  for (const [key, value] of Object.entries({ track: 2, laps: 3, items: 0 })) game.onInput(0, { type: 'setting', key, value });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  const memory = [{}, {}];
+  for (let ms = 0; ms < 15000; ms += 17) {
+    for (const slot of [0, 1]) {
+      const m = kartRaceBot(game.botView(slot), 'normal', () => 0.5, 0, memory[slot]);
+      if (m && m.type === 'drive') game.onInput(slot, { type: 'drive', steer: m.steer, gas: m.gas, brake: m.brake, drift: m.drift });
+    }
+    ctx.advance(17);
+  }
+  for (const k of game.karts) assert.ok(k.speed > 6, `speed ${k.speed}`);
+  assert.ok(game.events.bumps < 20, `bumps ${game.events.bumps}`);
+});
