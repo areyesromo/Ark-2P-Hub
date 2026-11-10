@@ -414,8 +414,10 @@ export class KartRace {
     // This track's lap record (from the stats, if the room keeps any): shown on the TV, and
     // beating it is news.
     // Laps are saved only when the series ends, so a record set earlier in it counts too.
-    const saved = this.ctx.lapRecord && !this.battle ? this.ctx.lapRecord(this.track.name) : null;
-    const series = this.seriesRecords[this.track.name];
+    // (A track's records can go by another name: the bigger 3D tracks start fresh.)
+    const recordName = this.track.recordName || this.track.name;
+    const saved = this.ctx.lapRecord && !this.battle ? this.ctx.lapRecord(recordName) : null;
+    const series = this.seriesRecords[recordName];
     const rec = saved && (!series || saved.ms <= series.ms) ? saved : series;
     this.record = rec ? { name: rec.name, ms: rec.ms } : null;
     this.newRecord = null; // { slot, name, ms, at } for a moment after it's beaten
@@ -453,7 +455,8 @@ export class KartRace {
       const p = 0.012 + ((rows - 1 - Math.floor(j / 2)) * g.rowGap) / this.track.length;
       return { ...pointAt(this.track, p, j % 2 ? g.side : -g.side), p };
     };
-    const homeLane = (slot) => (order.indexOf(slot) % 2 ? CPU.lanes[CPU.lanes.length - 1] : CPU.lanes[0]);
+    const lanes = this.track.lanes || CPU.lanes; // (wider on Kart Race 3D's 12-wide road)
+    const homeLane = (slot) => (order.indexOf(slot) % 2 ? lanes[lanes.length - 1] : lanes[0]);
     this.karts = field.map((pick, slot) => {
       const p = grid(slot);
       // (A player's held controls carry over; a computer racer starts with its hands off.)
@@ -608,7 +611,7 @@ export class KartRace {
       const blocked = close || ahead.some((o) => o.speed < k.speed - 0.3);
       if (blocked && now >= d.laneUntil) {
         const free = (lane) => !this.karts.some((o) => o !== k && Math.abs(along(o)) < 2.5 && Math.abs(this.offset(o) - lane) < 1.4);
-        const others = CPU.lanes.filter((l) => l !== d.lane && free(l));
+        const others = (this.track.lanes || CPU.lanes).filter((l) => l !== d.lane && free(l));
         if (others.length) {
           d.lane = others.reduce((a, b) => (Math.abs(b - d.lane) < Math.abs(a - d.lane) ? b : a));
           d.laneUntil = now + CPU.passMs;
@@ -1060,11 +1063,11 @@ export class KartRace {
     if (slot > 1) return; // records are the players' (a computer racer's laps don't count)
     const name = this.ctx.players[slot].name;
     if (!this.record) {
-      this.record = this.seriesRecords[this.track.name] = { name, ms };
+      this.record = this.seriesRecords[this.track.recordName || this.track.name] = { name, ms };
       return;
     }
     if (ms >= this.record.ms) return;
-    this.record = this.seriesRecords[this.track.name] = { name, ms };
+    this.record = this.seriesRecords[this.track.recordName || this.track.name] = { name, ms };
     this.newRecord = { slot, name, ms, at: now };
     this.events.records++;
   }
@@ -1085,6 +1088,7 @@ export class KartRace {
     this.history.push({
       race: this.race,
       track: this.track.name,
+      record: this.track.recordName || this.track.name, // the name its lap records go under
       winner: this.result.winner,
       times: this.karts.map((k) => (k.finishedAt !== null && !this.battle ? k.finishedAt - this.raceStart : null)),
       balloons: this.battle ? this.karts.map((k) => k.balloons) : null,
@@ -1311,7 +1315,7 @@ export class KartRace {
       reactionTimes: (this.history || []).flatMap((h) => (h.react || []).map((ms, slot) => ({ slot, ms })).filter((r) => r.ms !== null)),
       record: racing && this.record ? { name: this.record.name, ms: this.record.ms } : null,
       newRecord: racing && this.newRecord && now - this.newRecord.at < REACTION_SHOW_MS ? { slot: this.newRecord.slot, name: this.newRecord.name, ms: this.newRecord.ms } : null,
-      lapTimes: (this.history || []).flatMap((h) => (h.best || []).map((ms, slot) => ({ track: h.track, slot, ms })).filter((l) => l.ms !== null)),
+      lapTimes: (this.history || []).flatMap((h) => (h.best || []).map((ms, slot) => ({ track: h.record || h.track, slot, ms })).filter((l) => l.ms !== null)),
       cup: this.cup || this.cup8,
       suddenDeath: this.cup && this.race > 4 && this.phase !== 'standings',
       // On the leaderboard between races: what's next.

@@ -283,3 +283,42 @@ test('a battle arena has no scenery', () => {
   assert.ok(game.battle);
   assert.equal(game.hostView().track.scenery, null);
 });
+
+// ---- the big tracks in a race: lanes, laps and records ----
+
+test('computer racers hold the wide lanes on a big track', () => {
+  const { game } = racingOn(KartRace3D, { field: 1 });
+  assert.equal(game.karts.length, 8);
+  for (const k of game.karts.slice(2)) assert.ok([-4.1, 4.1].includes(k.driver.home), String(k.driver.home));
+});
+
+test('the 2D game keeps its lanes and record names', () => {
+  const t = buildTrack(0);
+  assert.deepEqual(t.lanes, [-2.4, 0, 2.4]);
+  assert.equal(t.recordName, TRACKS[0].name);
+});
+
+test('a 3D lap record is looked up and saved under its wide name', () => {
+  const asked = [];
+  const ctx = fakeCtx();
+  ctx.lapRecord = (track) => (asked.push(track), null);
+  const { game } = racingOn(KartRace3D, { track: 2 }, ctx);
+  assert.equal(game.track.name, 'Speedway Oval');
+  assert.ok(asked.includes('Speedway Oval (wide)'), JSON.stringify(asked));
+  game.karts[0].bestLap = 51000;
+  game.result = { winner: 0, time: 1000 };
+  game.endRace();
+  const laps = game.hostView().lapTimes || [];
+  assert.ok(laps.some((l) => l.track === 'Speedway Oval (wide)' && l.ms === 51000), JSON.stringify(laps));
+});
+
+test('Kart Race 3D races 3 laps by default; Kart Race keeps 5', () => {
+  assert.equal(new KartRace3D(fakeCtx()).settings.laps, 3);
+  assert.equal(new KartRace(fakeCtx()).settings.laps, 5);
+});
+
+test('a saved 5-lap setting still loads as 5', () => {
+  const ctx = fakeCtx();
+  ctx.saved = { settings: { laps: 5 } };
+  assert.equal(new KartRace3D(ctx).settings.laps, 5);
+});
