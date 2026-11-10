@@ -90,7 +90,8 @@
   let api = null;
   let view = null;
   let textKey = '';
-  const held = { left: false, right: false, brake: false, gas: false, drift: false };
+  const held = { left: false, right: false, brake: false, gas: false, drift: false, back: false };
+  let lookX = 0; // Kart Race 3D: the look strip, -1 (left) .. 1 (right)
   let analog = 0; // steering from the stick, slide or tilt: -1..1
   let stickBrake = false; // stick pulled down
   let stickGas = false; // stick pushed up
@@ -109,10 +110,16 @@
     const brake = held.brake || stickBrake;
     const gas = held.gas || stickGas;
     const drift = held.drift;
-    const key = steer + '|' + gas + '|' + brake + '|' + drift;
+    const key = steer + '|' + gas + '|' + brake + '|' + drift + (threeD ? '|' + lookX + '|' + held.back : '');
     if (!els || key === sent) return;
     sent = key;
-    api.send({ type: 'drive', steer: steer, gas: gas, brake: brake, drift: drift });
+    const input = { type: 'drive', steer: steer, gas: gas, brake: brake, drift: drift };
+    if (threeD) {
+      // Looking round (the 3D TV's camera): the strip's glance and the Look back button.
+      input.look = lookX;
+      input.back = held.back;
+    }
+    api.send(input);
     if (els.left) {
       els.left.classList.toggle('on', held.left);
       els.right.classList.toggle('on', held.right);
@@ -123,7 +130,8 @@
   }
 
   function release() {
-    held.left = held.right = held.brake = held.gas = held.drift = false;
+    held.left = held.right = held.brake = held.gas = held.drift = held.back = false;
+    lookX = 0;
     analog = 0;
     stickBrake = stickGas = false;
     send();
@@ -556,6 +564,7 @@
           '<div class="kr-controls">' +
           '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
           '<div class="kr-steer"></div>' +
+          (threeD ? '<div class="kr-look"><div class="kr-lookstrip">◀ look ▶</div><button class="kr-btn lookback">👀 LOOK BACK</button></div>' : '') +
           '<div class="kr-bottom"><button class="kr-btn item">🎁</button><button class="kr-btn drift">DRIFT</button>' +
           '<button class="kr-btn brake">BRAKE<small>hold: reverse</small></button><button class="kr-btn gas">GAS</button></div>' +
           '</div>' +
@@ -609,6 +618,17 @@
         holdButton(els.brake, 'brake');
         holdButton(els.gas, 'gas');
         holdButton(els.drift, 'drift');
+        if (threeD) {
+          holdButton(root.querySelector('.lookback'), 'back');
+          // A finger on the strip glances that way (its middle is straight ahead); lifting it looks ahead again.
+          dragPad(root.querySelector('.kr-lookstrip'), function (pt) {
+            lookX = Math.round(clamp(pt.x / (pt.w / 2)) * 10) / 10;
+            send();
+          }, function () {
+            lookX = 0;
+            send();
+          });
+        }
         els.item.addEventListener('pointerdown', function (e) {
           e.preventDefault();
           const mine = view && view.karts && view.karts[view.you];
@@ -639,7 +659,8 @@
         if (fit) fit.disconnect();
         stopTilt();
         root = els = view = host = fit = null;
-        held.left = held.right = held.brake = held.gas = held.drift = false;
+        held.left = held.right = held.brake = held.gas = held.drift = held.back = false;
+    lookX = 0;
         analog = 0;
         stickBrake = stickGas = false;
         sent = textKey = '';

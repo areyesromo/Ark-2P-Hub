@@ -116,6 +116,9 @@
 .kr3d-phone .status { padding: .6rem .8rem; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
 .kr3d-phone .kr-btn { border-radius: var(--r-md); }
 .kr3d-phone .kr-btn.on { outline: 3px solid var(--me); outline-offset: -4px; }
+.kr3d-phone .kr-look { display: flex; gap: .5rem; margin: .4rem 0; }
+.kr3d-phone .kr-lookstrip { flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--muted); font-size: var(--fs-sm); touch-action: none; user-select: none; }
+.kr3d-phone .kr-btn.lookback { flex: 0 0 auto; min-height: 44px; padding: 0 .8rem; font-size: var(--fs-sm); }
 .kr3d-phone .kr-btn.gas { background: var(--me); color: var(--on-bright); border-color: var(--me); }
 .kr3d-phone .kr-btn.drift { position: relative; background: linear-gradient(to right, var(--btn) var(--charge, 0%), var(--bg-2) var(--charge, 0%)); }
 .kr3d-phone .kr-btn small { display: block; font-size: clamp(.65rem, 2vw, .9rem); margin-top: .3rem; }
