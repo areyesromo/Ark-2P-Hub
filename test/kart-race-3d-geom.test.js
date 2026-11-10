@@ -134,3 +134,38 @@ test('wall lines: a barrier shared by two stretches is drawn once, each side up 
   }
   assert.ok(shared > 100, 'Hairpins has long shared stretches');
 });
+
+test('chase with no yaw is the same camera', () => {
+  const p = { x: 10, y: 9, angle: 0.7 };
+  assert.deepEqual(G.chase(p, G.CAM), G.chase(p, G.CAM, 0));
+});
+
+test('looking back puts the eye ahead of the kart, looking back at it', () => {
+  const c = G.chase({ x: 10, y: 10, angle: 0 }, G.CAM, Math.PI);
+  assert.ok(c.eye[0] > 10 && c.look[0] < 10, JSON.stringify(c));
+});
+
+test("a glance to the right puts the eye on the kart's left, looking right", () => {
+  const c = G.chase({ x: 10, y: 10, angle: 0 }, G.CAM, Math.PI / 2);
+  assert.ok(c.eye[1] < 10 && c.look[1] > 10, JSON.stringify(c));
+});
+
+test('lookYaw: back wins, a glance turns up to a quarter turn', () => {
+  assert.equal(G.lookYaw({ back: true, look: 1 }), Math.PI);
+  assert.equal(G.lookYaw({ look: -1 }), -Math.PI / 2);
+  assert.equal(G.lookYaw(null), 0);
+  assert.equal(G.lookYaw({}), 0);
+});
+
+test('swing takes the short way round', () => {
+  const next = G.swing(0.9 * Math.PI, -0.9 * Math.PI, 16);
+  assert.ok(next > 0.9 * Math.PI, String(next));
+});
+
+test('swing settles at the goal in about 150 ms', () => {
+  let yaw = 0;
+  for (let i = 0; i < 10; i++) yaw = G.swing(yaw, Math.PI, 16);
+  assert.ok(Math.PI - yaw < 0.1 * Math.PI, 'mostly there after 160 ms: ' + yaw);
+  for (let i = 0; i < 10; i++) yaw = G.swing(yaw, Math.PI, 16);
+  assert.ok(Math.abs(yaw - Math.PI) < 0.001, String(yaw));
+});
