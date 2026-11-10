@@ -111,3 +111,17 @@ test('the 2D phone sends no look', () => {
   const last = drives().at(-1);
   assert.ok(last && !('look' in last) && !('back' in last), JSON.stringify(last));
 });
+
+test('landscape 3D phone: steering on the left, the look row above the pedals on the right', () => {
+  // The landscape controls are a grid; with the look row in it, every piece must be placed, or
+  // the pedals drop into a squashed row under the steering pad.
+  const css = fs.readFileSync('public/games/kart-race-3d/style.css', 'utf8');
+  const rule = (sel) => {
+    const at = css.indexOf(sel + ' {');
+    return at === -1 ? '' : css.slice(at, css.indexOf('}', at));
+  };
+  assert.match(rule('.kr3d-phone.landscape .kr-steer'), /grid-row:\s*2\s*\/\s*4/);
+  assert.match(rule('.kr3d-phone.landscape .kr-look'), /grid-column:\s*2;\s*grid-row:\s*2/);
+  assert.match(rule('.kr3d-phone.landscape .kr-bottom'), /grid-column:\s*2;\s*grid-row:\s*3/);
+  assert.match(rule('.kr3d-phone.landscape .kr-controls'), /grid-template-rows:\s*auto auto minmax\(0, 1fr\)/);
+});
