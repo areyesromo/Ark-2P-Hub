@@ -22,6 +22,7 @@
   const BRAKE_DECEL = 4; // slowing faster than this (units/s²) tips the driver forward
   const JOLT_MS = 150; // a jolt fades in about this long
   const BOB_NOD = 4; // radians of nod per unit of head bob
+  const EASE_MS = 120; // the driver's body eases to what the kart does in about this long
   const RIM_STEPS = 12; // how finely a hand looks along the rim for a spot it can reach
 
   /** A label floating over a kart: the text on a rounded tag in `color`, always facing the camera. */
@@ -255,7 +256,10 @@
     let tailState = null;
     let jolt = 0;
     let wasSpinning = false;
-    let lastSpeed = 0;
+    let speedS = { x: 0, v: 0 }; // eased: speed, turn rate, boost and brake (0..1)
+    let rateS = { x: 0, v: 0 };
+    let boostS = { x: 0, v: 0 };
+    let brakeS = { x: 0, v: 0 };
     return {
       obj: obj,
       racer: racerId,
@@ -265,7 +269,9 @@
         obj.position.set(pose.x, h, pose.y);
         obj.rotation.y = -pose.angle; // field y is scene z
         const dt = last ? now - last.t : 0;
-        const rate = last ? R.turnRate(last.pose, pose, dt) : 0;
+        // A jump (a new race, a respawn) isn't driving: no turn and no speed from it.
+        const jumped = Boolean(last) && Math.hypot(pose.x - last.pose.x, pose.y - last.pose.y) > R.TELEPORT;
+        const rate = last && !jumped ? R.turnRate(last.pose, pose, dt) : 0;
         if (dt > 0) lean = R.ease(lean, Math.max(-LEAN.max, Math.min(LEAN.max, rate * LEAN.perTurn)));
         body.rotation.x = lean;
         body.rotation.y = k && k.spin ? ((now % SPIN_MS) / SPIN_MS) * Math.PI * 2 : 0;
@@ -278,18 +284,24 @@
           p.front.forEach(function (w) { w.rotation.y = -steer; });
           if (model.can) {
             // The driver: the reaction playing, the tail, a jolt on a spin-out, the body's pose.
-            const speed = dt > 0 ? (Math.hypot(pose.x - last.pose.x, pose.y - last.pose.y) / dt) * 1000 : 0;
-            const braking = dt > 0 && ((lastSpeed - speed) / dt) * 1000 > BRAKE_DECEL;
+            // Everything the body follows is eased (springs), so a late update or a boost never snaps it.
+            const step = dt || 0;
+            const speed = dt > 0 && !jumped ? (Math.hypot(pose.x - last.pose.x, pose.y - last.pose.y) / dt) * 1000 : speedS.x;
+            const wasSpeed = speedS.x;
+            speedS = B.spring(speedS, speed, step, EASE_MS * 2);
+            const braking = step > 0 && ((wasSpeed - speedS.x) / step) * 1000 > BRAKE_DECEL;
+            rateS = B.spring(rateS, rate, step, EASE_MS);
+            boostS = B.spring(boostS, k && k.boosting ? 1 : 0, step, EASE_MS);
+            brakeS = B.spring(brakeS, braking ? 1 : 0, step, EASE_MS);
             const spinning = Boolean(k && k.spin);
-            jolt = spinning && !wasSpinning ? 1 : jolt * Math.exp(-(dt || 0) / JOLT_MS);
+            jolt = spinning && !wasSpinning ? 1 : jolt * Math.exp(-step / JOLT_MS);
             wasSpinning = spinning;
-            reacting = B.react(reacting, B.reaction(k, place, Boolean(k && k.finished)), dt || 0);
-            tailState = B.tail(tailState, rate, speed, jolt, dt || 0);
-            const body = B.pose({ steer: steer, rate: rate, speed: speed, boosting: Boolean(k && k.boosting), braking: braking, jolt: jolt, now: now, reaction: reacting });
+            reacting = B.react(reacting, B.reaction(k, place, Boolean(k && k.finished)), step);
+            tailState = B.tail(tailState, rateS.x, speedS.x, jolt, step);
+            const body = B.pose({ steer: steer, rate: rateS.x, speed: speedS.x, boost: boostS.x, brake: brakeS.x, jolt: jolt, now: now, reaction: reacting });
             // The head bobs with speed and bumps: as a small nod.
-            (body.turns.head = body.turns.head || []).push(['z', R.bob(speed, last ? h - last.h : 0, now) * BOB_NOD]);
+            (body.turns.head = body.turns.head || []).push(['z', R.bob(speedS.x, last && !jumped ? h - last.h : 0, now) * BOB_NOD]);
             animate(THREE, model, body, tailState);
-            lastSpeed = speed;
           }
         }
         last = { pose: pose, t: now, h: h };
@@ -297,6 +309,8 @@
       dispose: function () {
         gone = true;
         if (stand) stand.dispose(); // (a model's clones share the loaded geometry: never freed here)
+        // …but each driver's skeleton is his own (its bone texture on the graphics card).
+        if (model) model.group.traverse(function (o) { if (o.isSkinnedMesh && o.skeleton) o.skeleton.dispose(); });
         if (ring) {
           ring.geometry.dispose();
           ring.material.dispose();

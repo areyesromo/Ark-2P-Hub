@@ -305,3 +305,43 @@ test("a player's kart gets a ring in its colour; a computer's doesn't", async ()
   await c.ready();
   assert.equal(ring(c.k), null);
 });
+
+/** How far (radians) the chest bone turned between two frames. */
+function chestStep(k, frame) {
+  const chest = k.obj.getObjectByName('chest');
+  const before = chest.quaternion.clone();
+  frame();
+  return before.angleTo(chest.quaternion);
+}
+
+test("a boost starting doesn't snap the driver's body", async () => {
+  const { k, ready } = kart();
+  await ready();
+  let pose = { x: 0, y: 0, angle: 0 };
+  let t = 1000;
+  const step = (view) => { pose = { x: pose.x + 0.14, y: 0, angle: 0 }; t += 16; k.set(pose, view, t, 2); };
+  for (let i = 0; i < 30; i++) step({});
+  const jump = chestStep(k, () => step({ boosting: true }));
+  assert.ok(jump < 0.03, `the chest turned ${jump.toFixed(3)} rad in one frame`);
+});
+
+test('a new race (a jump across the field) moves the driver smoothly', async () => {
+  const { k, ready } = kart();
+  await ready();
+  let t = 1000;
+  for (let i = 0; i < 30; i++) { t += 16; k.set({ x: i * 0.14, y: 0, angle: 0 }, {}, t, 2); }
+  const jump = chestStep(k, () => { t += 16; k.set({ x: 60, y: 40, angle: 2 }, {}, t, 2); });
+  const after = chestStep(k, () => { t += 16; k.set({ x: 60.14, y: 40, angle: 2 }, {}, t, 2); });
+  assert.ok(jump < 0.03 && after < 0.03, `${jump.toFixed(3)} then ${after.toFixed(3)} rad`);
+});
+
+test("disposing a Rex frees his own bones' texture", async () => {
+  const { win, ready } = kart();
+  await ready();
+  const a = win.KRKarts.make(THREE, 'rex', '#ff0000', null, true);
+  await flush();
+  let freed = 0;
+  a.obj.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.dispose = () => freed++; });
+  a.dispose();
+  assert.equal(freed, 1);
+});

@@ -115,7 +115,9 @@
   /**
    * The driver's pose this frame: the steering wheel's turn, how much each hand holds its grip (1:
    * on the wheel), and the turns for each bone (body, head, breathing and the reaction).
-   * input: { steer, rate, speed, boosting, braking, jolt (0..1), now, reaction: react()'s state }.
+   * input: { steer, rate, speed, boost / brake (0..1, or boosting / braking), jolt (0..1), now,
+   * reaction: react()'s state }. The caller eases rate, speed, boost and brake (springs), so the body
+   * never snaps.
    */
   function pose(input) {
     const turns = {};
@@ -123,7 +125,10 @@
     const lean = clamp((input.rate || 0) * LEAN.perTurn, LEAN.max);
     put('spine', 'x', lean / 2);
     put('chest', 'x', lean / 2);
-    const pitch = (input.boosting ? PITCH.boost : 0) - (input.braking ? PITCH.brake : 0);
+    // (boost / brake: 0..1, eased by the caller; or the plain booleans)
+    const boost = input.boost !== undefined ? input.boost : input.boosting ? 1 : 0;
+    const brake = input.brake !== undefined ? input.brake : input.braking ? 1 : 0;
+    const pitch = PITCH.boost * boost - PITCH.brake * brake;
     put('spine', 'z', pitch / 2);
     put('chest', 'z', pitch / 2 + BREATH.angle * Math.sin((2 * Math.PI * BREATH.hz * input.now) / 1000));
     const jolt = input.jolt || 0;
