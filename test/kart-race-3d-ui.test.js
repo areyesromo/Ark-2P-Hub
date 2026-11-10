@@ -43,12 +43,12 @@ test('3D HUD preserves lap information during a penalty and updates existing nod
   const first = el.querySelectorAll('.kr3d-driver')[0];
   const lap = first.querySelector('.kr3d-lap');
   const structure = el.innerHTML;
-  assert.equal(lap.textContent, 'LAP 2 / 5');
+  assert.equal(lap.textContent, 'LAP 2 / ' + v.laps); // (the fixture races the game's default laps)
   assert.equal(first.querySelector('.kr3d-drift').querySelector('span').textContent, 'RELEASE · BOOST');
   v.karts[0].jumped = true;
   v.karts[0].speed = -1;
   instance.hud(v, el);
-  assert.equal(lap.textContent, 'LAP 2 / 5');
+  assert.equal(lap.textContent, 'LAP 2 / ' + v.laps); // (the fixture races the game's default laps)
   assert.equal(first.querySelector('.kr3d-alert').textContent, 'Jump start · 1 s penalty');
   assert.equal(first.querySelector('.kr3d-speed strong').textContent, 'R 12');
   assert.equal(el.innerHTML, structure);
