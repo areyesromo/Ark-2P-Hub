@@ -110,12 +110,32 @@
   // it catches up (per ms). In a battle it sits higher and further back to show more of the arena.
   const CAM = { back: 3.2, up: 1.6, ahead: 2.5, fov: 70, rate: 0.008, battle: { back: 4.5, up: 3.0, ahead: 1.5 } };
 
-  /** Where the camera wants to be for a kart: { eye: [x, y], eyeH, look: [x, y] } in field units. */
-  function chase(pose, cam) {
+  /**
+   * Where the camera wants to be for a kart: { eye: [x, y], eyeH, look: [x, y] } in field units.
+   * `yaw` swings it round the kart (the player looking round): π looks back, ±π/2 to the side
+   * (positive: to the right, as the kart's angle grows).
+   */
+  function chase(pose, cam, yaw) {
     cam = cam || CAM;
-    const c = Math.cos(pose.angle);
-    const s = Math.sin(pose.angle);
+    const a = pose.angle + (yaw || 0);
+    const c = Math.cos(a);
+    const s = Math.sin(a);
     return { eye: [pose.x - c * cam.back, pose.y - s * cam.back], eyeH: cam.up, look: [pose.x + c * cam.ahead, pose.y + s * cam.ahead] };
+  }
+
+  /** How far round a player wants their camera: looking back is a half turn, a glance up to a quarter. */
+  function lookYaw(k) {
+    if (!k) return 0;
+    return k.back ? Math.PI : (k.look || 0) * (Math.PI / 2);
+  }
+
+  const SWING_MS = 50; // the camera's turn eases in about three times this (≈150 ms)
+
+  /** Turn part of the way from cur toward goal, the shorter way round; close enough, exactly there. */
+  function swing(cur, goal, dtMs) {
+    const d = Math.atan2(Math.sin(goal - cur), Math.cos(goal - cur));
+    if (Math.abs(d) < 0.01) return cur + d;
+    return cur + d * (1 - Math.exp(-dtMs / SWING_MS));
   }
 
   /** Move part of the way to the goal: more the longer the frame, never past it. */
@@ -146,5 +166,5 @@
     return [kart[0] + dx * d, kart[1] + dy * d];
   }
 
-  globalThis.ArkKartGeom = { heightAt: heightAt, ribbon: ribbon, wallLines: wallLines, wallSegments: wallSegments, smoother: smoother, CAM: CAM, chase: chase, follow: follow, clampEye: clampEye };
+  globalThis.ArkKartGeom = { heightAt: heightAt, ribbon: ribbon, wallLines: wallLines, wallSegments: wallSegments, smoother: smoother, CAM: CAM, chase: chase, lookYaw: lookYaw, swing: swing, follow: follow, clampEye: clampEye };
 })();

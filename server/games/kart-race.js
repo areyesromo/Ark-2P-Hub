@@ -497,6 +497,8 @@ export class KartRace {
         webUntil: 0,
         oilUntil: 0,
         spinUntil: 0,
+        look: 0, // Kart Race 3D: where the player is glancing (-1 left .. 1 right)
+        lookBack: false, // …and whether they're looking back (the TV's camera only)
         jumpStart: false, // pressed GAS during the lights
         stallUntil: 0, // ...so it can't go until then
         reactionOpen: false, // waiting for the first GAS after lights out
@@ -1184,6 +1186,10 @@ export class KartRace {
     k.gas = Boolean(input.gas);
     k.brake = Boolean(input.brake);
     k.drift = Boolean(input.drift);
+    // Looking round (Kart Race 3D's camera): a glance from -1 to 1, and looking back.
+    const look = Number(input.look);
+    k.look = Number.isFinite(look) ? Math.max(-1, Math.min(1, look)) : 0;
+    k.lookBack = Boolean(input.back);
   }
 
   // ---- views ----
@@ -1277,6 +1283,8 @@ export class KartRace {
             webbed: now < k.webUntil,
             oiled: now < k.oilUntil,
             spin: now < k.spinUntil,
+            look: Math.round(k.look * 10) / 10,
+            back: k.lookBack,
             reaction: k.reactionMs !== null && k.reactionMs <= REACTION_MAX_MS && now - this.raceStart - k.reactionMs < REACTION_SHOW_MS ? k.reactionMs : null,
             jumped: k.jumpStart && (this.phase === 'countdown' || now < k.stallUntil), // "JUMP START"
             finished: k.finishedAt !== null,

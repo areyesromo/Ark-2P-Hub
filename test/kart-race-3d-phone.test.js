@@ -70,3 +70,58 @@ test('switching from the 3D phone back to the original keeps the 2D presentation
   assert.ok(!host.child.querySelector('.item').innerHTML.includes('Collect a'));
   original.unmount();
 });
+
+/** A 3D (or 2D) phone mid-race, and what it sends. */
+function racingPhone(threeD) {
+  const { factory } = phone();
+  const sent = [];
+  const host = new Element();
+  const p = factory.make(threeD ? { threeD: true } : {});
+  p.mount(host, { send: (input) => sent.push(input), vibrate() {} });
+  p.update({ ...kartViews().race, you: 0 });
+  return { root: host.child, sent, drives: () => sent.filter((s) => s.type === 'drive') };
+}
+
+test("the 3D phone's Look back button sends back while held", () => {
+  const { root, drives } = racingPhone(true);
+  const e = { pointerId: 3, preventDefault() {} };
+  root.querySelector('.lookback').listeners.pointerdown(e);
+  assert.equal(drives().at(-1).back, true);
+  root.querySelector('.lookback').listeners.pointerup(e);
+  assert.equal(drives().at(-1).back, false);
+});
+
+test('the look strip sends where the finger is, and 0 when it lifts', () => {
+  const { root, drives } = racingPhone(true);
+  const strip = root.querySelector('.kr-lookstrip');
+  strip.getBoundingClientRect = () => ({ left: 0, top: 0, width: 200, height: 40 });
+  strip.listeners.pointerdown({ pointerId: 4, clientX: 150, clientY: 20, preventDefault() {} });
+  assert.equal(drives().at(-1).look, 0.5);
+  strip.listeners.pointermove({ pointerId: 4, clientX: 0, clientY: 20 });
+  assert.equal(drives().at(-1).look, -1);
+  strip.listeners.pointercancel({ pointerId: 4 });
+  assert.equal(drives().at(-1).look, 0);
+});
+
+test('the 2D phone sends no look', () => {
+  const { root, drives } = racingPhone(false);
+  assert.doesNotMatch(root.innerHTML, /kr-look/);
+  const e = { pointerId: 1, preventDefault() {} };
+  root.querySelector('.gas').listeners.pointerdown(e);
+  const last = drives().at(-1);
+  assert.ok(last && !('look' in last) && !('back' in last), JSON.stringify(last));
+});
+
+test('landscape 3D phone: steering on the left, the look row above the pedals on the right', () => {
+  // The landscape controls are a grid; with the look row in it, every piece must be placed, or
+  // the pedals drop into a squashed row under the steering pad.
+  const css = fs.readFileSync('public/games/kart-race-3d/style.css', 'utf8');
+  const rule = (sel) => {
+    const at = css.indexOf(sel + ' {');
+    return at === -1 ? '' : css.slice(at, css.indexOf('}', at));
+  };
+  assert.match(rule('.kr3d-phone.landscape .kr-steer'), /grid-row:\s*2\s*\/\s*4/);
+  assert.match(rule('.kr3d-phone.landscape .kr-look'), /grid-column:\s*2;\s*grid-row:\s*2/);
+  assert.match(rule('.kr3d-phone.landscape .kr-bottom'), /grid-column:\s*2;\s*grid-row:\s*3/);
+  assert.match(rule('.kr3d-phone.landscape .kr-controls'), /grid-template-rows:\s*auto auto minmax\(0, 1fr\)/);
+});

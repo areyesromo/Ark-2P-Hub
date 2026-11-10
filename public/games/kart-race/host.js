@@ -921,6 +921,16 @@
     return { type: 'drive', steer: steer, gas: !brake && (has('A') || has('RT')), brake: brake, drift: has('X') || has('RB') };
   }
 
+  // Kart Race 3D's camera: the right stick glances left and right, pulled down (or clicked) looks back.
+  function lookPoll(pad, v) {
+    const input = padPoll(pad, v);
+    if (!input) return null;
+    const r = pad.stick2 || { x: 0, y: 0 };
+    input.look = Math.abs(r.x) > DEADZONE ? Math.round(r.x * 10) / 10 : 0;
+    input.back = r.y > 0.6 || pad.held.indexOf('RS') !== -1;
+    return input;
+  }
+
   /**
    * The TV renderer. `opts.stage` (Kart Race 3D) draws the race in place of the 2D canvas:
    * { mount(arenaEl), update(view), unmount() }. An optional presentation draws its HUD and menus.
@@ -960,8 +970,8 @@
         if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
         return out;
       },
-      padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
-      padPoll: padPoll,
+      padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item' + (opts.look ? ' · R-stick: look (pull down or click: look back)' : '') + ' · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
+      padPoll: opts.look ? lookPoll : padPoll,
       pad: function (btn, v, slot) {
         if (stage && stage.pad && stage.pad(btn)) return null;
         if (v.phase === 'setup') {

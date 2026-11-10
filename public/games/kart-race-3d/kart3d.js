@@ -21,6 +21,7 @@
     let prev = null; // the view before this one
     let cams = [];
     let follow = [null, null]; // each half's camera: { eye: [x, y], h, look: [x, y], fov }
+    let yaw = [0, 0]; // how far round each half's camera has swung (its player looking round)
     let lastFrame = 0;
 
     const css = getComputedStyle(document.documentElement);
@@ -57,7 +58,9 @@
       // One camera per player (karts 0 and 1); any computer racers are just in the picture.
       poses.slice(0, cams.length).forEach(function (pose, i) {
         const k = view.karts[i];
-        const goal = G.chase(pose, view.battle ? CAM.battle : CAM);
+        // Looking back or glancing swings this half's camera round its own kart.
+        yaw[i] = G.swing(yaw[i], G.lookYaw(k), dt);
+        const goal = G.chase(pose, view.battle ? CAM.battle : CAM, yaw[i]);
         const fov = CAM.fov + (k && k.boosting ? BOOST_FOV : 0);
         const want = goal.eye.concat(goal.eyeH, goal.look, fov);
         const f = follow[i] ? G.follow(follow[i], want, dt) : want; // a new race: straight there
@@ -146,6 +149,7 @@
             race = v.karts ? v.race : null;
             smooth = G.smoother();
             follow = [null, null];
+            yaw = [0, 0];
           }
           setKarts(v);
           if (v.karts) smooth.push(performance.now(), v.karts.map(function (k) { return { x: k.x, y: k.y, angle: k.angle }; }));
