@@ -106,6 +106,12 @@
       const f = v.field;
       gl.camera.position.set(f.w / 2, f.w * OVERVIEW.up, f.h / 2 + f.h * OVERVIEW.back);
       gl.camera.lookAt(f.w / 2, 0, f.h / 2);
+      // Every camera sees across this field (a big track's far cliffs, the whole field from above).
+      const far = Math.max(200, 2.5 * f.w);
+      [gl.camera].concat(cams).forEach(function (cam) {
+        cam.far = far;
+        cam.updateProjectionMatrix();
+      });
     }
 
     /** One kart per racer in the view (two, or eight in the Cup): the players' with a P1 / P2 tag. */

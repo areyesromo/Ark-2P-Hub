@@ -10,6 +10,7 @@ import * as THREE from 'three';
 async function scene() {
   let frame = null;
   let draw = null;
+  const overview = new THREE.PerspectiveCamera(50, 16 / 9, 0.1, 200);
   let clock = 1000;
   const sets = [];
   const context = vm.createContext({
@@ -21,7 +22,7 @@ async function scene() {
   vm.runInContext(fs.readFileSync('public/games/kart-race/racers.js', 'utf8'), context);
   vm.runInContext(fs.readFileSync('public/games/kart-race-3d/geom3d.js', 'utf8'), context);
   context.ArkMini = {
-    scene3d: async (el, opts) => (draw = opts.draw, { THREE, scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(), onFrame: (fn) => { frame = fn; }, dispose() {} }),
+    scene3d: async (el, opts) => (draw = opts.draw, { THREE, scene: new THREE.Scene(), camera: overview, onFrame: (fn) => { frame = fn; }, dispose() {} }),
   };
   context.KRThings = { make: () => ({ group: new THREE.Group(), update() {}, dispose() {} }) };
   context.KRWorld = { build: () => ({ group: new THREE.Group(), segments: [], dispose() {} }) };
@@ -40,7 +41,7 @@ async function scene() {
     draw({ setScissorTest() {}, setViewport() {}, setScissor() {}, render: (sc, cam) => out.push(cam) }, null, 1600, 900);
     return out;
   };
-  return { s, frame: () => frame(), sets, cameras, tick: (ms) => { clock += ms; } };
+  return { s, frame: () => frame(), sets, cameras, overview, tick: (ms) => { clock += ms; } };
 }
 
 const kartView = (finished) => ({ x: 5, y: 5, angle: 0, racer: 'rex', finished, spin: false });
@@ -80,4 +81,14 @@ test("looking back turns only that half's camera round", async () => {
   const [p1, p2] = cameras();
   assert.ok(p1.position.x > 20, 'P1 looks back from in front: ' + p1.position.x);
   assert.ok(p2.position.x < 20, 'P2 still behind: ' + p2.position.x);
+});
+
+test('the cameras see the whole big field', async () => {
+  const { s, cameras, overview } = await scene();
+  const v = view('race', false);
+  v.field = { w: 288, h: 162 };
+  s.update(v);
+  for (const cam of cameras()) assert.equal(cam.far, 720);
+  assert.equal(overview.far, 720);
+  assert.ok(overview.position.distanceTo(new THREE.Vector3(288, 0, 0)) < 720, 'the far corner is in view');
 });
