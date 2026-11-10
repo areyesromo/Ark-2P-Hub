@@ -4,6 +4,11 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.39
+
+- 🦖 Kart Race 3D: Rex drives for real now: his hands stay on a turning steering wheel, his body leans
+  and rocks with the drive, his tail swishes, and he tosses items forward or drops them behind.
+
 ## 0.1.38
 
 - 🛞 Kart Race 3D: Rex's 3D wheels look like his kart's wheels now, with a black tyre, a yellow rim and a
