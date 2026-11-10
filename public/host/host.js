@@ -728,7 +728,7 @@
     const r = current && current.renderer;
     if (!state || state.phase !== 'playing' || !r || !r.padPoll || !lastView || Ark.setup.isHub(lastView)) return;
     Object.keys(padSeats).forEach(function (idx) {
-      const input = r.padPoll({ held: ArkPads.held(Number(idx)), stick: ArkPads.stick(Number(idx)) }, lastView, padSeats[idx].slot);
+      const input = r.padPoll({ held: ArkPads.held(Number(idx)), stick: ArkPads.stick(Number(idx)), stick2: ArkPads.stick2(Number(idx)) }, lastView, padSeats[idx].slot);
       const key = input ? JSON.stringify(input) : '';
       if (!input || key === lastPolled[idx]) return;
       lastPolled[idx] = key;

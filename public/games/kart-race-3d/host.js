@@ -83,6 +83,6 @@
     Ark.loadScript('/games/kart-race/host.js'),
     Ark.loadScript('/games/kart-race-3d/ui.js'),
   ]).then(function () {
-    return window.ArkKartTV.make({ stage: stage, presentation: window.ArkKart3DUI.create() });
+    return window.ArkKartTV.make({ stage: stage, presentation: window.ArkKart3DUI.create(), look: true });
   }));
 })();
