@@ -5,13 +5,13 @@ import assert from 'node:assert/strict';
 import fs from 'node:fs';
 import vm from 'node:vm';
 import '../public/games/kart-race/track.js';
-import { TIMING } from '../server/games/kart-race.js';
+import { TIMING, USED_MS } from '../server/games/kart-race.js';
+import { useItem } from '../server/games/kart-items.js';
 import { KartRace3D } from '../server/games/kart-race-3d.js';
 import { fakeCtx } from './helpers.js';
 
 /** A 3D race, settings applied, lights out. */
-function racing(settings = {}) {
-  const ctx = fakeCtx();
+function racing(settings = {}, ctx = fakeCtx()) {
   const game = new KartRace3D(ctx, () => 0.5);
   game.start();
   for (const [key, value] of Object.entries(settings)) game.onInput(0, { type: 'setting', key, value });
@@ -106,4 +106,29 @@ test('the 2D pad sends no look', () => {
 test('the 3D pad hint mentions looking round; the 2D one does not', () => {
   assert.match(tv().make({ look: true }).padHint, /R-stick: look/);
   assert.doesNotMatch(tv().make({}).padHint, /R-stick/);
+});
+
+// ---- what each kart just used (for the 3D driver's throw / drop animations) ----
+
+test('a kart says what it just used, for a moment', () => {
+  const { ctx, game } = racing();
+  game.karts[0].items = ['banana'];
+  game.onInput(0, { type: 'item' });
+  assert.equal(game.hostView().karts[0].used, 'banana');
+  ctx.advance(USED_MS + 20);
+  assert.equal(game.hostView().karts[0].used, null);
+});
+
+test('a Gold Turbo press counts as goldturbo', () => {
+  const { ctx, game } = racing();
+  game.karts[0].goldUntil = ctx.now() + 5000;
+  game.onInput(0, { type: 'item' });
+  assert.equal(game.hostView().karts[0].used, 'goldturbo');
+});
+
+test("computer racers' uses show too", () => {
+  const { ctx, game } = racing({ field: 1 });
+  game.karts[3].items = ['bomb'];
+  useItem(game, 3, ctx.now());
+  assert.equal(game.hostView().karts[3].used, 'bomb');
 });

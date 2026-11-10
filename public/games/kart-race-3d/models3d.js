@@ -10,6 +10,10 @@
   const KRModels = {
     MODELS: MODELS,
     has: function (racerId) { return Boolean(MODELS[racerId]); },
+    /** The skeleton-aware cloner (every Rex needs bones of his own); tests swap in their own. */
+    cloner: function () {
+      return import('/vendor/three-addons/utils/SkeletonUtils.js').then(function (mod) { return mod.clone; });
+    },
     /** Loads a .glb (as Party Board does); tests swap in a fake. */
     loader: function (url) {
       return import('/vendor/three-addons/loaders/GLTFLoader.js').then(function (mod) {
@@ -20,14 +24,14 @@
       const files = MODELS[racerId];
       if (!files) return null;
       if (loading[racerId]) return loading[racerId];
-      loading[racerId] = Promise.all([KRModels.loader(DIR + files.kart), KRModels.loader(DIR + files.driver)])
+      loading[racerId] = Promise.all([KRModels.loader(DIR + files.kart), KRModels.loader(DIR + files.driver), KRModels.cloner()])
         .then(function (got) {
           const kart = got[0].scene;
           const driver = got[1].scene;
           kart.updateMatrixWorld(true);
           const wheel = kart.getObjectByName('wheel_fl');
           const size = new THREE.Box3().setFromObject(wheel).getSize(new THREE.Vector3());
-          return { kart: kart, driver: driver, wheelRadius: size.y / 2 };
+          return { kart: kart, driver: driver, wheelRadius: size.y / 2, clone: got[2] };
         })
         .catch(function (err) {
           // Logged once: the karts keep their placeholder, and the page doesn't try again.

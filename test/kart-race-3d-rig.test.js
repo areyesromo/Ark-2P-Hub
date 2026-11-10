@@ -1,5 +1,5 @@
 // Kart Race 3D's movement maths (public/games/kart-race-3d/rig3d.js): wheel roll, steering,
-// where Rex looks, and his reactions.
+// and where Rex looks (his reactions are in kart-race-3d-body.test.js).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import '../public/games/kart-race-3d/rig3d.js';
@@ -42,28 +42,6 @@ test('headGoal caps at 30°', () => {
   assert.equal(R.HEAD_MAX, (30 * Math.PI) / 180);
   assert.equal(R.headGoal(100), R.HEAD_MAX);
   assert.equal(R.headGoal(-100), -R.HEAD_MAX);
-});
-
-test('reaction: spin first, then a win in first place, else none', () => {
-  assert.equal(R.reaction({ spin: true, finished: true }, 1), 'spin');
-  assert.equal(R.reaction({ finished: true }, 1), 'win');
-  assert.equal(R.reaction({ finished: true }, 2), null);
-  assert.equal(R.reaction({}, 1), null);
-  assert.equal(R.reaction(null, 1), null);
-});
-
-test('moves: hands follow the wheel, arms up when spun, a left fist pump when winning', () => {
-  // Turning right (clockwise for the driver) lifts the left hand and lowers the right.
-  const drive = R.moves(null, 0.2, 0.3, 0);
-  assert.ok(Math.abs(drive.armL - 0.2 * R.ARM_PER_STEER) < 1e-12);
-  assert.ok(Math.abs(drive.armR + 0.2 * R.ARM_PER_STEER) < 1e-12);
-  assert.equal(drive.headYaw, 0.3);
-  const spin = R.moves('spin', 0.2, 0.3, 0);
-  assert.equal(spin.armL, 2.2);
-  assert.equal(spin.armR, 2.2);
-  const win = R.moves('win', 0.2, 0.3, 0);
-  assert.equal(win.armR, 0);
-  assert.ok(win.armL >= 1.6);
 });
 
 test('bob is 0 when stopped on flat road', () => {

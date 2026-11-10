@@ -14,6 +14,15 @@ ROOT = os.path.abspath(os.path.join(HERE, '..', '..'))
 
 import bpy  # noqa: E402
 import math  # noqa: E402
+
+# Test poses for the check renders: bone -> rotation in its own frame (degrees, x y z).
+POSES = {  # (a positive x turn lifts an arm forward and up)
+    'steer-left': {'upper_arm_l': (-15, 0, 0), 'upper_arm_r': (15, 0, 0), 'forearm_l': (-10, 0, 0), 'forearm_r': (10, 0, 0), 'head': (0, 0, 20)},
+    'steer-right': {'upper_arm_l': (15, 0, 0), 'upper_arm_r': (-15, 0, 0), 'forearm_l': (10, 0, 0), 'forearm_r': (-10, 0, 0), 'head': (0, 0, -20)},
+    'arms-up': {'upper_arm_l': (110, 0, 0), 'upper_arm_r': (110, 0, 0), 'head': (20, 0, 0)},
+    'throw': {'upper_arm_r': (140, 0, 0), 'forearm_r': (60, 0, 0), 'chest': (-10, 0, 0)},
+    'drop': {'upper_arm_l': (90, 0, 60), 'forearm_l': (30, 0, 0), 'tail_1': (0, 0, 25), 'tail_2': (0, 0, 20), 'tail_3': (0, 0, 15)},
+}
 import common, driver, kart, paint  # noqa: E402
 
 ap = argparse.ArgumentParser()
@@ -55,19 +64,20 @@ if opts.check:
     for name, objs in parts.items():
         common.render_views(objs, os.path.join(CHECK, name), textured=True)
     if len(parts) == 2:
-        # Rex in his seat, then turned as far as the game turns him (full right lock): head 30 degrees,
-        # the left hand up and the right hand down at the shoulders (KRRig.ARM_PER_STEER x 25 degrees).
+        # Rex in his seat (his rig carries his mesh), then bent as the game bends him, to catch the
+        # skin tearing or folding at the shoulders, elbows, neck or tail root.
         seat = common.B(cfg['kart']['seat'])
-        for o in parts['rex']:
-            o.location = o.location + seat
+        rig = next(o for o in parts['rex'] if o.type == 'ARMATURE')
+        rig.location = rig.location + seat
+        rig.data.pose_position = 'POSE'  # (the glTF export can leave it showing the rest pose)
         both = parts['kart'] + parts['rex']
         common.render_views(both, os.path.join(CHECK, 'seated'), textured=True)
-        byname = {o.name: o for o in both}
-        byname['head'].rotation_euler.z -= math.radians(30)  # looking right
-        raise_ = 0.6 * math.radians(25)  # a raise turns about game z, which is Blender -y
-        byname['arm_l'].rotation_euler.y -= raise_
-        byname['arm_r'].rotation_euler.y += raise_
-        for n in ('wheel_fl', 'wheel_fr'):
-            byname[n].rotation_euler.z -= math.radians(25)  # to the right
-        common.render_views(both, os.path.join(CHECK, 'posed'), textured=True)
+        for name, bends in POSES.items():
+            for pb in rig.pose.bones:
+                pb.rotation_mode = 'XYZ'
+                pb.rotation_euler = (0, 0, 0)
+            for bone, xyz in bends.items():
+                rig.pose.bones[bone].rotation_euler = [math.radians(a) for a in xyz]
+            bpy.context.view_layer.update()
+            common.render_views(both, os.path.join(CHECK, 'rig-' + name), textured=True)
 print('built', opts.racer, sorted(parts))

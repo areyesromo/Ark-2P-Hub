@@ -50,6 +50,9 @@ export const KART = {
   miniBoostMs: 600,
 };
 /** Walls run this far outside the road's edge (past a strip of grass). */
+/** How long a kart's view says what it just used (long enough for the TV's throw or drop). */
+export const USED_MS = 600;
+
 export const WALL = { out: 1.25, headOn: 0.72, bounce: 0.35 };
 export const PHYSICS = { tickMs: 1000 / 60, sendEvery: 2 };
 // The start: five red lights come on one by one, hold for a moment nobody can guess, then all
@@ -511,6 +514,8 @@ export class KartRace {
         webUntil: 0,
         oilUntil: 0,
         spinUntil: 0,
+        usedKind: null, // the item it last used, and when (the 3D TV's driver animates it)
+        usedAt: -Infinity,
         look: 0, // Kart Race 3D: where the player is glancing (-1 left .. 1 right)
         lookBack: false, // …and whether they're looking back (the TV's camera only)
         jumpStart: false, // pressed GAS during the lights
@@ -1298,6 +1303,7 @@ export class KartRace {
             webbed: now < k.webUntil,
             oiled: now < k.oilUntil,
             spin: now < k.spinUntil,
+            used: now - k.usedAt < USED_MS ? k.usedKind : null, // what it just used, for a moment
             look: Math.round(k.look * 10) / 10,
             back: k.lookBack,
             reaction: k.reactionMs !== null && k.reactionMs <= REACTION_MAX_MS && now - this.raceStart - k.reactionMs < REACTION_SHOW_MS ? k.reactionMs : null,
