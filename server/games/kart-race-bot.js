@@ -10,11 +10,18 @@
  */
 import { reactionMs } from './bot-human.js';
 
+// pace: on a big 3D road, the share of its top speed it aims for (the levels' gap there).
 const LEVEL = {
-  easy: { wobble: 0.35, corner: 0.7, drift: false, look: 1.1 },
-  normal: { wobble: 0.12, corner: 0.85, drift: true, look: 1 },
-  hard: { wobble: 0.04, corner: 0.97, drift: true, look: 0.95 },
+  easy: { wobble: 0.35, corner: 0.7, drift: false, look: 1.1, pace: 0.82 },
+  normal: { wobble: 0.12, corner: 0.85, drift: true, look: 1, pace: 0.92 },
+  hard: { wobble: 0.04, corner: 0.97, drift: true, look: 0.95, pace: 1 },
 };
+// The big 3D roads (a lap of 400-500): their bends are wide, so the computer brakes only for what
+// a kart can't turn (the server's KART.turnRate at full lock), and steers gently enough that its
+// reaction time doesn't make it weave from lock to lock. The small 2D roads keep the tuned driving.
+const BIG_ROAD = 300;
+const TURN_RATE = 2.8;
+const STEER_GAIN = { big: 1.4, small: 2.4 };
 const angleDiff = (a, b) => Math.atan2(Math.sin(a - b), Math.cos(a - b));
 
 export function kartRaceBot(view, level, rng = Math.random, retries = 0, memory = {}) {
@@ -29,7 +36,7 @@ export function kartRaceBot(view, level, rng = Math.random, retries = 0, memory 
   const k = view.karts[me];
   if (k.finished) return memory.kartDriving ? stop(memory) : null;
   const pace = driveDelayMs(level, rng);
-  const move = driveKart(view, level, rng, memory, 0);
+  const move = driveKart(view, level, rng, memory, 0, true);
   return move ? { ...move, botDelayMs: pace } : null;
 }
 
@@ -45,7 +52,7 @@ export function driveDelayMs(level, rng = Math.random) {
  * file. `memory.sway` (a computer racer's own style, about ±0.1) makes it a little wobblier and
  * later on the brakes, or steadier and earlier. Returns a drive or item input, or null.
  */
-export function driveKart(view, level, rng, memory, lane = 0) {
+export function driveKart(view, level, rng, memory, lane = 0, giveRoom = false) {
   const L = LEVEL[level];
   const me = view.you;
   const k = view.karts[me];
@@ -60,8 +67,15 @@ export function driveKart(view, level, rng, memory, lane = 0) {
   if (view.road) {
     // A point ahead on the road, further the faster it goes.
     const r = view.road;
-    const i = Math.min(r.ahead.length - 1, Math.max(1, Math.round((Math.abs(k.speed) / 2.2) * L.look)));
+    // (On a big road, the point 5 ahead or further even when slow: a point 1 ahead of a kart off the middle,
+    // as on the grid, is a sharp angle away, and it would weave there.)
+    const nearest = r.length > BIG_ROAD ? 3 : 1;
+    const i = Math.min(r.ahead.length - 1, Math.max(nearest, Math.round((Math.abs(k.speed) / 2.2) * L.look)));
     const a = r.ahead[i];
+    // The seat computer on a big road keeps to its own side of a kart alongside: two aiming at the
+    // same point grind together, and every bump costs speed. (The Cup's racers get their line,
+    // room included, from driveComputers.)
+    if (giveRoom && r.length > BIG_ROAD) lane += besideShift(view, k, a.angle);
     const p = { x: a.x - Math.sin(a.angle) * lane, y: a.y + Math.cos(a.angle) * lane }; // in its lane
     steerTo = Math.atan2(p.y - k.y, p.x - k.x);
     turn = bend(r);
@@ -97,16 +111,56 @@ export function driveKart(view, level, rng, memory, lane = 0) {
       return { type: 'drive', steer: stuck.steer, gas: false, brake: true, drift: false };
     }
   } else stuck.since = null;
+  const big = Boolean(view.road && view.road.length > BIG_ROAD);
   const err = angleDiff(steerTo, k.angle);
-  const steer = Math.max(-1, Math.min(1, err * 2.4 + (rng() * 2 - 1) * L.wobble * (1 + sway)));
+  const steer = Math.max(-1, Math.min(1, err * (big ? STEER_GAIN.big : STEER_GAIN.small) + (rng() * 2 - 1) * L.wobble * (1 + sway)));
   // Speed for the bend ahead: slower the sharper it is.
   const top = k.top || view.maxSpeed || 8.5;
-  const want = top * (1 - Math.min(0.65, Math.abs(turn) * 0.75)) * (Math.abs(turn) > 0.2 ? L.corner * (1 + sway * 0.3) : 1);
-  const fast = k.speed > want + 0.4;
   const drift = L.drift && Math.abs(turn) > 0.7 && k.speed > top * 0.55;
-  const input = { type: 'drive', steer: Math.round(steer * 20) / 20, gas: !fast || drift, brake: fast && !drift, drift };
+  let gas;
+  let brake;
+  if (big) {
+    // Off the gas above its pace (it coasts down, keeping a boost's speed for a while); on the
+    // brakes only for a bend it can't turn at this speed.
+    const bendLimit = bigRoadBend(view.road, turn, k.turnRate || TURN_RATE, L, sway);
+    brake = k.speed > bendLimit + 0.4 && !drift;
+    gas = !brake && (k.speed < top * L.pace * (1 + sway * 0.1) || drift);
+  } else {
+    const want = top * (1 - Math.min(0.65, Math.abs(turn) * 0.75)) * (Math.abs(turn) > 0.2 ? L.corner * (1 + sway * 0.3) : 1);
+    const fast = k.speed > want + 0.4;
+    gas = !fast || drift;
+    brake = fast && !drift;
+  }
+  const input = { type: 'drive', steer: Math.round(steer * 20) / 20, gas, brake, drift };
   memory.kartDriving = true;
   return input;
+}
+
+/** Sideways room to give a kart alongside (within 2 ahead or behind, 2.5 across): 2 away from it. */
+function besideShift(view, k, roadAngle) {
+  const sx = -Math.sin(roadAngle);
+  const sy = Math.cos(roadAngle);
+  let shift = 0;
+  view.karts.forEach((o, j) => {
+    if (j === view.you || !o) return;
+    const dx = o.x - k.x;
+    const dy = o.y - k.y;
+    const across = dx * sx + dy * sy;
+    const along = dx * sy - dy * sx;
+    if (Math.abs(along) < 2 && Math.abs(across) < 2.5) shift += across > 0 ? -2 : across < 0 ? 2 : 0;
+  });
+  return shift;
+}
+
+/**
+ * On a big road, the fastest it can take the bend ahead: the road's curvature against this racer's
+ * turn rate, with the level's margin (no limit on a straight).
+ */
+function bigRoadBend(road, turn, rate, L, sway) {
+  const a = road.ahead[0];
+  const b = road.ahead[road.ahead.length - 1];
+  const curve = Math.abs(turn) / (Math.hypot(b.x - a.x, b.y - a.y) || 1); // radians a unit of road
+  return curve > 1e-6 ? (rate * L.corner * (1 + sway * 0.3)) / curve : Infinity;
 }
 
 /** How much the road bends over the next stretch (radians). */

@@ -1284,6 +1284,7 @@ export class KartRace {
             tyre: k.tyre,
             coins: k.coins,
             top: k.car.maxSpeed + k.coins * COINS.perCoin, // this kart's top speed (its speedometer's red line)
+            turnRate: k.car.turnRate, // how fast it turns at full lock (the computer's bend speed)
             drifting: k.drifting,
             driftCharge: k.drifting ? Math.min(1, k.driftMs / KART.driftChargeMs) : 0,
             lapMs: this.raceStart && k.finishedAt === null ? Math.max(0, now - this.raceStart - k.lapStart) : null,

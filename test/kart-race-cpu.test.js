@@ -3,7 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import '../public/games/kart-race/track.js';
-import { TIMING } from '../server/games/kart-race.js';
+import { TIMING, KartRace } from '../server/games/kart-race.js';
 import { KartRace3D } from '../server/games/kart-race-3d.js';
 import { kartRaceBot, driveKart } from '../server/games/kart-race-bot.js';
 import { kartRaceBot as kartRaceBotMain } from './fixtures/kart-race-bot-main.js';
@@ -33,9 +33,16 @@ function race3d(settings = {}) {
   return { ctx, game };
 }
 
-test('the seat computer drives exactly as before', () => {
-  // Some real driver's views from a race (both karts driven, items on so there's something to use).
-  const { ctx, game } = race3d();
+test('on the 2D tracks the seat computer drives exactly as before', () => {
+  // Some real driver's views from a 2D race (both karts driven, items on so there's something to
+  // use): the big 3D roads have their own driving (below); the small ones must not change.
+  const ctx = fakeCtx();
+  const game = new KartRace(ctx, () => 0.5);
+  game.start();
+  for (const [key, value] of Object.entries({ track: 1, laps: 3, items: 1 })) game.onInput(0, { type: 'setting', key, value });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
   const views = [];
   const mem = [{}, {}];
   for (let n = 0; n < 2000 && views.length < 200; n++) {
@@ -141,4 +148,83 @@ test("the players' karts are never driven by the race", () => {
   const at = game.karts.slice(0, 2).map((k) => [k.x, k.y]);
   for (let ms = 0; ms < 10000; ms += 17) ctx.advance(17);
   game.karts.slice(0, 2).forEach((k, i) => assert.ok(Math.hypot(k.x - at[i][0], k.y - at[i][1]) < 0.5, `player ${i + 1} moved`));
+});
+
+// ---- the seat computer on the big 3D roads, driven as the room drives it ----
+
+/**
+ * The computer in player 2's seat as the room runs it (rooms.js driveBot): a move each time its view
+ * changes, played a reaction time later. Player 1 sits still. Returns its first lap's time (ms, or
+ * null) and how often its steering flipped from lock to lock (a weave), a minute.
+ */
+function seatLap(trackSetting, level) {
+  const ctx = fakeCtx();
+  const rng = seeded(11);
+  const game = new KartRace3D(ctx, rng);
+  game.start();
+  for (const [key, value] of Object.entries({ track: trackSetting, laps: 3, items: 1 })) game.onInput(0, { type: 'setting', key, value });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  const k = game.karts[1];
+  const memory = {};
+  let pending = null;
+  let seen = '';
+  let flips = 0;
+  let lastSteer = 0;
+  let ms = 0;
+  for (; ms < 150000 && k.bestLap === null; ms += 17) {
+    const view = game.botView(1);
+    const key = JSON.stringify(view);
+    if (key !== seen && !pending) {
+      seen = key;
+      const move = kartRaceBot(view, level, rng, 0, memory);
+      if (move) pending = { at: ms + (move.botDelayMs || 0), move };
+    }
+    if (pending && ms >= pending.at) {
+      const { botDelayMs, ...input } = pending.move;
+      game.onInput(1, input);
+      pending = null;
+    }
+    if (k.steer * lastSteer < -0.5) flips++;
+    if (k.steer) lastSteer = k.steer;
+    ctx.advance(17);
+  }
+  return { lap: k.bestLap, flipsPerMin: flips / (ms / 60000) };
+}
+
+const LAP_MS = { easy: 75000, normal: 62000, hard: 55000 }; // a first lap well inside these
+
+TRACKS_3D.forEach((def, t) => {
+  test(`the seat computer laps ${def.name} at each level, Hard fastest, without weaving`, () => {
+    const laps = {};
+    for (const level of ['easy', 'normal', 'hard']) {
+      const r = seatLap(t + 1, level);
+      assert.ok(r.lap !== null && r.lap <= LAP_MS[level], `${level}: lap ${r.lap}`);
+      if (level !== 'easy') assert.ok(r.flipsPerMin < 2, `${level} weaves: ${r.flipsPerMin.toFixed(1)} lock flips a minute`);
+      laps[level] = r.lap;
+    }
+    assert.ok(laps.hard < laps.normal && laps.normal < laps.easy, JSON.stringify(laps));
+  });
+});
+
+test('two seat computers side by side on a big road give each other room instead of grinding', () => {
+  // Same racer, same driving: both aim at the same middle, and used to rub along at a crawl.
+  const ctx = fakeCtx();
+  const game = new KartRace3D(ctx, () => 0.5);
+  game.start();
+  for (const [key, value] of Object.entries({ track: 2, laps: 3, items: 0 })) game.onInput(0, { type: 'setting', key, value });
+  game.onInput(0, { type: 'go' });
+  game.onInput(1, { type: 'go' });
+  ctx.advance(TIMING.countdownMs + 50);
+  const memory = [{}, {}];
+  for (let ms = 0; ms < 15000; ms += 17) {
+    for (const slot of [0, 1]) {
+      const m = kartRaceBot(game.botView(slot), 'normal', () => 0.5, 0, memory[slot]);
+      if (m && m.type === 'drive') game.onInput(slot, { type: 'drive', steer: m.steer, gas: m.gas, brake: m.brake, drift: m.drift });
+    }
+    ctx.advance(17);
+  }
+  for (const k of game.karts) assert.ok(k.speed > 6, `speed ${k.speed}`);
+  assert.ok(game.events.bumps < 20, `bumps ${game.events.bumps}`);
 });

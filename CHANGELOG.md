@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.40
+
+- 🏎️ Kart Race 3D: the computer in player 2's seat drives the big tracks properly now: it holds a
+  steady line, only brakes for bends it can't take, and laps in about 45 seconds on Hard (Easy and
+  Normal are a little slower), instead of weaving and braking its way round.
+
 ## 0.1.39
 
 - 🦖 Kart Race 3D: Rex drives for real now: his hands stay on a turning steering wheel, his body leans
