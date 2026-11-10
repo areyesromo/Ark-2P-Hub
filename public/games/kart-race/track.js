@@ -121,8 +121,24 @@
     return perimeter;
   }
 
+  // Built roads by their points: a big track's road takes a moment to build, and the server (every
+  // race start) and the TV (the world, the scenery, the course map) ask for the same one again.
+  // Callers only read what they get back.
+  const built = new Map();
+  const BUILT_MAX = 16;
+
   /** Everything about a track's road: the centre line and its cumulative length. */
   function build(points) {
+    const key = points.map(function (p) { return p[0] + ',' + p[1]; }).join(';');
+    const known = built.get(key);
+    if (known) return known;
+    const road = buildRoad(points);
+    if (built.size >= BUILT_MAX) built.delete(built.keys().next().value);
+    built.set(key, road);
+    return road;
+  }
+
+  function buildRoad(points) {
     const line = centreLine(points, samplesFor(points));
     const cum = [0];
     for (let i = 1; i <= line.length; i++) {

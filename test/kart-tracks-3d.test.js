@@ -322,3 +322,15 @@ test('a saved 5-lap setting still loads as 5', () => {
   ctx.saved = { settings: { laps: 5 } };
   assert.equal(new KartRace3D(ctx).settings.laps, 5);
 });
+
+test('a big track is built once: the same road and barriers again next race', () => {
+  const a = buildTrack(1, TRACKS_3D);
+  const b = buildTrack(1, TRACKS_3D);
+  assert.equal(a.edge, b.edge, 'the barriers are reused');
+  assert.equal(a.line, b.line, 'the centre line is reused');
+});
+
+test('the same points build the same road object (the TV builds it in three places)', () => {
+  const pts = TRACKS_3D[0].points.map((p) => p.slice()); // a copy, as a view brings them
+  assert.equal(Road.build(pts), Road.build(TRACKS_3D[0].points.map((p) => p.slice())));
+});

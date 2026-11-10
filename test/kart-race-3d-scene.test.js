@@ -91,4 +91,7 @@ test('the cameras see the whole big field', async () => {
   for (const cam of cameras()) assert.equal(cam.far, 720);
   assert.equal(overview.far, 720);
   assert.ok(overview.position.distanceTo(new THREE.Vector3(288, 0, 0)) < 720, 'the far corner is in view');
+  // From that high, a near plane of 0.1 leaves too little depth precision: kerbs and road flicker.
+  assert.ok(overview.near >= 288 / 100, 'overview near ' + overview.near);
+  for (const cam of cameras()) assert.ok(cam.near <= 0.1, 'the chase cameras keep a close near plane');
 });

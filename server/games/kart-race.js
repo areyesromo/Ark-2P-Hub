@@ -204,6 +204,14 @@ export const BIG_LAP = 120;
  * field, ? box rows, coins. On a big track the distances that are fractions of a lap (a shortcut's
  * jump, the coins' clear space) are kept to the same length in units as on a small one.
  */
+// Each track's barriers, worked out once (they depend only on its road, width and wall).
+const EDGES = new WeakMap();
+
+function edgeOf(def, road, width, out) {
+  if (!EDGES.has(def)) EDGES.set(def, Road.barriers(road, width / 2, out));
+  return EDGES.get(def);
+}
+
 export function buildTrack(index, list = TRACKS) {
   const def = list[index];
   const road = Road.build(def.points);
@@ -217,7 +225,7 @@ export function buildTrack(index, list = TRACKS) {
   // The barriers either side of the road (shared down the middle where two stretches run close).
   return {
     index, name: def.name, points: def.points, width, out, field: def.field || FIELD, rows, boxOffsets: def.boxOffsets || ITEMS.offsets, grid: def.grid || GRID,
-    cutJump: big ? 3.5 / road.length : CUT_JUMP, boosts: def.boosts, coins, ...road, edge: Road.barriers(road, width / 2, out),
+    cutJump: big ? 3.5 / road.length : CUT_JUMP, boosts: def.boosts, coins, ...road, edge: edgeOf(def, road, width, out),
     scenery: def.scenery || null, features: def.features || null, // the TV's look (Kart Race 3D's canyon)
     lanes: def.lanes || CPU.lanes, recordName: def.recordName || def.name, // computer racers' lanes; whose records
   };
