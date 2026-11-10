@@ -9,7 +9,8 @@ const Racers = globalThis.ArkKartRacers;
 
 // The Track row: Mixed, then each big track. And the 8-kart Cup: the Field (1v1 or the Cup) and how
 // well the computer racers drive.
-const OPTIONS_3D = { ...OPTIONS, track: TRACKS_3D.map((_, i) => i).concat(TRACKS_3D.length), field: [0, 1], cpu: ['normal', 'easy', 'hard'] };
+// Laps: 3 by default (a big track's lap is about a minute), 5 and 8 still there.
+const OPTIONS_3D = { ...OPTIONS, track: TRACKS_3D.map((_, i) => i).concat(TRACKS_3D.length), field: [0, 1], cpu: ['normal', 'easy', 'hard'], laps: [3, 5, 8] };
 
 /**
  * The 8-kart Cup: the two players and six computer racers (racers neither picked), five races on

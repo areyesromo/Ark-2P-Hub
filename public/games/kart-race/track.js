@@ -5,6 +5,8 @@
   const SAMPLES = 240; // points on each track's centre line
   const MIN_RADIUS = 1.7; // no corner tighter than this (a kart at medium speed turns about 1.5)
   const MIN_RADIUS_BIG = 4; // …on a big track, more than half its road (7 wide), or the inside edge folds over
+  const MIN_RADIUS_WIDE = 6.5; // …and on a very long one (Kart Race 3D's, 12 wide), more than half of that
+  const WIDE = 300; // a loop of control points longer than this is a very long track
   const BIG = 120; // a control loop longer than this round is a big track (Kart Race 3D's)
 
   /** A closed centripetal Catmull-Rom curve through the points (no cusps or spikes), `perSeg` points per span. */
@@ -69,9 +71,11 @@
    */
   function centreLine(points, n) {
     n = n || samplesFor(points);
-    const minR = perimeterOf(points) <= BIG ? MIN_RADIUS : MIN_RADIUS_BIG;
+    const perimeter = perimeterOf(points);
+    const minR = perimeter <= BIG ? MIN_RADIUS : perimeter <= WIDE ? MIN_RADIUS_BIG : MIN_RADIUS_WIDE;
     let line = resample(spline(points, 24), n);
-    for (let pass = 0; pass < 150; pass++) {
+    const passes = minR === MIN_RADIUS_WIDE ? 1500 : 150; // (a wide bend takes more easing)
+    for (let pass = 0; pass < passes; pass++) {
       const tight = line.map(function (_, i) { return radiusAt(line, i) < minR; });
       if (tight.indexOf(true) === -1) break;
       line = resample(line.map(function (p, i) {
@@ -117,8 +121,24 @@
     return perimeter;
   }
 
+  // Built roads by their points: a big track's road takes a moment to build, and the server (every
+  // race start) and the TV (the world, the scenery, the course map) ask for the same one again.
+  // Callers only read what they get back.
+  const built = new Map();
+  const BUILT_MAX = 16;
+
   /** Everything about a track's road: the centre line and its cumulative length. */
   function build(points) {
+    const key = points.map(function (p) { return p[0] + ',' + p[1]; }).join(';');
+    const known = built.get(key);
+    if (known) return known;
+    const road = buildRoad(points);
+    if (built.size >= BUILT_MAX) built.delete(built.keys().next().value);
+    built.set(key, road);
+    return road;
+  }
+
+  function buildRoad(points) {
     const line = centreLine(points, samplesFor(points));
     const cum = [0];
     for (let i = 1; i <= line.length; i++) {

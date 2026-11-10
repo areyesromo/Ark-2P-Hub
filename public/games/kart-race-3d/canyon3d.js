@@ -10,13 +10,17 @@
   const SEED = 20261108;
   const ROCK_GAP = 3; // rocks keep this far outside the barriers
   const ARCH = { clear: 7, legR: 2.5, legGap: 1, legClear: 0.5, grow: 6, slide: 0.03, slideStep: 0.002 }; // clear: the underside's height, above the chase camera
+  // Sizes for a 128-wide field; a bigger field scales them by its width (s = field.w / 128).
+  const BASE_W = 128;
   const CLIFF = { out: 1, step: 7, r: [5, 8], h: [9, 16] };
-  const BOULDERS = { max: 36, grid: 4, r: [1, 3], h: [1, 4] };
+  const BOULDERS = { max: 80, grid: 4, r: [1, 3], h: [1, 4] };
   const MESA = { maxR: 14, h: 8 };
   const DAM = { y: -30, w: 56, h: 22 };
-  // The paddock along the first stretch after the line, outside the loop: [kind, distance along the road, offset].
-  const PADDOCK = [['tent', 8, 10], ['canopy', 14, 10.5], ['tent', 20, 9.5], ['tent', 26, 10]];
-  const FLAGS = { from: 4, to: 30, every: 3, offset: 6.5 };
+  // The paddock along the first stretch after the line, outside the loop: [kind, distance along the
+  // road, how far beyond the barriers]. (People-sized: these don't scale.)
+  const PADDOCK = [['tent', 8, 5], ['canopy', 14, 5.5], ['tent', 20, 4.5], ['tent', 26, 5]];
+  const FLAGS = { from: 4, to: 30, every: 3, beyond: 1.75 };
+  const times = function (range, s) { return [range[0] * s, range[1] * s]; };
 
   /** A small seeded random generator (mulberry32): every TV draws the same canyon. */
   function random(seed) {
@@ -54,15 +58,15 @@
   const between = function (rnd, range) { return range[0] + rnd() * (range[1] - range[0]); };
 
   /** Cliffs in a ring just outside the field's edge, each wholly outside it. */
-  function cliffs(f, rnd) {
+  function cliffs(f, rnd, s) {
     const out = [];
     const edge = function (x0, y0, x1, y1, nx, ny) {
       const len = Math.hypot(x1 - x0, y1 - y0);
-      for (let d = 0; d <= len; d += CLIFF.step) {
-        const r = between(rnd, CLIFF.r);
+      for (let d = 0; d <= len; d += CLIFF.step * s) {
+        const r = between(rnd, times(CLIFF.r, s));
         const t = d / len;
         const push = r + CLIFF.out;
-        out.push({ kind: 'cliff', x: x0 + (x1 - x0) * t + nx * push, y: y0 + (y1 - y0) * t + ny * push, r: r, h: between(rnd, CLIFF.h) });
+        out.push({ kind: 'cliff', x: x0 + (x1 - x0) * t + nx * push, y: y0 + (y1 - y0) * t + ny * push, r: r, h: between(rnd, times(CLIFF.h, s)) });
       }
     };
     edge(0, 0, f.w, 0, 0, -1);
@@ -73,17 +77,17 @@
   }
 
   /** The festival paddock: tents, a canopy and flags beside the first stretch after the line, outside the loop. */
-  function paddock(road) {
+  function paddock(road, keep) {
     const Road = window.ArkKartTrack;
     const at = function (d, off) { return Road.pointAt(road, d / road.length, off); };
-    const mid = at(PADDOCK[1][1], PADDOCK[1][2]);
+    const mid = at(PADDOCK[1][1], keep + PADDOCK[1][2]);
     const side = inside(road, mid.x, mid.y) ? -1 : 1;
     const out = PADDOCK.map(function (p) {
-      const q = at(p[1], p[2] * side);
+      const q = at(p[1], (keep + p[2]) * side);
       return { kind: p[0], x: q.x, y: q.y, angle: q.angle };
     });
     for (let d = FLAGS.from; d <= FLAGS.to; d += FLAGS.every) {
-      const q = at(d, FLAGS.offset * side);
+      const q = at(d, (keep + FLAGS.beyond) * side);
       out.push({ kind: 'flag', x: q.x, y: q.y, angle: q.angle });
     }
     return out;
@@ -123,8 +127,9 @@
     const f = view.field;
     const keep = view.trackWidth / 2 + view.wallOut; // the road and its barriers
     const rnd = random(SEED);
-    const rocks = cliffs(f, rnd);
-    const pad = paddock(road);
+    const s = f.w / BASE_W;
+    const rocks = cliffs(f, rnd, s);
+    const pad = paddock(road, keep);
 
     // The mesa: the most open spot inside the loop.
     let best = null;
@@ -137,15 +142,16 @@
     }
     const placed = [];
     if (best && best.c - keep - ROCK_GAP > 1) {
-      const mesa = { kind: 'mesa', x: best.x, y: best.y, r: Math.min(MESA.maxR, best.c - keep - ROCK_GAP), h: MESA.h };
+      const mesa = { kind: 'mesa', x: best.x, y: best.y, r: Math.min(MESA.maxR * s, best.c - keep - ROCK_GAP), h: MESA.h * s };
       rocks.push(mesa);
       placed.push(mesa);
     }
 
     // Boulders on a jittered grid, in a seeded order, clear of the road, the paddock and each other.
     const spots = [];
-    for (let x = BOULDERS.grid / 2; x < f.w; x += BOULDERS.grid) {
-      for (let y = BOULDERS.grid / 2; y < f.h; y += BOULDERS.grid) spots.push([x + (rnd() - 0.5) * 3, y + (rnd() - 0.5) * 3]);
+    const grid = BOULDERS.grid * s;
+    for (let x = grid / 2; x < f.w; x += grid) {
+      for (let y = grid / 2; y < f.h; y += grid) spots.push([x + (rnd() - 0.5) * 3 * s, y + (rnd() - 0.5) * 3 * s]);
     }
     for (let i = spots.length - 1; i > 0; i--) {
       const j = Math.floor(rnd() * (i + 1));
@@ -157,8 +163,8 @@
     for (let i = 0; i < spots.length && boulders < BOULDERS.max; i++) {
       const x = spots[i][0];
       const y = spots[i][1];
-      const r = between(rnd, BOULDERS.r);
-      const h = between(rnd, BOULDERS.h);
+      const r = between(rnd, times(BOULDERS.r, s));
+      const h = between(rnd, times(BOULDERS.h, s));
       if (x - r < 0.5 || y - r < 0.5 || x + r > f.w - 0.5 || y + r > f.h - 0.5) continue;
       if (clearance(road, x, y) < keep + ROCK_GAP + r) continue;
       if (pad.some(function (p) { return Math.hypot(p.x - x, p.y - y) < ROCK_GAP + r; })) continue;
@@ -172,7 +178,8 @@
     return {
       rocks: rocks,
       arches: (scenery.arches || []).map(function (p) { return arch(road, p, keep); }).filter(Boolean),
-      dam: { x: f.w / 2, y: DAM.y, w: DAM.w, h: DAM.h },
+      dam: { x: f.w / 2, y: DAM.y * s, w: DAM.w * s, h: DAM.h * s },
+      scale: s,
       paddock: pad,
     };
   }
@@ -195,8 +202,8 @@
    * A rock as slabs: [{ x, y (field), base, r, h, turn, color }]. Every slab is drawn from one shared
    * cylinder in one instanced mesh, so all the canyon's rock costs a single draw call.
    */
-  function slabs(rock, rnd, out) {
-    const n = Math.max(1, Math.round(rock.h / SLAB_H));
+  function slabs(rock, rnd, out, s) {
+    const n = Math.max(1, Math.round(rock.h / (SLAB_H * (s || 1))));
     const h = rock.h / n;
     let r = rock.r;
     for (let i = 0; i < n; i++) {
@@ -300,7 +307,7 @@
 
     const rnd = random(SEED + 1);
     const all = [];
-    l.rocks.forEach(function (r) { slabs(r, rnd, all); });
+    l.rocks.forEach(function (r) { slabs(r, rnd, all, l.scale); });
     l.arches.forEach(function (a) {
       const obj = place(PIECES.arch(THREE, a, mat), 'arch', a.x, a.y, a.angle);
       // The legs: rock either side of the road, up to the ring.

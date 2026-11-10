@@ -10,6 +10,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   red hub, and they stay clean as they spin.
 - 👀 Kart Race 3D: look behind you and glance left or right while you drive: hold Look back on
   the phone, or use a controller's right stick.
+- 🏁 Kart Race 3D's tracks are much bigger: a road wide enough for the whole pack and laps of about
+  a minute (3D races now default to 3 laps). Lap records start fresh on the bigger tracks.
 
 ## 0.1.37
 

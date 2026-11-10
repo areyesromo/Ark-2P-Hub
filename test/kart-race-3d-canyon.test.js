@@ -10,7 +10,7 @@ import { buildTrack } from '../server/games/kart-race.js';
 import { TRACKS_3D } from '../server/games/kart-tracks-3d.js';
 
 const Road = globalThis.ArkKartTrack;
-const HALF = 3.5;
+const HALF = 6; // (half the big tracks' 12-wide road)
 const OUT = 1.25;
 
 /** A page with the canyon code loaded. */
@@ -24,9 +24,9 @@ function page() {
 const sunset = buildTrack(0, TRACKS_3D);
 const view = {
   track: { points: sunset.points, scenery: { kind: 'canyon', arches: [0.396, 0.85] } },
-  trackWidth: 7,
+  trackWidth: sunset.width,
   wallOut: OUT,
-  field: { w: 128, h: 72 },
+  field: sunset.field,
 };
 const road = Road.build(sunset.points);
 
@@ -60,7 +60,7 @@ test('the same canyon every time', () => {
 test('cliffs stand outside the field', () => {
   const cliffs = page().KRCanyon.layout(view).rocks.filter((r) => r.kind === 'cliff');
   assert.ok(cliffs.length > 30, String(cliffs.length));
-  for (const c of cliffs) assert.ok(c.x + c.r < 0 || c.x - c.r > 128 || c.y + c.r < 0 || c.y - c.r > 72, JSON.stringify(c));
+  for (const c of cliffs) assert.ok(c.x + c.r < 0 || c.x - c.r > view.field.w || c.y + c.r < 0 || c.y - c.r > view.field.h, JSON.stringify(c));
 });
 
 test('rocks in the field keep off the road', () => {
@@ -87,8 +87,8 @@ test('two arches straddle the road, legs clear of every stretch', () => {
 
 test('the dam is in the distance', () => {
   const dam = page().KRCanyon.layout(view).dam;
-  assert.ok(dam.y < -20, String(dam.y));
-  assert.ok(dam.x > 0 && dam.x < 128);
+  assert.ok(dam.y < -45, String(dam.y));
+  assert.ok(dam.x > 0 && dam.x < view.field.w);
 });
 
 test('the paddock is by the start, off the road, outside the loop', () => {
@@ -230,8 +230,8 @@ test('the dam faces the track across the north, with its lake behind it', () => 
   const box = new THREE.Box3().setFromObject(dam);
   assert.ok(box.max.x - box.min.x > box.max.z - box.min.z, 'wider across than deep');
   assert.ok(box.max.z < 0, 'beyond the north edge: ' + box.max.z);
-  // The overview camera (kart3d.js) draws to 200 units: keep the lake well inside that.
-  assert.ok(box.min.z > -66, 'lake not too far back: ' + box.min.z);
+  // The cameras (kart3d.js) see 2.5 field-widths: keep the lake well inside that.
+  assert.ok(box.min.z > -0.5 * view.field.w, 'lake not too far back: ' + box.min.z);
   const meshes = dam.children.filter((o) => o.isMesh);
   const z = (m) => new THREE.Box3().setFromObject(m).getCenter(new THREE.Vector3()).z;
   const wall = meshes[0];
@@ -247,4 +247,14 @@ test('dispose also frees the rocks instance buffers', () => {
   rocks.dispose = () => { freed++; };
   built.dispose();
   assert.equal(freed, 1);
+});
+
+test('boulders: more of them on the big field, up to 80', () => {
+  const n = page().KRCanyon.layout(view).rocks.filter((r) => r.kind === 'boulder').length;
+  assert.ok(n > 36 && n <= 80, String(n));
+});
+
+test('the big tracks are what the canyon is laid out for', () => {
+  assert.equal(sunset.width, 12);
+  assert.deepEqual(sunset.field, { w: 288, h: 162 });
 });

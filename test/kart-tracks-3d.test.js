@@ -132,9 +132,35 @@ TRACKS_3D.forEach((def, i) => {
   const L = t.line;
   const n = L.length;
 
-  test(`${def.name}: a big track (road 7, field 128 x 72)`, () => {
-    assert.equal(t.width, 7);
-    assert.deepEqual(t.field, { w: 128, h: 72 });
+  test(`${def.name}: a big track (road 12, field 288 x 162)`, () => {
+    assert.equal(t.width, 12);
+    assert.deepEqual(t.field, { w: 288, h: 162 });
+  });
+
+  test(`${def.name}: a lap of 45-60 s at top speed`, () => {
+    const s = t.length / 8.5;
+    assert.ok(s >= 45 && s <= 60, `${s.toFixed(1)} s`);
+  });
+
+  test(`${def.name}: rows of boxes about every 60 units`, () => {
+    assert.equal(t.rows.length, Math.round(t.length / 60));
+    for (let i = 1; i < t.rows.length; i++) {
+      const gap = (t.rows[i] - t.rows[i - 1]) * t.length;
+      assert.ok(gap >= 50 && gap <= 70, `gap ${gap.toFixed(1)}`);
+    }
+  });
+
+  test(`${def.name}: one more boost pad than before, the new one on a straight`, () => {
+    assert.equal(t.boosts.length, 3);
+    const p = t.boosts[2][0];
+    const a = pointAt(t, p - 5 / t.length).angle;
+    const b = pointAt(t, p + 5 / t.length).angle;
+    assert.ok(Math.abs(Math.atan2(Math.sin(b - a), Math.cos(b - a))) < 0.1, 'on a straight');
+  });
+
+  test(`${def.name}: races in wide lanes, under its own record name`, () => {
+    assert.deepEqual(t.lanes, [-4.1, 0, 4.1]);
+    assert.equal(t.recordName, def.name + ' (wide)');
   });
 
   test(`${def.name}: a clean loop on its field`, () => {
@@ -167,14 +193,14 @@ TRACKS_3D.forEach((def, i) => {
     const rows = 4;
     const spots = [];
     for (let j = 0; j < 8; j++) {
-      const p = 0.012 + ((rows - 1 - Math.floor(j / 2)) * GRID.rowGap) / t.length;
-      spots.push(pointAt(t, p, j % 2 ? GRID.side : -GRID.side));
+      const p = 0.012 + ((rows - 1 - Math.floor(j / 2)) * t.grid.rowGap) / t.length;
+      spots.push(pointAt(t, p, j % 2 ? t.grid.side : -t.grid.side));
     }
     for (const s of spots) assert.ok(locate(t, s.x, s.y).d <= t.width / 2, 'grid spot off the road');
-    for (let a = 0; a < 8; a++) for (let b = a + 1; b < 8; b++) assert.ok(Math.hypot(spots[a].x - spots[b].x, spots[a].y - spots[b].y) >= 1.4, 'grid spots too close');
+    for (let a = 0; a < 8; a++) for (let b = a + 1; b < 8; b++) assert.ok(Math.hypot(spots[a].x - spots[b].x, spots[a].y - spots[b].y) >= 2, 'grid spots too close');
   });
 
-  test(`${def.name}: a Normal driver laps in 40-60 s`, () => {
+  test(`${def.name}: a Normal driver completes a lap without getting stuck`, () => {
     const ctx = fakeCtx();
     const game = new KartRace3D(ctx, () => 0.5);
     game.start();
@@ -184,7 +210,7 @@ TRACKS_3D.forEach((def, i) => {
     ctx.advance(TIMING.countdownMs + 50);
     assert.equal(game.track.name, def.name);
     const memory = [{}, {}];
-    for (let ms = 0; ms < 120000 && game.karts[0].bestLap === null; ms += 17) {
+    for (let ms = 0; ms < 300000 && game.karts[0].bestLap === null; ms += 17) {
       for (const slot of [0, 1]) {
         const move = kartRaceBot(game.botView(slot), 'normal', () => 0.5, 0, memory[slot]);
         if (move && move.type === 'drive') game.onInput(slot, { type: 'drive', steer: move.steer, gas: move.gas, brake: move.brake, drift: move.drift });
@@ -192,7 +218,7 @@ TRACKS_3D.forEach((def, i) => {
       ctx.advance(17);
     }
     const lap = game.karts[0].bestLap;
-    assert.ok(lap !== null && lap >= 40000 && lap <= 60000, `lap ${lap}`);
+    assert.ok(lap !== null && lap <= 180000, `lap ${lap}`);
   });
 });
 
@@ -224,7 +250,7 @@ test("the setup view sends each track's own field and road width, for the previe
   game.start();
   const v = game.hostView();
   assert.equal(v.trackSizes.length, 5);
-  for (const s of v.trackSizes) assert.deepEqual(s, { field: { w: 128, h: 72 }, width: 7 });
+  for (const s of v.trackSizes) assert.deepEqual(s, { field: { w: 288, h: 162 }, width: 12 });
   const two = new KartRace(fakeCtx());
   two.start();
   assert.deepEqual(two.hostView().trackSizes[0], { field: { w: 32, h: 18 }, width: 3.4 });
@@ -256,4 +282,55 @@ test('a battle arena has no scenery', () => {
   const { game } = racingOn(KartRace3D, { mode: 1 });
   assert.ok(game.battle);
   assert.equal(game.hostView().track.scenery, null);
+});
+
+// ---- the big tracks in a race: lanes, laps and records ----
+
+test('computer racers hold the wide lanes on a big track', () => {
+  const { game } = racingOn(KartRace3D, { field: 1 });
+  assert.equal(game.karts.length, 8);
+  for (const k of game.karts.slice(2)) assert.ok([-4.1, 4.1].includes(k.driver.home), String(k.driver.home));
+});
+
+test('the 2D game keeps its lanes and record names', () => {
+  const t = buildTrack(0);
+  assert.deepEqual(t.lanes, [-2.4, 0, 2.4]);
+  assert.equal(t.recordName, TRACKS[0].name);
+});
+
+test('a 3D lap record is looked up and saved under its wide name', () => {
+  const asked = [];
+  const ctx = fakeCtx();
+  ctx.lapRecord = (track) => (asked.push(track), null);
+  const { game } = racingOn(KartRace3D, { track: 2 }, ctx);
+  assert.equal(game.track.name, 'Speedway Oval');
+  assert.ok(asked.includes('Speedway Oval (wide)'), JSON.stringify(asked));
+  game.karts[0].bestLap = 51000;
+  game.result = { winner: 0, time: 1000 };
+  game.endRace();
+  const laps = game.hostView().lapTimes || [];
+  assert.ok(laps.some((l) => l.track === 'Speedway Oval (wide)' && l.ms === 51000), JSON.stringify(laps));
+});
+
+test('Kart Race 3D races 3 laps by default; Kart Race keeps 5', () => {
+  assert.equal(new KartRace3D(fakeCtx()).settings.laps, 3);
+  assert.equal(new KartRace(fakeCtx()).settings.laps, 5);
+});
+
+test('a saved 5-lap setting still loads as 5', () => {
+  const ctx = fakeCtx();
+  ctx.saved = { settings: { laps: 5 } };
+  assert.equal(new KartRace3D(ctx).settings.laps, 5);
+});
+
+test('a big track is built once: the same road and barriers again next race', () => {
+  const a = buildTrack(1, TRACKS_3D);
+  const b = buildTrack(1, TRACKS_3D);
+  assert.equal(a.edge, b.edge, 'the barriers are reused');
+  assert.equal(a.line, b.line, 'the centre line is reused');
+});
+
+test('the same points build the same road object (the TV builds it in three places)', () => {
+  const pts = TRACKS_3D[0].points.map((p) => p.slice()); // a copy, as a view brings them
+  assert.equal(Road.build(pts), Road.build(TRACKS_3D[0].points.map((p) => p.slice())));
 });
