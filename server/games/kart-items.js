@@ -133,11 +133,13 @@ export function useItem(game, slot, now) {
   if (now < k.goldUntil) {
     boost(game, k, now, true);
     game.events.used++;
+    used(k, 'goldturbo', now);
     return;
   }
   const kind = k.items.shift();
   if (!kind) return;
   game.events.used++;
+  used(k, kind, now);
   if (kind === 'turbo') boost(game, k, now);
   else if (kind === 'shield') k.shieldUntil = now + ITEMS.shieldMs;
   else if (kind === 'banana') {
@@ -185,6 +187,12 @@ export function useItem(game, slot, now) {
     const at = Road.pointAt(game.track, k.progress + (forward * ITEMS.bombThrow) / game.track.length);
     game.shots.push({ kind, x: at.x, y: at.y, angle: 0, owner: slot, bornAt: now, until: now + ITEMS.bombFuseMs });
   }
+}
+
+/** What a kart just used, and when: the 3D TV's driver throws, drops or holds it up. */
+function used(k, kind, now) {
+  k.usedKind = kind;
+  k.usedAt = now;
 }
 
 /** Drop a web or oil just behind the kart (it can't hit you straight away). */
