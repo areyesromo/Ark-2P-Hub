@@ -1,6 +1,6 @@
 // Kart Race 3D's movement maths for a racer's 3D model: how far the wheels roll, how far the
-// front wheels steer, where the driver looks, and how he reacts (arms up in a spin, a fist pump
-// for a win). Plain numbers in and out, so it's testable without WebGL. Sets globalThis.KRRig.
+// front wheels steer, and where the driver looks (his reactions and the rest of his motion are in
+// body3d.js). Plain numbers in and out, so it's testable without WebGL. Sets globalThis.KRRig.
 // Signs: field (x, y) is scene (x, z), so a growing pose angle turns the kart towards scene +z, its
 // right. A positive turn rate means turning right; angles here carry that sign, and the caller sets
 // rotation.y = -angle (a positive rotation.y turns towards the left).
@@ -12,10 +12,6 @@
   const HEAD_PER_TURN = 0.3;
   const TOP_SPEED = 8.5; // the server's KART.maxSpeed: the bob is full from here up
   const BOB = { amp: 0.02, period: 60, dropGain: 0.4, dropMax: 0.05 };
-  const ARMS_UP = 2.2; // a shoulder turn that puts the hands over the head
-  // Hands on the wheel: turning right (clockwise for the driver) lifts the left hand and lowers the
-  // right, each arm turning at its shoulder by this much per radian of steering.
-  const ARM_PER_STEER = 0.6;
   const clamp = (v, max) => Math.max(-max, Math.min(max, v));
 
   /** How fast the kart is turning, in radians a second (positive: to the right). */
@@ -45,23 +41,5 @@
     return ride - clamp(dh * BOB.dropGain, BOB.dropMax) + 0; // (+0: no -0 when stopped)
   }
 
-  /** What the driver is reacting to: a spin-out, winning the race (first over the line), or nothing. */
-  function reaction(k, place) {
-    if (!k) return null;
-    if (k.spin) return 'spin';
-    if (k.finished && place === 1) return 'win';
-    return null;
-  }
-
-  /**
-   * The driver's pose: each arm's raise at the shoulder (positive lifts the hand) and the head's
-   * turn. Driving: the hands follow the wheel. Spun out: arms up, head shaking. Won: the left fist pumps.
-   */
-  function moves(react, steer, head, now) {
-    if (react === 'spin') return { armL: ARMS_UP, armR: ARMS_UP, headYaw: 0.35 * Math.sin(now / 70) };
-    if (react === 'win') return { armL: 1.6 + 0.6 * Math.abs(Math.sin(now / 180)), armR: 0, headYaw: 0 };
-    return { armL: steer * ARM_PER_STEER, armR: -steer * ARM_PER_STEER, headYaw: head };
-  }
-
-  globalThis.KRRig = { STEER_MAX, HEAD_MAX, TELEPORT, ARM_PER_STEER, turnRate, roll, steerGoal, headGoal, ease, bob, reaction, moves };
+  globalThis.KRRig = { STEER_MAX, HEAD_MAX, TELEPORT, turnRate, roll, steerGoal, headGoal, ease, bob };
 })();

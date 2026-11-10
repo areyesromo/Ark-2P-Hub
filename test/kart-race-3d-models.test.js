@@ -100,7 +100,10 @@ test("rex-kart.glb's steering wheel turns on the column, with grips", () => {
   assert.ok(steer !== -1, 'a steer node');
   const kids = (json.nodes[steer].children || []).map((c) => json.nodes[c].name);
   assert.ok(kids.includes('grip_l') && kids.includes('grip_r'), JSON.stringify(kids));
-  assert.ok(node(json, 'grip_l').translation[2] < 0, 'grip_l on the left');
+  const at = (name) => new THREE.Vector3().setFromMatrixPosition(worlds(json)(name));
+  assert.ok(at('grip_l').z < 0 && at('grip_r').z > 0, 'grip_l on the left, in the kart frame');
+  // In reach of the driver's hands: below the wheel's centre (the near side of a tilted wheel).
+  assert.ok(at('grip_l').y < at('steer').y && at('grip_r').y < at('steer').y);
   assert.ok(json.nodes[steer].mesh !== undefined, 'the steering wheel is a mesh of its own');
   assert.ok(triangles(json) <= 10000, String(triangles(json)));
 });

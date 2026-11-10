@@ -19,6 +19,10 @@
   const LENGTH = 1.75; // the kart's hit capsule (server KART: 2 * (r + reach))
   const LEAN = { max: 0.15, perTurn: 0.06 }; // roll in a bend: radians per radian-a-second of turning
   const SPIN_MS = 600; // a spin-out turns the kart once round in this long
+  const BRAKE_DECEL = 4; // slowing faster than this (units/s²) tips the driver forward
+  const JOLT_MS = 150; // a jolt fades in about this long
+  const BOB_NOD = 4; // radians of nod per unit of head bob
+  const RIM_STEPS = 12; // how finely a hand looks along the rim for a spot it can reach
 
   /** A label floating over a kart: the text on a rounded tag in `color`, always facing the camera. */
   function tag(THREE, text, color) {
@@ -87,34 +91,115 @@
     };
   }
 
+  const BONES = ['hips', 'spine', 'chest', 'neck', 'head', 'shoulder_l', 'upper_arm_l', 'forearm_l', 'hand_l', 'shoulder_r', 'upper_arm_r',
+    'forearm_r', 'hand_r', 'thigh_l', 'shin_l', 'foot_l', 'thigh_r', 'shin_r', 'foot_r', 'tail_1', 'tail_2', 'tail_3'];
+
   /**
-   * The racer's 3D model, cloned from the loaded one (the clones share its geometry and texture):
-   * the kart, the driver on its seat, and the parts that move. `top`: the driver's head height.
+   * The racer's 3D model, cloned from the loaded one (the clones share its geometry and texture; the
+   * driver's bones are his own): the kart, the driver on its seat, and the parts that move, with the
+   * rest pose they move from. `top`: the driver's head height.
    */
   function rig(THREE, model) {
     const kart = model.kart.clone(true);
-    const driver = model.driver.clone(true);
+    const driver = model.clone ? model.clone(model.driver) : model.driver.clone(true);
     const seat = kart.getObjectByName('seat');
     if (seat) driver.position.copy(seat.position);
     const group = new THREE.Group();
     group.add(kart, driver);
     const part = function (root, name) { return root.getObjectByName(name); };
+    const bones = {};
+    BONES.forEach(function (n) { const b = part(driver, n); if (b) bones[n] = b; });
     const parts = {
       wheels: ['wheel_fl', 'wheel_fr', 'wheel_rl', 'wheel_rr'].map(function (n) { return part(kart, n); }).filter(Boolean),
       front: ['wheel_fl', 'wheel_fr'].map(function (n) { return part(kart, n); }).filter(Boolean),
-      head: part(driver, 'head'),
-      armL: part(driver, 'arm_l'),
-      armR: part(driver, 'arm_r'),
-    };
-    const base = {
-      headY: parts.head ? parts.head.position.y : 0,
-      headYaw: parts.head ? parts.head.rotation.y : 0,
-      armL: parts.armL ? parts.armL.rotation.z : 0,
-      armR: parts.armR ? parts.armR.rotation.z : 0,
+      steer: part(kart, 'steer'),
+      grips: { l: part(kart, 'grip_l'), r: part(kart, 'grip_r') },
+      bones: bones,
     };
     group.updateMatrixWorld(true);
+    // The rest pose: each bone's own turn, and its parent's (in the model's frame) to turn about
+    // the model's axes; the steering wheel's turn on its column.
+    const rest = { steer: parts.steer ? parts.steer.quaternion.clone() : null, bones: {} };
+    Object.keys(bones).forEach(function (n) {
+      const b = bones[n];
+      const parentQ = new THREE.Quaternion();
+      if (b.parent) b.parent.getWorldQuaternion(parentQ);
+      rest.bones[n] = { q: b.quaternion.clone(), parentInv: parentQ.invert() };
+    });
     const top = new THREE.Box3().setFromObject(driver).max.y;
-    return { group: group, parts: parts, base: base, wheelRadius: model.wheelRadius, top: top };
+    return { group: group, parts: parts, rest: rest, wheelRadius: model.wheelRadius, top: top, can: Boolean(parts.steer && bones.hand_l && bones.hand_r) };
+  }
+
+  const AXES = { x: [1, 0, 0], y: [0, 1, 0], z: [0, 0, 1] };
+
+  /**
+   * Put a pose (KRBody.pose) on a model: the steering wheel's turn, every bone's turns (about the
+   * model's axes, from its rest), then each hand onto its grip (two-bone reach, by its weight).
+   */
+  function animate(THREE, model, p, tailState) {
+    const P = model.parts;
+    const tmp = { q: new THREE.Quaternion(), v: new THREE.Vector3() };
+    if (P.steer && model.rest.steer) P.steer.quaternion.copy(model.rest.steer).multiply(tmp.q.setFromAxisAngle(tmp.v.set(0, 1, 0), -p.wheel));
+    const turns = Object.assign({}, p.turns);
+    if (tailState) {
+      ['tail_1', 'tail_2', 'tail_3'].forEach(function (n, i) { turns[n] = [['y', tailState.yaw[i]], ['z', tailState.pitch[i]]]; });
+    }
+    Object.keys(P.bones).forEach(function (n) {
+      const b = P.bones[n];
+      const r = model.rest.bones[n];
+      b.quaternion.copy(r.q);
+      (turns[n] || []).forEach(function (t) {
+        const axis = tmp.v.fromArray(AXES[t[0]]).applyQuaternion(r.parentInv);
+        b.quaternion.premultiply(tmp.q.setFromAxisAngle(axis, t[1]));
+      });
+    });
+    model.group.updateMatrixWorld(true);
+    [['l', -1], ['r', 1]].forEach(function (arm) {
+      const s = arm[0];
+      const w = p.ikWeight[s];
+      const upper = P.bones['upper_arm_' + s];
+      const fore = P.bones['forearm_' + s];
+      const hand = P.bones['hand_' + s];
+      const grip = P.grips[s];
+      if (!(w > 0) || !upper || !fore || !hand || !grip) return;
+      const local = function (o) { return model.group.worldToLocal(o.getWorldPosition(new THREE.Vector3())); };
+      const S = local(upper);
+      const reach = S.distanceTo(local(fore)) + local(fore).distanceTo(local(hand));
+      const solved = window.KRBody.ik2(S.toArray(), local(fore).toArray(), local(hand).toArray(), onRim(THREE, model, grip, p.wheel, S, reach).toArray(), [S.x, S.y - 0.2, S.z + arm[1] * 0.15]);
+      aim(THREE, model.group, upper, fore, new THREE.Vector3().fromArray(solved.elbow), w);
+      aim(THREE, model.group, fore, hand, new THREE.Vector3().fromArray(solved.hand), w);
+    });
+  }
+
+  /**
+   * Where a hand holds the rim: its grip, or, when the turned wheel has carried the grip out of
+   * reach, the first point back along the rim (towards where the grip was) that the hand can reach:
+   * the hand slides round the rim, as a driver's does. In the model's frame.
+   */
+  function onRim(THREE, model, grip, wheel, shoulder, reach) {
+    const up = new THREE.Vector3(0, 1, 0);
+    let best = null;
+    for (let i = 0; i <= RIM_STEPS; i++) {
+      const p = grip.position.clone().applyAxisAngle(up, (i / RIM_STEPS) * wheel); // (back towards its rest spot)
+      best = model.group.worldToLocal(grip.parent.localToWorld(p));
+      if (best.distanceTo(shoulder) <= reach * 0.995) return best;
+    }
+    return best;
+  }
+
+  /** Turn `bone` so its child moves towards `target` (model frame), by weight w. */
+  function aim(THREE, group, bone, child, target, w) {
+    const toLocal = function (o) { return group.worldToLocal(o.getWorldPosition(new THREE.Vector3())); };
+    const from = toLocal(bone);
+    const d0 = toLocal(child).sub(from).normalize();
+    const d1 = target.clone().sub(from).normalize();
+    const groupInv = group.getWorldQuaternion(new THREE.Quaternion()).invert();
+    const turn = new THREE.Quaternion().setFromUnitVectors(d0, d1);
+    const now = groupInv.clone().multiply(bone.getWorldQuaternion(new THREE.Quaternion()));
+    const parent = bone.parent ? groupInv.clone().multiply(bone.parent.getWorldQuaternion(new THREE.Quaternion())) : new THREE.Quaternion();
+    const want = parent.invert().multiply(turn.multiply(now));
+    bone.quaternion.slerp(want, w);
+    bone.updateMatrixWorld(true);
   }
 
   /**
@@ -161,10 +246,16 @@
     }
 
     const R = window.KRRig;
+    const B = window.KRBody;
     let last = null; // the last frame { pose, t, h }: for turning, rolling and the road's height
     let lean = 0;
     let steer = 0;
-    let look = 0;
+    // The driver's motion between frames: the reaction playing, the tail's springs, a jolt fading.
+    let reacting = null;
+    let tailState = null;
+    let jolt = 0;
+    let wasSpinning = false;
+    let lastSpeed = 0;
     return {
       obj: obj,
       racer: racerId,
@@ -184,15 +275,21 @@
           const rolled = last ? R.roll(last.pose, pose, model.wheelRadius) : 0;
           p.wheels.forEach(function (w) { w.rotation.z -= rolled; }); // rolling forward is a negative turn
           steer = R.ease(steer, R.steerGoal(rate));
-          look = R.ease(look, R.headGoal(rate));
           p.front.forEach(function (w) { w.rotation.y = -steer; });
-          const m = R.moves(R.reaction(k, place), steer, look, now);
-          if (p.armL) p.armL.rotation.z = model.base.armL + m.armL;
-          if (p.armR) p.armR.rotation.z = model.base.armR + m.armR;
-          if (p.head) {
-            p.head.rotation.y = model.base.headYaw - m.headYaw;
+          if (model.can) {
+            // The driver: the reaction playing, the tail, a jolt on a spin-out, the body's pose.
             const speed = dt > 0 ? (Math.hypot(pose.x - last.pose.x, pose.y - last.pose.y) / dt) * 1000 : 0;
-            p.head.position.y = model.base.headY + R.bob(speed, last ? h - last.h : 0, now);
+            const braking = dt > 0 && ((lastSpeed - speed) / dt) * 1000 > BRAKE_DECEL;
+            const spinning = Boolean(k && k.spin);
+            jolt = spinning && !wasSpinning ? 1 : jolt * Math.exp(-(dt || 0) / JOLT_MS);
+            wasSpinning = spinning;
+            reacting = B.react(reacting, B.reaction(k, place, Boolean(k && k.finished)), dt || 0);
+            tailState = B.tail(tailState, rate, speed, jolt, dt || 0);
+            const body = B.pose({ steer: steer, rate: rate, speed: speed, boosting: Boolean(k && k.boosting), braking: braking, jolt: jolt, now: now, reaction: reacting });
+            // The head bobs with speed and bumps: as a small nod.
+            (body.turns.head = body.turns.head || []).push(['z', R.bob(speed, last ? h - last.h : 0, now) * BOB_NOD]);
+            animate(THREE, model, body, tailState);
+            lastSpeed = speed;
           }
         }
         last = { pose: pose, t: now, h: h };

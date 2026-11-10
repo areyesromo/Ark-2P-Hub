@@ -69,7 +69,8 @@ def steering_wheel(body, cfg):
 
 
 def grips(steer, cfg):
-    '''The driver's grips on the rim, at 10 (left hand) and 2 o'clock (right), children of `steer`.'''
+    '''The driver's grips on the rim, children of `steer`: `gripAngle` degrees round from the top
+    each side (120: 8 and 4 o'clock, the near side of a wheel tilted towards the driver, in reach).'''
     s = cfg['steer']
     axis = Vector(cfg['column']['axis']).normalized()  # (game frame)
     up = Vector((0, 1, 0))
@@ -79,7 +80,7 @@ def grips(steer, cfg):
     out = []
     bpy.context.view_layer.update()
     for name, side in (('grip_l', -1), ('grip_r', 1)):
-        p = Vector(s['centre']) + s['radius'] * (math.cos(math.radians(60)) * twelve + side * math.sin(math.radians(60)) * right)
+        p = Vector(s['centre']) + s['radius'] * (math.cos(math.radians(s.get('gripAngle', 60))) * twelve + side * math.sin(math.radians(s.get('gripAngle', 60))) * right)
         g = common.empty(name, list(p))
         bpy.context.view_layer.update()
         world = g.matrix_world.copy()
