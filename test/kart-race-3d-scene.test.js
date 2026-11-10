@@ -9,9 +9,11 @@ import * as THREE from 'three';
 /** A scene with fake parts; returns it, the frame callback and every set() call each kart got. */
 async function scene() {
   let frame = null;
+  let draw = null;
+  let clock = 1000;
   const sets = [];
   const context = vm.createContext({
-    performance: { now: () => 1000 },
+    performance: { now: () => clock },
     getComputedStyle: () => ({ getPropertyValue: () => '' }),
     document: { documentElement: {} },
   });
@@ -19,7 +21,7 @@ async function scene() {
   vm.runInContext(fs.readFileSync('public/games/kart-race/racers.js', 'utf8'), context);
   vm.runInContext(fs.readFileSync('public/games/kart-race-3d/geom3d.js', 'utf8'), context);
   context.ArkMini = {
-    scene3d: async () => ({ THREE, scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(), onFrame: (fn) => { frame = fn; }, dispose() {} }),
+    scene3d: async (el, opts) => (draw = opts.draw, { THREE, scene: new THREE.Scene(), camera: new THREE.PerspectiveCamera(), onFrame: (fn) => { frame = fn; }, dispose() {} }),
   };
   context.KRThings = { make: () => ({ group: new THREE.Group(), update() {}, dispose() {} }) };
   context.KRWorld = { build: () => ({ group: new THREE.Group(), segments: [], dispose() {} }) };
@@ -32,7 +34,13 @@ async function scene() {
   };
   vm.runInContext(fs.readFileSync('public/games/kart-race-3d/kart3d.js', 'utf8'), context);
   const s = await context.KR3D.create({ classList: { toggle() {} } });
-  return { s, frame: () => frame(), sets };
+  /** The two halves' cameras, as the next draw renders them. */
+  const cameras = () => {
+    const out = [];
+    draw({ setScissorTest() {}, setViewport() {}, setScissor() {}, render: (sc, cam) => out.push(cam) }, null, 1600, 900);
+    return out;
+  };
+  return { s, frame: () => frame(), sets, cameras, tick: (ms) => { clock += ms; } };
 }
 
 const kartView = (finished) => ({ x: 5, y: 5, angle: 0, racer: 'rex', finished, spin: false });
@@ -55,4 +63,21 @@ test('the karts keep moving while the finish shows, so the winner can celebrate'
   const last = sets[0][sets[0].length - 1];
   assert.equal(last.k.finished, true, 'the winner saw the finish');
   assert.equal(last.place, 1);
+});
+
+test("looking back turns only that half's camera round", async () => {
+  const { s, frame, cameras, tick } = await scene();
+  const v = view('race', false);
+  v.karts = [
+    { x: 20, y: 20, angle: 0, racer: 'rex', back: true, look: 0 },
+    { x: 20, y: 30, angle: 0, racer: 'dash', back: false, look: 0 },
+  ];
+  s.update(v);
+  for (let i = 0; i < 30; i++) {
+    tick(16);
+    frame();
+  }
+  const [p1, p2] = cameras();
+  assert.ok(p1.position.x > 20, 'P1 looks back from in front: ' + p1.position.x);
+  assert.ok(p2.position.x < 20, 'P2 still behind: ' + p2.position.x);
 });

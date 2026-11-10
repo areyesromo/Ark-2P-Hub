@@ -24,6 +24,7 @@
   function alertFor(k) {
     if (k.jumped) return 'Jump start · 1 s penalty';
     if (k.cut) return 'Shortcut · back to the track';
+    if (k.back) return '👀 Looking back';
     if (k.spin) return 'Spun out';
     if (k.offTrack) return 'Off road · losing speed';
     if (k.shield) return 'Shield active';

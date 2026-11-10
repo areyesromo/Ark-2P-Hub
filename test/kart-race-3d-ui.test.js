@@ -87,3 +87,12 @@ test('3D clock rolls over without showing 0:60.0', () => {
   assert.equal(context.ArkKart3DUI.clock(60000), '1:00.0');
   assert.equal(context.ArkKart3DUI.clock(null), '—');
 });
+
+test("the HUD says when you're looking back", () => {
+  const { instance } = ui();
+  const v = kartViews().race;
+  v.karts[0] = { ...v.karts[0], back: true, jumped: false, cut: false };
+  const el = new Node();
+  instance.hud(v, el);
+  assert.equal(el.querySelectorAll('.kr3d-driver')[0].querySelector('.kr3d-alert').textContent, '👀 Looking back');
+});
