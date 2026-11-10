@@ -57,9 +57,10 @@ test('a lane shifts the line the driver takes', () => {
   const { game } = race3d();
   const v = game.botView(0);
   const steer = (lane) => driveKart(v, 'hard', () => 0.5, {}, lane).steer;
-  // Further right a lane, further right it steers (full lock is the limit).
-  assert.ok(steer(-1) < steer(1), `${steer(-1)} ${steer(1)}`);
-  assert.ok(steer(-1) <= steer(0) && steer(0) <= steer(1), `${steer(-1)} ${steer(0)} ${steer(1)}`);
+  // Further right a lane, further right it steers (full lock is the limit): the track's own lanes.
+  const [left, mid, right] = game.track.lanes;
+  assert.ok(steer(left) < steer(right), `${steer(left)} ${steer(right)}`);
+  assert.ok(steer(left) <= steer(mid) && steer(mid) <= steer(right), `${steer(left)} ${steer(mid)} ${steer(right)}`);
 });
 
 // ---- the race loop drives the computer racers ----
@@ -69,7 +70,7 @@ import { CPU, pointAt } from '../server/games/kart-race.js';
 import { TRACKS_3D } from '../server/games/kart-tracks-3d.js';
 
 /** Race on until every computer has a lap (or the time is up), noting the longest any sat still. */
-function runLap(ctx, game, maxMs = 90000) {
+function runLap(ctx, game, maxMs = 200000) { // (a big track's lap is about 450 units)
   const still = new Map();
   let worst = 0;
   for (let ms = 0; ms < maxMs; ms += 17) {

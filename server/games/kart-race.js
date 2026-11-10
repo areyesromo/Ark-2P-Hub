@@ -209,7 +209,9 @@ export function buildTrack(index, list = TRACKS) {
   const road = Road.build(def.points);
   const width = def.width || TRACK_WIDTH;
   const out = def.out || WALL.out;
-  const rows = def.rows || ITEMS.rows;
+  // ? box rows: the track's own, or one every `rowEvery` units of lap, or the usual fractions.
+  const spread = (n) => Array.from({ length: n }, (_, i) => (i + 0.5) / n);
+  const rows = def.rows || (def.rowEvery ? spread(Math.round(road.length / def.rowEvery)) : ITEMS.rows);
   const big = road.length > BIG_LAP;
   const coins = coinSpots(def, rows, def.coins || COINS.perLap, big ? 2.45 / road.length : COINS.clear);
   // The barriers either side of the road (shared down the middle where two stretches run close).
@@ -217,6 +219,7 @@ export function buildTrack(index, list = TRACKS) {
     index, name: def.name, points: def.points, width, out, field: def.field || FIELD, rows, boxOffsets: def.boxOffsets || ITEMS.offsets, grid: def.grid || GRID,
     cutJump: big ? 3.5 / road.length : CUT_JUMP, boosts: def.boosts, coins, ...road, edge: Road.barriers(road, width / 2, out),
     scenery: def.scenery || null, features: def.features || null, // the TV's look (Kart Race 3D's canyon)
+    lanes: def.lanes || CPU.lanes, recordName: def.recordName || def.name, // computer racers' lanes; whose records
   };
 }
 
