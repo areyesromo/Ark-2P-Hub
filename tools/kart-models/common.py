@@ -188,6 +188,7 @@ def export(objs, path):
     bpy.ops.export_scene.gltf(
         filepath=path, export_format='GLB', use_selection=True, export_yup=True,
         export_apply=True, export_image_format='JPEG', export_jpeg_quality=90,
+        export_skins=True, export_animations=False,
         export_extras=False, export_cameras=False, export_lights=False)
 
 

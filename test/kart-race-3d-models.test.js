@@ -3,6 +3,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
+import * as THREE from 'three';
 import { readGlb, nodeNames, triangles, bounds, imageSize, floats } from './helpers-glb.js';
 
 const DIR = 'public/games/kart-race-3d/models/';
@@ -35,23 +36,73 @@ test('the front-left wheel is front and left (left is -z)', () => {
   assert.ok(rr[0] < 0 && rr[2] > 0, String(rr));
 });
 
-test('rex.glb has its parts', () => {
-  const { json } = readGlb(DIR + 'rex.glb');
-  for (const name of ['torso', 'head', 'arm_l', 'arm_r']) assert.ok(nodeNames(json).includes(name), name);
-});
+const BONES = ['hips', 'spine', 'chest', 'neck', 'head',
+  ...['shoulder', 'upper_arm', 'forearm', 'hand', 'thigh', 'shin', 'foot'].flatMap((b) => [b + '_l', b + '_r']),
+  'tail_1', 'tail_2', 'tail_3'];
 
-test('rex.glb is within budget', () => {
+/** Each node's world matrix (its parents' transforms down to it). */
+function worlds(json) {
+  const parent = {};
+  json.nodes.forEach((n, i) => (n.children || []).forEach((c) => { parent[c] = i; }));
+  const local = (n) => new THREE.Matrix4().compose(
+    new THREE.Vector3(...(n.translation || [0, 0, 0])),
+    new THREE.Quaternion(...(n.rotation || [0, 0, 0, 1])),
+    new THREE.Vector3(...(n.scale || [1, 1, 1])));
+  const world = (i) => (parent[i] === undefined ? local(json.nodes[i]) : world(parent[i]).multiply(local(json.nodes[i])));
+  return (name) => world(json.nodes.findIndex((n) => n.name === name));
+}
+
+/** An accessor's numbers, floats or normalised integers. */
+function numbers(json, bin, i) {
+  const a = json.accessors[i];
+  if (a.componentType === 5126) return floats(json, bin, i);
+  const view = json.bufferViews[a.bufferView];
+  const size = { VEC4: 4 }[a.type];
+  const bytes = a.componentType === 5121 ? 1 : 2;
+  const stride = view.byteStride || size * bytes;
+  const start = (view.byteOffset || 0) + (a.byteOffset || 0);
+  const out = [];
+  for (let n = 0; n < a.count; n++) {
+    const e = [];
+    for (let k = 0; k < size; k++) e.push(bytes === 1 ? bin.readUInt8(start + n * stride + k) / 255 : bin.readUInt16LE(start + n * stride + k * 2) / 65535);
+    out.push(e);
+  }
+  return out;
+}
+
+test('rex.glb is one skinned mesh with its 22 bones', () => {
   const { json } = readGlb(DIR + 'rex.glb');
+  assert.equal((json.skins || []).length, 1);
+  const names = json.skins[0].joints.map((j) => json.nodes[j].name).sort();
+  assert.deepEqual(names, [...BONES].sort());
+  const skinned = json.meshes.filter((m) => m.primitives.every((p) => p.attributes.JOINTS_0 !== undefined && p.attributes.WEIGHTS_0 !== undefined));
+  assert.equal(skinned.length, 1);
   assert.ok(triangles(json) <= 8000, String(triangles(json)));
 });
 
-test('the head pivot is above the shoulders; the left arm is on the left', () => {
+test("every vertex's weights add up to 1", () => {
+  const { json, bin } = readGlb(DIR + 'rex.glb');
+  const prim = json.meshes.find((m) => m.primitives[0].attributes.WEIGHTS_0 !== undefined).primitives[0];
+  for (const w of numbers(json, bin, prim.attributes.WEIGHTS_0)) assert.ok(Math.abs(w[0] + w[1] + w[2] + w[3] - 1) < 0.01, String(w));
+});
+
+test("the left arm's bones are on the left, the head above the chest", () => {
   const { json } = readGlb(DIR + 'rex.glb');
-  const head = node(json, 'head').translation;
-  const l = node(json, 'arm_l').translation;
-  const r = node(json, 'arm_r').translation;
-  assert.ok(head[1] > l[1] - 0.05, `${head} ${l}`);
-  assert.ok(l[2] < 0 && r[2] > 0, `${l} ${r}`);
+  const w = worlds(json);
+  const at = (name) => new THREE.Vector3().setFromMatrixPosition(w(name));
+  assert.ok(at('upper_arm_l').z < 0 && at('upper_arm_r').z > 0, `${at('upper_arm_l').z} ${at('upper_arm_r').z}`);
+  assert.ok(at('head').y > at('chest').y);
+});
+
+test("rex-kart.glb's steering wheel turns on the column, with grips", () => {
+  const { json } = readGlb(DIR + 'rex-kart.glb');
+  const steer = json.nodes.findIndex((n) => n.name === 'steer');
+  assert.ok(steer !== -1, 'a steer node');
+  const kids = (json.nodes[steer].children || []).map((c) => json.nodes[c].name);
+  assert.ok(kids.includes('grip_l') && kids.includes('grip_r'), JSON.stringify(kids));
+  assert.ok(node(json, 'grip_l').translation[2] < 0, 'grip_l on the left');
+  assert.ok(json.nodes[steer].mesh !== undefined, 'the steering wheel is a mesh of its own');
+  assert.ok(triangles(json) <= 10000, String(triangles(json)));
 });
 
 test('each model has one 1024 texture and stays small', () => {
