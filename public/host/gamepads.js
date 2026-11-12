@@ -7,12 +7,13 @@
 (function () {
   const BUTTONS = {
     0: 'A', 1: 'B', 2: 'X', 3: 'Y', 4: 'LB', 5: 'RB', 6: 'LT', 7: 'RT',
-    8: 'BACK', 9: 'START', 12: 'UP', 13: 'DOWN', 14: 'LEFT', 15: 'RIGHT',
+    8: 'BACK', 9: 'START', 10: 'LS', 11: 'RS', 12: 'UP', 13: 'DOWN', 14: 'LEFT', 15: 'RIGHT',
   };
   const STICK = 0.6;
 
   const held = {}; // pad index -> names held on the last frame
   const sticks = {}; // pad index -> left stick { x, y }, -1..1
+  const sticks2 = {}; // pad index -> right stick { x, y }, -1..1
   let onPress = function () {};
   let onChange = function () {};
   let onFrame = function () {};
@@ -47,6 +48,7 @@
       const now = pressedNames(gp);
       held[gp.index] = now;
       sticks[gp.index] = { x: gp.axes[0] || 0, y: gp.axes[1] || 0 };
+      sticks2[gp.index] = { x: gp.axes[2] || 0, y: gp.axes[3] || 0 };
       now.forEach(function (name) {
         // Fire once per press, not every frame it's held.
         if (!before || before.indexOf(name) === -1) onPress(gp.index, name);
@@ -56,6 +58,7 @@
       if (!seen[i]) {
         delete held[i];
         delete sticks[i];
+        delete sticks2[i];
         changed = true;
       }
     });
@@ -75,6 +78,8 @@
     held: function (index) { return held[index] || []; },
     /** Left stick position { x, y } (-1..1, down is +y). */
     stick: function (index) { return sticks[index] || { x: 0, y: 0 }; },
+    /** Right stick position { x, y } (-1..1, down is +y). */
+    stick2: function (index) { return sticks2[index] || { x: 0, y: 0 }; },
     /** Short buzz, on controllers and browsers that support it. */
     rumble: function (index, ms) {
       const gp = pads().filter(function (p) { return p.index === index; })[0];

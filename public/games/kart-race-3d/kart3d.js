@@ -5,7 +5,7 @@
 (function () {
   const SKY = 0x9bd4f5;
   const BOOST_FOV = 8; // extra field of view on a boost
-  const OVERVIEW = { up: 24, back: 15 }; // the camera between races, south of the field centre
+  const OVERVIEW = { up: 0.75, back: 0.83 }; // the camera between races, south of the field centre (× its width, height)
 
   function create(el) {
     const G = window.ArkKartGeom;
@@ -21,6 +21,7 @@
     let prev = null; // the view before this one
     let cams = [];
     let follow = [null, null]; // each half's camera: { eye: [x, y], h, look: [x, y], fov }
+    let yaw = [0, 0]; // how far round each half's camera has swung (its player looking round)
     let lastFrame = 0;
 
     const css = getComputedStyle(document.documentElement);
@@ -35,6 +36,8 @@
       if (split()) {
         renderer.setScissorTest(true);
         cams.forEach(function (cam, i) {
+          // Each half shows the other player's tag, never its own (right in front of its camera).
+          karts.forEach(function (k, j) { if (k && k.marker) k.marker.visible = j !== i; });
           const x = i * Math.floor(w / 2);
           renderer.setViewport(x, 0, Math.floor(w / 2), h);
           renderer.setScissor(x, 0, Math.floor(w / 2), h);
@@ -44,6 +47,7 @@
         });
         renderer.setScissorTest(false);
       } else {
+        karts.forEach(function (k) { if (k && k.marker) k.marker.visible = true; }); // the overview shows both tags
         renderer.setViewport(0, 0, w, h);
         renderer.render(scene, gl.camera);
       }
@@ -51,9 +55,12 @@
 
     /** Move each half's camera toward its kart, never behind a wall. */
     function aim(poses, dt) {
-      poses.forEach(function (pose, i) {
+      // One camera per player (karts 0 and 1); any computer racers are just in the picture.
+      poses.slice(0, cams.length).forEach(function (pose, i) {
         const k = view.karts[i];
-        const goal = G.chase(pose, view.battle ? CAM.battle : CAM);
+        // Looking back or glancing swings this half's camera round its own kart.
+        yaw[i] = G.swing(yaw[i], G.lookYaw(k), dt);
+        const goal = G.chase(pose, view.battle ? CAM.battle : CAM, yaw[i]);
         const fov = CAM.fov + (k && k.boosting ? BOOST_FOV : 0);
         const want = goal.eye.concat(goal.eyeH, goal.look, fov);
         const f = follow[i] ? G.follow(follow[i], want, dt) : want; // a new race: straight there
@@ -75,12 +82,14 @@
       const dt = lastFrame ? Math.min(100, now - lastFrame) : 16;
       lastFrame = now;
       if (things && view) things.update(view, now);
-      const poses = split() ? smooth.at(now) : null;
+      // The karts keep moving while the finish shows (the winner celebrates); the chase cameras
+      // only while the screen is split.
+      const poses = view && view.karts ? smooth.at(now) : null;
       if (!poses) return;
       poses.forEach(function (pose, i) {
-        if (karts[i]) karts[i].set(pose, view.karts[i], now);
+        if (karts[i] && view.karts[i]) karts[i].set(pose, view.karts[i], now, view.positions && view.positions[i]);
       });
-      aim(poses, dt);
+      if (split()) aim(poses, dt);
     }
 
     function setWorld(v) {
@@ -95,12 +104,23 @@
       if (world) gl.scene.add(world.group);
       // Between races, look over the whole field.
       const f = v.field;
-      gl.camera.position.set(f.w / 2, OVERVIEW.up, f.h / 2 + OVERVIEW.back);
+      gl.camera.position.set(f.w / 2, f.w * OVERVIEW.up, f.h / 2 + f.h * OVERVIEW.back);
       gl.camera.lookAt(f.w / 2, 0, f.h / 2);
+      // From that high, a near plane further out keeps the depth fine enough that the kerbs, pads
+      // and road don't flicker against each other (it never comes close to anything).
+      gl.camera.near = Math.max(0.1, f.w / 100);
+      // Every camera sees across this field (a big track's far cliffs, the whole field from above).
+      const far = Math.max(200, 2.5 * f.w);
+      [gl.camera].concat(cams).forEach(function (cam) {
+        cam.far = far;
+        cam.updateProjectionMatrix();
+      });
     }
 
+    /** One kart per racer in the view (two, or eight in the Cup): the players' with a P1 / P2 tag. */
     function setKarts(v) {
-      [0, 1].forEach(function (slot) {
+      const n = Math.max(karts.length, v.karts ? v.karts.length : 0);
+      for (let slot = 0; slot < n; slot++) {
         const k = v.karts && v.karts[slot];
         const want = k ? k.racer : null;
         if (karts[slot] && karts[slot].racer !== want) {
@@ -109,10 +129,14 @@
           karts[slot] = null;
         }
         if (want && !karts[slot]) {
-          karts[slot] = window.KRKarts.make(gl.THREE, want, colors[slot]);
+          // Players wear their colour; a computer racer its own kart's.
+          const player = slot < 2;
+          const color = player ? colors[slot] : window.ArkKartRacers.racer(want).stripe;
+          karts[slot] = window.KRKarts.make(gl.THREE, want, color, player && v.karts.length > 2 ? 'P' + (slot + 1) : null, player);
           gl.scene.add(karts[slot].obj);
         }
-      });
+      }
+      karts.length = v.karts ? Math.max(2, v.karts.length) : karts.length;
     }
 
     return window.ArkMini.scene3d(el, { fov: 50, maxPixelRatio: 1, draw: draw }).then(function (g) {
@@ -134,6 +158,7 @@
             race = v.karts ? v.race : null;
             smooth = G.smoother();
             follow = [null, null];
+            yaw = [0, 0];
           }
           setKarts(v);
           if (v.karts) smooth.push(performance.now(), v.karts.map(function (k) { return { x: k.x, y: k.y, angle: k.angle }; }));

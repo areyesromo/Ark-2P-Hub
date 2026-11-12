@@ -51,8 +51,15 @@
     { key: 'arena', title: 'Arena', fmt: function (n) { return n === 0 ? 'Mixed' : arenaNames[n - 1] || 'Arena ' + n; } },
     { key: 'races', title: 'Rounds', fmt: function (n) { return n === 1 ? 'One round' : n === 4 ? 'First to 3' : 'Best of ' + n; } },
   ];
+  // Kart Race 3D: 1v1 or the 8-kart Cup (you two and six computer racers, five races on the big
+  // tracks: only the computers' level and the laps to pick).
+  const FIELD = { key: 'field', title: 'Field', fmt: function (n) { return n ? '🏁 8-kart Cup' : '⚔️ 1v1'; } };
+  const CPU_LEVEL = { key: 'cpu', title: 'Computer', fmt: function (s) { return { easy: 'Easy', normal: 'Normal', hard: 'Hard' }[s] || s; } };
+  const CUP8_ROWS = [FIELD, CPU_LEVEL, ROWS[2]];
   function rowsFor(v) {
-    return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (!v.options || !v.options.field) return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (v.settings.field === 1) return CUP8_ROWS;
+    return [FIELD].concat(v.settings.mode ? BATTLE_ROWS : ROWS);
   }
   const BALLOON_POP_MS = 450;
   Ark.loadScript('/games/kart-race/items.js').then(function () { hudKey = ''; });
@@ -67,6 +74,7 @@
   let arena = null;
   let canvas = null;
   let stage = null; // the 3D race in Kart Race 3D (see make), in place of the canvas
+  let presentation = null; // opt-in: the 2D game keeps its own HUD and menus
   let overlay = null;
   let raf = null;
   let view = null;
@@ -225,6 +233,7 @@
   }
 
   function renderHud(v) {
+    if (presentation) return presentation.hud(v, hud);
     let html = '';
     if (v.karts && v.battle) {
       const bside = function (slot) {
@@ -259,6 +268,8 @@
 
   /** A little map of a track (or a ? for Mixed) for the setup screen; in a battle, of the arena. */
   function previewHtml(v, n) {
+    // Kart Race 3D's 8-kart Cup: all five big tracks, one race each.
+    if (v.settings.field === 1) return '<div class="kr-preview mixed"><span>🏁</span><div>The Cup: five races, one on each big track</div></div>';
     if (v.settings.mode) {
       const a = v.settings.arena;
       if (a === 0) return '<div class="kr-preview mixed"><span>🎲</span><div>Mixed: a different arena each round</div></div>';
@@ -270,11 +281,15 @@
     }
     if (n === 0) return '<div class="kr-preview mixed"><span>🎲</span><div>Mixed: a different track each race</div></div>';
     if (!Road || !v.trackPoints) return '';
-    if (!previews[n]) previews[n] = Road.svgPath(Road.centreLine(v.trackPoints[n - 1]));
-    const f = v.field;
+    // Each track at its own size (Kart Race 3D's big ones too), cached by name: Kart Race and Kart
+    // Race 3D share this script, and their track number n isn't the same track.
+    const name = trackNames[n - 1] || '';
+    if (!previews['t' + name]) previews['t' + name] = Road.svgPath(Road.centreLine(v.trackPoints[n - 1]));
+    const size = (v.trackSizes && v.trackSizes[n - 1]) || { field: v.field, width: v.trackWidth };
+    const f = size.field;
     return '<div class="kr-preview"><svg viewBox="0 0 ' + f.w + ' ' + f.h + '"><rect width="' + f.w + '" height="' + f.h + '" rx="0.8"/>' +
-      '<path class="kerb" d="' + previews[n] + '" stroke-width="' + (v.trackWidth + 0.5) + '"/>' +
-      '<path class="road" d="' + previews[n] + '" stroke-width="' + v.trackWidth + '"/></svg><div>' + esc(trackNames[n - 1] || '') + '</div></div>';
+      '<path class="kerb" d="' + previews['t' + name] + '" stroke-width="' + (size.width + 0.5) + '"/>' +
+      '<path class="road" d="' + previews['t' + name] + '" stroke-width="' + size.width + '"/></svg><div>' + esc(name) + '</div></div>';
   }
 
   /** The leaderboard: one row per race (track, winner, both times), then the wins. */
@@ -307,7 +322,14 @@
 
   function renderOverlay(v) {
     let html = '';
-    if (v.phase === 'setup') {
+    if (presentation) {
+      html = presentation.overlay(v, {
+        settings: function () { return Ark.setup.html(v, rowsFor(v), settingsFocus(v)); },
+        preview: function () { return previewHtml(v, v.settings.track); },
+        picks: function () { return picksHtml(v); },
+        board: function () { return boardHtml(v); },
+      });
+    } else if (v.phase === 'setup') {
       html = '<div class="panel kr-setup"><div class="title">🏎️ Kart Race</div><div class="kr-setup-row">' + Ark.setup.html(v, rowsFor(v), settingsFocus(v)) + '<div class="kr-setup-col">' + previewHtml(v, v.settings.track) + picksHtml(v) + '</div></div>' +
         '<div class="sub">Pick on your phone, or with a controller (↑↓ row, ←→ change). <strong>Start</strong> (or <strong>A</strong>) when you\'re ready: the lights come on when you both are.</div></div>';
     } else if (v.phase === 'countdown') {
@@ -899,9 +921,19 @@
     return { type: 'drive', steer: steer, gas: !brake && (has('A') || has('RT')), brake: brake, drift: has('X') || has('RB') };
   }
 
+  // Kart Race 3D's camera: the right stick glances left and right, pulled down (or clicked) looks back.
+  function lookPoll(pad, v) {
+    const input = padPoll(pad, v);
+    if (!input) return null;
+    const r = pad.stick2 || { x: 0, y: 0 };
+    input.look = Math.abs(r.x) > DEADZONE ? Math.round(r.x * 10) / 10 : 0;
+    input.back = r.y > 0.6 || pad.held.indexOf('RS') !== -1;
+    return input;
+  }
+
   /**
    * The TV renderer. `opts.stage` (Kart Race 3D) draws the race in place of the 2D canvas:
-   * { mount(arenaEl), update(view), unmount() }; the HUD and overlays stay the same.
+   * { mount(arenaEl), update(view), unmount() }. An optional presentation draws its HUD and menus.
    */
   function make(opts) {
     opts = opts || {};
@@ -938,9 +970,10 @@
         if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
         return out;
       },
-      padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
-      padPoll: padPoll,
+      padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item' + (opts.look ? ' · R-stick: look (pull down or click: look back)' : '') + ' · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
+      padPoll: opts.look ? lookPoll : padPoll,
       pad: function (btn, v, slot) {
+        if (stage && stage.pad && stage.pad(btn)) return null;
         if (v.phase === 'setup') {
           if (!pads[slot]) pads[slot] = { row: 0 };
           const settings = rowsFor(v);
@@ -954,6 +987,7 @@
           if (view) {
             overlayKey = '';
             renderOverlay(view);
+            if (presentation && presentation.focus) presentation.focus(overlay, slot);
           }
           return input;
         }
@@ -978,6 +1012,7 @@
         overlay = root.querySelector('.kr-overlay');
         // This renderer's own stage (or none: the 2D canvas), whichever game mounted last.
         stage = opts.stage || null;
+        presentation = opts.presentation || null;
         if (stage) stage.mount(arena);
         else raf = requestAnimationFrame(draw);
       },
@@ -986,12 +1021,13 @@
         arenaNames = v.arenaNames || arenaNames;
         // The mode changed the settings rows (5 for a race, 3 for a battle): a controller on its
         // racer or tyres row stays there, one on a settings row stays on the list.
-        if (view && v.settings && view.settings && v.settings.mode !== view.settings.mode) {
+        // The settings rows changed (Mode, or Kart Race 3D's Field): a controller on its racer or
+        // tyres row stays there, one on a settings row stays on the list.
+        if (view && v.settings && view.settings && rowsFor(view).length !== rowsFor(v).length) {
           const was = rowsFor(view).length;
           const now = rowsFor(v).length;
           Object.keys(pads).forEach(function (slot) {
-            const row = pads[slot].row || 0;
-            pads[slot].row = row >= was ? now + (row - was) : Math.min(row, now - 1);
+            pads[slot].row = remapRow(pads[slot].row || 0, was, now);
           });
           overlayKey = '';
         }
@@ -1009,6 +1045,8 @@
       unmount: function () {
         if (stage) stage.unmount();
         stage = null;
+        if (presentation) presentation.dispose();
+        presentation = null;
         cancelAnimationFrame(raf);
         root = hud = arena = canvas = overlay = view = shown = line = barrier = barrierPic = lastBalloons = null;
         bursts = [];
@@ -1018,6 +1056,11 @@
     };
   }
 
-  window.ArkKartTV = { make: make };
+  /** A controller's setup row when the settings rows go from `was` to `now` (racer and tyres follow them). */
+  function remapRow(row, was, now) {
+    return row >= was ? now + (row - was) : Math.min(row, now - 1);
+  }
+
+  window.ArkKartTV = { make: make, rowsFor: rowsFor, remapRow: remapRow };
   Ark.register('host', 'kart-race', make({}));
 })();

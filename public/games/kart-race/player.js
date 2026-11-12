@@ -26,8 +26,15 @@
     { key: 'arena', title: 'Arena', fmt: function (n) { return n === 0 ? 'Mixed' : arenaNames[n - 1] || 'Arena ' + n; } },
     { key: 'races', title: 'Rounds', fmt: function (n) { return n === 1 ? 'One round' : n === 4 ? 'First to 3' : 'Best of ' + n; } },
   ];
+  // Kart Race 3D: 1v1 or the 8-kart Cup (you two and six computer racers, five races on the big
+  // tracks: only the computers' level and the laps to pick).
+  const FIELD = { key: 'field', title: 'Field', fmt: function (n) { return n ? '🏁 8-kart Cup' : '⚔️ 1v1'; } };
+  const CPU_LEVEL = { key: 'cpu', title: 'Computer', fmt: function (s) { return { easy: 'Easy', normal: 'Normal', hard: 'Hard' }[s] || s; } };
+  const CUP8_ROWS = [FIELD, CPU_LEVEL, ROWS[2]];
   function rowsFor(v) {
-    return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (!v.options || !v.options.field) return v.settings.mode ? BATTLE_ROWS : ROWS;
+    if (v.settings.field === 1) return CUP8_ROWS;
+    return [FIELD].concat(v.settings.mode ? BATTLE_ROWS : ROWS);
   }
 
   /** 🎈🎈🎈, popped ones faded. */
@@ -83,7 +90,8 @@
   let api = null;
   let view = null;
   let textKey = '';
-  const held = { left: false, right: false, brake: false, gas: false, drift: false };
+  const held = { left: false, right: false, brake: false, gas: false, drift: false, back: false };
+  let lookX = 0; // Kart Race 3D: the look strip, -1 (left) .. 1 (right)
   let analog = 0; // steering from the stick, slide or tilt: -1..1
   let stickBrake = false; // stick pulled down
   let stickGas = false; // stick pushed up
@@ -91,6 +99,7 @@
   let sent = '';
   let tiltNote = '';
   let restored = false; // sent this phone's remembered racer and tyres yet?
+  let threeD = false;
 
   const clamp = function (x) { return Math.max(-1, Math.min(1, x)); };
   const dead = function (x) { return Math.abs(x) < DEAD ? 0 : x; };
@@ -101,10 +110,16 @@
     const brake = held.brake || stickBrake;
     const gas = held.gas || stickGas;
     const drift = held.drift;
-    const key = steer + '|' + gas + '|' + brake + '|' + drift;
+    const key = steer + '|' + gas + '|' + brake + '|' + drift + (threeD ? '|' + lookX + '|' + held.back : '');
     if (!els || key === sent) return;
     sent = key;
-    api.send({ type: 'drive', steer: steer, gas: gas, brake: brake, drift: drift });
+    const input = { type: 'drive', steer: steer, gas: gas, brake: brake, drift: drift };
+    if (threeD) {
+      // Looking round (the 3D TV's camera): the strip's glance and the Look back button.
+      input.look = lookX;
+      input.back = held.back;
+    }
+    api.send(input);
     if (els.left) {
       els.left.classList.toggle('on', held.left);
       els.right.classList.toggle('on', held.right);
@@ -115,7 +130,8 @@
   }
 
   function release() {
-    held.left = held.right = held.brake = held.gas = held.drift = false;
+    held.left = held.right = held.brake = held.gas = held.drift = held.back = false;
+    lookX = 0;
     analog = 0;
     stickBrake = stickGas = false;
     send();
@@ -370,12 +386,24 @@
     if (v.phase === 'setup') {
       const ready = v.ready || [false, false];
       const wait = ready[me] ? 'Ready ✓ Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: press Ready when you are.' : 'Pick the settings (either of you can), then press Ready.';
-      return '<span class="big">🏎️ Kart Race</span><br>' + wait;
+      return '<span class="big">🏎️ Kart Race' + (threeD ? ' 3D' : '') + '</span><br>' + wait;
     }
     const ready = v.ready || [false, false];
     const waiting = function (what) {
       return ready[me] ? 'Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: ' + what : what;
     };
+    if ((v.phase === 'standings' || v.phase === 'over') && v.cupPoints) {
+      // Kart Race 3D's 8-kart Cup: where you came, both your points and your place in the table.
+      const pts = v.cupPoints;
+      const table = 1 + pts.filter(function (p, i) { return p > pts[me] || (p === pts[me] && i < me); }).length;
+      const them = 'Them'; // (a phone's view has no player list)
+      const line = 'You: ' + pts[me] + ' pts · ' + them + ': ' + pts[1 - me] + ' pts · ' + ordinal(table) + ' in the table';
+      if (v.phase === 'over') {
+        return '<span class="big ' + (v.winner === me ? 'won">You win the cup! 🏆' : 'lost">They win the cup') + '</span><br>' + line + '<br>' + waiting('press Rematch for another cup.');
+      }
+      const place = v.history[v.history.length - 1].places[me];
+      return '<span class="big">Race ' + v.race + ': ' + ordinal(place) + '</span><br>' + line + '<br>Next: ' + esc(v.next.track) + ' · ' + waiting('press Ready for the next race.');
+    }
     if (v.phase === 'standings') {
       const last = v.history[v.history.length - 1];
       if (v.battle || last.winner === null) {
@@ -405,17 +433,25 @@
       return '<span class="big">' + balloonsHtml(k.balloons, of) + '</span><br>Them ' + balloonsHtml(v.karts[1 - me].balloons, of) + ' · ⏱ ' + Math.floor(secs / 60) + ':' + ('0' + (secs % 60)).slice(-2) +
         (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : k.spin ? ' · <span class="lost">💥 Popped!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
     }
-    const pos = v.positions[me] === 1 ? '1st' : '2nd';
+    const pos = v.karts.length > 2 ? ordinal(v.positions[me]) + ' of ' + v.karts.length : v.positions[me] === 1 ? '1st' : '2nd';
     if (v.phase === 'countdown') {
       let dots = '';
       for (let i = 1; i <= 5; i++) dots += '<i class="' + (v.lights >= i ? 'on' : '') + '"></i>';
       return '<span class="big kr-lights">' + dots + '</span><br>' + (k.jumped ? '<span class="lost">Jump start! 1 s penalty</span>' : 'Wait for the lights to go out, then GAS') + '<br>' + esc(v.track.name) + ' · ' + v.laps + ' laps';
+    }
+    if (v.phase === 'finish' && v.cupPoints) {
+      // The 8-kart Cup: the first player home may not have won (computers can be ahead): where you came.
+      return '<span class="big' + (k.finished ? '">🏁 You finish ' : '">Finish it! ') + pos + '</span>';
     }
     if (v.phase === 'finish' && v.result) {
       return '<span class="big ' + (v.result.winner === me ? 'won">🏁 You win' : 'lost">They win') + (v.races > 1 ? ' race ' + v.race : '') + '!</span>' +
         (v.newRecord && v.newRecord.slot === me ? '<br><span class="won">⏱️ New lap record!</span>' : '');
     }
     return '<span class="big pos">' + pos + '</span><br>Lap ' + Math.min(v.laps, k.laps + 1) + ' / ' + v.laps + (k.jumped ? ' · <span class="lost">Jump start! 1 s penalty</span>' : v.newRecord && v.newRecord.slot === me ? ' · <span class="won">⏱️ New lap record!</span>' : k.reaction !== null && k.reaction !== undefined ? ' · <span class="won">⚡ Reaction ' + (k.reaction / 1000).toFixed(2) + ' s</span>' : k.spin ? ' · <span class="lost">🍌 Spun out!</span>' : k.shield ? ' · <span class="won">🛡️ Shielded</span>' : k.cut ? ' · <span class="lost">⛔ Shortcut! Back you go</span>' : k.offTrack ? ' · <span class="lost">on the grass!</span>' : k.boosting ? ' · <span class="won">BOOST!</span>' : '');
+  }
+
+  function ordinal(n) {
+    return n + (n % 100 >= 11 && n % 100 <= 13 ? 'th' : ['th', 'st', 'nd', 'rd'][n % 10] || 'th');
   }
 
   function clock(ms) {
@@ -434,6 +470,11 @@
     els.speed.classList.toggle('charged', k.driftCharge >= 1);
     els.kmh.textContent = (v.battle ? '' : '🟡 ' + (k.coins || 0) + ' · ') + (k.speed < -0.05 ? 'R ' : '') + Math.round(Math.abs(k.speed) * KMH) + ' km/h';
     els.lap.textContent = v.battle ? '' : (k.lapMs !== null ? '⏱ ' + clock(k.lapMs) : '') + (k.lastLap ? ' · last ' + clock(k.lastLap) : '') + (k.bestLap ? ' · best ' + clock(k.bestLap) : '');
+    if (threeD) {
+      els.drift.classList.toggle('charged', k.driftCharge >= 1);
+      els.drift.style.setProperty('--charge', Math.round(Math.max(0, Math.min(1, k.driftCharge || 0)) * 100) + '%');
+      els.drift.querySelector('small').textContent = k.driftCharge >= 1 ? 'Release for boost' : k.drifting ? 'Charging boost' : 'Hold through a bend';
+    }
   }
 
   /** Lay the controls out for the chosen layout and how the phone is held. */
@@ -462,7 +503,7 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.newRecord && v.newRecord.slot, v.history && v.history.length, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result,
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.newRecord && v.newRecord.slot, v.history && v.history.length, v.cupPoints, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result,
       v.battle && v.karts && [v.karts[0].balloons, v.karts[1].balloons, Math.ceil(v.battle.msLeft / 1000)]]);
     if (key === textKey) return;
     textKey = key;
@@ -478,7 +519,7 @@
     const standings = v.phase === 'standings';
     els.go.classList.toggle('hidden', !setup && !standings);
     const ready = Boolean(v.ready && v.ready[v.you]);
-    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : standings ? 'Ready for the next ' + (v.settings.mode ? 'round' : 'race') : 'Ready';
+    els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : standings ? 'Ready for the next ' + (v.battle ? 'round' : 'race') : 'Ready';
     els.go.classList.toggle('on', ready && (setup || standings));
     els.controls.classList.toggle('hidden', between || standings);
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
@@ -488,7 +529,7 @@
     // The item button: the next item big, the two after it small (or 🌟 while Gold Turbo lasts).
     const items = (k && k.items) || [];
     const gold = Boolean(k && k.gold);
-    els.item.innerHTML = gold ? '<span class="now">🌟</span>' : items.length ? '<span class="now">' + itemIcon(items[0]) + '</span><span class="next">' + items.slice(1).map(itemIcon).join('') + '</span>' : '—';
+    els.item.innerHTML = (gold ? '<span class="now">🌟</span>' : items.length ? '<span class="now">' + itemIcon(items[0]) + '</span><span class="next">' + items.slice(1).map(itemIcon).join('') + '</span>' : '—') + (threeD ? '<small>' + (gold ? 'Boost again' : items.length ? esc(itemName(items[0])) : 'Collect a ? box') + '</small>' : '');
     // A screen reader would only read out the emoji (or "dash" for —): say what the button does.
     els.item.setAttribute('aria-label', gold ? 'Boost (Gold Turbo)'
       : items.length ? 'Use ' + itemName(items[0]) + (items.length > 1 ? ', then ' + items.slice(1).map(itemName).join(', ') : '')
@@ -501,111 +542,132 @@
     if (between) release();
   }
 
-  Ark.register('player', 'kart-race', {
-    // Setup, the leaderboard between races and the end screen are menus: pinch zoom stays on.
-    zoomable: function (v) { return v.phase === 'setup' || v.phase === 'standings' || v.phase === 'over'; },
-    mount: function (el, a) {
-      api = a;
-      host = el;
-      root = document.createElement('div');
-      root.className = 'kr-phone';
-      root.innerHTML =
-        '<div class="status"></div>' +
-        '<div class="kr-setup-box"></div>' +
+  /** The phone renderer. `opts.threeD` (Kart Race 3D): its own title, item names and drift guidance. */
+  function make(opts) {
+    opts = opts || {};
+    return {
+      // Setup, the leaderboard between races and the end screen are menus: pinch zoom stays on.
+      zoomable: function (v) { return v.phase === 'setup' || v.phase === 'standings' || v.phase === 'over'; },
+      mount: function (el, a) {
+        api = a;
+        threeD = Boolean(opts.threeD);
+        host = el;
+        root = document.createElement('div');
+        root.className = 'kr-phone' + (threeD ? ' kr3d-phone' : '');
+        root.innerHTML =
+          '<div class="status"></div>' +
+          '<div class="kr-setup-box"></div>' +
 
-        '<div class="ark-setup kr-prefs hidden"></div>' +
-        '<button class="primary go hidden">Ready</button>' +
-        '<div class="ark-setup kr-picks hidden"></div>' +
-        '<div class="kr-controls">' +
-        '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
-        '<div class="kr-steer"></div>' +
-        '<div class="kr-bottom"><button class="kr-btn item">🎁</button><button class="kr-btn drift">DRIFT</button>' +
-        '<button class="kr-btn brake">BRAKE<small>hold: reverse</small></button><button class="kr-btn gas">GAS</button></div>' +
-        '</div>' +
-        '<button class="primary rematch hidden">Rematch</button>' +
-        '<button class="ghost change hidden">Change settings</button>';
-      el.appendChild(root);
-      els = {
-        status: root.querySelector('.status'),
-        setup: root.querySelector('.kr-setup-box'),
-        picks: root.querySelector('.kr-picks'),
-        prefs: root.querySelector('.kr-prefs'),
-        go: root.querySelector('.go'),
-        controls: root.querySelector('.kr-controls'),
-        steer: root.querySelector('.kr-steer'),
-        brake: root.querySelector('.brake'),
-        gas: root.querySelector('.gas'),
-        drift: root.querySelector('.drift'),
-        bottom: root.querySelector('.kr-bottom'),
-        speed: root.querySelector('.kr-speed'),
-        bar: root.querySelector('.kr-speed i'),
-        kmh: root.querySelector('.kmh'),
-        lap: root.querySelector('.lapt'),
-        item: root.querySelector('.item'),
-        rematch: root.querySelector('.rematch'),
-        change: root.querySelector('.change'),
-      };
-      els.prefs.addEventListener('click', function (e) {
-        const s = e.target.closest('[data-style]');
-        const l = e.target.closest('[data-layout]');
-        if (s) {
-          setStyle(s.getAttribute('data-style'));
-          if (style === 'tilt') startTilt(true);
+          '<div class="ark-setup kr-prefs hidden"></div>' +
+          '<button class="primary go hidden">Ready</button>' +
+          '<div class="ark-setup kr-picks hidden"></div>' +
+          '<div class="kr-controls">' +
+          '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
+          '<div class="kr-steer"></div>' +
+          (threeD ? '<div class="kr-look"><div class="kr-lookstrip">◀ look ▶</div><button class="kr-btn lookback">👀 LOOK BACK</button></div>' : '') +
+          '<div class="kr-bottom"><button class="kr-btn item">🎁</button><button class="kr-btn drift">DRIFT</button>' +
+          '<button class="kr-btn brake">BRAKE<small>hold: reverse</small></button><button class="kr-btn gas">GAS</button></div>' +
+          '</div>' +
+          '<button class="primary rematch hidden">Rematch</button>' +
+          '<button class="ghost change hidden">Change settings</button>';
+        el.appendChild(root);
+        if (threeD) root.querySelector('.drift').innerHTML = 'DRIFT<small>Hold through a bend</small>';
+        els = {
+          status: root.querySelector('.status'),
+          setup: root.querySelector('.kr-setup-box'),
+          picks: root.querySelector('.kr-picks'),
+          prefs: root.querySelector('.kr-prefs'),
+          go: root.querySelector('.go'),
+          controls: root.querySelector('.kr-controls'),
+          steer: root.querySelector('.kr-steer'),
+          brake: root.querySelector('.brake'),
+          gas: root.querySelector('.gas'),
+          drift: root.querySelector('.drift'),
+          bottom: root.querySelector('.kr-bottom'),
+          speed: root.querySelector('.kr-speed'),
+          bar: root.querySelector('.kr-speed i'),
+          kmh: root.querySelector('.kmh'),
+          lap: root.querySelector('.lapt'),
+          item: root.querySelector('.item'),
+          rematch: root.querySelector('.rematch'),
+          change: root.querySelector('.change'),
+        };
+        els.prefs.addEventListener('click', function (e) {
+          const s = e.target.closest('[data-style]');
+          const l = e.target.closest('[data-layout]');
+          if (s) {
+            setStyle(s.getAttribute('data-style'));
+            if (style === 'tilt') startTilt(true);
+          }
+          if (l) {
+            layout = l.getAttribute('data-layout');
+            store(LAYOUT_KEY, layout);
+            renderPrefs();
+            applyLayout();
+          }
+        });
+        window.addEventListener('resize', applyLayout);
+        if (window.ResizeObserver) {
+          fit = new ResizeObserver(applyLayout); // e.g. the hub's menu opening above us
+          fit.observe(el);
         }
-        if (l) {
-          layout = l.getAttribute('data-layout');
-          store(LAYOUT_KEY, layout);
-          renderPrefs();
-          applyLayout();
+        buildSteer();
+        renderPrefs();
+        if (style === 'tilt') startTilt(false);
+        applyLayout();
+        holdButton(els.brake, 'brake');
+        holdButton(els.gas, 'gas');
+        holdButton(els.drift, 'drift');
+        if (threeD) {
+          holdButton(root.querySelector('.lookback'), 'back');
+          // A finger on the strip glances that way (its middle is straight ahead); lifting it looks ahead again.
+          dragPad(root.querySelector('.kr-lookstrip'), function (pt) {
+            lookX = Math.round(clamp(pt.x / (pt.w / 2)) * 10) / 10;
+            send();
+          }, function () {
+            lookX = 0;
+            send();
+          });
         }
-      });
-      window.addEventListener('resize', applyLayout);
-      if (window.ResizeObserver) {
-        fit = new ResizeObserver(applyLayout); // e.g. the hub's menu opening above us
-        fit.observe(el);
-      }
-      buildSteer();
-      renderPrefs();
-      if (style === 'tilt') startTilt(false);
-      applyLayout();
-      holdButton(els.brake, 'brake');
-      holdButton(els.gas, 'gas');
-      holdButton(els.drift, 'drift');
-      els.item.addEventListener('pointerdown', function (e) {
-        e.preventDefault();
-        const mine = view && view.karts && view.karts[view.you];
-        if (!mine || !(mine.gold || (mine.items && mine.items.length))) return;
-        api.send({ type: 'item' });
-        api.vibrate(30);
-      });
-      Ark.setup.bind(els.setup, api);
-      els.picks.addEventListener('click', function (e) {
-        const r = e.target.closest('[data-racer]');
-        const t = e.target.closest('[data-tyre]');
-        if (r) {
-          store(RACER_KEY, r.getAttribute('data-racer'));
-          api.send({ type: 'racer', id: r.getAttribute('data-racer') });
-        }
-        if (t) {
-          store(TYRE_KEY, t.getAttribute('data-tyre'));
-          api.send({ type: 'tyre', id: t.getAttribute('data-tyre') });
-        }
-      });
-      els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
-      els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });
-      els.change.addEventListener('click', function () { api.send({ type: 'setup' }); });
-    },
-    update: render,
-    unmount: function () {
-      window.removeEventListener('resize', applyLayout);
-      if (fit) fit.disconnect();
-      stopTilt();
-      root = els = view = host = fit = null;
-      held.left = held.right = held.brake = held.gas = held.drift = false;
-      analog = 0;
-      stickBrake = stickGas = false;
-      sent = textKey = '';
-      restored = false;
-    },
-  });
+        els.item.addEventListener('pointerdown', function (e) {
+          e.preventDefault();
+          const mine = view && view.karts && view.karts[view.you];
+          if (!mine || !(mine.gold || (mine.items && mine.items.length))) return;
+          api.send({ type: 'item' });
+          api.vibrate(30);
+        });
+        Ark.setup.bind(els.setup, api);
+        els.picks.addEventListener('click', function (e) {
+          const r = e.target.closest('[data-racer]');
+          const t = e.target.closest('[data-tyre]');
+          if (r) {
+            store(RACER_KEY, r.getAttribute('data-racer'));
+            api.send({ type: 'racer', id: r.getAttribute('data-racer') });
+          }
+          if (t) {
+            store(TYRE_KEY, t.getAttribute('data-tyre'));
+            api.send({ type: 'tyre', id: t.getAttribute('data-tyre') });
+          }
+        });
+        els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
+        els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });
+        els.change.addEventListener('click', function () { api.send({ type: 'setup' }); });
+      },
+      update: render,
+      unmount: function () {
+        window.removeEventListener('resize', applyLayout);
+        if (fit) fit.disconnect();
+        stopTilt();
+        root = els = view = host = fit = null;
+        held.left = held.right = held.brake = held.gas = held.drift = held.back = false;
+    lookX = 0;
+        analog = 0;
+        stickBrake = stickGas = false;
+        sent = textKey = '';
+        restored = false;
+      },
+    };
+  }
+  window.ArkKartPhone = { make: make, rowsFor: rowsFor };
+  Ark.register('player', 'kart-race', make({}));
 })();

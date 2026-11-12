@@ -8,3 +8,217 @@
 .kr3d-frame.p1 { left: 0; border-color: var(--p1); border-radius: var(--r-md) 0 0 var(--r-md); }
 .kr3d-frame.p2 { right: 0; border-color: var(--p2); border-radius: 0 var(--r-md) var(--r-md) 0; }
 .kr3d-none { position: absolute; inset: 0; margin: auto; height: fit-content; width: fit-content; max-width: 40rem; padding: 1.4rem 2.2rem; background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: var(--radius); font-size: var(--fs-lg); text-align: center; }
+
+/* Keep the road central; each player's information stays on their own side. */
+.kr-host.kr-3d { position: relative; gap: 0; }
+.kr-host.kr-3d .kr-hud { position: absolute; inset: 0; display: block; min-height: 0; z-index: 2; pointer-events: none; }
+.kr-host.kr-3d .kr-hud[hidden], .kr-3d [hidden], .kr3d-status[hidden] { display: none; }
+.kr-host.kr-3d .kr-overlay { z-index: 3; padding: 1rem; }
+.kr-3d .p1 { --driver: var(--p1); }
+.kr-3d .p2 { --driver: var(--p2); }
+.kr3d-eyebrow { display: block; color: var(--muted); font-size: var(--fs-sm); font-weight: 800; letter-spacing: .12em; }
+.kr3d-racebar { position: absolute; inset: 0 0 auto; height: 2.8rem; padding: .4rem 1.2rem; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1rem; background: var(--bg); border-bottom: 1px solid var(--line); font-size: var(--fs-sm); }
+.kr3d-course { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 800; }
+.kr3d-clock { font-size: var(--fs-lg); font-variant-numeric: tabular-nums; }
+.kr3d-series { text-align: right; color: var(--muted); font-weight: 800; }
+.kr3d-drivers { position: absolute; inset: 2.8rem 0 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); }
+.kr3d-driver { position: relative; min-width: 0; padding: .8rem; }
+.kr3d-driver-top { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 .8rem; max-width: 21rem; padding: .6rem .9rem; background: var(--panel); border-left: 4px solid var(--driver); border-radius: var(--r-sm); }
+.kr3d-identity { min-width: 0; }
+.kr3d-name { display: block; color: var(--driver); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: var(--fs-lg); }
+.kr3d-driver.p2 .kr3d-driver-top { margin-left: auto; }
+.kr3d-driver.p2 .kr3d-alert { margin-left: auto; }
+.kr3d-position { font-size: var(--fs-2xl); font-weight: 900; grid-column: 2; grid-row: 1 / 3; color: var(--driver); }
+.kr3d-lap { font-size: var(--fs-md); font-weight: 800; }
+.kr3d-alert { width: fit-content; max-width: 100%; margin-top: .5rem; padding: .35rem .7rem; background: var(--bg); color: var(--warn); border-radius: var(--r-sm); font-size: var(--fs-sm); font-weight: 800; }
+.kr3d-driver-bottom { position: absolute; bottom: 2.3rem; left: .8rem; right: .8rem; display: grid; grid-template-columns: 1fr auto; align-items: end; gap: .4rem .7rem; }
+.kr3d-speed { width: fit-content; max-width: 100%; border-radius: var(--r-sm); padding: .5rem .75rem; background: var(--panel); }
+.kr3d-speed strong { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; }
+.kr3d-speed small { font-size: var(--fs-sm); color: var(--muted); margin-left: .3rem; }
+.kr3d-coins { display: block; color: var(--warn); font-size: var(--fs-sm); font-weight: 800; }
+.kr3d-laptime { display: block; color: var(--muted); font-size: var(--fs-sm); font-variant-numeric: tabular-nums; }
+.kr3d-drift { grid-column: 1; max-width: 13rem; background: var(--panel); padding: .4rem .7rem; border-radius: var(--r-sm); }
+.kr3d-drift span { font-size: .75rem; font-weight: 900; }
+.kr3d-drift > div { height: .35rem; margin-top: .25rem; border-radius: var(--r-pill); overflow: hidden; background: var(--line); }
+.kr3d-drift i { display: block; height: 100%; background: var(--driver); }
+.kr3d-drift.charged { color: var(--warn); }
+.kr3d-drift.charged i { background: var(--warn); }
+.kr3d-item { grid-column: 2; grid-row: 1 / 3; min-width: 7rem; max-width: 10rem; padding: .6rem .8rem; text-align: center; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); }
+.kr3d-item.ready { border-color: var(--driver); }
+.kr3d-item b { display: block; font-size: 2.4rem; line-height: 1.2; }
+.kr3d-item small { display: block; font-size: var(--fs-sm); }
+.kr3d-item .kr3d-eyebrow { font-size: .7rem; }
+.kr3d-queue { display: block; font-size: var(--fs-md); }
+.kr3d-driving-hint { position: absolute; bottom: .55rem; left: 1rem; right: 1rem; width: fit-content; max-width: calc(100% - 2rem); background: var(--bg); border-radius: var(--r-sm); padding: .2rem .4rem; font-size: .75rem; color: var(--muted); }
+.kr3d-map { position: absolute; left: 50%; top: 3.4rem; transform: translateX(-50%); width: clamp(7rem, 13vw, 12rem); padding: .35rem; background: var(--panel); border: 1px solid var(--line); border-radius: var(--r-md); text-align: center; }
+.kr3d-map svg { display: block; width: 100%; }
+.kr3d-map > span { font-size: .65rem; font-weight: 700; color: var(--muted); }
+.kr3d-map-road { fill: none; stroke: var(--btn); stroke-linejoin: round; }
+.kr3d-map-line { fill: none; stroke: var(--muted); stroke-width: .2; }
+.kr3d-map-start { fill: none; stroke: var(--text); stroke-width: .6; }
+.kr3d-map circle { fill: var(--driver); stroke: var(--bg); stroke-width: .35; }
+.kr3d-map text { fill: var(--on-bright); font-size: 2px; font-weight: 900; }
+.kr3d-frame { border-width: 2px; }
+
+/* A garage and circuit board, using the game's existing settings and selection controls. */
+.kr3d-setup, .kr3d-summary { width: min(72rem, 100%); max-height: 100%; overflow: auto; padding: clamp(1rem, 2vw, 2rem); text-align: left; pointer-events: auto; box-shadow: 0 1rem 4rem var(--bg); }
+.kr-3d .kr-overlay .panel.kr3d-setup, .kr-3d .kr-overlay .panel.kr3d-summary { max-width: 72rem; padding: 1.2rem 1.5rem; background: var(--panel); }
+.kr-3d .kr3d-rules .ark-setup { font-size: var(--fs-sm); gap: .2rem; }
+.kr-3d .kr3d-rules .row { display: grid; grid-template-columns: 5rem 1fr; gap: .5rem; align-items: center; padding: .25rem; }
+.kr-3d .kr3d-rules .row .title { margin: 0; font-size: var(--fs-sm); }
+.kr-3d .kr3d-rules .opt { min-height: 36px; padding: .35rem; pointer-events: none; cursor: default; }
+.kr3d-setup header { display: flex; justify-content: space-between; align-items: center; gap: 1rem; margin-bottom: 1rem; }
+.kr3d-setup h1, .kr3d-summary h1 { font-size: clamp(1.8rem, 3vw, 3rem); font-weight: 900; letter-spacing: -.04em; }
+.kr3d-setup h1 em { color: var(--p1); font-style: normal; }
+.kr3d-setup p { margin: .4rem 0 0; color: var(--muted); font-size: var(--fs-sm); }
+.kr3d-tag { padding: .5rem .8rem; border: 1px solid var(--line); border-radius: var(--r-pill); color: var(--p1); font-size: .75rem; font-weight: 900; white-space: nowrap; }
+.kr3d-setup-grid { display: grid; grid-template-columns: 1.1fr 1fr; gap: 1rem; }
+.kr3d-rules, .kr3d-track { background: var(--bg-2); border: 1px solid var(--line); border-radius: var(--r-md); padding: 1rem; min-width: 0; }
+.kr3d-rules h2 { font-size: var(--fs-md); margin-bottom: .4rem; }
+.kr3d-rules .ark-setup { margin: 0; max-width: none; }
+.kr3d-track { display: flex; flex-direction: column; justify-content: center; text-align: center; }
+.kr3d-track .kr-preview { width: 100%; max-width: 23rem; margin: .2rem auto; }
+.kr3d-track .kr-preview svg { max-height: 12rem; }
+.kr3d-track .kr-preview rect { fill: var(--bg); }
+.kr3d-track .kr-preview .kerb { stroke: var(--p1); }
+.kr3d-track .kr-preview .road { stroke: var(--btn); }
+.kr3d-track .kr-preview > div { color: var(--text); font-size: var(--fs-lg); margin-top: .3rem; }
+.kr3d-garage { margin-top: 1rem; }
+.kr3d-garage .pick { padding: .75rem 1rem; background: var(--bg-2); border: 1px solid var(--line); border-top: 3px solid var(--driver); border-radius: var(--r-md); min-width: 0; }
+.kr3d-garage .pick > .name { color: var(--driver); font-size: var(--fs-md); overflow-wrap: anywhere; }
+.kr3d-garage .kr-car { margin-top: .3rem; }
+.kr3d-garage .kr-kart { height: 5rem; width: 3.5rem; }
+.kr3d-garage .stat { font-size: var(--fs-sm); }
+.kr3d-ready { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .8rem; margin-top: 1rem; }
+.kr3d-ready > div { display: flex; flex-wrap: wrap; gap: .3rem .8rem; justify-content: space-between; padding: .65rem .8rem; border-radius: var(--r-sm); background: var(--bg); font-size: var(--fs-sm); }
+.kr3d-ready span { color: var(--driver); overflow-wrap: anywhere; min-width: 0; }
+.kr3d-ready b { color: var(--text); }
+.kr3d-setup footer, .kr3d-summary footer { margin-top: .8rem; color: var(--muted); font-size: var(--fs-sm); line-height: 1.5; }
+.kr3d-results { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: .8rem; margin-top: 1rem; }
+.kr3d-results > div { padding: 1rem; background: var(--bg-2); border: 1px solid var(--line); border-top: 3px solid var(--driver); border-radius: var(--r-md); }
+.kr3d-results h2 { color: var(--driver); font-size: var(--fs-xl); margin: .5rem 0; overflow-wrap: anywhere; }
+.kr3d-results strong { font-size: var(--fs-xl); font-variant-numeric: tabular-nums; }
+.kr3d-results p { color: var(--muted); font-size: var(--fs-sm); margin: .4rem 0 0; }
+.kr3d-table-wrap { overflow-x: auto; margin-top: .8rem; }
+.kr3d-summary .kr-board { width: 100%; }
+.kr3d-next { color: var(--p1); font-weight: 800; }
+.kr3d-countdown, .kr3d-finish { text-align: center; max-width: min(90%, 38rem); }
+.kr3d-countdown .lights { margin: 1rem 0; }
+.kr3d-countdown p, .kr3d-finish p { font-size: var(--fs-md); color: var(--muted); margin: .5rem 0 0; }
+.kr3d-record { align-self: flex-start; margin-top: 12rem; font-size: var(--fs-md); }
+.kr3d-status { position: absolute; z-index: 5; inset: 0; margin: auto; width: min(36rem, 90%); height: fit-content; text-align: center; box-shadow: 0 0 0 100vmax color-mix(in srgb, var(--bg) 80%, transparent); }
+.kr3d-status h2 { margin-top: .6rem; }
+.kr3d-status p { font-size: var(--fs-md); color: var(--muted); }
+.kr3d-status button { min-height: 48px; }
+
+/* Phone controls keep their original hit areas and input behavior. */
+.kr3d-phone { min-width: 0; }
+.kr3d-phone .status { padding: .6rem .8rem; border: 1px solid var(--line); border-radius: var(--r-md); background: var(--panel); }
+.kr3d-phone .kr-btn { border-radius: var(--r-md); }
+.kr3d-phone .kr-btn.on { outline: 3px solid var(--me); outline-offset: -4px; }
+.kr3d-phone .kr-look { display: flex; gap: .5rem; margin: .4rem 0; }
+.kr3d-phone .kr-lookstrip { flex: 1; min-height: 44px; display: flex; align-items: center; justify-content: center; border: 1px dashed var(--line); border-radius: var(--r-md); background: var(--panel); color: var(--muted); font-size: var(--fs-sm); touch-action: none; user-select: none; }
+.kr3d-phone .kr-btn.lookback { flex: 0 0 auto; min-height: 44px; padding: 0 .8rem; font-size: var(--fs-sm); }
+.kr3d-phone .kr-btn.gas { background: var(--me); color: var(--on-bright); border-color: var(--me); }
+.kr3d-phone .kr-btn.drift { position: relative; background: linear-gradient(to right, var(--btn) var(--charge, 0%), var(--bg-2) var(--charge, 0%)); }
+.kr3d-phone .kr-btn small { display: block; font-size: clamp(.65rem, 2vw, .9rem); margin-top: .3rem; }
+.kr3d-phone .kr-btn.drift.charged { border-color: var(--warn); color: var(--warn); }
+.kr3d-phone .kr-btn.item.gold { animation: none; }
+.kr3d-phone .kr-btn.item { opacity: 1; }
+.kr3d-phone .kr-btn.item:not(.ready) { color: var(--muted); }
+.kr3d-phone .kr-btn.item small { font-size: .8rem; }
+.kr3d-phone .kr-prefs { border: 1px solid var(--line); border-radius: var(--r-md); padding: .6rem; }
+/* Sideways: the dash across the top, the steering pad down the left, the look row above the pedals. */
+.kr3d-phone.landscape .kr-controls { grid-template-rows: auto auto minmax(0, 1fr); }
+.kr3d-phone.landscape .kr-look { grid-column: 2; grid-row: 2; margin: 0; }
+.kr3d-phone.landscape .kr-bottom { grid-column: 2; grid-row: 3; min-width: 0; grid-template-rows: minmax(44px, .8fr) minmax(44px, 1fr); }
+.kr3d-phone.landscape .kr-steer { grid-column: 1; grid-row: 2 / 4; min-width: 0; }
+.kr3d-phone.landscape .kr-btn { min-width: 0; min-height: 44px; padding: .3rem; }
+.kr3d-phone.landscape .status { padding: .3rem .6rem; }
+.kr3d-phone.landscape .kr-btn.item .now { font-size: 1.5rem; }
+.kr3d-phone.landscape .kr-btn.item { font-size: 1.2rem; line-height: 1; }
+.kr3d-phone.landscape .kr-btn small { font-size: .65rem; margin-top: .15rem; }
+@media (max-height: 450px) {
+  .kr3d-phone.landscape .kr-read .lapt { display: none; }
+  .kr3d-phone.landscape .kr-controls { gap: 6px; }
+  .kr3d-phone.landscape .kr-btn.item .next { display: inline; font-size: .6rem; }
+  .kr3d-phone.landscape .kr-btn.item .now { display: inline; }
+}
+
+@media (max-width: 900px), (max-height: 650px) {
+  .kr3d-driver { padding: .5rem; }
+  .kr3d-driver-top { width: calc(100% - 4rem); gap: 0 .4rem; padding: .4rem .6rem; }
+  .kr3d-name { font-size: var(--fs-md); }
+  .kr3d-position { font-size: var(--fs-xl); }
+  .kr3d-identity .kr3d-eyebrow, .kr3d-lap { font-size: .8rem; }
+  .kr3d-map { width: 7rem; }
+  .kr3d-driver-bottom { left: .5rem; right: .5rem; bottom: 2.1rem; }
+  .kr3d-speed { padding: .35rem .5rem; }
+  .kr3d-speed strong { font-size: var(--fs-lg); }
+  .kr3d-laptime { display: none; }
+  .kr3d-item { min-width: 5rem; padding: .4rem; max-width: 7rem; }
+  .kr3d-item b { font-size: 1.8rem; }
+  .kr3d-drift { max-width: 10rem; }
+  .kr3d-driving-hint { font-size: .65rem; left: .5rem; right: .5rem; }
+  .kr3d-setup, .kr3d-summary { padding: 1rem; }
+  .kr3d-garage .kr-kart { height: 3.5rem; width: 2.5rem; }
+  .kr3d-setup header { margin-bottom: .6rem; }
+}
+@media (max-width: 600px) {
+  .kr3d-setup-grid { grid-template-columns: 1fr; }
+  .kr3d-tag { display: none; }
+  .kr3d-garage .kr-picks-tv, .kr3d-results, .kr3d-ready { grid-template-columns: 1fr; }
+  .kr3d-racebar { font-size: .7rem; padding-inline: .5rem; }
+  .kr3d-map { top: 7rem; width: 5rem; }
+  .kr3d-driver-top { width: 100%; }
+  .kr3d-driving-hint { display: none; }
+  .kr3d-driver-bottom { bottom: .5rem; }
+  .kr3d-item small, .kr3d-item .kr3d-eyebrow { font-size: .65rem; }
+}
+@media (max-height: 750px) and (min-width: 901px) {
+  .kr-3d .kr-overlay .panel.kr3d-setup { padding: .8rem 1rem; }
+  .kr3d-setup header { margin-bottom: .5rem; }
+  .kr3d-setup h1 { font-size: 1.8rem; }
+  .kr3d-setup header p { display: none; }
+  .kr-3d .kr3d-rules .ark-setup { font-size: .8rem; gap: 0; }
+  .kr-3d .kr3d-rules .row { padding: .1rem; }
+  .kr-3d .kr3d-rules .opt { min-height: 28px; padding: .25rem; }
+  .kr3d-rules, .kr3d-track { padding: .6rem; }
+  .kr3d-track .kr-preview svg { max-height: 8rem; }
+  .kr3d-garage { margin-top: .5rem; }
+  .kr3d-garage .pick { padding: .4rem .6rem; }
+  .kr3d-garage .line img { width: 1.5em; height: 1.5em; }
+  .kr3d-garage .kr-kart { height: 3rem; width: 2rem; }
+  .kr3d-garage .stat { font-size: .75rem; }
+  .kr3d-ready { margin-top: .5rem; }
+  .kr3d-ready > div { padding: .4rem .6rem; }
+  .kr3d-setup footer { margin-top: .4rem; font-size: .75rem; }
+  .kr3d-garage .kr-car { margin-top: 0; }
+  .kr3d-garage .kr-car .rows { gap: 0; }
+  .kr3d-ready > div { padding-block: .25rem; }
+  .kr3d-setup footer { line-height: 1.2; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kr3d-phone *, .kr-3d * { animation: none !important; transition: none !important; }
+}
+
+/* The 8-kart Cup: the running order down each half's outer edge, the computers on the course map,
+   and the cup's points table. */
+.kr3d-order { position: absolute; top: 6.4rem; margin: 0; padding: .3rem; list-style: none; background: var(--panel); border-radius: var(--r-sm); font-size: var(--fs-sm); line-height: 1.5; max-width: 9rem; }
+.kr3d-order[hidden] { display: none; }
+.kr3d-driver.p1 .kr3d-order { left: .8rem; }
+.kr3d-driver.p2 .kr3d-order { right: .8rem; }
+.kr3d-order li { padding: 0 .4rem; border-radius: var(--r-sm); color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.kr3d-order li b { display: inline-block; min-width: 1.1em; color: var(--text); }
+.kr3d-order li.p1 { color: var(--p1); font-weight: 800; }
+.kr3d-order li.p2 { color: var(--p2); font-weight: 800; }
+.kr3d-order li.me { background: var(--bg); }
+.kr3d-map .kr3d-map-cpus circle { fill: var(--muted); stroke: var(--bg); stroke-width: .2; }
+.kr3d-cup { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
+.kr3d-cup th { color: var(--muted); font-weight: 800; text-align: left; padding: .3rem .5rem; }
+.kr3d-cup td { padding: .3rem .5rem; border-top: 1px solid var(--line); }
+.kr3d-cup td small { color: var(--muted); font-weight: 800; }
+.kr3d-cup .kr3d-total { font-weight: 900; font-variant-numeric: tabular-nums; }
+.kr3d-cup tr.p1 td { color: var(--p1); font-weight: 800; }
+.kr3d-cup tr.p2 td { color: var(--p2); font-weight: 800; }
+.kr3d-cpu-top { color: var(--muted); margin: .2rem 0 .6rem; }

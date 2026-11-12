@@ -4,11 +4,47 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
-## 0.1.37
+## 0.1.41
 
 - 🗂️ A shorter lobby: the board games (Checkers, Connect Four, Mancala, Dots and Boxes, Battleship,
   Dice Party) are in a 🎲 Board Games folder, and Crazy Eights, Memory Match and Liar's Dice in
   🃏 Cards & Casino. Open one to pick a game; ◀ All games (or B on a controller) goes back.
+
+## 0.1.40
+
+- 🏎️ Kart Race 3D: the computer in player 2's seat drives the big tracks properly now: it holds a
+  steady line, only brakes for bends it can't take, and laps in about 45 seconds on Hard (Easy and
+  Normal are a little slower), instead of weaving and braking its way round.
+
+## 0.1.39
+
+- 🦖 Kart Race 3D: Rex drives for real now: his hands stay on a turning steering wheel, his body leans
+  and rocks with the drive, his tail swishes, and he tosses items forward or drops them behind.
+
+## 0.1.38
+
+- 🛞 Kart Race 3D: Rex's 3D wheels look like his kart's wheels now, with a black tyre, a yellow rim and a
+  red hub, and they stay clean as they spin.
+- 👀 Kart Race 3D: look behind you and glance left or right while you drive: hold Look back on
+  the phone, or use a controller's right stick.
+- 🏁 Kart Race 3D's tracks are much bigger: a road wide enough for the whole pack and laps of about
+  a minute (3D races now default to 3 laps). Lap records start fresh on the bigger tracks.
+
+## 0.1.37
+
+- 🏎️ Kart Race 3D has a new garage, player-by-player racing HUD, a course map, clearer item and
+  drift-boost displays, and a podium with times and ready states. Phone controls show item names
+  and when to release a charged drift. Loading now has feedback and retry (controller X).
+- 🏜️ Kart Race 3D races on five big new tracks built for 3D, with a road twice as wide and laps
+  of about a minute: Sunset Canyon Rally, Speedway Oval, Grand Prix Circuit, Serpent Pass and
+  Zigzag Ridge.
+- 🏁 Kart Race 3D has an 8-kart Cup: you two and six computer racers, five races on the big
+  tracks, points for every place, and the leader starts at the back.
+- 🦖 Kart Race 3D: Rex now races as a real 3D kart and driver. His wheels spin and steer, he
+  turns the wheel, looks into bends, throws his arms up when he spins out and pumps his fist
+  when he wins.
+- 🏜️ Kart Race 3D: Sunset Canyon Rally now races through its canyon: red rock cliffs and mesas,
+  two rock arches over the road, a dam in the distance and the festival paddock by the start.
 
 ## 0.1.36
 
