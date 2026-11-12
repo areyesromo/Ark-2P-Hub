@@ -4,6 +4,9 @@ Ideas for new Party Minigames, Micro Mayhem minis and full games, waiting their 
 backlog, not the bucket list: pick from here when choosing what to build next. Each gets a short
 design when its turn comes.
 
+**Pick from this list.** Don't brainstorm new games while it still has ideas; only once it's empty do
+we discuss more. Take an idea off the list when it ships.
+
 **Look** says who builds what (see `docs/3D-HANDOFF.md`):
 
 - **2D**: done here, start to finish.
@@ -142,6 +145,72 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 
 Already in the hub: Checkers, Connect Four, Mancala, Dots and Boxes, Battleship, Liar's Dice,
 Crazy Eights, Memory Match, Rock Paper Scissors, Dice Party.
+
+# More full games
+
+## Arcade and sports duels
+
+| Idea | Based on | How it plays | Look |
+|---|---|---|---|
+| Blast Grid | Bomberman | A maze of crates: drop bombs, grab bigger blasts and speed, trap the other. | 2D, 3D base |
+| Pool (8-ball and 9-ball) | Pool | Aim and power on the phone, real ball physics, fouls and ball-in-hand. | 3D base, 3D art table |
+| Table Football | Foosball | Two rods each on the phone (slide to move, flick to kick). | 3D base |
+| Pinball Duel | Pinball | One table split in two: drain balls to the other side, flippers on the phone. | 2D |
+| Darts 501 | Darts | The full game: 501 down, finish on a double; the hand sways. | 3D base |
+| Basketball 1v1 | Street ball | Half court, first to 11; shoot, drive, block. | 3D art |
+| Dodgeball | Dodgeball | Throw, catch on time, dodge; three hits and out. | 2D |
+| Bubble Duel | Puzzle Bobble | Shoot bubbles, match three; drops send rows to the other. | 2D |
+| Gem Swap Duel | Match-3 | Swap gems; combos send blockers to the other's board. | 2D |
+| Maze Chase | Pac-Man | One runs eating dots, the other is the ghost; swap each round. | 2D |
+| Road Crossing Race | Frogger | Both cross the same roads and rivers; first to five crossings. | 2D, 3D base |
+| Lander Duel | Lunar Lander | Land softly on a pad with fuel to spare; wind and gravity change. | 2D |
+| Worm Artillery | Worms | Teams of three on a breakable island, weapons and wind. Bigger than Tank Duel. | 2D |
+| Horse Race Bets | Derby | Bet on a luck race with tips and odds; most money after six races. | 2D, 3D art |
+| Skee-Ball | Skee-ball | Roll up the ramp into the rings; nine balls each. | 3D base |
+
+## Puzzle races
+
+| Idea | How it plays | Look |
+|---|---|---|
+| Sudoku Race | Same puzzle, both phones; first to finish, mistakes cost time. | 2D |
+| Picture Logic (Nonogram) | Same grid, fill by the number clues; first to the picture. | 2D |
+| Mine Duel | One minefield, turns; find mines for points, hit one and lose your turn. | 2D |
+| Five Letters | Wordle-style: both guess the same hidden word, fewest guesses wins. | 2D |
+| Make 24 | Four numbers, make 24 with + − × ÷; first right. | 2D |
+| Numbers Round | Countdown-style: reach the target with six numbers. | 2D |
+| Slide Puzzle Race | Same scrambled 15-puzzle; fewest moves or first done. | 2D |
+| Spot the Change | Two pictures, tap the differences first. | 2D |
+
+## Quiz formats (reuse the quiz questions)
+
+| Idea | How it plays | Look |
+|---|---|---|
+| Quiz Board | Jeopardy-style board of categories and values; steal, a final wager. | 2D |
+| Money Ladder | Climb 15 questions with lifelines; walk away or risk it. Head-to-head ladders. | 2D |
+| Timeline | Put events, inventions or films in order; one wrong and you're out. | 2D |
+| Map Pin | Drop a pin on the world map for a city or landmark; nearest wins. | 2D |
+| Flags and Capitals | Fast rounds of flags, capitals, shapes of countries. | 2D |
+| Higher or Lower Stats | Which is bigger: populations, heights, box office. | 2D |
+
+## Co-op
+
+| Idea | How it plays | Look |
+|---|---|---|
+| Heist | One sees the cameras and map, the other moves through; talk your way in and out. | 2D, 3D art |
+| Starship Crew | One pilots, one shoots and fixes; survive the waves. | 2D, 3D base |
+| Silent Count | The Mind-style: play numbered cards in rising order with no talking. | 2D |
+| Fireworks Show | Hanabi-style: you see each other's cards, not your own; build the colours in order. | 2D |
+| Tandem Bike | Each pedals one side and leans; ride the course together. | 3D art |
+
+## Content for games we have
+
+Not new games: more of what's there (counts as of v0.1.36).
+
+- Fake Out questions (69), Mind Meld cards (60), Word Hunt words (134).
+- Party Board: more characters, events and items.
+- Trivia Quest monsters (3), Tower Defence towers and creeps (3 each).
+- Marble Maze levels, Dungeon Duo floors, Kitchen Rush recipes, Mini Golf's second course.
+- Bomb Squad modules. Seasonal themes (Halloween, winter) for Party Board and the minis.
 
 ## Notes
 

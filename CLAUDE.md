@@ -70,6 +70,7 @@ The cloud session builds games and their base (rules, server, phones, computer p
 of simple shapes). The owner's local session makes 3D models, scenery and animation (Kart Race 3D, and
 any 3D that needs models or scenery). Write a brief for it in `docs/3D-HANDOFF.md`, and don't change the
 rules for art. New minigame ideas live in `docs/MINIGAME-IDEAS.md` (the working backlog, unlike the bucket list).
+When asked what to build next, pick from that list; only suggest brand-new ideas once it's empty.
 
 ## Bucket list
 
