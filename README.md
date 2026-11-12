@@ -17,7 +17,9 @@ The lobby groups games into **⚔️ Competitive** (head to head, one of you win
 **🎲 Dice & Board** (classic table games, head to head) and **🎨 Casual** (you play together, nobody really loses). Within each group
 the games you played most recently come first (the last one is tagged
 ⏱ Last played), and **🎲 Random game** at the top picks one for you (never the
-one you just played).
+one you just played). The board and card games sit in two folders,
+**🎲 Board Games** and **🃏 Cards & Casino**, so the list stays short: open one to pick a game
+inside, and **◀ All games** (or **B** on a controller) to go back.
 Once both seats are taken, the TV's lobby stacks the two players (with your
 head to head and the tournament) in a narrow column on the left and gives the
 rest of the screen to the games; the QR code comes back when a seat is free.
@@ -573,7 +575,7 @@ minimum and a gaming PC as typical:
 **Done lately**: 🤖 a computer opponent (Easy, Normal, Hard) in every game that can have one, and a
 teammate in the co-op games; 🏆 trophies and practice records; 🌍 online play through a quick
 tunnel, with a remote screen; more co-op content (Dungeon Duo's Ice Caves and Armory, Marble Maze's
-moving parts, Kitchen Rush's Food Truck); 🎳 Bowling, ten-pin in 3D; 🏗️ Tower Stack, co-op stacking; ✨ HD graphics; the computer's levels pulled further apart (Penalty Shootout, Bumper Cars, Crazy Eights, Dungeon Duo's Warden).
+moving parts, Kitchen Rush's Food Truck); 🎳 Bowling, ten-pin in 3D; 🏗️ Tower Stack, co-op stacking; ✨ HD graphics; the computer's levels pulled further apart (Penalty Shootout, Bumper Cars, Crazy Eights, Dungeon Duo's Warden); four new minigames (Curling, Drum Beat, Musical Chairs, Archery).
 
 **Next up: more to play together**
 

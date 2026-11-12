@@ -20,6 +20,8 @@ don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, tex
   documented at the top of `server/games/index.js`.
 - `server/games/index.js`: the `GAMES` registry. Setup screens are added here with `withSetup(game, spec)`
   (see `server/games/options.js`); the game reads its choices with `settingOf(ctx, key, fallback)`.
+- Lobby folders: `FOLDERS` in `server/games/index.js` puts a game in 🎲 Board Games or 🃏 Cards & Casino (new board,
+  card and casino games go there).
 - `server/games/minis/`, `server/games/board/`: Party Minigames / Micro Mayhem minis and Party Board maps.
 - `public/games/<id>/host.js` (TV) and `player.js` (phone): IIFEs that call `Ark.register('host' | 'player', '<id>', {...})`,
   plus an optional `style.css` and shared helpers (`board.js`), loaded with `Ark.loadCss` / `Ark.loadScript`.
@@ -63,6 +65,14 @@ style from `play.css`: give your Rematch button `class="primary rematch"` and on
    This goes for any change players notice (hub, desktop app), not only games.
 
 Commit messages: `Game Name: what changed, in plain words` (for example `Kart Race: smaller Star glow for the bigger karts`).
+
+## 3D work and the ideas list
+
+The cloud session builds games and their base (rules, server, phones, computer player, tests, a TV scene
+of simple shapes). The owner's local session makes 3D models, scenery and animation (Kart Race 3D, and
+any 3D that needs models or scenery). Write a brief for it in `docs/3D-HANDOFF.md`, and don't change the
+rules for art. New minigame ideas live in `docs/MINIGAME-IDEAS.md` (the working backlog, unlike the bucket list).
+When asked what to build next, pick from that list; only suggest brand-new ideas once it's empty.
 
 ## Bucket list
 

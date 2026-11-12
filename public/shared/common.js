@@ -303,7 +303,7 @@
    * Coming soon). Gives '' for a game it plays, or with no computer seated.
    */
   function botTag(state, g) {
-    if (!botSeat(state) || g.id === 'random' || g.vsComputer) return '';
+    if (!botSeat(state) || g.id === 'random' || g.folderCard || g.back || g.vsComputer) return '';
     return g.botSoon ? '<em class="tag soon">⏳ Coming soon</em>' : '<em class="tag">🧑 Needs a person</em>';
   }
 
@@ -595,7 +595,46 @@
     drawClock();
   }
 
+  /** Lobby folders (which games are in each comes from the server: a game's `folder`). */
+  const FOLDERS = {
+    board: { name: '🎲 Board Games' },
+    cards: { name: '🃏 Cards & Casino' },
+  };
+  const CATEGORY_ORDER = ['competitive', 'board', 'casual'];
+
+  /**
+   * The lobby's cards from the room's games. Games in a folder become one folder card (in the
+   * Dice & Board group); with a folder open, a Back card and then that folder's games.
+   * A folder card: { folderCard: key, name, tagline, lastPlayed }; the Back card: { back: true }.
+   */
+  function lobbyEntries(games, open) {
+    const inside = open ? games.filter(function (g) { return g.folder === open; }) : [];
+    if (inside.length) {
+      return [{ id: 'back', back: true, name: '◀ All games', tagline: (FOLDERS[open] || {}).name || '' }].concat(inside);
+    }
+    const out = [];
+    const folders = {};
+    games.forEach(function (g) {
+      if (!g.folder) return out.push(g);
+      let f = folders[g.folder];
+      if (!f) f = folders[g.folder] = { id: 'folder:' + g.folder, folderCard: g.folder, name: (FOLDERS[g.folder] || { name: g.folder }).name, category: 'board', names: [], lastPlayed: null };
+      f.names.push(g.name);
+      if ((g.lastPlayed || 0) > (f.lastPlayed || 0)) f.lastPlayed = g.lastPlayed;
+    });
+    const keys = Object.keys(FOLDERS).filter(function (k) { return folders[k]; }).concat(Object.keys(folders).filter(function (k) { return !FOLDERS[k]; }));
+    const cards = keys.map(function (k) {
+      const f = folders[k];
+      f.tagline = f.names.length + ' games: ' + f.names.join(', ');
+      return f;
+    });
+    // The folder cards open the Dice & Board group (before the first game of a later group).
+    let at = out.findIndex(function (g) { return CATEGORY_ORDER.indexOf(g.category) > CATEGORY_ORDER.indexOf('board'); });
+    if (at < 0) at = out.length;
+    return out.slice(0, at).concat(cards, out.slice(at));
+  }
+
   window.Ark = {
+    lobbyEntries: lobbyEntries,
     phoneClock: phoneClock,
     lobbyLayout: lobbyLayout,
     avatarHtml: avatarHtml,
