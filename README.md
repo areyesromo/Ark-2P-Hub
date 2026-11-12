@@ -573,7 +573,7 @@ minimum and a gaming PC as typical:
 **Done lately**: 🤖 a computer opponent (Easy, Normal, Hard) in every game that can have one, and a
 teammate in the co-op games; 🏆 trophies and practice records; 🌍 online play through a quick
 tunnel, with a remote screen; more co-op content (Dungeon Duo's Ice Caves and Armory, Marble Maze's
-moving parts, Kitchen Rush's Food Truck); 🎳 Bowling, ten-pin in 3D; 🏗️ Tower Stack, co-op stacking; ✨ HD graphics; the computer's levels pulled further apart (Penalty Shootout, Bumper Cars, Crazy Eights, Dungeon Duo's Warden).
+moving parts, Kitchen Rush's Food Truck); 🎳 Bowling, ten-pin in 3D; 🏗️ Tower Stack, co-op stacking; ✨ HD graphics; the computer's levels pulled further apart (Penalty Shootout, Bumper Cars, Crazy Eights, Dungeon Duo's Warden); four new minigames (Curling, Drum Beat, Musical Chairs, Archery).
 
 **Next up: more to play together**
 

@@ -64,6 +64,13 @@ style from `play.css`: give your Rematch button `class="primary rematch"` and on
 
 Commit messages: `Game Name: what changed, in plain words` (for example `Kart Race: smaller Star glow for the bigger karts`).
 
+## 3D work and the ideas list
+
+The cloud session builds games and their base (rules, server, phones, computer player, tests, a TV scene
+of simple shapes). The owner's local session makes 3D models, scenery and animation (Kart Race 3D, and
+any 3D that needs models or scenery). Write a brief for it in `docs/3D-HANDOFF.md`, and don't change the
+rules for art. New minigame ideas live in `docs/MINIGAME-IDEAS.md` (the working backlog, unlike the bucket list).
+
 ## Bucket list
 
 `docs/BUCKET-LIST.md` holds ideas the owner has parked for later (paid services, big maybes). Read it back only
