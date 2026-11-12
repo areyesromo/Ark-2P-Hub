@@ -85,6 +85,34 @@ Eights does). Never make up a card at random. Famous trademarked names get our o
 | War | Flip and compare, ties go to war. Pure luck, for little ones. | 2D |
 | Two-player Hearts or Spades | The 2-player draw-a-card versions of the trick games. | 2D |
 
+### Family card games (own decks, our own names)
+
+These use their own custom decks (colours, numbers, action cards), drawn on screen, so they need
+our own names and card art. The rules of a game aren't owned, but the names and art are.
+
+| Idea | Based on | How it plays | Look |
+|---|---|---|---|
+| Colour Clash | Uno | Match colour or number; Skip, Reverse (another turn in 1v1), Draw Two, Wild, Wild Draw Four. Call it at one card. A new deck, not Crazy Eights. | 2D |
+| Double Match | Dos | Match by number onto two centre rows; a double match makes the other draw and adds a row. | 2D |
+| Ten Phases | Phase 10 | Ten phases in order (two sets of 3, a run of 7, seven of one colour...); first through phase 10 wins. Skips and wilds. | 2D |
+| Build Piles | Skip-Bo | Empty your stock pile by building 1 to 12 on shared piles, with four discard piles each and wilds. | 2D |
+| Road Race | Mille Bornes | Play distance cards to reach 1000 km; hit the other with flat tyres, stop lights, speed limits; play the fix or a safety. | 2D, 3D art cars |
+| Property Deal | Monopoly Deal | Bank money, collect full colour sets, charge rent, Deal Breaker and Just Say No style action cards. First to three full sets. | 2D |
+| Lucky Seven | Flip 7 | Push your luck: flip numbers, stop before a repeat, bank the sum. First to 200. | 2D |
+| Five Crowns style | Five Crowns | Rummy over eleven hands, the wild rank changes each hand. | 2D |
+| Golf (cards) | Golf | Six face-down cards, swap to lower your score; pairs in a column cancel. | 2D |
+| Old Maid | Old Maid | Pair off and pass; don't get stuck with the odd card. For kids. | 2D |
+| Slap Stack | Egyptian Ratscrew / Slapjack | Flip in turn, slap a Jack, a double or a sandwich first to take the pile. Reaction game. | 2D |
+| Bomb Cards | Exploding Kittens | Draw until someone draws a bomb; defuse, skip, peek, shuffle and attack cards. | 2D |
+| Love Letter style | Love Letter | A tiny deck, one card in hand, guess and compare to knock the other out. Deduction. | 2D |
+| Bluff Court | Coup | Two hidden roles each; claim any role's power, the other can call your bluff. | 2D |
+| Number Tiles | Rummikub | Tiles 1 to 13 in four colours; lay sets and runs and rearrange the table. | 2D |
+| Sequence style | Sequence | Play a card to take its space on a card-grid board; five in a row. | 2D |
+| Card Draft | Sushi Go | Pick one, pass the rest; score sets over three rounds. | 2D |
+| Expeditions | Lost Cities | 1v1: lay rising numbers in five colours; bets double a colour, short ones cost. | 2D |
+| Market Trade | Jaipur | 1v1: take or swap goods from the market, sell sets for falling-value tokens, camels. | 2D |
+| Canasta / Pinochle / Gin | Classics | The 2-player versions of the traditional melding games. | 2D |
+
 ## Board games
 
 | Idea | How it plays | Look |
