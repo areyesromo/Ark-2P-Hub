@@ -278,6 +278,17 @@ const FAST = new Set([
   'bomb-duel', 'kart-race', 'kart-race-3d', 'block-battle', 'reaction-duel', 'micro-mayhem',
 ]);
 
+/**
+ * Lobby folders: one tile in the lobby that opens to these games (it keeps the list short).
+ * Each game still has its own records, trophies and computer. The names are on the screens
+ * (Ark.lobbyEntries in public/shared/common.js).
+ */
+export const FOLDERS = {
+  board: ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
+  cards: ['crazy-eights', 'liars-dice', 'memory-match'],
+};
+const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
+
 export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
@@ -287,6 +298,7 @@ export function listGames() {
       name,
       tagline,
       category: category || 'competitive',
+      folder: folderOf(id), // in a lobby folder (see FOLDERS), or null
       needsPhone: Boolean(needsPhone || phoneOnly),
       phoneOnly: Boolean(phoneOnly),
       handheld: Boolean(handheld), // lobby label: 📱 No TV needed

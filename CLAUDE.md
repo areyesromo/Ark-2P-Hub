@@ -20,6 +20,8 @@ don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, tex
   documented at the top of `server/games/index.js`.
 - `server/games/index.js`: the `GAMES` registry. Setup screens are added here with `withSetup(game, spec)`
   (see `server/games/options.js`); the game reads its choices with `settingOf(ctx, key, fallback)`.
+- Lobby folders: `FOLDERS` in `server/games/index.js` puts a game in 🎲 Board Games or 🃏 Cards & Casino (new board,
+  card and casino games go there).
 - `server/games/minis/`, `server/games/board/`: Party Minigames / Micro Mayhem minis and Party Board maps.
 - `public/games/<id>/host.js` (TV) and `player.js` (phone): IIFEs that call `Ark.register('host' | 'player', '<id>', {...})`,
   plus an optional `style.css` and shared helpers (`board.js`), loaded with `Ark.loadCss` / `Ark.loadScript`.

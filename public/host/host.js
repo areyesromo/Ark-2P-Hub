@@ -163,8 +163,23 @@
 
   // The first lobby card picks a game at random (the server chooses, see Room#pickRandomGame).
   const RANDOM = { id: 'random', name: '🎲 Random game', tagline: "Can't decide? Let the hub pick one for you." };
+  let openFolder = null; // the lobby folder open on the TV (Board Games, Cards & Casino), or null
   function lobbyCards() {
-    return [RANDOM].concat(state.games);
+    const entries = Ark.lobbyEntries(state.games, openFolder);
+    if (entries[0] && entries[0].back) return entries;
+    openFolder = null; // (it's gone, or was never open)
+    return [RANDOM].concat(entries);
+  }
+  /** Opens a folder (or closes it with null); a controller's pick goes to the first game, or back to the folder. */
+  function showFolder(key) {
+    const was = openFolder;
+    openFolder = key;
+    const cards = lobbyCards();
+    focus = key ? Math.min(1, cards.length - 1) : Math.max(0, cards.findIndex(function (c) { return c.folderCard === was; }));
+    renderLobby();
+    // In view: the top of the folder, or the folder card you came back to.
+    const el = key ? $('game-list').firstElementChild : $('game-list').querySelector('[data-folder="' + was + '"]');
+    if (el && el.scrollIntoView) el.scrollIntoView({ block: key ? 'start' : 'nearest' });
   }
 
   function renderLobby() {
@@ -197,13 +212,15 @@
     $('game-list').innerHTML = cards.map(function (g, i) {
       const botTag = Ark.botTag(state, g); // (with the computer seated, a game it can't play is greyed out)
       const off = (pads && g.phoneOnly) || Boolean(botTag);
-      const heading = i > 0 && (i === 1 || cards[i - 1].category !== g.category)
+      if (g.back) return '<button class="game-card random back" data-back' + (padFocus && i === focus ? ' pad-focus' : '') + '><strong>' + Ark.escapeHtml(g.name) + '</strong><span>' + Ark.escapeHtml(g.tagline) + '</span></button>';
+      const heading = !openFolder && i > 0 && (i === 1 || cards[i - 1].category !== g.category)
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
         : '';
       const tag = newest && g.lastPlayed === newest ? '<em class="tag">⏱ Last played</em>' : '';
       return (
         heading +
-        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
+        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (g.folderCard ? ' folder' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" ' +
+        (g.folderCard ? 'data-folder="' + Ark.escapeHtml(g.folderCard) + '">' : 'data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>') +
         '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag || Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
         '</button>'
@@ -215,6 +232,9 @@
   }
 
   $('game-list').addEventListener('click', function (e) {
+    const folder = e.target.closest('[data-folder]');
+    if (folder) return showFolder(folder.getAttribute('data-folder'));
+    if (e.target.closest('[data-back]')) return showFolder(null);
     const btn = e.target.closest('[data-game]');
     if (!btn || btn.disabled) return;
     socket.emit('lobby:start', { gameId: btn.getAttribute('data-game') }, function (res) {
@@ -811,6 +831,8 @@
       socket.emit('lobby:tournament', { bestOf: next });
       return flashPad('🏆 Tournament: ' + (next ? 'best of ' + next + ' games' : 'off') + ' · X to change');
     }
+    if (btn === 'B' && openFolder) return showFolder(null); // B in a folder: back to all games
+    if ((btn === 'A' || btn === 'START') && (cards[focus].folderCard || cards[focus].back)) return showFolder(cards[focus].folderCard || null);
     if (btn === 'B') {
       socket.emit('pad:leave', { slot: seat.slot });
       delete padSeats[idx];

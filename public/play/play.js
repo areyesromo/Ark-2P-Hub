@@ -181,6 +181,7 @@
     casual: '🎨 Casual <span>Play together, just for fun</span>',
   };
 
+  let openFolder = null; // the lobby folder open on this phone, or null
   function renderLobby() {
     const opponent = state.players[1 - me.slot];
     let status;
@@ -196,11 +197,18 @@
 
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
     const pads = Ark.controllerSeated(state);
-    const games = state.games;
+    const games = Ark.lobbyEntries(state.games, openFolder);
+    const inFolder = Boolean(games[0] && games[0].back);
+    if (!inFolder) openFolder = null;
     $('phone-games').innerHTML =
-      '<button data-game="random" class="random"' + (state.readyToPlay ? '' : ' disabled') + '><strong>🎲 Random game</strong><span>Can\'t decide? Let the hub pick.</span></button>' +
+      (inFolder ? '' : '<button data-game="random" class="random"' + (state.readyToPlay ? '' : ' disabled') + '><strong>🎲 Random game</strong><span>Can\'t decide? Let the hub pick.</span></button>') +
       games.map(function (g, i) {
-      const heading = i === 0 || games[i - 1].category !== g.category
+      if (g.back) return '<button data-back class="random back"><strong>' + Ark.escapeHtml(g.name) + '</strong><span>' + Ark.escapeHtml(g.tagline) + '</span></button>';
+      if (g.folderCard) {
+        return (i === 0 || games[i - 1].category !== g.category ? '<h3 class="game-group">' + GROUPS[g.category] + '</h3>' : '') +
+          '<button data-folder="' + Ark.escapeHtml(g.folderCard) + '" class="folder"><strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + '</strong><span>' + Ark.escapeHtml(g.tagline) + '</span></button>';
+      }
+      const heading = !inFolder && (i === 0 || games[i - 1].category !== g.category)
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
         : '';
       const botTag = Ark.botTag(state, g); // (with the computer seated, a game it can't play is greyed out)
@@ -233,6 +241,12 @@
   }
 
   $('phone-games').addEventListener('click', function (e) {
+    const folder = e.target.closest('[data-folder]');
+    if (folder || e.target.closest('[data-back]')) {
+      openFolder = folder ? folder.getAttribute('data-folder') : null;
+      renderLobby();
+      return window.scrollTo(0, $('phone-games').offsetTop - 12);
+    }
     const btn = e.target.closest('[data-game]');
     if (!btn || btn.disabled) return;
     socket.emit('lobby:start', { gameId: btn.getAttribute('data-game') }, function (res) {

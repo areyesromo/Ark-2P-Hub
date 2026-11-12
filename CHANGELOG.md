@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.37
+
+- 🗂️ A shorter lobby: the board games (Checkers, Connect Four, Mancala, Dots and Boxes, Battleship,
+  Dice Party) are in a 🎲 Board Games folder, and Crazy Eights, Memory Match and Liar's Dice in
+  🃏 Cards & Casino. Open one to pick a game; ◀ All games (or B on a controller) goes back.
+
 ## 0.1.36
 
 - 🥁 Four new minigames, in Party Minigames and on the Party Board: Drum Beat (hit the notes on the
