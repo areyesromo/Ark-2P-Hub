@@ -111,7 +111,7 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 | Card Draft | Sushi Go | Pick one, pass the rest; score sets over three rounds. | 2D |
 | Expeditions | Lost Cities | 1v1: lay rising numbers in five colours; bets double a colour, short ones cost. | 2D |
 | Market Trade | Jaipur | 1v1: take or swap goods from the market, sell sets for falling-value tokens, camels. | 2D |
-| Canasta / Pinochle / Gin | Classics | The 2-player versions of the traditional melding games. | 2D |
+| Canasta / Pinochle | Classics | The 2-player versions of the traditional melding games. | 2D |
 
 ## Board games
 
