@@ -1,6 +1,6 @@
-# Minigame ideas
+# Game ideas
 
-Ideas for new Party Minigames and Micro Mayhem minis, waiting their turn. This is the working
+Ideas for new Party Minigames, Micro Mayhem minis and full games, waiting their turn. This is the working
 backlog, not the bucket list: pick from here when choosing what to build next. Each gets a short
 design when its turn comes.
 
@@ -51,6 +51,69 @@ design when its turn comes.
 | Which Box | One hides the prize in one of three boxes, the other picks; swap roles, five rounds. | 2D |
 | Odd or Even | Both secretly pick fingers 1 to 5; one calls odd, one even, winner takes a point. | 2D |
 | Price Guess | A made-up shop item and its parts; nearest guess without going over. | 2D |
+
+# Casino, card and board games
+
+Full games (their own lobby entry), not minis. Only games with clear rules a computer can play well:
+no games judged on taste or humour (Cards Against Humanity, Dixit, Apples to Apples), and no word
+association (Codenames). Games for 3 or more get a 2-player version if one exists.
+
+**Cards are real decks**: shuffle once, deal from the top, reshuffle only when it runs out (as Crazy
+Eights does). Never make up a card at random. Famous trademarked names get our own name.
+
+## Casino (play chips only, never real money)
+
+| Idea | How it plays | Look |
+|---|---|---|
+| Blackjack | Both play the dealer from a shuffled shoe; most chips after the last hand wins. | 2D, 3D art table |
+| Heads-up Hold'em | 1v1 poker: two hidden cards on your phone, five shared on the TV, blinds go up. | 2D, 3D art table |
+| Roulette | Both bet on the same spin; most chips after ten spins. | 3D base wheel |
+| Baccarat | Bet on player, banker or tie; quick rounds. | 2D |
+| Craps | Take turns as the shooter, the other bets with or against. | 3D base dice |
+| Video Poker | Same dealt hand to both, hold and draw; best hand takes the pot. | 2D |
+| Slots duel | Same machine, ten pulls each, a bonus round; pure luck, short. | 2D |
+| Red Dog / Acey-Deucey | Bet whether the next card falls between two. | 2D |
+
+## Card games
+
+| Idea | How it plays | Look |
+|---|---|---|
+| Gin Rummy | Draw and discard to make sets and runs; knock to end the hand. | 2D |
+| Cribbage | Pegging and counting fifteens, a peg board on the TV. | 2D |
+| Speed (Spit) | Both play at once onto two piles, one up or down; first out wins. Real-time. | 2D |
+| Go Fish | Ask for ranks, make books of four. Easy for kids. | 2D |
+| War | Flip and compare, ties go to war. Pure luck, for little ones. | 2D |
+| Two-player Hearts or Spades | The 2-player draw-a-card versions of the trick games. | 2D |
+
+## Board games
+
+| Idea | How it plays | Look |
+|---|---|---|
+| Pawn race ("Sorry"-style) | Draw from a shuffled deck of move cards, bump the other back to start, slides. | 2D, 3D art board |
+| Ludo / Parcheesi | Roll to bring pawns out and home, capture, safe squares. | 2D, 3D art board |
+| Backgammon | The classic race with hitting and bearing off; a doubling cube. | 2D, 3D art board |
+| Snakes & Ladders | Pure luck, quick and silly; for kids. | 2D |
+| Reversi | Flip discs by trapping lines; most discs wins. | 2D |
+| Chess | The full game, with a computer at three levels. | 2D, 3D art pieces |
+| Chinese Checkers | The 2-player star board, hop across to the far point. | 2D |
+| Nine Men's Morris | Make mills of three to take pieces. | 2D |
+| Go (9x9) | Surround territory; a small board keeps it short. | 2D |
+| Five in a Row (Gomoku) | Five in a line on a big grid; Pente's captures as an option. | 2D |
+| Hex | Join your two sides of a rhombus board; no draws. | 2D |
+| Wall maze race ("Quoridor"-style) | Move to the far side or place a wall to block; path must stay open. | 2D, 3D base |
+| Hidden ranks ("Stratego"-style) | Hidden armies on a board; attacks reveal ranks. Hidden info stays on each phone. | 2D |
+| Code Breaker (Bulls and Cows) | Set a secret code, guess the other's with clues. | 2D |
+| Who Is It (deduction) | Yes/no questions about faces to find the other's secret pick. | 2D |
+| Dominoes | Draw and block versions; match ends. | 2D |
+| Yacht (five dice) | Five dice, three rolls, fill the score card. | 3D base dice |
+| Farkle / Pig | Push your luck dice: roll on or bank. | 3D base dice |
+| Shut the Box | Roll and close numbered tiles that add up; lowest left wins. | 2D |
+| Ultimate Tic-tac-toe | Nine boards; where you play sends the other to that board. | 2D |
+| Word Tiles ("Scrabble"-style) | Letter tiles on a bonus board, our word list. | 2D |
+| Hangman duel | Each sets a word, the other guesses. | 2D |
+
+Already in the hub: Checkers, Connect Four, Mancala, Dots and Boxes, Battleship, Liar's Dice,
+Crazy Eights, Memory Match, Rock Paper Scissors, Dice Party.
 
 ## Notes
 
