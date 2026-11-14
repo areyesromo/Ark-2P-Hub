@@ -4,6 +4,11 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.42
+
+- 🏎️ Kart Race: phones get a quarter of the data they did during a race (the TV still draws the
+  whole track), so racing stays smooth on a busy Wi-Fi.
+
 ## 0.1.41
 
 - 🗂️ A shorter lobby: the board games (Checkers, Connect Four, Mancala, Dots and Boxes, Battleship,
