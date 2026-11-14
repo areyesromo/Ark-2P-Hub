@@ -1,17 +1,13 @@
 // test-deps.mjs: runs before `npm test` (the pretest script). A fresh clone has no node_modules,
 // and then most test files fail with "Cannot find package": say what to do instead.
-import { createRequire } from 'node:module';
+import fs from 'node:fs';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const require = createRequire(import.meta.url);
-const pkg = require('../package.json');
-const missing = [...Object.keys(pkg.dependencies), 'socket.io-client'].filter((name) => {
-  try {
-    require.resolve(name + '/package.json');
-    return false;
-  } catch {
-    return true;
-  }
-});
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const pkg = JSON.parse(fs.readFileSync(path.join(ROOT, 'package.json'), 'utf8'));
+// (by folder: some packages, three among them, don't let their package.json be imported)
+const missing = [...Object.keys(pkg.dependencies), 'socket.io-client'].filter((name) => !fs.existsSync(path.join(ROOT, 'node_modules', name, 'package.json')));
 if (missing.length) {
   console.error(`\nThe packages aren't installed (missing: ${missing.join(', ')}). Run this first:\n`);
   console.error('  npm ci\n');
