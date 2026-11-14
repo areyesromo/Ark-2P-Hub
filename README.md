@@ -445,9 +445,10 @@ Pi set up before that, run `sudo apt install fonts-noto-color-emoji` once.
 ### Local development
 
 ```bash
-npm install
+npm ci             # ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci skips the desktop app's Electron
 npm run dev        # restarts on file changes
-npm test
+npm test           # every test (about a minute and a half on four cores)
+npm run test:fast  # all but the slow computer-vs-computer games, for quick checks
 ```
 
 Open <http://localhost:3000/host/> in one window and

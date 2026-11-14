@@ -9,7 +9,9 @@ don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, tex
 ## Commands
 
 - `npm run dev`: server with `--watch` on http://localhost:3000 (TV at `/`, phones at `/play/`, admin at `/admin/`)
-- `npm test`: every `test/*.test.js` (node:test, no extra runner)
+- `npm test`: every `test/*.test.js` (node:test, no extra runner). Needs `npm ci` first (`ELECTRON_SKIP_BINARY_DOWNLOAD=1` skips Electron)
+- `npm run test:fast`: everything but the slow computer-vs-computer files (`bots-games*`, `kart-race-cpu`), for quick checks
+- Computer-player tests: the harness is `test/helpers-bots.js`; a slow game goes in `HEAVY` there (its own `bots-games-*.test.js`) so it runs in parallel
 - `node --test test/kart-race*.test.js`: one game's tests
 - `node tools/games-catalog.mjs`: regenerate `docs/GAMES.md` (`test/catalog.test.js` fails until you do)
 
