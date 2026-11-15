@@ -35,11 +35,14 @@ RUN ARCH="${TARGETARCH:-$(uname -m)}"; \
 COPY server ./server
 COPY public ./public
 
-# Stamped by update.sh / update.ps1 (and CI) so /version shows what is running.
+# Stamped by update.sh / update.ps1 (and CI) so /version shows what is running: the commit, when it
+# was built, and the latest release it's at (the TV shows "v0.1.42 · abc1234"; package.json says 0.1.0).
 ARG GIT_SHA=unknown
 ARG BUILD_TIME=unknown
+ARG APP_VERSION=
 ENV ARK_COMMIT=$GIT_SHA \
-    ARK_BUILT=$BUILD_TIME
+    ARK_BUILT=$BUILD_TIME \
+    ARK_VERSION=$APP_VERSION
 
 # Settings (admin password hash, join address) live here; compose mounts a volume on it.
 RUN mkdir -p /app/data && chown node:node /app/data

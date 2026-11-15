@@ -115,6 +115,9 @@ $sha = (Invoke-Native git @("rev-parse", "--short", "HEAD")).Out
 if ($changes) { $sha = "$sha+dirty" }
 $env:GIT_SHA = $sha
 $env:BUILD_TIME = (Get-Date).ToUniversalTime().ToString("yyyy-MM-ddTHH:mm:ssZ")
+# The latest release (the TV shows it).
+$tag = Invoke-Native git @("describe", "--tags", "--abbrev=0")
+$env:APP_VERSION = if ($tag.Code -eq 0) { $tag.Out -replace '^v', '' } else { "" }
 
 # ---- build -------------------------------------------------------------------
 # A failed build never touches the running container.

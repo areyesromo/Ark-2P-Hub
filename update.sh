@@ -96,7 +96,8 @@ SHA="$(git rev-parse --short HEAD)"
 [ -z "$CHANGES" ] || SHA="${SHA}+dirty"
 GIT_SHA="$SHA"
 BUILD_TIME="$(date -u +%Y-%m-%dT%H:%M:%SZ)"
-export GIT_SHA BUILD_TIME
+APP_VERSION="$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')" # the latest release (the TV shows it)
+export GIT_SHA BUILD_TIME APP_VERSION
 
 # ---- build -------------------------------------------------------------------
 # A failed build never touches the running container.
