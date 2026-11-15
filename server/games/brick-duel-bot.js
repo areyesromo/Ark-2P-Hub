@@ -5,11 +5,13 @@
  *   easy:   misses about one in four, and just meets the ball.
  *   normal: misses one in ten, and angles the ball towards its bricks.
  *   hard:   misses one in thirty, and steers the ball at the thickest part of its wall.
+ * Its moves come with a hand (hand.js): the paddle speeds up and eases off, like a person's.
  */
 import { FIELD } from './brick-duel.js';
 import { reactionMs } from './bot-human.js';
 
 const MISS = { easy: 0.25, normal: 0.1, hard: 0.03 };
+const HAND = { easy: 50, normal: 70, hard: 100 }; // how quickly its hand gets going (units / s², see hand.js)
 
 export function brickDuelBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   if (!view || !(level in MISS) || view.phase !== 'play' || !view.side) return null;
@@ -55,7 +57,7 @@ export function brickDuelBot(view, level, rng = Math.random, retries = 0, memory
     target = x + memory.brick.off;
   }
   target = Math.max(0, Math.min(w, target));
-  return { type: 'move', x: target / w, botDelayMs: reactionMs(level, rng) };
+  return { type: 'move', x: target / w, hand: HAND[level], botDelayMs: reactionMs(level, rng) };
 }
 
 /** The column with the most bricks left in it. */

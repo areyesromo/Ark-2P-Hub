@@ -315,3 +315,16 @@ test('the phone view has lives and scores, not positions', () => {
   assert.equal(v.ships, undefined);
   assert.ok(ROCK.sizes.length === 3);
 });
+
+test('the computer fires once lined up within your ship (Normal, Hard), not only dead on', async () => {
+  const { asteroidDuelBot } = await import('../server/games/asteroid-duel-bot.js');
+  const { SHIP } = await import('../server/games/asteroid-duel.js');
+  // You, 2.5 away and still, a little off its nose: inside your ship's width, not dead on.
+  const off = Math.atan2(SHIP.r, 2.5) * 0.55;
+  const view = { phase: 'play', you: 0, ready: true, rocks: [], bullets: [],
+    ships: [{ x: 4, y: 4.5, vx: 0, vy: 0, angle: off, alive: true }, { x: 6.5, y: 4.5, vx: 0, vy: 0, angle: Math.PI, alive: true, shield: false }] };
+  const fires = (level) => [0, 1, 2, 3, 4].every(() => (asteroidDuelBot(view, level, () => 0.5, 0, {}) || {}).type === 'fire');
+  assert.ok(off > 0.06, 'the test angle is wider than "dead on"');
+  assert.ok(fires('hard') && fires('normal'), 'Normal and Hard fire');
+  assert.ok(!fires('easy'), 'Easy waits to be dead on');
+});
