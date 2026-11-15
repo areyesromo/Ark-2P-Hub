@@ -85,10 +85,13 @@ export class Battleship {
       if (p.local) this.ready[slot] = true;
     });
     if (this.ready.every(Boolean)) return this.aim();
-    this.runPhase('place', this.turnMs ? TIMING.placeMs : null, () => this.aim());
+    this.runPhase('place', this.turnMs ? TIMING.placeMs : null, 'aim');
   }
 
-  /** Enter a timed phase, pushing a fresh view every second, then call onEnd. */
+  /**
+   * Enter a timed phase, pushing a fresh view every second, then call the method named onEnd (a
+   * name, not a function, so a saved game keeps it: see resumed).
+   */
   runPhase(phase, ms, onEnd) {
     this.phase = phase;
     this.phaseEnds = ms === null ? null : this.ctx.now() + ms; // null: no time limit
@@ -108,9 +111,17 @@ export class Battleship {
         this.ctx.update();
         this.scheduleStep();
       } else {
-        this.onPhaseEnd();
+        this[this.onPhaseEnd]();
       }
     }, Math.max(0, Math.min(1000, left)));
+  }
+
+  /** Picked up after a restart (see RESUMES in index.js): the clock runs on from where it was. */
+  resumed(downMs = 0) {
+    this.timer = null;
+    if (this.phaseEnds === null || this.phase === 'over') return;
+    this.phaseEnds += downMs;
+    this.scheduleStep();
   }
 
   stopTimer() {
@@ -121,7 +132,12 @@ export class Battleship {
   aim() {
     this.stopTimer();
     this.ready = [true, true]; // whatever was placed when the placing clock ran out is final
-    this.runPhase('aim', this.turnMs || null, () => this.fire(this.turn, this.randomTarget(1 - this.turn)));
+    this.runPhase('aim', this.turnMs || null, 'aimTimeUp');
+  }
+
+  /** Out of time to aim: a shot at random. */
+  aimTimeUp() {
+    this.fire(this.turn, this.randomTarget(1 - this.turn));
   }
 
   randomTarget(target) {
@@ -155,10 +171,13 @@ export class Battleship {
     }
     this.lastShot = { by: slot, x, y, result, ship };
     if (this.sunk[target].every(Boolean)) return this.finish(slot);
-    this.runPhase('shot', TIMING.shotMs, () => {
-      this.turn = target;
-      this.aim();
-    });
+    this.runPhase('shot', TIMING.shotMs, 'afterShot');
+  }
+
+  /** After a shot has been shown: the turn passes to the player shot at. */
+  afterShot() {
+    this.turn = 1 - this.lastShot.by;
+    this.aim();
   }
 
   finish(winner) {

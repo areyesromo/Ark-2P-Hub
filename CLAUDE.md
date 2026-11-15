@@ -24,7 +24,11 @@ don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, tex
 - `server/games/index.js`: the `GAMES` registry. Setup screens are added here with `withSetup(game, spec)`
   (see `server/games/options.js`); the game reads its choices with `settingOf(ctx, key, fallback)`.
 - Lobby folders: `FOLDERS` in `server/games/index.js` puts a game in 🎲 Board Games or 🃏 Cards & Casino (new board,
-  card and casino games go there).
+  card and casino games go there, and in `RESUMES` too: they survive a restart).
+- Resuming after a restart (`RESUMES`, `server/saves.js`): the room saves the game's own fields, so its state must be plain
+  data, and a timer's callback is a method *name* stored in state (`runPhase(phase, ms, 'afterShot')`), not a function.
+  A game with a clock gives `resumed(downMs)` to push its deadline back and arm its timer again. `test/resume.test.js`
+  checks every game in `RESUMES`.
 - `server/games/minis/`, `server/games/board/`: Party Minigames / Micro Mayhem minis and Party Board maps.
 - `public/games/<id>/host.js` (TV) and `player.js` (phone): IIFEs that call `Ark.register('host' | 'player', '<id>', {...})`,
   plus an optional `style.css` and shared helpers (`board.js`), loaded with `Ark.loadCss` / `Ark.loadScript`.

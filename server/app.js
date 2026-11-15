@@ -19,6 +19,7 @@ import { Stats } from './stats.js';
 import { Profiles, AVATARS, COLOURS } from './profiles.js';
 import { Practice } from './practice.js';
 import { Trophies, TROPHIES } from './trophies.js';
+import { GameSaves } from './saves.js';
 import { Tunnel } from './tunnel.js';
 import { Online, overInternet } from './online.js';
 
@@ -68,7 +69,7 @@ export function createApp({
   const profiles = new Profiles(dataDir);
   const practice = new Practice(dataDir);
   const trophies = new Trophies(dataDir);
-  const rooms = new RoomManager(io, { stats, profiles, practice, trophies });
+  const rooms = new RoomManager(io, { stats, profiles, practice, trophies, saves: new GameSaves(dataDir) });
   // Online play: a quick tunnel (or the owner's own address) for a friend somewhere else.
   let online = null;
   const tunnel = new Tunnel({ port: () => (listener.address() && listener.address().port) || port, onChange: () => online && online.refresh() });
@@ -195,7 +196,7 @@ export function createApp({
       new Promise((resolve) => {
         clearInterval(sweeper);
         online.shutdown();
-        for (const room of rooms.rooms.values()) room.dispose();
+        for (const room of rooms.rooms.values()) room.dispose({ keepSave: true }); // (games in progress are picked up after a restart)
         if (listener !== httpServer) listener.close();
         io.close(() => resolve());
       }),

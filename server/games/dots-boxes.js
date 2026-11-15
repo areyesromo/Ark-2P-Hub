@@ -57,6 +57,23 @@ export class DotsBoxes {
     this.scheduleTick();
   }
 
+  /**
+   * Picked up after a restart (see RESUMES in index.js): a timed turn's clock runs on from where it
+   * was (the time the hub was down doesn't count), and a finished round goes on to the next.
+   */
+  resumed(downMs = 0) {
+    this.timer = null;
+    if (this.phase === 'play' && this.turnEnds) {
+      this.turnEnds += downMs;
+      this.scheduleTick();
+    } else if (this.phase === 'roundEnd') {
+      this.timer = this.ctx.setTimeout(() => {
+        this.timer = null;
+        this.newRound();
+      }, TIMING.roundEndMs);
+    }
+  }
+
   /** Push the clock every second; draw a random open line when it runs out. */
   scheduleTick() {
     this.clearTimer();

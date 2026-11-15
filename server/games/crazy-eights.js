@@ -94,17 +94,35 @@ export class CrazyEights {
   turnStart() {
     this.drew = null;
     this.turns++;
-    this.turnClock(() => this.timeUp());
+    this.turnClock('timeUp');
     this.ctx.update();
   }
 
+  /** After `ms`, the method named onEnd (a name, not a function, so a saved game keeps it: resumed). */
   clock(ms, onEnd) {
     if (this.timer) this.ctx.clearTimeout(this.timer);
     this.turnEnds = this.ctx.now() + ms;
+    this.onClock = onEnd;
     this.timer = this.ctx.setTimeout(() => {
       this.timer = null;
-      onEnd();
+      this[this.onClock]();
     }, ms);
+  }
+
+  /** Picked up after a restart (see RESUMES in index.js): the clock runs on from where it was. */
+  resumed(downMs = 0) {
+    this.timer = null;
+    if (!this.turnEnds || this.phase === 'over') return;
+    this.turnEnds += downMs;
+    this.timer = this.ctx.setTimeout(() => {
+      this.timer = null;
+      this[this.onClock]();
+    }, Math.max(0, this.turnEnds - this.ctx.now()));
+  }
+
+  /** Out of time to call the suit (after an 8): the suit the player holds most of. */
+  suitTimeUp() {
+    this.callSuit(this.mostHeld(this.turn));
   }
 
   /** The clock for a turn (or for calling the suit), if turns are timed. */
@@ -134,7 +152,7 @@ export class CrazyEights {
     if (rankOf(c) === '8') {
       this.events.eights++;
       this.phase = 'suit';
-      this.turnClock(() => this.callSuit(this.mostHeld(slot)));
+      this.turnClock('suitTimeUp');
       return this.ctx.update();
     }
     if (this.actions && rankOf(c) === '2') {
@@ -234,7 +252,7 @@ export class CrazyEights {
       return this.ctx.update();
     }
     this.phase = 'handEnd';
-    this.clock(TIMING.handEndMs, () => this.deal());
+    this.clock(TIMING.handEndMs, 'deal');
     this.ctx.update();
   }
 

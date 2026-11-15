@@ -455,6 +455,9 @@ npm test           # every test; npm run test:fast for quick checks, npm run lin
 
 ## Notes
 
+- A board, card or casino game in progress (the 🎲 Board Games and 🃏 Cards & Casino folders)
+  survives an update or a power cut: when the TV comes back it picks the game up where it was,
+  and the phones rejoin their own seats. A game that nobody comes back to within a day is dropped.
 - Reaction times are measured on the server, so they include Wi-Fi latency
   (usually a few ms on a LAN). It's the same for both players.
 - Phone screen wake-lock and vibration work where the browser allows it;

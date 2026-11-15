@@ -72,7 +72,7 @@ export class MemoryMatch {
     this.race = this.settings.mode === 'race' && !this.ctx.players.some((p) => p && p.local);
     this.found = [new Set(), new Set()]; // Race: the cards each of you has paired
     this.mine = [[], []]; // Race: the cards each of you has face up right now
-    this.timed('countdown', TIMING.countdownMs, () => this.startTurn());
+    this.timed('countdown', TIMING.countdownMs, 'startTurn');
   }
 
   shuffle(list) {
@@ -88,24 +88,39 @@ export class MemoryMatch {
     this.timer = null;
   }
 
-  /** Enter a phase that ends after `ms` with `then()`. */
-  /** Into `phase`, then `then` after `ms` (null: no time limit). */
+  /**
+   * Into `phase`, then the method named `then` after `ms` (null: no time limit). A name, not a
+   * function, so a saved game keeps it (see resumed).
+   */
   timed(phase, ms, then) {
     this.clearTimer();
     this.phase = phase;
     this.phaseEnds = ms === null ? null : this.ctx.now() + ms;
+    this.onEnd = then;
     if (ms === null) return this.ctx.update();
+    this.arm();
+    this.ctx.update();
+  }
+
+  arm() {
     this.timer = this.ctx.setTimeout(() => {
       this.timer = null;
-      then();
-    }, ms);
-    this.ctx.update();
+      this[this.onEnd]();
+    }, Math.max(0, this.phaseEnds - this.ctx.now()));
+  }
+
+  /** Picked up after a restart (see RESUMES in index.js): the clock runs on from where it was. */
+  resumed(downMs = 0) {
+    this.timer = null;
+    if (this.phaseEnds === null || this.phase === 'over') return;
+    this.phaseEnds += downMs;
+    this.arm();
   }
 
   startTurn() {
     this.flipped = [];
     if (this.race) return this.timed('race', null); // no turns and no clock: first to clear wins
-    this.timed('turn', this.settings.turnSeconds ? this.settings.turnSeconds * 1000 : null, () => this.outOfTime());
+    this.timed('turn', this.settings.turnSeconds ? this.settings.turnSeconds * 1000 : null, 'outOfTime');
   }
 
   /** Too slow: flip random cards for them. */
@@ -153,15 +168,24 @@ export class MemoryMatch {
       this.events.matches++;
       this.lastMatch = { by: slot, face: a.face };
       // A pair: show it a moment, then the same player goes again.
-      this.timed('match', TIMING.matchMs, () => (this.cards.every((c) => c.owner !== null) ? this.finish() : this.startTurn()));
+      this.timed('match', TIMING.matchMs, 'afterPair');
     } else {
       this.events.misses++;
       // No pair: a moment to memorise them, then they turn back and the turn passes.
-      this.timed('peek', TIMING.peekMs, () => {
-        this.turn = 1 - this.turn;
-        this.startTurn();
-      });
+      this.timed('peek', TIMING.peekMs, 'afterMiss');
     }
+  }
+
+  /** A pair shown: the same player goes again, or that was the last pair. */
+  afterPair() {
+    if (this.cards.every((c) => c.owner !== null)) this.finish();
+    else this.startTurn();
+  }
+
+  /** A miss shown: the cards turn back and the turn passes. */
+  afterMiss() {
+    this.turn = 1 - this.turn;
+    this.startTurn();
   }
 
   /** The end: `first` cleared the board in a Race; otherwise most pairs wins. */

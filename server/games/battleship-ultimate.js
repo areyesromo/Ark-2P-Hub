@@ -368,14 +368,18 @@ export class UltimateBattleship {
     this.winner = null;
     this.turn = this.matches++ % 2;
     // Timed games pick a commander for anyone who hasn't in time; with no timer it waits.
-    this.runPhase('pick', this.turnMs ? UTIMING.pickMs : null, () => {
-      this.commanders = this.commanders.map((c) => c || COMMANDER_IDS[Math.floor(this.rng() * COMMANDER_IDS.length)]);
-      this.toPlace();
-    });
+    this.runPhase('pick', this.turnMs ? UTIMING.pickMs : null, 'pickTimeUp');
+  }
+
+  /** Out of time to pick: a commander at random for anyone who hasn't. */
+  pickTimeUp() {
+    this.commanders = this.commanders.map((c) => c || COMMANDER_IDS[Math.floor(this.rng() * COMMANDER_IDS.length)]);
+    this.toPlace();
   }
 
   // ---- phases and the clock --------------------------------------------------------------
 
+  /** Into `phase`; after `ms`, the method named onEnd (a name, so a saved game keeps it: resumed). */
   runPhase(phase, ms, onEnd) {
     this.phase = phase;
     this.phaseEnds = ms ? this.ctx.now() + ms : null;
@@ -393,8 +397,16 @@ export class UltimateBattleship {
       if (this.phaseEnds - this.ctx.now() > 0) {
         this.ctx.update();
         this.scheduleStep();
-      } else this.onPhaseEnd();
+      } else this[this.onPhaseEnd]();
     }, Math.max(0, Math.min(1000, left)));
+  }
+
+  /** Picked up after a restart (see RESUMES in index.js): the clock runs on from where it was. */
+  resumed(downMs = 0) {
+    this.timer = null;
+    if (!this.phaseEnds || this.phase === 'over') return;
+    this.phaseEnds += downMs;
+    this.scheduleStep();
   }
 
   stopTimer() {
@@ -407,7 +419,7 @@ export class UltimateBattleship {
     this.fleets = this.commanders.map((c) => randomFleet(this.sea, c, this.rng));
     this.ctx.players.forEach((p, slot) => { if (p && p.local) this.ready[slot] = true; });
     if (this.ready.every(Boolean)) return this.startTurn();
-    this.runPhase('place', this.turnMs ? UTIMING.placeMs : null, () => this.startTurn());
+    this.runPhase('place', this.turnMs ? UTIMING.placeMs : null, 'startTurn');
   }
 
   /** A turn: energy first, unless frozen (then it passes straight back). */
@@ -424,7 +436,12 @@ export class UltimateBattleship {
     this.eruption = null;
     if (this.sea === 'volcano' && !this.erupted && this.turns > ERUPT_AFTER && this.erupt()) return;
     this.energy[this.turn] = Math.min(ENERGY.max, this.energy[this.turn] + ENERGY.perTurn);
-    this.runPhase('aim', this.turnMs || null, () => this.shoot(this.turn, this.randomTarget(1 - this.turn)));
+    this.runPhase('aim', this.turnMs || null, 'aimTimeUp');
+  }
+
+  /** Out of time to aim: a shot at random. */
+  aimTimeUp() {
+    this.shoot(this.turn, this.randomTarget(1 - this.turn));
   }
 
   /** The fog lifts on what `slot` fired into it last turn: the hits there count now. */
@@ -670,10 +687,13 @@ export class UltimateBattleship {
     this.last = Object.assign({ by: slot }, what);
     const target = 1 - slot;
     if (COMMANDERS[this.commanders[target]].fleet.every((_, i) => this.isSunk(target, i))) return this.finish(slot);
-    this.runPhase('shot', UTIMING.shotMs, () => {
-      this.turn = target;
-      this.startTurn();
-    });
+    this.runPhase('shot', UTIMING.shotMs, 'afterShot');
+  }
+
+  /** After an action has been shown: the other player's turn. */
+  afterShot() {
+    this.turn = 1 - this.last.by;
+    this.startTurn();
   }
 
   finish(winner) {

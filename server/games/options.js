@@ -5,6 +5,8 @@
 // launch starts from it. The setup screen itself is Ark.setupHtml on the
 // client (public/shared/common.js).
 
+import { stateOf, restoreState } from '../saves.js';
+
 /** The defaults: the first value of each option. */
 export function defaultsOf(options) {
   const out = {};
@@ -101,6 +103,22 @@ class SetupFirst {
 
   playerView(slot) {
     return this.game ? { ...this.game.playerView(slot), ...this.hub() } : { phase: 'setup', you: slot, players: this.ctx.players, ...this.hub() };
+  }
+
+  /** What to save of a game in progress (see saves.js): the settings, and the game once begun. */
+  snapshot() {
+    return { settings: this.settings, game: this.game ? stateOf(this.game) : null };
+  }
+
+  /** Pick a saved game back up, where start() would begin afresh (see Room#startGame). */
+  restore(snap, downMs = 0) {
+    this.settings = snap.settings;
+    this.game = null;
+    if (!snap.game) return;
+    const ctx = Object.create(this.ctx);
+    ctx.settings = { ...this.settings };
+    this.game = restoreState(this.def.create(ctx), snap.game);
+    if (this.game.resumed) this.game.resumed(downMs); // (a game with a clock starts it again)
   }
 
   /** What the computer opponent sees (see a game's `bot`): the game's botView if it has one. */
