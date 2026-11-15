@@ -6,17 +6,17 @@
  *   easy:   aims loosely, doesn't lead its shots, never swerves.
  *   normal: leads its shots, and swerves from rocks that are close.
  *   hard:   aims tight, and swerves early.
+ * The room steers it (see `steers` in index.js): each update it acts on what it saw a reaction ago.
  */
 import { FIELD, SHIP, BULLET } from './asteroid-duel.js';
 import { reactionMs } from './bot-human.js';
 
 // fires: it shoots once lined up within this share of your ship's width as it sees it (0: only when
-// close to dead on); timed: lining up on its last look too, it times the press (a follow-through,
-// this share of a fresh reaction).
+// close to dead on).
 const LEVEL = {
-  easy: { aim: 0.16, lead: false, dodge: 0, fires: 0, timed: 0 },
-  normal: { aim: 0.08, lead: true, dodge: 0.6, fires: 0.6, timed: 0.6 },
-  hard: { aim: 0.04, lead: true, dodge: 1, fires: 0.75, timed: 0.6 },
+  easy: { aim: 0.16, lead: false, dodge: 0, fires: 0 },
+  normal: { aim: 0.12, lead: true, dodge: 0.6, fires: 0.6 },
+  hard: { aim: 0.1, lead: true, dodge: 1, fires: 0.75 },
 };
 const wrap = (v, size) => ((v % size) + size) % size;
 const delta = (a, b, size) => wrap(a - b + size / 2, size) - size / 2;
@@ -44,7 +44,6 @@ export function asteroidDuelBot(view, level, rng = Math.random, retries = 0, mem
       return stick(Math.atan2(-vx * side, vy * side), 1);
     }
   }
-  memory.astroAiming = false;
   if (!foe.alive) return stick(me.angle, 0.3); // (wait for them to come back)
   // Where to shoot: where they'll be when the shot gets there.
   let dx = delta(foe.x, me.x, FIELD.w);
@@ -63,9 +62,7 @@ export function asteroidDuelBot(view, level, rng = Math.random, retries = 0, mem
   // It fires once the shot would land: close to dead on, or (Normal, Hard) within part of your
   // ship's width from here, as a player fires when it looks lined up instead of waiting to be perfect.
   const width = Math.atan2(SHIP.r, d);
-  const timed = memory.astroAiming && L.timed ? pace * L.timed : pace; // (a follow-through: it saw it coming)
-  memory.astroAiming = true;
-  if (off < Math.max(0.06, width * L.fires) && view.ready && inRange && !foe.shield) return { type: 'fire', botDelayMs: timed };
+  if (off < Math.max(0.06, width * L.fires) && view.ready && inRange && !foe.shield) return { type: 'fire', botDelayMs: pace };
   // Close in when far, hold off when close (the engine only fires past SHIP.thrustFrom).
   const push = d > 6 ? 0.9 : d < 3 ? 0.3 : 0.35;
   return stick(want, push);

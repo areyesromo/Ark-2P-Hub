@@ -5,21 +5,22 @@
  * Its aim wobbles a little each shot, as a person's does, and it reacts at human speed
  * (bot-human.js).
  *   easy:   slow, aims loosely (many shots miss), never dodges, and shoots where you are.
- *   normal: a steadier aim, dodges shells that are close, and leads you a little.
- *   hard:   quicker, aims tight, dodges early, and leads its shots: it aims where you'll be when
+ *   normal: a steadier aim, dodges shells that are close, and leads you some of the way.
+ *   hard:   quicker, aims tighter, dodges early, and leads its shots: it aims where you'll be when
  *           the shell gets there, as a good player does.
+ * The room steers it (see `steers` in index.js): each update it acts on what it saw a reaction ago.
  */
 import { TANK, SHELL } from './tanks.js';
 import { reactionMs } from './bot-human.js';
 
 // aim: how far its aim strays (radians, a new wobble each shot, as a person's does); dodge: how
 // far ahead (s) it sees a shell coming; lead: how much of your movement it allows for (0 to 1).
-// fires: it shoots once lined up within this share of your tank's width as it sees it (0: only
-// when dead on, as Easy does).
+// (Tried out against a person's play, as the room drives it: steering on what it saw a reaction
+// ago. The game turns on the first hit, so a little aim makes a lot of difference.)
 const LEVEL = {
-  easy: { aim: 0.12, dodge: 0, lead: 0, fires: 0 },
-  normal: { aim: 0.05, dodge: 0.9, lead: 1, fires: 0.75, timed: 0.6 },
-  hard: { aim: 0.03, dodge: 1.1, lead: 1, fires: 0.75 },
+  easy: { aim: 0.12, dodge: 0, lead: 0 },
+  normal: { aim: 0.1, dodge: 0.5, lead: 0.65 },
+  hard: { aim: 0.065, dodge: 0.8, lead: 1 },
 };
 const CELL = 0.5;
 
@@ -67,14 +68,7 @@ export function tanksBot(view, level, rng = Math.random, retries = 0, memory = {
     const flight = (Math.hypot(dx, dy) / SHELL.speed) * L.lead;
     const want = Math.atan2(dy + (foe.vy || 0) * flight, dx + (foe.vx || 0) * flight) + memory.tankAim;
     const off = Math.abs(Math.atan2(Math.sin(want - me.angle), Math.cos(want - me.angle)));
-    // It fires once the shot would land: dead on, or (Normal, Hard) within part of your tank's width
-    // from here, as a player fires when it looks lined up instead of waiting to be perfect.
-    const width = Math.atan2(TANK.r, Math.hypot(dx, dy));
-    // (Already lining up on its last look, it sees the moment coming and times the press: a
-    // follow-through, quicker than a fresh reaction.)
-    const timed = memory.tankAiming && L.timed ? pace * L.timed : pace;
-    memory.tankAiming = true;
-    if (off < Math.max(0.05, width * L.fires) && view.ready) return { type: 'fire', botDelayMs: timed };
+    if (off < 0.05 && view.ready) return { type: 'fire', botDelayMs: pace };
     // Turn to face them (a tank faces the way it drives): closing in from afar, barely creeping
     // up close.
     // (it turns towards you and fires as its barrel comes round onto its lead: steering for the
@@ -82,7 +76,6 @@ export function tanksBot(view, level, rng = Math.random, retries = 0, memory = {
     const dist = Math.hypot(dx, dy);
     return move(dx, dy, dist > 5 ? 0.6 : dist < 2.5 ? 0.16 : 0.25);
   }
-  memory.tankAiming = false;
   // No clear line: round the cover towards them.
   const step = route(me, foe, walls, w, h);
   return step ? move(step[0] - me.x, step[1] - me.y, 1) : move(dx, dy, 1);
