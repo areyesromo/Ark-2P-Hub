@@ -11,13 +11,26 @@ COPY package.json package-lock.json ./
 RUN npm ci --omit=dev --omit=optional && npm cache clean --force
 
 # cloudflared, for online play's quick tunnel (the TV's 🌍 Invite online button). Without it the hub
-# still works; the button just says it isn't installed.
+# still works; the button just says it isn't installed. A pinned version, checked against the
+# SHA-256 from its release notes (github.com/cloudflare/cloudflared/releases); the desktop app's
+# workflow pins the same one. To update: the new version and its hashes, here and in desktop.yml.
+# No download (no internet) still builds, without it; a file that doesn't match its hash stops the build.
 ARG TARGETARCH
+ARG CLOUDFLARED_VERSION=2026.11.0
 RUN ARCH="${TARGETARCH:-$(uname -m)}"; \
     case "$ARCH" in x86_64) ARCH=amd64;; aarch64) ARCH=arm64;; armv7l) ARCH=arm;; esac; \
-    (wget -qO /usr/local/bin/cloudflared "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-${ARCH}" \
-      && chmod +x /usr/local/bin/cloudflared) \
-    || (rm -f /usr/local/bin/cloudflared; echo "cloudflared not downloaded: online play's quick tunnel won't be available")
+    case "$ARCH" in \
+      amd64) SHA=51f7c68b57ed7269164075d7e789efce5b59355982f06392deeb037d982a51fd;; \
+      arm64) SHA=abe54a006acf9faf2d19ee9d953cb0d0804e92f59c5382a162e57b84d086f56f;; \
+      arm) SHA=57f6a61df47583ccd5c3507b87964820adccb1f9fd35f311417c7872004dc368;; \
+      *) SHA=;; \
+    esac; \
+    if [ -z "$SHA" ]; then echo "No cloudflared for $ARCH: online play's quick tunnel won't be available"; exit 0; fi; \
+    if ! wget -qO /tmp/cloudflared "https://github.com/cloudflare/cloudflared/releases/download/${CLOUDFLARED_VERSION}/cloudflared-linux-${ARCH}"; then \
+      rm -f /tmp/cloudflared; echo "cloudflared not downloaded: online play's quick tunnel won't be available"; exit 0; \
+    fi; \
+    echo "$SHA  /tmp/cloudflared" | sha256sum -c - || { echo "cloudflared ${CLOUDFLARED_VERSION} ($ARCH) doesn't match its SHA-256"; exit 1; }; \
+    install -m 755 /tmp/cloudflared /usr/local/bin/cloudflared && rm /tmp/cloudflared
 
 COPY server ./server
 COPY public ./public

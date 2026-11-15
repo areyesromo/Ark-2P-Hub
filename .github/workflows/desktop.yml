@@ -66,14 +66,24 @@ jobs:
       - run: npm ci
       - name: Get cloudflared (online play's quick tunnel)
         shell: bash
+        # A pinned version, checked against the SHA-256 from its release notes (the Dockerfile pins
+        # the same one: update both together).
+        env:
+          CLOUDFLARED_VERSION: 2026.11.0
         run: |
           mkdir -p desktop/bin
+          base="https://github.com/cloudflare/cloudflared/releases/download/$CLOUDFLARED_VERSION"
           if [ "$RUNNER_OS" = "Windows" ]; then
-            curl -fsSL -o desktop/bin/cloudflared.exe https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe
+            out=desktop/bin/cloudflared.exe
+            curl -fsSL -o "$out" "$base/cloudflared-windows-amd64.exe"
+            sha=d5c1d82031da6253dcdcff64c944cd0fe063016edeb2e4fd088075fc9bd52d0a
           else
-            curl -fsSL -o desktop/bin/cloudflared https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-linux-amd64
-            chmod +x desktop/bin/cloudflared
+            out=desktop/bin/cloudflared
+            curl -fsSL -o "$out" "$base/cloudflared-linux-amd64"
+            sha=51f7c68b57ed7269164075d7e789efce5b59355982f06392deeb037d982a51fd
+            chmod +x "$out"
           fi
+          echo "$sha  $out" | sha256sum -c -
       - name: Set the version
         if: github.event_name == 'workflow_dispatch'
         shell: bash

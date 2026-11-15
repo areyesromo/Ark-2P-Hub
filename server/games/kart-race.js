@@ -1344,8 +1344,13 @@ export class KartRace {
     return Object.assign(this.common(), { players: this.ctx.players });
   }
 
+  /**
+   * A phone is the wheel: it shows its own kart, place and items, not the road. The ? boxes, coins
+   * and hazards on the track (most of the race's data, 30 times a second over Wi-Fi) are the TV's.
+   */
   playerView(slot) {
-    return Object.assign(this.common(), { you: slot });
+    const { boxes, coins, webs, oils, shots, blasts, bananas, track, ...v } = this.common();
+    return Object.assign(v, { track: track && { index: track.index, name: track.name, arena: track.arena }, you: slot });
   }
 
   /**
@@ -1353,7 +1358,7 @@ export class KartRace {
    * road on the TV: points along the middle of the road ahead of its kart, and where it is on it.
    */
   botView(slot) {
-    const v = this.playerView(slot);
+    const v = Object.assign(this.common(), { you: slot }); // (the whole road: it drives by it)
     if (!this.karts || !this.track) return v;
     const k = this.karts[slot];
     const here = locate(this.track, k.x, k.y);

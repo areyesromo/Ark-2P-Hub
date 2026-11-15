@@ -24,11 +24,25 @@ jobs:
       - run: npm test
 
   image:
-    # Builds amd64 + arm64 (Raspberry Pi) images. Pushes to GHCR only from main.
+    # Builds amd64 + arm64 (Raspberry Pi) images. Pushes to GHCR only from main. A pull request
+    # builds amd64 only (arm64 is emulated, and slow), unless it changes what goes into the image.
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # (to compare a pull request with its base)
+      - name: Which platforms
+        id: arch
+        env:
+          EVENT: ${{ github.event_name }}
+          BASE: ${{ github.base_ref }}
+        run: |
+          if [ "$EVENT" = push ] || git diff --name-only "origin/$BASE...HEAD" | grep -qE '^(Dockerfile|package(-lock)?\.json|\.dockerignore|\.github/workflows/ci\.yml)$'; then
+            echo "platforms=linux/amd64,linux/arm64" >> "$GITHUB_OUTPUT"
+          else
+            echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
+          fi
       - uses: docker/setup-qemu-action@v3
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
@@ -40,7 +54,7 @@ jobs:
       - uses: docker/build-push-action@v6
         with:
           context: .
-          platforms: linux/amd64,linux/arm64
+          platforms: ${{ steps.arch.outputs.platforms }}
           push: ${{ github.event_name == 'push' }}
           tags: |
             ghcr.io/areyesromo/ark-2p-hub:latest

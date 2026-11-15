@@ -2,6 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { KartRace, TRACKS, FIELD, TRACK_WIDTH, KART, WALL, TIMING, LIGHTS, JUMP, REACTION_SHOW_MS, ITEMS, COINS, SAMPLES, buildTrack, locate, pointAt } from '../server/games/kart-race.js';
 import { fakeCtx } from './helpers.js';
+import { race8 } from './helpers-kart.js';
 
 const TICK = 1000 / 60;
 
@@ -1727,4 +1728,18 @@ test('lap record: a record on the last lap is still announced during the finish'
   lapIn(game, ctx, 0, 40000);
   assert.equal(game.phase, 'finish');
   assert.deepEqual(game.hostView().newRecord, { slot: 0, name: 'Ana', ms: 40000 });
+});
+
+test('a phone gets its own kart and the race, not the road: boxes, coins and hazards are the TV\'s to draw', () => {
+  const { game } = race8({ items: 1 });
+  const host = game.hostView();
+  assert.ok(host.boxes.length > 0 && host.coins.length > 0, 'the TV draws the boxes and coins');
+  const phone = game.playerView(0);
+  for (const key of ['boxes', 'coins', 'webs', 'oils', 'shots', 'blasts', 'bananas']) assert.equal(phone[key], undefined, key);
+  assert.deepEqual(Object.keys(phone.track).sort(), ['arena', 'index', 'name']);
+  assert.equal(phone.track.name, host.track.name);
+  assert.deepEqual(phone.karts, host.karts);
+  assert.ok(JSON.stringify(phone).length < JSON.stringify(host).length / 2, 'well under half the TV\'s view, 30 times a second');
+  // The computer still sees the road (it drives for the ? boxes).
+  assert.ok(game.botView(0).boxes.length > 0);
 });
