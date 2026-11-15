@@ -4,6 +4,11 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.43
+
+- 🏷️ The hub on a Raspberry Pi or in Docker shows its real version on the TV (it always said
+  v0.1.0), so you can tell which release it's running.
+
 ## 0.1.42
 
 - 🏎️ Kart Race: phones get a quarter of the data they did during a race (the TV still draws the

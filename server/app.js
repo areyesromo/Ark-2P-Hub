@@ -27,11 +27,7 @@ const PUBLIC_DIR = path.join(ROOT_DIR, 'public');
 const THREE_DIR = path.dirname(createRequire(import.meta.url).resolve('three')); // node_modules/three/build
 // GLTFLoader and friends (the desktop app ships them elsewhere: ARK_THREE_ADDONS, see desktop/).
 const THREE_ADDONS_DIR = process.env.ARK_THREE_ADDONS || path.join(THREE_DIR, '..', 'examples', 'jsm');
-const VERSION = {
-  version: JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf8')).version,
-  commit: process.env.ARK_COMMIT || 'dev',
-  built: process.env.ARK_BUILT || 'dev',
-};
+const VERSION = versionOf(process.env, JSON.parse(fs.readFileSync(path.join(ROOT_DIR, 'package.json'), 'utf8')).version);
 // What's new (CHANGELOG.md): the desktop app's TV shows the notes since the version it last ran.
 // Not in the Docker image (it has no release versions), which serves an empty list.
 const CHANGES = (() => {
@@ -41,6 +37,16 @@ const CHANGES = (() => {
     return [];
   }
 })();
+
+/**
+ * What /version reports. The desktop app's package.json carries its release; a Docker build gets
+ * the latest release tag stamped in (ARK_VERSION: update.sh / update.ps1 and CI), as package.json
+ * stays at 0.1.0 there. Only a plain x.y.z is taken (the What's new card compares them).
+ */
+export function versionOf(env, packageVersion) {
+  const stamped = /^\d+\.\d+\.\d+$/.test(String(env.ARK_VERSION || '')) ? env.ARK_VERSION : null;
+  return { version: stamped || packageVersion, commit: env.ARK_COMMIT || 'dev', built: env.ARK_BUILT || 'dev' };
+}
 
 export function createApp({
   port = 3000,

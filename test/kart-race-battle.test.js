@@ -2,7 +2,7 @@
 // balloons left wins the round (or the most when time runs out).
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { KartRace, ARENAS, BATTLE, FIELD, TIMING, ITEMS, ODDS, buildArena, pointAt } from '../server/games/kart-race.js';
+import { KartRace, ARENAS, BATTLE, FIELD, TIMING, ODDS, buildArena, pointAt } from '../server/games/kart-race.js';
 import { rollItem, hazardCheck } from '../server/games/kart-items.js';
 import { fakeCtx } from './helpers.js';
 

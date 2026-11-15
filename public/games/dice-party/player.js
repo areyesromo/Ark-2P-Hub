@@ -38,7 +38,7 @@
         }).join('') + '</tr>';
       }
       const mine = v.cards[me][b.id];
-      let my = '';
+      let my;
       if (mine !== undefined) my = '<td class="got' + fresh(me, b) + '">' + mine + '</td>';
       else if (myTurn && b.id in v.options) my = '<td><button class="dp-pick' + (pick === b.id ? ' on' : '') + (v.options[b.id] ? '' : ' zero') + '" data-box="' + b.id + '">' + v.options[b.id] + '</button></td>';
       else my = '<td></td>';

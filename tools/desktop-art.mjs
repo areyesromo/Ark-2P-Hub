@@ -80,7 +80,7 @@ const page = await browser.newPage({ deviceScaleFactor: 1 });
 for (const p of PIECES) {
   await page.setViewportSize({ width: p.w, height: p.h });
   await page.setContent(`<html><body style="margin:0;background:transparent">${p.svg}</body></html>`);
-  await page.evaluate(() => document.fonts.ready);
+  await page.evaluate(() => document.fonts.ready); // eslint-disable-line no-undef -- (runs in the page)
   fs.mkdirSync(path.dirname(path.join(root, p.file)), { recursive: true });
   await page.screenshot({ path: path.join(root, p.file), omitBackground: Boolean(p.transparent), clip: { x: 0, y: 0, width: p.w, height: p.h } });
   console.log('wrote', p.file);

@@ -10,7 +10,6 @@
   let dashBtn = null;
   let info = null;
   let api = null;
-  let view = null;
   let lastKey = '';
   let pending = null;
   let lastSent = 0;
@@ -44,7 +43,6 @@
   }
 
   function render(v) {
-    view = v;
     const you = v.you;
     if (v.bumps > bumps && v.phase === 'play') api.vibrate(v.lastBump > 0.45 ? 70 : 25);
     bumps = v.bumps;
@@ -103,7 +101,7 @@
     unmount: function () {
       clearTimeout(sendTimer);
       if (pad) pad.destroy();
-      root = stick = pad = dashBtn = info = view = pending = null;
+      root = stick = pad = dashBtn = info = pending = null;
       lastKey = '';
       bumps = 0;
     },

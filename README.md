@@ -449,6 +449,7 @@ npm ci             # ELECTRON_SKIP_BINARY_DOWNLOAD=1 npm ci skips the desktop ap
 npm run dev        # restarts on file changes
 npm test           # every test (about a minute and a half on four cores)
 npm run test:fast  # all but the slow computer-vs-computer games, for quick checks
+npm run lint       # ESLint: undefined names, unused variables and the like (CI runs it too)
 ```
 
 Open <http://localhost:3000/host/> in one window and

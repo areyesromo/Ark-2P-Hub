@@ -108,7 +108,6 @@ test('Kart Race keeps its six tracks', () => {
 import { TRACKS_3D } from '../server/games/kart-tracks-3d.js';
 import kartRace3dDef, { KartRace3D } from '../server/games/kart-race-3d.js';
 import { kartRaceBot } from '../server/games/kart-race-bot.js';
-import { GRID } from '../server/games/kart-race.js';
 
 const NAMES_3D = ['Sunset Canyon Rally', 'Speedway Oval', 'Grand Prix Circuit', 'Serpent Pass', 'Zigzag Ridge'];
 

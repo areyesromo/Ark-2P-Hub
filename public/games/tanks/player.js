@@ -11,7 +11,6 @@
   let fireBtn = null;
   let info = null;
   let api = null;
-  let view = null;
   let lastKey = '';
   let prevHp = null;
   let pending = null;
@@ -65,7 +64,6 @@
   }
 
   function render(v) {
-    view = v;
     const you = v.you;
     if (prevHp !== null && v.hp[you] < prevHp && v.phase !== 'countdown') api.vibrate([80, 40, 80]);
     prevHp = v.hp[you];
@@ -129,7 +127,7 @@
       clearInterval(autofire);
       clearTimeout(sendTimer);
       if (pad) pad.destroy();
-      root = stick = pad = fireBtn = info = view = pending = null;
+      root = stick = pad = fireBtn = info = pending = null;
       autofire = null;
       lastKey = '';
       prevHp = null;

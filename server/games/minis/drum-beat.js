@@ -31,7 +31,6 @@ export default {
     const combo = [0, 0];
     const best = [0, 0];
     const last = [null, null];
-    let timer = null;
     let done = false;
 
     function finish() {
@@ -50,7 +49,7 @@ export default {
 
     return {
       start() {
-        timer = api.setTimeout(finish, chart[chart.length - 1].t + TAIL_MS);
+        api.setTimeout(finish, chart[chart.length - 1].t + TAIL_MS);
       },
       onInput(slot, input) {
         if (done || input.type !== 'hit' || (slot !== 0 && slot !== 1)) return;

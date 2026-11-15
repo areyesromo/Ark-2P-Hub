@@ -3,7 +3,6 @@
 //   node tools/simplify_glb.mjs IN OUT [KEEP=0.12]
 // For dense sculpted models (e.g. the board figures, ~96k triangles each). Textures aren't kept.
 import fs from 'node:fs';
-import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { mergeGeometries, mergeVertices } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { SimplifyModifier } from 'three/examples/jsm/modifiers/SimplifyModifier.js';

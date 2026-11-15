@@ -295,7 +295,7 @@ test('hurdle dash: a jump only clears a hurdle mid-air, not on the way down', ()
 });
 
 test('laser dodge: sends an update only when something on screen changes', () => {
-  const { inst, ctx, updates } = run(laserDodge, 2);
+  const { ctx, updates } = run(laserDodge, 2);
   ctx.advance(5000);
   assert.ok(updates() > 0);
   assert.ok(updates() < 5000 / 25 / 2, `${updates()} updates in 5 s`);

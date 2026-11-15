@@ -145,6 +145,13 @@ test('join URL prefers PUBLIC_URL, then a non-loopback origin', () => {
   assert.equal(resolveJoinBase({ hostOrigin: 'javascript:alert(1)', port: 3000 }), expected);
 });
 
+test('/version: a Docker build reports the release it was stamped with; anything else falls back to package.json', async () => {
+  const { versionOf } = await import('../server/app.js');
+  assert.deepEqual(versionOf({ ARK_VERSION: '0.1.42', ARK_COMMIT: 'abc1234', ARK_BUILT: 'today' }, '0.1.0'), { version: '0.1.42', commit: 'abc1234', built: 'today' });
+  for (const bad of ['', undefined, 'v0.1.42', 'fatal: No names found', '0.1']) assert.equal(versionOf({ ARK_VERSION: bad }, '0.1.0').version, '0.1.0', String(bad));
+  assert.deepEqual(versionOf({}, '0.1.0'), { version: '0.1.0', commit: 'dev', built: 'dev' });
+});
+
 test('/version reports the package version and build stamp', async () => {
   const res = await fetch(`${url}/version`);
   const body = await res.json();
