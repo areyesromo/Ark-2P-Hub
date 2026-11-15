@@ -183,3 +183,38 @@ test('a puck freed from a corner settles in that player\'s half, and one resting
   assert.ok(game.puck.x > FIELD.malletR, 'out of the mouth: ' + game.puck.x.toFixed(2));
   assert.deepEqual(game.scores, [0, 0]);
 });
+
+test("the computer's hand: it speeds up, eases into its target, and curves when it changes its mind", () => {
+  const { ctx, game } = setup();
+  launch(game, { x: 12, y: 4.5, vx: 0, vy: 0 });
+  game.mallets[0] = { x: 1, y: 4.5, vx: 0, vy: 0 };
+  game.onInput(0, { type: 'move', x: 7, y: 4.5, hand: 100 });
+  const speeds = [];
+  let last = game.mallets[0].x;
+  for (let i = 0; i < 60; i++) {
+    ctx.advance(PHYSICS.tickMs);
+    speeds.push((game.mallets[0].x - last) / (PHYSICS.tickMs / 1000));
+    last = game.mallets[0].x;
+  }
+  assert.ok(speeds[0] < PHYSICS.malletSpeed / 3, 'no instant top speed: ' + speeds[0]);
+  assert.ok(Math.max(...speeds) <= PHYSICS.malletSpeed + 1e-6, 'never past top speed');
+  const peak = speeds.indexOf(Math.max(...speeds));
+  assert.ok(peak > 2 && speeds[peak + 3] < speeds[peak], 'up to speed, then easing off: ' + speeds.map((s) => s.toFixed(1)).join(' '));
+  assert.ok(Math.abs(game.mallets[0].x - 7) < 0.05, 'arrives: ' + game.mallets[0].x);
+  // Moving fast, a new target off to the side: the mallet curves round (its momentum carries on).
+  game.mallets[0] = { x: 1, y: 4.5, vx: 0, vy: 0 };
+  game.hands[0] = { vx: PHYSICS.malletSpeed, vy: 0 };
+  game.onInput(0, { type: 'move', x: 1, y: 8, hand: 100 });
+  ctx.advance(PHYSICS.tickMs * 3);
+  assert.ok(game.mallets[0].x > 1.3, 'carried on forwards a little: ' + game.mallets[0].x);
+  // A phone's finger is still followed at top speed straight away (and its own move drops the hand).
+  game.onInput(0, { type: 'move', x: 7, y: 4.5 });
+  const x0 = game.mallets[0].x;
+  ctx.advance(PHYSICS.tickMs);
+  assert.ok(game.mallets[0].x - x0 > PHYSICS.malletSpeed * (PHYSICS.tickMs / 1000) * 0.95, 'phone: top speed at once');
+  // Bad hands are ignored: not a number, or outside what a hand can do.
+  for (const hand of ['fast', -5, Infinity]) {
+    game.onInput(1, { type: 'move', x: 12, y: 2, hand });
+    assert.notEqual(game.controls[1].hand, hand);
+  }
+});

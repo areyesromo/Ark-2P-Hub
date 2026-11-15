@@ -8,6 +8,10 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - 🏎️ Kart Race: phones get a quarter of the data they did during a race (the TV still draws the
   whole track), so racing stays smooth on a busy Wi-Fi.
+- 🏒 Air Hockey: the computer moves like a person. Its mallet speeds up, eases off and curves
+  round instead of darting about, and it doesn't twitch. It plays smarter too: Normal stays in line
+  with your shots instead of knocking them into its own goal, and Hard reads the puck, meets it
+  and shoots at the open side of your goal, or off a rail. Each level is a real step up.
 
 ## 0.1.41
 
