@@ -121,3 +121,33 @@ test('each phone gets the court (ball, paddles, field) so it can show the game w
   assert.deepEqual(v.paddles, game.paddles);
   assert.deepEqual(v.field, FIELD);
 });
+
+test("the computer's hand: its paddle speeds up and eases in; a phone still moves at once; bad hands ignored", () => {
+  const { ctx, game } = setup();
+  launch(game, { x: 8, y: 4.5, vx: 0.01, vy: 0 });
+  game.paddles[1] = 2;
+  game.onInput(1, { type: 'move', y: 7 / FIELD.h, hand: 80 });
+  const speeds = [];
+  let last = game.paddles[1];
+  for (let i = 0; i < 50; i++) {
+    ctx.advance(PHYSICS.tickMs);
+    speeds.push((game.paddles[1] - last) / (PHYSICS.tickMs / 1000));
+    last = game.paddles[1];
+  }
+  assert.ok(speeds[0] < PHYSICS.paddleSpeed / 3, 'no instant top speed: ' + speeds[0]);
+  assert.ok(Math.max(...speeds) <= PHYSICS.paddleSpeed + 1e-6, 'never past top speed');
+  const top = Math.max(...speeds);
+  const peak = speeds.indexOf(top);
+  assert.ok(peak > 2, 'builds up to speed');
+  assert.ok(speeds.slice(peak).filter((v) => v > 0.2 * top && v < 0.8 * top).length >= 3, 'eases in: ' + speeds.map((v) => v.toFixed(1)).join(' '));
+  assert.ok(Math.abs(game.paddles[1] - 7) < 0.05, 'arrives: ' + game.paddles[1]);
+  // A phone (no hand) still gets top speed straight away.
+  game.onInput(0, { type: 'move', y: 0.9 });
+  const y0 = game.paddles[0];
+  ctx.advance(PHYSICS.tickMs);
+  assert.ok(game.paddles[0] - y0 > PHYSICS.paddleSpeed * (PHYSICS.tickMs / 1000) * 0.95);
+  for (const hand of ['fast', 1, 1e6]) {
+    game.onInput(0, { type: 'move', y: 0.1, hand });
+    assert.notEqual(game.controls[0].hand, hand);
+  }
+});

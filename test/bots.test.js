@@ -234,6 +234,20 @@ test('Air Hockey: Normal and Hard keep in line with a fast shot; Hard meets the 
   }
 });
 
+test('Pong: the computer moves with a hand, and Hard angles the ball away from your paddle', () => {
+  const def = getGame('pong');
+  // The ball coming to its paddle (on the right), crossing at the middle.
+  for (const [yours, down] of [[1.5, true], [7.5, false]]) {
+    const view = { phase: 'play', you: 1, ball: { x: 8, y: 4.5, vx: 10, vy: 0 }, paddles: [yours, 4.5] };
+    for (let i = 0; i < 10; i++) {
+      const m = def.bot(view, 'hard', Math.random, 0, {});
+      assert.ok(m.hand > 0, 'a hand');
+      // Hitting the ball with the paddle's lower half sends it down: so its paddle sits above the ball.
+      if (Math.abs(m.y * 9 - 4.5) < 2) assert.equal(m.y * 9 < 4.5, down, 'your paddle at ' + yours + ': it aims ' + (down ? 'down' : 'up'));
+    }
+  }
+});
+
 test('Word Hunt: a word that also reads somewhere else on the grid is still found', () => {
   const def = getGame('word-hunt');
   // CAT reads across at the top (a chance spelling) and down the left (where it's hidden).

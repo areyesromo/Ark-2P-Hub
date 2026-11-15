@@ -22,6 +22,8 @@ const EXTRA = {
   'party-minis': ['server/games/minis/', 'public/games/minis/'],
   'micro-mayhem': ['server/games/minis/', 'public/games/minis/'],
   'kart-race-3d': ['server/games/kart-race.js', 'server/games/kart-items.js', 'server/games/kart-tracks-3d.js', 'public/games/kart-race/'],
+  'air-hockey': ['server/games/hand.js'],
+  pong: ['server/games/hand.js'],
 };
 
 const exists = (rel) => fs.existsSync(path.join(ROOT, rel));
