@@ -111,6 +111,10 @@ import { withSetup } from './options.js';
  * back (the game refused it). The room seats it as a controller player (ctx.players[slot].bot
  * is its level) and plays its moves after a pause (Room#driveBot). Games without one can't be
  * started while it's seated.
+ * steers: true for a game played by steering with a stick (Tank Duel, Asteroid Duel): there the
+ * room shows the computer each view a reaction time late and plays what it decides at once, as
+ * a person keeps steering on what they saw a moment ago (see Sight in bot-human.js); botDelayMs
+ * is then ignored. (Games where it goes to a spot, with a hand, are tuned for a move per reaction.)
  *
  * create(ctx) returns an instance with:
  *   start()                  begin (or restart) the match
@@ -148,11 +152,11 @@ const GAMES = [
   withSetup({ ...airHockey, bot: airHockeyBot }, firstTo('Goals to win', [7, 5, 10])),
   withSetup({ ...volleyBlobs, bot: volleyBlobsBot }, firstTo('Points to win', [7, 5, 11])),
   withSetup({ ...brickDuel, bot: brickDuelBot }, { rows: { title: 'Wall', values: [5, 3, 7], label: (n) => `${n} rows of bricks` } }),
-  withSetup({ ...asteroidDuel, bot: asteroidDuelBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup({ ...asteroidDuel, bot: asteroidDuelBot, steers: true }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...rallyTennis, bot: rallyTennisBot }, firstTo('Games to win', [4, 3, 6])),
   withSetup({ ...blockBattle, bot: blockBattleBot }, firstTo(ROUNDS_WON, [2, 1, 3])),
   withSetup({ ...snake, bot: snakeBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
-  withSetup({ ...tanks, bot: tanksBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
+  withSetup({ ...tanks, bot: tanksBot, steers: true }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...sumo, bot: sumoBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...partyBoard, bot: partyBoardBot }, {
     map: {

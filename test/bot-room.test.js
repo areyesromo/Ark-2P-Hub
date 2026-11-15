@@ -318,3 +318,40 @@ test('Stack Attack against the computer (through the room, its moves a reaction 
   assert.ok(caught >= landed * 0.8, 'caught ' + caught + ' of ' + landed + ', toppled ' + g.instance.view(null).stacks[1].topples);
   r.dispose();
 });
+
+test('in a game played by steering, the computer acts at once on what it saw a reaction time ago', async (t) => {
+  t.mock.timers.enable({ apis: ['setTimeout', 'Date'] });
+  const { REACTION, Sight } = await import('../server/games/bot-human.js');
+  const { r } = room({ level: 'hard' });
+  r.startGame('pong');
+  r.handleInput(0, { type: 'go' });
+  const ages = []; // how old (ms) each view it acted on was
+  const sent = [];
+  let stamp = 0;
+  // A stand-in computer: it steers to a spot that says which view it was looking at.
+  const def = { steers: true, bot: (view) => { ages.push(Date.now() - view.at); return { type: 'move', y: view.stamp % 2 ? 0.25 : 0.75, botDelayMs: 5000 }; } };
+  r.botDef = () => def;
+  r.botSight = new Sight('hard', () => 0.5); // (a steady lag, about its median, so the test is the same every run)
+  const play = r.handleInput.bind(r);
+  r.handleInput = (slot, input) => { if (slot === 1) sent.push(input); play(slot, input); };
+  r.game.botView = undefined;
+  const real = r.game.playerView.bind(r.game);
+  r.game.playerView = (slot) => ({ ...real(slot), stamp, at: Date.now() });
+  // A view every 100 ms: for the first reaction time it has nothing old enough to act on.
+  for (let i = 0; i < 6; i++) {
+    stamp = i;
+    r.driveBot();
+    t.mock.timers.tick(100);
+  }
+  assert.ok(ages.length > 0, 'it acts once it has seen far enough back');
+  for (const age of ages) assert.ok(age >= REACTION.hard.median * 0.9 && age < REACTION.hard.median + 150, 'it acts on a view a reaction old: ' + ages.join(', ') + ' ms');
+  assert.equal(r.botTimer, null, 'no waiting move: it acts straight away (its botDelayMs is ignored)');
+  assert.ok(sent.length >= 1 && sent.length <= ages.length, 'sent at once');
+  // The same steer twice isn't sent again.
+  const before = sent.length;
+  def.bot = () => ({ type: 'move', y: 0.5 });
+  r.driveBot();
+  r.driveBot();
+  assert.equal(sent.length, before + 1);
+  r.dispose();
+});

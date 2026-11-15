@@ -2,6 +2,7 @@ import { randomBytes, randomInt } from 'node:crypto';
 import { getGame, listGames } from './games/index.js';
 import { Tournament } from './tournament.js';
 import { defaultProfile } from './profiles.js';
+import { Sight } from './games/bot-human.js';
 import { contextFor } from './trophies.js';
 
 export const MAX_PLAYERS = 2;
@@ -263,6 +264,7 @@ export class Room {
     this.botLastMove = null;
     this.botMemory = {}; // the computer's memory for a match (see a game's `bot`)
     this.botCache = null; // its last answer, for the position it was worked out for
+    this.botSight = null; // what it sees, a reaction late, in a game played by steering
     this.generation++;
     this.game = null;
     this.gameId = null;
@@ -343,6 +345,7 @@ export class Room {
     if (this.lastPhase === 'over' && view.phase !== 'over') { // a rematch: the computer starts afresh
       this.botMemory = {};
       this.botCache = null;
+      this.botSight = null;
       this.botRetries = 0;
       this.botLastMove = null;
     }
@@ -363,6 +366,7 @@ export class Room {
     const slot = this.botSlot;
     if (slot === -1 || !this.game) return;
     const def = this.botDef();
+    if (def && def.steers) return this.steerBot(slot, def);
     // The same move again means the game refused it: `retries` lets the bot try something else.
     // One answer per position: the clock ticking down doesn't make it think again.
     const think = () => {
@@ -408,6 +412,39 @@ export class Room {
     }, Number.isFinite(first.botDelayMs) ? Math.max(0, first.botDelayMs) : BOT_THINK_MS);
     this.timers.add(t);
     this.botTimer = t;
+  }
+
+  /**
+   * A game played by steering (a game's `steers`): every update, the computer takes in the view,
+   * and acts at once on the one from a reaction time ago (Sight), as a person keeps steering on
+   * what they saw a moment ago. The same steer twice in a row isn't sent again.
+   */
+  steerBot(slot, def) {
+    if (this.botSteering || !this.game) return; // (its own move pushes views: not again from inside)
+    const level = this.players[slot].bot;
+    const now = Date.now();
+    if (!this.botSight) this.botSight = new Sight(level);
+    this.botSight.see(this.game.botView ? this.game.botView(slot) : this.game.playerView(slot), now);
+    const view = this.botSight.seen(now);
+    if (!view) return;
+    let move;
+    try {
+      move = def.bot(view, level, Math.random, this.botRetries || 0, this.botMemory);
+    } catch (err) {
+      console.error(`[room ${this.code}] computer move error:`, err);
+      return;
+    }
+    if (!move) return;
+    const { botDelayMs, botAnticipate, botFor, ...input } = move;
+    const key = JSON.stringify(input);
+    if (input.type === 'move' && key === this.botLastMove) return;
+    this.botLastMove = key;
+    this.botSteering = true;
+    try {
+      this.handleInput(slot, input);
+    } finally {
+      this.botSteering = false;
+    }
   }
 
   /**
