@@ -13,14 +13,15 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
       - run: npm ci
         env:
           ELECTRON_SKIP_BINARY_DOWNLOAD: '1' # the desktop app's Electron isn't needed to run the tests
+      - run: npm run lint
       - run: npm test
 
   image:
@@ -29,10 +30,10 @@ jobs:
     needs: test
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # (to compare a pull request with its base)
-      - name: Which platforms
+      - name: Which platforms, and which release
         id: arch
         env:
           EVENT: ${{ github.event_name }}
@@ -43,15 +44,17 @@ jobs:
           else
             echo "platforms=linux/amd64" >> "$GITHUB_OUTPUT"
           fi
-      - uses: docker/setup-qemu-action@v3
-      - uses: docker/setup-buildx-action@v3
-      - uses: docker/login-action@v3
+          # The latest release, for /version (the TV shows it; package.json stays at 0.1.0).
+          echo "release=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//')" >> "$GITHUB_OUTPUT"
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+      - uses: docker/login-action@v4
         if: github.event_name == 'push'
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
-      - uses: docker/build-push-action@v6
+      - uses: docker/build-push-action@v7
         with:
           context: .
           platforms: ${{ steps.arch.outputs.platforms }}
@@ -61,5 +64,6 @@ jobs:
             ghcr.io/areyesromo/ark-2p-hub:sha-${{ github.sha }}
           build-args: |
             GIT_SHA=${{ github.sha }}
+            APP_VERSION=${{ steps.arch.outputs.release }}
           cache-from: type=gha
           cache-to: type=gha,mode=max

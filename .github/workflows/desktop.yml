@@ -51,8 +51,8 @@ jobs:
       CSC_IDENTITY_AUTO_DISCOVERY: 'false' # no code-signing certificate (yet)
       VERSION: ${{ inputs.version }}
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v5
+      - uses: actions/setup-node@v5
         with:
           node-version: 22
           cache: npm
@@ -93,7 +93,7 @@ jobs:
         run: npm run ${{ matrix.script }} -- --publish never
       - name: Check the app has every file the hub serves
         run: node desktop/check-package.mjs ${{ matrix.resources }}
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v6
         with:
           name: desktop-${{ matrix.os }}
           path: ${{ matrix.files }}
@@ -110,12 +110,12 @@ jobs:
       VERSION: ${{ inputs.version }}
       GH_TOKEN: ${{ github.token }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           sparse-checkout: |
             desktop/steam
             CHANGELOG.md
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v7
         with:
           path: files
           merge-multiple: true
