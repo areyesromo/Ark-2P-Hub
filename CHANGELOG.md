@@ -12,6 +12,10 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   round instead of darting about, and it doesn't twitch. It plays smarter too: Normal stays in line
   with your shots instead of knocking them into its own goal, and Hard reads the puck, meets it
   and shoots at the open side of your goal, or off a rail. Each level is a real step up.
+- 🏓 Pong: the computer's paddle speeds up and eases off like a person's instead of darting, and on
+  Hard it angles the ball away from your paddle.
+- 🛡️ Tank Duel: the computer leads its shots (it aims where you'll be) and fires once it's lined up,
+  instead of waiting to be perfect. Hard is now a real fight, and Normal sits between it and Easy.
 
 ## 0.1.41
 
