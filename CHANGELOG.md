@@ -14,12 +14,13 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   and shoots at the open side of your goal, or off a rail. Each level is a real step up.
 - 🏓 Pong: the computer's paddle speeds up and eases off like a person's instead of darting, and on
   Hard it angles the ball away from your paddle.
-- 🛡️ Tank Duel: the computer leads its shots (it aims where you'll be) and fires once it's lined up,
-  instead of waiting to be perfect. Hard is now a real fight, and Normal sits between it and Easy.
+- 🛡️ Tank Duel: the computer leads its shots (it aims where you'll be), and it steers all the time
+  on what it saw a moment ago, as you do, instead of in jerky steps. Hard is now an even fight for
+  most players, and Normal sits between it and Easy.
 - 🧱 Brick Breaker Duel: the computer's paddle speeds up and eases off like a person's instead of
   darting.
-- ☄️ Asteroid Duel: the computer fires once it's lined up on your ship instead of waiting to be
-  dead on.
+- ☄️ Asteroid Duel: the computer steers all the time on what it saw a moment ago, as you do, and
+  fires once it's lined up on your ship instead of waiting to be dead on. Hard is a tough fight.
 
 ## 0.1.41
 

@@ -5,6 +5,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { getGame } from '../server/games/index.js';
 import { fakeCtx } from './helpers.js';
+import { Sight } from '../server/games/bot-human.js';
 
 
 export const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze', 'tower-stack'];
@@ -58,6 +59,7 @@ function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs
   for (const [key, value] of Object.entries(settings)) g.onInput(0, { type: 'setting', key, value });
   if (g.hostView().phase === 'setup') g.onInput(0, { type: 'go' });
   let now = 0;
+  if (def.steers) return steer(def, g, ctx, levels, rng, memory, stats, human, limitMs);
   const ask = (slot) => (levels[slot] ? def.bot(viewOf(slot), levels[slot], rng, 0, memory[slot]) : human ? human(g.playerView(slot), slot, rng) : null);
   while (g.hostView().phase !== 'over' && now < limitMs) {
     // As the room does: a look on every update; a waiting move it no longer wants is dropped.
@@ -87,6 +89,43 @@ function playSeeded(id, levels, { seed = 1, human = null, settings = {}, limitMs
       if (JSON.stringify(g.hostView()) === before) stats.refused++;
       stats.moves[slot]++;
     }
+  }
+  return { g, view: g.hostView(), stats, now };
+}
+
+/**
+ * A game played by steering (a game's `steers`), as Room#steerBot drives it: each update the
+ * computer takes in the view and acts at once on the one from a reaction ago (Sight).
+ */
+function steer(def, g, ctx, levels, rng, memory, stats, human, limitMs) {
+  const viewOf = (slot) => (g.botView ? g.botView(slot) : g.playerView(slot));
+  const sights = levels.map((level) => level && new Sight(level, rng));
+  const last = [null, null];
+  let now = 0;
+  let seen = -1;
+  while (g.hostView().phase !== 'over' && now < limitMs) {
+    if (ctx.updates !== seen) {
+      seen = ctx.updates;
+      for (const slot of [0, 1]) {
+        if (!levels[slot]) {
+          const move = human ? human(g.playerView(slot), slot, rng) : null;
+          if (move) g.onInput(slot, move);
+          continue;
+        }
+        sights[slot].see(viewOf(slot), now);
+        const view = sights[slot].seen(now);
+        const move = view && def.bot(view, levels[slot], rng, 0, memory[slot]);
+        if (!move) continue;
+        const { botDelayMs, botAnticipate, botFor, ...input } = move;
+        const key = JSON.stringify(input);
+        if (input.type === 'move' && key === last[slot]) continue;
+        last[slot] = key;
+        g.onInput(slot, input);
+        stats.moves[slot]++;
+      }
+    }
+    ctx.advance(16);
+    now += 16;
   }
   return { g, view: g.hostView(), stats, now };
 }
