@@ -8,6 +8,10 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - 🏷️ The hub on a Raspberry Pi or in Docker shows its real version on the TV (it always said
   v0.1.0), so you can tell which release it's running.
+- 💾 A board, card or casino game in progress (Checkers, Connect Four, Mancala, Dots and Boxes,
+  Battleship, Dice Party, Crazy Eights, Liar's Dice, Memory Match) survives an update or a power cut:
+  the TV picks it up where it was, with the same turn and the time left on the clock, and the
+  phones get their seats back.
 
 ## 0.1.42
 

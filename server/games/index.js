@@ -111,6 +111,9 @@ import { withSetup } from './options.js';
  * back (the game refused it). The room seats it as a controller player (ctx.players[slot].bot
  * is its level) and plays its moves after a pause (Room#driveBot). Games without one can't be
  * started while it's seated.
+ * resumes: true (see RESUMES below) for a game the room saves while it waits for a move, so a
+ * restart picks it up again. Its state must be plain data (arrays, objects, Sets, Maps); the
+ * room puts it back on a fresh instance from create(ctx), and calls resumed() if it has one.
  * steers: true for a game played by steering with a stick (Tank Duel, Asteroid Duel): there the
  * room shows the computer each view a reaction time late and plays what it decides at once, as
  * a person keeps steering on what they saw a moment ago (see Sight in bot-human.js); botDelayMs
@@ -287,6 +290,14 @@ const FAST = new Set([
  * Each game still has its own records, trophies and computer. The names are on the screens
  * (Ark.lobbyEntries in public/shared/common.js).
  */
+/**
+ * Games that pick up where they were after a restart (an update, a power cut): the board, card
+ * and casino games, the long ones you sit down for. The room saves them while they wait for a
+ * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
+ */
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match'];
+for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
+
 export const FOLDERS = {
   board: ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
   cards: ['crazy-eights', 'liars-dice', 'memory-match'],

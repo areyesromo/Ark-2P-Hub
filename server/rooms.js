@@ -3,6 +3,7 @@ import { getGame, listGames } from './games/index.js';
 import { Tournament } from './tournament.js';
 import { defaultProfile } from './profiles.js';
 import { Sight } from './games/bot-human.js';
+import { stateOf, restoreState } from './saves.js';
 import { contextFor } from './trophies.js';
 
 export const MAX_PLAYERS = 2;
@@ -37,12 +38,13 @@ const isValidToken = (t) => typeof t === 'string' && /^[0-9a-f]{32}$/.test(t);
  * views, the room pushes them out.
  */
 export class Room {
-  constructor(code, io, { stats = null, profiles = null, practice = null, trophies = null, hostToken = null } = {}) {
+  constructor(code, io, { stats = null, profiles = null, practice = null, trophies = null, saves = null, hostToken = null } = {}) {
     this.code = code;
     this.io = io;
     this.stats = stats; // match history (see stats.js), optional
     this.practice = practice; // records against the computer (see practice.js), optional
     this.trophies = trophies; // each player's trophies (see trophies.js), optional
+    this.saves = saves; // games in progress, saved to pick up after a restart (see saves.js), optional
     this.trophyNews = null; // the trophies the last game earned, for the screens: { n, at, list }
     this.trophySeq = 0; // (each batch a new number, so the screens show each once)
     this.online = false; // invited someone over the internet (see online.js)
@@ -207,11 +209,11 @@ export class Room {
     return pool[Math.floor(rng() * pool.length)].id;
   }
 
-  startGame(gameId) {
+  startGame(gameId, { resume = null, downMs = 0 } = {}) {
     if (gameId === 'random') gameId = this.pickRandomGame();
     const def = getGame(gameId);
     if (!def) return { error: 'Unknown game.' };
-    if (!this.readyToPlay) return { error: 'Waiting for two players.' };
+    if (!this.readyToPlay && !resume) return { error: 'Waiting for two players.' }; // (a saved game waits for its players to come back)
     if (def.phoneOnly && this.players.some((p) => p && p.local && !p.bot)) return { error: `${def.name} needs two phones.` };
     if (this.botSlot !== -1 && !def.bot) return { error: `${def.name} can't be played against the computer (yet).` };
 
@@ -252,13 +254,54 @@ export class Room {
     this.gameId = def.id;
     this.game = def.create(ctx);
     this.broadcastState();
-    this.game.start();
+    if (resume) {
+      // Where it was saved: the game's own state on this new instance (see saves.js); its clock
+      // runs on from where it was (resumed), not counting the time the hub was down.
+      if (this.game.restore) this.game.restore(resume, downMs);
+      else {
+        restoreState(this.game, resume);
+        if (this.game.resumed) this.game.resumed(downMs);
+      }
+      this.pushGameViews();
+    } else this.game.start();
     return { ok: true, gameId: def.id };
   }
 
-  stopGame({ silent = false } = {}) {
+  /**
+   * A game that picks up after a restart (a game's `resumes`): saved with every update, with who's
+   * in which seat, so the TV re-opening the room after a restart brings it all back
+   * (RoomManager#create). A game's clock is put back by the game (resumed). A finished game isn't
+   * kept.
+   */
+  saveGame(view) {
+    if (!this.saves || !this.game) return;
+    const def = getGame(this.gameId);
+    if (!def || !def.resumes) return;
+    if (view.phase === 'over') return this.saves.remove(this.code);
+    this.saves.save(this.code, {
+      hostToken: this.hostToken,
+      gameId: this.gameId,
+      players: this.players.map((p) => p && { name: p.name, token: p.token, local: Boolean(p.local), ...(p.bot ? { bot: p.bot } : {}) }),
+      saved: this.saved,
+      botMemory: this.botMemory,
+      game: this.game.snapshot ? this.game.snapshot() : stateOf(this.game),
+    });
+  }
+
+  /** Pick up a saved game (see saveGame): its seats, then the game where it was. */
+  pickUp(data) {
+    this.players = data.players.map((p) => p && { name: p.name, token: p.token, socketId: null, connected: Boolean(p.bot), local: p.local, ...(p.bot ? { bot: p.bot } : {}) });
+    this.saved = data.saved || {};
+    const res = this.startGame(data.gameId, { resume: data.game, downMs: Math.max(0, Date.now() - data.savedAt) });
+    if (res.error) return res;
+    this.botMemory = data.botMemory || {};
+    return res;
+  }
+
+  stopGame({ silent = false, keepSave = false } = {}) {
     for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
+    if (this.saves && this.game && !keepSave) this.saves.remove(this.code); // (back to the lobby, or another game)
     this.botTimer = null;
     this.botRetries = 0;
     this.botLastMove = null;
@@ -354,6 +397,7 @@ export class Room {
     this.players.forEach((p, slot) => {
       if (p) this.io.to(this.playerChannel(slot)).emit('game:view', { gameId, view: this.game.playerView(slot) });
     });
+    this.saveGame(view);
     this.driveBot();
   }
 
@@ -566,14 +610,16 @@ export class Room {
     socket.emit('game:view', { gameId: this.gameId, view });
   }
 
-  dispose() {
-    this.stopGame({ silent: true });
+  /** keepSave: the server is closing, so a saved game stays to be picked up after it starts again. */
+  dispose({ keepSave = false } = {}) {
+    this.stopGame({ silent: true, keepSave });
   }
 }
 
 export class RoomManager {
-  constructor(io, { stats = null, profiles = null, practice = null, trophies = null } = {}) {
+  constructor(io, { stats = null, profiles = null, practice = null, trophies = null, saves = null } = {}) {
     this.io = io;
+    this.saves = saves;
     this.stats = stats;
     this.profiles = profiles;
     this.practice = practice;
@@ -593,9 +639,12 @@ export class RoomManager {
       } while (this.rooms.has(code));
       hostToken = null;
     }
-    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, practice: this.practice, trophies: this.trophies, hostToken: isValidToken(hostToken) ? hostToken : null });
+    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, practice: this.practice, trophies: this.trophies, saves: this.saves, hostToken: isValidToken(hostToken) ? hostToken : null });
     room.onlineAllowed = () => Boolean(this.online && this.online.allowed);
     this.rooms.set(code, room);
+    // The TV re-opening its room after a restart: a game saved in it picks up where it was.
+    const saved = wanted && code === normalizeCode(wanted) && this.saves ? this.saves.load(code) : null;
+    if (saved && saved.hostToken === room.hostToken && room.pickUp(saved).error) this.saves.remove(code);
     return room;
   }
 
