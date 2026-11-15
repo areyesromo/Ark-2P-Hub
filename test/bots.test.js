@@ -214,6 +214,26 @@ test('Air Hockey: the computer moves like a person (a hand, a steady aim), and a
   }
 });
 
+test('Air Hockey: Normal and Hard keep in line with a fast shot; Hard meets the puck and shoots at the open side', () => {
+  const def = getGame('air-hockey');
+  // A fast shot at its goal (it plays the left end), crossing above the middle: it stays in front of the goal,
+  // in line with where it will cross, instead of charging at it (that only deflects it in).
+  const shot = { phase: 'play', you: 0, puck: { x: 6, y: 3, vx: -14, vy: 2 }, mallets: [{ x: 2, y: 4.5 }, { x: 14, y: 4.5 }] };
+  for (const level of ['normal', 'hard']) {
+    const m = def.bot(shot, level, () => 0.5, 0, {});
+    assert.ok(m.x < 2.5, level + ' stays back: x ' + m.x.toFixed(2));
+    assert.ok(m.y < 4.2 && m.y > 3.3, level + ' towards where it crosses (about y 3.6): y ' + m.y.toFixed(2));
+  }
+  // A slow puck coming its way, their mallet covering the top of their goal: Hard plays it towards
+  // the bottom of their goal mouth (the open side). (y grows downwards: bottom is the larger y.)
+  for (const foeY of [2.5, 6.5]) {
+    const slow = { phase: 'play', you: 0, puck: { x: 6, y: 4.5, vx: -2, vy: 0 }, mallets: [{ x: 2, y: 4.5 }, { x: 14, y: foeY }] };
+    const m = def.bot(slow, 'hard', () => 0.5, 0, {});
+    assert.ok(m.x > 3, 'hard goes to meet it: x ' + m.x.toFixed(2));
+    assert.ok(foeY < 4.5 ? m.y > 4.5 : m.y < 4.5, 'hard shoots away from their mallet at y ' + foeY + ': aims y ' + m.y.toFixed(2));
+  }
+});
+
 test('Word Hunt: a word that also reads somewhere else on the grid is still found', () => {
   const def = getGame('word-hunt');
   // CAT reads across at the top (a chance spelling) and down the left (where it's hidden).
