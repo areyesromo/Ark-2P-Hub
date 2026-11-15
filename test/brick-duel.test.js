@@ -337,3 +337,27 @@ test('each phone gets its own side of the field (wall, balls, paddle) to show th
   assert.deepEqual(v.field, FIELD);
   assert.deepEqual(v.side, game.hostView().sides[1]);
 });
+
+test("the computer's hand: its paddle speeds up and eases in; a phone still moves at once", async () => {
+  const { PHYSICS } = await import('../server/games/brick-duel.js');
+  const { ctx, game } = setup();
+  ctx.advance(TIMING.countdownMs + 50);
+  game.sides[1].paddle = 1.5;
+  game.onInput(1, { type: 'move', x: 6 / FIELD.w, hand: 60 });
+  const speeds = [];
+  let last = game.sides[1].paddle;
+  for (let i = 0; i < 60; i++) {
+    ctx.advance(PHYSICS.tickMs);
+    speeds.push((game.sides[1].paddle - last) / (PHYSICS.tickMs / 1000));
+    last = game.sides[1].paddle;
+  }
+  assert.ok(speeds[0] < PHYSICS.paddleSpeed / 3, 'no instant top speed: ' + speeds[0]);
+  const top = Math.max(...speeds);
+  assert.ok(top <= PHYSICS.paddleSpeed + 1e-6);
+  assert.ok(speeds.slice(speeds.indexOf(top)).filter((v) => v > 0.2 * top && v < 0.8 * top).length >= 3, 'eases in');
+  assert.ok(Math.abs(game.sides[1].paddle - 6) < 0.05, 'arrives: ' + game.sides[1].paddle);
+  game.onInput(0, { type: 'move', x: 0.9 });
+  const x0 = game.sides[0].paddle;
+  ctx.advance(PHYSICS.tickMs);
+  assert.ok(game.sides[0].paddle - x0 > PHYSICS.paddleSpeed * (PHYSICS.tickMs / 1000) * 0.95, 'phone: top speed at once');
+});

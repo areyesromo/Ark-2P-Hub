@@ -3,9 +3,11 @@
 // back on your paddle). Some bricks are power bricks: 🔻 shrinks your rival's paddle for a
 // while, ⚪ gives you another ball, 🧱 adds a row to your rival's wall. Clear your wall first to
 // win; at time up, more bricks broken wins, and level goes to sudden death (next brick wins).
-// The server runs the physics at 60 Hz and pushes ~30 views a second (as in Pong).
+// The server runs the physics at 60 Hz and pushes ~30 views a second (as in Pong). The computer's
+// moves come with a hand (hand.js): its paddle speeds up and eases off, like a person's.
 
 import { settingOf } from './options.js';
+import { validHand, handStep } from './hand.js';
 
 export const ROWS = 5;
 export const MAX_ROWS = 10; // a wall never grows past this many rows
@@ -157,8 +159,11 @@ export class BrickDuel {
     const c = side.control;
     let x = side.paddle;
     const maxMove = PHYSICS.paddleSpeed * dt;
-    if (c.mode === 'target') x += clamp(c.x - x, -maxMove, maxMove);
+    side.hand = side.hand || { vx: 0, vy: 0 }; // the computer's hand speed, kept from tick to tick
+    if (c.mode === 'target' && c.hand) x = handStep(side.hand, { x, y: 0 }, { x: c.x, y: 0 }, c.hand, PHYSICS.paddleSpeed, dt).x;
+    else if (c.mode === 'target') x += clamp(c.x - x, -maxMove, maxMove);
     else x += c.v * maxMove;
+    if (!(c.mode === 'target' && c.hand) || x <= half || x >= FIELD.w - half) side.hand.vx = 0; // (the wall stops it)
     side.paddle = clamp(x, half, FIELD.w - half);
 
     const r = FIELD.ballR;
@@ -289,7 +294,8 @@ export class BrickDuel {
     const side = this.sides[slot];
     if (input.type === 'move' && typeof input.x === 'number' && Number.isFinite(input.x)) {
       // Phone strip: 0 = left, 1 = right.
-      side.control = { mode: 'target', x: clamp(input.x, 0, 1) * FIELD.w };
+      if (!validHand(input.hand)) return; // (the computer adds `hand`, see hand.js)
+      side.control = { mode: 'target', x: clamp(input.x, 0, 1) * FIELD.w, ...(input.hand !== undefined ? { hand: input.hand } : {}) };
     } else if (input.type === 'axis' && typeof input.v === 'number' && Number.isFinite(input.v)) {
       side.control = { mode: 'axis', v: clamp(input.v, -1, 1) };
     }
