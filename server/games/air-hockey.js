@@ -6,9 +6,10 @@
 // the rival's at the top) and send the finger's table position; the server
 // keeps each mallet in its own half. Controllers send stick direction in TV
 // coordinates. Both move the mallet at the same top speed. The computer's moves come with a hand
-// (see moveMallets): it speeds up and eases off like an arm, instead of jumping to top speed.
+// (hand.js): it speeds up and eases off like an arm, instead of jumping to top speed.
 
 import { settingOf } from './options.js';
+import { HAND_RANGE, validHand, handStep } from './hand.js';
 
 export const WIN_SCORE = 7;
 
@@ -29,7 +30,7 @@ export const PHYSICS = {
   friction: 0.35, // fraction of speed lost per second
   wallBounce: 0.92,
   hitBounce: 0.9,
-  handAccel: [40, 200], // the range a computer's hand may ask for (units / s²)
+  handAccel: HAND_RANGE, // the range a computer's hand may ask for (units / s², see hand.js)
 };
 
 export const TIMING = { countdownMs: 3000, goalMs: 1500 };
@@ -196,25 +197,10 @@ export class AirHockey {
       const py = m.y;
       const hand = this.hands[slot];
       if (c.mode === 'target' && c.hand) {
-        // A hand: it heads for the target no faster than it could still stop there, and changes
-        // speed or direction only so fast, so it builds up, eases in, and curves round when the
-        // target moves (its momentum carries on for a moment).
-        const dx = c.x - m.x;
-        const dy = c.y - m.y;
-        const d = Math.hypot(dx, dy);
-        const want = d > 1e-6 ? Math.min(PHYSICS.malletSpeed, Math.sqrt(2 * c.hand * d)) / d : 0;
-        let ax = dx * want - hand.vx;
-        let ay = dy * want - hand.vy;
-        const a = Math.hypot(ax, ay);
-        const most = c.hand * dt;
-        if (a > most) {
-          ax *= most / a;
-          ay *= most / a;
-        }
-        hand.vx += ax;
-        hand.vy += ay;
-        m.x += hand.vx * dt;
-        m.y += hand.vy * dt;
+        // (the computer: a hand that speeds up, eases in and curves round, see hand.js)
+        const to = handStep(hand, m, c, c.hand, PHYSICS.malletSpeed, dt);
+        m.x = to.x;
+        m.y = to.y;
       } else if (c.mode === 'target') {
         const dx = c.x - m.x;
         const dy = c.y - m.y;
@@ -258,9 +244,8 @@ export class AirHockey {
     if (input.type === 'rematch' && this.phase === 'over') return this.start();
     if (input.type === 'move' && Number.isFinite(input.x) && Number.isFinite(input.y)) {
       // Phone: where the finger is on the table. The mallet heads there and stops at its own half.
-      // The computer adds `hand`, how quickly its hand gets going (see moveMallets).
-      const [lo, hi] = PHYSICS.handAccel;
-      if (input.hand !== undefined && !(Number.isFinite(input.hand) && input.hand >= lo && input.hand <= hi)) return;
+      // The computer adds `hand`, how quickly its hand gets going (see hand.js).
+      if (!validHand(input.hand)) return;
       this.controls[slot] = { mode: 'target', x: clamp(input.x, 0, FIELD.w), y: clamp(input.y, 0, FIELD.h), ...(input.hand !== undefined ? { hand: input.hand } : {}) };
     } else if (input.type === 'axis' && Number.isFinite(input.x) && Number.isFinite(input.y)) {
       this.controls[slot] = { mode: 'axis', x: clamp(input.x, -1, 1), y: clamp(input.y, -1, 1) };

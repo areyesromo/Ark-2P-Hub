@@ -117,10 +117,14 @@ export class TankDuel {
 
   moveTanks(dt) {
     this.tanks.forEach((t, i) => {
+      t.vx = 0;
+      t.vy = 0;
       if (!t.alive) return;
       const c = this.controls[i];
       const mag = Math.min(1, Math.hypot(c.x, c.y));
       if (mag < 0.15) return;
+      const x0 = t.x;
+      const y0 = t.y;
       // Turn towards the stick, then drive; you only get speed once roughly facing that way.
       const diff = wrapAngle(Math.atan2(c.y, c.x) - t.angle);
       const turn = TANK.turnRate * dt;
@@ -131,6 +135,9 @@ export class TankDuel {
       // Slide along walls: try each axis separately.
       if (!this.blocked(nx, t.y, i)) t.x = nx;
       if (!this.blocked(t.x, ny, i)) t.y = ny;
+      // How it's moving (the TV shows it rolling along; the computer reads it to lead its shots).
+      t.vx = dt > 0 ? (t.x - x0) / dt : 0;
+      t.vy = dt > 0 ? (t.y - y0) / dt : 0;
     });
   }
 
@@ -284,7 +291,7 @@ export class TankDuel {
       tank: { r: TANK.r, hp: TANK.hp },
       shellR: SHELL.r,
       tanks: this.tanks.map((t) => ({
-        x: t.x, y: t.y, angle: t.angle, hp: t.hp, alive: t.alive,
+        x: t.x, y: t.y, angle: t.angle, hp: t.hp, alive: t.alive, vx: t.vx || 0, vy: t.vy || 0,
         flash: now - t.hitAt < TIMING.flashMs,
       })),
       shells: this.shells.map((s) => ({ x: s.x, y: s.y, vx: s.vx, vy: s.vy, owner: s.owner })),

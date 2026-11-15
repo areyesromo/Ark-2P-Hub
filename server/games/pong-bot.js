@@ -5,12 +5,14 @@
  * Each return it may misjudge it altogether (a miss you can win the point on):
  *   easy:   slow to react, misses about a third, and drifts back to the middle late.
  *   normal: quicker, misses about one in eight.
- *   hard:   quick, misses one in twenty-five, and hits with the paddle's edge to angle the ball.
+ *   hard:   quick, misses one in twenty-five, and hits with the paddle's edge to angle the ball
+ *           away from your paddle (as a person aims it: the edge that sends it to the far side).
+ * Its moves come with a hand (hand.js): the paddle speeds up and eases off, like a person's.
  */
 import { FIELD } from './pong.js';
 import { reactionMs } from './bot-human.js';
 
-const LEVEL = { easy: { miss: 0.3 }, normal: { miss: 0.12 }, hard: { miss: 0.04 } }; // (reactions: bot-human.js)
+const LEVEL = { easy: { miss: 0.3, hand: 50 }, normal: { miss: 0.12, hand: 70 }, hard: { miss: 0.04, hand: 100 } }; // (reactions: bot-human.js)
 
 export function pongBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];
@@ -32,7 +34,10 @@ export function pongBot(view, level, rng = Math.random, retries = 0, memory = {}
     // A slip of the same size for the whole approach (so it doesn't jitter), rolled afresh each
     // time the ball turns towards it.
     if (!memory.pong || !memory.pong.coming) {
-      const side = rng() < 0.5 ? -1 : 1;
+      // (Hard angles it away from you: hitting the ball with the paddle's lower half sends it down,
+      // so it hits with the half on the side away from your paddle.)
+      const away = view.paddles[1 - me] < FIELD.h / 2 ? 1 : -1;
+      const side = level === 'hard' ? -away : rng() < 0.5 ? -1 : 1;
       const reach = FIELD.paddleH / 2 + FIELD.ballR; // further off than this and it misses
       const off = rng() < L.miss
         ? side * reach * (1.1 + rng() * 0.4) // misjudged: it goes past
@@ -46,5 +51,5 @@ export function pongBot(view, level, rng = Math.random, retries = 0, memory = {}
     if (level === 'easy') target = (view.paddles[me] + FIELD.h / 2) / 2; // only half way back
   }
   target = Math.min(FIELD.h, Math.max(0, target));
-  return { type: 'move', y: target / FIELD.h, botDelayMs: reactionMs(level, rng) };
+  return { type: 'move', y: target / FIELD.h, hand: L.hand, botDelayMs: reactionMs(level, rng) };
 }

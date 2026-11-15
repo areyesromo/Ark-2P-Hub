@@ -1,9 +1,11 @@
 // Real-time Pong. The server runs the physics at 60 Hz and pushes ~30 views a
 // second; the TV draws (and extrapolates) them on a canvas. Phones send an
 // absolute paddle position from a touch strip, controllers send stick/D-pad
-// direction; both move the paddle at the same top speed, so neither is faster.
+// direction; both move the paddle at the same top speed, so neither is faster. The computer's
+// moves come with a hand (hand.js): its paddle speeds up and eases off instead of darting.
 
 import { settingOf } from './options.js';
+import { validHand, handStep } from './hand.js';
 
 export const WIN_SCORE = 5;
 
@@ -51,6 +53,7 @@ export class Pong {
     this.paddles = [FIELD.h / 2, FIELD.h / 2];
     // Per player: { mode: 'target', y } from phones, or { mode: 'axis', v } from controllers.
     this.controls = [{ mode: 'axis', v: 0 }, { mode: 'axis', v: 0 }];
+    this.hands = [{ vx: 0, vy: 0 }, { vx: 0, vy: 0 }]; // the computer's hand speed, kept from tick to tick
     this.frame = 0;
     this.last = this.ctx.now();
     this.resetBall(this.rng() < 0.5 ? 0 : 1);
@@ -174,8 +177,11 @@ export class Pong {
     const maxMove = PHYSICS.paddleSpeed * dt;
     this.controls.forEach((c, slot) => {
       let y = this.paddles[slot];
-      if (c.mode === 'target') y += clamp(c.y - y, -maxMove, maxMove);
+      const hand = this.hands[slot];
+      if (c.mode === 'target' && c.hand) y = handStep(hand, { x: 0, y }, { x: 0, y: c.y }, c.hand, PHYSICS.paddleSpeed, dt).y;
+      else if (c.mode === 'target') y += clamp(c.y - y, -maxMove, maxMove);
       else y += c.v * maxMove;
+      if (!(c.mode === 'target' && c.hand) || y <= PADDLE_MIN || y >= PADDLE_MAX) hand.vy = 0; // (the end of its run stops it)
       this.paddles[slot] = clamp(y, PADDLE_MIN, PADDLE_MAX);
     });
   }
@@ -183,8 +189,9 @@ export class Pong {
   onInput(slot, input) {
     if (input.type === 'rematch' && this.phase === 'over') return this.start();
     if (input.type === 'move' && Number.isFinite(input.y)) {
-      // Phone touch strip: 0 = top, 1 = bottom.
-      this.controls[slot] = { mode: 'target', y: clamp(input.y, 0, 1) * FIELD.h };
+      // Phone touch strip: 0 = top, 1 = bottom. The computer adds `hand` (see hand.js).
+      if (!validHand(input.hand)) return;
+      this.controls[slot] = { mode: 'target', y: clamp(input.y, 0, 1) * FIELD.h, ...(input.hand !== undefined ? { hand: input.hand } : {}) };
     } else if (input.type === 'axis' && Number.isFinite(input.v)) {
       // Controller: -1 = up, 1 = down.
       this.controls[slot] = { mode: 'axis', v: clamp(input.v, -1, 1) };

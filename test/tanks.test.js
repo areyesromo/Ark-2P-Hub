@@ -180,3 +180,22 @@ test('first to WIN_SCORE wins, the loop stops, rematch restarts', () => {
   assert.equal(game.phase, 'countdown');
   assert.deepEqual(game.scores, [0, 0]);
 });
+
+test('the TV view says how each tank is moving; the computer leads a moving tank with its shot', async () => {
+  const { tanksBot } = await import('../server/games/tanks-bot.js');
+  const ctx = fakeCtx();
+  const game = new TankDuel(ctx);
+  game.start();
+  ctx.advance(TIMING.countdownMs + 50);
+  game.onInput(0, { type: 'move', x: 1, y: 0 });
+  ctx.advance(500);
+  const t = game.hostView().tanks[0];
+  assert.ok(t.vx > 2 && Math.abs(t.vy) < 0.1, 'rolling right: ' + t.vx + ', ' + t.vy);
+  // A tank 6 to the right, driving across at full speed: Hard fires where it will be, not where it is.
+  const view = (angle) => ({ phase: 'play', you: 0, ready: true, field: FIELD, obstacles: [], shells: [],
+    tanks: [{ x: 4, y: 4.5, angle, alive: true }, { x: 10, y: 4.5, angle: Math.PI / 2, alive: true, vx: 0, vy: TANK.speed }] });
+  const lead = Math.atan2(TANK.speed * (6 / SHELL.speed), 6);
+  const fires = (angle) => [0, 1, 2, 3, 4].every(() => (tanksBot(view(angle), 'hard', () => 0.5, 0, {}) || {}).type === 'fire');
+  assert.ok(fires(lead), 'fires at its lead');
+  assert.ok(!fires(0), "doesn't fire at where the tank is now");
+});
