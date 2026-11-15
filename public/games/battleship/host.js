@@ -71,7 +71,7 @@
     const b = v.boards[slot];
     const shooter = 1 - slot; // this grid is what the other player fires at
     const targeted = (v.phase === 'aim' || v.phase === 'shot') && v.turn === shooter;
-    let status = '';
+    let status;
     if (v.phase === 'place') status = v.ready[slot] ? '✅ Fleet ready' : '⏳ Placing ships…';
     else status = b.afloat + ' ship' + (b.afloat === 1 ? '' : 's') + ' afloat';
     const s = v.lastShot;

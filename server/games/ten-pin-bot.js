@@ -7,7 +7,7 @@
  *   normal: near its line.
  *   hard:   right on it.
  */
-import { rollBall, LANE } from './ten-pin-roll.js';
+import { rollBall } from './ten-pin-roll.js';
 
 const LEVEL = {
   easy: { aim: 0.28, power: 0.15, spin: 0.3, think: 1.3 },

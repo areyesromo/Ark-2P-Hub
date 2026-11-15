@@ -10,6 +10,7 @@ don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, tex
 
 - `npm run dev`: server with `--watch` on http://localhost:3000 (TV at `/`, phones at `/play/`, admin at `/admin/`)
 - `npm test`: every `test/*.test.js` (node:test, no extra runner). Needs `npm ci` first (`ELECTRON_SKIP_BINARY_DOWNLOAD=1` skips Electron)
+- `npm run lint`: ESLint (`eslint.config.js`: real mistakes only, not style); CI runs it. A new shared browser global (`window.ArkSomething`) goes in its `ARK` list
 - `npm run test:fast`: everything but the slow computer-vs-computer files (`bots-games*`, `kart-race-cpu`), for quick checks
 - Computer-player tests: the harness is `test/helpers-bots.js`; a slow game goes in `HEAVY` there (its own `bots-games-*.test.js`) so it runs in parallel
 - `node --test test/kart-race*.test.js`: one game's tests

@@ -28,7 +28,6 @@
   let pendingX = null;
   let sendTimer = null;
   let powerN = undefined;
-  let dragging = false;
 
   function send() {
     sendTimer = null;
@@ -42,7 +41,6 @@
     if (e.type === 'pointermove' && !(e.buttons || e.pointerType === 'touch')) return;
     e.preventDefault();
     if (e.type === 'pointerdown') {
-      dragging = true;
       if (strip.setPointerCapture) strip.setPointerCapture(e.pointerId);
     }
     const r = strip.getBoundingClientRect();
@@ -132,7 +130,6 @@
       raf = requestAnimationFrame(draw);
       strip.addEventListener('pointerdown', onPointer);
       strip.addEventListener('pointermove', onPointer);
-      ['pointerup', 'pointercancel'].forEach(function (ev) { strip.addEventListener(ev, function () { dragging = false; }); });
       root.querySelector('.rematch').addEventListener('click', function () { api.send({ type: 'rematch' }); });
     },
     update: render,
@@ -143,7 +140,6 @@
       lastKey = '';
       pendingX = null;
       powerN = undefined;
-      dragging = false;
     },
   });
 })();

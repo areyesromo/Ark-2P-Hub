@@ -29,7 +29,7 @@ test('validateMap catches a dead end, a bad link, a 3-way fork and a self-link',
   assert.ok(validateMap(m).some((p) => /fork/.test(p)));
   m = loop();
   m.spaces[5].next = [6, 9];
-  m.spaces[8].next = [8 === 8 ? 7 : 0]; // 7 -> 8 -> 7: a trap that never gets back to the start
+  m.spaces[8].next = [7]; // 7 -> 8 -> 7: a trap that never gets back to the start
   m.spaces[7].next = [8];
   assert.ok(validateMap(m).some((p) => /start/.test(p)));
 });

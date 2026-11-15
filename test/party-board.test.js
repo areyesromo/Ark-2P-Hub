@@ -249,7 +249,7 @@ test('shop: offers what you can afford, only with a free slot; buying takes coin
   assert.equal(v.prompt.kind, 'shop');
   assert.deepEqual(v.prompt.options, ['mushroom', 'coin-thief', 'none']);
   h.choose(0, 'coin-thief');
-  v = h.settle();
+  h.settle();
   assert.deepEqual(h.p(0).items, ['coin-thief']);
   assert.equal(h.p(0).coins, 1 + 3, 'paid 8, then blue space 7');
   const k = board();
@@ -355,7 +355,7 @@ test('slot machine: three of a kind +15, a pair +5, else +1', () => {
       h.q.push(r);
       h.choose(0, 'stop');
     }
-    v = h.settle();
+    h.settle();
     return h.p(0).coins;
   };
   assert.equal(spin(0.01, 0.01, 0.01), 4 + 15);

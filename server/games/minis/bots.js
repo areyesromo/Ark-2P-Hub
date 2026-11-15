@@ -523,7 +523,7 @@ export const PLAYERS = {
     const me = s.players[you];
     const mine = String(you);
     const theirs = String(1 - you);
-    let target = null;
+    let target;
     if (s.bucket && Math.hypot(s.bucket.c + 0.5 - me.x, s.bucket.r + 0.5 - me.y) < 5) target = { c: s.bucket.c, r: s.bucket.r };
     else {
       const keep = m.tile && s.tiles[m.tile.r * s.cols + m.tile.c] !== mine ? m.tile : null;

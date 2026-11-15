@@ -964,7 +964,7 @@ function solo(p = 0.55, opts) {
 }
 
 test('items: a Web holds you to half speed for 1.5 s (no coins lost); Hover floats over; a shield blocks it', () => {
-  const { ctx, game, a, b } = solo(0.55);
+  const { ctx, game, b } = solo(0.55);
   useNow(game, 0, 'web');
   assert.equal(game.webs.length, 1);
   const w = game.webs[0];
@@ -996,7 +996,7 @@ test('items: a Web holds you to half speed for 1.5 s (no coins lost); Hover floa
 });
 
 test('items: Oil takes your steering and brakes for 1 s', () => {
-  const { ctx, game, a, b } = solo(0.55);
+  const { ctx, game, b } = solo(0.55);
   useNow(game, 0, 'oil');
   const o = game.oils[0];
   onRoad(game, b, 0.2, 6);
@@ -1097,7 +1097,7 @@ test('items: a Bomb lands ahead and goes off after 1.5 s, spinning everyone with
 });
 
 test('items: shots and hazards are cleared each race; 6 webs at most; a Bouncer and a Seeker destroy each other', () => {
-  const { ctx, game, a, b } = solo(0.55, { races: 3 });
+  const { ctx, game, a } = solo(0.55, { races: 3 });
   for (let i = 0; i < 8; i++) {
     useNow(game, 0, 'web');
     a.x += 0.01;

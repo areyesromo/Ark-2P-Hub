@@ -40,7 +40,7 @@
       spot.position.set(0, 0.01, 0);
       gl.scene.add(spot);
       h.keeperMats = ArkMini.P_COLORS.map(function (c) { return new T.MeshStandardMaterial({ color: c }); });
-      h.keeper = new T.Mesh(new T.CapsuleGeometry ? new T.CapsuleGeometry(0.35, 1.0, 6, 12) : new T.BoxGeometry(0.7, 1.7, 0.4), h.keeperMats[1]);
+      h.keeper = new T.Mesh(T.CapsuleGeometry ? new T.CapsuleGeometry(0.35, 1.0, 6, 12) : new T.BoxGeometry(0.7, 1.7, 0.4), h.keeperMats[1]);
       h.keeper.castShadow = true;
       gl.scene.add(h.keeper);
       h.ball = new T.Mesh(new T.SphereGeometry(0.2, 20, 16), new T.MeshStandardMaterial({ color: 0xf8fafc, roughness: 0.35 }));

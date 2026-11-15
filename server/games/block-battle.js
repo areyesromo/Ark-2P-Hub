@@ -38,7 +38,6 @@ const KICKS = [0, -1, 1, -2, 2]; // sideways nudges tried when a rotation doesn'
 const EMPTY = '.';
 const JUNK = 'g';
 
-const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 
 export class BlockBattle {
   constructor(ctx, rng = Math.random) {

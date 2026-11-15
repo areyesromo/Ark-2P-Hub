@@ -63,7 +63,7 @@ app.on('before-quit', () => {
 });
 process.on('exit', (code) => log('exiting', { code, helpersAtExit: helpers(process.pid) }));
 function helpers(pid) {
-  let children = [];
+  let children;
   try {
     children = fs.readdirSync(`/proc/${pid}/task`).flatMap((t) =>
       fs.readFileSync(`/proc/${pid}/task/${t}/children`, 'utf8').split(' ').filter(Boolean));
