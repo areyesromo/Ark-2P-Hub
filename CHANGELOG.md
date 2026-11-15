@@ -16,6 +16,10 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   Hard it angles the ball away from your paddle.
 - 🛡️ Tank Duel: the computer leads its shots (it aims where you'll be) and fires once it's lined up,
   instead of waiting to be perfect. Hard is now a real fight, and Normal sits between it and Easy.
+- 🧱 Brick Breaker Duel: the computer's paddle speeds up and eases off like a person's instead of
+  darting.
+- ☄️ Asteroid Duel: the computer fires once it's lined up on your ship instead of waiting to be
+  dead on.
 
 ## 0.1.41
 
