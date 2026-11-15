@@ -116,6 +116,16 @@ export class LiarsDice {
     this.ctx.update();
   }
 
+  /** Picked up after a restart (see RESUMES in index.js): a round being revealed goes on to the next. */
+  resumed() {
+    this.timer = null;
+    if (this.phase !== 'reveal') return;
+    this.timer = this.ctx.setTimeout(() => {
+      this.timer = null;
+      this.newRound();
+    }, TIMING.revealMs);
+  }
+
   view() {
     const revealed = this.phase === 'reveal' || this.phase === 'over';
     return {
