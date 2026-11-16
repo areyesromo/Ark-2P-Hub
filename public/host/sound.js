@@ -133,10 +133,33 @@
     close: function () { tone('sine', 660, 760, 0.12, 0.25); tone('sine', 760, 660, 0.12, 0.25, 0.12); },
     whoosh: function () { noise('bandpass', 300, 3000, 0.4, 0.35); },
     reveal: function () { arpeggio('sine', [988, 1319], 0.1, 0.35, 0.3); },
+    // The themes' own (see THEMED): two strokes of chalk on a board, a knock on a wooden table.
+    chalk: function () { noise('bandpass', 1800, 4200, 0.16, 0.4); noise('bandpass', 2300, 5200, 0.11, 0.3, 0.19); },
+    chalkOff: function () { noise('bandpass', 4200, 1600, 0.18, 0.3); },
+    knock: function () {
+      [0, 0.15].forEach(function (d, i) {
+        tone('triangle', 230 - i * 25, 150, 0.09, 0.5, d);
+        tone('sine', 820 - i * 60, 720, 0.05, 0.22, d);
+        noise('bandpass', 1100, 700, 0.03, 0.35, d);
+      });
+    },
+    knockOff: function () { tone('triangle', 170, 120, 0.1, 0.45); noise('bandpass', 800, 500, 0.03, 0.3); },
   };
+
+  // Some sounds change with the theme picked in Settings (each theme's stylesheet names itself: --ark-theme).
+  const THEMED = {
+    neon: { join: 'chalk', leave: 'chalkOff' },
+    cozy: { join: 'knock', leave: 'knockOff' },
+  };
+  function themed(name) {
+    let theme = '';
+    try { theme = getComputedStyle(document.documentElement).getPropertyValue('--ark-theme').trim(); } catch (e) { /* no styles */ }
+    return (THEMED[theme] && THEMED[theme][name]) || name;
+  }
 
   function play(name) {
     if (muted || !SOUNDS[name] || !unlocked()) return;
+    name = themed(name);
     const now = performance.now();
     if (now - (lastPlayed[name] || 0) < 40) return;
     lastPlayed[name] = now;

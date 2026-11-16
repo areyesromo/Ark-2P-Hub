@@ -187,7 +187,13 @@ export function createApp({
   // update's new art and code show straight away instead of an old cached copy.
   app.use(express.static(PUBLIC_DIR, { extensions: ['html'], setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
 
-  registerSocketHandlers(io, rooms, { refreshJoin, online, fromInternet: (socket) => overInternet(socket.handshake.headers, settings.tunnelUrl) });
+  // A new look (Settings, or Player 1's controller on the TV): every screen swaps its stylesheet.
+  const changeTheme = (theme) => {
+    if (!settings.setTheme(theme)) return false;
+    io.emit('hub:theme', { theme: settings.theme });
+    return true;
+  };
+  registerSocketHandlers(io, rooms, { refreshJoin, online, setTheme: changeTheme, fromInternet: (socket) => overInternet(socket.handshake.headers, settings.tunnelUrl) });
 
   const sweeper = setInterval(() => rooms.sweep(), 60 * 1000);
   sweeper.unref();

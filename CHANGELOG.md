@@ -15,6 +15,11 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   a player sits down or a game opens.
 - ⚙ Settings has no password any more, so it can't be forgotten: Player 1's phone opens it from its
   menu (⋯ → ⚙ Settings). It still only opens at home, never over the internet.
+- 🎨 Every game's "You win!" and "X wins the match!" now wears the theme too (Neon's scoreboard
+  letters in your colour, Cozy's serif in mustard). Kart Race keeps its own look for now.
+- 🎮 Player 1 can change the theme from a controller on the TV: RT in the lobby, ← → to choose, A to pick.
+- 🔊 Each theme sounds its own when a player sits down or leaves: a chalk scrape in Neon, a knock
+  on the wooden table in Cozy.
 
 ## 0.1.44
 
