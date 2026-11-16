@@ -5,6 +5,13 @@ import { randomBytes, scryptSync, timingSafeEqual, createHash } from 'node:crypt
 const MIN_PASSWORD = 4;
 
 /**
+ * The hub's looks, picked in Settings: default (the original), neon (the two players' colours
+ * facing off on a split screen) and cozy (games as boxes on a shelf). Each but default is a
+ * stylesheet in public/shared/themes/, served as /theme.css (see app.js).
+ */
+export const THEMES = ['default', 'neon', 'cozy'];
+
+/**
  * Small persistent settings store (a JSON file in the data folder, which is a
  * Docker volume so it survives updates). Holds the admin password hash and the
  * join address used for the QR code.
@@ -32,6 +39,19 @@ export class Settings {
     const tmp = `${this.file}.tmp`;
     fs.writeFileSync(tmp, JSON.stringify(this.data, null, 2));
     fs.renameSync(tmp, this.file);
+  }
+
+  /** The look of the TV and phones (see THEMES): Default unless picked in Settings. */
+  get theme() {
+    return THEMES.includes(this.data.theme) ? this.data.theme : 'default';
+  }
+
+  setTheme(theme) {
+    if (!THEMES.includes(theme)) return false;
+    if (theme === 'default') delete this.data.theme;
+    else this.data.theme = theme;
+    this.save();
+    return true;
   }
 
   get joinUrl() {

@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.45
+
+- 🎨 Pick a look for the TV and the phones in Settings (⚙ → Theme): **Default**, **Neon** (the two
+  players face off across a split screen, with big scoreboard names) or **Cozy** (games as boxes on
+  a shelf, warm wood and paper, players as game pieces). Every screen changes straight away.
+
 ## 0.1.44
 
 - 🧱 Brick Breaker Duel: a missed ball now puts back the last brick you broke, so keeping the ball

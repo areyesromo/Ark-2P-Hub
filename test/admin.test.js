@@ -126,3 +126,39 @@ test('login is rate limited after repeated wrong passwords', async () => {
   for (let i = 0; i < 11; i++) last = await api('POST', '/api/admin/login', { password: `wrong${i}` });
   assert.equal(last.status, 429);
 });
+
+test('theme: picked in Settings, served as /theme.css, and every screen told when it changes', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-theme-'));
+  const hub = createApp({ port: 0, dataDir: dir, adminPassword: 'pw-for-tests', https: false });
+  const { port } = await hub.listen();
+  const base = `http://127.0.0.1:${port}`;
+  const call = async (method, route, body, token) => {
+    const res = await fetch(base + route, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` }, body: body ? JSON.stringify(body) : undefined });
+    return { status: res.status, body: await res.json() };
+  };
+  const css = async () => (await fetch(base + '/theme.css')).text();
+  try {
+    assert.match(await css(), /default theme/, 'the original look: nothing to add');
+    assert.equal((await call('GET', '/api/admin/status')).body.theme, 'default');
+    assert.equal((await call('PUT', '/api/admin/theme', { theme: 'neon' })).status, 401, 'behind the password');
+    const { token } = (await call('POST', '/api/admin/login', { password: 'pw-for-tests' })).body;
+    assert.equal((await call('PUT', '/api/admin/theme', { theme: 'disco' }, token)).status, 400);
+    // A TV in a room hears about the change straight away.
+    const tv = connect(base, { transports: ['websocket'], forceNew: true });
+    await new Promise((resolve) => tv.emit('host:create', {}, resolve));
+    const told = new Promise((resolve) => tv.once('hub:theme', resolve));
+    for (const theme of ['neon', 'cozy']) {
+      assert.deepEqual((await call('PUT', '/api/admin/theme', { theme }, token)).body, { theme });
+      assert.equal(await css(), fs.readFileSync(path.join('public', 'shared', 'themes', `${theme}.css`), 'utf8'));
+    }
+    assert.equal((await told).theme, 'neon');
+    // Kept across a restart (the settings file), and back to the default.
+    assert.equal(new Settings(dir).theme, 'cozy');
+    await call('PUT', '/api/admin/theme', { theme: 'default' }, token);
+    assert.match(await css(), /default theme/);
+    tv.close();
+  } finally {
+    await hub.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

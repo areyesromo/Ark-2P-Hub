@@ -1,0 +1,154 @@
+/* Cozy: games as boxes on a shelf, warm wood and paper, players as game pieces.
+   Picked in Settings (served as /theme.css). It changes the tokens and the hub's own screens
+   (lobby, seats, game list, phone header); the games keep their own look and colours.
+   Panels stay dark (games put light text on them): only the hub's own boxes are paper. */
+@font-face { font-family: 'Ark Serif'; src: url(/shared/fonts/fraunces-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Ark Serif'; src: url(/shared/fonts/fraunces-latin-900-normal.woff2) format('woff2'); font-weight: 800 900; font-display: swap; }
+@font-face { font-family: 'Ark Text'; src: url(/shared/fonts/atkinson-hyperlegible-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Ark Text'; src: url(/shared/fonts/atkinson-hyperlegible-latin-700-normal.woff2) format('woff2'); font-weight: 700 900; font-display: swap; }
+
+:root {
+  --bg: #1e1a24;
+  --bg-2: #2a2230;
+  --panel: #33272a;
+  --line: #5a4436;
+  --line-strong: #8a6a55;
+  --text: #f2e7d3;
+  --muted: #b9a9a0;
+  --btn: #6b4430;
+  --wood: #4a2f22;
+  --wood-2: #6b4430;
+  --paper: #f2e7d3;
+  --ink: #231a17;
+  --ink-soft: #6b5a50;
+  --teal: #1d6b73;
+  --mustard: #d9a21e;
+  --plum: #6c3a6a;
+  --r-sm: 6px;
+  --r-md: 10px;
+  --radius: 14px;
+  --serif: 'Ark Serif', Georgia, serif;
+}
+
+html, body { font-family: 'Ark Text', system-ui, sans-serif; }
+body { background: radial-gradient(ellipse at top, #2e2531 0%, var(--bg) 65%) fixed; }
+
+/* ---- type ---- */
+h1, h2, h3, .brand, .vs, .seat .who, .game-card strong, .phone-games button strong, .hub-title,
+.join-code, .room-chip strong, .lobby-status, .me-name, .rematch, .ark-tourney .t-head {
+  font-family: var(--serif);
+}
+h1, h2, h3, .brand { font-weight: 900; letter-spacing: 0; }
+.brand .p1 { color: var(--mustard); }
+.brand .p2 { color: var(--paper); }
+
+/* ---- buttons: wood, and the main one mustard ---- */
+button, .btn { border-radius: var(--r-md); }
+button.primary, .btn.primary { background: var(--mustard); color: var(--ink); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.2); }
+button.ghost, .btn.ghost { border-color: var(--line-strong); color: var(--text); }
+.wood, .games.panel, .join.panel {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 2px, transparent 2px 23px, rgba(255, 255, 255, 0.03) 23px 25px, transparent 25px 61px),
+    linear-gradient(var(--wood), #3d261c);
+  border-color: #2b1a13;
+}
+
+/* ---- TV lobby ---- */
+.room-chip { background: var(--paper); color: var(--ink-soft); border: 0; border-radius: var(--r-sm); transform: rotate(-1.5deg); box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35); }
+.room-chip strong { color: var(--ink); font-size: 1.25em; }
+.join h2 { font-size: 2.4rem; }
+.join .muted { color: #d9c9b6; }
+.join-url, .join-code { color: var(--paper); }
+.join-code { font-size: 2.2rem; }
+.qr-wrap { border-radius: var(--r-sm); box-shadow: 0 0 0 0.5rem var(--paper), 0 0.8rem 1.2rem rgba(0, 0, 0, 0.45); transform: rotate(1deg); }
+.games h2 { font-size: 2rem; }
+.games > .muted { color: #d9c9b6; }
+
+/* The seats: each player a round game piece in their colour on a paper card. */
+.seat {
+  border: 3px dashed var(--line-strong); border-radius: var(--radius); background: transparent;
+  padding-left: 6.4rem; min-height: 8.5rem;
+}
+.seat::before {
+  content: ''; position: absolute; left: 1.4rem; top: 50%; width: 3.8rem; height: 3.8rem; margin-top: -1.9rem;
+  border-radius: 50%; border: 3px dashed var(--line-strong);
+}
+.seat.filled { border: 0; background: var(--paper); box-shadow: 0 0.5rem 0 #2b1a13, 0 1rem 1.5rem rgba(0, 0, 0, 0.4); }
+#seat-0.filled, #seat-1.filled { box-shadow: 0 0.5rem 0 #2b1a13, 0 1rem 1.5rem rgba(0, 0, 0, 0.4); }
+.seat.filled::before { border: 0; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.45), transparent 45%), currentColor; box-shadow: inset 0 -0.5rem 0 rgba(0, 0, 0, 0.28), 0 0.25rem 0 rgba(0, 0, 0, 0.3); }
+.seat.filled .who, .seat.filled .status { color: var(--ink); }
+.seat.filled .status { color: var(--ink-soft); }
+/* (the seat's own colour is a little dark on paper for its label) */
+#seat-0.filled .label { color: #0e7490; }
+#seat-1.filled .label { color: #be185d; }
+.seat.filled .kick { color: var(--ink-soft); border-color: #cbb9a0; }
+.seat .who { font-size: 2.3rem; font-weight: 900; }
+.vs { font-family: var(--serif); font-style: italic; font-weight: 700; font-size: 2.4rem; color: var(--mustard); }
+.lobby.full .seat { padding-left: 4.6rem; }
+.lobby.full .seat::before { left: 1rem; width: 2.6rem; height: 2.6rem; margin-top: -1.3rem; }
+
+/* The game list: boxes standing on shelves (a plank under each row), the one you're on pulled out. */
+.game-list { column-gap: 1.2rem; row-gap: 2.2rem; padding: 0.4rem 0.6rem 1.2rem; }
+.game-card {
+  position: relative; border: 0; border-radius: 4px 4px 2px 2px;
+  background: var(--paper); color: var(--ink);
+  border-top: 0.55rem solid var(--teal);
+  box-shadow: inset -0.35rem 0 0 rgba(0, 0, 0, 0.08), 0 0.35rem 0.5rem rgba(0, 0, 0, 0.35);
+  transition: transform 0.15s ease;
+}
+.game-card:nth-of-type(3n+2) { border-top-color: var(--mustard); }
+.game-card:nth-of-type(3n) { border-top-color: var(--plum); }
+.game-card::after {
+  content: ''; position: absolute; left: -0.7rem; right: -0.7rem; bottom: -1.1rem; height: 0.7rem;
+  background: linear-gradient(var(--wood-2), var(--wood)); box-shadow: 0 0.35rem 0.4rem rgba(0, 0, 0, 0.45); pointer-events: none;
+}
+.game-card strong { font-size: 1.45rem; font-weight: 900; color: var(--ink); }
+.game-card span { color: var(--ink-soft); }
+.game-card .tag { color: #8a5a00; }
+.game-card em.label { color: var(--ink-soft); border-color: #cbb9a0; }
+.game-card em.label.handheld { color: var(--teal); border-color: var(--teal); }
+.game-card em.label.motion { color: #8a5a00; border-color: #8a5a00; }
+.game-card em.label.bot { color: var(--plum); border-color: var(--plum); }
+.game-card:not(:disabled):hover { transform: translateY(-0.3rem); }
+.game-card.pad-focus { transform: translateY(-0.5rem); box-shadow: 0 0 0 0.25rem var(--mustard), 0 0.9rem 1.2rem rgba(0, 0, 0, 0.5); }
+.game-card.folder { border-style: solid; border-width: 0.55rem 0 0; background: linear-gradient(var(--paper) 0 0) padding-box, var(--paper); outline: 2px solid var(--wood-2); outline-offset: -0.6rem; }
+.game-card.random { border-top-style: dashed; border-top-color: var(--mustard); }
+.game-card.phone-only { opacity: 0.55; }
+.game-group { font-family: var(--serif); font-size: 1.5rem; color: var(--paper); margin-top: 0.4rem; }
+.game-group span { font-family: 'Ark Text', system-ui, sans-serif; color: #d9c9b6; }
+
+.hub-setup .hub-title { font-size: 2.6em; }
+.ark-setup .opt.on { background: var(--mustard); color: var(--ink); }
+.ark-tourney.on { border-color: var(--mustard); }
+.pad-hint, .h2h .muted { color: var(--muted); }
+
+/* ---- phones ---- */
+.join-screen h1 { font-size: 3rem; }
+/* The header is a wooden plank, with you as a game piece. */
+.me {
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.08) 0 2px, transparent 2px 31px),
+    linear-gradient(var(--wood-2), var(--wood));
+  border-bottom: 4px solid var(--me); padding: 6px 16px;
+}
+.me .dot { width: 22px; height: 22px; background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), transparent 45%), var(--me); box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.28); }
+.me-name { font-size: 1.3rem; font-weight: 900; color: var(--paper); }
+.menu { background: var(--wood); border-bottom-color: #2b1a13; }
+.lobby-status { font-size: 1.4rem; color: var(--paper); }
+.phone-games { gap: 14px; }
+.phone-games button {
+  background: var(--paper); color: var(--ink); border: 0; border-left: 8px solid var(--teal); border-radius: 4px;
+  box-shadow: 0 4px 0 #2b1a13, 0 6px 10px rgba(0, 0, 0, 0.35);
+}
+.phone-games button:nth-of-type(3n+2) { border-left-color: var(--mustard); }
+.phone-games button:nth-of-type(3n) { border-left-color: var(--plum); }
+.phone-games button strong { font-size: 1.3rem; font-weight: 900; color: var(--ink); }
+.phone-games button span { color: var(--ink-soft); }
+.phone-games button.folder { border: 0; border-left: 8px double var(--wood-2); }
+.phone-games button.random { border: 0; border-left: 8px dashed var(--mustard); }
+.phone-games .tag { color: #8a5a00; }
+.phone-games button em.label { color: var(--ink-soft); border-color: #cbb9a0; }
+.phone-games button em.label.handheld { color: var(--teal); border-color: var(--teal); }
+.phone-games button em.label.motion { color: #8a5a00; border-color: #8a5a00; }
+.phone-games button em.label.bot { color: var(--plum); border-color: var(--plum); }
+.phone-games .game-group { font-family: var(--serif); font-size: 1.25rem; color: var(--paper); }

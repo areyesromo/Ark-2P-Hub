@@ -1,6 +1,7 @@
 import express from 'express';
 import { randomBytes } from 'node:crypto';
 import { normalizeJoinUrl } from './network.js';
+import { THEMES } from './settings.js';
 
 const SESSION_MS = 12 * 60 * 60 * 1000;
 const MAX_FAILURES = 10;
@@ -19,8 +20,9 @@ const FAILURE_WINDOW_MS = 15 * 60 * 1000;
  *   GET  /api/admin/online                   -> Online#status() (Bearer token) online play: on or off, the address, the tunnel
  *   PUT  /api/admin/online   { allowed?, tunnelUrl? } -> Online#status() (Bearer token)
  *   POST /api/admin/online/stop              -> Online#status() (Bearer token) stop the tunnel and every room's invite
+ *   PUT  /api/admin/theme    { theme }       -> { theme }  (Bearer token) the look of the TV and phones (THEMES)
  */
-export function adminRouter({ settings, stats, trophies = null, practice = null, online = null, publicUrl, detectedJoin, onJoinUrlChange }) {
+export function adminRouter({ settings, stats, trophies = null, practice = null, online = null, publicUrl, detectedJoin, onJoinUrlChange, onThemeChange = () => {} }) {
   const router = express.Router();
   router.use(express.json({ limit: '4kb' }));
 
@@ -65,6 +67,8 @@ export function adminRouter({ settings, stats, trophies = null, practice = null,
       needsSetup: !settings.hasPassword,
       passwordFromEnv: settings.passwordFromEnv,
       joinUrl: settings.joinUrl,
+      theme: settings.theme,
+      themes: THEMES,
       envOverride: publicUrl || '',
       detected: detectedJoin(),
     });
@@ -106,6 +110,13 @@ export function adminRouter({ settings, stats, trophies = null, practice = null,
     settings.setJoinUrl(joinUrl);
     await onJoinUrlChange();
     res.json({ joinUrl });
+  });
+
+  router.put('/theme', (req, res) => {
+    if (!authed(req)) return res.status(401).json({ error: 'Please log in again.' });
+    if (!settings.setTheme(req.body && req.body.theme)) return res.status(400).json({ error: 'Pick one of: ' + THEMES.join(', ') + '.' });
+    onThemeChange(settings.theme);
+    res.json({ theme: settings.theme });
   });
 
   router.post('/stats/reset', (req, res) => {

@@ -385,6 +385,13 @@ The setting is stored in the `ark-data` Docker volume, so it survives updates.
 You can also set `ADMIN_PASSWORD` and/or `PUBLIC_URL` in `docker-compose.yml`;
 `PUBLIC_URL` overrides the saved address.
 
+#### Themes
+
+Settings (`/admin/`) also picks the look of the TV and the phones: **Default**, **Neon** (a split
+screen, the two players face to face with big scoreboard names) or **Cozy** (games as boxes on a
+shelf, wood and paper, players as game pieces). It changes on every screen straight away, and the
+games themselves keep their own look.
+
 ### Update and redeploy from GitHub
 
 Clone the repo once on the Docker machine, then run the update script from the

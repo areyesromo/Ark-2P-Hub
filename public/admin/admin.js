@@ -55,6 +55,7 @@
 
   function showSettings() {
     show('settings');
+    document.querySelectorAll('input[name="theme"]').forEach(function (r) { r.checked = r.value === status.theme; });
     loadMatchCount();
     loadOnline();
     $('join-url').value = status.joinUrl;
@@ -119,6 +120,19 @@
   $('settings').addEventListener('submit', function (e) {
     e.preventDefault();
     save($('join-url').value);
+  });
+  $('themes').addEventListener('change', function (e) {
+    if (e.target.name !== 'theme') return;
+    api('PUT', '/api/admin/theme', { theme: e.target.value }).then(function (r) {
+      if (r.status === 401) { setToken(''); return show('login'); }
+      $('theme-msg').className = r.status === 200 ? 'msg ok' : 'msg err';
+      $('theme-msg').textContent = r.status === 200 ? 'Theme changed on every screen.' : r.error || 'Something went wrong.';
+      if (r.status === 200) {
+        status.theme = r.theme;
+        const link = document.getElementById('ark-theme');
+        if (link) link.href = '/theme.css?t=' + Date.now(); // (this page too)
+      }
+    });
   });
   $('use-here').addEventListener('click', function () { $('join-url').value = location.origin; });
   $('clear').addEventListener('click', function () { $('join-url').value = ''; save(''); });
