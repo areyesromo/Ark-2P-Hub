@@ -11,9 +11,7 @@ services:
     network_mode: host
     environment:
       PORT: "3000"
-      # Optional, set in /opt/ark/.env: an admin password (instead of creating
-      # one at /admin/) and a fixed address for phones (e.g. a static IP).
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
+      # Optional, set in /opt/ark/.env: a fixed address for phones (e.g. a static IP).
       PUBLIC_URL: ${PUBLIC_URL:-}
     volumes:
       # Settings and match history survive updates.

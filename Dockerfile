@@ -44,7 +44,7 @@ ENV ARK_COMMIT=$GIT_SHA \
     ARK_BUILT=$BUILD_TIME \
     ARK_VERSION=$APP_VERSION
 
-# Settings (admin password hash, join address) live here; compose mounts a volume on it.
+# Settings (join address, theme, online play) live here; compose mounts a volume on it.
 RUN mkdir -p /app/data && chown node:node /app/data
 
 USER node

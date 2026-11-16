@@ -125,9 +125,9 @@ test('a room records each finished match once, including rematches, and shows th
   room.dispose();
 });
 
-test('/api/stats serves the leaderboard; the admin can wipe it', async () => {
+test('/api/stats serves the leaderboard; Settings can wipe it', async () => {
   const dir = tmp();
-  const server = createApp({ port: 0, publicUrl: '', dataDir: dir, adminPassword: 'secret' });
+  const server = createApp({ port: 0, publicUrl: '', dataDir: dir });
   const addr = await server.listen();
   const base = `http://127.0.0.1:${addr.port}`;
   try {
@@ -138,13 +138,8 @@ test('/api/stats serves the leaderboard; the admin can wipe it', async () => {
     assert.equal(lb.players[0].name, 'Abe');
 
     const denied = await fetch(`${base}/api/admin/stats/reset`, { method: 'POST' });
-    assert.equal(denied.status, 401);
-    const { token } = await (await fetch(`${base}/api/admin/login`, {
-      method: 'POST',
-      headers: { 'content-type': 'application/json' },
-      body: JSON.stringify({ password: 'secret' }),
-    })).json();
-    const ok = await fetch(`${base}/api/admin/stats/reset`, { method: 'POST', headers: { authorization: `Bearer ${token}` } });
+    assert.equal(denied.status, 403, 'only from the Settings page (JSON)');
+    const ok = await fetch(`${base}/api/admin/stats/reset`, { method: 'POST', headers: { 'content-type': 'application/json' } });
     assert.deepEqual(await ok.json(), { ok: true });
     assert.equal((await (await fetch(`${base}/api/stats`)).json()).total, 0);
     assert.equal(new Stats(dir).matches.length, 0, 'wiped on disk too');

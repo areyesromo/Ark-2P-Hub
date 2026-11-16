@@ -41,9 +41,16 @@
       <button id="lobby-btn">Back to lobby</button>
       <button id="profile-btn" class="ghost">🎨 Avatar and colour</button>
       <button id="trophies-btn" class="ghost">🏆 My trophies</button>
+      <button id="settings-btn" class="ghost hidden">⚙ Settings</button>
       <button id="buzz-btn" class="ghost">📳 Test vibration</button>
       <button id="leave-btn" class="ghost">Leave room</button>
       <p id="buzz-msg" class="buzz-msg hidden"></p>
+    </div>
+
+    <!-- Settings, for Player 1 at home: the Settings page, inside this phone so it stays in the room. -->
+    <div id="settings-sheet" class="settings-sheet hidden" role="dialog" aria-label="Settings">
+      <div class="settings-bar"><strong>⚙ Settings</strong><button id="settings-close" class="primary">Done</button></div>
+      <iframe id="settings-frame" title="Settings"></iframe>
     </div>
 
     <main id="pad" class="pad">

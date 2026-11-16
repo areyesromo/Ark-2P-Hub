@@ -53,7 +53,6 @@ export function createApp({
   port = 3000,
   publicUrl = process.env.PUBLIC_URL,
   dataDir = process.env.DATA_DIR || path.join(ROOT_DIR, 'data'),
-  adminPassword = process.env.ADMIN_PASSWORD,
   https = process.env.HTTPS !== 'off',
 } = {}) {
   const app = express();
@@ -64,7 +63,7 @@ export function createApp({
     pingInterval: 10000,
     pingTimeout: 8000,
   });
-  const settings = new Settings(dataDir, { envPassword: adminPassword });
+  const settings = new Settings(dataDir);
   const stats = new Stats(dataDir);
   const profiles = new Profiles(dataDir);
   const practice = new Practice(dataDir);
@@ -111,6 +110,15 @@ export function createApp({
     if (/^\/(api\/)?(stats|trophies)(\/|$)/.test(p)) return res.status(403).send('The leaderboard and trophies are for the hub\'s home screens.');
     if (/^\/host(\/|\/index(\.html)?)?$/.test(p) && !req.query.watch) return res.redirect(302, '/play/');
     if (/^\/healthz\/?$/.test(p)) return res.json({ ok: true }); // (how many rooms there are stays at home)
+    next();
+  });
+  // Settings has no password, so no other website may show it in a frame (to trick a tap): only the
+  // hub's own pages (Player 1's phone opens it inside the phone page).
+  app.use((req, res, next) => {
+    if (/^\/(api\/)?admin(\/|$)/.test(routed(req))) {
+      res.setHeader('X-Frame-Options', 'SAMEORIGIN');
+      res.setHeader('Content-Security-Policy', "frame-ancestors 'self'");
+    }
     next();
   });
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
