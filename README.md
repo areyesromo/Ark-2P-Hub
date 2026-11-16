@@ -59,7 +59,7 @@ scans in from the lobby takes its seat.
 | **Rock Paper Scissors** | Pick in secret on your phone; the TV reveals both. First to 3. |
 | **Pong** | The classic, in real time. The whole court is on your phone too, turned so your paddle is at the bottom: drag left and right anywhere on it (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
 | **Volley Blobs** | Beach volleyball for two bouncy blobs. Hold ◀ ▶ on your phone (or the stick) to slide and tap JUMP; where the ball hits your dome sets where it goes, so jump into it to smash. Up to 3 touches a side, and the one who lost the point serves. First to 7. |
-| **Brick Breaker Duel** | A race to break your own wall, side by side on the TV. Your wall, balls and paddle are on your phone too: drag left and right on it (or use the stick) to move your paddle; a missed ball just costs a moment. Power bricks shrink your rival's paddle, give you an extra ball or add a row to their wall. First to clear their wall wins; after 2 minutes, most bricks broken (level: next brick wins). |
+| **Brick Breaker Duel** | A race to break your own wall, side by side on the TV. Your wall, balls and paddle are on your phone too: drag left and right on it (or use the stick) to move your paddle; a missed ball puts back the last brick you broke (or, if you pick it, just costs a moment). Power bricks shrink your rival's paddle, give you an extra ball or add a row to their wall. First to clear their wall wins; after 2 minutes, most bricks broken (level: next brick wins). |
 | **Asteroid Duel** | Two ships in a field of drifting rocks, and the edges wrap round. Point the joystick (or the stick) where you want to face and push further to thrust; hold FIRE to shoot. Big rocks split when shot, and flying into one hurts. Three lives a round, a short shield after each hit; last ship flying takes the round. First to 3 rounds. |
 | **Rally Tennis** | Tennis seen from above: your player runs to the ball by themselves, you time the swing. Tap SWING (or A) as the ball reaches you: spot on is a faster, deeper shot, a touch early pulls it left and late pushes it right, and holding ◀ ▶ aims too. Aim wide with a mistimed swing and it lands out. One swing per ball: too early or too late and it's gone. Tennis scoring (15, 30, 40, deuce); first to 4 games. |
 | **Falling Blocks Battle** | A well each, side by side, and the same pieces in the same order for both. Slide ◀ ▶ (hold to keep going), rotate, hold ▼ to speed it down or DROP it at once. Clear 2 or more lines together and junk rows rise into your rival's well (2 lines send 1, 3 send 2, 4 send 4); your clears cancel junk coming at you first. Fill your well and you lose the round. First to 2 rounds. |
@@ -120,11 +120,11 @@ starts). The numbers above are the defaults; you can change, for example:
 | Reaction Duel, Rock Paper Scissors | Points to win: 3, 5 or 7 |
 | Pong | Points to win: 3, 5, 7 or 11 |
 | Volley Blobs | Points to win: 5, 7 or 11 |
-| Brick Breaker Duel | Wall: 3, 5 or 7 rows of bricks |
+| Brick Breaker Duel | Wall: 3, 5 or 7 rows of bricks; missed ball: a brick comes back, or just a moment lost |
 | Asteroid Duel | Round wins needed: 2, 3 or 5 |
 | Rally Tennis | Games to win: 3, 4 or 6 |
 | Falling Blocks Battle | Round wins needed: 1, 2 or 3 |
-| Air Hockey | Goals to win: 5, 7 or 10 |
+| Air Hockey | Goals to win: 5, 7 or 10; own goals: count, or don't (your goal bounces out a puck you touched last) |
 | Light Cycles, Snake Battle, Tank Duel, Sumo, Bomb Duel | Round wins needed: 2, 3 or 5 |
 | Tower Defence Duel | 10, 20 or 30 lives |
 | Connect Four | One round, or first to 3 or 5; timed (20 s a move) or no timer |

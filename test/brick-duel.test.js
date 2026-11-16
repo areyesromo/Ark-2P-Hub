@@ -361,3 +361,22 @@ test("the computer's hand: its paddle speeds up and eases in; a phone still move
   ctx.advance(PHYSICS.tickMs);
   assert.ok(game.sides[0].paddle - x0 > PHYSICS.paddleSpeed * (PHYSICS.tickMs / 1000) * 0.95, 'phone: top speed at once');
 });
+
+test('a missed ball puts back the last brick you broke (the usual rule); the old way it only costs a moment', () => {
+  for (const [misses, back] of [['brick', true], ['moment', false]]) {
+    const { ctx, game } = setup(() => 0.3, { misses });
+    // Break a brick by hand, as a hit does.
+    const side = game.sides[0];
+    const [k, brick] = [...side.bricks.entries()].find(([, b]) => !b.p);
+    side.bricks.delete(k);
+    side.broken++;
+    side.brokenAt.push({ r: brick.r, c: brick.c });
+    const before = side.bricks.size;
+    // Then miss: the only ball falls off the bottom.
+    launch(game, 0, { x: 4, y: FIELD.h - 0.2, vx: 0, vy: 8 });
+    ctx.advance(200);
+    assert.equal(side.bricks.has(k), back, misses + ': the brick ' + (back ? 'is back' : 'stays broken'));
+    assert.equal(side.bricks.size, before + (back ? 1 : 0));
+    assert.equal(side.broken, back ? 0 : 1, 'the count of broken bricks follows');
+  }
+});

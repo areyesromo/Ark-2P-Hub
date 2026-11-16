@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.44
+
+- 🧱 Brick Breaker Duel: a missed ball now puts back the last brick you broke, so keeping the ball
+  in play counts (and the computer's levels really differ). Prefer the old way? Pick "Missed ball:
+  just a moment lost" on the setup screen.
+- 🏒 Air Hockey: a new setup option, "Own goals: don't count". Then your own goal bounces out a puck
+  you touched last, so a save that goes wrong doesn't score for them. Own goals still count unless
+  you pick it.
+
 ## 0.1.43
 
 - 🏷️ The hub on a Raspberry Pi or in Docker shows its real version on the TV (it always said

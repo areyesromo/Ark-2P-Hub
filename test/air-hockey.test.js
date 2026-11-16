@@ -218,3 +218,27 @@ test("the computer's hand: it speeds up, eases into its target, and curves when 
     assert.notEqual(game.controls[1].hand, hand);
   }
 });
+
+test("own goals: they count by default; with them off, your own goal bounces out a puck you touched last", () => {
+  for (const [ownGoals, lastTouch, scores] of [['count', 0, true], ['bounce', 0, false], ['bounce', 1, true]]) {
+    const ctx = fakeCtx();
+    ctx.settings = { ownGoals };
+    const game = new AirHockey(ctx);
+    game.start();
+    launch(game, { x: 1.2, y: FIELD.h / 2, vx: -12, vy: 0 }); // heading into the left goal (player 1's)
+    game.lastTouch = lastTouch;
+    for (let i = 0; i < 20 && game.scores[1] === 0; i++) ctx.advance(PHYSICS.tickMs);
+    assert.equal(game.scores[1] === 1, scores, `${ownGoals}, last touched by ${lastTouch}: ${scores ? 'a goal' : 'bounced out'}`);
+    if (!scores) assert.ok(game.puck.vx > 0, 'it comes back out');
+  }
+});
+
+test('the last touch is whoever hit the puck last, and a new point starts with no one', () => {
+  const { ctx, game } = setup();
+  launch(game, { x: 4, y: FIELD.h / 2, vx: -6, vy: 0 });
+  game.mallets[0] = { x: 2.6, y: FIELD.h / 2, vx: 0, vy: 0 };
+  for (let i = 0; i < 30 && game.lastTouch === null; i++) ctx.advance(PHYSICS.tickMs);
+  assert.equal(game.lastTouch, 0);
+  game.goal(1);
+  assert.equal(game.lastTouch, null);
+});
