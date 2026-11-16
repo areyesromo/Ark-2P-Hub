@@ -146,7 +146,19 @@
     document.body.className = 'slot-' + me.slot;
     $('me-name').textContent = me.name;
     $('me-tag').textContent = 'P' + (me.slot + 1) + ' · ' + me.code;
+    // Settings is Player 1's, at home (over the internet it stays shut: see app.js).
+    $('settings-btn').classList.toggle('hidden', me.slot !== 0 || Boolean(inviteKey));
   }
+
+  $('settings-btn').addEventListener('click', function () {
+    $('menu').classList.add('hidden');
+    $('settings-frame').src = '/admin/?embed=1';
+    $('settings-sheet').classList.remove('hidden');
+  });
+  $('settings-close').addEventListener('click', function () {
+    $('settings-sheet').classList.add('hidden');
+    $('settings-frame').src = 'about:blank';
+  });
 
   $('menu-btn').addEventListener('click', function () { $('menu').classList.toggle('hidden'); });
   $('lobby-btn').addEventListener('click', function () {
@@ -297,6 +309,7 @@
 
   socket.on('room:state', function (s) {
     state = s;
+    if (s.phase !== 'playing') document.body.classList.remove('match-over');
     if (me) applyState();
     if (me) Ark.showTrophies(s, me.slot, me.name); // (your new trophies)
   });
@@ -368,6 +381,7 @@
     const v = msg.view;
     showHubSetup(Ark.setup.isHub(v) ? v : null);
     $('hub-change').classList.toggle('hidden', !(v.hubSetup && v.phase === 'over'));
+    document.body.classList.toggle('match-over', v.phase === 'over'); // (for the themes)
     renderTourneyBar();
     if (Ark.setup.isHub(v)) return; // the game hasn't started: the hub shows its setup screen
     if (current && current.renderer && current.gameId === msg.gameId) current.renderer.update(v);

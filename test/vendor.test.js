@@ -11,7 +11,7 @@ let dataDir;
 
 before(async () => {
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-vendor-'));
-  server = createApp({ port: 0, publicUrl: '', dataDir, adminPassword: '' });
+  server = createApp({ port: 0, publicUrl: '', dataDir });
   const addr = await server.listen();
   url = `http://127.0.0.1:${addr.port}`;
 });

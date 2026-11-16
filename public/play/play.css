@@ -104,3 +104,11 @@ body.slot-1 { --me: var(--p2); }
 .tourney-bar { display: flex; justify-content: center; margin: 0 12px 12px; font-size: 0.95rem; }
 
 .menu .buzz-msg { margin: 0; font-size: 0.9rem; color: var(--muted); max-width: 18rem; }
+
+/* Settings, on Player 1's phone: the Settings page over everything, with Done at the top. */
+.settings-sheet { position: fixed; inset: 0; z-index: 40; display: flex; flex-direction: column; background: var(--bg);
+  padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+.settings-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 8px 16px; background: var(--bg-2); border-bottom: 3px solid var(--me); }
+.settings-bar strong { font-size: var(--fs-md); }
+.settings-bar button { padding: 10px 22px; min-height: 44px; }
+.settings-sheet iframe { flex: 1; width: 100%; border: 0; background: var(--bg); }

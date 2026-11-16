@@ -43,11 +43,10 @@ What the installer does (it's safe to run again any time, e.g. to repair the set
    and starts the **kiosk** (full-screen TV screen) at login on any recent Pi OS
    desktop (labwc, Wayfire or LXDE).
 
-Options go in front of `bash`, e.g. `curl … | ADMIN_PASSWORD=secret bash`:
+Options go in front of `bash`, e.g. `curl … | PUBLIC_URL=http://192.168.1.50:3000 bash`:
 
 | Option | Does |
 | --- | --- |
-| `ADMIN_PASSWORD=…` | Password for Settings (`/admin/`); otherwise you create one there |
 | `PUBLIC_URL=http://192.168.1.50:3000` | Fix the address phones use |
 | `ARK_SOURCE=1` | Build from source on the Pi instead of using the prebuilt image |
 | `ARK_NO_KIOSK=1` | Only run the server (no TV screen on this Pi) |

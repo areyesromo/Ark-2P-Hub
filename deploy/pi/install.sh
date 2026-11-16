@@ -9,7 +9,6 @@
 #   ARK_DIR=/opt/ark     where the hub lives
 #   ARK_SOURCE=1         build from source instead of pulling the prebuilt image
 #   ARK_NO_KIOSK=1       just the server (no TV screen on this Pi)
-#   ADMIN_PASSWORD=...   set the /admin/ password (otherwise create it at /admin/)
 #   PUBLIC_URL=...       fix the address phones use, e.g. http://192.168.1.50:3000
 set -euo pipefail
 
@@ -75,7 +74,6 @@ else
   fi
   ENV_LINES+=("COMPOSE_FILE=docker-compose.source.yml")
 fi
-[ -n "${ADMIN_PASSWORD:-}" ] && ENV_LINES+=("ADMIN_PASSWORD=$ADMIN_PASSWORD")
 [ -n "${PUBLIC_URL:-}" ] && ENV_LINES+=("PUBLIC_URL=$PUBLIC_URL")
 if [ "$DRY" = 1 ]; then
   say "+ write $DIR/.env (${#ENV_LINES[@]} setting(s))"

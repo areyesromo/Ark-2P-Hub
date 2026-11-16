@@ -13,7 +13,6 @@ services:
     network_mode: host
     environment:
       PORT: "3000"
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:-}
       PUBLIC_URL: ${PUBLIC_URL:-}
     volumes:
       - ark-data:/app/data

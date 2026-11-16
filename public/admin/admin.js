@@ -1,22 +1,13 @@
 (function () {
-  const TOKEN_KEY = 'ark.admin';
   const $ = (id) => document.getElementById(id);
   let status = null;
-
-  function token() {
-    try { return sessionStorage.getItem(TOKEN_KEY) || ''; } catch (e) { return ''; }
-  }
-  function setToken(t) {
-    try {
-      if (t) sessionStorage.setItem(TOKEN_KEY, t);
-      else sessionStorage.removeItem(TOKEN_KEY);
-    } catch (e) { /* private mode */ }
-  }
+  // Opened inside Player 1's phone (play.js): no way back to the TV from here, the phone has its own Close.
+  if (/[?&]embed=1\b/.test(location.search)) document.body.classList.add('embed');
 
   function api(method, url, body) {
     return fetch(url, {
       method: method,
-      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + token() },
+      headers: { 'Content-Type': 'application/json' },
       body: body ? JSON.stringify(body) : undefined,
     }).then(function (res) {
       return res.json().catch(function () { return {}; }).then(function (data) {
@@ -24,10 +15,6 @@
         return data;
       });
     });
-  }
-
-  function show(id) {
-    ['setup', 'login', 'settings'].forEach(function (s) { $(s).classList.toggle('hidden', s !== id); });
   }
 
   function isLocal(host) {
@@ -54,7 +41,7 @@
   }
 
   function showSettings() {
-    show('settings');
+    $('settings').classList.remove('hidden');
     document.querySelectorAll('input[name="theme"]').forEach(function (r) { r.checked = r.value === status.theme; });
     loadMatchCount();
     loadOnline();
@@ -72,41 +59,13 @@
   function load() {
     return api('GET', '/api/admin/status').then(function (s) {
       status = s;
-      if (s.needsSetup) return show('setup');
-      $('login-note').textContent = s.passwordFromEnv ? 'The password is set by ADMIN_PASSWORD on the server.' : '';
-      if (!token()) return show('login');
       showSettings();
     });
   }
 
-  $('setup').addEventListener('submit', function (e) {
-    e.preventDefault();
-    if ($('setup-pw').value !== $('setup-pw2').value) {
-      $('setup-msg').textContent = "Passwords don't match.";
-      return;
-    }
-    api('POST', '/api/admin/setup', { password: $('setup-pw').value }).then(function (r) {
-      if (!r.token) { $('setup-msg').textContent = r.error || 'Something went wrong.'; return; }
-      setToken(r.token);
-      load();
-    });
-  });
-
-  $('login').addEventListener('submit', function (e) {
-    e.preventDefault();
-    api('POST', '/api/admin/login', { password: $('login-pw').value }).then(function (r) {
-      if (!r.token) { $('login-msg').textContent = r.error || 'Something went wrong.'; return; }
-      $('login-msg').textContent = '';
-      $('login-pw').value = '';
-      setToken(r.token);
-      showSettings();
-    });
-  });
-
   function save(value) {
     const msg = $('settings-msg');
     api('PUT', '/api/admin/settings', { joinUrl: value }).then(function (r) {
-      if (r.status === 401) { setToken(''); show('login'); return; }
       if (r.error) { msg.className = 'msg err'; msg.textContent = r.error; return; }
       status.joinUrl = r.joinUrl;
       $('join-url').value = r.joinUrl;
@@ -124,7 +83,6 @@
   $('themes').addEventListener('change', function (e) {
     if (e.target.name !== 'theme') return;
     api('PUT', '/api/admin/theme', { theme: e.target.value }).then(function (r) {
-      if (r.status === 401) { setToken(''); return show('login'); }
       $('theme-msg').className = r.status === 200 ? 'msg ok' : 'msg err';
       $('theme-msg').textContent = r.status === 200 ? 'Theme changed on every screen.' : r.error || 'Something went wrong.';
       if (r.status === 200) {
@@ -139,7 +97,6 @@
   $('clear-stats').addEventListener('click', function () {
     if (!window.confirm('Clear every recorded match and the leaderboard? This can\'t be undone.')) return;
     api('POST', '/api/admin/stats/reset').then(function (r) {
-      if (r.status === 401) { setToken(''); return show('login'); }
       $('stats-msg').className = r.ok ? 'msg ok' : 'msg err';
       $('stats-msg').textContent = r.ok ? 'Match history cleared.' : r.error || 'Something went wrong.';
       loadMatchCount();
@@ -147,7 +104,6 @@
   });
 
   function onlineReply(r) {
-    if (r.status === 401) { setToken(''); return show('login'); }
     $('online-msg').className = r.status === 200 ? 'msg ok' : 'msg err';
     $('online-msg').textContent = r.status === 200 ? 'Saved.' : r.error || 'Something went wrong.';
     showOnline(r);
@@ -162,14 +118,9 @@
   $('clear-trophies').addEventListener('click', function () {
     if (!window.confirm('Clear everyone\'s trophies and practice records? This can\'t be undone.')) return;
     api('POST', '/api/admin/trophies/reset').then(function (r) {
-      if (r.status === 401) { setToken(''); return show('login'); }
       $('trophies-msg').className = r.ok ? 'msg ok' : 'msg err';
       $('trophies-msg').textContent = r.ok ? 'Trophies and practice records cleared.' : r.error || 'Something went wrong.';
     });
-  });
-
-    $('logout').addEventListener('click', function () {
-    api('POST', '/api/admin/logout').then(function () { setToken(''); show('login'); });
   });
 
   load();

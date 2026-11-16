@@ -376,21 +376,25 @@ Inside Docker, the server only knows its own internal IP. If the TV page is
 opened as `http://localhost:…` (for example on the server itself), the QR code
 can point somewhere phones can't reach, and the TV shows a ⚠ warning. To fix it:
 
-1. On a phone or PC, open `http://<server-ip>:3000/admin/` (or press ⚙ on the TV screen).
-2. The first visit asks you to create an admin password.
-3. Press **Use this page's address**, or type the address, then **Save**. The QR
+1. On Player 1's phone, open the menu (⋯) → **⚙ Settings**. Or open
+   `http://<server-ip>:3000/admin/` on a phone or PC, or press ⚙ on the TV screen.
+2. Press **Use this page's address**, or type the address, then **Save**. The QR
    code on the TV updates right away.
 
+Settings has no password: it opens on your home network only (never over the
+internet, even while someone is invited online). Of the two phones, only Player 1's has the button.
+
 The setting is stored in the `ark-data` Docker volume, so it survives updates.
-You can also set `ADMIN_PASSWORD` and/or `PUBLIC_URL` in `docker-compose.yml`;
-`PUBLIC_URL` overrides the saved address.
+You can also set `PUBLIC_URL` in `docker-compose.yml`:
+it overrides the saved address.
 
 #### Themes
 
 Settings (`/admin/`) also picks the look of the TV and the phones: **Default**, **Neon** (a split
 screen, the two players face to face with big scoreboard names) or **Cozy** (games as boxes on a
-shelf, wood and paper, players as game pieces). It changes on every screen straight away, and the
-games themselves keep their own look.
+shelf, wood and paper, players as game pieces). It changes on every screen straight away. The themes
+dress the lobby, the frame around a match (the top bar, the winner's name, the scoreboards, the
+Rematch button), the leaderboard and the trophies; inside, each game keeps its own look.
 
 ### Update and redeploy from GitHub
 

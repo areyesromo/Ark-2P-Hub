@@ -14,7 +14,7 @@ let dataDir;
 
 before(async () => {
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-admin-'));
-  server = createApp({ port: 0, publicUrl: '', dataDir, adminPassword: '' });
+  server = createApp({ port: 0, publicUrl: '', dataDir });
   const addr = await server.listen();
   url = `http://127.0.0.1:${addr.port}`;
 });
@@ -24,13 +24,13 @@ after(async () => {
   fs.rmSync(dataDir, { recursive: true, force: true });
 });
 
-async function api(method, route, body, token) {
+async function api(method, route, body, headers = {}) {
   const res = await fetch(url + route, {
     method,
-    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` },
+    headers: { 'Content-Type': 'application/json', ...headers },
     body: body ? JSON.stringify(body) : undefined,
   });
-  return { status: res.status, body: await res.json() };
+  return { status: res.status, body: await res.json().catch(() => null) };
 }
 
 test('normalizeJoinUrl accepts what people type', () => {
@@ -48,36 +48,11 @@ test('a saved join address beats the TV origin; PUBLIC_URL beats both', () => {
   assert.equal(env.source, 'env');
 });
 
-test('ADMIN_PASSWORD from the environment works without setup', () => {
-  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-env-'));
-  const s = new Settings(dir, { envPassword: 'hunter2' });
-  assert.equal(s.hasPassword, true);
-  assert.equal(s.checkPassword('hunter2'), true);
-  assert.equal(s.checkPassword('nope'), false);
-  assert.throws(() => s.createPassword('other'));
-  fs.rmSync(dir, { recursive: true, force: true });
-});
-
-test('setup, login and changing the join address updates the TV QR live', async () => {
-  // First run: setup is needed and settings are locked.
-  let r = await api('GET', '/api/admin/status');
-  assert.equal(r.body.needsSetup, true);
-  assert.equal((await api('PUT', '/api/admin/settings', { joinUrl: 'http://1.2.3.4:3000' })).status, 401);
-
-  // Create the password (too short is rejected), and it can't be created twice.
-  assert.equal((await api('POST', '/api/admin/setup', { password: 'ab' })).status, 400);
-  r = await api('POST', '/api/admin/setup', { password: 'letmein' });
-  assert.ok(r.body.token);
-  assert.equal((await api('POST', '/api/admin/setup', { password: 'takeover' })).status, 409);
-
-  // Password is stored hashed, never in plain text.
-  const saved = fs.readFileSync(path.join(dataDir, 'settings.json'), 'utf8');
-  assert.ok(!saved.includes('letmein'));
-
-  // Login.
-  assert.equal((await api('POST', '/api/admin/login', { password: 'wrong' })).status, 401);
-  const { body: login } = await api('POST', '/api/admin/login', { password: 'letmein' });
-  assert.ok(login.token);
+test('Settings has no password: changing the join address updates the TV QR live', async () => {
+  const r0 = await api('GET', '/api/admin/status');
+  assert.equal(r0.status, 200);
+  assert.equal(r0.body.needsSetup, undefined);
+  assert.equal((await api('POST', '/api/admin/login', { password: 'x' })).status, 404, 'no logging in any more');
 
   // A TV that opened the hub via localhost (Docker / kiosk)...
   const tv = connect(url, { transports: ['websocket'], forceNew: true });
@@ -85,12 +60,12 @@ test('setup, login and changing the join address updates the TV QR live', async 
   const room = server.rooms.get(created.code);
   assert.notEqual(room.joinUrl, `http://192.168.1.50:3000/play/?room=${created.code}`);
 
-  // ...gets a new QR code as soon as the admin saves the address.
+  // ...gets a new QR code as soon as Settings saves the address.
   const newQr = new Promise((resolve) => tv.once('host:qr', resolve));
   const newState = new Promise((resolve) =>
     tv.on('room:state', (s) => s.joinUrl.startsWith('http://192.168.1.50:3000') && resolve(s)),
   );
-  r = await api('PUT', '/api/admin/settings', { joinUrl: '192.168.1.50:3000' }, login.token);
+  const r = await api('PUT', '/api/admin/settings', { joinUrl: '192.168.1.50:3000' });
   assert.deepEqual(r.body, { joinUrl: 'http://192.168.1.50:3000' });
   assert.match((await newQr).qr, /^data:image\/png;base64,/);
   const state = await newState;
@@ -98,16 +73,38 @@ test('setup, login and changing the join address updates the TV QR live', async 
   assert.equal(state.joinGuess, false);
 
   // Bad input is rejected; the setting survives a restart (new Settings on the same folder).
-  assert.equal((await api('PUT', '/api/admin/settings', { joinUrl: 'ftp://nope' }, login.token)).status, 400);
-  assert.equal(new Settings(dataDir, { envPassword: '' }).joinUrl, 'http://192.168.1.50:3000');
-
-  // Logout invalidates the token.
-  await api('POST', '/api/admin/logout', null, login.token);
-  assert.equal((await api('PUT', '/api/admin/settings', { joinUrl: '' }, login.token)).status, 401);
+  assert.equal((await api('PUT', '/api/admin/settings', { joinUrl: 'ftp://nope' })).status, 400);
+  assert.equal(new Settings(dataDir).joinUrl, 'http://192.168.1.50:3000');
   tv.close();
 });
 
-test('trophies: everyone\'s count, one player\'s whole set (locked ones too), and a reset behind the password', async () => {
+test('Settings changes only come from the hub\'s own pages (another website can\'t send them)', async () => {
+  // A plain form post (no JSON) or a request from another site is refused, and nothing changes.
+  const form = await fetch(url + '/api/admin/stats/reset', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body: 'x=1' });
+  assert.equal(form.status, 403);
+  const plain = await fetch(url + '/api/admin/settings', { method: 'PUT', headers: { 'Content-Type': 'text/plain' }, body: '{"joinUrl":""}' });
+  assert.equal(plain.status, 403);
+  assert.equal((await api('PUT', '/api/admin/settings', { joinUrl: '' }, { Origin: 'http://evil.example' })).status, 403);
+  assert.equal(new Settings(dataDir).joinUrl, 'http://192.168.1.50:3000');
+  // Nor can another site show the page in a frame.
+  const page = await fetch(url + '/admin/');
+  assert.equal(page.headers.get('x-frame-options'), 'SAMEORIGIN');
+  assert.match(page.headers.get('content-security-policy'), /frame-ancestors 'self'/);
+  // From the hub's own page (same host) it's fine.
+  assert.equal((await api('PUT', '/api/admin/settings', { joinUrl: '192.168.1.50:3000' }, { Origin: url })).status, 200);
+});
+
+test('an old password in the settings file is dropped', () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-old-'));
+  fs.writeFileSync(path.join(dir, 'settings.json'), JSON.stringify({ passwordHash: 'scrypt$aa$bb', joinUrl: 'http://10.0.0.2:3000' }));
+  const s = new Settings(dir);
+  s.setTheme('neon');
+  const saved = JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8'));
+  assert.deepEqual(saved, { joinUrl: 'http://10.0.0.2:3000', theme: 'neon' });
+  fs.rmSync(dir, { recursive: true, force: true });
+});
+
+test('trophies: everyone\'s count, one player\'s whole set (locked ones too), and a reset from Settings', async () => {
   let r = await api('GET', '/api/trophies');
   assert.equal(r.status, 200);
   assert.deepEqual(r.body.players, []);
@@ -116,45 +113,35 @@ test('trophies: everyone\'s count, one player\'s whole set (locked ones too), an
   assert.equal(r.body.count, 0);
   assert.equal(r.body.trophies.length, r.body.total);
   assert.ok(r.body.trophies.every((t) => t.how && t.at === null));
-  assert.equal((await api('POST', '/api/admin/trophies/reset')).status, 401);
-  const { body: login } = await api('POST', '/api/admin/login', { password: 'letmein' });
-  assert.deepEqual((await api('POST', '/api/admin/trophies/reset', null, login.token)).body, { ok: true });
-});
-
-test('login is rate limited after repeated wrong passwords', async () => {
-  let last;
-  for (let i = 0; i < 11; i++) last = await api('POST', '/api/admin/login', { password: `wrong${i}` });
-  assert.equal(last.status, 429);
+  assert.deepEqual((await api('POST', '/api/admin/trophies/reset')).body, { ok: true });
 });
 
 test('theme: picked in Settings, served as /theme.css, and every screen told when it changes', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-theme-'));
-  const hub = createApp({ port: 0, dataDir: dir, adminPassword: 'pw-for-tests', https: false });
+  const hub = createApp({ port: 0, dataDir: dir, https: false });
   const { port } = await hub.listen();
   const base = `http://127.0.0.1:${port}`;
-  const call = async (method, route, body, token) => {
-    const res = await fetch(base + route, { method, headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token || ''}` }, body: body ? JSON.stringify(body) : undefined });
+  const call = async (method, route, body) => {
+    const res = await fetch(base + route, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
     return { status: res.status, body: await res.json() };
   };
   const css = async () => (await fetch(base + '/theme.css')).text();
   try {
     assert.match(await css(), /default theme/, 'the original look: nothing to add');
     assert.equal((await call('GET', '/api/admin/status')).body.theme, 'default');
-    assert.equal((await call('PUT', '/api/admin/theme', { theme: 'neon' })).status, 401, 'behind the password');
-    const { token } = (await call('POST', '/api/admin/login', { password: 'pw-for-tests' })).body;
-    assert.equal((await call('PUT', '/api/admin/theme', { theme: 'disco' }, token)).status, 400);
+    assert.equal((await call('PUT', '/api/admin/theme', { theme: 'disco' })).status, 400);
     // A TV in a room hears about the change straight away.
     const tv = connect(base, { transports: ['websocket'], forceNew: true });
     await new Promise((resolve) => tv.emit('host:create', {}, resolve));
     const told = new Promise((resolve) => tv.once('hub:theme', resolve));
     for (const theme of ['neon', 'cozy']) {
-      assert.deepEqual((await call('PUT', '/api/admin/theme', { theme }, token)).body, { theme });
+      assert.deepEqual((await call('PUT', '/api/admin/theme', { theme })).body, { theme });
       assert.equal(await css(), fs.readFileSync(path.join('public', 'shared', 'themes', `${theme}.css`), 'utf8'));
     }
     assert.equal((await told).theme, 'neon');
     // Kept across a restart (the settings file), and back to the default.
     assert.equal(new Settings(dir).theme, 'cozy');
-    await call('PUT', '/api/admin/theme', { theme: 'default' }, token);
+    await call('PUT', '/api/admin/theme', { theme: 'default' });
     assert.match(await css(), /default theme/);
     tv.close();
   } finally {

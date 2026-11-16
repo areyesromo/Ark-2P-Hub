@@ -85,8 +85,20 @@
 
   // ---- lobby -----------------------------------------------------------
 
+  // When each seat last got a new player: the seat is "arrived" for a moment, for the themes' entrances.
+  const arrived = [{ name: null, at: 0 }, { name: null, at: 0 }];
+  const ARRIVE_MS = 900;
+
   function renderSeat(slot, p) {
     const el = $('seat-' + slot);
+    const a = arrived[slot];
+    const name = p ? p.name : null;
+    if (name !== a.name) {
+      a.name = name;
+      a.at = name ? Date.now() : 0;
+      if (name) setTimeout(function () { if (state) renderSeat(slot, state.players[slot]); }, ARRIVE_MS + 50);
+    }
+    const fresh = a.at && Date.now() - a.at < ARRIVE_MS ? ' arrived' : '';
     const label = '<span class="label">Player ' + (slot + 1) + '</span>';
     if (!p) {
       el.className = 'seat empty';
@@ -96,7 +108,7 @@
         (other && !other.bot ? '<span class="status">or play the 🤖 computer: ' + Ark.botLevelsHtml(null) + '</span>' : '');
       return;
     }
-    el.className = 'seat filled' + (p.connected ? '' : ' away');
+    el.className = 'seat filled' + (p.connected ? '' : ' away') + fresh;
     const confirming = kickArmed && kickArmed.slot === slot;
     el.innerHTML =
       '<button class="kick' + (confirming ? ' armed' : '') + '" data-kick="' + slot + '" title="Remove this player">' + (confirming ? 'Remove?' : '✕') + '</button>' +
@@ -412,6 +424,7 @@
     current = null;
     pendingView = null;
     lastView = null;
+    markMatch(null);
     Object.keys(lastPolled).forEach(function (k) { delete lastPolled[k]; });
     Object.keys(hubPads).forEach(function (k) { delete hubPads[k]; });
     $('stage').innerHTML = '';
@@ -486,6 +499,7 @@
     updateMusic();
     showHubSetup(setup ? msg.view : null);
     if (setup !== wasSetup) renderPadFooter();
+    markMatch(setup ? null : msg.view);
     if (setup) return; // the game hasn't started: the hub shows its setup screen
     if (current.renderer) current.renderer.update(msg.view);
     else {
@@ -493,6 +507,26 @@
       pendingAt = performance.now();
     }
   });
+
+  /**
+   * A match on the TV: body.in-game while one is on, body.match-over once it has ended, with
+   * data-winner (0, 1 or draw, for head-to-head games) and the winner's name in the top bar's
+   * #winner-tag. The default look leaves them be; the themes dress the frame and the finish.
+   */
+  function markMatch(v) {
+    const body = document.body;
+    const over = Boolean(v && v.phase === 'over');
+    body.classList.toggle('in-game', Boolean(v));
+    body.classList.toggle('match-over', over);
+    const w = over && 'winner' in v ? (v.winner === 0 || v.winner === 1 ? v.winner : 'draw') : null;
+    if (w === null) body.removeAttribute('data-winner');
+    else body.setAttribute('data-winner', String(w));
+    const p = typeof w === 'number' && state && state.players[w];
+    const text = w === 'draw' ? 'Draw' : p ? '🏆 ' + p.name + ' wins' : '';
+    const tag = $('winner-tag');
+    if (tag.textContent !== text) tag.textContent = text;
+    tag.classList.toggle('hidden', !text);
+  }
 
   // ---- the hub's setup screen ------------------------------------------
   // For games that don't draw their own (wrapped with withSetup on the

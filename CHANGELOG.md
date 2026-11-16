@@ -8,7 +8,13 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - 🎨 Pick a look for the TV and the phones in Settings (⚙ → Theme): **Default**, **Neon** (the two
   players face off across a split screen, with big scoreboard names) or **Cozy** (games as boxes on
-  a shelf, warm wood and paper, players as game pieces). Every screen changes straight away.
+  a shelf, warm wood and paper, players as game pieces). Every screen changes straight away, and
+  each theme shows a small picture of itself to choose from.
+- 🎨 Neon and Cozy also dress the match: the top bar during a game, the winner's name when it ends,
+  the scoreboards, the Rematch button, the leaderboard and trophy pages, and a little entrance when
+  a player sits down or a game opens.
+- ⚙ Settings has no password any more, so it can't be forgotten: Player 1's phone opens it from its
+  menu (⋯ → ⚙ Settings). It still only opens at home, never over the internet.
 
 ## 0.1.44
 

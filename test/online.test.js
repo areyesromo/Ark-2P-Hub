@@ -136,7 +136,7 @@ import { createApp } from '../server/app.js';
 
 async function server() {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-online-app-'));
-  const app = createApp({ port: 0, publicUrl: '', dataDir: dir, adminPassword: 'pw', https: false });
+  const app = createApp({ port: 0, publicUrl: '', dataDir: dir, https: false });
   const addr = await app.listen();
   const url = `http://127.0.0.1:${addr.port}`;
   return { app, url, dir, close: async () => { await app.close(); fs.rmSync(dir, { recursive: true, force: true }); } };
@@ -188,24 +188,21 @@ test('the remote screen: it sees the room like the TV, but can\'t start a game, 
 test('Settings: online play on or off, your own https address (checked), and stopping everything', async () => {
   const s = await server();
   try {
-    const call = async (method, route, body, token) => {
-      const res = await fetch(s.url + route, { method, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (token || '') }, body: body ? JSON.stringify(body) : undefined });
+    const call = async (method, route, body) => {
+      const res = await fetch(s.url + route, { method, headers: { 'Content-Type': 'application/json' }, body: body ? JSON.stringify(body) : undefined });
       return { status: res.status, body: await res.json() };
     };
-    assert.equal((await call('GET', '/api/admin/online')).status, 401);
-    const { body: login } = await call('POST', '/api/admin/login', { password: 'pw' });
-    const tok = login.token;
-    let r = await call('GET', '/api/admin/online', null, tok);
+    let r = await call('GET', '/api/admin/online', null);
     assert.equal(r.body.allowed, true);
     assert.equal(r.body.status, 'off');
-    assert.equal((await call('PUT', '/api/admin/online', { tunnelUrl: 'http://plain.example.com' }, tok)).status, 400);
-    r = await call('PUT', '/api/admin/online', { tunnelUrl: 'https://ark.example.com/play/' }, tok);
+    assert.equal((await call('PUT', '/api/admin/online', { tunnelUrl: 'http://plain.example.com' })).status, 400);
+    r = await call('PUT', '/api/admin/online', { tunnelUrl: 'https://ark.example.com/play/' });
     assert.equal(r.body.ownUrl, 'https://ark.example.com');
     assert.equal(r.body.status, 'on');
-    r = await call('PUT', '/api/admin/online', { allowed: false, tunnelUrl: '' }, tok);
+    r = await call('PUT', '/api/admin/online', { allowed: false, tunnelUrl: '' });
     assert.equal(r.body.allowed, false);
     assert.equal(r.body.ownUrl, '');
-    assert.equal((await call('POST', '/api/admin/online/stop', null, tok)).body.status, 'off');
+    assert.equal((await call('POST', '/api/admin/online/stop', null)).body.status, 'off');
   } finally {
     await s.close();
   }
@@ -219,8 +216,8 @@ test('over the internet, Settings stays shut whatever the spelling (case, double
     for (const p of ['/API/admin/status', '/api/Admin/status', '/Api/Admin/online', '//admin/', '/%61dmin/', '/ADMIN/', '/Admin/index.html']) {
       assert.equal((await fetch(s.url + p, { headers: tunnelHeaders })).status, 403, p);
     }
-    const setup = await fetch(s.url + '/API/ADMIN/setup', { method: 'POST', headers: { ...tunnelHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ password: 'takeover' }) });
-    assert.equal(setup.status, 403, 'no taking over a hub without a password');
+    const change = await fetch(s.url + '/API/ADMIN/theme', { method: 'PUT', headers: { ...tunnelHeaders, 'Content-Type': 'application/json' }, body: JSON.stringify({ theme: 'neon' }) });
+    assert.equal(change.status, 403, 'no changing settings from outside');
   } finally {
     await s.close();
   }
