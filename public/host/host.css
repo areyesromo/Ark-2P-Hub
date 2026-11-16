@@ -237,3 +237,6 @@ body.watching .icon-btn, body.watching .update-banner, body.watching .seat-avata
 body.watching #to-lobby, body.watching #quit, body.watching .kick, body.watching .bot-levels, body.watching .icon-btn,
 body.watching .join, body.watching .pad-hint, body.watching .update-banner, body.watching .whats-new { display: none !important; }
 body.watching .game-list { pointer-events: none; }
+
+/* The winner's name in the top bar at the end of a match (markMatch in host.js): the themes show it. */
+.winner-tag { display: none !important; }

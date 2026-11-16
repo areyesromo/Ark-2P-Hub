@@ -22,9 +22,47 @@
     label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; color: var(--muted); }
     label.check { flex-direction: row; align-items: center; gap: 10px; color: var(--text); }
     label.check input { width: 1.2em; height: 1.2em; }
-    .themes { display: flex; flex-direction: column; gap: 10px; }
-    .themes label.check { align-items: flex-start; line-height: 1.4; }
-    .themes label.check input { margin-top: 0.15em; flex: none; }
+    body.embed main { padding-top: 12px; }
+    body.embed .no-embed, body.embed h1 { display: none; }
+
+    /* Themes: a card each, with a small picture of the TV lobby in that look. */
+    @font-face { font-family: 'Ark Display'; src: url(/shared/fonts/big-shoulders-display-latin-900-normal.woff2) format('woff2'); font-weight: 900; }
+    @font-face { font-family: 'Ark Serif'; src: url(/shared/fonts/fraunces-latin-900-normal.woff2) format('woff2'); font-weight: 900; }
+    .themes { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; }
+    .theme-opt { position: relative; flex-direction: column; gap: 8px; padding: 8px; border-radius: var(--r-md); border: 2px solid var(--line); color: var(--text); cursor: pointer; font-weight: 400; }
+    .theme-opt:has(input:checked) { border-color: var(--good); box-shadow: 0 0 0 2px var(--good); }
+    .theme-opt:has(input:focus-visible) { outline: 3px solid var(--p1); outline-offset: 2px; }
+    .theme-opt input { position: absolute; opacity: 0; pointer-events: none; }
+    .theme-opt .txt { font-size: 0.85rem; line-height: 1.35; color: var(--muted); }
+    .theme-opt .txt strong { display: block; font-size: 1rem; color: var(--text); }
+    /* (literal colours: each picture shows its own theme, whatever this page is wearing) */
+    .mini { position: relative; display: grid; grid-template-columns: 1fr 1fr 1fr; grid-template-rows: auto auto 1fr; gap: 5px; aspect-ratio: 16 / 10; padding: 7px; border-radius: 6px; overflow: hidden; font-size: 10px; line-height: 1; }
+    .mini .t { grid-column: 1 / -1; font-size: 11px; font-weight: 900; }
+    .mini .t i { font-style: normal; }
+    .mini .s { display: flex; align-items: center; justify-content: center; padding: 6px 2px; font-weight: 900; }
+    .mini .s1 { grid-column: 1; }
+    .mini .s2 { grid-column: 3; }
+    .mini .s { grid-row: 2; }
+    .mini .g { grid-row: 3; border-radius: 3px; }
+    .mini-default { background: radial-gradient(ellipse at top, #1a1f3d, #0b0d17 70%); color: #eef0ff; font-family: system-ui, sans-serif; }
+    .mini-default .a { color: #22d3ee; } .mini-default .b { color: #f472b6; }
+    .mini-default .s { border-radius: 6px; background: #1b2036; }
+    .mini-default .s1 { border: 2px solid #22d3ee; } .mini-default .s2 { border: 2px solid #f472b6; }
+    .mini-default .g { background: #141829; border: 1px solid #2c3354; }
+    .mini-neon { background: linear-gradient(105deg, #0c3b4a 49.5%, #f4f1ff 49.5% 50.5%, #4d1a3d 50.5%); color: #f4f1ff; font-family: 'Ark Display', 'Arial Narrow', sans-serif; text-transform: uppercase; }
+    .mini-neon .a { color: #22d3ee; } .mini-neon .b { color: #f472b6; }
+    .mini-neon .s { font-size: 14px; background: #0d0b22; }
+    .mini-neon .s1 { box-shadow: inset 3px 0 0 #22d3ee; clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%); }
+    .mini-neon .s2 { box-shadow: inset -3px 0 0 #f472b6; clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%); }
+    .mini-neon .vs { grid-column: 2; grid-row: 2; align-self: center; text-align: center; font-size: 15px; font-style: italic; font-weight: 900; text-shadow: -1px 0 #22d3ee, 1px 0 #f472b6; }
+    .mini-neon .g { background: #1d1942; box-shadow: inset 3px 0 0 #6a63b0; border-radius: 1px; }
+    .mini-cozy { background: #1e1a24; color: #f2e7d3; font-family: 'Ark Serif', Georgia, serif; }
+    .mini-cozy .a { color: #d9a21e; }
+    .mini-cozy .s { gap: 4px; background: #f2e7d3; color: #231a17; border-radius: 5px; }
+    .mini-cozy .s::before { content: ''; width: 9px; height: 9px; border-radius: 50%; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.3); }
+    .mini-cozy .s1::before { background: #22d3ee; } .mini-cozy .s2::before { background: #f472b6; }
+    .mini-cozy .g { background: #f2e7d3; border-top: 4px solid #1d6b73; border-radius: 2px; box-shadow: 0 4px 0 #6b4430; margin-bottom: 4px; }
+    .mini-cozy .g + .g { border-top-color: #d9a21e; } .mini-cozy .g + .g + .g { border-top-color: #6c3a6a; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; }
     .row button { flex: 1; }
     p { margin: 0; line-height: 1.45; }
@@ -40,33 +78,22 @@
   <main>
     <h1 class="brand"><span class="p1">ARK</span> <span class="p2">2P</span> HUB <span class="muted">· Settings</span></h1>
 
-    <!-- First run: create the admin password -->
-    <form id="setup" class="panel hidden">
-      <h2>Create an admin password</h2>
-      <p class="muted">First-time setup. You'll need this password to change settings later.</p>
-      <label>Password <input type="password" id="setup-pw" autocomplete="new-password" required></label>
-      <label>Again <input type="password" id="setup-pw2" autocomplete="new-password" required></label>
-      <button class="primary" type="submit">Create password</button>
-      <p class="msg err" id="setup-msg"></p>
-    </form>
-
-    <!-- Login -->
-    <form id="login" class="panel hidden">
-      <h2>Admin login</h2>
-      <p class="muted note" id="login-note"></p>
-      <label>Password <input type="password" id="login-pw" autocomplete="current-password" required></label>
-      <button class="primary" type="submit">Log in</button>
-      <p class="msg err" id="login-msg"></p>
-    </form>
-
     <!-- Settings -->
     <form id="settings" class="panel hidden">
+      <p class="muted note no-embed">Settings opens on this hub's home network only (and from Player 1's phone: ⋯ → ⚙ Settings).</p>
       <h2>Theme</h2>
       <p class="muted">The look of the TV and the phones. It changes on every screen straight away.</p>
       <div class="themes" id="themes" role="radiogroup" aria-label="Theme">
-        <label class="check"><input type="radio" name="theme" value="default"> <span><strong>Default</strong>: the original look, dark blue with the two players' colours</span></label>
-        <label class="check"><input type="radio" name="theme" value="neon"> <span><strong>Neon</strong>: the two players face off across a split screen, with big scoreboard names</span></label>
-        <label class="check"><input type="radio" name="theme" value="cozy"> <span><strong>Cozy</strong>: games as boxes on a shelf, warm wood and paper, players as game pieces</span></label>
+        <!-- Each with a small picture of the TV lobby in that look (drawn in CSS below). -->
+        <label class="theme-opt"><input type="radio" name="theme" value="default">
+          <span class="mini mini-default" aria-hidden="true"><b class="t"><i class="a">ARK</i> <i class="b">2P</i></b><span class="s s1">Ana</span><span class="s s2">Ben</span><span class="g"></span><span class="g"></span><span class="g"></span></span>
+          <span class="txt"><strong>Default</strong> the original look, dark blue with the two players' colours</span></label>
+        <label class="theme-opt"><input type="radio" name="theme" value="neon">
+          <span class="mini mini-neon" aria-hidden="true"><b class="t"><i class="a">ARK</i> <i class="b">2P</i></b><span class="s s1">ANA</span><span class="vs">VS</span><span class="s s2">BEN</span><span class="g"></span><span class="g"></span><span class="g"></span></span>
+          <span class="txt"><strong>Neon</strong> the two players face off across a split screen, with big scoreboard names</span></label>
+        <label class="theme-opt"><input type="radio" name="theme" value="cozy">
+          <span class="mini mini-cozy" aria-hidden="true"><b class="t"><i class="a">ARK</i> <i class="b">2P</i></b><span class="s s1">Ana</span><span class="s s2">Ben</span><span class="g"></span><span class="g"></span><span class="g"></span></span>
+          <span class="txt"><strong>Cozy</strong> games as boxes on a shelf, warm wood and paper, players as game pieces</span></label>
       </div>
       <p class="msg" id="theme-msg"></p>
       <h2 style="margin-top:12px">Join address</h2>
@@ -106,7 +133,7 @@
       <p class="muted">Everyone's trophies, and their records against the computer. Clearing them can't be undone.</p>
       <div class="row"><button type="button" class="ghost" id="clear-trophies">Clear trophies and practice</button></div>
       <p class="msg" id="trophies-msg"></p>
-      <div class="row"><a class="btn ghost" href="/host/">Back to TV screen</a><button type="button" class="ghost" id="logout">Log out</button></div>
+      <div class="row no-embed"><a class="btn ghost" href="/host/">Back to TV screen</a></div>
     </form>
   </main>
   <script src="/admin/admin.js"></script>

@@ -34,7 +34,7 @@ html, body { font-family: 'Ark Text', system-ui, sans-serif; }
 body { background: radial-gradient(ellipse at top, #2e2531 0%, var(--bg) 65%) fixed; }
 
 /* ---- type ---- */
-h1, h2, h3, .brand, .vs, .seat .who, .game-card strong, .phone-games button strong, .hub-title,
+h1, h2, h3, .brand, .seats .vs, .seat .who, .game-card strong, .phone-games button strong, .hub-title,
 .join-code, .room-chip strong, .lobby-status, .me-name, .rematch, .ark-tourney .t-head {
   font-family: var(--serif);
 }
@@ -83,7 +83,7 @@ button.ghost, .btn.ghost { border-color: var(--line-strong); color: var(--text);
 #seat-1.filled .label { color: #be185d; }
 .seat.filled .kick { color: var(--ink-soft); border-color: #cbb9a0; }
 .seat .who { font-size: 2.3rem; font-weight: 900; }
-.vs { font-family: var(--serif); font-style: italic; font-weight: 700; font-size: 2.4rem; color: var(--mustard); }
+.seats .vs { font-family: var(--serif); font-style: italic; font-weight: 700; font-size: 2.4rem; color: var(--mustard); }
 .lobby.full .seat { padding-left: 4.6rem; }
 .lobby.full .seat::before { left: 1rem; width: 2.6rem; height: 2.6rem; margin-top: -1.3rem; }
 
@@ -152,3 +152,89 @@ button.ghost, .btn.ghost { border-color: var(--line-strong); color: var(--text);
 .phone-games button em.label.motion { color: #8a5a00; border-color: #8a5a00; }
 .phone-games button em.label.bot { color: var(--plum); border-color: var(--plum); }
 .phone-games .game-group { font-family: var(--serif); font-size: 1.25rem; color: var(--paper); }
+
+/* ---- during a match (TV): the top bar is a wooden plank; at the end, a paper ribbon for the winner ---- */
+body.in-game .topbar {
+  margin: -1.5rem -2.5rem 0; padding: 0.5rem 2.5rem;
+  background:
+    repeating-linear-gradient(90deg, rgba(0, 0, 0, 0.07) 0 2px, transparent 2px 41px),
+    linear-gradient(var(--wood-2), var(--wood));
+  box-shadow: 0 0.3rem 0 #2b1a13, 0 0.6rem 1rem rgba(0, 0, 0, 0.35);
+}
+body.in-game .topbar h1 { font-size: 1.7rem; }
+body.match-over[data-winner] .winner-tag:not(.hidden) {
+  display: flex !important; align-items: center; gap: 0.6rem; padding: 0.3rem 1.2rem 0.3rem 0.6rem; margin-left: 1rem;
+  font-family: var(--serif); font-weight: 900; font-size: 1.4rem; white-space: nowrap;
+  color: var(--ink); background: var(--paper); border-radius: 4px; transform: rotate(-2deg);
+  box-shadow: 0 0.25rem 0 rgba(0, 0, 0, 0.35);
+  animation: cozy-drop 0.55s cubic-bezier(0.3, 1.4, 0.5, 1) both;
+}
+body.match-over[data-winner="0"] .winner-tag::before,
+body.match-over[data-winner="1"] .winner-tag::before {
+  content: ''; flex: none; width: 1.6rem; height: 1.6rem; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), transparent 45%), var(--p1);
+  box-shadow: inset 0 -0.25rem 0 rgba(0, 0, 0, 0.28);
+}
+body.match-over[data-winner="1"] .winner-tag::before { background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), transparent 45%), var(--p2); }
+
+/* The scoreboard many games share: serif names, points as little game pieces. */
+.scoreboard .name { font-family: var(--serif); font-weight: 900; font-size: 1.6em; }
+.scoreboard .pip { width: 1em; height: 1em; }
+.scoreboard .pip.on { box-shadow: inset 0 -0.18em 0 rgba(0, 0, 0, 0.3); }
+.scoreboard .round { font-family: var(--serif); letter-spacing: 0.04em; text-transform: none; font-size: 1.15em; }
+
+/* Phones: the Rematch button is a big round token. */
+.rematch { border-radius: var(--r-pill); padding: 16px 40px; font-family: var(--serif); font-weight: 900; box-shadow: inset 0 -5px 0 rgba(0, 0, 0, 0.22), 0 4px 0 #2b1a13; }
+
+/* ---- leaderboard and trophies: a paper score pad, and medals ---- */
+.page-stats .panel {
+  background: repeating-linear-gradient(transparent 0 2.1rem, rgba(29, 107, 115, 0.18) 2.1rem calc(2.1rem + 1px)), var(--paper);
+  color: var(--ink); border: 0; border-radius: 4px; box-shadow: 0 0.4rem 0 #2b1a13, 0 0.8rem 1.2rem rgba(0, 0, 0, 0.4);
+}
+.page-stats .panel h2 { font-family: var(--serif); color: var(--ink); }
+.page-stats .panel th, .page-stats .panel .muted, .page-stats .panel .rank, .page-stats .panel .vs, .page-stats .panel .when { color: var(--ink-soft); }
+.page-stats .panel th { font-family: var(--serif); text-transform: none; letter-spacing: 0; font-size: 0.95rem; }
+.page-stats .panel tbody tr + tr td { border-top-color: #d8c8ae; }
+.page-stats .panel .win { color: var(--teal); }
+.page-stats .panel .gold { color: #8a5a00; }
+.page-stats .panel .bar { background: var(--mustard); }
+.page-stats .panel .tag { background: #e4d6bd; color: var(--ink-soft); }
+.page-stats .panel tr:has(.rank.gold) td { background: color-mix(in srgb, var(--mustard) 22%, transparent); }
+.page-stats .panel.empty { color: var(--ink-soft); }
+.page-trophies .who { font-family: var(--serif); font-weight: 900; }
+.page-trophies .trophy { background: var(--paper); color: var(--ink); border: 0; border-radius: 6px; box-shadow: 0 0.3rem 0 #2b1a13; }
+.page-trophies .trophy .how { color: var(--ink-soft); }
+.page-trophies .trophy .when { color: var(--teal); }
+.page-trophies .trophy strong { font-family: var(--serif); font-weight: 900; }
+.page-trophies .trophy .icon {
+  display: flex; align-items: center; justify-content: center; flex: none; width: 3.4rem; height: 3.4rem; font-size: 1.8rem; border-radius: 50%;
+  background: radial-gradient(circle at 35% 30%, #f3d27a, var(--mustard) 60%); box-shadow: inset 0 -0.3rem 0 rgba(0, 0, 0, 0.22), 0 0 0 3px #8a5a00;
+}
+.page-trophies .trophy.locked { opacity: 0.7; background: transparent; color: var(--paper); box-shadow: none; outline: 2px dashed var(--line-strong); outline-offset: -2px; }
+.page-trophies .trophy.locked .how { color: var(--muted); }
+.page-trophies .trophy.locked .icon { background: transparent; box-shadow: none; border: 2px dashed var(--line-strong); }
+
+/* ---- motion: a player's piece drops onto their seat, a game comes off the shelf ---- */
+@keyframes cozy-drop {
+  0% { transform: translateY(-2.5rem) rotate(-2deg); opacity: 0; }
+  60% { transform: translateY(0.3rem) rotate(-2deg); opacity: 1; }
+  100% { transform: translateY(0) rotate(-2deg); }
+}
+@keyframes cozy-piece {
+  0% { transform: translateY(-4rem); }
+  55% { transform: translateY(0.4rem); }
+  75% { transform: translateY(-0.5rem); }
+  100% { transform: translateY(0); }
+}
+@keyframes cozy-shelf {
+  0% { transform: translateY(1.5rem) scale(0.97); opacity: 0; }
+  100% { transform: none; opacity: 1; }
+}
+.seat.arrived::before { animation: cozy-piece 0.6s ease-out both; }
+/* (the game's own stage only fades: games measure their canvas as it appears) */
+.hub-setup:not(.hidden) { animation: cozy-shelf 0.4s cubic-bezier(0.3, 1.2, 0.5, 1) both; }
+#stage:not(.hidden) { animation: cozy-fade 0.3s ease-out both; }
+@keyframes cozy-fade { from { opacity: 0; } }
+
+/* The top bar stays on one line, whatever the font. */
+.topbar h1, .room-chip, .topbar button, .topbar .btn { white-space: nowrap; }

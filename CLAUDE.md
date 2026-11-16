@@ -8,7 +8,7 @@ don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, tex
 
 ## Commands
 
-- `npm run dev`: server with `--watch` on http://localhost:3000 (TV at `/`, phones at `/play/`, admin at `/admin/`)
+- `npm run dev`: server with `--watch` on http://localhost:3000 (TV at `/`, phones at `/play/`, Settings at `/admin/`, no password: home network only, and from Player 1's phone menu)
 - `npm test`: every `test/*.test.js` (node:test, no extra runner). Needs `npm ci` first (`ELECTRON_SKIP_BINARY_DOWNLOAD=1` skips Electron)
 - `npm run lint`: ESLint (`eslint.config.js`: real mistakes only, not style); CI runs it. A new shared browser global (`window.ArkSomething`) goes in its `ARK` list
 - `npm run test:fast`: everything but the slow computer-vs-computer files (`bots-games*`, `kart-race-cpu`), for quick checks
@@ -58,8 +58,9 @@ In UI styles, use them instead of literal values:
 - Radii: `--r-sm` 8px, `--r-md` 12px, `--radius` 18px, `--r-pill`. Type: `--fs-sm` … `--fs-2xl`.
 
 Themes (picked in Settings, served as `/theme.css`) live in `public/shared/themes/<name>.css`: they override
-these tokens and restyle the hub's own screens (lobby, seats, game list, phone header), so a game that sticks
-to the tokens follows the theme for free. Their fonts are bundled in `public/shared/fonts/` (no internet needed).
+these tokens and restyle the hub's own screens (lobby, seats, game list, phone header, leaderboard, trophies) and
+the frame around a match (`body.in-game`, `body.match-over[data-winner]`, `#winner-tag`, the shared `.scoreboard`
+and `.rematch`), so a game that sticks to the tokens and shared pieces follows the theme for free. Their fonts are bundled in `public/shared/fonts/` (no internet needed).
 
 Keep literal colours for game objects whose colour is the thing itself (a red wire, a Simon pad, a traffic
 light, a gold coin), so a palette change doesn't repaint the game. Phones get the shared `.rematch` button
