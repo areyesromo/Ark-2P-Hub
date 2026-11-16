@@ -152,9 +152,15 @@ const GAMES = [
   withSetup({ ...rockPaperScissors, bot: rpsBot }, firstTo('Points to win', [3, 5, 7])),
   withSetup({ ...pong, bot: pongBot }, firstTo('Points to win', [5, 3, 7, 11])),
   withSetup({ ...tron, bot: tronBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
-  withSetup({ ...airHockey, bot: airHockeyBot }, firstTo('Goals to win', [7, 5, 10])),
+  withSetup({ ...airHockey, bot: airHockeyBot }, {
+    ...firstTo('Goals to win', [7, 5, 10]),
+    ownGoals: { title: 'Own goals', values: ['count', 'bounce'], label: (k) => (k === 'count' ? 'Count, as in real air hockey' : "Don't count: your goal bounces it out") },
+  }),
   withSetup({ ...volleyBlobs, bot: volleyBlobsBot }, firstTo('Points to win', [7, 5, 11])),
-  withSetup({ ...brickDuel, bot: brickDuelBot }, { rows: { title: 'Wall', values: [5, 3, 7], label: (n) => `${n} rows of bricks` } }),
+  withSetup({ ...brickDuel, bot: brickDuelBot }, {
+    rows: { title: 'Wall', values: [5, 3, 7], label: (n) => `${n} rows of bricks` },
+    misses: { title: 'Missed ball', values: ['brick', 'moment'], label: (k) => (k === 'brick' ? 'A brick comes back' : 'Just a moment lost') },
+  }),
   withSetup({ ...asteroidDuel, bot: asteroidDuelBot, steers: true }, firstTo(ROUNDS_WON, [3, 2, 5])),
   withSetup({ ...rallyTennis, bot: rallyTennisBot }, firstTo('Games to win', [4, 3, 6])),
   withSetup({ ...blockBattle, bot: blockBattleBot }, firstTo(ROUNDS_WON, [2, 1, 3])),

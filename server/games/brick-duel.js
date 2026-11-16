@@ -40,6 +40,9 @@ export class BrickDuel {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
     this.rows = settingOf(ctx, 'rows', ROWS);
+    // A missed ball puts back the last brick you broke (or, the old way, only costs a moment), so
+    // keeping the ball in play counts.
+    this.missCostsBrick = settingOf(ctx, 'misses', 'brick') === 'brick';
     this.rng = rng;
     this.timer = null;
   }
@@ -72,6 +75,7 @@ export class BrickDuel {
         balls: [],
         newBalls: [], // extra balls from ⚪ bricks, added once this step's balls have moved
         broken: 0,
+        brokenAt: [], // where each brick you broke was, latest last (a missed ball puts one back)
         serves: 0,
         shrunkUntil: -Infinity,
       };
@@ -203,8 +207,12 @@ export class BrickDuel {
     });
     side.balls.push(...side.newBalls);
     side.newBalls = [];
-    // Missed every ball: one comes back on the paddle after a moment.
-    if (!side.balls.length) side.balls.push(this.heldBall(side, now + TIMING.respawnMs));
+    // Missed every ball: one comes back on the paddle after a moment, and (the usual rule) the last
+    // brick you broke goes back up.
+    if (!side.balls.length) {
+      side.balls.push(this.heldBall(side, now + TIMING.respawnMs));
+      if (this.missCostsBrick) this.brickBack(side);
+    }
   }
 
   serve(side, b) {
@@ -248,7 +256,19 @@ export class BrickDuel {
       }
       side.bricks.delete(k);
       side.broken++;
+      side.brokenAt.push({ r: brick.r, c: brick.c });
       if (brick.p) this.usePower(slot, brick.p);
+      return;
+    }
+  }
+
+  /** A missed ball: the last brick broken goes back (a plain one; a spot a new row has filled is skipped). */
+  brickBack(side) {
+    while (side.brokenAt.length) {
+      const { r, c } = side.brokenAt.pop();
+      if (side.bricks.has(key(r, c))) continue;
+      side.bricks.set(key(r, c), { r, c, p: null });
+      side.broken--;
       return;
     }
   }

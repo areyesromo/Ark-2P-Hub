@@ -54,6 +54,9 @@ export class AirHockey {
   constructor(ctx) {
     this.ctx = ctx;
     this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
+    // Own goals count (as in real air hockey), or not: then your own goal mouth is a wall to a puck
+    // you touched last, so a save that goes wrong bounces out instead of scoring for them.
+    this.ownGoals = settingOf(ctx, 'ownGoals', 'count') === 'count';
     this.timer = null;
   }
 
@@ -65,6 +68,7 @@ export class AirHockey {
     this.controls = [{ mode: 'axis', x: 0, y: 0 }, { mode: 'axis', x: 0, y: 0 }];
     this.hands = [{ vx: 0, vy: 0 }, { vx: 0, vy: 0 }]; // a hand's speed, kept from tick to tick
     this.puck = { x: HALF, y: FIELD.h / 2, vx: 0, vy: 0 };
+    this.lastTouch = null; // whose mallet hit the puck last (for "own goals don't count")
     this.frame = 0;
     this.last = this.ctx.now();
     this.enter('countdown', TIMING.countdownMs);
@@ -118,7 +122,7 @@ export class AirHockey {
     if (p.x < -r) return this.goal(1);
     if (p.x > FIELD.w + r) return this.goal(0);
 
-    this.mallets.forEach((m) => this.collide(m));
+    this.mallets.forEach((m, slot) => this.collide(m, slot));
     this.walls(); // (a mallet pinning the puck in a corner can't push it through the wall)
     this.unstick(dt);
   }
@@ -155,17 +159,19 @@ export class AirHockey {
       p.vy = -Math.abs(p.vy) * PHYSICS.wallBounce;
     }
     const inMouth = Math.abs(p.y - FIELD.h / 2) < FIELD.goalH / 2;
-    if (p.x < r && !inMouth) {
+    // (with own goals off, your goal is shut to a puck you touched last)
+    const shut = (slot) => !this.ownGoals && this.lastTouch === slot;
+    if (p.x < r && (!inMouth || shut(0))) {
       p.x = r;
       p.vx = Math.abs(p.vx) * PHYSICS.wallBounce;
-    } else if (p.x > FIELD.w - r && !inMouth) {
+    } else if (p.x > FIELD.w - r && (!inMouth || shut(1))) {
       p.x = FIELD.w - r;
       p.vx = -Math.abs(p.vx) * PHYSICS.wallBounce;
     }
   }
 
   /** Puck vs mallet: push the puck out, then bounce it off the (moving) mallet. */
-  collide(m) {
+  collide(m, slot) {
     const p = this.puck;
     const min = FIELD.malletR + FIELD.puckR;
     const dx = p.x - m.x;
@@ -181,6 +187,7 @@ export class AirHockey {
       p.vx -= (1 + PHYSICS.hitBounce) * vn * nx;
       p.vy -= (1 + PHYSICS.hitBounce) * vn * ny;
     }
+    this.lastTouch = slot;
     const speed = Math.hypot(p.vx, p.vy);
     if (speed > PHYSICS.puckMax) {
       p.vx *= PHYSICS.puckMax / speed;
@@ -230,6 +237,7 @@ export class AirHockey {
     // The puck restarts, still, in the half of the player who conceded.
     const conceder = 1 - scorer;
     this.puck = { x: conceder === 0 ? FIELD.w / 4 : (FIELD.w * 3) / 4, y: FIELD.h / 2, vx: 0, vy: 0 };
+    this.lastTouch = null;
     if (this.scores[scorer] >= this.winScore) {
       this.winner = scorer;
       if (this.timer) this.ctx.clearTimeout(this.timer);
