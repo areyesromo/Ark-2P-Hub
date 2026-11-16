@@ -88,7 +88,7 @@
       if (v.hands) {
         html += '<p class="ld-info">Their dice</p><div class="ld-mine ld-theirs">' + v.hands[1 - mine].map(function (d) { return ArkDice.html(d, look(d)); }).join('') + '</div>';
       }
-      if (v.phase === 'over') html += '<div class="ld-current big">' + (v.winner === mine ? 'You win! 🏆' : 'You lose') + '</div><button class="primary ld-rematch">Rematch</button>';
+      if (v.phase === 'over') html += '<div class="ld-current big ark-result">' + (v.winner === mine ? 'You win! 🏆' : 'You lose') + '</div><button class="primary ld-rematch">Rematch</button>';
     }
     root.innerHTML = html;
   }

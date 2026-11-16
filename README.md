@@ -394,7 +394,9 @@ Settings (`/admin/`) also picks the look of the TV and the phones: **Default**, 
 screen, the two players face to face with big scoreboard names) or **Cozy** (games as boxes on a
 shelf, wood and paper, players as game pieces). It changes on every screen straight away. The themes
 dress the lobby, the frame around a match (the top bar, the winner's name, the scoreboards, the
-Rematch button), the leaderboard and the trophies; inside, each game keeps its own look.
+Rematch button, each game's "You win!"), the leaderboard and the trophies, and give the TV its own
+sound when a player sits down (chalk in Neon, a wooden knock in Cozy). Player 1 can also change it
+on the TV with a controller: **RT** in the lobby, ← → to choose, A to pick.
 
 ### Update and redeploy from GitHub
 

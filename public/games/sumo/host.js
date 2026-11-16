@@ -39,7 +39,7 @@
       }
     } else if (v.phase === 'over') {
       big = '🏆';
-      sub = nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>' +
+      sub = '<span class="ark-result">' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong></span>' +
         '<br>Rematch or head back to the lobby from your phones or controllers.';
     } else if (v.phase === 'play' && v.ring.shrinking) {
       sub = '<span class="shrink">⚠ The ring is shrinking!</span>';

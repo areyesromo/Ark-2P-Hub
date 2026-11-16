@@ -27,7 +27,7 @@
     const dir = v.you === 0 ? '↔ left-right' : '↕ front-back';
     let status;
     if (v.phase === 'intro') status = 'You drop the blocks sliding <strong>' + dir + '</strong>. Tap as one is right over the tower.';
-    else if (v.phase === 'over') status = '<span class="big">' + (v.stars ? '⭐'.repeat(v.stars) : 'Down it comes') + '</span><br>' + v.height + ' floors';
+    else if (v.phase === 'over') status = '<span class="big ark-result">' + (v.stars ? '⭐'.repeat(v.stars) : 'Down it comes') + '</span><br>' + v.height + ' floors';
     else if (v.last && v.phase === 'settle') status = v.last.kind === 'perfect' ? '✨ Perfect!' + (v.combo >= 3 ? ' It grows back.' : '') : v.last.kind === 'miss' ? '💥 Missed: a life gone' : 'Trimmed: the overhang falls off';
     else status = mine ? '<strong>Your drop</strong> · watch the TV' : 'Their drop…';
     const hearts = '❤️'.repeat(Math.max(0, v.lives)) + '🖤'.repeat(Math.max(0, v.maxLives - v.lives));

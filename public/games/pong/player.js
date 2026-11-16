@@ -114,7 +114,7 @@
     else if (v.phase === 'point') status = v.lastScorer === you ? 'You scored! 🎉' : 'They scored';
     else if (v.phase === 'play') status = 'Drag left and right to move your paddle';
     else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     const key = score + status + v.phase;

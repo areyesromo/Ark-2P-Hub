@@ -63,7 +63,7 @@
       html = '<div class="panel small"><div class="big">' + (r.draw ? '🤝' : v.scores[0] + ' : ' + v.scores[1]) + '</div><div class="sub">' +
         (r.draw ? 'Both blown up: a draw!' : nameOf(v, r.winner) + ' takes round ' + v.round + '!') + '</div></div>';
     } else if (v.phase === 'over') {
-      html = '<div class="panel"><div class="title">🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</div>' +
+      html = '<div class="panel"><div class="title ark-result">🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</div>' +
         '<div class="sub">Rematch, change the settings (🎮 Y) or head back to the lobby from your phones or controllers.</div></div>';
     }
     if (html === overlayKey) return;

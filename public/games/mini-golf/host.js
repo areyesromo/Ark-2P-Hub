@@ -53,7 +53,7 @@
       html = '<div class="panel small"><div class="sub">' + holeLine(v, 0) + '<br>' + holeLine(v, 1) + '</div></div>';
     } else if (v.phase === 'over') {
       const t = v.scores;
-      html = '<div class="panel"><div class="big-title">' + (v.draw ? '🤝 A tie!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
+      html = '<div class="panel"><div class="big-title ark-result">' + (v.draw ? '🤝 A tie!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
         '<div class="sub">' + nameOf(v, 0) + ' <strong>' + t[0] + '</strong> strokes · ' + nameOf(v, 1) + ' <strong>' + t[1] + '</strong> strokes' +
         '<br>Rematch, change the holes (🎮 Y) or head back to the lobby from your phones or controllers.</div></div>';
     } else if (v.phase === 'play' && v.timeLeftMs < 15000) {

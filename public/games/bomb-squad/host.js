@@ -65,7 +65,7 @@
           (h.defused ? '✅ ' + clock(h.timeLeftMs) + ' left' : '💥 ' + (h.reason === 'time' ? 'out of time' : '3 strikes')) +
           '</td><td>' + (h.stars ? new Array(h.stars + 1).join('⭐') : '—') + '</td></tr>';
       }).join('');
-      return '<div class="panel"><div class="title">' + v.stars + ' of ' + v.maxStars + ' ⭐</div>' +
+      return '<div class="panel"><div class="title ark-result">' + v.stars + ' of ' + v.maxStars + ' ⭐</div>' +
         '<table>' + rows + '</table><p class="muted">Rematch on a phone (or ⚙ change the settings).</p></div>';
     }
     return '';

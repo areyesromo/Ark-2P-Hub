@@ -12,7 +12,7 @@
       return '<div class="big ' + (w === me ? 'ok' : w === null ? '' : 'bad') + '">' + (w === null ? '🤝 A draw' : w === me ? '⭐ You win it!' : 'They win it') + '</div>';
     },
     over: function (v, me) {
-      return '<div class="big">' + (v.winner === me ? 'You win the party! 🏆' : 'You lose') + '</div><div class="muted">' + v.wins[me] + ' – ' + v.wins[1 - me] + '</div>';
+      return '<div class="big ark-result">' + (v.winner === me ? 'You win the party! 🏆' : 'You lose') + '</div><div class="muted">' + v.wins[me] + ' – ' + v.wins[1 - me] + '</div>';
     },
     buzz: function (v, me) { return v.lastResult.winner === me ? [30, 30, 30] : 40; },
   };

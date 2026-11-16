@@ -79,7 +79,7 @@
       else if (r.reason === 'time') status = r.roundWinner === you ? 'Time! You had more armour 🎉' : 'Time! They had more armour';
       else status = r.roundWinner === you ? 'Destroyed them! Round to you 🎉' : 'You were destroyed 💥';
     } else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     fireBtn.classList.toggle('reloading', !v.ready);

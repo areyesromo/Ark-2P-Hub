@@ -80,7 +80,7 @@
           left.map(function (c) { return C.face(c, 'small'); }).join('') + '</div></div>';
       }).join('');
       const head = v.phase === 'over'
-        ? '🏆 ' + nameOf(v, v.winner) + ' wins' + (v.target ? ' <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>' : '') + '!'
+        ? '<span class="ark-result">🏆 ' + nameOf(v, v.winner) + ' wins' + (v.target ? ' <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>' : '') + '!</span>'
         : r.stuck ? 'Nobody can go on: ' + nameOf(v, r.winner) + ' holds fewer points <strong>+' + r.points + '</strong>'
           : nameOf(v, r.winner) + ' is out! <strong>+' + r.points + '</strong>';
       return '<div class="ce-end"><div class="head">' + head + '</div>' + hands +

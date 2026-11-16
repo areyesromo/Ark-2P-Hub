@@ -60,7 +60,9 @@ In UI styles, use them instead of literal values:
 Themes (picked in Settings, served as `/theme.css`) live in `public/shared/themes/<name>.css`: they override
 these tokens and restyle the hub's own screens (lobby, seats, game list, phone header, leaderboard, trophies) and
 the frame around a match (`body.in-game`, `body.match-over[data-winner]`, `#winner-tag`, the shared `.scoreboard`
-and `.rematch`), so a game that sticks to the tokens and shared pieces follows the theme for free. Their fonts are bundled in `public/shared/fonts/` (no internet needed).
+and `.rematch`), so a game that sticks to the tokens and shared pieces follows the theme for free. A game's own
+finish line ("You win! 🏆", "X wins the match!") carries `class="ark-result"` (plus `won` / `lost` / `draw` where
+it knows) so the themes can dress it: give a new game's finish the same. Their fonts are bundled in `public/shared/fonts/` (no internet needed).
 
 Keep literal colours for game objects whose colour is the thing itself (a red wire, a Simon pad, a traffic
 light, a gold coin), so a palette change doesn't repaint the game. Phones get the shared `.rematch` button

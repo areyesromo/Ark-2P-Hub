@@ -54,7 +54,7 @@
 
   function status(v) {
     if (v.phase === 'over') {
-      return '<div class="title">' + (v.draw ? '🤝 A draw!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
+      return '<div class="title ark-result">' + (v.draw ? '🤝 A draw!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
         '<p class="muted">Rematch on a phone or press A (or ⚙ change the settings).</p>';
     }
     const last = v.last ? '<div class="sub">' + nameOf(v, v.last.by) + ' scored <strong>' + v.last.points + '</strong> in ' + esc(v.last.box) + '</div>' : '';

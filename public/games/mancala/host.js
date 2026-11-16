@@ -31,7 +31,7 @@
       return v.result.draw ? 'A draw: ' + st[0] + ' each' : nameOf(v, v.result.winner) + ' wins the round ' + Math.max(st[0], st[1]) + ' : ' + Math.min(st[0], st[1]) + '! 🎉';
     }
     if (v.phase === 'over') {
-      return '🏆 ' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>' +
+      return '<span class="ark-result">🏆 ' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong></span>' +
         '<div class="sub">Rematch or head back to the lobby from your phones or controllers.</div>';
     }
     return '';

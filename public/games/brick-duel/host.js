@@ -59,7 +59,7 @@
       sub = 'Break your wall first!';
     } else if (v.phase === 'over') {
       big = '🏆';
-      sub = (v.winner === null ? 'A draw!' : nameOf(v, v.winner) + ' wins!') +
+      sub = '<span class="ark-result">' + (v.winner === null ? 'A draw!' : nameOf(v, v.winner) + ' wins!') + '</span>' +
         '<br>Rematch or head back to the lobby from your phones or controllers.';
     }
     const key = big + '|' + sub;

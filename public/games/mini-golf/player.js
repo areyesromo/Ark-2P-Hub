@@ -131,8 +131,8 @@
     if (v.phase === 'over') {
       const t = v.scores;
       const line = 'You ' + t[me] + ' strokes · them ' + t[1 - me];
-      if (v.draw) return '<span class="big">A tie! 🤝</span><br>' + line;
-      return '<span class="big ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span><br>' + line;
+      if (v.draw) return '<span class="big ark-result draw">A tie! 🤝</span><br>' + line;
+      return '<span class="big ark-result ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span><br>' + line;
     }
     const b = v.balls[me];
     const head = 'Hole ' + v.holeNo + '/' + v.holeCount + ' · ' + v.hole.name + ' · par ' + v.hole.par;

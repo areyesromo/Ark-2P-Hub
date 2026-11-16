@@ -36,7 +36,7 @@
     const score = '<div class="score">You ' + v.scores[me] + ' – ' + v.scores[1 - me] + ' Them' + (v.target ? ' · first to ' + v.target : '') + '</div>';
     if (v.phase === 'over') {
       const won = v.winner === me;
-      return score + '<div class="ce-wait"><div class="outcome ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</div>' +
+      return score + '<div class="ce-wait"><div class="outcome ark-result ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</div>' +
         '<button class="primary rematch">Rematch</button></div>';
     }
     if (v.phase === 'handEnd') {

@@ -66,7 +66,7 @@
     if (v.phase === 'countdown') status = 'Starting in ' + v.countdown + '…';
     else if (v.phase === 'play') status = v.shrunk ? '🔻 Your paddle is shrunk!' : 'Drag left and right to move your paddle';
     else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : v.winner === null ? '' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : v.winner === null ? 'draw' : 'lost');
       status = v.winner === null ? 'A draw' : v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     const key = score + status + v.phase;

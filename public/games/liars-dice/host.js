@@ -44,7 +44,7 @@
     const call = nameOf(v, r.caller) + ' called <strong>Liar!</strong> on ' + bidHtml(r.bid);
     const truth = 'There ' + (r.actual === 1 ? 'is' : 'are') + ' <strong>' + r.actual + '</strong>' + (v.wild ? ' (ones are wild)' : '');
     const out = v.phase === 'over'
-      ? '<div class="title">🏆 ' + nameOf(v, v.winner) + ' wins!</div>'
+      ? '<div class="title ark-result">🏆 ' + nameOf(v, v.winner) + ' wins!</div>'
       : '<div class="sub">' + nameOf(v, r.loser) + ' loses a die</div>';
     return '<div class="sub">' + call + '</div><div class="sub">' + truth + '</div>' + out +
       (v.phase === 'over' ? '<p class="muted">Rematch on a phone (or ⚙ change the settings).</p>' : '');

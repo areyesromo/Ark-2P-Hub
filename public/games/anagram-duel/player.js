@@ -50,7 +50,7 @@
       const r = v.result;
       if (r && r.winner !== null) html = '<div class="big ' + (r.winner === you ? 'won' : 'lost') + '">' + (r.winner === you ? 'Got it! ' : 'Too slow: ') + esc(r.word.toUpperCase()) + '</div>';
       else if (r) html = '<div class="big">' + esc(r.answer.toUpperCase()) + '</div><div class="sub">Nobody found it</div>';
-      if (v.phase === 'over') html += '<div class="big ' + (v.winner === you ? 'won' : 'lost') + '">' + (v.winner === you ? 'You win! 🏆' : 'You lose') + '</div><button class="primary rematch">Rematch</button>';
+      if (v.phase === 'over') html += '<div class="big ark-result ' + (v.winner === you ? 'won' : 'lost') + '">' + (v.winner === you ? 'You win! 🏆' : 'You lose') + '</div><button class="primary rematch">Rematch</button>';
     }
     root.innerHTML = score + '<div class="ad-main">' + html + '</div>';
     if (shake) {

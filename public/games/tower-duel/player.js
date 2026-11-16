@@ -164,7 +164,7 @@
     }
     if (v.phase === 'over') {
       const won = v.winner === v.you;
-      root.innerHTML = top + '<div class="td-wait"><div class="outcome ' + (v.winner === null ? '' : won ? 'won' : 'lost') + '">' +
+      root.innerHTML = top + '<div class="td-wait"><div class="outcome ark-result ' + (v.winner === null ? '' : won ? 'won' : 'lost') + '">' +
         (v.winner === null ? 'Draw! 🤝' : won ? 'You win! 🏆' : 'You lose') + '</div><button class="primary rematch">Rematch</button></div>';
       return money(s);
     }

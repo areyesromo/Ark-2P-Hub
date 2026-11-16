@@ -59,7 +59,7 @@
       if (r.draw) status = r.reason === 'time' ? "Time's up: draw" : 'Both fell: draw';
       else status = r.winner === you ? 'Pushed them out! Round to you 🎉' : 'You fell off 😵';
     } else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     const key = v.scores.join(':') + status + v.phase;

@@ -467,6 +467,8 @@
     // What's new is a lobby thing (see showNews).
     if (s.phase === 'playing' && newsOpen) closeNews();
     if (s.phase !== 'playing' && newsWaiting) showNews(newsWaiting);
+    // The theme picker closes when a game starts or Player 1's controller leaves the seat.
+    if (themeSheet && (s.phase === 'playing' || !padSeats[themeSheet.pad] || padSeats[themeSheet.pad].slot !== 0)) closeThemes();
     // The picker follows its seat: closed when that player leaves or a game starts.
     if (picker) {
       const p = s.players[picker.slot];
@@ -700,12 +702,74 @@
     renderPadHint();
   }
 
+  // ---- the theme, picked with Player 1's controller (RT, or a click of the right stick) ----
+  // The phones' Player 1 has Settings for it; here the controller moves round the three looks.
+
+  const THEMES = [
+    { id: 'default', name: 'Default', note: 'the original look' },
+    { id: 'neon', name: 'Neon', note: 'a split screen, scoreboard names' },
+    { id: 'cozy', name: 'Cozy', note: 'boxes on a shelf, wood and paper' },
+  ];
+  let themeSheet = null; // { pad, focus } while it's open
+
+  /** The look the TV is wearing now: each theme's stylesheet names itself (--ark-theme). */
+  function currentTheme() {
+    return getComputedStyle(document.documentElement).getPropertyValue('--ark-theme').trim() || 'default';
+  }
+
+  function themeMini(id) {
+    const cap = id === 'neon' ? function (s) { return s.toUpperCase(); } : function (s) { return s; };
+    return '<span class="mini mini-' + id + '" aria-hidden="true"><b class="t"><i class="a">ARK</i> <i class="b">2P</i></b>' +
+      '<span class="s s1">' + cap('Ana') + '</span>' + (id === 'neon' ? '<span class="vs">VS</span>' : '') + '<span class="s s2">' + cap('Ben') + '</span>' +
+      '<span class="g"></span><span class="g"></span><span class="g"></span></span>';
+  }
+
+  function renderThemes() {
+    const el = $('theme-sheet');
+    el.classList.toggle('hidden', !themeSheet);
+    if (!themeSheet) return void (el.innerHTML = '');
+    const now = currentTheme();
+    el.innerHTML = '<div class="panel ts-panel"><h2>🎨 Theme</h2><div class="ts-list">' +
+      THEMES.map(function (t, i) {
+        return '<div class="ts-opt' + (t.id === now ? ' on' : '') + (i === themeSheet.focus ? ' pad-focus' : '') + '">' + themeMini(t.id) +
+          '<strong>' + t.name + (t.id === now ? ' ✓' : '') + '</strong><span>' + t.note + '</span></div>';
+      }).join('') +
+      '</div><p class="muted">🎮 ← → choose · A pick · B close</p></div>';
+  }
+
+  function openThemes(idx) {
+    const at = THEMES.findIndex(function (t) { return t.id === currentTheme(); });
+    themeSheet = { pad: Number(idx), focus: Math.max(0, at) };
+    renderThemes();
+  }
+
+  function closeThemes() {
+    themeSheet = null;
+    renderThemes();
+  }
+
+  function themePress(btn) {
+    const n = THEMES.length;
+    if (btn === 'LEFT' || btn === 'UP') themeSheet.focus = (themeSheet.focus + n - 1) % n;
+    else if (btn === 'RIGHT' || btn === 'DOWN') themeSheet.focus = (themeSheet.focus + 1) % n;
+    else if (btn === 'B' || btn === 'BACK') return closeThemes();
+    else if (btn === 'A' || btn === 'START') {
+      const pick = THEMES[themeSheet.focus];
+      closeThemes();
+      socket.emit('host:theme', { theme: pick.id }, function (res) {
+        flashPad(res && res.ok ? '🎨 Theme: ' + pick.name + ' · RT to change' : '⚠️ ' + ((res && res.error) || 'The theme didn\'t change.'));
+      });
+      return;
+    } else return;
+    renderThemes();
+  }
+
   function renderPadHint() {
     const n = connectedPads.length;
     let text;
     if (padMessage) text = padMessage;
     else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
-    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · LT play the computer · D-pad + A pick a game' +
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · LT play the computer · RT theme (Player 1) · D-pad + A pick a game' +
       (awayPhones().length ? ' · Back: free the seat of a phone that left' : '');
     $('pad-hint').textContent = text;
     renderUpdate(); // its RT tag shows while a controller is connected
@@ -823,6 +887,12 @@
     }
 
     if (picker && btn === 'BACK') return picker.sheet.close();
+    // The theme picker takes Player 1's controller (another controller's B closes it).
+    if (themeSheet) {
+      if (Number(idx) === themeSheet.pad) themePress(btn);
+      else if (btn === 'B') closeThemes();
+      return;
+    }
     // RT (any controller) presses the update banner.
     if (btn === 'RT' && desktop && updateActionable()) return desktop.update();
     // Lobby. Back (on any controller) frees the seats of phones that have gone.
@@ -842,6 +912,10 @@
       return;
     }
     if (btn === 'LB' || btn === 'RB') return openPicker(seat.slot, Number(idx));
+    if (btn === 'RT' || btn === 'RS') {
+      if (seat.slot !== 0) return flashPad('🎨 Player 1 picks the theme (RT on their controller).');
+      return openThemes(idx);
+    }
     const cards = lobbyCards();
     const n = cards.length;
     if (btn === 'Y') return renamePad(idx, seat);

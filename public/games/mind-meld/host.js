@@ -38,7 +38,7 @@
       return;
     }
     if (v.phase === 'over') {
-      root.innerHTML = '<div class="md-msg"><div class="title">' + v.stars + ' of ' + v.maxStars + ' ⭐</div><table>' +
+      root.innerHTML = '<div class="md-msg"><div class="title ark-result">' + v.stars + ' of ' + v.maxStars + ' ⭐</div><table>' +
         v.history.map(function (h) {
           return '<tr><td>' + esc(h.card[0]) + ' ↔ ' + esc(h.card[1]) + '</td><td>“' + esc(h.clue || '—') + '”</td><td>' + stars(h.stars) + '</td></tr>';
         }).join('') + '</table><p class="muted">Play again from a phone or with A (or ⚙ change the settings).</p></div>';

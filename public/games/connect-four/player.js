@@ -34,7 +34,7 @@
       if (v.result.draw) return 'Board full. Draw!';
       return v.result.winner === you ? '<span class="won">You connected four! 🎉</span>' : '<span class="lost">They connected four</span>';
     }
-    if (v.phase === 'over') return v.winner === you ? '<span class="won big">You win! 🏆</span>' : '<span class="lost big">You lose</span>';
+    if (v.phase === 'over') return v.winner === you ? '<span class="won big ark-result">You win! 🏆</span>' : '<span class="lost big ark-result">You lose</span>';
     return '';
   }
 

@@ -54,7 +54,7 @@
       const r = v.result;
       banner = r.winner === null ? 'Round ' + v.round + ': a draw!' : nameOf(v, r.winner) + ' takes round ' + v.round + '!';
       if (v.phase === 'over') {
-        banner = v.draw ? "🤝 It's a draw!" : '🏆 ' + nameOf(v, v.winner) + ' wins the match!';
+        banner = '<span class="ark-result">' + (v.draw ? "🤝 It's a draw!" : '🏆 ' + nameOf(v, v.winner) + ' wins the match!') + '</span>';
         banner += '<div class="sub">Rematch, change the settings or head back to the lobby from your phones.</div>';
       }
       banner = '<div class="wr-banner">' + banner + '<div class="sub">' + v.possible + ' words were hiding in this grid</div></div>';

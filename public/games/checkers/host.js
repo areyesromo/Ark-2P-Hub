@@ -23,7 +23,7 @@
     }
     if (v.phase === 'roundEnd') return v.result.draw ? '40 quiet moves: a draw' : nameOf(v, v.result.winner) + ' ' + WHY[v.result.why] + '! 🎉';
     if (v.phase === 'over') {
-      return '🏆 ' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>' +
+      return '<span class="ark-result">🏆 ' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong></span>' +
         '<div class="sub">Rematch or head back to the lobby from your phones or controllers.</div>';
     }
     return '';

@@ -25,6 +25,7 @@ const reply = (ack, payload) => {
  *   pad:rename    { slot, name }             -> ack { ok, name } | { error }
  *   profile:set   { avatar?, colour?, slot? } -> ack { ok, profile } | { error }  (a phone: its own seat; the TV: slot)
  *   host:kick     { slot }                   -> ack { ok } | { error }  (the TV removes a player)
+ *   host:theme    { theme }                  -> ack { ok, theme } | { error }  (Player 1's controller picks the look, see THEMES)
  *
  * Server -> client:
  *   room:state    Room#publicState()
@@ -39,7 +40,7 @@ export const GUESSES = { max: 20, windowMs: 10 * 60 * 1000 };
 /** How long a phone gets to answer "still there?" before its seat counts as free. */
 export const PING_MS = 2500;
 
-export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, fromInternet = () => false }) {
+export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, fromInternet = () => false, setTheme = () => false }) {
   /** Does this seated phone still answer? */
   function answers(player) {
     const s = player && player.socketId && io.sockets.sockets.get(player.socketId);
@@ -351,6 +352,18 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
       room.touch();
       room.removePlayer(seat);
       reply(ack, { ok: true });
+    });
+
+    // The look, picked on the TV with Player 1's controller (the phones' Player 1 has Settings).
+    // At home only, like Settings, and only while Player 1's seat is a controller on this TV.
+    socket.on('host:theme', (data, ack) => {
+      if (role !== 'host' || fromInternet(socket)) return reply(ack, { error: 'Only the TV at home can change the theme.' });
+      const p1 = room.players[0];
+      if (!p1 || !p1.local) return reply(ack, { error: 'Player 1 picks the theme, with a controller on this TV.' });
+      const theme = asObject(data).theme;
+      if (!setTheme(theme)) return reply(ack, { error: 'No such theme.' });
+      room.touch();
+      reply(ack, { ok: true, theme });
     });
 
     socket.on('disconnect', detach);

@@ -195,7 +195,7 @@
     const theirs = v.cards[them].total;
     let status;
     if (v.phase === 'intro') status = '🎳 Get ready…';
-    else if (v.phase === 'over') status = v.draw ? '🤝 A tie: ' + mine + ' each' : v.winner === me ? '<span class="won">🏆 You win, ' + mine + ' to ' + theirs + '!</span>' : '<span class="lost">They win, ' + theirs + ' to ' + mine + '</span>';
+    else if (v.phase === 'over') status = '<span class="ark-result">' + (v.draw ? '🤝 A tie: ' + mine + ' each' : v.winner === me ? '<span class="won">🏆 You win, ' + mine + ' to ' + theirs + '!</span>' : '<span class="lost">They win, ' + theirs + ' to ' + mine + '</span>') + '</span>';
     else if (myTurn()) status = '<strong>Your turn</strong> · frame ' + (v.next.frame + 1) + (v.next.ball ? ', ball ' + (v.next.ball + 1) : '');
     else if (v.phase === 'rolling' && v.turn === me) status = 'Rolling…';
     else status = 'Their turn' + (v.phase === 'rolling' ? ': rolling…' : '…');

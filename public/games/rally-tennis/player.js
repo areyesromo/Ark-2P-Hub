@@ -53,7 +53,7 @@
     else if (v.phase === 'rally') status = 'Their shot…';
     else if (v.phase === 'point' && v.last) status = v.last.winner === you ? 'Your point! 🎉' : 'Their point';
     else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     const key = score + v.calls.join(':') + v.score + status + v.phase;

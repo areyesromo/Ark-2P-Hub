@@ -74,7 +74,7 @@
       if (key !== textKey) {
         textKey = key;
         els.head.innerHTML = v.phase === 'over'
-          ? '<div class="md-over">' + v.stars + ' of ' + v.maxStars + ' ⭐</div>'
+          ? '<div class="md-over ark-result">' + v.stars + ' of ' + v.maxStars + ' ⭐</div>'
           : '<p class="md-help">Mind Meld needs a phone for whoever gives the clue.</p>';
         els.dial.innerHTML = '';
         els.form.classList.add('hidden');

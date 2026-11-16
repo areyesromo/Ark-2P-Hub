@@ -71,7 +71,7 @@
     } else if (v.phase === 'floorClear') {
       html = '<div class="big">⬇️</div><div class="sub">' + esc(v.floorName) + ' cleared!' + (v.floor + 1 < v.floors ? ' Down you go…' : '') + '</div>';
     } else if (v.phase === 'over') {
-      html = '<div class="big">' + (v.won ? '⭐'.repeat(v.stars) : '💀') + '</div><div class="sub">' +
+      html = '<div class="big ark-result">' + (v.won ? '⭐'.repeat(v.stars) : '💀') + '</div><div class="sub">' +
         (v.won ? 'Quest complete in ' + clock(v.timeMs) + (v.retries ? ' (' + v.retries + ' retr' + (v.retries === 1 ? 'y' : 'ies') + ')' : ', not one retry') : 'Out of continues: the dungeon wins this time') +
         '<br>' + nameOf(v, 0) + ' & ' + nameOf(v, 1) + ', rematch or head back to the lobby from your phones or controllers.</div>';
     }

@@ -62,7 +62,7 @@
     const me = v.chefs[v.you];
     let status;
     if (v.phase === 'countdown') status = '<span class="big">' + (v.countdown || '') + '</span><br>' + Ark.escapeHtml(v.kitchen) + ': get cooking!';
-    else if (v.phase === 'over') status = '<span class="big">' + (v.stars ? '⭐'.repeat(v.stars) : 'Shift over') + '</span><br>' + v.coins + ' 💰 · ' + v.served + ' served';
+    else if (v.phase === 'over') status = '<span class="big ark-result">' + (v.stars ? '⭐'.repeat(v.stars) : 'Shift over') + '</span><br>' + v.coins + ' 💰 · ' + v.served + ' served';
     else status = '<span class="held">' + heldText(me.held) + '</span>';
     const orders = v.phase === 'play' ? '<div class="kr-mini">' + v.orders.map(function (o) {
       return '<span class="' + (o.left < 0.25 ? 'late' : '') + '">' + DISH[o.recipe] + '</span>';

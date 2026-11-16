@@ -74,7 +74,7 @@
     else if (v.phase === 'play') status = v.alive ? 'Hold FIRE to shoot · push the stick further to thrust' : '💥 Hit! Back in a moment…';
     else if (v.phase === 'roundEnd' && r) status = r.draw ? (r.reason === 'time' ? 'Time: a draw' : 'Both out: a draw') : r.roundWinner === you ? 'Round to you! 🎉' : 'Round to them';
     else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     fireBtn.classList.toggle('reloading', !v.ready);

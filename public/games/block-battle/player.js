@@ -65,7 +65,7 @@
     else if (v.phase === 'play') status = 'Lines: you ' + v.lines[you] + ' · them ' + v.lines[1 - you] + (v.pending ? ' · ⚠️ ' + v.pending + ' junk coming!' : '');
     else if (v.phase === 'roundEnd' && v.result) status = v.result.draw ? 'Both full: a draw' : v.result.roundWinner === you ? 'Round to you! 🎉' : 'Round to them';
     else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     const key = score + status + v.phase;

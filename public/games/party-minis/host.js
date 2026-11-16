@@ -22,7 +22,7 @@
       return '<div class="title">' + (w === null ? '🤝 A draw' : '⭐ ' + ArkMini.nameOf(v, w) + ' wins it!') + '</div>';
     },
     over: function (v) {
-      return '<div class="title">🏆 ' + ArkMini.nameOf(v, v.winner) + ' wins the party!</div><div class="muted">' + v.wins[0] + ' – ' + v.wins[1] + '</div>';
+      return '<div class="title ark-result">🏆 ' + ArkMini.nameOf(v, v.winner) + ' wins the party!</div><div class="muted">' + v.wins[0] + ' – ' + v.wins[1] + '</div>';
     },
   };
 

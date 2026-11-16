@@ -27,7 +27,7 @@
   function banner(v) {
     const r = v.result;
     if (v.phase === 'over') {
-      return '<div class="wh-banner">🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!' +
+      return '<div class="wh-banner"><span class="ark-result">🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!</span>' +
         '<div class="sub">Words found: ' + v.totalWords[0] + ' – ' + v.totalWords[1] + ' · Rematch (🎮 A), settings (🎮 Y) or back to the lobby.</div></div>';
     }
     if (v.phase === 'result' && r) {

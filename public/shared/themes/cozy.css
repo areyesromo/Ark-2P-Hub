@@ -8,6 +8,7 @@
 @font-face { font-family: 'Ark Text'; src: url(/shared/fonts/atkinson-hyperlegible-latin-700-normal.woff2) format('woff2'); font-weight: 700 900; font-display: swap; }
 
 :root {
+  --ark-theme: cozy; /* (the TV reads it: host.js currentTheme) */
   --bg: #1e1a24;
   --bg-2: #2a2230;
   --panel: #33272a;
@@ -238,3 +239,9 @@ body.match-over[data-winner="1"] .winner-tag::before { background: radial-gradie
 
 /* The top bar stays on one line, whatever the font. */
 .topbar h1, .room-chip, .topbar button, .topbar .btn { white-space: nowrap; }
+
+/* Each game's own finish line (tagged .ark-result): the shelf's serif, a mustard win. */
+body .ark-result { font-family: var(--serif); font-weight: 900; letter-spacing: 0; text-transform: none; }
+body .ark-result.won { color: var(--mustard); }
+body .ark-result.lost { color: var(--muted); }
+.sub > .ark-result { display: inline-block; font-size: 1.25em; line-height: 1.15; }

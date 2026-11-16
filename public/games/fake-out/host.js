@@ -52,7 +52,7 @@
       const sub = v.draw
         ? 'It\'s a draw! <strong>' + v.scores[0] + ' : ' + v.scores[1] + '</strong>'
         : nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>';
-      return '<div class="fo-center"><div class="big">' + (v.draw ? '🤝' : '🏆') + '</div><div class="sub">' + sub +
+      return '<div class="fo-center"><div class="big">' + (v.draw ? '🤝' : '🏆') + '</div><div class="sub"><span class="ark-result">' + sub + '</span>' +
         '<br>Rematch or head back to the lobby from your phones.</div></div>';
     }
     const shown = v.phase === 'reveal' && v.reveal ? v.reveal.find(function (r) { return r.kind === 'truth'; }) : null;

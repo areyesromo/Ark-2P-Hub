@@ -89,7 +89,7 @@
         }).join('') + '</div>' +
         (mine ? '<div class="pb-wait">' + (v.pick.picks[1 - me] ? '' : 'Waiting for them…') + '</div>' : '<div class="pb-time" data-end="' + (receivedAt + v.pick.msLeft) + '">' + Math.ceil(v.pick.msLeft / 1000) + ' s</div>');
     } else if (v.phase === 'over') {
-      h += '<div class="pb-big">' + (v.draw ? '🤝 A draw' : v.winner === me ? '🏆 You win!' : 'You lose') + '</div>' + recap(v) + '<button class="primary pb-rematch">Rematch</button>';
+      h += '<div class="pb-big ark-result">' + (v.draw ? '🤝 A draw' : v.winner === me ? '🏆 You win!' : 'You lose') + '</div>' + recap(v) + '<button class="primary pb-rematch">Rematch</button>';
     } else if (v.phase === 'bonus') {
       h += '<div class="pb-big">🌟 Bonus stars…</div>';
     } else {

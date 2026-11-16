@@ -179,7 +179,7 @@
       const won = v.winner === you;
       root.innerHTML =
         '<div class="score">' + score + '</div>' +
-        '<div class="outcome ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</div>' +
+        '<div class="outcome ark-result ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</div>' +
         '<div class="label">Their fleet</div>' +
         '<div data-board="theirs" class="big-board">' + ArkSea.gridHtml({ size: v.size, shots: v.theirs.shots, ships: v.theirs.ships }) + '</div>' +
         '<button class="primary rematch">Rematch</button>';

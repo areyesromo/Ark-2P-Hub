@@ -28,7 +28,7 @@
       case 'over':
         return {
           cls: 'over',
-          big: '🏆 ' + nameOf(view, view.winner) + ' wins!',
+          big: '<span class="ark-result">🏆 ' + nameOf(view, view.winner) + ' wins!</span>',
           sub: resultLine(view) + '<br>Rematch or head back to the lobby from your phones.',
         };
       default:

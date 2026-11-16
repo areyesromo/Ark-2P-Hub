@@ -149,3 +149,34 @@ test('theme: picked in Settings, served as /theme.css, and every screen told whe
     fs.rmSync(dir, { recursive: true, force: true });
   }
 });
+
+test('theme from the TV: only Player 1\'s controller, and every screen hears about it', async () => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-tvtheme-'));
+  const hub = createApp({ port: 0, dataDir: dir, https: false });
+  const { port } = await hub.listen();
+  const base = `http://127.0.0.1:${port}`;
+  const emit = (s, ev, data) => new Promise((resolve) => s.emit(ev, data, resolve));
+  const tv = connect(base, { transports: ['websocket'], forceNew: true });
+  const phone = connect(base, { transports: ['websocket'], forceNew: true });
+  try {
+    const { code } = await emit(tv, 'host:create', {});
+    // Player 1 on a phone: the TV can't change it (that phone has Settings).
+    assert.ok((await emit(phone, 'player:join', { code, name: 'Ana' })).ok);
+    assert.match((await emit(tv, 'host:theme', { theme: 'neon' })).error, /Player 1/);
+    assert.match((await emit(phone, 'host:theme', { theme: 'neon' })).error, /TV/, 'not from a phone');
+    phone.emit('player:leave');
+    await new Promise((r) => setTimeout(r, 100));
+    // Player 1 on a controller: yes.
+    assert.equal((await emit(tv, 'pad:join', { name: 'Pad' })).slot, 0);
+    assert.match((await emit(tv, 'host:theme', { theme: 'disco' })).error, /No such theme/);
+    const told = new Promise((resolve) => phone.once('hub:theme', resolve));
+    assert.deepEqual(await emit(tv, 'host:theme', { theme: 'cozy' }), { ok: true, theme: 'cozy' });
+    assert.equal((await told).theme, 'cozy');
+    assert.equal(new Settings(dir).theme, 'cozy');
+  } finally {
+    tv.close();
+    phone.close();
+    await hub.close();
+    fs.rmSync(dir, { recursive: true, force: true });
+  }
+});

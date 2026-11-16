@@ -144,8 +144,8 @@
       const r = v.result;
       const line = 'You ' + r.points[you] + ' – ' + r.points[1 - you] + ' them' + (v.goal ? '' : ' (shared words cancel)');
       if (v.phase === 'over') {
-        if (v.draw) return '<span class="big">Draw! 🤝</span><br>' + line;
-        return '<span class="big ' + (v.winner === you ? 'won' : 'lost') + '">' + (v.winner === you ? 'You win! 🏆' : 'You lose') + '</span><br>' + line;
+        if (v.draw) return '<span class="big ark-result draw">Draw! 🤝</span><br>' + line;
+        return '<span class="big ark-result ' + (v.winner === you ? 'won' : 'lost') + '">' + (v.winner === you ? 'You win! 🏆' : 'You lose') + '</span><br>' + line;
       }
       return (r.winner === null ? 'Round drawn. ' : r.winner === you ? '<span class="won">Round to you! 🎉</span> ' : '<span class="lost">Round to them.</span> ') + line;
     }

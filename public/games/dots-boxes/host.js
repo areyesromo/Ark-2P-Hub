@@ -21,7 +21,7 @@
     }
     if (v.phase === 'roundEnd') return v.result.draw ? 'Same number of boxes: a draw' : nameOf(v, v.result.winner) + ' takes the round, ' + Math.max(v.score[0], v.score[1]) + ' to ' + Math.min(v.score[0], v.score[1]) + '! 🎉';
     if (v.phase === 'over') {
-      return '🏆 ' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>' +
+      return '<span class="ark-result">🏆 ' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong></span>' +
         '<div class="sub">Rematch or head back to the lobby from your phones or controllers.</div>';
     }
     return '';
