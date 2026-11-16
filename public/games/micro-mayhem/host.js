@@ -24,7 +24,7 @@
       }).join('') + '</div>';
     },
     over: function (v) {
-      return '<div class="title">🏆 ' + ArkMini.nameOf(v, v.winner) + ' wins!</div><div class="muted">' + v.count + ' micro-games, up to speed ' + v.level + '</div>';
+      return '<div class="title ark-result">🏆 ' + ArkMini.nameOf(v, v.winner) + ' wins!</div><div class="muted">' + v.count + ' micro-games, up to speed ' + v.level + '</div>';
     },
   };
 

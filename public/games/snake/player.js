@@ -78,7 +78,7 @@
       else if (r.reason === 'time') status = r.roundWinner === you ? 'Time! You were longer 🎉' : 'Time! They were longer';
       else status = r.roundWinner === you ? 'They crashed! Round to you 🎉' : 'You crashed 💥';
     } else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     if (v.phase === 'play' && prevLen && v.lengths[you] > prevLen) api.vibrate(25);

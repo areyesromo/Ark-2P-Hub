@@ -51,7 +51,7 @@
     }
     if (v.phase === 'over') {
       const text = v.draw ? 'Draw! 🤝' : v.winner === me ? 'You win! 🏆' : 'You lose';
-      return score(v) + '<div class="fo-wait"><div class="outcome ' + (v.draw ? '' : v.winner === me ? 'won' : 'lost') + '">' + text + '</div>' +
+      return score(v) + '<div class="fo-wait"><div class="outcome ark-result ' + (v.draw ? '' : v.winner === me ? 'won' : 'lost') + '">' + text + '</div>' +
         '<button class="primary rematch">Rematch</button></div>';
     }
     // Once the truth has turned over, it fills the blank (as on the TV).

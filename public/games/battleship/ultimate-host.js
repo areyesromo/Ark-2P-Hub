@@ -48,8 +48,8 @@
     if (v.phase === 'place') {
       return '<div class="big">Hide your fleets!</div><div class="sub">' + esc(v.seaName) + ' · place your ships on your phone, then tap Ready</div>';
     }
-    if (v.phase === 'over' && v.winner === null) return '<div class="big">🌋 A draw!</div><div class="sub">The volcano took both fleets. Rematch or head back to the lobby from your phones or controllers.</div>';
-    if (v.phase === 'over') return '<div class="big">🏆 ' + nameOf(v, v.winner) + ' wins!</div><div class="sub">Rematch or head back to the lobby from your phones or controllers.</div>';
+    if (v.phase === 'over' && v.winner === null) return '<div class="big ark-result">🌋 A draw!</div><div class="sub">The volcano took both fleets. Rematch or head back to the lobby from your phones or controllers.</div>';
+    if (v.phase === 'over') return '<div class="big ark-result">🏆 ' + nameOf(v, v.winner) + ' wins!</div><div class="sub">Rematch or head back to the lobby from your phones or controllers.</div>';
     const last = v.last ? U.lastText(v, -1, function (s) { return nameOf(v, s); }) : '';
     if (v.phase === 'shot') return '<div class="big">' + last + '</div>';
     const p = v.players[v.turn].local && pads[v.turn] ? ' · 🎮 ' + actName(v, v.turn, pads[v.turn].act) : '';

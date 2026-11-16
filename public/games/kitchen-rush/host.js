@@ -62,7 +62,7 @@
     if (v.phase === 'countdown') {
       html = '<div class="big">' + (v.countdown || '') + '</div><div class="sub">' + esc(v.kitchen) + ' · ' + v.minutes + ' minute shift · serve the orders before they run out</div>';
     } else if (v.phase === 'over') {
-      html = '<div class="big">' + (v.stars ? '⭐'.repeat(v.stars) : '🍳') + '</div><div class="sub">Shift over! <strong>' + v.coins + ' 💰</strong> · ' + v.served + ' served · ' + v.missed + ' missed' +
+      html = '<div class="big ark-result">' + (v.stars ? '⭐'.repeat(v.stars) : '🍳') + '</div><div class="sub">Shift over! <strong>' + v.coins + ' 💰</strong> · ' + v.served + ' served · ' + v.missed + ' missed' +
         '<br>' + nameOf(v, 0) + ' & ' + nameOf(v, 1) + ', rematch or head back to the lobby from your phones or controllers.</div>';
     }
     if (html === overlayKey) return;

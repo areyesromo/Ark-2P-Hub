@@ -229,7 +229,7 @@
 
   function bodyHtml(v) {
     if (v.phase === 'over') {
-      return '<div class="bs-card"><div class="big">' + v.stars + ' of ' + v.maxStars + ' ⭐</div><p>' +
+      return '<div class="bs-card"><div class="big ark-result">' + v.stars + ' of ' + v.maxStars + ' ⭐</div><p>' +
         v.history.filter(function (h) { return h.defused; }).length + ' of ' + v.bombs + ' bombs defused.</p>' +
         '<button class="primary bs-rematch">Play again</button></div>';
     }

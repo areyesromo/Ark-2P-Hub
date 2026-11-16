@@ -87,7 +87,7 @@
         'On your phone: drag the ball to where you stand, then swipe it up the lane. Curve the swipe for spin.</div></div>';
     } else if (v.phase === 'over') {
       const s = v.scores;
-      html = '<div class="panel"><div class="big">' + (v.draw ? '🤝 A tie!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
+      html = '<div class="panel"><div class="big ark-result">' + (v.draw ? '🤝 A tie!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
         '<div class="sub">' + nameOf(v, 0) + ' <strong>' + s[0] + '</strong> · ' + nameOf(v, 1) + ' <strong>' + s[1] + '</strong>' +
         (v.perfect[0] || v.perfect[1] ? '<br>🎳 A perfect game!' : '') +
         '<br>Rematch or head back to the lobby from your phones or controllers.</div></div>';

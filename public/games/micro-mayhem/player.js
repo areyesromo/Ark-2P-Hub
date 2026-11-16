@@ -17,7 +17,7 @@
         '<div class="muted">They ' + (v.lastResult.pass[1 - me] ? 'made it' : 'missed it') + '</div>';
     },
     over: function (v, me) {
-      return '<div class="big">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</div><div class="muted">Up to speed ' + v.level + '</div>';
+      return '<div class="big ark-result">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</div><div class="muted">Up to speed ' + v.level + '</div>';
     },
     buzz: function (v, me) { return v.lastResult.pass[me] ? 20 : [60, 40, 60]; },
   };

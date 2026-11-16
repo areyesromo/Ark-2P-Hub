@@ -59,7 +59,7 @@
       html = '<div class="big">' + (v.countdown || '') + '</div><div class="sub">Build towers on your side · send creeps down theirs · ' + v.maxLives + ' lives each</div>';
     } else if (v.phase === 'over') {
       const sub = v.winner === null ? 'Both bases fell at once: a draw!' : nameOf(v, v.winner) + ' wins with ' + v.sides[v.winner].lives + ' ❤️ left!';
-      html = '<div class="big">' + (v.winner === null ? '🤝' : '🏆') + '</div><div class="sub">' + sub + '<br>Rematch or head back to the lobby from your phones or controllers.</div>';
+      html = '<div class="big">' + (v.winner === null ? '🤝' : '🏆') + '</div><div class="sub"><span class="ark-result">' + sub + '</span><br>Rematch or head back to the lobby from your phones or controllers.</div>';
     }
     if (html === overlayKey) return;
     overlayKey = html;

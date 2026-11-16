@@ -31,7 +31,7 @@
       return '<span class="p' + (slot + 1) + '-text">' + esc(view.players[slot].name) + '</span>';
     };
     if (view.phase === 'choose') return 'Make your picks!';
-    if (view.phase === 'over') return '🏆 ' + nameOf(view.winner) + ' wins the match!';
+    if (view.phase === 'over') return '<span class="ark-result">🏆 ' + nameOf(view.winner) + ' wins the match!</span>';
     if (view.roundWinner === null) return 'Draw!';
     return nameOf(view.roundWinner) + ' takes the round';
   }

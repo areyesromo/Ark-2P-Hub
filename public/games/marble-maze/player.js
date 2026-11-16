@@ -47,7 +47,7 @@
     else if (v.phase === 'play') status = 'Roll it to the green goal!';
     else if (v.phase === 'fall') status = v.fallBy === 'block' ? '💥 Squashed!' : '🕳️ Down the hole!';
     else if (v.phase === 'clear' && v.result) status = v.result.cleared ? '🎉 Made it! ' + stars(v.result.stars) : '⏱ Out of time';
-    else if (v.phase === 'over') status = '<span class="big">' + v.stars + ' of ' + v.maxStars + ' ⭐</span>';
+    else if (v.phase === 'over') status = '<span class="big ark-result">' + v.stars + ' of ' + v.maxStars + ' ⭐</span>';
     const key = JSON.stringify([v.axis, status, v.phase, v.stars]);
     if (key === textKey) return;
     textKey = key;

@@ -50,7 +50,7 @@
       outcome = v.roundWinner === you ? 'You win the round' : 'They win the round';
     }
     if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       outcome = v.winner === you ? 'You win the match! 🏆' : 'You lose the match';
     }
     return (

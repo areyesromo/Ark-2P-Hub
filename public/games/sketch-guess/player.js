@@ -192,7 +192,7 @@
       const r = v.result;
       return (r.guessed ? '✅ Got it! ' : '⏰ It was ') + '<strong>' + esc(r.word) + '</strong> ' + (r.stars ? new Array(r.stars + 1).join('⭐') : '');
     }
-    if (v.phase === 'over') return '<span class="final">⭐ ' + v.stars + ' / ' + v.maxStars + '</span><br>Teamwork! Play again?';
+    if (v.phase === 'over') return '<span class="final ark-result">⭐ ' + v.stars + ' / ' + v.maxStars + '</span><br>Teamwork! Play again?';
     return '';
   }
 

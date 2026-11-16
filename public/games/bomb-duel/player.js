@@ -62,7 +62,7 @@
     if (v.phase === 'setup') return '<span class="big">💣 Bomb Duel</span><br>Pick the settings (either of you can), then start.';
     if (v.phase === 'countdown') return 'Round ' + v.round + ' · get ready… <strong>' + v.countdown + '</strong>';
     if (v.phase === 'over') {
-      return '<span class="big ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span><br>' +
+      return '<span class="big ark-result ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span><br>' +
         'You ' + v.scores[me] + ' – ' + v.scores[1 - me] + ' them';
     }
     if (v.phase === 'roundEnd' && v.result) {

@@ -193,7 +193,7 @@
   function overScreen(v) {
     const won = v.winner === v.you;
     // (the Volcano can sink both fleets at once: a draw)
-    const outcome = v.winner === null ? '<div class="outcome draw">🌋 A draw: the volcano took both fleets</div>' : '<div class="outcome ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</div>';
+    const outcome = v.winner === null ? '<div class="outcome ark-result draw">🌋 A draw: the volcano took both fleets</div>' : '<div class="outcome ark-result ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</div>';
     return outcome +
       '<div class="label">Their fleet</div><div data-board="theirs" class="ub-board">' + U.seaHtml({ rows: v.rows, shots: v.theirs.shots, ships: v.theirs.ships }) + '</div>' +
       '<button class="primary rematch">Rematch</button>';

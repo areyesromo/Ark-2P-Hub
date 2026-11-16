@@ -17,7 +17,7 @@
     if (v.phase === 'play') return nameOf(v, v.turn) + "'s turn" + (v.timed ? ' <span class="clock">⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's</span>' : '');
     if (v.phase === 'roundEnd') return v.result.draw ? 'Board full. Draw!' : nameOf(v, v.result.winner) + ' connects four! 🎉';
     if (v.phase === 'over') {
-      return '🏆 ' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong>' +
+      return '<span class="ark-result">🏆 ' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '</strong></span>' +
         '<div class="sub">Rematch or head back to the lobby from your phones or controllers.</div>';
     }
     return '';

@@ -48,7 +48,7 @@
         const won = v.winner === you;
         return {
           cls: won ? 'won' : 'lost',
-          big: won ? 'You win! 🏆' : 'You lose',
+          big: '<span class="ark-result ' + (won ? 'won' : 'lost') + '">' + (won ? 'You win! 🏆' : 'You lose') + '</span>',
           sub: score,
           rematch: true,
         };

@@ -205,8 +205,8 @@
       return '<span class="pct ' + cls + '">' + mine + '%</span> match · them ' + theirs + '%';
     }
     if (v.phase === 'over') {
-      if (v.draw) return '<div class="outcome">Draw! 🤝</div>';
-      return v.winner === you ? '<div class="outcome won">You win! 🏆</div>' : '<div class="outcome lost">You lose</div>';
+      if (v.draw) return '<div class="outcome ark-result draw">Draw! 🤝</div>';
+      return v.winner === you ? '<div class="outcome ark-result won">You win! 🏆</div>' : '<div class="outcome ark-result lost">You lose</div>';
     }
     return '';
   }

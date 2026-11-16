@@ -90,7 +90,7 @@
         '<div class="sub"><strong>' + esc(v.monster.name) + '</strong> is beaten!' + (v.hearts === 0 && v.monsterIndex < v.monsters.length - 1 ? ' But you\'re out of hearts…' : '') + '</div></div>';
     }
     if (v.phase === 'over') {
-      return '<div class="qz-center"><div class="big">' + (v.won ? '🏆' : '💀') + '</div><div class="sub">' +
+      return '<div class="qz-center"><div class="big ark-result">' + (v.won ? '🏆' : '💀') + '</div><div class="sub">' +
         (v.won ? 'Quest complete! You beat all three monsters'
           : v.monster.hp === 0 ? 'You beat the ' + esc(v.monster.name) + ', but that was your last heart'
             : 'Out of hearts. The ' + esc(v.monster.name) + ' wins this time') +

@@ -54,8 +54,8 @@
       sub = 'Point ' + nameOf(v, v.last.winner);
     } else if (v.phase === 'over') {
       big = '🏆';
-      sub = nameOf(v, v.winner) + ' wins <strong>' + v.games[v.winner] + ' : ' + v.games[1 - v.winner] +
-        '</strong><br>Rematch or head back to the lobby from your phones or controllers.';
+      sub = '<span class="ark-result">' + nameOf(v, v.winner) + ' wins <strong>' + v.games[v.winner] + ' : ' + v.games[1 - v.winner] +
+        '</strong></span><br>Rematch or head back to the lobby from your phones or controllers.';
     }
     const key = big + '|' + sub;
     if (key === overlayKey) return;

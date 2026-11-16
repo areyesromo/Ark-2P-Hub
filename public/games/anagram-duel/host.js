@@ -33,7 +33,7 @@
       line = '<div class="big muted">' + esc(r.answer.toUpperCase()) + '</div><div class="sub">Nobody found it in time. No point.</div>';
     }
     if (v.phase === 'over') {
-      line += '<div class="ad-over">🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!' +
+      line += '<div class="ad-over"><span class="ark-result">🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!</span>' +
         '<div class="sub">' + [0, 1].map(function (s) { return nameOf(v, s) + ': fastest ' + (v.fastest[s] === null ? '–' : (v.fastest[s] / 1000).toFixed(1) + ' s'); }).join(' · ') + '</div>' +
         '<div class="sub">Rematch or head back to the lobby from your phones.</div></div>';
     }

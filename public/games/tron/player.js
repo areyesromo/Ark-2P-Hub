@@ -73,7 +73,7 @@
       if (v.result.draw) status = 'Both crashed. Draw!';
       else status = v.result.roundWinner === you ? 'They crashed! Round to you 🎉' : 'You crashed 💥';
     } else if (v.phase === 'over') {
-      cls = v.winner === you ? 'won' : 'lost';
+      cls = 'ark-result ' + (v.winner === you ? 'won' : 'lost');
       status = v.winner === you ? 'You win! 🏆' : 'You lose';
     }
     const key = score + status + v.phase + v.dir;

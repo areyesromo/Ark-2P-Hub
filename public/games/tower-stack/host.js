@@ -68,7 +68,7 @@
       html = '<div class="panel"><div class="big">🏗️ Tower Stack</div><div class="sub">Take turns: ' + nameOf(v, 0) + ' drops the blocks sliding ↔, ' + nameOf(v, 1) + ' the ones sliding ↕.<br>' +
         'Whatever hangs over the edge is cut off. Dead on keeps it whole; three in a row and it grows back.</div></div>';
     } else if (v.phase === 'over') {
-      html = '<div class="panel"><div class="big">' + (v.stars ? '⭐'.repeat(v.stars) : '🏚️') + '</div><div class="sub"><strong>' + v.height + '</strong> floors' +
+      html = '<div class="panel"><div class="big ark-result">' + (v.stars ? '⭐'.repeat(v.stars) : '🏚️') + '</div><div class="sub"><strong>' + v.height + '</strong> floors' +
         (v.bestCombo >= 3 ? ' · best streak ' + v.bestCombo + ' perfect' : '') + '<br>' + nameOf(v, 0) + ' & ' + nameOf(v, 1) + ', rematch or head back to the lobby from your phones or controllers.</div></div>';
     }
     if (html === overlayKey) return;

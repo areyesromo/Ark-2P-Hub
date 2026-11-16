@@ -15,8 +15,8 @@
     if (v.phase === 'countdown') return 'Get ready… ' + v.countdown + '<br>' + (v.race ? 'Race: your own board. Clear it first!' : v.turn === me ? 'You go first!' : 'They go first.');
     if (v.phase === 'race') return '<span class="big you">Race!</span><br>Find every pair before they do';
     if (v.phase === 'over') {
-      if (v.draw) return '<span class="big">Draw! 🤝</span>';
-      return '<span class="big ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span>';
+      if (v.draw) return '<span class="big ark-result draw">Draw! 🤝</span>';
+      return '<span class="big ark-result ' + (v.winner === me ? 'won' : 'lost') + '">' + (v.winner === me ? 'You win! 🏆' : 'You lose') + '</span>';
     }
     if (v.phase === 'match') return v.turn === me ? '<span class="won">A pair! Go again 🎉</span>' : 'They found a pair…';
     if (v.phase === 'peek') return v.turn === me ? '<span class="lost">No match.</span> Remember them!' : 'No match: remember them!';

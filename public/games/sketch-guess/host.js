@@ -89,7 +89,7 @@
           '<td>' + (h.guessed ? '✅ ' + secs(h.ms) + 's' : '❌') + '</td>' +
           '<td>' + starsText(h.stars) + '</td></tr>';
       }).join('');
-      return '<div class="result">⭐ ' + v.stars + ' / ' + v.maxStars + ' · ' + rating(v) + '</div>' +
+      return '<div class="result ark-result">⭐ ' + v.stars + ' / ' + v.maxStars + ' · ' + rating(v) + '</div>' +
         '<table class="sg-history">' + rows + '</table>' +
         '<div class="sub small">Rematch or head back to the lobby from your phones.</div>';
     }

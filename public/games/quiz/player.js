@@ -45,7 +45,7 @@
       let text = 'You win! 🏆';
       if (v.draw) { cls = ''; text = 'Draw! 🤝'; }
       else if (v.winner !== you) { cls = 'lost'; text = 'You lose'; }
-      return '<div class="score">' + score + '</div><div class="qz-wait"><div class="outcome ' + cls + '">' + text + '</div>' +
+      return '<div class="score">' + score + '</div><div class="qz-wait"><div class="outcome ark-result ' + cls + '">' + text + '</div>' +
         '<button class="primary rematch">Rematch</button></div>';
     }
 

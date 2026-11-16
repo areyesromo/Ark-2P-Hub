@@ -51,7 +51,7 @@
     const table = '<div class="dp-scroll"><table class="dp-card dp-mini"><tr><th>Round ' + v.round + '/' + v.rounds + '</th><th class="p' + (me + 1) + '-text">You</th><th class="p' + (them + 1) + '-text">Them</th></tr>' + rows + '</table></div>';
     let tray;
     if (v.phase === 'over') {
-      tray = '<div class="dp-big">' + (v.draw ? 'A draw 🤝' : v.winner === me ? 'You win! 🏆' : 'You lose') + '</div><button class="primary dp-rematch">Rematch</button>';
+      tray = '<div class="dp-big ark-result">' + (v.draw ? 'A draw 🤝' : v.winner === me ? 'You win! 🏆' : 'You lose') + '</div><button class="primary dp-rematch">Rematch</button>';
     } else {
       const lastLine = v.last ? (v.last.by === me ? 'You' : 'They') + ' scored ' + v.last.points + ' in ' + esc(v.last.box) : '';
       const status = myTurn ? (v.rollsLeft === 3 ? '<strong>Your turn:</strong> roll!' : v.rollsLeft ? 'Tap dice to hold · tap a box (twice) to score' : 'No rolls left: pick a box')
@@ -84,7 +84,7 @@
     }
     let html = '';
     if (v.phase === 'over') {
-      html += '<div class="dp-big">' + (v.draw ? 'A draw 🤝' : v.winner === me ? 'You win! 🏆' : 'You lose') + '</div>' +
+      html += '<div class="dp-big ark-result">' + (v.draw ? 'A draw 🤝' : v.winner === me ? 'You win! 🏆' : 'You lose') + '</div>' +
         '<p class="dp-info">' + v.scores[me] + ' to ' + v.scores[1 - me] + '</p><button class="primary dp-rematch">Rematch</button>';
       root.innerHTML = html;
       return;

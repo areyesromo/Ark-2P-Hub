@@ -100,7 +100,7 @@
       const result = v.draw
         ? '🤝 It\'s a draw!'
         : '🏆 ' + nameOf(v, v.winner) + ' wins!';
-      return '<div class="result">' + result + '</div><table class="dd-history">' + rows + '</table>' +
+      return '<div class="result ark-result">' + result + '</div><table class="dd-history">' + rows + '</table>' +
         '<div class="sub">Rematch or head back to the lobby from your phones.</div>';
     }
     return '';

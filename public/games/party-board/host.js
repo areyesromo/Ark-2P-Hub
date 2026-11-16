@@ -44,7 +44,7 @@
     };
     return '<div class="pb-recap-card">' +
       '<div class="pb-mapname ' + v.board.tier + '">' + esc(v.board.name) + ' · ' + TIER[v.board.tier] + '</div>' +
-      '<div class="pb-msg">' + (v.draw ? '🤝 A draw!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
+      '<div class="pb-msg ark-result">' + (v.draw ? '🤝 A draw!' : '🏆 ' + nameOf(v, v.winner) + ' wins!') + '</div>' +
       '<table><tr><th></th><th>' + nameOf(v, 0) + '</th><th>' + nameOf(v, 1) + '</th></tr>' +
       RECAP.map(function (row) { return '<tr><th>' + row[1] + '</th>' + cell(row, 0) + cell(row, 1) + '</tr>'; }).join('') +
       (v.bonusStars ? '<tr><th>🌟 Bonus stars</th>' + [0, 1].map(function (slot) {

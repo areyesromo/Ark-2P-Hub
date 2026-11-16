@@ -16,7 +16,7 @@
   function top(v) {
     const you = v.you;
     if (v.phase === 'countdown') return 'Grid ' + v.round + ' coming up…';
-    if (v.phase === 'over') return v.winner === you ? '<span class="won">You win! 🏆</span>' : '<span class="lost">You lose</span>';
+    if (v.phase === 'over') return v.winner === you ? '<span class="won ark-result">You win! 🏆</span>' : '<span class="lost ark-result">You lose</span>';
     const r = v.result;
     if (v.phase === 'result' && r) return r.winner === null ? 'Level: nobody takes this grid' : r.winner === you ? '<span class="won">Your grid!</span>' : '<span class="lost">Their grid</span>';
     if (v.mode === 'race') return 'You <strong>' + v.counts[you] + '</strong> of ' + v.words.length + ' · Them ' + v.counts[1 - you] + ' · grids ' + v.scores[you] + ' – ' + v.scores[1 - you];

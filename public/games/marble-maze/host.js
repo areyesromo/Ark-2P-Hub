@@ -290,7 +290,7 @@
         : '<div class="panel"><div class="title">⏱ Out of time</div><p>On to the next maze.</p></div>';
     }
     if (v.phase === 'over') {
-      return '<div class="panel"><div class="title">' + v.stars + ' of ' + v.maxStars + ' ⭐</div><table>' +
+      return '<div class="panel"><div class="title ark-result">' + v.stars + ' of ' + v.maxStars + ' ⭐</div><table>' +
         v.history.map(function (h) {
           return '<tr><td>' + esc(h.name) + '</td><td>' + (h.cleared ? time(h.ms) : 'out of time') + '</td><td>' + stars(h.stars) + '</td></tr>';
         }).join('') + '</table><p class="muted">Rematch on a phone or with A (or ⚙ change the settings).</p></div>';

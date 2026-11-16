@@ -37,8 +37,8 @@
       sub = (v.fault === 'touches' ? 'Too many touches! ' : '') + nameOf(v, v.lastScorer) + ' scores!';
     } else if (v.phase === 'over') {
       big = '🏆';
-      sub = nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] +
-        '</strong><br>Rematch or head back to the lobby from your phones or controllers.';
+      sub = '<span class="ark-result">' + nameOf(v, v.winner) + ' wins <strong>' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] +
+        '</strong></span><br>Rematch or head back to the lobby from your phones or controllers.';
     }
     const key = big + '|' + sub;
     if (key === overlayKey) return;

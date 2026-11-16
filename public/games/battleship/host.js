@@ -60,7 +60,7 @@
     if (v.phase === 'over') {
       const w = v.winner;
       const acc = function (slot) { return v.fired[slot] ? Math.round((100 * v.hits[slot]) / v.fired[slot]) : 0; };
-      return '<div class="big">🏆 ' + nameOf(v, w) + ' wins!</div><div class="sub">' +
+      return '<div class="big ark-result">🏆 ' + nameOf(v, w) + ' wins!</div><div class="sub">' +
         'Sank the whole fleet in ' + v.fired[w] + ' shots (' + acc(w) + '% hits vs ' + acc(1 - w) + '%) · ' +
         'Rematch or head back to the lobby from your phones or controllers.</div>';
     }

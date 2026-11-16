@@ -50,7 +50,7 @@
       return status(v) + '<div class="qz-wait"><div class="big">' + v.monster.emoji + '</div><p>' + text + '</p></div>';
     }
     if (v.phase === 'over') {
-      return status(v) + '<div class="qz-wait"><div class="outcome ' + (v.won ? 'won' : 'lost') + '">' + (v.won ? 'Quest complete! 🏆' : 'Out of hearts 💀') + '</div>' +
+      return status(v) + '<div class="qz-wait"><div class="outcome ark-result ' + (v.won ? 'won' : 'lost') + '">' + (v.won ? 'Quest complete! 🏆' : 'Out of hearts 💀') + '</div>' +
         '<p>You earned <strong>' + v.stars + ' / ' + v.maxStars + ' ⭐</strong> together.</p><button class="primary rematch">Rematch</button></div>';
     }
     const answered = v.yourPick !== null;

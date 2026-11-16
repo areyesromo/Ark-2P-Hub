@@ -45,7 +45,7 @@
     let banner = '';
     if (v.phase === 'race') banner = '<div class="mm-banner">🏁 Race! On your phones · ' + v.pairs + ' pairs to clear</div>';
     if (v.phase === 'over') {
-      banner = '<div class="mm-banner">' + (v.draw ? "🤝 It's a draw!" : '🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!') +
+      banner = '<div class="mm-banner"><span class="ark-result">' + (v.draw ? "🤝 It's a draw!" : '🏆 ' + nameOf(v, v.winner) + ' wins ' + v.scores[v.winner] + ' : ' + v.scores[1 - v.winner] + '!') + '</span>' +
         '<div class="sub">Rematch, change the settings (🎮 Y) or head back to the lobby.</div></div>';
     }
     return banner + grid + (v.phase === 'over' || !v.timed ? '' : '<div class="mm-bar"><div class="fill"></div></div>'); // no bar with no timer
