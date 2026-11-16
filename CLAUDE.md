@@ -57,6 +57,10 @@ In UI styles, use them instead of literal values:
 - Meaning: `--good`, `--bad` (`--bad-strong`, `--bad-soft`), `--warn`. Dark text on a bright fill: `--on-bright`, `--on-good`, `--on-warn`.
 - Radii: `--r-sm` 8px, `--r-md` 12px, `--radius` 18px, `--r-pill`. Type: `--fs-sm` … `--fs-2xl`.
 
+Themes (picked in Settings, served as `/theme.css`) live in `public/shared/themes/<name>.css`: they override
+these tokens and restyle the hub's own screens (lobby, seats, game list, phone header), so a game that sticks
+to the tokens follows the theme for free. Their fonts are bundled in `public/shared/fonts/` (no internet needed).
+
 Keep literal colours for game objects whose colour is the thing itself (a red wire, a Simon pad, a traffic
 light, a gold coin), so a palette change doesn't repaint the game. Phones get the shared `.rematch` button
 style from `play.css`: give your Rematch button `class="primary rematch"` and only add a margin if it needs one.

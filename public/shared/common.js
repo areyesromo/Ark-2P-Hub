@@ -289,6 +289,11 @@
     }
     check();
     socket.on('connect', check);
+    // A new look picked in Settings: swap the theme stylesheet (/theme.css), no reload needed.
+    socket.on('hub:theme', function () {
+      const link = document.getElementById('ark-theme');
+      if (link) link.href = '/theme.css?t=' + Date.now();
+    });
   }
 
   /** A game's lobby labels: 📱 No TV needed (playable on the phones alone), 🤸 Motion (tilt or move to play). */

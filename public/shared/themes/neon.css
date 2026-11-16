@@ -1,0 +1,131 @@
+/* Neon: the two players face off across a split screen, with big scoreboard names.
+   Picked in Settings (served as /theme.css). It changes the tokens and the hub's own screens
+   (lobby, seats, game list, phone header); the games keep their own look and colours. */
+@font-face { font-family: 'Ark Display'; src: url(/shared/fonts/big-shoulders-display-latin-800-normal.woff2) format('woff2'); font-weight: 800; font-display: swap; }
+@font-face { font-family: 'Ark Display'; src: url(/shared/fonts/big-shoulders-display-latin-900-normal.woff2) format('woff2'); font-weight: 900; font-display: swap; }
+@font-face { font-family: 'Ark Text'; src: url(/shared/fonts/atkinson-hyperlegible-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Ark Text'; src: url(/shared/fonts/atkinson-hyperlegible-latin-700-normal.woff2) format('woff2'); font-weight: 700 900; font-display: swap; }
+
+:root {
+  --bg: #14112f;
+  --bg-2: #1d1942;
+  --panel: #1d1942;
+  --line: #332d68;
+  --line-strong: #6a63b0;
+  --text: #f4f1ff;
+  --muted: #a29ed0;
+  --btn: #2e2865;
+  --p1-deep: #0c3b4a;
+  --p2-deep: #4d1a3d;
+  --ink: #0d0b22;
+  --r-sm: 3px;
+  --r-md: 4px;
+  --radius: 6px;
+  --display: 'Ark Display', 'Arial Narrow', Impact, sans-serif;
+}
+
+html, body { font-family: 'Ark Text', system-ui, sans-serif; }
+html { background: var(--bg); }
+body { background: transparent; } /* (so the court below shows through) */
+
+/* The court: each player's side of the screen in their colour, split by a chalk line on a slant.
+   Lobby only (games draw their own backgrounds), and faded out under the top bar. */
+body:has(#lobby:not(.hidden))::before {
+  content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+  background:
+    linear-gradient(105deg, transparent calc(50% - 2px), rgba(244, 241, 255, 0.35) calc(50% - 2px) calc(50% + 2px), transparent calc(50% + 2px)),
+    linear-gradient(105deg, color-mix(in srgb, var(--p1-deep) 85%, transparent) 50%, color-mix(in srgb, var(--p2-deep) 85%, transparent) 50%);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 4.5rem, #000 9rem);
+  mask-image: linear-gradient(to bottom, transparent 4.5rem, #000 9rem);
+}
+/* Both seats taken: the players stack on the left in their own colours, so no court behind them. */
+body:has(#lobby.full:not(.hidden))::before { display: none; }
+
+/* ---- type ---- */
+h1, h2, h3, .brand, .vs, .seat .who, .game-card strong, .phone-games button strong, .hub-title,
+.join-code, .room-chip strong, .lobby-status, .me-name, .rematch, .ark-tourney .t-head {
+  font-family: var(--display);
+}
+h1, h2, h3, .brand { font-weight: 900; letter-spacing: 0.02em; }
+.topbar h1 { font-size: 2.4rem; }
+.brand { text-transform: uppercase; }
+
+/* ---- buttons ---- */
+button, .btn { border-radius: var(--r-md); }
+button.primary, .btn.primary { background: var(--me, var(--p1)); color: var(--ink); }
+button.ghost, .btn.ghost { border-color: var(--line-strong); }
+
+.panel { border-radius: var(--radius); }
+input { border-radius: var(--r-md); }
+
+/* ---- TV lobby ---- */
+.room-chip { border-radius: var(--r-md); background: var(--ink); border-color: var(--line-strong); }
+.room-chip strong { font-size: 1.3em; font-weight: 900; }
+.join.panel { background: color-mix(in srgb, var(--ink) 80%, transparent); }
+.join h2 { font-size: 2.6rem; }
+.join-code { font-size: 2.4rem; font-weight: 900; }
+.qr-wrap { border-radius: var(--r-md); }
+.games.panel { background: color-mix(in srgb, var(--ink) 80%, transparent); }
+.games h2 { font-size: 2.2rem; }
+
+/* The seats: scoreboard names, each on its own side's colour with a slanted edge. */
+.seat {
+  border: 0; border-radius: 0; min-height: 9rem;
+  background: color-mix(in srgb, var(--ink) 70%, transparent);
+  outline: 2px dashed var(--line-strong); outline-offset: -2px;
+}
+#seat-0 { clip-path: polygon(0 0, 100% 0, calc(100% - 1.6rem) 100%, 0 100%); }
+#seat-1 { clip-path: polygon(1.6rem 0, 100% 0, 100% 100%, 0 100%); text-align: right; align-items: flex-end; }
+#seat-1 .who { flex-direction: row-reverse; }
+#seat-1 .kick { right: auto; left: 2rem; }
+.seat.filled { outline: 0; }
+#seat-0.filled { background: linear-gradient(105deg, var(--p1-deep), color-mix(in srgb, var(--p1-deep) 30%, var(--ink))); box-shadow: inset 0.5rem 0 0 var(--p1); }
+#seat-1.filled { background: linear-gradient(255deg, var(--p2-deep), color-mix(in srgb, var(--p2-deep) 30%, var(--ink))); box-shadow: inset -0.5rem 0 0 var(--p2); }
+.seat .label { font-family: var(--display); font-size: 1.1rem; letter-spacing: 0.2em; }
+.seat .who { font-size: 3.4rem; font-weight: 900; line-height: 1; text-transform: uppercase; letter-spacing: 0.01em; }
+.seat.empty .who { font-size: 2.4rem; }
+.vs { font-size: 4rem; font-weight: 900; color: var(--text); font-style: italic; text-shadow: -0.2rem 0 0 var(--p1), 0.2rem 0 0 var(--p2); }
+
+.lobby.full .seat, .lobby.full #seat-1 { clip-path: none; text-align: left; align-items: stretch; }
+.lobby.full #seat-1 .who { flex-direction: row; }
+.lobby.full #seat-1 .kick { left: auto; right: 0.6rem; }
+.lobby.full #seat-1.filled { background: linear-gradient(105deg, var(--p2-deep), color-mix(in srgb, var(--p2-deep) 30%, var(--ink))); box-shadow: inset 0.5rem 0 0 var(--p2); }
+.lobby.full .seat .who { font-size: 2.2rem; }
+.lobby.full .vs { font-size: 2rem; }
+
+/* The game list: a running order, sharp edges, a bar on the left that lights up on the one you're on. */
+.game-card { border-radius: var(--r-sm); background: var(--bg-2); border: 0; box-shadow: inset 0.3rem 0 0 var(--line-strong); padding-left: 1.4rem; }
+.game-card strong { font-size: 1.6rem; font-weight: 800; letter-spacing: 0.01em; }
+.game-card:not(:disabled):hover { box-shadow: inset 0.4rem 0 0 var(--p1); }
+.game-card.pad-focus { box-shadow: inset 0.5rem 0 0 var(--p1), 0 0 0 3px var(--p1); background: color-mix(in srgb, var(--p1-deep) 70%, var(--bg-2)); }
+.game-card.folder { border: 0; box-shadow: inset 0.3rem 0 0 var(--p2), inset 0.6rem 0 0 var(--bg-2), inset 0.8rem 0 0 var(--p2); padding-left: 1.8rem; }
+.game-card.folder.pad-focus { box-shadow: inset 0.3rem 0 0 var(--p2), inset 0.6rem 0 0 var(--bg-2), inset 0.8rem 0 0 var(--p2), 0 0 0 3px var(--p1); }
+.game-card.random { border: 0; background: linear-gradient(105deg, var(--p1-deep) 50%, var(--p2-deep) 50%); box-shadow: none; }
+.game-card.random.pad-focus { box-shadow: 0 0 0 3px var(--p1); }
+.game-group { font-family: var(--display); font-size: 1.5rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.game-group span { font-family: 'Ark Text', system-ui, sans-serif; text-transform: none; letter-spacing: 0; }
+
+.hub-setup .hub-title { font-size: 3em; text-transform: uppercase; }
+.ark-setup .opt { border-radius: var(--r-sm); }
+.ark-tourney, .online-on, .trophy-card, .update-banner { border-radius: var(--r-md); }
+
+/* ---- phones ---- */
+.join-screen h1 { font-size: 3.4rem; text-transform: uppercase; }
+/* Your jersey: the top bar in your colour, cut on a slant. */
+.me {
+  background: linear-gradient(100deg, var(--me) 0 calc(100% - 7.5rem), var(--bg-2) calc(100% - 7.5rem + 1px));
+  border-bottom: 0; color: var(--ink); padding: 6px 16px;
+}
+.me-name { font-size: 1.5rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.02em; }
+.me-tag { color: var(--ink); opacity: 0.75; }
+.me .dot { background: var(--ink); box-shadow: 0 0 0 2px var(--ink); }
+.me .menu-btn { color: var(--text); }
+.me-conn { color: var(--ink); font-weight: 700; }
+.lobby-status { font-size: 1.6rem; font-weight: 800; color: var(--text); text-transform: uppercase; letter-spacing: 0.02em; }
+.phone-games button { border: 0; border-radius: var(--r-sm); background: var(--bg-2); box-shadow: inset 6px 0 0 var(--me); padding-left: 22px; }
+.phone-games button strong { font-size: 1.45rem; font-weight: 800; }
+.phone-games button.folder { border: 0; box-shadow: inset 4px 0 0 var(--me), inset 8px 0 0 var(--bg-2), inset 11px 0 0 var(--me); padding-left: 26px; }
+.phone-games button.random { border: 0; background: linear-gradient(105deg, var(--p1-deep) 50%, var(--p2-deep) 50%); box-shadow: none; }
+.phone-games .game-group { font-family: var(--display); font-size: 1.3rem; text-transform: uppercase; letter-spacing: 0.06em; }
+.phone-games .game-group span { font-family: 'Ark Text', system-ui, sans-serif; text-transform: none; letter-spacing: 0; }
+.rematch { font-size: var(--fs-lg); text-transform: uppercase; letter-spacing: 0.04em; }

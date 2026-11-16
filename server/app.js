@@ -115,6 +115,13 @@ export function createApp({
   });
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
   app.get('/version', (_req, res) => res.json(VERSION));
+  // The look picked in Settings: its stylesheet, or nothing for the default. Every page links it.
+  app.get('/theme.css', (_req, res) => {
+    const theme = settings.theme;
+    res.type('text/css').set('Cache-Control', 'no-cache');
+    if (theme === 'default') return res.send('/* default theme */\n');
+    res.sendFile(path.join(PUBLIC_DIR, 'shared', 'themes', `${theme}.css`));
+  });
   app.get('/whats-new.json', (req, res) => {
     const since = /^\d+\.\d+\.\d+$/.test(String(req.query.since)) ? String(req.query.since) : null;
     res.json({ version: VERSION.version, entries: notesSince(CHANGES, since, VERSION.version) });
@@ -146,6 +153,8 @@ export function createApp({
       online,
       publicUrl,
       detectedJoin: () => resolveJoin({ port }),
+      // A new look: every TV and phone swaps its theme stylesheet (see watchVersion in common.js).
+      onThemeChange: (theme) => io.emit('hub:theme', { theme }),
       // New join address: refresh every open room so TVs show the new QR right away.
       onJoinUrlChange: async () => {
         for (const room of rooms.rooms.values()) {

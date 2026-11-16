@@ -6,6 +6,7 @@
   <link rel="icon" href="/shared/icon.svg">
   <title>Ark 2P Hub · Settings</title>
   <link rel="stylesheet" href="/shared/common.css">
+  <link rel="stylesheet" id="ark-theme" href="/theme.css"> <!-- the look picked in Settings -->
   <style>
     main {
       max-width: 520px;
@@ -21,6 +22,9 @@
     label { display: flex; flex-direction: column; gap: 6px; font-weight: 700; color: var(--muted); }
     label.check { flex-direction: row; align-items: center; gap: 10px; color: var(--text); }
     label.check input { width: 1.2em; height: 1.2em; }
+    .themes { display: flex; flex-direction: column; gap: 10px; }
+    .themes label.check { align-items: flex-start; line-height: 1.4; }
+    .themes label.check input { margin-top: 0.15em; flex: none; }
     .row { display: flex; gap: 10px; flex-wrap: wrap; }
     .row button { flex: 1; }
     p { margin: 0; line-height: 1.45; }
@@ -57,7 +61,15 @@
 
     <!-- Settings -->
     <form id="settings" class="panel hidden">
-      <h2>Join address</h2>
+      <h2>Theme</h2>
+      <p class="muted">The look of the TV and the phones. It changes on every screen straight away.</p>
+      <div class="themes" id="themes" role="radiogroup" aria-label="Theme">
+        <label class="check"><input type="radio" name="theme" value="default"> <span><strong>Default</strong>: the original look, dark blue with the two players' colours</span></label>
+        <label class="check"><input type="radio" name="theme" value="neon"> <span><strong>Neon</strong>: the two players face off across a split screen, with big scoreboard names</span></label>
+        <label class="check"><input type="radio" name="theme" value="cozy"> <span><strong>Cozy</strong>: games as boxes on a shelf, warm wood and paper, players as game pieces</span></label>
+      </div>
+      <p class="msg" id="theme-msg"></p>
+      <h2 style="margin-top:12px">Join address</h2>
       <p class="muted">The address phones open when they scan the QR code on the TV. Use this machine's
         LAN IP and port, e.g. <code>http://192.168.1.50:3000</code>.</p>
       <p class="warn note hidden" id="env-note"></p>
