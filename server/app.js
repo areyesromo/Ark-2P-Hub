@@ -124,11 +124,16 @@ export function createApp({
   app.get('/healthz', (_req, res) => res.json({ ok: true, rooms: rooms.rooms.size, playing: rooms.playing }));
   app.get('/version', (_req, res) => res.json(VERSION));
   // The look picked in Settings: its stylesheet, or nothing for the default. Every page links it.
-  app.get('/theme.css', (_req, res) => {
-    const theme = settings.theme;
-    res.type('text/css').set('Cache-Control', 'no-cache');
-    if (theme === 'default') return res.send('/* default theme */\n');
-    res.sendFile(path.join(PUBLIC_DIR, 'shared', 'themes', `${theme}.css`));
+  // The layout comes after the theme: it moves things about, the theme colours them.
+  app.get('/theme.css', async (_req, res) => {
+    const { theme, layout } = settings;
+    const read = (dir, name) => fs.promises.readFile(path.join(PUBLIC_DIR, 'shared', dir, `${name}.css`), 'utf8');
+    try {
+      const parts = [theme === 'default' ? '/* default theme */\n' : await read('themes', theme), layout === 'classic' ? '/* classic layout */\n' : await read('layouts', layout)];
+      res.type('text/css').set('Cache-Control', 'no-cache').send(parts.join('\n'));
+    } catch {
+      res.type('text/css').send('/* the look could not be read */\n');
+    }
   });
   app.get('/whats-new.json', (req, res) => {
     const since = /^\d+\.\d+\.\d+$/.test(String(req.query.since)) ? String(req.query.since) : null;
@@ -162,7 +167,7 @@ export function createApp({
       publicUrl,
       detectedJoin: () => resolveJoin({ port }),
       // A new look: every TV and phone swaps its theme stylesheet (see watchVersion in common.js).
-      onThemeChange: (theme) => io.emit('hub:theme', { theme }),
+      onThemeChange: () => io.emit('hub:theme', { theme: settings.theme, layout: settings.layout }),
       // New join address: refresh every open room so TVs show the new QR right away.
       onJoinUrlChange: async () => {
         for (const room of rooms.rooms.values()) {
@@ -188,12 +193,13 @@ export function createApp({
   app.use(express.static(PUBLIC_DIR, { extensions: ['html'], setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));
 
   // A new look (Settings, or Player 1's controller on the TV): every screen swaps its stylesheet.
-  const changeTheme = (theme) => {
-    if (!settings.setTheme(theme)) return false;
-    io.emit('hub:theme', { theme: settings.theme });
+  const changeLook = ({ theme, layout }) => {
+    if (theme !== undefined && !settings.setTheme(theme)) return false;
+    if (layout !== undefined && !settings.setLayout(layout)) return false;
+    io.emit('hub:theme', { theme: settings.theme, layout: settings.layout });
     return true;
   };
-  registerSocketHandlers(io, rooms, { refreshJoin, online, setTheme: changeTheme, fromInternet: (socket) => overInternet(socket.handshake.headers, settings.tunnelUrl) });
+  registerSocketHandlers(io, rooms, { refreshJoin, online, setLook: changeLook, fromInternet: (socket) => overInternet(socket.handshake.headers, settings.tunnelUrl) });
 
   const sweeper = setInterval(() => rooms.sweep(), 60 * 1000);
   sweeper.unref();

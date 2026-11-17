@@ -126,25 +126,38 @@ test('theme: picked in Settings, served as /theme.css, and every screen told whe
     return { status: res.status, body: await res.json() };
   };
   const css = async () => (await fetch(base + '/theme.css')).text();
+  const tv = connect(base, { transports: ['websocket'], forceNew: true });
   try {
     assert.match(await css(), /default theme/, 'the original look: nothing to add');
     assert.equal((await call('GET', '/api/admin/status')).body.theme, 'default');
     assert.equal((await call('PUT', '/api/admin/theme', { theme: 'disco' })).status, 400);
     // A TV in a room hears about the change straight away.
-    const tv = connect(base, { transports: ['websocket'], forceNew: true });
     await new Promise((resolve) => tv.emit('host:create', {}, resolve));
     const told = new Promise((resolve) => tv.once('hub:theme', resolve));
     for (const theme of ['neon', 'cozy']) {
       assert.deepEqual((await call('PUT', '/api/admin/theme', { theme })).body, { theme });
-      assert.equal(await css(), fs.readFileSync(path.join('public', 'shared', 'themes', `${theme}.css`), 'utf8'));
+      assert.ok((await css()).startsWith(fs.readFileSync(path.join('public', 'shared', 'themes', `${theme}.css`), 'utf8')));
     }
     assert.equal((await told).theme, 'neon');
     // Kept across a restart (the settings file), and back to the default.
     assert.equal(new Settings(dir).theme, 'cozy');
     await call('PUT', '/api/admin/theme', { theme: 'default' });
     assert.match(await css(), /default theme/);
-    tv.close();
+    // The layout: its own setting, served after the theme in the same stylesheet.
+    assert.equal((await call('GET', '/api/admin/status')).body.layout, 'classic');
+    assert.match(await css(), /classic layout/);
+    assert.equal((await call('PUT', '/api/admin/layout', { layout: 'tilted' })).status, 400);
+    const toldLayout = new Promise((resolve) => tv.once('hub:theme', resolve));
+    assert.deepEqual((await call('PUT', '/api/admin/layout', { layout: 'shelf' })).body, { layout: 'shelf' });
+    assert.deepEqual(await toldLayout, { theme: 'default', layout: 'shelf' });
+    await call('PUT', '/api/admin/theme', { theme: 'neon' });
+    const both = await css();
+    const neon = fs.readFileSync(path.join('public', 'shared', 'themes', 'neon.css'), 'utf8');
+    const shelf = fs.readFileSync(path.join('public', 'shared', 'layouts', 'shelf.css'), 'utf8');
+    assert.ok(both.indexOf(neon) === 0 && both.indexOf(shelf) > neon.length - 1, 'the theme, then the layout');
+    assert.equal(new Settings(dir).layout, 'shelf');
   } finally {
+    tv.close();
     await hub.close();
     fs.rmSync(dir, { recursive: true, force: true });
   }
@@ -173,6 +186,10 @@ test('theme from the TV: only Player 1\'s controller, and every screen hears abo
     assert.deepEqual(await emit(tv, 'host:theme', { theme: 'cozy' }), { ok: true, theme: 'cozy' });
     assert.equal((await told).theme, 'cozy');
     assert.equal(new Settings(dir).theme, 'cozy');
+    assert.deepEqual(await emit(tv, 'host:theme', { layout: 'versus' }), { ok: true, layout: 'versus' });
+    assert.match((await emit(tv, 'host:theme', { layout: 'upside-down' })).error, /No such/);
+    assert.match((await emit(tv, 'host:theme', {})).error, /No such/);
+    assert.equal(new Settings(dir).layout, 'versus');
   } finally {
     tv.close();
     phone.close();

@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.46
+
+- 🧩 New: pick a **layout** as well as a theme (Settings, or RT on Player 1's controller). **Versus** puts
+  the two of you face to face across the screen with names as big as a scoreboard's, and the games
+  as a running order; **Shelf** stands the games on a shelf like boxes, spine out, with the one
+  you're on pulled out. Any theme goes with any layout; **Classic** is the one you know.
+
 ## 0.1.45
 
 - 🎨 Pick a look for the TV and the phones in Settings (⚙ → Theme): **Default**, **Neon** (the two

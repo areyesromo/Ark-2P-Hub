@@ -388,15 +388,18 @@ The setting is stored in the `ark-data` Docker volume, so it survives updates.
 You can also set `PUBLIC_URL` in `docker-compose.yml`:
 it overrides the saved address.
 
-#### Themes
+#### Themes and layouts
 
 Settings (`/admin/`) also picks the look of the TV and the phones: **Default**, **Neon** (a split
 screen, the two players face to face with big scoreboard names) or **Cozy** (games as boxes on a
 shelf, wood and paper, players as game pieces). It changes on every screen straight away. The themes
 dress the lobby, the frame around a match (the top bar, the winner's name, the scoreboards, the
 Rematch button, each game's "You win!"), the leaderboard and the trophies, and give the TV its own
-sound when a player sits down (chalk in Neon, a wooden knock in Cozy). Player 1 can also change it
-on the TV with a controller: **RT** in the lobby, ← → to choose, A to pick.
+sound when a player sits down (chalk in Neon, a wooden knock in Cozy). **Layout** is picked apart from it: **Classic** (the QR
+code, two seats and a grid of games), **Versus** (the two players face to face across a split
+screen, big names, the games as a running order) or **Shelf** (the games as boxes on a shelf, the
+chosen one pulled out). Any theme goes with any layout. Player 1 can also change both on the TV with
+a controller: **RT** in the lobby, ↑ ↓ theme or layout, ← → to choose, A to try it on.
 
 ### Update and redeploy from GitHub
 

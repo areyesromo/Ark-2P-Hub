@@ -292,7 +292,9 @@
     // A new look picked in Settings: swap the theme stylesheet (/theme.css), no reload needed.
     socket.on('hub:theme', function () {
       const link = document.getElementById('ark-theme');
-      if (link) link.href = '/theme.css?t=' + Date.now();
+      if (!link) return;
+      link.onload = function () { document.dispatchEvent(new Event('ark:look')); }; // (the TV's picker follows it)
+      link.href = '/theme.css?t=' + Date.now();
     });
   }
 

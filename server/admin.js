@@ -1,13 +1,13 @@
 import express from 'express';
 import { normalizeJoinUrl } from './network.js';
-import { THEMES } from './settings.js';
+import { THEMES, LAYOUTS } from './settings.js';
 
 /**
  * /api/admin: the settings the Settings page edits (on a computer, or Player 1's phone). There's no
  * password: Settings only opens at home, never over the internet (see app.js), and each change
  * must be sent as JSON, which another website can't do from your browser.
  *
- *   GET  /api/admin/status     { joinUrl, theme, themes, envOverride, detected }
+ *   GET  /api/admin/status     { joinUrl, theme, themes, layout, layouts, envOverride, detected }
  *   PUT  /api/admin/settings   { joinUrl }  -> { joinUrl }
  *   POST /api/admin/stats/reset              -> { ok }     wipe match history
  *   POST /api/admin/trophies/reset           -> { ok }     wipe trophies and practice records
@@ -15,6 +15,7 @@ import { THEMES } from './settings.js';
  *   PUT  /api/admin/online   { allowed?, tunnelUrl? } -> Online#status()
  *   POST /api/admin/online/stop              -> Online#status() stop the tunnel and every room's invite
  *   PUT  /api/admin/theme    { theme }       -> { theme }  the look of the TV and phones (THEMES)
+ *   PUT  /api/admin/layout   { layout }      -> { layout } how the lobby is laid out (LAYOUTS)
  */
 export function adminRouter({ settings, stats, trophies = null, practice = null, online = null, publicUrl, detectedJoin, onJoinUrlChange, onThemeChange = () => {} }) {
   const router = express.Router();
@@ -42,6 +43,8 @@ export function adminRouter({ settings, stats, trophies = null, practice = null,
       joinUrl: settings.joinUrl,
       theme: settings.theme,
       themes: THEMES,
+      layout: settings.layout,
+      layouts: LAYOUTS,
       envOverride: publicUrl || '',
       detected: detectedJoin(),
     });
@@ -63,6 +66,12 @@ export function adminRouter({ settings, stats, trophies = null, practice = null,
     if (!settings.setTheme(req.body && req.body.theme)) return res.status(400).json({ error: 'Pick one of: ' + THEMES.join(', ') + '.' });
     onThemeChange(settings.theme);
     res.json({ theme: settings.theme });
+  });
+
+  router.put('/layout', (req, res) => {
+    if (!settings.setLayout(req.body && req.body.layout)) return res.status(400).json({ error: 'Pick one of: ' + LAYOUTS.join(', ') + '.' });
+    onThemeChange(settings.theme);
+    res.json({ layout: settings.layout });
   });
 
   router.post('/stats/reset', (req, res) => {
