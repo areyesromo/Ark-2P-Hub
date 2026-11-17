@@ -43,6 +43,7 @@
   function showSettings() {
     $('settings').classList.remove('hidden');
     document.querySelectorAll('input[name="theme"]').forEach(function (r) { r.checked = r.value === status.theme; });
+    document.querySelectorAll('input[name="layout"]').forEach(function (r) { r.checked = r.value === status.layout; });
     loadMatchCount();
     loadOnline();
     $('join-url').value = status.joinUrl;
@@ -80,16 +81,34 @@
     e.preventDefault();
     save($('join-url').value);
   });
+  // The choices, each with its picture (look-minis.js).
+  function lookOptions(name, list, mini) {
+    return list.map(function (o) {
+      return '<label class="theme-opt"><input type="radio" name="' + name + '" value="' + o.id + '">' + mini(o.id) +
+        '<span class="txt"><strong>' + o.name + '</strong> ' + o.note + '</span></label>';
+    }).join('');
+  }
+  $('themes').innerHTML = lookOptions('theme', ArkLooks.themes, ArkLooks.themeMini);
+  $('layouts').innerHTML = lookOptions('layout', ArkLooks.layouts, ArkLooks.layoutMini);
+  function refreshLook() {
+    const link = document.getElementById('ark-theme');
+    if (link) link.href = '/theme.css?t=' + Date.now(); // (this page too)
+  }
+
+  $('layouts').addEventListener('change', function (e) {
+    if (e.target.name !== 'layout') return;
+    api('PUT', '/api/admin/layout', { layout: e.target.value }).then(function (r) {
+      $('layout-msg').className = r.status === 200 ? 'msg ok' : 'msg err';
+      $('layout-msg').textContent = r.status === 200 ? 'Layout changed on every screen.' : r.error || 'Something went wrong.';
+      if (r.status === 200) { status.layout = r.layout; refreshLook(); }
+    });
+  });
   $('themes').addEventListener('change', function (e) {
     if (e.target.name !== 'theme') return;
     api('PUT', '/api/admin/theme', { theme: e.target.value }).then(function (r) {
       $('theme-msg').className = r.status === 200 ? 'msg ok' : 'msg err';
       $('theme-msg').textContent = r.status === 200 ? 'Theme changed on every screen.' : r.error || 'Something went wrong.';
-      if (r.status === 200) {
-        status.theme = r.theme;
-        const link = document.getElementById('ark-theme');
-        if (link) link.href = '/theme.css?t=' + Date.now(); // (this page too)
-      }
+      if (r.status === 200) { status.theme = r.theme; refreshLook(); }
     });
   });
   $('use-here').addEventListener('click', function () { $('join-url').value = location.origin; });

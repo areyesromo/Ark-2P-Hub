@@ -44,20 +44,13 @@
     <form id="settings" class="panel hidden">
       <p class="muted note no-embed">Settings opens on this hub's home network only (and from Player 1's phone: ⋯ → ⚙ Settings).</p>
       <h2>Theme</h2>
-      <p class="muted">The look of the TV and the phones. It changes on every screen straight away.</p>
-      <div class="themes" id="themes" role="radiogroup" aria-label="Theme">
-        <!-- Each with a small picture of the TV lobby in that look (drawn in CSS below). -->
-        <label class="theme-opt"><input type="radio" name="theme" value="default">
-          <span class="mini mini-default" aria-hidden="true"><b class="t"><i class="a">ARK</i> <i class="b">2P</i></b><span class="s s1">Ana</span><span class="s s2">Ben</span><span class="g"></span><span class="g"></span><span class="g"></span></span>
-          <span class="txt"><strong>Default</strong> the original look, dark blue with the two players' colours</span></label>
-        <label class="theme-opt"><input type="radio" name="theme" value="neon">
-          <span class="mini mini-neon" aria-hidden="true"><b class="t"><i class="a">ARK</i> <i class="b">2P</i></b><span class="s s1">ANA</span><span class="vs">VS</span><span class="s s2">BEN</span><span class="g"></span><span class="g"></span><span class="g"></span></span>
-          <span class="txt"><strong>Neon</strong> the two players face off across a split screen, with big scoreboard names</span></label>
-        <label class="theme-opt"><input type="radio" name="theme" value="cozy">
-          <span class="mini mini-cozy" aria-hidden="true"><b class="t"><i class="a">ARK</i> <i class="b">2P</i></b><span class="s s1">Ana</span><span class="s s2">Ben</span><span class="g"></span><span class="g"></span><span class="g"></span></span>
-          <span class="txt"><strong>Cozy</strong> games as boxes on a shelf, warm wood and paper, players as game pieces</span></label>
-      </div>
+      <p class="muted">The colours and fonts of the TV and the phones. It changes on every screen straight away.</p>
+      <div class="themes" id="themes" role="radiogroup" aria-label="Theme"></div> <!-- (from ArkLooks: admin.js) -->
       <p class="msg" id="theme-msg"></p>
+      <h2 style="margin-top:12px">Layout</h2>
+      <p class="muted">How the lobby is arranged on the TV and the phones. Any theme goes with any layout.</p>
+      <div class="themes" id="layouts" role="radiogroup" aria-label="Layout"></div>
+      <p class="msg" id="layout-msg"></p>
       <h2 style="margin-top:12px">Join address</h2>
       <p class="muted">The address phones open when they scan the QR code on the TV. Use this machine's
         LAN IP and port, e.g. <code>http://192.168.1.50:3000</code>.</p>
@@ -98,6 +91,7 @@
       <div class="row no-embed"><a class="btn ghost" href="/host/">Back to TV screen</a></div>
     </form>
   </main>
+  <script src="/shared/look-minis.js"></script>
   <script src="/admin/admin.js"></script>
 </body>
 </html>

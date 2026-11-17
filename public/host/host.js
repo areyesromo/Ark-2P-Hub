@@ -224,14 +224,14 @@
     $('game-list').innerHTML = cards.map(function (g, i) {
       const botTag = Ark.botTag(state, g); // (with the computer seated, a game it can't play is greyed out)
       const off = (pads && g.phoneOnly) || Boolean(botTag);
-      if (g.back) return '<button class="game-card random back" data-back' + (padFocus && i === focus ? ' pad-focus' : '') + '><strong>' + Ark.escapeHtml(g.name) + '</strong><span>' + Ark.escapeHtml(g.tagline) + '</span></button>';
+      if (g.back) return '<button class="game-card random back' + (i === focus ? ' at' : '') + (padFocus && i === focus ? ' pad-focus' : '') + '" data-back><strong>' + Ark.escapeHtml(g.name) + '</strong><span>' + Ark.escapeHtml(g.tagline) + '</span></button>';
       const heading = !openFolder && i > 0 && (i === 1 || cards[i - 1].category !== g.category)
         ? '<h3 class="game-group">' + (GROUPS[g.category] || Ark.escapeHtml(g.category)) + '</h3>'
         : '';
       const tag = newest && g.lastPlayed === newest ? '<em class="tag">⏱ Last played</em>' : '';
       return (
         heading +
-        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (g.folderCard ? ' folder' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" ' +
+        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (g.folderCard ? ' folder' : '') + (i === focus ? ' at' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" ' +
         (g.folderCard ? 'data-folder="' + Ark.escapeHtml(g.folderCard) + '">' : 'data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>') +
         '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag || Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
@@ -702,44 +702,41 @@
     renderPadHint();
   }
 
-  // ---- the theme, picked with Player 1's controller (RT, or a click of the right stick) ----
-  // The phones' Player 1 has Settings for it; here the controller moves round the three looks.
+  // ---- the look, picked with Player 1's controller (RT, or a click of the right stick) ----
+  // Two rows, the theme (colours and fonts) and the layout; the phones' Player 1 has Settings for it.
 
-  const THEMES = [
-    { id: 'default', name: 'Default', note: 'the original look' },
-    { id: 'neon', name: 'Neon', note: 'a split screen, scoreboard names' },
-    { id: 'cozy', name: 'Cozy', note: 'boxes on a shelf, wood and paper' },
+  const LOOK_ROWS = [
+    { key: 'theme', title: '🎨 Theme', list: ArkLooks.themes, mini: ArkLooks.themeMini, fallback: 'default' },
+    { key: 'layout', title: '🧩 Layout', list: ArkLooks.layouts, mini: ArkLooks.layoutMini, fallback: 'classic' },
   ];
-  let themeSheet = null; // { pad, focus } while it's open
+  let themeSheet = null; // { pad, row, focus: [theme, layout] } while it's open
 
-  /** The look the TV is wearing now: each theme's stylesheet names itself (--ark-theme). */
-  function currentTheme() {
-    return getComputedStyle(document.documentElement).getPropertyValue('--ark-theme').trim() || 'default';
-  }
-
-  function themeMini(id) {
-    const cap = id === 'neon' ? function (s) { return s.toUpperCase(); } : function (s) { return s; };
-    return '<span class="mini mini-' + id + '" aria-hidden="true"><b class="t"><i class="a">ARK</i> <i class="b">2P</i></b>' +
-      '<span class="s s1">' + cap('Ana') + '</span>' + (id === 'neon' ? '<span class="vs">VS</span>' : '') + '<span class="s s2">' + cap('Ben') + '</span>' +
-      '<span class="g"></span><span class="g"></span><span class="g"></span></span>';
+  /** What the TV is wearing now: each theme and layout stylesheet names itself (--ark-theme, --ark-layout). */
+  function currentLook(key) {
+    const row = LOOK_ROWS.find(function (r) { return r.key === key; });
+    return getComputedStyle(document.documentElement).getPropertyValue('--ark-' + key).trim() || row.fallback;
   }
 
   function renderThemes() {
     const el = $('theme-sheet');
     el.classList.toggle('hidden', !themeSheet);
     if (!themeSheet) return void (el.innerHTML = '');
-    const now = currentTheme();
-    el.innerHTML = '<div class="panel ts-panel"><h2>🎨 Theme</h2><div class="ts-list">' +
-      THEMES.map(function (t, i) {
-        return '<div class="ts-opt' + (t.id === now ? ' on' : '') + (i === themeSheet.focus ? ' pad-focus' : '') + '">' + themeMini(t.id) +
-          '<strong>' + t.name + (t.id === now ? ' ✓' : '') + '</strong><span>' + t.note + '</span></div>';
-      }).join('') +
-      '</div><p class="muted">🎮 ← → choose · A pick · B close</p></div>';
+    el.innerHTML = '<div class="panel ts-panel">' + LOOK_ROWS.map(function (row, r) {
+      const now = currentLook(row.key);
+      return '<h2 class="' + (r === themeSheet.row ? 'on' : '') + '">' + row.title + '</h2><div class="ts-list">' +
+        row.list.map(function (t, i) {
+          return '<div class="ts-opt' + (t.id === now ? ' on' : '') + (r === themeSheet.row && i === themeSheet.focus[r] ? ' pad-focus' : '') + '">' + row.mini(t.id) +
+            '<strong>' + t.name + (t.id === now ? ' ✓' : '') + '</strong></div>';
+        }).join('') + '</div>';
+    }).join('') + '<p class="muted">🎮 ↑ ↓ theme or layout · ← → choose · A try it on · B done</p></div>';
   }
 
   function openThemes(idx) {
-    const at = THEMES.findIndex(function (t) { return t.id === currentTheme(); });
-    themeSheet = { pad: Number(idx), focus: Math.max(0, at) };
+    themeSheet = {
+      pad: Number(idx),
+      row: 0,
+      focus: LOOK_ROWS.map(function (row) { return Math.max(0, row.list.findIndex(function (t) { return t.id === currentLook(row.key); })); }),
+    };
     renderThemes();
   }
 
@@ -749,27 +746,34 @@
   }
 
   function themePress(btn) {
-    const n = THEMES.length;
-    if (btn === 'LEFT' || btn === 'UP') themeSheet.focus = (themeSheet.focus + n - 1) % n;
-    else if (btn === 'RIGHT' || btn === 'DOWN') themeSheet.focus = (themeSheet.focus + 1) % n;
+    const r = themeSheet.row;
+    const n = LOOK_ROWS[r].list.length;
+    if (btn === 'UP' || btn === 'DOWN') themeSheet.row = (r + 1) % LOOK_ROWS.length;
+    else if (btn === 'LEFT') themeSheet.focus[r] = (themeSheet.focus[r] + n - 1) % n;
+    else if (btn === 'RIGHT') themeSheet.focus[r] = (themeSheet.focus[r] + 1) % n;
     else if (btn === 'B' || btn === 'BACK') return closeThemes();
     else if (btn === 'A' || btn === 'START') {
-      const pick = THEMES[themeSheet.focus];
-      closeThemes();
-      socket.emit('host:theme', { theme: pick.id }, function (res) {
-        flashPad(res && res.ok ? '🎨 Theme: ' + pick.name + ' · RT to change' : '⚠️ ' + ((res && res.error) || 'The theme didn\'t change.'));
+      // Worn straight away (every screen); the picker stays open to try the other row.
+      const row = LOOK_ROWS[r];
+      const pick = row.list[themeSheet.focus[r]];
+      const msg = {};
+      msg[row.key] = pick.id;
+      socket.emit('host:theme', msg, function (res) {
+        if (!res || !res.ok) flashPad('⚠️ ' + ((res && res.error) || 'The look didn\'t change.'));
       });
       return;
     } else return;
     renderThemes();
   }
+  // A new look has arrived (common.js swaps the stylesheet): the picker's ✓ follows it.
+  document.addEventListener('ark:look', function () { if (themeSheet) renderThemes(); });
 
   function renderPadHint() {
     const n = connectedPads.length;
     let text;
     if (padMessage) text = padMessage;
     else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
-    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · LT play the computer · RT theme (Player 1) · D-pad + A pick a game' +
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · LT play the computer · RT theme and layout (Player 1) · D-pad + A pick a game' +
       (awayPhones().length ? ' · Back: free the seat of a phone that left' : '');
     $('pad-hint').textContent = text;
     renderUpdate(); // its RT tag shows while a controller is connected
@@ -913,7 +917,7 @@
     }
     if (btn === 'LB' || btn === 'RB') return openPicker(seat.slot, Number(idx));
     if (btn === 'RT' || btn === 'RS') {
-      if (seat.slot !== 0) return flashPad('🎨 Player 1 picks the theme (RT on their controller).');
+      if (seat.slot !== 0) return flashPad('🎨 Player 1 picks the theme and layout (RT on their controller).');
       return openThemes(idx);
     }
     const cards = lobbyCards();

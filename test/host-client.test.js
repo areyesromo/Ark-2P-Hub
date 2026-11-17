@@ -51,6 +51,7 @@ function tv(load) {
     ArkSound: stub(),
     ArkPads: stub(),
     ArkMusic: stub(),
+    ArkLooks: stub(),
     setTimeout: () => 0,
     clearTimeout() {},
     setInterval: () => 0,

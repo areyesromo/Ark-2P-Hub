@@ -39,3 +39,31 @@ code { background: var(--bg-2); padding: 2px 6px; border-radius: 6px; word-break
 .msg.err { color: var(--bad); }
 .note { font-size: 0.9rem; }
 .warn { color: var(--warn); }
+
+/* The layouts' pictures (ArkLooks.layoutMini): blocks in the page's own colours. */
+.mini.lay { display: block; position: relative; padding: 0; background: var(--bg); border: 1px solid var(--line); }
+.lay i { position: absolute; display: block; font-style: normal; }
+.lay .q { left: 5%; top: 10%; width: 32%; height: 80%; border-radius: 4px; background: var(--panel); box-shadow: inset 0 0 0 1px var(--line); }
+.lay .q::after { content: ''; position: absolute; inset: 25% 20%; background: #fff; border-radius: 2px; }
+.lay .st { width: 25%; height: 26%; border-radius: 4px; background: var(--panel); }
+.lay .st.p1 { box-shadow: inset 0 0 0 2px var(--p1); }
+.lay .st.p2 { box-shadow: inset 0 0 0 2px var(--p2); }
+.lay .bx { width: 17%; height: 22%; border-radius: 3px; background: var(--bg-2); box-shadow: inset 0 0 0 1px var(--line); }
+.lay .court { inset: 0; background: linear-gradient(105deg, color-mix(in srgb, var(--p1) 22%, var(--bg)) 50%, color-mix(in srgb, var(--p2) 22%, var(--bg)) 50%); }
+.lay .name { top: 12%; font-size: 21px; font-weight: 900; line-height: 1; font-family: var(--font-title, inherit); }
+.lay .name.p1 { color: var(--p1); }
+.lay .name.p2 { color: var(--p2); }
+.lay .vs { left: 44%; top: 20%; font-size: 12px; font-weight: 900; font-style: italic; color: var(--text); }
+.lay .row { width: 27%; height: 13%; border-top: 1px solid var(--line-strong, var(--line)); }
+.lay .row.on { background: var(--text); border-top: 2px solid var(--p1); }
+.lay .piece { top: 10%; width: 9%; aspect-ratio: 1; border-radius: 50%; box-shadow: inset 0 -2px 0 rgba(0, 0, 0, 0.3); }
+.lay .piece.p1 { background: var(--p1); }
+.lay .piece.p2 { background: var(--p2); }
+.lay .pname { top: 13%; font-size: 10px; font-weight: 900; color: var(--text); font-family: var(--font-title, inherit); }
+.lay .spine, .lay .front { bottom: 22%; width: 6.5%; border-radius: 1px; }
+.lay .s0 { background: color-mix(in srgb, var(--p1) 50%, var(--bg)); }
+.lay .s1 { background: color-mix(in srgb, var(--warn) 50%, var(--bg)); }
+.lay .s2 { background: color-mix(in srgb, var(--p2) 50%, var(--bg)); }
+.lay .s3 { background: color-mix(in srgb, var(--good) 45%, var(--bg)); }
+.lay .front { width: 22%; height: 44%; bottom: 24%; background: var(--text); box-shadow: inset 0 3px 0 var(--p1); }
+.lay .plank { left: 4%; right: 4%; bottom: 17%; height: 5%; background: color-mix(in srgb, #6b4430 80%, var(--bg)); }

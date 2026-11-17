@@ -23,6 +23,7 @@
   --r-md: 4px;
   --radius: 6px;
   --display: 'Ark Display', 'Arial Narrow', Impact, sans-serif;
+  --font-title: var(--display); /* (the layouts' big names and titles) */
 }
 
 html, body { font-family: 'Ark Text', system-ui, sans-serif; }

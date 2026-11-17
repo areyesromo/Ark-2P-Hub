@@ -9,6 +9,14 @@ import path from 'node:path';
 export const THEMES = ['default', 'neon', 'cozy'];
 
 /**
+ * How the lobby is laid out, picked apart from the theme (any theme with any layout): classic (the
+ * original grid), versus (the two players face to face, big names, games as a running order) and
+ * shelf (games as boxes on a shelf, the chosen one pulled out). Each but classic is a stylesheet in
+ * public/shared/layouts/, served after the theme in /theme.css.
+ */
+export const LAYOUTS = ['classic', 'versus', 'shelf'];
+
+/**
  * Small persistent settings store (a JSON file in the data folder, which is a
  * Docker volume so it survives updates): the join address for the QR code, online
  * play and the theme. Settings has no password: it opens only at home (see app.js).
@@ -38,6 +46,19 @@ export class Settings {
   /** The look of the TV and phones (see THEMES): Default unless picked in Settings. */
   get theme() {
     return THEMES.includes(this.data.theme) ? this.data.theme : 'default';
+  }
+
+  /** The lobby's layout (see LAYOUTS): Classic unless picked in Settings. */
+  get layout() {
+    return LAYOUTS.includes(this.data.layout) ? this.data.layout : 'classic';
+  }
+
+  setLayout(layout) {
+    if (!LAYOUTS.includes(layout)) return false;
+    if (layout === 'classic') delete this.data.layout;
+    else this.data.layout = layout;
+    this.save();
+    return true;
   }
 
   setTheme(theme) {

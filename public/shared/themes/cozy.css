@@ -29,6 +29,7 @@
   --r-md: 10px;
   --radius: 14px;
   --serif: 'Ark Serif', Georgia, serif;
+  --font-title: var(--serif); /* (the layouts' big names and titles) */
 }
 
 html, body { font-family: 'Ark Text', system-ui, sans-serif; }

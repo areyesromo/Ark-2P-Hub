@@ -25,7 +25,7 @@ const reply = (ack, payload) => {
  *   pad:rename    { slot, name }             -> ack { ok, name } | { error }
  *   profile:set   { avatar?, colour?, slot? } -> ack { ok, profile } | { error }  (a phone: its own seat; the TV: slot)
  *   host:kick     { slot }                   -> ack { ok } | { error }  (the TV removes a player)
- *   host:theme    { theme }                  -> ack { ok, theme } | { error }  (Player 1's controller picks the look, see THEMES)
+ *   host:theme    { theme?, layout? }        -> ack { ok, theme?, layout? } | { error }  (Player 1's controller picks the look: THEMES, LAYOUTS)
  *
  * Server -> client:
  *   room:state    Room#publicState()
@@ -40,7 +40,7 @@ export const GUESSES = { max: 20, windowMs: 10 * 60 * 1000 };
 /** How long a phone gets to answer "still there?" before its seat counts as free. */
 export const PING_MS = 2500;
 
-export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, fromInternet = () => false, setTheme = () => false }) {
+export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, fromInternet = () => false, setLook = () => false }) {
   /** Does this seated phone still answer? */
   function answers(player) {
     const s = player && player.socketId && io.sockets.sockets.get(player.socketId);
@@ -360,10 +360,10 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
       if (role !== 'host' || fromInternet(socket)) return reply(ack, { error: 'Only the TV at home can change the theme.' });
       const p1 = room.players[0];
       if (!p1 || !p1.local) return reply(ack, { error: 'Player 1 picks the theme, with a controller on this TV.' });
-      const theme = asObject(data).theme;
-      if (!setTheme(theme)) return reply(ack, { error: 'No such theme.' });
+      const { theme, layout } = asObject(data);
+      if ((theme === undefined && layout === undefined) || !setLook({ theme, layout })) return reply(ack, { error: 'No such theme or layout.' });
       room.touch();
-      reply(ack, { ok: true, theme });
+      reply(ack, { ok: true, ...(theme !== undefined && { theme }), ...(layout !== undefined && { layout }) });
     });
 
     socket.on('disconnect', detach);
