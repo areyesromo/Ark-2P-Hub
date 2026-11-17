@@ -81,6 +81,7 @@ import { PARTIES } from './minis/index.js';
 import mancala from './mancala.js';
 import dotsBoxes from './dots-boxes.js';
 import { withSetup } from './options.js';
+import { BLURBS } from './blurbs.js';
 
 /**
  * Every game is a module exporting:
@@ -315,6 +316,7 @@ export function listGames() {
       id,
       name,
       tagline,
+      blurb: BLURBS[id] || tagline, // the lobby card's short line (the tagline is on the setup screen)
       category: category || 'competitive',
       folder: folderOf(id), // in a lobby folder (see FOLDERS), or null
       needsPhone: Boolean(needsPhone || phoneOnly),

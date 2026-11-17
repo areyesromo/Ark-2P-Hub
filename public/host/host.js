@@ -239,7 +239,7 @@
         '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (g.folderCard ? ' folder' : '') + (i === focus ? ' at' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" ' +
         (g.folderCard ? 'data-folder="' + Ark.escapeHtml(g.folderCard) + '">' : 'data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>') +
         '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag || Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
-        '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
+        '<span>' + Ark.escapeHtml(g.blurb || g.tagline) + '</span>' +
         '</button>'
       );
     }).join('');
@@ -541,6 +541,17 @@
 
   const hubPads = {}; // controller players: slot -> { row }
   let hubSetupKey = '';
+  let guideSheet = null; // How to play / About, open over the setup screen (Ark.guide)
+
+  function openGuide(tab, pad) {
+    if (guideSheet) guideSheet.close();
+    const game = (state.games || []).find(function (g) { return g.id === state.gameId; });
+    guideSheet = Ark.guide.open(game, tab, { pad: pad, onClose: function () { guideSheet = null; } });
+  }
+  $('hub-setup').addEventListener('click', function (e) {
+    const b = e.target.closest('[data-guide]');
+    if (b) openGuide(b.getAttribute('data-guide'), false);
+  });
 
   function showHubSetup(v) {
     const playing = Boolean(state && state.phase === 'playing');
@@ -548,6 +559,7 @@
     $('stage').classList.toggle('hidden', Boolean(v) || !playing);
     if (!v) {
       hubSetupKey = '';
+      if (guideSheet) guideSheet.close(); // (the game has started)
       return;
     }
     const parts = Ark.setup.hubParts(v);
@@ -558,6 +570,8 @@
     const game = (state.games || []).find(function (g) { return g.id === state.gameId; });
     $('hub-setup').innerHTML =
       '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
+      (game && game.blurb ? '<p class="hub-blurb">' + Ark.escapeHtml(game.blurb) + '</p>' : '') +
+      Ark.guide.buttonsHtml(Object.keys(padSeats).length > 0) +
       '<p class="muted">Set up the match on your phone, or with a controller: ↑↓ picks a row, ←→ changes it. ' +
       '<strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</p>' +
       Ark.setup.html(parts.view, parts.rows, focus);
@@ -873,7 +887,10 @@
     const seat = padSeats[idx];
 
     if (state.phase === 'playing') {
+      // The guide, open over the setup screen, takes the controller (B closes it).
+      if (guideSheet) return guideSheet.press(btn);
       if (btn === 'BACK') return socket.emit('lobby:return');
+      if (seat && Ark.setup.isHub(lastView) && (btn === 'X' || btn === 'Y')) return openGuide(btn === 'X' ? 'rules' : 'about', true);
       if (seat && Ark.setup.isHub(lastView)) {
         if (!hubPads[seat.slot]) hubPads[seat.slot] = { row: 0 };
         const parts = Ark.setup.hubParts(lastView);

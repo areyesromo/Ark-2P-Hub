@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import fs from 'node:fs';
-import { catalog, CATALOG, IDEAS_MARK } from '../tools/games-catalog.mjs';
+import { catalog, CATALOG, IDEAS_MARK, guide, GUIDE } from '../tools/games-catalog.mjs';
 import { listGames } from '../server/games/index.js';
 import { MICROS, PARTIES } from '../server/games/minis/index.js';
 
@@ -18,4 +18,20 @@ test('docs/GAMES.md: no idea has the name of a game or minigame we already have'
   const ideas = [...text.slice(text.indexOf(IDEAS_MARK)).matchAll(/^- \*\*(.+?)\*\*/gm)].map((m) => m[1]);
   assert.ok(ideas.length > 0);
   for (const name of ideas) assert.ok(!have.has(name.toLowerCase()), `"${name}" is built: move it out of the ideas`);
+});
+
+test('the setup screen\'s 📖 How to play is the README\'s rules for every game (run `node tools/games-catalog.mjs` after changing them)', () => {
+  assert.equal(fs.readFileSync(GUIDE, 'utf8').replace(/\r\n/g, '\n'), guide());
+  const g = JSON.parse(guide());
+  for (const game of listGames()) {
+    assert.ok(g[game.id] && g[game.id].rules, game.id + ': its row in the README games table');
+    assert.ok(!/[<>]script/i.test(JSON.stringify(g[game.id])));
+  }
+});
+
+test('every game has a short line for its lobby card (the full description is on its setup screen)', () => {
+  for (const game of listGames()) {
+    assert.ok(game.blurb && game.blurb !== game.tagline, game.id + ': a line in server/games/blurbs.js');
+    assert.ok(game.blurb.length <= 50, game.id + ': ' + game.blurb.length + ' letters');
+  }
 });
