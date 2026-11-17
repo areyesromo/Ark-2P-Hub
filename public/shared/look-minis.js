@@ -6,11 +6,13 @@
     { id: 'default', name: 'Default', note: 'the original look, dark blue with the two players\' colours' },
     { id: 'neon', name: 'Neon', note: 'scoreboard letters and the two players\' colours, on a split court' },
     { id: 'cozy', name: 'Cozy', note: 'warm wood and paper, players as game pieces' },
+    { id: 'daylight', name: 'Daylight', note: 'bright paper and ink for a sunny room (games keep their dark look)' },
   ];
   const LAYOUTS = [
     { id: 'classic', name: 'Classic', note: 'the QR code, the two seats and a grid of games' },
     { id: 'versus', name: 'Versus', note: 'the two players face to face, big names, the games as a running order' },
     { id: 'shelf', name: 'Shelf', note: 'games as boxes on a shelf, the chosen one pulled out' },
+    { id: 'arcade', name: 'Arcade', note: 'a cabinet\'s select screen: big tiles in a strip, P1 / P2 badges' },
   ];
 
   function themeMini(id) {
@@ -29,6 +31,10 @@
     } else if (id === 'versus') {
       parts = '<i class="court"></i><i class="name p1" style="left:6%">Ana</i><i class="vs">VS</i><i class="name p2" style="right:6%">Ben</i>' +
         [0, 1, 2, 3, 4, 5].map(function (k) { return '<i class="row' + (k ? '' : ' on') + '" style="left:' + (6 + (k % 3) * 30) + '%;top:' + (62 + Math.floor(k / 3) * 17) + '%"></i>'; }).join('');
+    } else if (id === 'arcade') {
+      parts = '<i class="title">SELECT GAME</i>' +
+        [0, 1, 2, 3, 4].map(function (k) { return '<i class="tile t' + (k % 4) + (k === 2 ? ' on' : '') + '" style="left:' + (2 + k * 20) + '%"></i>'; }).join('') +
+        '<i class="badge p1" style="left:6%">P1 Ana</i><i class="badge p2" style="right:6%">P2 Ben</i>';
     } else {
       parts = '<i class="piece p1" style="left:30%"></i><i class="pname" style="left:40%">Ana</i><i class="piece p2" style="left:62%"></i><i class="pname" style="left:72%">Ben</i>' +
         [0, 1, 2, 3, 4, 5, 6, 7].map(function (k) {
