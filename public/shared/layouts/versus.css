@@ -32,8 +32,8 @@ body:has(#lobby:not(.hidden))::before, body:has(#lobby.full:not(.hidden))::befor
 #lobby #seat-0 .kick { right: 0; left: auto; top: 0; }
 #lobby #seat-1 .kick { left: 0; right: auto; top: 0; }
 #lobby .seat .label { font-size: 1rem; letter-spacing: 0.15em; }
-#lobby .seat .who { font-family: var(--font-title, inherit); font-size: 6rem; font-weight: 900; line-height: 0.95; }
-#lobby.full .seat .who { font-size: 5.2rem; }
+#lobby .seat .who { font-family: var(--font-title, inherit); font-size: min(6rem, calc(36rem / var(--name-len, 6))); font-weight: 900; line-height: 0.95; }
+#lobby.full .seat .who { font-size: min(5.2rem, calc(46rem / var(--name-len, 6))); }
 #lobby #seat-0.filled .who { color: var(--p1); }
 #lobby #seat-1.filled .who { color: var(--p2); }
 #lobby .seat.empty .who { font-size: 3.2rem; color: var(--muted); }

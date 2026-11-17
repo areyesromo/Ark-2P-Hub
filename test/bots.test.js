@@ -58,44 +58,6 @@ test('Memory Match: Hard remembers every card it has seen, Easy forgets', () => 
   assert.ok(hard >= 5, 'Hard won ' + hard + ' of 6');
 });
 
-test('quizzes: Hard is right more often than Easy, and never sees an answer it isn\'t meant to on a player\'s screen', () => {
-  const def = getGame('quiz');
-  const right = (level) => {
-    let n = 0;
-    for (let i = 0; i < 400; i++) {
-      const m = def.bot({ phase: 'question', yourPick: null, question: { options: ['a', 'b', 'c', 'd'] }, botAnswer: 2, timeLeftMs: 15000 }, level, Math.random);
-      if (m.choice === 2) n++;
-    }
-    return n / 400;
-  };
-  assert.ok(right('hard') > right('normal') + 0.08 && right('normal') > right('easy') + 0.08);
-  for (const id of ['quiz', 'trivia-quest']) {
-    // The answer is only in the computer's own view.
-    const ctx = fakeCtx();
-    ctx.players.forEach((p) => (p.local = true));
-    ctx.players[1].bot = 'hard';
-    const g = getGame(id).create(ctx);
-    g.start();
-    if (g.hostView().phase === 'setup') g.onInput(0, { type: 'go' });
-    for (let i = 0; i < 60 && g.hostView().phase !== 'question'; i++) ctx.advance(500);
-    assert.equal(g.hostView().phase, 'question');
-    assert.equal(g.playerView(0).correct, null);
-    assert.equal(g.playerView(1).correct, null);
-    assert.equal(g.hostView().correct, null);
-    assert.ok(Number.isInteger(g.botView(1).botAnswer));
-    assert.equal(g.botView(0).botAnswer, undefined, 'only for the computer\'s seat');
-  }
-});
-
-test('Reaction Duel: the computer never jumps the gun, and Hard is quicker than Easy', () => {
-  const { view } = play('reaction-duel', ['hard', 'easy'], { seed: 3 });
-  assert.equal(view.phase, 'over');
-  assert.equal(view.winner, 0);
-  assert.ok(view.bestMs[0] >= 150, 'a human-ish time: ' + view.bestMs[0]);
-  const def = getGame('reaction-duel');
-  assert.equal(def.bot({ phase: 'wait', you: 1 }, 'hard', Math.random), null);
-});
-
 test('Dice Party: the computer decides what to hold once a roll, and doesn\'t flip-flop', () => {
   const def = getGame('dice-party');
   for (const level of ['normal', 'hard']) {
@@ -260,12 +222,11 @@ test('Word Hunt: a word that also reads somewhere else on the grid is still foun
   assert.ok(tried.has('0-6') && tried.has('0-2'), [...tried].join(' '));
 });
 
-test('the computer never reacts faster than a person could (Pong, Air Hockey, Tank Duel, Reaction Duel)', async () => {
+test('the computer never reacts faster than a person could (Pong, Air Hockey, Tank Duel)', async () => {
   const { REACTION } = await import('../server/games/bot-human.js');
   const views = {
     pong: { phase: 'play', you: 1, ball: { x: 8, y: 4.5, vx: 10, vy: 2 }, paddles: [4.5, 4.5] },
     'air-hockey': { phase: 'play', you: 0, puck: { x: 5, y: 4, vx: -3, vy: 0 }, mallets: [{ x: 2, y: 4.5 }, { x: 14, y: 4.5 }] },
-    'reaction-duel': { phase: 'go', you: 0 },
     tanks: { phase: 'play', you: 0, ready: true, field: { w: 16, h: 9 }, obstacles: [], shells: [], tanks: [{ x: 2, y: 4.5, angle: 0, alive: true }, { x: 14, y: 4.5, angle: Math.PI, alive: true }] },
   };
   for (const [id, view] of Object.entries(views)) {

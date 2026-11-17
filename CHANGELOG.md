@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.47
+
+- 📛 Long names fit their seat: in every layout and theme a name shrinks to fit (up to 16 letters), so
+  "Controller 1" no longer pushes Player 2 aside.
+- 🤖 With the computer in a seat, the lobby makes room for the games as it does for two people (the
+  room code stays on screen: join with it to take the computer's seat).
+- 🤖 Reaction Duel, Quiz Battle, Trivia Quest and Tower Stack are for two people now: the computer was
+  either unbeatable or no fun there.
+
 ## 0.1.46
 
 - 🧩 New: pick a **layout** as well as a theme (Settings, or RT on Player 1's controller). **Versus** puts

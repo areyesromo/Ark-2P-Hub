@@ -8,10 +8,10 @@ import { fakeCtx } from './helpers.js';
 import { Sight } from '../server/games/bot-human.js';
 
 
-export const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze', 'tower-stack'];
-export const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'quiz', 'trivia-quest', 'reaction-duel', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'ten-pin', ...REALTIME];
+export const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
+export const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'ten-pin', ...REALTIME];
 export const SOON = [];
-export const COOP = ['kitchen-rush', 'dungeon-duo', 'marble-maze', 'tower-stack']; // (the computer as your teammate: nobody to beat)
+export const COOP = ['kitchen-rush', 'dungeon-duo', 'marble-maze']; // (the computer as your teammate: nobody to beat)
 
 /** A seeded rng (mulberry32). */
 export function seeded(seed) {
@@ -161,7 +161,7 @@ export function gameTests(ids) {
           assert.equal(view.phase, 'over', id + ' ' + level);
           // (both move in a turn-based game; in an action game one can win without having to: the
           // quicker tap in Reaction Duel, a blob whose spot the ball keeps landing on in Volley Blobs)
-          assert.ok(id === 'reaction-duel' || REALTIME.includes(id) ? stats.moves[0] + stats.moves[1] > 0 : stats.moves[0] > 0 && stats.moves[1] > 0, id + ' ' + level + ' both moved: ' + JSON.stringify(stats) + ' ' + JSON.stringify(view.scores));
+          assert.ok(REALTIME.includes(id) ? stats.moves[0] + stats.moves[1] > 0 : stats.moves[0] > 0 && stats.moves[1] > 0, id + ' ' + level + ' both moved: ' + JSON.stringify(stats) + ' ' + JSON.stringify(view.scores));
           if (!REALTIME.includes(id)) assert.equal(stats.refused, 0, id + ' every move taken'); // (a steer shows a tick later)
         }
       });

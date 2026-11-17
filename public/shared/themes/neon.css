@@ -84,15 +84,15 @@ input { border-radius: var(--r-md); }
 #seat-0.filled { background: linear-gradient(105deg, var(--p1-deep), color-mix(in srgb, var(--p1-deep) 30%, var(--ink))); box-shadow: inset 0.5rem 0 0 var(--p1); }
 #seat-1.filled { background: linear-gradient(255deg, var(--p2-deep), color-mix(in srgb, var(--p2-deep) 30%, var(--ink))); box-shadow: inset -0.5rem 0 0 var(--p2); }
 .seat .label { font-family: var(--display); font-size: 1.1rem; letter-spacing: 0.2em; }
-.seat .who { font-size: 3.4rem; font-weight: 900; line-height: 1; text-transform: uppercase; letter-spacing: 0.01em; }
-.seat.empty .who { font-size: 2.4rem; }
+.seat .who { font-size: min(3.4rem, calc(30rem / var(--name-len, 6))); font-weight: 900; line-height: 1; text-transform: uppercase; letter-spacing: 0.01em; }
+.seat.empty .who { font-size: 2.4rem; } /* ("Waiting…") */
 .seats .vs { font-size: 4rem; font-weight: 900; color: var(--text); font-style: italic; text-shadow: -0.2rem 0 0 var(--p1), 0.2rem 0 0 var(--p2); }
 
 .lobby.full .seat, .lobby.full #seat-1 { clip-path: none; text-align: left; align-items: stretch; }
 .lobby.full #seat-1 .who { flex-direction: row; }
 .lobby.full #seat-1 .kick { left: auto; right: 0.6rem; }
 .lobby.full #seat-1.filled { background: linear-gradient(105deg, var(--p2-deep), color-mix(in srgb, var(--p2-deep) 30%, var(--ink))); box-shadow: inset 0.5rem 0 0 var(--p2); }
-.lobby.full .seat .who { font-size: 2.2rem; }
+.lobby.full .seat .who { font-size: min(2.2rem, calc(24rem / var(--name-len, 6))); }
 .lobby.full .seats .vs { font-size: 2rem; }
 
 /* The game list: a running order, sharp edges, a bar on the left that lights up on the one you're on. */

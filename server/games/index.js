@@ -28,8 +28,6 @@ import { mancalaBot } from './mancala-bot.js';
 import { rpsBot } from './rock-paper-scissors-bot.js';
 import { memoryMatchBot } from './memory-match-bot.js';
 import { diceBot } from './dice-party-bot.js';
-import { quizBot } from './quiz-bot.js';
-import { reactionDuelBot } from './reaction-duel-bot.js';
 import { pongBot } from './pong-bot.js';
 import { airHockeyBot } from './air-hockey-bot.js';
 import { snakeBot } from './snake-bot.js';
@@ -43,7 +41,6 @@ import { rallyTennisBot } from './rally-tennis-bot.js';
 import { sumoBot } from './sumo-bot.js';
 import { miniGolfBot } from './mini-golf-bot.js';
 import { tenPinBot } from './ten-pin-bot.js';
-import { towerStackBot } from './tower-stack-bot.js';
 import { blockBattleBot } from './block-battle-bot.js';
 import { crazyEightsBot } from './crazy-eights-bot.js';
 import { liarsDiceBot } from './liars-dice-bot.js';
@@ -101,8 +98,8 @@ import { withSetup } from './options.js';
  * phones alone); motion: true labels it "🤸 Motion" (phones can tilt or move to play).
  * bot(view, level, rng, retries, memory): the computer opponent ("🤖 Vs computer" in the lobby).
  * Given the computer's own view and its level ('easy', 'normal', 'hard'), it gives its next input,
- * or null when it has no move. The view is playerView, or botView(slot) if the game has one (a
- * quiz adds the answer there, for the computer to get right as often as its level says). The input
+ * or null when it has no move. The view is playerView, or botView(slot) if the game has one (what
+ * else the computer may see, such as the minis' timing). The input
  * may carry botDelayMs, its pause before playing it (a reaction time: what it worked out when it
  * looked is what it plays then; with botAnticipate, a move it saw coming and timed, such as its
  * own planned turn, it judges afresh at that moment; with botFor, what it's for, such as a piece,
@@ -148,7 +145,7 @@ const timer = (usual, times) => ({
 const minigamesBot = (view, level, rng, retries, memory) => miniBot(view, level, rng, memory);
 
 const GAMES = [
-  withSetup({ ...reactionDuel, bot: reactionDuelBot }, firstTo('Points to win', [3, 5, 7])),
+  withSetup(reactionDuel, firstTo('Points to win', [3, 5, 7])),
   withSetup({ ...rockPaperScissors, bot: rpsBot }, firstTo('Points to win', [3, 5, 7])),
   withSetup({ ...pong, bot: pongBot }, firstTo('Points to win', [5, 3, 7, 11])),
   withSetup({ ...tron, bot: tronBot }, firstTo(ROUNDS_WON, [3, 2, 5])),
@@ -196,11 +193,11 @@ const GAMES = [
   { ...bombDuel, bot: bombDuelBot },
   { ...kartRace, bot: kartRaceBot },
   { ...kartRace3d, bot: kartRaceBot },
-  withSetup({ ...quiz, bot: quizBot }, {
+  withSetup(quiz, {
     questions: { title: 'Number of questions', values: [10, 5, 15, 20], label: (n) => String(n) },
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
   }),
-  withSetup({ ...triviaQuest, bot: quizBot }, {
+  withSetup(triviaQuest, {
     topic: { title: 'Topic', values: TOPICS.map((_, i) => i).concat(TOPICS.length), label: (n) => (n === 0 ? 'Mixed' : TOPICS[n - 1]) },
     hearts: { title: 'Difficulty', values: [5, 7, 3], label: (n) => (n === 7 ? 'Easy · 7 ❤️' : n === 5 ? 'Normal · 5 ❤️' : 'Hard · 3 ❤️') },
     ...timer('off', '15 s a question (12 s for the Dragon), faster hits harder'),
@@ -216,7 +213,7 @@ const GAMES = [
     minutes: { title: 'Shift', values: [3, 2, 4], label: (n) => `${n} minutes` },
   }),
   withSetup({ ...towerDuel, bot: towerDuelBot }, { lives: { title: 'Lives', values: [20, 10, 30], label: (n) => `${n} lives` } }),
-  withSetup({ ...towerStack, bot: towerStackBot }, {
+  withSetup(towerStack, {
     difficulty: { title: 'Difficulty', values: [0, 1], label: (n) => (n ? 'Easy (slower blocks, 5 lives, an easier perfect)' : 'Normal (3 lives)') },
   }),
   withSetup({ ...dungeonDuo, bot: dungeonDuoBot }, {

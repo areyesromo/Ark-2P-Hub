@@ -19,7 +19,7 @@
 #lobby .seats, #lobby.full .seats { display: flex; justify-content: center; align-items: center; gap: 1.6rem; }
 #lobby #seat-0, #lobby #seat-1 {
   position: relative; border: 0; outline: 0; background: none; box-shadow: none; clip-path: none; transform: none;
-  min-height: 0; padding: 0.3rem 0 0.3rem 4.8rem; text-align: left; align-items: flex-start;
+  min-height: 0; min-width: 0; flex: 0 1 auto; padding: 0.3rem 0 0.3rem 4.8rem; text-align: left; align-items: flex-start;
 }
 #lobby #seat-1 { padding: 0.3rem 4.8rem 0.3rem 0; text-align: right; align-items: flex-end; }
 #lobby #seat-1 .who { flex-direction: row-reverse; }
@@ -31,13 +31,14 @@
 }
 #lobby #seat-1::before { left: auto; right: 0; }
 #lobby .seat.empty::before { background: none; box-shadow: none; border: 3px dashed var(--line-strong); }
-#lobby .seat .who { font-family: var(--font-title, inherit); font-size: 3.4rem; font-weight: 900; line-height: 1; }
+#lobby .seat .who { font-family: var(--font-title, inherit); font-size: min(3.4rem, calc(28rem / var(--name-len, 6))); font-weight: 900; line-height: 1; }
 #lobby #seat-0.filled .who, #lobby #seat-1.filled .who { color: var(--text); }
 #lobby .seat.empty .who { font-size: 2.2rem; color: var(--muted); }
 #lobby .seat .label { font-size: 0.9rem; }
-#lobby #seat-0 .kick { left: auto; right: -2.2rem; top: 0; }
-#lobby #seat-1 .kick { right: auto; left: -2.2rem; top: 0; }
-#lobby .seats .vs, #lobby.full .seats .vs { font-size: 0; }
+/* ✕ above each piece, on the outside (clear of "and" in the middle) */
+#lobby #seat-0 .kick { left: 0.4rem; right: auto; top: -1.4rem; }
+#lobby #seat-1 .kick { right: 0.4rem; left: auto; top: -1.4rem; }
+#lobby .seats .vs, #lobby.full .seats .vs { font-size: 0; text-shadow: none; }
 #lobby .seats .vs::after { content: 'and'; font-family: var(--font-title, inherit); font-size: 2rem; font-style: italic; font-weight: 700; color: var(--muted); }
 /* Everything else (controller hint, online invite, head to head, tournament) on one line under them. */
 #lobby .players-col, #lobby.full .players-col { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; column-gap: 1.2rem; row-gap: 0.4rem; }

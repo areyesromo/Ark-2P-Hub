@@ -84,7 +84,11 @@ button.ghost, .btn.ghost { border-color: var(--line-strong); color: var(--text);
 #seat-0.filled .label { color: #0e7490; }
 #seat-1.filled .label { color: #be185d; }
 .seat.filled .kick { color: var(--ink-soft); border-color: #cbb9a0; }
-.seat .who { font-size: 2.3rem; font-weight: 900; }
+.seat .who { font-size: min(2.3rem, calc(24rem / var(--name-len, 6))); font-weight: 900; }
+.lobby.full .seat .who { font-size: min(2rem, calc(16rem / var(--name-len, 6))); }
+/* (the computer's level buttons, on its paper seat) */
+.seat.filled .bot-levels button { color: var(--ink); border-color: #cbb9a0; }
+.seat.filled .bot-levels button.on { color: var(--on-bright); border-color: var(--p2); }
 .seats .vs { font-family: var(--serif); font-style: italic; font-weight: 700; font-size: 2.4rem; color: var(--mustard); }
 .lobby.full .seat { padding-left: 4.6rem; }
 .lobby.full .seat::before { left: 1rem; width: 2.6rem; height: 2.6rem; margin-top: -1.3rem; }
