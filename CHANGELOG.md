@@ -10,6 +10,11 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   the two of you face to face across the screen with names as big as a scoreboard's, and the games
   as a running order; **Shelf** stands the games on a shelf like boxes, spine out, with the one
   you're on pulled out. Any theme goes with any layout; **Classic** is the one you know.
+- 🕹️ A fourth layout, **Arcade**: a cabinet's select screen, with the games as big tiles in a strip
+  across the TV (the one you're on lit up), P1 / P2 badges along the bottom, and "Insert coin" on a
+  free seat. On phones the games become a grid of tiles.
+- ☀️ A fourth theme, **Daylight**: bright paper and ink for a sunny room. The lobby, setup, Settings,
+  leaderboard and trophies go light; each game keeps its own dark look while you play.
 
 ## 0.1.45
 

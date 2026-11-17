@@ -3,18 +3,20 @@ import path from 'node:path';
 
 /**
  * The hub's looks, picked in Settings: default (the original), neon (the two players' colours
- * facing off on a split screen) and cozy (games as boxes on a shelf). Each but default is a
+ * facing off on a split screen), cozy (warm wood and paper) and daylight (bright paper and ink, for a
+ * sunny room: the menus only, games keep their dark look). Each but default is a
  * stylesheet in public/shared/themes/, served as /theme.css (see app.js).
  */
-export const THEMES = ['default', 'neon', 'cozy'];
+export const THEMES = ['default', 'neon', 'cozy', 'daylight'];
 
 /**
  * How the lobby is laid out, picked apart from the theme (any theme with any layout): classic (the
- * original grid), versus (the two players face to face, big names, games as a running order) and
- * shelf (games as boxes on a shelf, the chosen one pulled out). Each but classic is a stylesheet in
+ * original grid), versus (the two players face to face, big names, games as a running order),
+ * shelf (games as boxes on a shelf, the chosen one pulled out) and arcade (a cabinet's select screen:
+ * big tiles in a strip, P1 / P2 badges). Each but classic is a stylesheet in
  * public/shared/layouts/, served after the theme in /theme.css.
  */
-export const LAYOUTS = ['classic', 'versus', 'shelf'];
+export const LAYOUTS = ['classic', 'versus', 'shelf', 'arcade'];
 
 /**
  * Small persistent settings store (a JSON file in the data folder, which is a

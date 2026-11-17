@@ -1,0 +1,110 @@
+/* Arcade: a cabinet's select screen. The games are big tiles in one scrolling strip across the
+   middle, the one you're on lit up; the two players are P1 / P2 badges along the bottom, and an
+   empty seat says "Insert coin". Picked in Settings apart from the theme and served after it in
+   /theme.css. #lobby / #phone-games in the selectors: one step stronger than a theme's own rules. */
+:root { --ark-layout: arcade; }
+
+/* ---- TV ---- */
+#lobby.lobby { grid-template-columns: minmax(0, 1fr) minmax(15rem, 20rem); grid-template-rows: minmax(0, 1fr) auto; grid-template-areas: "games join" "players join"; gap: 0.8rem 2rem; }
+#lobby.lobby.full { grid-template-columns: minmax(0, 1fr); grid-template-areas: "games" "players"; }
+#lobby .join h2 { font-family: var(--font-title, inherit); font-size: 1.8rem; text-transform: uppercase; letter-spacing: 0.08em; }
+#lobby .qr-wrap { width: min(100%, 15rem); }
+/* Faint scanlines over the select screen (lobby only: games draw their own). */
+body:has(#lobby:not(.hidden))::after {
+  content: ''; position: fixed; inset: 0; z-index: 30; pointer-events: none;
+  background: repeating-linear-gradient(to bottom, rgba(0, 0, 0, 0.06) 0 1px, transparent 1px 3px);
+}
+
+/* The strip of tiles. */
+#lobby .games.panel { background: none; border: 0; padding: 0; justify-content: center; overflow: hidden; }
+#lobby .games h2 { font-family: var(--font-title, inherit); font-size: 2.6rem; text-transform: uppercase; letter-spacing: 0.14em; text-align: center; }
+#lobby .games > p { text-align: center; }
+#lobby .game-list {
+  display: flex; flex-wrap: nowrap; align-items: center; gap: 1.2rem; overflow-x: auto; overflow-y: hidden;
+  padding: 1.6rem 3rem; scroll-snap-type: x proximity; scrollbar-width: none;
+}
+#lobby .game-list::-webkit-scrollbar { display: none; }
+#lobby .game-group { display: none; }
+#lobby .game-card {
+  position: relative; flex: 0 0 15rem; width: 15rem; height: 19rem; padding: 1.2rem; gap: 0.5rem;
+  display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch; text-align: left;
+  scroll-snap-align: center; border: 0; outline: 0; border-radius: var(--radius); clip-path: none;
+  color: var(--text); transform: scale(0.94); transition: transform 0.15s ease, box-shadow 0.15s ease;
+  --tile: var(--p1);
+  background:
+    radial-gradient(circle at 72% 26%, color-mix(in srgb, var(--tile) 45%, transparent) 0 3.4rem, transparent 3.5rem),
+    linear-gradient(165deg, color-mix(in srgb, var(--tile) 50%, var(--bg)), color-mix(in srgb, var(--tile) 12%, var(--bg)) 75%);
+  box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 12%, transparent), 0 0.8rem 1.4rem rgba(0, 0, 0, 0.3);
+}
+#lobby .game-card:nth-of-type(4n+2) { --tile: var(--p2); }
+#lobby .game-card:nth-of-type(4n+3) { --tile: var(--warn); }
+#lobby .game-card:nth-of-type(4n) { --tile: var(--good); }
+#lobby .game-card::after { display: none; }
+#lobby .game-card strong { font-family: var(--font-title, inherit); font-size: 1.8rem; line-height: 1.05; color: var(--text); writing-mode: horizontal-tb; transform: none; white-space: normal; max-height: none; }
+#lobby .game-card strong em { display: inline-block; }
+#lobby .game-card > span { display: block; color: color-mix(in srgb, var(--text) 78%, transparent); font-size: 0.95rem; }
+#lobby .game-card.random, #lobby .game-card.folder { flex-direction: column; border-style: none; }
+#lobby .game-card.folder { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 12%, transparent), 0.5rem -0.5rem 0 -0.1rem color-mix(in srgb, var(--tile) 30%, var(--bg)), 0.8rem 0.8rem 1.4rem rgba(0, 0, 0, 0.3); }
+#lobby .game-card:not(:disabled):hover, #lobby .game-card.at { transform: scale(1.04); }
+#lobby .game-card.at { box-shadow: 0 0 0 0.3rem var(--tile), 0 0 2.6rem color-mix(in srgb, var(--tile) 55%, transparent); }
+#lobby .game-card.pad-focus::before {
+  content: 'Press A'; position: absolute; top: 1rem; left: 1.2rem; font-size: 0.85rem; font-weight: 900; letter-spacing: 0.18em; text-transform: uppercase;
+  color: var(--text); animation: arcade-blink 1s steps(2, start) infinite;
+}
+@keyframes arcade-blink { to { visibility: hidden; } }
+
+/* The players: P1 / P2 badges along the bottom (and the hints and tournament just above). */
+#lobby .players-col, #lobby.full .players-col { flex-direction: row; flex-wrap: wrap; justify-content: center; align-items: center; gap: 0.5rem 1.2rem; overflow: visible; padding: 0; margin: 0; }
+#lobby .players-col > .seats { order: 2; flex: 0 0 100%; }
+#lobby .players-col > :not(.seats) { order: 1; text-align: center; margin: 0; font-size: 0.95rem; }
+#lobby .players-col .online button { padding: 0.35rem 0.9rem; }
+#lobby .players-col .ark-tourney { padding: 0.25rem 0.8rem; }
+#lobby.full .room-note { display: none; }
+#lobby .seats, #lobby.full .seats { display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); gap: 1rem; align-items: center; }
+#lobby #seat-0, #lobby #seat-1 {
+  position: relative; flex-direction: row; flex-wrap: wrap; align-items: center; column-gap: 0.9rem; row-gap: 0.1rem;
+  min-height: 0; padding: 0.55rem 1.4rem; border: 0; outline: 0; clip-path: none; text-align: left; justify-content: flex-start;
+  border-radius: var(--r-pill); background: color-mix(in srgb, var(--bg) 75%, transparent);
+  box-shadow: inset 0 0 0 0.18rem currentColor;
+}
+#lobby #seat-1 { flex-direction: row-reverse; text-align: right; }
+#lobby .seat::before { display: none; }
+#lobby .seat .label {
+  padding: 0.15rem 0.6rem; border-radius: var(--r-sm); background: currentColor; font-size: 0; line-height: 1;
+}
+#lobby #seat-0 .label::after, #lobby #seat-1 .label::after { font-size: 1rem; font-weight: 900; letter-spacing: 0.1em; color: var(--bg); }
+#lobby #seat-0 .label::after { content: 'P1'; }
+#lobby #seat-1 .label::after { content: 'P2'; }
+#lobby .seat .who { font-family: var(--font-title, inherit); font-size: 1.9rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; }
+#lobby #seat-0.filled .who, #lobby #seat-1.filled .who { color: var(--text); }
+#lobby .seat.empty .who { font-size: 0; }
+#lobby .seat.empty .who::after { content: 'Insert coin'; font-size: 1.6rem; color: var(--muted); animation: arcade-blink 1.2s steps(2, start) infinite; }
+#lobby .seat .status { flex: 0 0 100%; font-size: 0.9rem; }
+#lobby .seat .kick { top: -0.7rem; right: 0.6rem; left: auto; }
+#lobby #seat-1 .kick { right: auto; left: 0.6rem; }
+#lobby .seats .vs, #lobby.full .seats .vs { font-family: var(--font-title, inherit); font-size: 2.2rem; font-weight: 900; font-style: italic; color: var(--text); }
+
+/* ---- phones: a P1 / P2 badge up top, the games as a grid of tiles ---- */
+body:has(#phone-lobby:not(.hidden)) .me { border-bottom: 3px solid var(--me); }
+body:has(#phone-lobby:not(.hidden)) .me-tag { padding: 2px 8px; border-radius: var(--r-pill); background: var(--me); color: var(--on-bright); opacity: 1; }
+body:has(#phone-lobby:not(.hidden)) .me-name { font-family: var(--font-title, inherit); text-transform: uppercase; letter-spacing: 0.04em; }
+.lobby-status { font-family: var(--font-title, inherit); text-transform: uppercase; letter-spacing: 0.06em; }
+#phone-games { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+#phone-games .game-group { grid-column: 1 / -1; font-family: var(--font-title, inherit); }
+#phone-games button {
+  --tile: var(--p1);
+  min-height: 132px; justify-content: flex-end; gap: 4px; padding: 12px; border: 0; border-radius: var(--r-md);
+  color: var(--text); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 12%, transparent);
+  background:
+    radial-gradient(circle at 78% 22%, color-mix(in srgb, var(--tile) 45%, transparent) 0 26px, transparent 27px),
+    linear-gradient(165deg, color-mix(in srgb, var(--tile) 50%, var(--bg)), color-mix(in srgb, var(--tile) 12%, var(--bg)) 80%);
+}
+#phone-games button:nth-of-type(4n+2) { --tile: var(--p2); }
+#phone-games button:nth-of-type(4n+3) { --tile: var(--warn); }
+#phone-games button:nth-of-type(4n) { --tile: var(--good); }
+#phone-games button strong { font-family: var(--font-title, inherit); font-size: 1.15rem; line-height: 1.1; color: var(--text); }
+#phone-games button span { font-size: 0.8rem; color: color-mix(in srgb, var(--text) 78%, transparent); display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; }
+#phone-games button em.label { font-size: 0.62rem; margin-left: 0; margin-right: 4px; color: var(--text); border-color: color-mix(in srgb, var(--text) 35%, transparent); }
+#phone-games button.random { grid-column: 1 / -1; min-height: 84px; }
+#phone-games button.folder { box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--text) 12%, transparent), 5px -5px 0 -1px color-mix(in srgb, var(--tile) 30%, var(--bg)); }
+#phone-games button:active { transform: scale(0.97); }

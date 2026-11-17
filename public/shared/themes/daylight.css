@@ -1,0 +1,88 @@
+/* Daylight: bright paper and ink, for a sunny room. Picked in Settings (served as /theme.css).
+   It lights up the hub's own screens (lobby, setup, Settings, leaderboard, trophies); while a game is
+   on screen the original dark palette comes back (body.in-game on the TV, a phone's game stage),
+   because every game is drawn for a dark background. */
+@font-face { font-family: 'Ark Text'; src: url(/shared/fonts/atkinson-hyperlegible-latin-400-normal.woff2) format('woff2'); font-weight: 400; font-display: swap; }
+@font-face { font-family: 'Ark Text'; src: url(/shared/fonts/atkinson-hyperlegible-latin-700-normal.woff2) format('woff2'); font-weight: 700 900; font-display: swap; }
+@font-face { font-family: 'Ark Serif'; src: url(/shared/fonts/fraunces-latin-700-normal.woff2) format('woff2'); font-weight: 700; font-display: swap; }
+@font-face { font-family: 'Ark Serif'; src: url(/shared/fonts/fraunces-latin-900-normal.woff2) format('woff2'); font-weight: 800 900; font-display: swap; }
+
+:root {
+  --ark-theme: daylight; /* (the TV reads it: host.js currentLook) */
+  --bg: #f6f1e7;
+  --bg-2: #ece4d4;
+  --panel: #fffdf8;
+  --line: #d9cfbc;
+  --line-strong: #9c927e;
+  --text: #1f1c18;
+  --muted: #645d52;
+  --btn: #e6ddcb;
+  --p1: #0e7490;
+  --p2: #be185d;
+  --good: #15803d;
+  --bad: #dc2626;
+  --bad-strong: #b91c1c;
+  --bad-soft: #b91c1c;
+  --warn: #b45309;
+  --on-bright: #ffffff;
+  --on-good: #ffffff;
+  --on-warn: #ffffff;
+  --font-title: 'Ark Serif', Georgia, serif; /* (the layouts' big names and titles) */
+  color-scheme: light;
+}
+/* A game on screen: the original dark palette (common.css), so every game looks as it was drawn. */
+body.in-game, body:has(#phone-stage:not(.hidden)) {
+  --bg: #0b0d17; --bg-2: #141829; --panel: #1b2036; --line: #2c3354; --line-strong: #5f699c;
+  --text: #eef0ff; --muted: #9aa1c7; --btn: #3b4370;
+  --p1: #22d3ee; --p2: #f472b6; --good: #4ade80; --bad: #f87171; --bad-strong: #ef4444; --bad-soft: #fca5a5; --warn: #facc15;
+  --on-bright: #06121c; --on-good: #052e16; --on-warn: #1c1402;
+  color-scheme: dark;
+  background: radial-gradient(ellipse at top, #1a1f3d 0%, #0b0d17 60%) fixed;
+}
+
+html, body { font-family: 'Ark Text', system-ui, sans-serif; }
+html { background: var(--bg); }
+body { background: radial-gradient(ellipse at top, #fffdf8 0%, var(--bg) 65%) fixed; color: var(--text); }
+
+h1, h2, h3, .brand, .seats .vs, .seat .who, .game-card strong, .phone-games button strong, .hub-title, .join-code, .lobby-status, .me-name, .rematch {
+  font-family: var(--font-title);
+}
+h1, h2, h3, .brand { font-weight: 900; letter-spacing: 0; }
+
+/* ---- buttons: ink on paper ---- */
+button, .btn { border-radius: var(--r-md); }
+button.primary, .btn.primary { background: var(--text); color: var(--bg); }
+button.ghost, .btn.ghost { border-color: var(--line-strong); color: var(--text); }
+body.in-game button.primary, body:has(#phone-stage:not(.hidden)) button.primary { background: var(--me, var(--p1)); color: var(--on-bright); }
+.panel { box-shadow: 0 1px 0 var(--line), 0 0.6rem 1.4rem rgba(60, 45, 20, 0.08); }
+.ark-tourney.compact { background: rgba(11, 13, 23, 0.9); }
+.ark-tourney.on { border-color: var(--warn); }
+
+/* ---- TV lobby (classic layout) ---- */
+.room-chip { background: var(--panel); box-shadow: 0 1px 0 var(--line); }
+.join.panel .qr-wrap { box-shadow: 0 0 0 1px var(--line); }
+.seat { border-color: var(--line-strong); }
+.seat.filled { background: var(--panel); }
+#seat-0.filled { box-shadow: inset 0 0.35rem 0 var(--p1), 0 0.5rem 1.2rem rgba(60, 45, 20, 0.1); border-color: var(--line); }
+#seat-1.filled { box-shadow: inset 0 0.35rem 0 var(--p2), 0 0.5rem 1.2rem rgba(60, 45, 20, 0.1); border-color: var(--line); }
+#seat-0 .label { color: var(--p1); }
+#seat-1 .label { color: var(--p2); }
+.seat .kick { color: var(--muted); }
+.game-card { background: var(--panel); border-color: var(--line); box-shadow: 0 1px 0 var(--line); }
+.game-card:not(:disabled):hover { border-color: var(--text); }
+.game-card.pad-focus { border-color: var(--text); box-shadow: 0 0 0 3px var(--text); }
+em.label.handheld { color: var(--good); border-color: var(--good); }
+em.label.motion { color: var(--warn); border-color: var(--warn); }
+em.label.bot { color: var(--p2); border-color: var(--p2); }
+.game-card .tag, .phone-games .tag { color: var(--warn); }
+.whats-new { background: color-mix(in srgb, var(--bg) 70%, transparent); }
+
+/* ---- phones ---- */
+.me { background: var(--panel); }
+.menu { background: var(--panel); }
+.phone-games button { background: var(--panel); border-color: var(--line); box-shadow: 0 1px 0 var(--line); }
+
+/* ---- each game's finish line, and the leaderboard ---- */
+body .ark-result { font-family: var(--font-title); font-weight: 900; }
+.page-stats .panel, .page-trophies .trophy { background: var(--panel); }
+.page-stats .gold { color: var(--warn); }
