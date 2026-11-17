@@ -1743,3 +1743,48 @@ test('a phone gets its own kart and the race, not the road: boxes, coins and haz
   // The computer still sees the road (it drives for the ? boxes).
   assert.ok(game.botView(0).boxes.length > 0);
 });
+
+test('the setup in three steps: each confirms a racer, then tyres, then both Ready on the track and settings; B goes back', () => {
+  const ctx = fakeCtx();
+  const g = new KartRace(ctx, () => 0.5);
+  g.start();
+  assert.equal(g.hostView().step, 'racer');
+  assert.equal(g.hostView().hidePreview, false, "the hub's preview beside the racers");
+  g.onInput(0, { type: 'racer', id: 'rex' });
+  g.onInput(0, { type: 'confirm' });
+  assert.deepEqual(g.hostView().confirmed, [true, false]);
+  g.onInput(0, { type: 'racer', id: 'roxy' }); // a new pick: confirm it again
+  assert.deepEqual(g.hostView().confirmed, [false, false]);
+  g.onInput(0, { type: 'confirm' });
+  g.onInput(1, { type: 'confirm' });
+  assert.equal(g.hostView().step, 'tyre');
+  assert.equal(g.hostView().hidePreview, true);
+  g.onInput(1, { type: 'back' }); // nothing to take back: both back to the racers
+  assert.equal(g.hostView().step, 'racer');
+  g.onInput(0, { type: 'confirm' });
+  g.onInput(1, { type: 'confirm' });
+  g.onInput(0, { type: 'tyre', id: 'slicks' });
+  g.onInput(0, { type: 'confirm' });
+  g.onInput(0, { type: 'back' }); // takes back the confirm, stays on tyres
+  assert.equal(g.hostView().step, 'tyre');
+  assert.deepEqual(g.hostView().confirmed, [false, false]);
+  g.onInput(0, { type: 'confirm' });
+  g.onInput(1, { type: 'confirm' });
+  assert.equal(g.hostView().step, 'course');
+  g.onInput(0, { type: 'confirm' }); // (no confirming on the course step: Ready is "go")
+  assert.equal(g.hostView().step, 'course');
+  g.onInput(0, { type: 'go' });
+  g.onInput(1, { type: 'go' });
+  assert.equal(g.hostView().phase, 'countdown');
+  assert.equal(g.hostView().step, null);
+  assert.deepEqual(g.picks[0], { racer: 'roxy', tyre: 'slicks' });
+});
+
+test('the computer confirms its racer and tyres once you have confirmed yours', async () => {
+  const { kartRaceBot } = await import('../server/games/kart-race-bot.js');
+  const base = { phase: 'setup', you: 1, ready: [false, false] };
+  assert.equal(kartRaceBot({ ...base, step: 'racer', confirmed: [false, false] }, 'normal', () => 0.5), null);
+  assert.equal(kartRaceBot({ ...base, step: 'racer', confirmed: [true, false] }, 'normal', () => 0.5).type, 'confirm');
+  assert.equal(kartRaceBot({ ...base, step: 'tyre', confirmed: [true, false] }, 'normal', () => 0.5).type, 'confirm');
+  assert.equal(kartRaceBot({ ...base, step: 'course', confirmed: [false, false], ready: [true, false] }, 'normal', () => 0.5).type, 'go');
+});

@@ -1,0 +1,53 @@
+/* Kart Race (and Kart Race 3D): the racer and tyre select screens, the setup's first two steps.
+   Both players' picks big on their own side, every choice in a strip along the bottom. */
+.krs { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; gap: 0.7rem;
+  padding: 0.6rem 1rem 0.8rem; background: radial-gradient(ellipse at top, color-mix(in srgb, var(--panel) 85%, transparent), color-mix(in srgb, var(--bg) 92%, transparent) 70%); overflow: hidden; z-index: 5; }
+.krs-steps { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem; font-weight: 800; color: var(--muted); letter-spacing: 0.04em; }
+.krs-steps span { padding: 0.15rem 0.7rem; border-radius: var(--r-pill); border: 1px solid var(--line); }
+.krs-steps span.on { color: var(--on-bright); background: var(--warn); border-color: var(--warn); }
+.krs-steps span.past { color: var(--text); border-color: var(--good); }
+.krs-steps i { font-style: normal; opacity: 0.6; }
+.krs-title { font-family: var(--font-title, inherit); font-size: 2rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.06em; }
+
+/* The two players, face to face. */
+.krs-cards { flex: 1 1 auto; min-height: 0; width: min(64rem, 100%); display: grid; grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); align-items: stretch; gap: 1rem; }
+.krs-vs { align-self: center; font-family: var(--font-title, inherit); font-size: 2.4rem; font-weight: 900; font-style: italic; color: var(--muted); }
+.krs-card { --who: var(--p1); position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.3rem; min-height: 0; padding: 0.7rem 0.9rem;
+  border-radius: var(--radius); background: linear-gradient(170deg, color-mix(in srgb, var(--who) 26%, var(--panel)), var(--panel) 60%); border: 3px solid color-mix(in srgb, var(--who) 55%, transparent); }
+.krs-card.p2 { --who: var(--p2); }
+.krs-card.done { border-color: var(--who); box-shadow: 0 0 1.6rem -0.2rem color-mix(in srgb, var(--who) 70%, transparent); }
+.krs-who { align-self: stretch; font-weight: 800; color: var(--who); }
+.krs-tag { padding: 0 0.45rem; border-radius: var(--r-sm); background: var(--who); color: var(--on-bright); font-size: 0.85em; }
+.krs-hero { position: relative; flex: 1 1 auto; min-height: 6rem; width: 100%; display: flex; align-items: center; justify-content: center; }
+.krs-big { height: 100%; max-height: 11rem; aspect-ratio: 1; object-fit: contain; filter: drop-shadow(0 0.5rem 0.8rem rgba(0, 0, 0, 0.45)); animation: krs-pop 0.25s ease-out; }
+.krs-big.full { aspect-ratio: auto; max-height: 15rem; }
+.krs-kart { position: absolute; right: 4%; bottom: 0; height: 45%; max-height: 5.5rem; transform: rotate(90deg); filter: drop-shadow(0 0.3rem 0.4rem rgba(0, 0, 0, 0.5)); }
+.krs-name { font-family: var(--font-title, inherit); font-size: 1.9rem; font-weight: 900; line-height: 1; }
+.krs-type { color: var(--muted); font-size: 0.95rem; }
+.krs-card .rows { width: 100%; display: grid; gap: 0.2rem; font-size: 0.85rem; }
+.krs-state { font-weight: 800; color: var(--muted); }
+.krs-card.done .krs-state { color: var(--who); }
+@keyframes krs-pop { from { transform: scale(0.85); opacity: 0.4; } }
+
+/* Every choice along the bottom: racers in two rows of six, tyres in one; P1 / P2 marks on each player's. */
+.krs-strip { width: min(64rem, 100%); display: grid; gap: 0.45rem; }
+.krs-strip.racer { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+.krs-strip.tyre { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+.krs-pick { position: relative; display: flex; align-items: center; gap: 0.4rem; padding: 0.3rem 0.5rem; border-radius: var(--r-md); background: var(--bg-2); border: 2px solid var(--line); font-size: 0.9rem; min-width: 0; }
+.krs-pick img { width: 2.4rem; height: 2.4rem; flex: none; }
+.krs-pick b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.krs-em { font-size: 1.6rem; }
+.krs-pick.p1 { border-color: var(--p1); }
+.krs-pick.p2 { border-color: var(--p2); }
+.krs-pick.p1.p2 { border-color: var(--p1) var(--p2) var(--p2) var(--p1); }
+.krs-pick em { position: absolute; top: -0.55rem; font-style: normal; font-size: 0.7rem; font-weight: 900; padding: 0 0.35rem; border-radius: var(--r-sm); color: var(--on-bright); }
+.krs-pick em.p1 { left: 0.3rem; background: var(--p1); }
+.krs-pick em.p2 { right: 0.3rem; background: var(--p2); }
+.krs-hint { color: var(--muted); font-size: 0.9rem; text-align: center; }
+.krs-card .stat { display: flex; align-items: center; gap: 0.5em; color: var(--muted); }
+.krs-card .stat span { width: 5em; text-align: left; }
+.krs-card .bar { flex: 1; display: flex; gap: 3px; }
+.krs-card .bar i { flex: 1; height: 9px; border-radius: 2px; background: color-mix(in srgb, var(--text) 12%, transparent); }
+.krs-card .bar i.on { background: var(--who); }
+.krs-card .bar i.plus { background: var(--good); }
+.krs-card .bar i.minus { background: transparent; box-shadow: inset 0 0 0 2px var(--bad); }

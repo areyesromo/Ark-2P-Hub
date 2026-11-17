@@ -511,7 +511,7 @@
     showHubSetup(setup ? msg.view : null);
     if (setup !== wasSetup) renderPadFooter();
     markMatch(setup ? null : msg.view);
-    showSidePreview(!setup && msg.view.phase === 'setup'); // (a game with its own setup menu)
+    showSidePreview(!setup && msg.view.phase === 'setup' && !msg.view.hidePreview); // (a game with its own setup menu)
     if (setup) return; // the game hasn't started: the hub shows its setup screen
     if (current.renderer) current.renderer.update(msg.view);
     else {
