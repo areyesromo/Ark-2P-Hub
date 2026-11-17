@@ -266,3 +266,18 @@ body.watching .game-list { pointer-events: none; }
 #hub-setup .hub-cols { flex: 1 1 auto; min-height: 0; }
 #hub-setup .hub-settings { max-height: 100%; overflow-y: auto; padding: 0.3rem; }
 #hub-setup .pv-box { font-size: 1.05rem; }
+/* Room at both ends of the game list, as deep as the fade: scrolled to the top or the bottom, the
+   first and last games sit clear of it. */
+#lobby .games > .game-list { padding-bottom: 3rem; }
+#lobby .games.more-above > .game-list, #lobby .games > .game-list { scroll-margin-top: 3rem; }
+#lobby .game-card { scroll-margin: 3rem 0; } /* (a controller's pick is scrolled clear of the fade too) */
+
+/* A game with its own setup menu (Kart Race, Mini Golf…): its preview beside the menu (showSidePreview). */
+body.own-setup #app { display: grid; grid-template-columns: minmax(16rem, 0.6fr) minmax(0, 1.4fr); grid-template-rows: auto minmax(0, 1fr) auto; column-gap: 1.6rem; }
+body.own-setup .topbar { grid-column: 1 / -1; }
+body.own-setup #side-preview { grid-column: 1; grid-row: 2; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; overflow-y: auto; text-align: left; }
+body.own-setup #stage { grid-column: 2; grid-row: 2; min-width: 0; min-height: 0; overflow-y: auto; } /* (a tall menu scrolls) */
+body.own-setup #pad-footer { grid-column: 1 / -1; }
+.side-preview .hub-title { font-size: 2rem; font-weight: 900; }
+.side-preview .hub-blurb { margin: -0.4rem 0 0; color: var(--muted); font-size: 1.1rem; }
+.side-preview .pv-box { font-size: 1.05rem; }

@@ -76,11 +76,11 @@ style from `play.css`: give your Rematch button `class="primary rematch"` and on
 
 1. Server module + its test (`npm test` must pass).
 2. TV and phone renderers under `public/games/<id>/`.
-3. The game's row in the **README.md** games table (keep the player-facing tone and detail level). It is also the
-   setup screen's 📖 How to play (with its rows in the README's settings and controller tables): run
+3. The game's row in the **README.md** games table (keep the player-facing tone and detail level). It is also what the
+   setup screen's preview tells you (with its rows in the README's settings and controller tables): run
    `node tools/games-catalog.mjs` after changing them (it writes `public/shared/game-guide.json`).
 4. New game or minigame: `node tools/games-catalog.mjs`, add helper files that don't start with the id to `EXTRA` in that tool,
-   and a short lobby-card line (under 50 letters) in `server/games/blurbs.js` (the tagline goes on the setup screen's ℹ️ About).
+   and a short lobby-card line (under 50 letters) in `server/games/blurbs.js` (the tagline is the preview's first box).
    Its setup screen's preview picture: `node tools/game-previews.mjs <id>` (needs Playwright; writes `public/games/<id>/preview.jpg`).
 5. A line for players in `CHANGELOG.md`, under the next desktop release's `## x.y.z` heading (add the heading if it
    isn't there; one version above the last release on GitHub). It's the app's What's new card and the release notes.

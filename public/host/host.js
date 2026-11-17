@@ -432,6 +432,7 @@
     pendingView = null;
     lastView = null;
     markMatch(null);
+    showSidePreview(false);
     Object.keys(lastPolled).forEach(function (k) { delete lastPolled[k]; });
     Object.keys(hubPads).forEach(function (k) { delete hubPads[k]; });
     $('stage').innerHTML = '';
@@ -510,6 +511,7 @@
     showHubSetup(setup ? msg.view : null);
     if (setup !== wasSetup) renderPadFooter();
     markMatch(setup ? null : msg.view);
+    showSidePreview(!setup && msg.view.phase === 'setup'); // (a game with its own setup menu)
     if (setup) return; // the game hasn't started: the hub shows its setup screen
     if (current.renderer) current.renderer.update(msg.view);
     else {
@@ -544,19 +546,38 @@
 
   const hubPads = {}; // controller players: slot -> { row }
   let hubSetupKey = '';
-  let guideSheet = null; // How to play / About, open over the setup screen (Ark.guide)
   let preview = null; // the game's preview beside its settings (Ark.preview), and which game it's for
   let previewFor = null;
+  let sidePreview = null; // the same, beside a game's own setup menu (Kart Race, Mini Golf…: showSidePreview)
+  let sideFor = null;
 
-  function openGuide(tab, pad) {
-    if (guideSheet) guideSheet.close();
-    const game = (state.games || []).find(function (g) { return g.id === state.gameId; });
-    guideSheet = Ark.guide.open(game, tab, { pad: pad, onClose: function () { guideSheet = null; } });
+  /**
+   * A game that draws its own setup menu (its view's phase is 'setup' without the hub's): its
+   * preview sits beside it (body.own-setup), as it does beside the hub's setup screen.
+   */
+  function showSidePreview(on) {
+    const el = $('side-preview');
+    const was = document.body.classList.contains('own-setup');
+    document.body.classList.toggle('own-setup', on);
+    el.classList.toggle('hidden', !on);
+    if (!on) {
+      if (sidePreview) sidePreview.stop();
+      sidePreview = null;
+      sideFor = null;
+      if (was) window.dispatchEvent(new Event('resize')); // (the game has its whole width back)
+      return;
+    }
+    if (sideFor !== state.gameId) {
+      if (sidePreview) sidePreview.stop();
+      sideFor = state.gameId;
+      const game = (state.games || []).find(function (g) { return g.id === state.gameId; });
+      el.innerHTML = '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
+        (game && game.blurb ? '<p class="hub-blurb">' + Ark.escapeHtml(game.blurb) + '</p>' : '') +
+        '<div class="hub-preview"></div>';
+      sidePreview = Ark.preview.open(el.querySelector('.hub-preview'), game, { pad: Object.keys(padSeats).length > 0 });
+    }
+    if (!was) window.dispatchEvent(new Event('resize'));
   }
-  $('hub-setup').addEventListener('click', function (e) {
-    const b = e.target.closest('[data-guide]');
-    if (b) openGuide(b.getAttribute('data-guide'), false);
-  });
 
   function showHubSetup(v) {
     const playing = Boolean(state && state.phase === 'playing');
@@ -564,7 +585,6 @@
     $('stage').classList.toggle('hidden', Boolean(v) || !playing);
     if (!v) {
       hubSetupKey = '';
-      if (guideSheet) guideSheet.close(); // (the game has started)
       if (preview) preview.stop();
       preview = null;
       previewFor = null;
@@ -589,7 +609,6 @@
     if (key === hubSetupKey) return;
     hubSetupKey = key;
     $('hub-setup').querySelector('.hub-settings').innerHTML =
-      Ark.guide.buttonsHtml(Object.keys(padSeats).length > 0) +
       '<p class="muted">Set up the match on your phone, or with a controller: ↑↓ picks a row, ←→ changes it. ' +
       '<strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</p>' +
       Ark.setup.html(parts.view, parts.rows, focus);
@@ -800,10 +819,12 @@
   function fadeEdges() {
     const el = document.querySelector('#lobby .games');
     if (!el) return;
-    el.classList.toggle('more-above', el.scrollTop > 4);
-    el.classList.toggle('more-below', el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+    // (a little slack: a scaled screen like the Steam Deck's can stop a pixel short of the very end)
+    el.classList.toggle('more-above', el.scrollTop > 12);
+    el.classList.toggle('more-below', Math.ceil(el.scrollTop + el.clientHeight) < el.scrollHeight - 12);
   }
   if (document.querySelector('#lobby .games')) document.querySelector('#lobby .games').addEventListener('scroll', fadeEdges, { passive: true });
+  window.addEventListener('resize', fadeEdges);
 
   // ---- the look, picked with Player 1's controller (RT, or a click of the right stick) ----
   // Two rows, the theme (colours and fonts) and the layout; the phones' Player 1 has Settings for it.
@@ -889,7 +910,7 @@
     const setup = Ark.setup.isHub(lastView);
     const show = Boolean(state && state.phase === 'playing' && anyPad && (setup || (r && r.padHint)));
     el.classList.toggle('hidden', !show);
-    if (show) el.textContent = '🎮 ' + (setup ? '↑↓ pick a row · ←→ change it · A start · RB / LB the preview · X how to play' : r.padHint) + ' · Back: lobby';
+    if (show) el.textContent = '🎮 ' + (setup ? '↑↓ pick a row · ←→ change it · A start · RB / LB the preview' : r.padHint) + ' · Back: lobby';
   }
 
   // Ready-made names for controller players, after the leaderboard's.
@@ -971,13 +992,12 @@
     const seat = padSeats[idx];
 
     if (state.phase === 'playing') {
-      // The guide, open over the setup screen, takes the controller (B closes it).
-      if (guideSheet) return guideSheet.press(btn);
       if (btn === 'BACK') return socket.emit('lobby:return');
-      if (seat && Ark.setup.isHub(lastView) && (btn === 'X' || btn === 'Y')) return openGuide(btn === 'X' ? 'rules' : 'about', true);
       // The preview's dialog box: RB / RT the next box, LB / LT the one before (and the wait starts again).
-      if (preview && Ark.setup.isHub(lastView) && (btn === 'RB' || btn === 'RT')) return preview.next();
-      if (preview && Ark.setup.isHub(lastView) && (btn === 'LB' || btn === 'LT')) return preview.prev();
+      // (On the hub's setup screen, or beside a game's own setup menu: none uses those buttons there.)
+      const shown = (Ark.setup.isHub(lastView) && preview) || (lastView && lastView.phase === 'setup' && sidePreview);
+      if (shown && (btn === 'RB' || btn === 'RT')) return shown.next();
+      if (shown && (btn === 'LB' || btn === 'LT')) return shown.prev();
       if (seat && Ark.setup.isHub(lastView)) {
         if (!hubPads[seat.slot]) hubPads[seat.slot] = { row: 0 };
         const parts = Ark.setup.hubParts(lastView);

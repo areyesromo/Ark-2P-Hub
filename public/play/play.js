@@ -397,7 +397,6 @@
     if (!v) {
       hubSetupKey = '';
       $('hub-change').classList.add('hidden');
-      if (guideSheet) guideSheet.close(); // (the game has started)
       if (preview) preview.stop();
       preview = null;
       previewFor = null;
@@ -421,22 +420,15 @@
     hubSetupKey = key;
     const parts = Ark.setup.hubParts(v);
     $('hub-setup').querySelector('.hub-settings').innerHTML =
-      Ark.guide.buttonsHtml(false) +
       '<p class="muted">Pick the settings (either of you can), then start.</p>' +
       Ark.setup.html(parts.view, parts.rows) +
       '<button class="primary hub-go">Start</button>';
   }
   Ark.setup.bind($('hub-setup'), api);
-  let guideSheet = null; // How to play / About over the setup screen (Ark.guide)
   let preview = null; // the game's preview above its settings (Ark.preview), and which game it's for
   let previewFor = null;
   $('hub-setup').addEventListener('click', function (e) {
     if (e.target.closest('.hub-go')) api.send({ type: 'go' });
-    const b = e.target.closest('[data-guide]');
-    if (!b) return;
-    if (guideSheet) guideSheet.close();
-    const game = state && (state.games || []).find(function (g) { return g.id === state.gameId; });
-    guideSheet = Ark.guide.open(game, b.getAttribute('data-guide'), { onClose: function () { guideSheet = null; } });
   });
   $('hub-change').addEventListener('click', function () { api.send({ type: 'setup' }); });
 

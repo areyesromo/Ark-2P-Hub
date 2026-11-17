@@ -52,6 +52,7 @@ function tv(load) {
     ArkPads: stub(),
     ArkMusic: stub(),
     ArkLooks: stub(),
+    Event: class { constructor(type) { this.type = type; } },
     setTimeout: () => 0,
     clearTimeout() {},
     setInterval: () => 0,
