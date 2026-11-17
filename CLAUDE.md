@@ -87,6 +87,10 @@ style from `play.css`: give your Rematch button `class="primary rematch"` and on
 
 Commit messages: `Game Name: what changed, in plain words` (for example `Kart Race: smaller Star glow for the bigger karts`).
 
+Releases: once a PR with player-facing changes is merged (CI green), start the desktop build straight away, without asking:
+the `desktop.yml` workflow on `main` with the version of the newest `## x.y.z` heading in `CHANGELOG.md` (if it isn't released
+yet). It builds the AppImage and Windows installer and publishes the GitHub Release; the app's Update banner then offers it.
+
 ## 3D work and the ideas list
 
 The cloud session builds games and their base (rules, server, phones, computer player, tests, a TV scene
