@@ -99,6 +99,8 @@
       if (name) setTimeout(function () { if (state) renderSeat(slot, state.players[slot]); }, ARRIVE_MS + 50);
     }
     const fresh = a.at && Date.now() - a.at < ARRIVE_MS ? ' arrived' : '';
+    // How long the name is: the layouts and themes size a name to fit its seat (--name-len).
+    el.style.setProperty('--name-len', String(Math.max(5, p ? Array.from(p.name).length : 8)));
     const label = '<span class="label">Player ' + (slot + 1) + '</span>';
     if (!p) {
       el.className = 'seat empty';
@@ -197,11 +199,14 @@
   function renderLobby() {
     $('join-url').textContent = state.joinUrl ? state.joinUrl.replace(/\?.*$/, '') : '';
     $('join-warn').classList.toggle('hidden', !state.joinGuess);
-    // Both seats taken: the QR code steps aside and the game list gets the room (it stays while
-    // the computer has a seat: someone who scans in takes it).
-    Ark.lobbyLayout($('lobby'), 'full', state.players.every(function (p) { return p && !p.bot; }), document.querySelector('.join'),
+    // Both seats taken (the computer's too): the QR code steps aside and the game list gets the room.
+    // Someone who joins with the room code still takes the computer's seat, so the note says so.
+    Ark.lobbyLayout($('lobby'), 'full', state.players.every(function (p) { return p; }), document.querySelector('.join'),
       [document.querySelector('.players-col'), document.querySelector('.games')], lobbyDrawn);
     lobbyDrawn = true;
+    $('room-note-tail').textContent = Ark.botSeat(state)
+      ? ' · join with this code on a phone to take the computer\'s seat.'
+      : ' · the QR code comes back when a seat is free.';
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
     $('games-hint').textContent = Ark.botSeat(state)

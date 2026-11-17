@@ -2,7 +2,6 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
 import { TowerStack, TIMING, STACK, offsetAt } from '../server/games/tower-stack.js';
-import { towerStackBot } from '../server/games/tower-stack-bot.js';
 import { getGame } from '../server/games/index.js';
 
 function game({ difficulty = 0 } = {}) {
@@ -144,36 +143,12 @@ test('bad input is ignored; a drop while the last one settles does nothing; one 
   assert.equal(ctx.pendingTimers(), 1);
 });
 
-test('in the lobby: Tower Stack, a co-op game with a difficulty, and the computer as a teammate', () => {
+test('in the lobby: Tower Stack, a co-op game with a difficulty, for two people (no computer teammate)', () => {
   const def = getGame('tower-stack');
   assert.equal(def.name, 'Tower Stack');
   assert.equal(def.category, 'casual');
-  assert.equal(typeof def.bot, 'function');
+  assert.equal(def.bot, undefined);
   assert.deepEqual(def.create(fakeCtx()).options.difficulty, [0, 1]);
-});
-
-test('the computer drops on its turn as the block crosses the middle: Hard nearly always perfect, Easy less often', () => {
-  const rate = (level) => {
-    let n = 0;
-    for (let s = 0; s < 30; s++) {
-      const { ctx, g } = game();
-      ctx.players[0].bot = level; // (seated as the computer)
-      let seed = s + 1;
-      const rng = () => { seed = (seed * 16807) % 2147483647; return seed / 2147483647; };
-      ctx.advance(Math.floor(rng() * 900)); // (somewhere along its slide)
-      const m = towerStackBot(g.playerView(0), level, rng, 0, {});
-      assert.equal(m.type, 'drop');
-      assert.equal(towerStackBot(g.playerView(1), level, rng, 0, {}), null, 'not its turn');
-      ctx.advance(m.botDelayMs);
-      g.onInput(0, { type: 'drop' });
-      if (g.hostView().last.kind === 'perfect') n++;
-    }
-    return n;
-  };
-  const hard = rate('hard');
-  const easy = rate('easy');
-  assert.ok(hard >= 22, 'hard ' + hard + '/30');
-  assert.ok(easy < hard, 'easy ' + easy);
 });
 
 test('a controller on the TV is judged on time (its press arrives at once); a phone gets the time its tap takes to arrive', () => {

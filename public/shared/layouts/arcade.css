@@ -75,7 +75,7 @@ body:has(#lobby:not(.hidden))::after {
 #lobby #seat-0 .label::after, #lobby #seat-1 .label::after { font-size: 1rem; font-weight: 900; letter-spacing: 0.1em; color: var(--bg); }
 #lobby #seat-0 .label::after { content: 'P1'; }
 #lobby #seat-1 .label::after { content: 'P2'; }
-#lobby .seat .who { font-family: var(--font-title, inherit); font-size: 1.9rem; font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; }
+#lobby .seat .who { min-width: 0; font-family: var(--font-title, inherit); font-size: min(1.9rem, calc(24rem / var(--name-len, 6))); font-weight: 900; text-transform: uppercase; letter-spacing: 0.04em; }
 #lobby #seat-0.filled .who, #lobby #seat-1.filled .who { color: var(--text); }
 #lobby .seat.empty .who { font-size: 0; }
 #lobby .seat.empty .who::after { content: 'Insert coin'; font-size: 1.6rem; color: var(--muted); animation: arcade-blink 1.2s steps(2, start) infinite; }

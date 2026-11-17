@@ -30,12 +30,13 @@ Dice Party with its Handheld screen) and **🤸 Motion** (you can tilt or move y
 or a joystick always work too).
 No one to play with? Games labelled **🤖 Vs computer** can be played against the computer:
 Battleship (Classic and Ultimate), Connect Four, Checkers, Dots and Boxes, Mancala, Rock Paper
-Scissors, Memory Match, Dice Party, Quiz Battle, Reaction Duel, Pong, Air Hockey, Snake Battle,
+Scissors, Memory Match, Dice Party, Pong, Air Hockey, Snake Battle,
 Light Cycles, Tank Duel, Word Hunt, Volley Blobs, Brick Breaker Duel, Rally Tennis, Sumo, Asteroid
 Duel, Mini Golf, Falling Blocks Battle, Bomb Duel, Kart Race (and 3D, races and balloon battles),
 Tower Defence Duel, Crazy Eights, Liar's Dice, Anagram Duel, Word Race, Party Board, Party
-Minigames, Micro Mayhem (every minigame), and as your teammate in Trivia Quest, Kitchen Rush,
-Dungeon Duo and Marble Maze. In Kart Race it readies up on the menus once you have. The phone-only games
+Minigames, Micro Mayhem (every minigame), and as your teammate in Kitchen Rush, Dungeon Duo and
+Marble Maze. Reaction Duel, Quiz Battle, Trivia Quest and Tower Stack are for two people: a
+computer there was either unbeatable or no fun. In Kart Race it readies up on the menus once you have. The phone-only games
 need just your phone against it (it isn't a controller). With a seat free,
 tap **Easy**, **Normal** or **Hard** under it on the TV (or on your phone's lobby, or press **LT**
 on a controller). While it's seated, the games it can't play are greyed out (**🧑 Needs a

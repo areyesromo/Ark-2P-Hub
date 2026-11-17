@@ -87,7 +87,7 @@ body { overflow: hidden; }
 .lobby.full .seats { grid-template-columns: 1fr; gap: 0.5rem; }
 .lobby.full .vs { font-size: 1.2rem; text-align: center; }
 .lobby.full .seat { min-height: 0; padding: 1rem 1.2rem; }
-.lobby.full .seat .who { font-size: 1.5rem; }
+.lobby.full .seat .who { font-size: min(1.5rem, calc(24rem / var(--name-len, 6))); }
 .lobby.full .pad-hint { margin: 0; font-size: 0.9rem; text-align: left; }
 .lobby.full .h2h { margin: 0; font-size: 1rem; text-align: left; }
 .lobby.full .tourney { font-size: 0.95rem; }
@@ -97,7 +97,7 @@ body { overflow: hidden; }
 
 .seats {
   display: grid;
-  grid-template-columns: 1fr auto 1fr;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr); /* (a long name can't push the other seat aside) */
   align-items: center;
   gap: 1.5rem;
 }
@@ -114,7 +114,9 @@ body { overflow: hidden; }
   gap: 0.4rem;
 }
 .seat .label { font-size: 0.9rem; font-weight: 800; letter-spacing: 0.15em; text-transform: uppercase; }
-.seat .who { font-size: 2rem; font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.seat { min-width: 0; }
+/* A name fits its seat: smaller the longer it is (--name-len, set by host.js), cut off only as a last resort. */
+.seat .who { font-size: min(2rem, calc(26rem / var(--name-len, 6))); font-weight: 900; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .seat .status { font-size: 0.95rem; color: var(--muted); }
 .seat.filled { border-style: solid; background: var(--panel); }
 #seat-0 { color: var(--p1); }
@@ -218,7 +220,7 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 .seat .kick.armed { background: var(--bad); border-color: var(--bad); }
 /* The player's avatar, in their profile colour (the seat keeps its P1 / P2 colour for the games). */
 .seat .who { display: flex; align-items: center; gap: 0.6rem; }
-.seat .who .nm { overflow: hidden; text-overflow: ellipsis; }
+.seat .who .nm { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
 .seat-avatar { padding: 0; border: 0; background: none; font-size: 1.4rem; cursor: pointer; border-radius: 50%; }
 .lobby.full .seat-avatar { font-size: 1.1rem; }
 
