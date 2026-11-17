@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.51
+
+- 🎬 The six games with their own setup menu (Kart Race, Kart Race 3D, Bomb Duel, Word Race, Mini
+  Golf and Memory Match) show their preview beside it too, so every game has one.
+- 🧹 The How to play and About buttons are gone from the setup screen: the preview's dialog box tells
+  you all of it.
+- 📜 The game list's fade no longer covers the first and last games: there's room at the ends, and
+  the fade goes once you reach the top or the bottom.
+
 ## 0.1.50
 
 - 🎬 Every game's setup screen now shows the game before you play: a picture of it, and a dialog box

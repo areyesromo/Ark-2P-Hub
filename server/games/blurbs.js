@@ -1,7 +1,7 @@
 /**
  * The short line under each game's name in the lobby (TV cards and the phone list): what it is in
- * a few words. The full description (the game's tagline) and its rules are on its setup screen,
- * behind ℹ️ About and 📖 How to play (see public/shared/game-guide.json). Keep each under 50 letters.
+ * a few words. The full description (the game's tagline) and its rules are in the preview on its
+ * setup screen (Ark.preview, with public/shared/game-guide.json). Keep each under 50 letters.
  */
 export const BLURBS = {
   'reaction-duel': 'Wait for GO, then tap first.',
