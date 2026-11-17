@@ -40,7 +40,7 @@
     }).join('') + '</div>';
   }
   function prompt(v) {
-    if (v.phase === 'setup') return 'Phone: choose your racer & tyres, then Ready · Controller: ↑↓ select · ←→ change · A ready';
+    if (v.phase === 'setup') return 'Phone: pick the track and settings, then Ready · Controller: ↑↓ select · ←→ change · A ready · B back to the tyres';
     if (v.phase === 'standings') return 'Phone: Ready for the next ' + (v.battle ? 'round' : 'race') + ' · Controller: A ready';
     return 'Phone: Rematch or Change settings · Controller: A rematch · Y settings · Hub menu: lobby';
   }

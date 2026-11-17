@@ -24,6 +24,9 @@
   // for the racers listed here (any others are drawn as shapes).
   const ART = '/games/kart-race/art/';
   const SPRITES = ['rex', 'roxy', 'zip', 'zara', 'swift', 'sky', 'boulder', 'bella', 'dash', 'dot', 'rascal', 'ruby'];
+  // The select screen's big picture of a racer, from the waist or chest up (full/<id>.webp, see
+  // art/README.md): list a racer here once their picture is in; the rest show their coin.
+  const FULL = [];
   const RACERS = [];
   KINDS.forEach(function (k) {
     [[k[1], 'm'], [k[2], 'f']].forEach(function (who) {
@@ -38,6 +41,7 @@
         stripe: k[5],
         portrait: ART + 'portraits/' + who[0][0] + '.webp',
         sprite: SPRITES.indexOf(who[0][0]) !== -1 ? ART + 'karts/' + who[0][0] + '.webp' : null,
+        full: FULL.indexOf(who[0][0]) !== -1 ? ART + 'full/' + who[0][0] + '.webp' : null,
       });
     });
   });

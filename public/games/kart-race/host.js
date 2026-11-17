@@ -1,5 +1,6 @@
 (function () {
   Ark.loadCss('/games/kart-race/style.css');
+  Ark.loadCss('/games/kart-race/select.css'); // (the racer and tyre select screens: Kart Race 3D's too)
   // The track geometry the server drives on (track.js), so the road drawn is the road raced.
   let Road = window.ArkKartTrack || null;
   function loadRoad(tries) {
@@ -198,6 +199,67 @@
     }).join('') + '</div>';
   }
 
+  // ---- the select screens: racer, then tyres (the setup's first two steps) ----
+
+  const STEPS = [['racer', 'Racer'], ['tyre', 'Tyres'], ['course', 'Track & settings']];
+
+  /** One player's side: their racer big (a full picture once there's one, else the coin), kart, stats. */
+  function selectCard(v, slot) {
+    const R = window.ArkKartRacers;
+    const pick = v.picks[slot];
+    const r = R.racer(pick.racer);
+    const t = R.tyre(pick.tyre);
+    const done = v.confirmed && v.confirmed[slot];
+    const away = v.players[slot].connected === false;
+    const big = r.full || r.portrait;
+    return '<div class="krs-card p' + (slot + 1) + (done ? ' done' : '') + '">' +
+      '<div class="krs-who"><span class="krs-tag">P' + (slot + 1) + '</span> ' + nameOf(v, slot) + '</div>' +
+      '<div class="krs-hero"><img class="krs-big' + (r.full ? ' full' : '') + '" src="' + big + '" alt="">' +
+      (r.sprite ? '<img class="krs-kart" src="' + r.sprite + '" alt="">' : '') + '</div>' +
+      '<div class="krs-name">' + r.name + '</div>' +
+      '<div class="krs-type">' + R.TYPES[r.type].emoji + ' ' + R.TYPES[r.type].label + (v.step === 'tyre' ? ' · ' + t.emoji + ' ' + t.name + ' tyres' : '') + '</div>' +
+      '<div class="rows">' + STAT_ROWS.map(function (s) {
+        const mod = v.step === 'tyre' ? t.mod[s[0]] || 0 : 0;
+        return '<div class="stat"><span>' + s[1] + '</span><div class="bar">' + statBar(r.stats[s[0]], mod) + '</div></div>';
+      }).join('') + '</div>' +
+      '<div class="krs-state">' + (done ? '✓ Confirmed' : away ? 'Disconnected' : v.step === 'tyre' ? 'Choosing tyres…' : 'Choosing a racer…') + '</div>' +
+      '</div>';
+  }
+
+  /** The racer (or tyre) select screen: both players' picks big, every choice along the bottom. */
+  function selectHtml(v) {
+    const R = window.ArkKartRacers;
+    if (!R || !v.picks) return '';
+    const step = v.step;
+    const steps = '<div class="krs-steps">' + STEPS.map(function (s, i) {
+      return '<span class="' + (s[0] === step ? 'on' : STEPS.findIndex(function (x) { return x[0] === step; }) > i ? 'past' : '') + '">' + (i + 1) + ' · ' + s[1] + '</span>';
+    }).join('<i>▸</i>') + '</div>';
+    const list = step === 'racer' ? R.RACERS : R.TYRES;
+    const strip = '<div class="krs-strip ' + step + '">' + list.map(function (x) {
+      const who = [0, 1].filter(function (slot) { return v.picks[slot][step] === x.id; });
+      return '<div class="krs-pick' + who.map(function (s) { return ' p' + (s + 1); }).join('') + '">' +
+        (step === 'racer' ? '<img src="' + x.portrait + '" alt="">' : '<span class="krs-em">' + x.emoji + '</span>') +
+        '<b>' + x.name + '</b>' + who.map(function (s) { return '<em class="p' + (s + 1) + '">P' + (s + 1) + '</em>'; }).join('') + '</div>';
+    }).join('') + '</div>';
+    return '<div class="krs">' + steps +
+      '<div class="krs-title">' + (step === 'racer' ? 'Choose your racer' : 'Choose your tyres') + '</div>' +
+      '<div class="krs-cards">' + selectCard(v, 0) + '<div class="krs-vs">VS</div>' + selectCard(v, 1) + '</div>' + strip +
+      '<div class="krs-hint">📱 Tap one, then <b>Confirm</b> · 🎮 ←→' + (step === 'racer' ? '↑↓' : '') + ' choose · <b>A</b> confirm · <b>B</b> back</div>' +
+      '</div>';
+  }
+
+  /** A controller on a select screen: move along the choices (the racers in two rows of six), A confirms, B goes back. */
+  function selectPad(btn, v, slot) {
+    const R = window.ArkKartRacers;
+    if (btn === 'A' || btn === 'START') return { type: 'confirm' };
+    if (btn === 'B') return { type: 'back' };
+    const list = v.step === 'racer' ? R.RACERS : R.TYRES;
+    const step = { LEFT: -1, RIGHT: 1, UP: v.step === 'racer' ? -6 : -1, DOWN: v.step === 'racer' ? 6 : 1 }[btn];
+    if (!step) return null;
+    const at = Math.max(0, list.findIndex(function (x) { return x.id === v.picks[slot][v.step]; }));
+    return { type: v.step, id: list[(at + step + list.length) % list.length].id };
+  }
+
   /** Ark.setup.focus for the settings rows only (a player on their Racer / Tyres row is outlined in the picks panel instead). */
   function settingsFocus(v) {
     const rows = rowsFor(v);
@@ -322,7 +384,10 @@
 
   function renderOverlay(v) {
     let html = '';
-    if (presentation) {
+    // The first two steps of the setup are the select screens, the same in Kart Race 3D.
+    if (v.phase === 'setup' && v.step && v.step !== 'course') {
+      html = selectHtml(v);
+    } else if (presentation) {
       html = presentation.overlay(v, {
         settings: function () { return Ark.setup.html(v, rowsFor(v), settingsFocus(v)); },
         preview: function () { return previewHtml(v, v.settings.track); },
@@ -970,14 +1035,17 @@
         if (b.used > (a.used || 0) && !(b.boosts > a.boosts)) out.push('shoot');
         return out;
       },
-      padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item' + (opts.look ? ' · R-stick: look (pull down or click: look back)' : '') + ' · Setup: ↑↓ row (the last two are your racer and tyres), ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
+      padHint: 'Stick or D-pad ← → steer · RT / A gas · LT / B brake, hold to reverse · X / RB drift · Y / LB item' + (opts.look ? ' · R-stick: look (pull down or click: look back)' : '') + ' · Setup: your racer, then tyres (D-pad choose, A confirm, B back), then the track: ↑↓ row, ←→ change, A ready · Between races: A ready · End: A rematch (when you both press it), Y settings',
       padPoll: opts.look ? lookPoll : padPoll,
       pad: function (btn, v, slot) {
         if (stage && stage.pad && stage.pad(btn)) return null;
+        if (v.phase === 'setup' && v.step && v.step !== 'course') return selectPad(btn, v, slot);
+        if (v.phase === 'setup' && v.step === 'course' && btn === 'B') return { type: 'back' };
         if (v.phase === 'setup') {
           if (!pads[slot]) pads[slot] = { row: 0 };
           const settings = rowsFor(v);
-          const rows = settings.concat(PICK_ROWS.map(function (key) { return { key: key }; }));
+          // (the racer and tyres have their own steps now: on the course step, just the settings)
+          const rows = v.step === 'course' ? settings : settings.concat(PICK_ROWS.map(function (key) { return { key: key }; }));
           pads[slot].row = Math.min(pads[slot].row || 0, rows.length - 1); // a mode change can drop rows
           const row = pads[slot].row;
           // ← → on the Racer / Tyres rows cycles this player's pick; everything else is the usual setup.

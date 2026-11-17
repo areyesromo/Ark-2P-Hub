@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.52
+
+- 🏎️ Kart Race and Kart Race 3D start like a proper kart game: **choose your racer** (both of you on
+  one screen, your pick big on your side with their kart and stats, all twelve along the bottom),
+  confirm, then **choose your tyres** (the stats show what they change), confirm, then the **track
+  and settings**. On a phone or a controller (D-pad to choose, **A** to confirm, **B** to go back).
+
 ## 0.1.51
 
 - 🎬 The six games with their own setup menu (Kart Race, Kart Race 3D, Bomb Duel, Word Race, Mini

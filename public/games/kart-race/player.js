@@ -346,18 +346,19 @@
     return h;
   }
 
-  function renderPicks(v) {
+  /** The racer and tyre pickers: `only` 'racer' or 'tyre' on the setup's select steps, both at the end. */
+  function renderPicks(v, only) {
     const R = window.ArkKartRacers;
     if (!R) return '';
     const mine = v.picks[v.you];
     const racer = R.racer(mine.racer);
     const tyre = R.tyre(mine.tyre);
-    return '<div class="title">Your racer</div><div class="kr-racers">' + R.RACERS.map(function (r) {
+    return (only === 'tyre' ? '' : '<div class="title">Your racer</div><div class="kr-racers">' + R.RACERS.map(function (r) {
       return '<button type="button" class="kr-racer' + (r.id === racer.id ? ' on' : '') + '" aria-pressed="' + (r.id === racer.id) + '" data-racer="' + r.id + '"><img src="' + r.portrait + '" alt="">' + r.name + '</button>';
-    }).join('') + '</div>' +
-      '<div class="title">Tyres</div><div class="kr-tyres">' + R.TYRES.map(function (t) {
+    }).join('') + '</div>') +
+      (only === 'racer' ? '' : '<div class="title">Tyres</div><div class="kr-tyres">' + R.TYRES.map(function (t) {
         return '<button type="button" class="kr-tyre' + (t.id === tyre.id ? ' on' : '') + '" aria-pressed="' + (t.id === tyre.id) + '" data-tyre="' + t.id + '"><span>' + t.emoji + '</span>' + t.name + '</button>';
-      }).join('') + '</div>' +
+      }).join('') + '</div>') +
       '<div class="kr-stats"><div class="who"><img src="' + racer.portrait + '" alt=""> ' + racer.name + ' · ' + R.TYPES[racer.type].label + ' · ' + tyre.emoji + ' ' + tyre.name + '</div>' +
       '<div class="kr-car">' + (racer.sprite ? '<img class="kr-kart" src="' + racer.sprite + '" alt="">' : '') + '<div class="rows">' +
       STAT_ROWS.map(function (row) {
@@ -384,9 +385,16 @@
   function status(v) {
     const me = v.you;
     if (v.phase === 'setup') {
+      const title = '<span class="big">🏎️ Kart Race' + (threeD ? ' 3D' : '') + '</span><br>';
+      if (v.step === 'racer' || v.step === 'tyre') {
+        const done = v.confirmed || [false, false];
+        const what = v.step === 'racer' ? 'racer' : 'tyres';
+        return title + '<b>Step ' + (v.step === 'racer' ? 1 : 2) + ' of 3:</b> ' +
+          (done[me] ? 'Confirmed ✓ Waiting for the other player…' : done[1 - me] ? 'The other player has confirmed: pick your ' + what + ' and Confirm.' : 'Pick your ' + what + ', then Confirm.');
+      }
       const ready = v.ready || [false, false];
-      const wait = ready[me] ? 'Ready ✓ Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: press Ready when you are.' : 'Pick the settings (either of you can), then press Ready.';
-      return '<span class="big">🏎️ Kart Race' + (threeD ? ' 3D' : '') + '</span><br>' + wait;
+      const wait = ready[me] ? 'Ready ✓ Waiting for the other player…' : ready[1 - me] ? 'The other player is ready: press Ready when you are.' : 'Pick the track and settings (either of you can), then press Ready.';
+      return title + '<b>Step 3 of 3:</b> ' + wait;
     }
     const ready = v.ready || [false, false];
     const waiting = function (what) {
@@ -503,21 +511,28 @@
     dash(v);
     const me = v.you;
     const k = v.karts && v.karts[me];
-    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.lights, v.next, v.newRecord && v.newRecord.slot, v.history && v.history.length, v.cupPoints, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result,
+    const key = JSON.stringify([Boolean(window.ArkKartRacers), v.picks, v.ready, v.step, v.confirmed, v.lights, v.next, v.newRecord && v.newRecord.slot, v.history && v.history.length, v.cupPoints, v.phase, v.race, v.scores, v.settings, v.positions && v.positions[me], k && [k.jumped, k.reaction, k.laps, k.offTrack, k.boosting, k.cut, k.items, k.gold, k.spin, k.shield, k.star, k.shrunk, k.frozen], Boolean(window.ArkKartItems), v.result,
       v.battle && v.karts && [v.karts[0].balloons, v.karts[1].balloons, Math.ceil(v.battle.msLeft / 1000)]]);
     if (key === textKey) return;
     textKey = key;
     const setup = v.phase === 'setup';
     const between = setup || v.phase === 'over';
+    // The setup in three steps: your racer, your tyres (each confirmed), then the track and settings.
+    const selecting = setup && (v.step === 'racer' || v.step === 'tyre');
+    const confirmed = Boolean(selecting && v.confirmed && v.confirmed[v.you]);
     els.status.innerHTML = status(v);
-    els.setup.innerHTML = setup ? Ark.setup.html(v, rowsFor(v)) : '';
-    els.picks.innerHTML = between ? renderPicks(v) : '';
-    els.picks.classList.toggle('hidden', !between);
+    els.setup.innerHTML = setup && !selecting ? Ark.setup.html(v, rowsFor(v)) : '';
+    els.picks.innerHTML = selecting ? renderPicks(v, v.step) : between && !setup ? renderPicks(v) : '';
+    els.picks.classList.toggle('hidden', !selecting && !(between && !setup));
+    els.confirm.classList.toggle('hidden', !selecting);
+    els.confirm.textContent = confirmed ? 'Confirmed ✓ (tap to change)' : v.step === 'tyre' ? 'Confirm tyres' : 'Confirm racer';
+    els.confirm.classList.toggle('on', confirmed);
+    els.back.classList.toggle('hidden', !setup || v.step === 'racer');
     if (setup) restorePicks(v);
     else restored = false; // ask again next time we're back at setup
-    els.prefs.classList.toggle('hidden', !between);
+    els.prefs.classList.toggle('hidden', !between || selecting); // (your controller: on the track step and at the end)
     const standings = v.phase === 'standings';
-    els.go.classList.toggle('hidden', !setup && !standings);
+    els.go.classList.toggle('hidden', (!setup && !standings) || selecting);
     const ready = Boolean(v.ready && v.ready[v.you]);
     els.go.textContent = ready ? 'Ready ✓ (tap to cancel)' : standings ? 'Ready for the next ' + (v.battle ? 'round' : 'race') : 'Ready';
     els.go.classList.toggle('on', ready && (setup || standings));
@@ -559,8 +574,10 @@
           '<div class="kr-setup-box"></div>' +
 
           '<div class="ark-setup kr-prefs hidden"></div>' +
-          '<button class="primary go hidden">Ready</button>' +
           '<div class="ark-setup kr-picks hidden"></div>' +
+          '<button class="primary go hidden">Ready</button>' +
+          '<button class="primary confirm hidden">Confirm racer</button>' +
+          '<button class="ghost back hidden">◀ Back</button>' +
           '<div class="kr-controls">' +
           '<div class="kr-dash"><div class="kr-speed"><i></i></div><div class="kr-read"><b class="kmh">0 km/h</b><span class="lapt"></span></div></div>' +
           '<div class="kr-steer"></div>' +
@@ -578,6 +595,8 @@
           picks: root.querySelector('.kr-picks'),
           prefs: root.querySelector('.kr-prefs'),
           go: root.querySelector('.go'),
+          confirm: root.querySelector('.confirm'),
+          back: root.querySelector('.back'),
           controls: root.querySelector('.kr-controls'),
           steer: root.querySelector('.kr-steer'),
           brake: root.querySelector('.brake'),
@@ -650,6 +669,8 @@
           }
         });
         els.go.addEventListener('click', function () { api.send({ type: 'go' }); });
+        els.confirm.addEventListener('click', function () { api.send({ type: 'confirm' }); });
+        els.back.addEventListener('click', function () { api.send({ type: 'back' }); });
         els.rematch.addEventListener('click', function () { api.send({ type: 'rematch' }); });
         els.change.addEventListener('click', function () { api.send({ type: 'setup' }); });
       },

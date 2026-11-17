@@ -31,6 +31,11 @@ export function kartRaceBot(view, level, rng = Math.random, retries = 0, memory 
   // The menus: ready when you are (setup, between races, a rematch).
   const ready = view.ready || [false, false];
   if ((view.phase === 'setup' || view.phase === 'standings') && ready[1 - me] && !ready[me]) return { type: 'go', botDelayMs: 600 + rng() * 800 };
+  // (the racer and tyre steps: it confirms its pick once you've confirmed yours)
+  const confirmed = view.confirmed || [false, false];
+  if (view.phase === 'setup' && (view.step === 'racer' || view.step === 'tyre') && confirmed[1 - me] && !confirmed[me]) {
+    return { type: 'confirm', botDelayMs: 500 + rng() * 700 };
+  }
   if (view.phase === 'over' && ready[1 - me] && !ready[me]) return { type: 'rematch', botDelayMs: 900 + rng() * 900 };
   if (view.phase !== 'race' || !view.karts) return memory.kartDriving ? stop(memory) : null;
   const k = view.karts[me];

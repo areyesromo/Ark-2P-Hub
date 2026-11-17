@@ -344,7 +344,34 @@ export class KartRace {
     this.result = null;
     this.karts = null;
     this.track = null;
-    this.ready = [false, false]; // both say so (Start / A) and the race begins
+    // The setup is three steps, like a kart game's menus: each picks a racer and confirms (A), then
+    // tyres, then the track and settings, where both say Ready (Start / A) and the race begins.
+    // ("go" still readies up from any step: the race starts with the picks as they are.)
+    this.step = 'racer';
+    this.confirmed = [false, false];
+    this.ready = [false, false];
+    this.ctx.update();
+  }
+
+  /** A player is happy with their racer (or tyres); when both are, on to the next step. */
+  confirm(slot) {
+    this.confirmed[slot] = !this.confirmed[slot];
+    const away = (i) => this.ctx.players && this.ctx.players[i] && this.ctx.players[i].connected === false;
+    if (this.confirmed.every((c, i) => c || away(i))) {
+      this.step = this.step === 'racer' ? 'tyre' : 'course';
+      this.confirmed = [false, false];
+    }
+    this.ctx.update();
+  }
+
+  /** B on the menus: take back your confirm, or (with nothing to take back) go back a step, for both. */
+  stepBack(slot) {
+    if (this.step !== 'course' && this.confirmed[slot]) this.confirmed[slot] = false;
+    else if (this.step !== 'racer') {
+      this.step = this.step === 'course' ? 'tyre' : 'racer';
+      this.confirmed = [false, false];
+      this.ready = [false, false];
+    }
     this.ctx.update();
   }
 
@@ -1148,6 +1175,7 @@ export class KartRace {
     if (!known.some((x) => x.id === id)) return;
     this.picks[slot] = { ...this.picks[slot], [input.type]: id };
     if (this.ready) this.ready[slot] = false; // a new pick: ready again when you say so
+    if (this.confirmed) this.confirmed[slot] = false; // …and confirm it again
     this.ctx.update();
   }
 
@@ -1157,6 +1185,8 @@ export class KartRace {
       return;
     }
     if (this.phase === 'setup') {
+      if (input.type === 'confirm' && (this.step === 'racer' || this.step === 'tyre')) return this.confirm(slot);
+      if (input.type === 'back') return this.stepBack(slot);
       if (input.type === 'setting' && applySetting(this.ctx, this.options, this.settings, input.key, input.value)) {
         this.ready = [false, false]; // you both agreed to the old settings
         this.ctx.update();
@@ -1337,6 +1367,10 @@ export class KartRace {
       next: this.phase === 'standings' ? { race: this.race + 1, track: (this.battle ? ARENAS : this.tracks)[this.nextIndex].name, suddenDeath: this.cup && this.race >= 4 } : null,
       lights: this.phase === 'countdown' ? Math.min(LIGHTS.count, Math.floor((now - this.lightsFrom) / LIGHTS.stepMs)) : 0,
       ready: this.ready || [false, false],
+      // The setup's step (racer, tyre, course) and who has confirmed their pick in it.
+      step: this.phase === 'setup' ? this.step || 'racer' : null,
+      confirmed: this.phase === 'setup' ? this.confirmed || [false, false] : null,
+      hidePreview: this.phase === 'setup' && this.step !== 'racer', // (the hub's preview: beside the racers only)
     };
   }
 

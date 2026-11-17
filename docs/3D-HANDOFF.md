@@ -38,6 +38,19 @@ tracks built for 3D (hills, jumps, banked turns, bridges, tunnels) with the road
 boost pads and item rows marked as named meshes or empties. See `docs/DREAMS.md`. The server needs
 height on the track for jumps and hills: ask here and the cloud session adds it.
 
+### Kart Race racers: a picture of each from the waist up (`kart-race`, `kart-race-3d`)
+
+The setup's first screen is a racer select, like a kart game's: each player's pick is shown big on
+their side. Today that's the round coin portrait. A picture of each racer from the waist (or chest)
+up would make it feel like a proper select screen:
+
+- One per racer, `public/games/kart-race/art/full/<racer id>.webp` (ids in `art/README.md`):
+  transparent background, the racer facing slightly towards the middle, about 512 px tall, in
+  the coins' style and colours. A pose with some character (a wave, arms crossed, a thumbs-up).
+- Add the racer's id to `FULL` in `public/games/kart-race/racers.js`; the select screen shows the
+  picture instead of the coin straight away (`.krs-big.full`, up to 15rem tall). Nothing else changes.
+- Later, the same racers in 3D on the select screen (turning on a stand) would be the next step.
+
 ### Already playable with stand-in shapes
 
 Each of these works today. Art would lift them; none of it changes play.

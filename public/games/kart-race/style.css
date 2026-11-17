@@ -234,3 +234,7 @@
 .kr-ready i { color: var(--muted); }
 .kr-side .react { color: var(--warn); font-weight: 800; }
 .kr-mid .record { font-size: 0.9rem; color: var(--warn); font-weight: 700; }
+/* The setup's select steps on a phone: Confirm (your racer, then your tyres) and Back. */
+.kr-phone .confirm { font-size: 1.1rem; padding: 16px 32px; align-self: center; }
+.kr-phone .confirm.on { background: var(--good); color: var(--on-good); }
+.kr-phone .back { align-self: center; }

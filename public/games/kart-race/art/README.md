@@ -11,4 +11,8 @@ version of the same name and size and it shows up as is.
 - `karts/empty/<racer id>.webp`: the same kart with nobody in it, same format. Not used in 2D;
   kept for the 3D module.
 
+- `full/<racer id>.webp`: the racer from the waist (or chest) up for the select screen, transparent
+  background, about 512 px tall. Add the racer's id to `FULL` in `../racers.js` once it's in
+  (until then the select screen shows their coin). See `docs/3D-HANDOFF.md`.
+
 Racer ids: rex, roxy, zip, zara, swift, sky, boulder, bella, dash, dot, rascal, ruby.
