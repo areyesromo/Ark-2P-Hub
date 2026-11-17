@@ -718,8 +718,84 @@
     return sheet;
   }
 
+  // ---- the game's preview, on its setup screen ----
+  // A picture of the game (public/games/<id>/preview.jpg, made by tools/game-previews.mjs) and a
+  // dialog box under it that tells you about the game a box at a time: what it is, then its rules,
+  // its controller buttons and its settings (game-guide.json). It turns to the next box every
+  // PREVIEW_MS, or straight away on RB / RT (back: LB / LT) or a tap, which starts the wait again.
+  const PREVIEW_MS = 10000;
+  const BOX_LETTERS = 170;
+
+  /** Sentences grouped into boxes of about BOX_LETTERS (counting the text, not its tags). */
+  function boxes(html) {
+    const parts = String(html || '').split(/(?<=[.!?])\s+(?=[^a-z])/);
+    const out = [];
+    let cur = '';
+    parts.forEach(function (p) {
+      const len = function (t) { return t.replace(/<[^>]+>/g, '').length; };
+      if (cur && len(cur) + len(p) > BOX_LETTERS) { out.push(cur); cur = p; } else cur = cur ? cur + ' ' + p : p;
+    });
+    if (cur) out.push(cur);
+    return out;
+  }
+
+  function previewPages(game, info) {
+    const pages = [];
+    if (game && game.tagline) pages.push({ title: 'ℹ️ About', html: escapeHtml(game.tagline) });
+    [['📖 How to play', info.rules], ['🎮 With a controller', info.controls], ['⚙ Settings', info.settings]].forEach(function (pair) {
+      const list = boxes(pair[1]);
+      list.forEach(function (html, i) { pages.push({ title: pair[0] + (list.length > 1 ? ' · ' + (i + 1) + '/' + list.length : ''), html: html }); });
+    });
+    return pages;
+  }
+
+  /**
+   * Fill `el` with `game`'s preview and keep its dialog box turning. opts.pad: show the controller
+   * keys. Returns { next(), prev(), stop() } (stop when the setup screen goes).
+   */
+  function openPreview(el, game, opts) {
+    const o = opts || {};
+    let pages = previewPages(game, {});
+    let at = 0;
+    let timer = null;
+    let stopped = false;
+    el.innerHTML =
+      '<div class="pv-shot"><img alt="" src="/games/' + encodeURIComponent(game ? game.id : '') + '/preview.jpg"></div>' +
+      '<div class="pv-box" role="button" tabindex="-1" aria-live="polite"></div>';
+    const img = el.querySelector('img');
+    img.addEventListener('error', function () { el.querySelector('.pv-shot').classList.add('none'); });
+    const box = el.querySelector('.pv-box');
+    function show() {
+      const p = pages[at] || { title: '', html: '' };
+      box.innerHTML = '<div class="pv-head">' + p.title + '</div><div class="pv-text">' + p.html + '</div>' +
+        '<div class="pv-foot"><span class="pv-dots">' + pages.map(function (_p, i) { return '<i' + (i === at ? ' class="on"' : '') + '></i>'; }).join('') + '</span>' +
+        (o.pad ? '<span class="pv-keys"><kbd>LB</kbd> back · <kbd>RB</kbd> next</span>' : '<span class="pv-keys">tap for the next</span>') + '</div>' +
+        '<div class="pv-timer"></div>'; // (its bar runs down the wait: a new one each box)
+      clearTimeout(timer);
+      if (!stopped && pages.length > 1) timer = setTimeout(function () { step(1); }, PREVIEW_MS);
+    }
+    function step(d) {
+      if (!pages.length) return;
+      at = (at + d + pages.length) % pages.length;
+      show();
+    }
+    box.addEventListener('click', function () { step(1); });
+    show();
+    loadGuide().then(function (all) {
+      if (stopped) return;
+      pages = previewPages(game, (all && game && all[game.id]) || {});
+      show();
+    });
+    return {
+      next: function () { step(1); },
+      prev: function () { step(-1); },
+      stop: function () { stopped = true; clearTimeout(timer); },
+    };
+  }
+
   window.Ark = {
     guide: { buttonsHtml: guideButtonsHtml, open: openGuide, load: loadGuide },
+    preview: { open: openPreview, pages: previewPages, ms: PREVIEW_MS },
     lobbyEntries: lobbyEntries,
     phoneClock: phoneClock,
     lobbyLayout: lobbyLayout,

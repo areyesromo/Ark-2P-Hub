@@ -246,3 +246,32 @@ em.tag.online-slow { color: var(--muted); }
 /* No scrollbars (an app, not a web page): everything still scrolls by touch, wheel, trackpad or a controller. */
 * { scrollbar-width: none; }
 *::-webkit-scrollbar { width: 0; height: 0; }
+
+/* The game's preview on its setup screen (Ark.preview): its picture, and a dialog box that turns. */
+.hub-cols { display: grid; grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); gap: 2rem; width: min(84rem, 100%); align-items: start; text-align: left; }
+.hub-settings { display: flex; flex-direction: column; align-items: stretch; gap: 0.8rem; min-width: 0; }
+.hub-settings .ark-setup { width: 100%; margin: 0; }
+.hub-settings .guide-btns { justify-content: flex-start; }
+.hub-preview { display: flex; flex-direction: column; gap: 0.8rem; min-width: 0; }
+.pv-shot { border-radius: var(--radius); overflow: hidden; background: var(--bg-2); box-shadow: 0 0 0 2px var(--line), 0 0.8rem 1.6rem rgba(0, 0, 0, 0.35); aspect-ratio: 16 / 9; }
+.pv-shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.pv-shot.none { display: none; }
+.pv-box {
+  position: relative; overflow: hidden; cursor: pointer; padding: 0.9em 1.1em 0.8em; min-height: 9.5em;
+  display: flex; flex-direction: column; gap: 0.35em;
+  background: var(--panel); border: 3px solid var(--text); border-radius: var(--r-md); font-size: 0.8em; line-height: 1.45;
+}
+.pv-head { font-weight: 900; color: var(--muted); font-size: 0.85em; letter-spacing: 0.04em; }
+.pv-text { flex: 1; }
+.pv-foot { display: flex; align-items: center; justify-content: space-between; gap: 1em; font-size: 0.75em; color: var(--muted); }
+.pv-dots { display: flex; gap: 0.35em; flex-wrap: wrap; }
+.pv-dots i { width: 0.55em; height: 0.55em; border-radius: 50%; background: var(--line); }
+.pv-dots i.on { background: var(--text); }
+.pv-keys kbd { font: inherit; padding: 0 0.4em; border-radius: var(--r-sm); background: var(--btn); color: var(--text); }
+.pv-timer { position: absolute; left: 0; bottom: 0; height: 3px; width: 100%; background: var(--p1); transform-origin: left; animation: pv-run 10s linear forwards; }
+@keyframes pv-run { from { transform: scaleX(1); } to { transform: scaleX(0); } }
+/* Phones: the picture and box above the settings. */
+@media (max-width: 760px) {
+  .hub-cols { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
+  .pv-box { font-size: 0.95em; min-height: 8.5em; }
+}

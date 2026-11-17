@@ -162,7 +162,10 @@ starts). The numbers above are the defaults; you can change, for example:
 
 The room remembers your choice for next time. At the end of a match,
 **Rematch** plays again with the same settings and **⚙ Change settings** (or
-**Y** on a controller) goes back to the setup screen. The setup screen also has **📖 How to play**
+**Y** on a controller) goes back to the setup screen. Beside the settings, the setup screen shows the
+game: a picture of it and a dialog box that tells you about it a box at a time (what it is, the rules,
+the controller buttons, the settings). It turns every 10 seconds; **RB** / **RT** turns to the next box
+straight away, **LB** / **LT** goes back (or tap it). The setup screen also has **📖 How to play**
 (the rules from the tables above, the controller buttons and the settings) and **ℹ️ About** (the
 game's full description): **X** and **Y** on a controller, **B** closes it.
 

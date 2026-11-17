@@ -35,3 +35,12 @@ test('every game has a short line for its lobby card (the full description is on
     assert.ok(game.blurb.length <= 50, game.id + ': ' + game.blurb.length + ' letters');
   }
 });
+
+test('every game has a picture for its setup screen\'s preview (run `node tools/game-previews.mjs <id>` for a new one)', () => {
+  for (const game of listGames()) {
+    const file = `public/games/${game.id}/preview.jpg`;
+    assert.ok(fs.existsSync(file), file);
+    const size = fs.statSync(file).size;
+    assert.ok(size > 2000 && size < 200 * 1024, file + ': ' + size + ' bytes');
+  }
+});

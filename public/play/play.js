@@ -398,16 +398,29 @@
       hubSetupKey = '';
       $('hub-change').classList.add('hidden');
       if (guideSheet) guideSheet.close(); // (the game has started)
+      if (preview) preview.stop();
+      preview = null;
+      previewFor = null;
       return;
+    }
+    const game = state && (state.games || []).find(function (g) { return g.id === state.gameId; });
+    // The game's preview (its picture and the dialog box: tap it for the next) is drawn once, so the
+    // box keeps turning while the settings under it change.
+    if (previewFor !== state.gameId || !$('hub-setup').querySelector('.hub-settings')) {
+      if (preview) preview.stop();
+      previewFor = state.gameId;
+      hubSetupKey = '';
+      $('hub-setup').innerHTML =
+        '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
+        (game && game.blurb ? '<p class="hub-blurb">' + Ark.escapeHtml(game.blurb) + '</p>' : '') +
+        '<div class="hub-cols"><div class="hub-preview"></div><div class="hub-settings"></div></div>';
+      preview = Ark.preview.open($('hub-setup').querySelector('.hub-preview'), game);
     }
     const key = JSON.stringify(v.hubSetup.settings);
     if (key === hubSetupKey) return;
     hubSetupKey = key;
-    const game = state && (state.games || []).find(function (g) { return g.id === state.gameId; });
     const parts = Ark.setup.hubParts(v);
-    $('hub-setup').innerHTML =
-      '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
-      (game && game.blurb ? '<p class="hub-blurb">' + Ark.escapeHtml(game.blurb) + '</p>' : '') +
+    $('hub-setup').querySelector('.hub-settings').innerHTML =
       Ark.guide.buttonsHtml(false) +
       '<p class="muted">Pick the settings (either of you can), then start.</p>' +
       Ark.setup.html(parts.view, parts.rows) +
@@ -415,6 +428,8 @@
   }
   Ark.setup.bind($('hub-setup'), api);
   let guideSheet = null; // How to play / About over the setup screen (Ark.guide)
+  let preview = null; // the game's preview above its settings (Ark.preview), and which game it's for
+  let previewFor = null;
   $('hub-setup').addEventListener('click', function (e) {
     if (e.target.closest('.hub-go')) api.send({ type: 'go' });
     const b = e.target.closest('[data-guide]');

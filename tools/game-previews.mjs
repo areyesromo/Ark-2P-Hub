@@ -1,0 +1,58 @@
+// game-previews.mjs: take a picture of every game on the TV for its setup screen's preview
+// (public/games/<id>/preview.jpg). It starts a hub on a spare port, seats two players, starts each
+// game in turn past its setup screen and photographs the TV a few seconds in.
+//   node tools/game-previews.mjs            every game
+//   node tools/game-previews.mjs pong tron  just these
+// Needs Playwright with Chromium (npm i --no-save playwright && npx playwright install chromium);
+// the pictures are committed, so the hub itself never needs it.
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createRequire } from 'node:module';
+import { io as connect } from 'socket.io-client';
+import { createApp } from '../server/app.js';
+import { listGames } from '../server/games/index.js';
+
+const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
+const require = createRequire(import.meta.url);
+const { chromium } = require('playwright');
+const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
+const emit = (s, ev, data) => new Promise((resolve) => s.emit(ev, data, resolve));
+// The 3D games take a moment longer to build their scene.
+const WAIT = { 'kart-race-3d': 9000, 'ten-pin': 7000, 'tower-stack': 7000, 'dungeon-duo': 8000, 'marble-maze': 7000, 'party-board': 8000 };
+
+const only = process.argv.slice(2);
+const games = listGames().filter((g) => !only.length || only.includes(g.id));
+const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-previews-'));
+const hub = createApp({ port: 0, dataDir: dir, https: false });
+const { port } = await hub.listen();
+const base = `http://127.0.0.1:${port}`;
+const browser = await chromium.launch();
+// A smaller picture than the TV (a preview, not a wallpaper): 1280 x 800 drawn at 0.6.
+const tv = await browser.newPage({ viewport: { width: 1280, height: 800 }, deviceScaleFactor: 0.6 });
+await tv.goto(base + '/host/');
+await tv.waitForFunction("/^[A-Z]{4}$/.test(document.getElementById('room-code').textContent)"); // (runs in the page)
+const code = await tv.textContent('#room-code');
+const players = [];
+for (const name of ['Ana', 'Ben']) {
+  const s = connect(base, { transports: ['websocket'], forceNew: true });
+  await emit(s, 'player:join', { code, name });
+  players.push(s);
+}
+for (const g of games) {
+  const res = await emit(players[0], 'lobby:start', { gameId: g.id });
+  if (!res || !res.ok) { console.log(g.id, 'did not start:', res && res.error); continue; }
+  await sleep(800);
+  players[0].emit('game:input', { type: 'go' }); // (past the setup screen, on its usual settings)
+  await sleep(WAIT[g.id] || 4500);
+  const out = path.join(ROOT, 'public', 'games', g.id, 'preview.jpg');
+  await tv.locator('#stage').screenshot({ path: out, type: 'jpeg', quality: 72 });
+  console.log(g.id, Math.round(fs.statSync(out).size / 1024) + ' KB');
+  players[0].emit('lobby:return');
+  await sleep(700);
+}
+players.forEach((s) => s.close());
+await browser.close();
+await hub.close();
+fs.rmSync(dir, { recursive: true, force: true });
