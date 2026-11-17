@@ -181,6 +181,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Lobby | **X** | Tournament: off, best of 3, 5 or 7 games |
 | Lobby | **LT** | Play the computer: it takes the free seat on Easy; press again for Normal, then Hard, then it leaves |
 | Lobby | **LB** / **RB** | Pick your avatar and colour (D-pad to move, **A** to pick, **B** to close) |
+| Lobby | **↑** past the top row of games | The top bar and the Invite button: **← →** along it, **A** presses (⚙ Settings, 🏆 leaderboard, sound, music…), **↓** or **B** back to the games |
 | Mind Meld | **Left stick** or **D-pad ← →** turns the dial, **A** locks in | Controller players always guess; the clue-giver needs a phone to type |
 | Marble Maze | **Left stick** or **D-pad** tilts the board | In split mode only your axis counts: player 1 left/right, player 2 forwards/back. **A** plays again at the end |
 | Tower Stack | **A** (or **RT**) drops the block on your turn | Player 1 drops the blocks sliding left-right, player 2 the ones sliding front-back. **A** rematches at the end |
