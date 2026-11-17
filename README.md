@@ -162,7 +162,9 @@ starts). The numbers above are the defaults; you can change, for example:
 
 The room remembers your choice for next time. At the end of a match,
 **Rematch** plays again with the same settings and **⚙ Change settings** (or
-**Y** on a controller) goes back to the setup screen.
+**Y** on a controller) goes back to the setup screen. The setup screen also has **📖 How to play**
+(the rules from the tables above, the controller buttons and the settings) and **ℹ️ About** (the
+game's full description): **X** and **Y** on a controller, **B** closes it.
 
 ## Controllers
 
@@ -384,6 +386,8 @@ can point somewhere phones can't reach, and the TV shows a ⚠ warning. To fix i
 
 Settings has no password: it opens on your home network only (never over the
 internet, even while someone is invited online). Of the two phones, only Player 1's has the button.
+A controller works on Settings (and the leaderboard and trophies) too: the D-pad moves between the
+choices, **A** picks, **B** goes back to the TV.
 
 The setting is stored in the `ark-data` Docker volume, so it survives updates.
 You can also set `PUBLIC_URL` in `docker-compose.yml`:

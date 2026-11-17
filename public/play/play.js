@@ -229,7 +229,7 @@
         heading +
         '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (off ? ' class="phone-only"' : '') + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
         '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : botTag ? ' ' + botTag : ' ' + Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
-        '<span>' + Ark.escapeHtml(g.tagline) + '</span>' +
+        '<span>' + Ark.escapeHtml(g.blurb || g.tagline) + '</span>' +
         '</button>'
       );
     }).join('');
@@ -397,6 +397,7 @@
     if (!v) {
       hubSetupKey = '';
       $('hub-change').classList.add('hidden');
+      if (guideSheet) guideSheet.close(); // (the game has started)
       return;
     }
     const key = JSON.stringify(v.hubSetup.settings);
@@ -406,13 +407,21 @@
     const parts = Ark.setup.hubParts(v);
     $('hub-setup').innerHTML =
       '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
+      (game && game.blurb ? '<p class="hub-blurb">' + Ark.escapeHtml(game.blurb) + '</p>' : '') +
+      Ark.guide.buttonsHtml(false) +
       '<p class="muted">Pick the settings (either of you can), then start.</p>' +
       Ark.setup.html(parts.view, parts.rows) +
       '<button class="primary hub-go">Start</button>';
   }
   Ark.setup.bind($('hub-setup'), api);
+  let guideSheet = null; // How to play / About over the setup screen (Ark.guide)
   $('hub-setup').addEventListener('click', function (e) {
     if (e.target.closest('.hub-go')) api.send({ type: 'go' });
+    const b = e.target.closest('[data-guide]');
+    if (!b) return;
+    if (guideSheet) guideSheet.close();
+    const game = state && (state.games || []).find(function (g) { return g.id === state.gameId; });
+    guideSheet = Ark.guide.open(game, b.getAttribute('data-guide'), { onClose: function () { guideSheet = null; } });
   });
   $('hub-change').addEventListener('click', function () { api.send({ type: 'setup' }); });
 

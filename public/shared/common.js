@@ -640,7 +640,86 @@
     return out.slice(0, at).concat(cards, out.slice(at));
   }
 
+  // ---- the game guide: ℹ️ About and 📖 How to play, on the setup screen ----
+  // About is the game's full description (its tagline, with its labels); How to play is its rules,
+  // controller buttons and settings, from the README's tables (game-guide.json, made by
+  // tools/games-catalog.mjs). A sheet over the screen, so the setup itself stays short.
+  let guideData = null;
+  function loadGuide() {
+    if (!guideData) {
+      guideData = fetch('/shared/game-guide.json').then(function (r) { return r.json(); }).catch(function () { guideData = null; return {}; });
+    }
+    return guideData;
+  }
+
+  /** The two buttons, for the setup screen (with the controller buttons that open them, on the TV). */
+  function guideButtonsHtml(pad) {
+    return '<div class="guide-btns">' +
+      '<button type="button" class="ghost" data-guide="rules">📖 How to play' + (pad ? ' <kbd>X</kbd>' : '') + '</button>' +
+      '<button type="button" class="ghost" data-guide="about">ℹ️ About' + (pad ? ' <kbd>Y</kbd>' : '') + '</button>' +
+      '</div>';
+  }
+
+  /**
+   * Open the guide for `game` (from the room's game list) on `tab` ('rules' or 'about'). Returns
+   * { press(btn), close() } for a controller: ← → or X / Y switch tab, ↑ ↓ scroll, B / A close.
+   */
+  function openGuide(game, tab, opts) {
+    const o = opts || {};
+    const el = document.createElement('div');
+    el.className = 'guide-overlay';
+    el.setAttribute('role', 'dialog');
+    document.body.appendChild(el);
+    let info = {};
+    const sheet = {
+      tab: tab === 'about' ? 'about' : 'rules',
+      press: function (btn) {
+        const body = el.querySelector('.guide-body');
+        if (btn === 'LEFT' || btn === 'RIGHT') return show(sheet.tab === 'rules' ? 'about' : 'rules');
+        if (btn === 'X') return show('rules');
+        if (btn === 'Y') return show('about');
+        if ((btn === 'UP' || btn === 'DOWN') && body) body.scrollBy({ top: (btn === 'UP' ? -1 : 1) * body.clientHeight * 0.6, behavior: 'smooth' });
+        if (btn === 'B' || btn === 'A' || btn === 'START' || btn === 'BACK') sheet.close();
+      },
+      close: function () {
+        if (!el.parentNode) return;
+        el.parentNode.removeChild(el);
+        if (o.onClose) o.onClose();
+      },
+    };
+    function section(title, html) { return html ? (title ? '<h3>' + title + '</h3>' : '') + '<p>' + html + '</p>' : ''; }
+    function show(t) {
+      sheet.tab = t;
+      const g = game || {};
+      const body = t === 'about'
+        ? section('', escapeHtml(g.tagline || '')) + '<p>' + gameLabels(g) + '</p>'
+        : (section('', info.rules) + section('🎮 With a controller', info.controls) + section('⚙ Settings', info.settings)) ||
+          '<p class="muted">The rules are on their way…</p>';
+      el.innerHTML = '<div class="panel guide-sheet">' +
+        '<div class="guide-head"><strong>' + escapeHtml(g.name || '') + '</strong>' +
+        '<button type="button" class="ghost guide-close" aria-label="Close">✕</button></div>' +
+        '<div class="guide-tabs">' +
+        '<button type="button" data-tab="rules" class="' + (t === 'rules' ? 'on' : 'ghost') + '">📖 How to play</button>' +
+        '<button type="button" data-tab="about" class="' + (t === 'about' ? 'on' : 'ghost') + '">ℹ️ About</button></div>' +
+        '<div class="guide-body">' + body + '</div>' +
+        (o.pad ? '<p class="muted guide-hint">🎮 ← → switch · ↑ ↓ scroll · B close</p>' : '') +
+        '</div>';
+    }
+    el.addEventListener('click', function (e) {
+      const t = e.target.closest('[data-tab]');
+      if (t) return show(t.getAttribute('data-tab'));
+      if (e.target.closest('.guide-close') || e.target === el) sheet.close();
+    });
+    show(sheet.tab);
+    loadGuide().then(function (all) {
+      info = (all && game && all[game.id]) || {};
+      if (el.parentNode) show(sheet.tab);
+    });
+    return sheet;
+  }
+
   window.Ark = {
+    guide: { buttonsHtml: guideButtonsHtml, open: openGuide, load: loadGuide },
     lobbyEntries: lobbyEntries,
     phoneClock: phoneClock,
     lobbyLayout: lobbyLayout,

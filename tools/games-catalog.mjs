@@ -99,7 +99,59 @@ export function catalog(previous) {
   return generated() + IDEAS_MARK + ideas;
 }
 
+// ---- the game guide: each game's rules, controller buttons and settings, from README.md ----
+// The setup screen's 📖 How to play shows them (public/shared/game-guide.json), so the rules are
+// written once, for players, in the README's tables.
+export const GUIDE = path.join(ROOT, 'public', 'shared', 'game-guide.json');
+
+/** README markdown (one table cell) as safe HTML: bold, code and links' text; nothing else. */
+function cellHtml(md) {
+  return md
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+    .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+    .replace(/`([^`]+)`/g, '<code>$1</code>')
+    .replace(/\\\|/g, '|')
+    .trim();
+}
+
+/** The rows of the README table under the heading line that matches `head` (cells split on |). */
+function tableRows(lines, start, end) {
+  const rows = [];
+  for (let i = start; i < end; i++) {
+    const l = lines[i];
+    if (!l.startsWith('|') || /^\|\s*-/.test(l) || /^\| Game \|/.test(l)) continue;
+    rows.push(l.slice(1, -1).split(/(?<!\\)\|/).map((c) => c.trim()));
+  }
+  return rows;
+}
+
+export function guide() {
+  const lines = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8').replace(/\r\n/g, '\n').split('\n');
+  const at = (re) => lines.findIndex((l) => re.test(l));
+  const games = listGames();
+  const byName = new Map(games.map((g) => [g.name.toLowerCase(), g.id]));
+  // A cell names one game ("Dots and Boxes") or several ("Reaction Duel, Rock Paper Scissors").
+  const idsIn = (cell) => {
+    const plain = cell.replace(/\*\*/g, '').trim().toLowerCase();
+    if (byName.has(plain)) return [byName.get(plain)];
+    return plain.split(/,| and /).map((n) => byName.get(n.trim())).filter(Boolean);
+  };
+  const out = Object.fromEntries(games.map((g) => [g.id, {}]));
+  const put = (rows, key, pick) => rows.forEach((r) => idsIn(r[0]).forEach((id) => { if (!out[id][key]) out[id][key] = pick(r); }));
+  // How it plays (the three game tables), the setup screen's settings, the controller buttons.
+  const gamesAt = at(/^## Games/);
+  const settingAt = lines.findIndex((l, i) => i > gamesAt && /^\| Game \| Setting/.test(l));
+  const controlsAt = at(/^## Controllers/);
+  const next = (i) => { const j = lines.findIndex((l, k) => k > i && /^## /.test(l)); return j === -1 ? lines.length : j; };
+  put(tableRows(lines, gamesAt, settingAt), 'rules', (r) => cellHtml(r[1]));
+  put(tableRows(lines, settingAt, next(gamesAt)), 'settings', (r) => cellHtml(r[1]));
+  put(tableRows(lines, controlsAt, next(controlsAt)), 'controls', (r) => cellHtml(r[1]) + (r[2] ? ' · ' + cellHtml(r[2]) : ''));
+  return JSON.stringify(out, null, 1) + '\n';
+}
+
 if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.meta.url)) {
+  fs.writeFileSync(GUIDE, guide());
   const before = exists('docs/GAMES.md') ? fs.readFileSync(CATALOG, 'utf8') : '';
   fs.writeFileSync(CATALOG, catalog(before));
   console.log('wrote docs/GAMES.md');

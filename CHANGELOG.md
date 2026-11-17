@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.48
+
+- 🃏 Game cards in the lobby have a short line now instead of a long description that spilled over.
+  The full description and the rules are on each game's setup screen: **📖 How to play** (the rules,
+  the controller buttons and the settings) and **ℹ️ About** (with a controller: **X** and **Y**).
+- 🎮 A controller works on the Settings page, the leaderboard and trophies (from the TV's ⚙ and 🏆):
+  the D-pad moves between the choices, **A** picks, **B** goes back. No more touchpad scrolling.
+
 ## 0.1.47
 
 - 📛 Long names fit their seat: in every layout and theme a name shrinks to fit (up to 16 letters), so
