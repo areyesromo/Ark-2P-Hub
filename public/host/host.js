@@ -545,6 +545,8 @@
   const hubPads = {}; // controller players: slot -> { row }
   let hubSetupKey = '';
   let guideSheet = null; // How to play / About, open over the setup screen (Ark.guide)
+  let preview = null; // the game's preview beside its settings (Ark.preview), and which game it's for
+  let previewFor = null;
 
   function openGuide(tab, pad) {
     if (guideSheet) guideSheet.close();
@@ -563,17 +565,30 @@
     if (!v) {
       hubSetupKey = '';
       if (guideSheet) guideSheet.close(); // (the game has started)
+      if (preview) preview.stop();
+      preview = null;
+      previewFor = null;
       return;
     }
     const parts = Ark.setup.hubParts(v);
     const focus = Ark.setup.focus(parts.view, parts.rows, hubPads);
+    const game = (state.games || []).find(function (g) { return g.id === state.gameId; });
+    // The game's preview (its picture and the dialog box) is drawn once, so its box keeps turning
+    // while the settings beside it change.
+    if (previewFor !== state.gameId || !$('hub-setup').querySelector('.hub-settings')) {
+      if (preview) preview.stop();
+      previewFor = state.gameId;
+      hubSetupKey = '';
+      $('hub-setup').innerHTML =
+        '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
+        (game && game.blurb ? '<p class="hub-blurb">' + Ark.escapeHtml(game.blurb) + '</p>' : '') +
+        '<div class="hub-cols"><div class="hub-preview"></div><div class="hub-settings"></div></div>';
+      preview = Ark.preview.open($('hub-setup').querySelector('.hub-preview'), game, { pad: Object.keys(padSeats).length > 0 });
+    }
     const key = JSON.stringify([v.hubSetup.settings, focus]);
     if (key === hubSetupKey) return;
     hubSetupKey = key;
-    const game = (state.games || []).find(function (g) { return g.id === state.gameId; });
-    $('hub-setup').innerHTML =
-      '<div class="hub-title">' + Ark.escapeHtml(game ? game.name : '') + '</div>' +
-      (game && game.blurb ? '<p class="hub-blurb">' + Ark.escapeHtml(game.blurb) + '</p>' : '') +
+    $('hub-setup').querySelector('.hub-settings').innerHTML =
       Ark.guide.buttonsHtml(Object.keys(padSeats).length > 0) +
       '<p class="muted">Set up the match on your phone, or with a controller: ↑↓ picks a row, ←→ changes it. ' +
       '<strong>Start</strong> (or <strong>A</strong>) when you\'re both ready.</p>' +
@@ -874,7 +889,7 @@
     const setup = Ark.setup.isHub(lastView);
     const show = Boolean(state && state.phase === 'playing' && anyPad && (setup || (r && r.padHint)));
     el.classList.toggle('hidden', !show);
-    if (show) el.textContent = '🎮 ' + (setup ? '↑↓ pick a row · ←→ change it · A start' : r.padHint) + ' · Back: lobby';
+    if (show) el.textContent = '🎮 ' + (setup ? '↑↓ pick a row · ←→ change it · A start · RB / LB the preview · X how to play' : r.padHint) + ' · Back: lobby';
   }
 
   // Ready-made names for controller players, after the leaderboard's.
@@ -960,6 +975,9 @@
       if (guideSheet) return guideSheet.press(btn);
       if (btn === 'BACK') return socket.emit('lobby:return');
       if (seat && Ark.setup.isHub(lastView) && (btn === 'X' || btn === 'Y')) return openGuide(btn === 'X' ? 'rules' : 'about', true);
+      // The preview's dialog box: RB / RT the next box, LB / LT the one before (and the wait starts again).
+      if (preview && Ark.setup.isHub(lastView) && (btn === 'RB' || btn === 'RT')) return preview.next();
+      if (preview && Ark.setup.isHub(lastView) && (btn === 'LB' || btn === 'LT')) return preview.prev();
       if (seat && Ark.setup.isHub(lastView)) {
         if (!hubPads[seat.slot]) hubPads[seat.slot] = { row: 0 };
         const parts = Ark.setup.hubParts(lastView);

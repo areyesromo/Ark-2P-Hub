@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.50
+
+- 🎬 Every game's setup screen now shows the game before you play: a picture of it, and a dialog box
+  that tells you about it a box at a time (what it is, the rules, the controller buttons, the
+  settings). It turns every 10 seconds; **RB** / **RT** turns it straight away, **LB** / **LT** goes
+  back, or tap it. The settings are right beside it, on the phones too.
+
 ## 0.1.49
 
 - 🎮 The controller reaches the top bar: push up past the first row of games to get to ⚙ Settings,
