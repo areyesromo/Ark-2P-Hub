@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.49
+
+- 🎮 The controller reaches the top bar: push up past the first row of games to get to ⚙ Settings,
+  🏆 the leaderboard, sound, music and the rest (**A** presses, **↓** comes back). No touching needed.
+- 📱 No more scrollbars: it looks like an app, not a web page. Lists still scroll by controller, touch,
+  wheel or trackpad, and the game list fades at the edge when there's more to see. The top bar's
+  buttons are bigger for a finger on the Steam Deck's screen.
+
 ## 0.1.48
 
 - 🃏 Game cards in the lobby have a short line now instead of a long description that spilled over.

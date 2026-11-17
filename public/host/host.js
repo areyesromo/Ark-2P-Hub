@@ -221,7 +221,7 @@
     $('h2h').classList.toggle('hidden', !h2h);
     $('tourney').innerHTML = Ark.tournamentHtml(state.players, state.tournament, { controls: true });
 
-    const padFocus = Object.keys(padSeats).length > 0;
+    const padFocus = Object.keys(padSeats).length > 0 && barFocus === null; // (not while a controller is up in the top bar)
     const cards = lobbyCards();
     if (focus >= cards.length) focus = 0;
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
@@ -245,7 +245,9 @@
     }).join('');
     // Keep the controller's pick in view now that the list scrolls.
     const focused = padFocus && $('game-list').querySelector('.pad-focus');
-    if (focused && focused.scrollIntoView) focused.scrollIntoView({ block: 'nearest' });
+    if (focused && focused.scrollIntoView) focused.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+    fadeEdges();
+    if (barFocus !== null) renderBar(); // (the Invite button was drawn again)
   }
 
   $('game-list').addEventListener('click', function (e) {
@@ -472,6 +474,7 @@
     // What's new is a lobby thing (see showNews).
     if (s.phase === 'playing' && newsOpen) closeNews();
     if (s.phase !== 'playing' && newsWaiting) showNews(newsWaiting);
+    if (s.phase === 'playing' && barFocus !== null) { barFocus = null; renderBar(); } // (a game started)
     // The theme picker closes when a game starts or Player 1's controller leaves the seat.
     if (themeSheet && (s.phase === 'playing' || !padSeats[themeSheet.pad] || padSeats[themeSheet.pad].slot !== 0)) closeThemes();
     // The picker follows its seat: closed when that player leaves or a game starts.
@@ -587,6 +590,7 @@
   let padSeats = {}; // pad index -> { slot, token, name? }
   let connectedPads = [];
   let focus = 0; // the game card controllers have selected in the lobby
+  let barFocus = null; // or, pushed up past the top row: the top bar's button they're on (see barItems)
   let padMessage = '';
   let padMessageTimer = null;
 
@@ -721,6 +725,71 @@
     renderPadHint();
   }
 
+  // ---- the top bar and the lobby's own buttons, with a controller ----
+  // Push up past the first row of games and the controller moves onto the top bar (and the
+  // Invite button): the same buttons a mouse or a finger would press.
+
+  function barItems() {
+    return Array.prototype.filter.call(document.querySelectorAll('.topbar button, .topbar a.btn, #online button'), function (el) {
+      return !el.closest('.hidden') && el.offsetParent !== null && !el.disabled;
+    });
+  }
+
+  function renderBar() {
+    document.querySelectorAll('.topbar .pad-focus, #online .pad-focus').forEach(function (el) { el.classList.remove('pad-focus'); });
+    const items = barItems();
+    if (barFocus === null) return;
+    if (!items.length) return exitBar();
+    barFocus = Math.min(barFocus, items.length - 1);
+    items[barFocus].classList.add('pad-focus');
+  }
+
+  function enterBar() {
+    const items = barItems();
+    if (!items.length) return;
+    // Start on the button nearest above the card the controller was on.
+    const card = $('game-list').querySelectorAll('.game-card')[focus];
+    const x = card ? card.getBoundingClientRect().left + card.getBoundingClientRect().width / 2 : 0;
+    let best = 0;
+    items.forEach(function (el, i) {
+      const r = el.getBoundingClientRect();
+      const b = items[best].getBoundingClientRect();
+      if (Math.abs(r.left + r.width / 2 - x) < Math.abs(b.left + b.width / 2 - x)) best = i;
+    });
+    barFocus = best;
+    renderLobby();
+    renderBar();
+  }
+
+  function exitBar() {
+    barFocus = null;
+    renderBar();
+    renderLobby();
+  }
+
+  function barPress(btn) {
+    const items = barItems();
+    if (btn === 'LEFT') barFocus = (barFocus + items.length - 1) % items.length;
+    else if (btn === 'RIGHT') barFocus = (barFocus + 1) % items.length;
+    else if (btn === 'DOWN' || btn === 'B') return exitBar();
+    else if ((btn === 'A' || btn === 'START') && items[barFocus]) {
+      const el = items[barFocus];
+      if (el.tagName === 'A') return void (location.href = el.getAttribute('href'));
+      el.click();
+      return setTimeout(renderBar, 50); // (the bar may change: a button appears or goes)
+    } else return;
+    renderBar();
+  }
+
+  /** A soft fade on the game list's edge while there's more to scroll to (no scrollbar on the TV). */
+  function fadeEdges() {
+    const el = document.querySelector('#lobby .games');
+    if (!el) return;
+    el.classList.toggle('more-above', el.scrollTop > 4);
+    el.classList.toggle('more-below', el.scrollTop + el.clientHeight < el.scrollHeight - 4);
+  }
+  if (document.querySelector('#lobby .games')) document.querySelector('#lobby .games').addEventListener('scroll', fadeEdges, { passive: true });
+
   // ---- the look, picked with Player 1's controller (RT, or a click of the right stick) ----
   // Two rows, the theme (colours and fonts) and the layout; the phones' Player 1 has Settings for it.
 
@@ -792,7 +861,7 @@
     let text;
     if (padMessage) text = padMessage;
     else if (!n) text = '🎮 Got a controller? Connect it to this screen and press A to join.';
-    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · LT play the computer · RT theme and layout (Player 1) · D-pad + A pick a game' +
+    else text = '🎮 ' + n + ' controller' + (n > 1 ? 's' : '') + ' connected · A join · B leave · Y change name · LB / RB avatar · X tournament · LT play the computer · RT theme and layout (Player 1) · D-pad + A pick a game · ↑ past the top row: Settings and the top bar' +
       (awayPhones().length ? ' · Back: free the seat of a phone that left' : '');
     $('pad-hint').textContent = text;
     renderUpdate(); // its RT tag shows while a controller is connected
@@ -937,6 +1006,8 @@
       else if (btn === 'B') picker.sheet.close();
       return;
     }
+    // Up in the top bar (sound, Settings, the leaderboard…): ← → move along it, A presses, ↓ or B comes back.
+    if (barFocus !== null) return barPress(btn);
     if (btn === 'LB' || btn === 'RB') return openPicker(seat.slot, Number(idx));
     if (btn === 'RT' || btn === 'RS') {
       if (seat.slot !== 0) return flashPad('🎨 Player 1 picks the theme and layout (RT on their controller).');
@@ -977,7 +1048,9 @@
       focus = (focus + 1) % n;
     } else if (btn === 'UP' || btn === 'DOWN') {
       // Up and down go to the card above or below on screen, not the next in the list.
-      focus = Ark.stepVertical($('game-list').querySelectorAll('.game-card'), focus, btn === 'UP' ? -1 : 1);
+      const next = Ark.stepVertical($('game-list').querySelectorAll('.game-card'), focus, btn === 'UP' ? -1 : 1);
+      if (btn === 'UP' && next === focus) return enterBar(); // nothing above: up to the top bar
+      focus = next;
     } else if (btn === 'A' || btn === 'START') {
       if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
       else if (cards[focus].phoneOnly && Ark.controllerSeated(state)) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');

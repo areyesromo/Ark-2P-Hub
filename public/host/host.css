@@ -18,7 +18,8 @@ body { overflow: hidden; }
 }
 .topbar h1 { font-size: 2rem; }
 .topbar-right { display: flex; align-items: center; gap: 1rem; }
-.topbar button { padding: 0.5rem 1rem; }
+.topbar button, .topbar .btn { padding: 0.5rem 1rem; min-height: 2.9rem; min-width: 2.9rem; } /* (a finger on the Steam Deck's screen) */
+.topbar .pad-focus, #online .pad-focus { box-shadow: 0 0 0 3px var(--p1); border-color: var(--p1); color: var(--text); }
 
 .room-chip {
   background: var(--panel);
@@ -256,3 +257,8 @@ body.watching .game-list { pointer-events: none; }
 .ts-opt > span:last-child { color: var(--muted); }
 .ts-opt.on { border-color: var(--good); }
 .ts-opt.pad-focus { border-color: var(--p1); box-shadow: 0 0 0 3px var(--p1); }
+
+/* No scrollbars (common.css): the game list fades at an edge while there's more that way (fadeEdges). */
+#lobby .games.more-below { -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent); mask-image: linear-gradient(to bottom, #000 calc(100% - 3rem), transparent); }
+#lobby .games.more-above { -webkit-mask-image: linear-gradient(to top, #000 calc(100% - 3rem), transparent); mask-image: linear-gradient(to top, #000 calc(100% - 3rem), transparent); }
+#lobby .games.more-above.more-below { -webkit-mask-image: linear-gradient(transparent, #000 3rem, #000 calc(100% - 3rem), transparent); mask-image: linear-gradient(transparent, #000 3rem, #000 calc(100% - 3rem), transparent); }
