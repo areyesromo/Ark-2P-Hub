@@ -22,6 +22,25 @@ const emit = (s, ev, data) => new Promise((resolve) => s.emit(ev, data, resolve)
 // The 3D games take a moment longer to build their scene.
 const WAIT = { 'kart-race-3d': 9000, 'ten-pin': 7000, 'tower-stack': 7000, 'dungeon-duo': 8000, 'marble-maze': 7000, 'party-board': 8000 };
 
+// A few games need more than "go" to show something worth seeing: both ready up, a word picked
+// and drawn, the gas held.
+const both = (players, input) => players.forEach((p) => p.emit('game:input', input));
+const race = async (players) => {
+  players[1].emit('game:input', { type: 'go' }); // (the other racer readies up too: Ana did with "go")
+  await sleep(5000);
+  for (let i = 0; i < 12; i++) { both(players, { type: 'drive', gas: true, steer: i % 4 === 0 ? 0.3 : 0 }); await sleep(250); }
+};
+const HOUSE = [[0.25, 0.85, 0.25, 0.45, 0.75, 0.45, 0.75, 0.85, 0.25, 0.85], [0.2, 0.47, 0.5, 0.15, 0.8, 0.47], [0.44, 0.85, 0.44, 0.65, 0.56, 0.65, 0.56, 0.85]];
+const NUDGE = {
+  'kart-race': race,
+  'kart-race-3d': race,
+  'sketch-guess': async (players) => {
+    both(players, { type: 'choose', index: 0 }); // (only the drawer's counts)
+    await sleep(800);
+    HOUSE.forEach((pts) => both(players, { type: 'draw', newStroke: true, color: 0, pts }));
+  },
+};
+
 const only = process.argv.slice(2);
 const games = listGames().filter((g) => !only.length || only.includes(g.id));
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-previews-'));
@@ -45,6 +64,7 @@ for (const g of games) {
   if (!res || !res.ok) { console.log(g.id, 'did not start:', res && res.error); continue; }
   await sleep(800);
   players[0].emit('game:input', { type: 'go' }); // (past the setup screen, on its usual settings)
+  if (NUDGE[g.id]) await NUDGE[g.id](players);
   await sleep(WAIT[g.id] || 4500);
   const out = path.join(ROOT, 'public', 'games', g.id, 'preview.jpg');
   await tv.locator('#stage').screenshot({ path: out, type: 'jpeg', quality: 72 });
