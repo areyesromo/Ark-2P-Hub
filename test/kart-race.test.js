@@ -1738,8 +1738,13 @@ test('a phone gets its own kart and the race, not the road: boxes, coins and haz
   for (const key of ['boxes', 'coins', 'webs', 'oils', 'shots', 'blasts', 'bananas']) assert.equal(phone[key], undefined, key);
   assert.deepEqual(Object.keys(phone.track).sort(), ['arena', 'index', 'name']);
   assert.equal(phone.track.name, host.track.name);
-  assert.deepEqual(phone.karts, host.karts);
-  assert.ok(JSON.stringify(phone).length < JSON.stringify(host).length / 2, 'well under half the TV\'s view, 30 times a second');
+  // Its own kart whole; the others only as far as it shows them (finished, and a battle's balloons).
+  assert.deepEqual(phone.karts[0], host.karts[0]);
+  assert.equal(phone.karts.length, host.karts.length);
+  for (let i = 1; i < phone.karts.length; i++) assert.deepEqual(phone.karts[i], { finished: host.karts[i].finished });
+  assert.deepEqual(game.playerView(1).karts[1], host.karts[1]);
+  for (const key of ['events', 'lapTimes', 'reactionTimes']) assert.equal(phone[key], undefined, key);
+  assert.ok(JSON.stringify(phone).length < JSON.stringify(host).length / 4, 'well under a quarter of the TV\'s view, 30 times a second');
   // The computer still sees the road (it drives for the ? boxes).
   assert.ok(game.botView(0).boxes.length > 0);
 });

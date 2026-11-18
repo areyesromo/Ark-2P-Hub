@@ -54,6 +54,10 @@
     socket.emit('host:create', { origin: location.origin }, onRoom);
   }
 
+  // The last whole view, to fill in the big fields the server leaves out while they're unchanged
+  // (`kept`: a track, the ? boxes; see Room#hostPacket).
+  let fullView = null;
+
   socket.on('connect', function () {
     $('conn').textContent = 'Connected';
     $('conn').className = 'conn ok';
@@ -79,6 +83,7 @@
   });
 
   socket.on('disconnect', function () {
+    fullView = null; // (the server sends a whole view when we're back)
     $('conn').textContent = 'Reconnecting…';
     $('conn').className = 'conn';
   });
@@ -502,6 +507,13 @@
   });
 
   socket.on('game:view', function (msg) {
+    if (msg.kept) {
+      if (!fullView || fullView.gameId !== msg.gameId) return socket.emit('game:resync');
+      const view = Object.assign({}, msg.view);
+      msg.kept.forEach(function (key) { view[key] = fullView.view[key]; });
+      msg = { gameId: msg.gameId, view: view };
+    }
+    fullView = msg;
     if (!current || current.gameId !== msg.gameId) return;
     const setup = Ark.setup.isHub(msg.view);
     if (!setup) playGameSounds(Ark.setup.isHub(lastView) ? null : lastView, msg.view);

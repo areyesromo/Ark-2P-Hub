@@ -41,7 +41,15 @@
     return n ? new Array(n + 1).join('⭐') : '—';
   }
 
+  let lastPhase = null;
+
   function render(v) {
+    // A buzz when the marble falls (long) or reaches the goal (a happy double).
+    if (api && v.phase !== lastPhase) {
+      if (v.phase === 'fall') api.vibrate(150);
+      else if (v.phase === 'clear' && v.result && v.result.cleared) api.vibrate([40, 30, 40]);
+    }
+    lastPhase = v.phase;
     let status = '';
     if (v.phase === 'intro') status = 'Maze ' + (v.levelIndex + 1) + ': ' + Ark.escapeHtml(v.level.name) + ' · ' + v.countdown + '…';
     else if (v.phase === 'play') status = 'Roll it to the green goal!';
@@ -87,6 +95,7 @@
       if (pad) pad.destroy();
       root = els = pad = pending = null;
       textKey = '';
+      lastPhase = null;
     },
   });
 })();

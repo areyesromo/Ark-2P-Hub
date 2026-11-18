@@ -1383,7 +1383,10 @@ export class KartRace {
    * and hazards on the track (most of the race's data, 30 times a second over Wi-Fi) are the TV's.
    */
   playerView(slot) {
-    const { boxes, coins, webs, oils, shots, blasts, bananas, track, ...v } = this.common();
+    // (nor the race's event log, the series' lap and reaction tables, which the TV and the stats
+    // keep, or the other karts' dashboards: of those it shows only the rival's balloons)
+    const { boxes, coins, webs, oils, shots, blasts, bananas, track, events, lapTimes, reactionTimes, ...v } = this.common();
+    if (v.karts) v.karts = v.karts.map((k, i) => (i === slot ? k : { finished: k.finished, ...(this.battle ? { balloons: k.balloons } : {}) }));
     return Object.assign(v, { track: track && { index: track.index, name: track.name, arena: track.arena }, you: slot });
   }
 

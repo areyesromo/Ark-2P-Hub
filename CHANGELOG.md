@@ -4,6 +4,16 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.53
+
+- 📶 Lighter on the Wi-Fi: the TV only receives a race's track, ? boxes and coins when they change
+  (Kart Race 3D sends about a third as much to the TV), and each racer's phone gets only its own
+  kart's dashboard.
+- 🧱 Falling Blocks Battle: shaded blocks, a faint grid in each well, a landing outline in the
+  piece's own colour, and the next piece in a box of its own.
+- 📳 Pong buzzes when your paddle sends the ball back and on every point; Marble Maze buzzes when
+  the marble falls and when it reaches the goal.
+
 ## 0.1.52
 
 - 🏎️ Kart Race and Kart Race 3D start like a proper kart game: **choose your racer** (both of you on

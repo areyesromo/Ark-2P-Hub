@@ -71,9 +71,26 @@
     }
   }
 
+  /** A block: its colour, lit along the top and left edges and shaded along the bottom and right. */
   function cell(g, x, y, color) {
     g.fillStyle = color;
     g.fillRect(x + 0.04, y + 0.04, 0.92, 0.92);
+    g.fillStyle = 'rgba(255, 255, 255, 0.28)';
+    g.fillRect(x + 0.04, y + 0.04, 0.92, 0.14);
+    g.fillRect(x + 0.04, y + 0.18, 0.14, 0.78);
+    g.fillStyle = 'rgba(0, 0, 0, 0.25)';
+    g.fillRect(x + 0.18, y + 0.82, 0.78, 0.14);
+    g.fillRect(x + 0.82, y + 0.18, 0.14, 0.64);
+  }
+
+  /** The well's faint grid, so you can count the columns a piece has to go. */
+  function grid(g, w, h) {
+    g.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+    g.lineWidth = 0.04;
+    g.beginPath();
+    for (let x = 1; x < w; x++) { g.moveTo(x, 0); g.lineTo(x, h); }
+    for (let y = 1; y < h; y++) { g.moveTo(0, y); g.lineTo(w, y); }
+    g.stroke();
   }
 
   /** Redrawn only when a view changed (or the size did): nothing moves in between. */
@@ -94,6 +111,7 @@
       g.setTransform(k, 0, 0, k, wx * k, 0);
       g.fillStyle = '#0b1020';
       g.fillRect(0, 0, wl.w, wl.h);
+      grid(g, wl.w, wl.h);
       g.strokeStyle = colors[slot];
       g.lineWidth = 0.1;
       g.strokeRect(-0.05, -0.05, wl.w + 0.1, wl.h + 0.1);
@@ -101,15 +119,27 @@
         for (let x = 0; x < row.length; x++) if (row[x] !== '.') cell(g, x, y, w.out ? '#374151' : COLORS[row[x]]);
       });
       if (w.piece) {
-        g.strokeStyle = 'rgba(255, 255, 255, 0.35)';
+        // Where it will land: the piece's own colour, faint, with an outline.
         g.lineWidth = 0.06;
-        w.ghost.forEach(function (c) { if (c[1] >= 0) g.strokeRect(c[0] + 0.1, c[1] + 0.1, 0.8, 0.8); });
+        w.ghost.forEach(function (c) {
+          if (c[1] < 0) return;
+          g.globalAlpha = 0.18;
+          g.fillStyle = COLORS[w.piece.kind];
+          g.fillRect(c[0] + 0.1, c[1] + 0.1, 0.8, 0.8);
+          g.globalAlpha = 0.6;
+          g.strokeStyle = COLORS[w.piece.kind];
+          g.strokeRect(c[0] + 0.1, c[1] + 0.1, 0.8, 0.8);
+          g.globalAlpha = 1;
+        });
         w.piece.cells.forEach(function (c) { if (c[1] >= 0) cell(g, c[0], c[1], COLORS[w.piece.kind]); });
       }
       // Side panel: next piece, then the junk bar (one cell per row coming).
       const px = slot === 0 ? -SIDE + 0.5 : wl.w + 0.5;
-      g.fillStyle = 'rgba(255, 255, 255, 0.5)';
-      g.font = '0.8px system-ui, sans-serif';
+      // (the next piece sits in a box of its own)
+      g.fillStyle = 'rgba(255, 255, 255, 0.05)';
+      g.fillRect(px - 0.3, 0.2, 4, 3.8);
+      g.fillStyle = 'rgba(255, 255, 255, 0.55)';
+      g.font = '700 0.7px system-ui, sans-serif';
       g.fillText('NEXT', px, 1);
       g.save();
       g.translate(px, 1.6);
@@ -122,7 +152,8 @@
         g.fillRect(bx, wl.h - 1 - i + 0.1, 0.6, 0.8);
       }
       g.fillStyle = 'rgba(255, 255, 255, 0.7)';
-      g.fillText('Lines ' + w.lines, px, 5.5);
+      g.font = '700 0.8px system-ui, sans-serif';
+      g.fillText('Lines ' + w.lines, px, 5.4);
     });
   }
 
