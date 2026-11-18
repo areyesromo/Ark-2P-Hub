@@ -11,6 +11,7 @@ const NAME_MAX = 16;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O, they look like 1 and 0
 const CODE_LENGTH = 4;
 const IDLE_ROOM_MS = 30 * 60 * 1000;
+const KEEP_MIN = 200; // (characters of JSON: a TV view's field this big goes only when it changes)
 
 const newToken = () => randomBytes(16).toString('hex');
 
@@ -393,7 +394,7 @@ export class Room {
       this.botLastMove = null;
     }
     this.lastPhase = view.phase;
-    this.io.to(this.hostChannel).emit('game:view', { gameId, view });
+    this.io.to(this.hostChannel).emit('game:view', this.hostPacket(gameId, view));
     this.players.forEach((p, slot) => {
       if (p) this.io.to(this.playerChannel(slot)).emit('game:view', { gameId, view: this.game.playerView(slot) });
     });
@@ -602,11 +603,43 @@ export class Room {
     return this.stats && a && b && !a.bot && !b.bot ? this.stats.headToHead(a.name, b.name) : null;
   }
 
+  /**
+   * The TV's view, less its big fields that haven't changed since the last one (a track, the ? boxes
+   * and coins: kilobytes, 30 times a second in a race). `kept` names them: the TV keeps its own copy
+   * (host.js). Small fields always go, so a view that barely changes costs nothing to compare.
+   */
+  hostPacket(gameId, view) {
+    const last = this.hostSent && this.hostSent.gameId === gameId ? this.hostSent.fields : null;
+    const fields = {};
+    const sent = {};
+    const kept = [];
+    for (const [key, value] of Object.entries(view)) {
+      const json = value === undefined ? '' : JSON.stringify(value);
+      if (json.length >= KEEP_MIN) {
+        fields[key] = json;
+        if (last && last[key] === json) {
+          kept.push(key);
+          continue;
+        }
+      }
+      sent[key] = value;
+    }
+    this.hostSent = { gameId, fields };
+    return kept.length ? { gameId, view: sent, kept } : { gameId, view };
+  }
+
   /** Bring a (re)connecting socket fully up to date. */
   sendSnapshot(socket, role, slot) {
     socket.emit('room:state', this.publicState());
+    this.sendView(socket, role, slot);
+  }
+
+  /** The whole view (a TV that has no copy to fill `kept` in from asks for this). */
+  sendView(socket, role, slot) {
     if (!this.game) return;
-    const view = role === 'host' ? this.game.hostView() : this.game.playerView(slot);
+    const view = role === 'player' ? this.game.playerView(slot) : this.game.hostView();
+    // (and the next broadcast to the TVs goes whole: this screen has nothing to keep yet)
+    if (role !== 'player') this.hostSent = null;
     socket.emit('game:view', { gameId: this.gameId, view });
   }
 

@@ -11,15 +11,17 @@ Legend: ✅ fine as it is · 🎨 could look better · 🎮 handling · 📶 net
 
 These are the changes that would be felt most, in rough order.
 
-1. 📶 **Kart Race (2D and 3D) phone view.** Each phone gets every kart, the event log and the
+1. ~~📶 **Kart Race (2D and 3D) phone view.**~~ Done in 0.1.53 (about 1.5 KB per update). Each phone gets every kart, the event log and the
    setup options 30 times a second (2.4 KB per update). The phone only needs its own kart, its
    item and its place. Trimming it cuts the phone's traffic by about 4× and its JSON work too
    (helps older phones).
-2. 📶 **Kart Race 3D TV view.** The item boxes (3.1 KB) and coins (2.2 KB) go out on every update,
+2. ~~📶 **Kart Race 3D TV view.**~~ Done in 0.1.53 for every game: the room leaves out a TV view's
+   big fields while they are unchanged (`Room#hostPacket`), so Kart Race 3D's TV gets about 2.6 KB. The item boxes (3.1 KB) and coins (2.2 KB) go out on every update,
    but they only change when someone picks one up. Send them once, then only when one changes.
    That takes the TV from 8.4 KB to about 3 KB per update.
-3. 🎨 **Block Battle.** The wells look empty: there are no grid lines, no ghost piece showing
-   where the piece will land, and no preview of the next piece.
+3. ~~🎨 **Block Battle.**~~ Done in 0.1.53: shaded blocks, a grid and a coloured landing outline.
+   (It already had the landing outline and the next piece; the first screenshot was taken during
+   the countdown.)
 4. 🎨 **Asteroid Duel.** The ships are tiny arrows and the rocks are plain grey. Bigger ships, a
    thrust flame and some shading on the rocks would help.
 5. 🎨 **Phone boards that are too small:** Mancala, Dots & Boxes, Crazy Eights' hand, Dice Party's
@@ -28,8 +30,8 @@ These are the changes that would be felt most, in rough order.
 6. 🎨 **Empty TV space:** Fake Out, Micro Mayhem, Sketch Guess (while a word is being picked),
    Tower Stack and Rally Tennis (a small court in a big screen). Each of these screens could hold
    bigger content or a status panel.
-7. 🎮 **No buzz (vibration)** in Pong, Marble Maze or Micro Mayhem. Every other action game buzzes
-   on a hit or a point.
+7. ~~🎮 **No buzz (vibration)** in Pong and Marble Maze.~~ Done in 0.1.53. (Micro Mayhem already
+   buzzed through the shared minigame frame.)
 8. 🎨 **Small TV text:** the Dice Party scorecard and the Mini Golf and Ten-Pin scorecards are
    hard to read from the couch.
 9. 📶 **Ten-Pin.** Each throw's pin physics goes out as one 27 KB view. That is harmless on a home
@@ -86,7 +88,7 @@ Ideas, from cheapest to most work:
 | Anagram Duel | 🎨 | The phone's tiles are small with a lot of empty space below. Make them bigger. |
 | Asteroid Duel | 🎨 | Tiny ships and grey rocks (see the top list). |
 | Battleship | ✅ | |
-| Block Battle | 🎨 | Empty wells: no grid, ghost piece or next-piece preview. |
+| Block Battle | ✅ | Grid, shaded blocks and coloured landing outline added in 0.1.53. |
 | Bomb Duel | ✅ | |
 | Bomb Squad | ✅ | |
 | Brick Duel | 🎨📶 | The phone's court is small. Its phone view is a full copy of the TV's. |
@@ -103,14 +105,14 @@ Ideas, from cheapest to most work:
 | Kitchen Rush | ✅📶 | |
 | Liar's Dice | ✅ | |
 | Mancala | 🎨 | The phone board is small. |
-| Marble Maze | ✅🎮 | No buzz when the marble hits a hole or reaches the goal. |
+| Marble Maze | ✅ | Buzzes on a fall and at the goal (0.1.53). |
 | Memory Match | ✅ | |
-| Micro Mayhem | 🎨🎮 | Big empty panels and small emoji targets. No buzz. |
+| Micro Mayhem | 🎨 | Big empty panels and small emoji targets. |
 | Mind Meld | ✅ | The dial reads well on the TV and the phone. |
 | Mini Golf | ✅ | The TV scorecard is small. The course could fill more of the TV. |
 | Party Board | ✅ | The side panels are mostly empty early in the game (items and stars fill them later). The phone's Roll button has empty space under it. |
 | Party Minigames | ✅ | The intro card reads well. The phone shows a blurred copy of the TV behind the card, which is fine. |
-| Pong | ✅🎮 | Neat neon look. No buzz on a hit or a point. |
+| Pong | ✅ | Neat neon look. Buzzes on a return and a point (0.1.53). |
 | Quiz | ✅ | |
 | Rally Tennis | 🎨 | The court is small in the middle of the TV, and the serve text overlaps the net. Make the court bigger and move the text off it. |
 | Reaction Duel | ✅ | Bold and clear. |

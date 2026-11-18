@@ -103,7 +103,16 @@
     }
   }
 
+  /** A buzz when your paddle sends the ball back, and on every point (a long one when it's theirs). */
+  function buzz(prev, v) {
+    if (!prev || !api) return;
+    const away = v.you === 0 ? 1 : -1; // (the way the ball goes off your paddle)
+    if (v.phase === 'play' && prev.phase === 'play' && Math.sign(prev.ball.vx) === -away && Math.sign(v.ball.vx) === away) api.vibrate(20);
+    if (v.phase === 'point' && prev.phase !== 'point') api.vibrate(v.lastScorer === v.you ? [40, 30, 40] : 120);
+  }
+
   function render(v) {
+    buzz(view, v);
     view = v;
     viewAt = performance.now();
     const you = v.you;
