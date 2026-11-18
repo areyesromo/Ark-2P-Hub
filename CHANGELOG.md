@@ -4,6 +4,27 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.56
+
+- 🤖 The computer no longer loses to someone who does nothing:
+  - Pong: after misjudging one ball, it missed every serve that came straight at it; fixed.
+  - Air Hockey: it shoots for the open side of your goal, and doesn't chase a fast rebound into its own.
+  - Bomb Duel: it no longer freezes on its own bomb, and it heads for the middle before the walls close in.
+  - Tank Duel: it fires at a tank that stands still.
+  - Snake (Easy) turns away from a wall in time, and Light Cycles (Easy) swerves out of a head-on.
+  - Mancala (Easy) looks a move further ahead, and Memory Match (Easy) remembers more.
+  - Mini Golf: it no longer stands still for good once every ball has stopped (it was still
+    thinking, and nothing woke it); the computer in any game now looks again every second.
+  - Connect Four (Easy) blocks a four you're about to make, and Dots & Boxes (Easy) takes a free box.
+- 📈 Tap the version number at the bottom right during a game to show the frame rate (to see how
+  smooth a game runs on your Steam Deck); tap it again to hide it.
+- 🏒 Air Hockey: a slow puck left on one side for 7 seconds drifts over to the other, so nobody can stall.
+- 💣 Bomb Duel: a turn pressed a moment after a junction still takes (a phone's slight delay
+  doesn't carry you past it).
+- 🔢 A 1 or 2 on the pieces that share the screen (mallets, sumo discs, tanks, ships, bombers, snakes,
+  light cycles) and a dot or a ring on Connect Four's discs and Checkers' men, so the players can be told apart
+  without the colours.
+
 ## 0.1.55
 
 - 🎲 Dice Party: a new scorecard on the TV, big enough to read from the couch: the numbers down the

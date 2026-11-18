@@ -88,7 +88,7 @@
     }
   }
 
-  function drawTank(g, t, r, color, maxHp) {
+  function drawTank(g, t, r, color, maxHp, slot) {
     g.save();
     g.translate(t.x, t.y);
     g.rotate(t.angle);
@@ -110,6 +110,7 @@
     g.fillStyle = t.flash ? '#ffffff' : color;
     g.fillRect(0, -r * 0.13, r * 1.35, r * 0.26);
     g.restore();
+    Ark.drawMark(g, t.x, t.y, r * 0.8, slot); // (1 or 2 on the turret, upright: not by colour alone)
     // Health pips above the tank (not rotated)
     for (let i = 0; i < maxHp; i++) {
       g.fillStyle = i < t.hp ? color : 'rgba(255,255,255,0.15)';
@@ -153,11 +154,11 @@
       s.angle += Math.atan2(Math.sin(t.angle - s.angle), Math.cos(t.angle - s.angle)) * 0.5;
       const drawn = { x: s.x, y: s.y, angle: s.angle, hp: t.hp, flash: t.flash };
       if (t.alive) {
-        drawTank(g, drawn, view.tank.r, colors[i], view.tank.hp);
+        drawTank(g, drawn, view.tank.r, colors[i], view.tank.hp, i);
       } else {
         // Wreck + blast
         g.globalAlpha = 0.35;
-        drawTank(g, drawn, view.tank.r, colors[i], view.tank.hp);
+        drawTank(g, drawn, view.tank.r, colors[i], view.tank.hp, i);
         g.globalAlpha = 1;
         const pulse = 0.9 + 0.2 * Math.sin((now || 0) / 90);
         g.fillStyle = 'rgba(255,190,90,0.85)';

@@ -178,6 +178,7 @@
         g.arc(ex + d[0] * 0.035, ey + d[1] * 0.035, 0.045, 0, Math.PI * 2);
         g.fill();
       });
+      Ark.drawMark(g, cx, cy + 0.17, 0.26, slot); // (1 or 2: not by colour alone)
     } else {
       g.strokeStyle = '#111';
       g.lineWidth = 0.08;

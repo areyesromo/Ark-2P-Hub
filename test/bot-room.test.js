@@ -355,3 +355,23 @@ test('in a game played by steering, the computer acts at once on what it saw a r
   assert.equal(sent.length, before + 1);
   r.dispose();
 });
+
+test('Mini Golf: the computer putts in the room, though it plans a putt a little at a time with every ball at rest', async () => {
+  // (real time: it plans for a few ms a look, and with nothing moving the game sends no view to
+  // make the room look again; it used to wait there for ever)
+  const { r } = room({ level: 'hard' });
+  try {
+    r.startGame('mini-golf');
+    r.handleInput(0, { type: 'go' });
+    const slot = r.botSlot;
+    const end = Date.now() + 12000;
+    while (Date.now() < end) {
+      const v = r.game && r.game.hostView();
+      if (v && v.balls && v.balls[slot].strokes > 0) break;
+      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+    assert.ok(r.game.hostView().balls[slot].strokes > 0, 'it putted');
+  } finally {
+    r.dispose();
+  }
+});

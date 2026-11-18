@@ -35,6 +35,10 @@
 }
 .disc.p1 { background: var(--p1); }
 .disc.p2 { background: var(--p2); }
+/* A dot on player 1's discs, a ring on player 2's: told apart without the colours (colour-blind players). */
+.disc::after { content: ''; position: absolute; border-radius: 50%; }
+.disc.p1::after { inset: 38%; background: rgba(255, 255, 255, 0.8); }
+.disc.p2::after { inset: 26%; border: 0.18em solid rgba(255, 255, 255, 0.8); }
 .disc.drop { animation: c4-drop 0.45s cubic-bezier(0.5, 0, 1, 1) both, c4-land 0.2s 0.45s ease-out; }
 /* The winning four: a white ring under the glow (the animation draws over it), so it still shows when the
    device asks for less motion. */

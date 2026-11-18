@@ -48,7 +48,8 @@
     });
   }
 
-  function drawMallet(g, f, x, y, color) {
+  /** A mallet; with `slot`, its player's number in the middle (not by colour alone). */
+  function drawMallet(g, f, x, y, color, slot) {
     g.shadowColor = color;
     g.shadowBlur = 18;
     g.fillStyle = color;
@@ -60,6 +61,7 @@
     g.beginPath();
     g.arc(x, y, f.malletR * 0.62, 0, Math.PI * 2);
     g.fill();
+    if (slot === 0 || slot === 1) return void Ark.drawMark(g, x, y, f.malletR * 0.75, slot);
     g.fillStyle = color;
     g.beginPath();
     g.arc(x, y, f.malletR * 0.32, 0, Math.PI * 2);

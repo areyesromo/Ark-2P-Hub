@@ -20,7 +20,7 @@
   "controls": "<strong>D-pad</strong> / <strong>left stick</strong> (or <strong>Y</strong>↑ <strong>A</strong>↓ <strong>X</strong>← <strong>B</strong>→) · Turn"
  },
  "air-hockey": {
-  "rules": "The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. First to 7.",
+  "rules": "The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. A slow puck left on one side for 7 seconds drifts over to the other. First to 7.",
   "settings": "Goals to win: 5, 7 or 10; own goals: count, or don't (your goal bounces out a puck you touched last)",
   "controls": "<strong>Left stick</strong> or <strong>D-pad</strong> · Move your mallet (in TV directions)"
  },
@@ -80,7 +80,7 @@
   "controls": "Follow the order: <strong>A</strong> taps / stops / pumps / fires / whacks / reels, <strong>A B X Y</strong> are Simon's green / red / blue / yellow, <strong>D-pad</strong> picks and swipes (◀ ▶ on the Glass Bridge), the <strong>stick</strong> steers the Tap it! cursor, the Coin Grab runner and the Ice Rink Sumo puck, and wiggles to shake · <strong>A</strong> is Ready on the *Next up* card and rematch at the end"
  },
  "bomb-duel": {
-  "rules": "Bomberman-style, on a 15×11 arena of stone pillars and wooden crates. Walk with the D-pad on your phone (or a controller) and drop bombs with the big button: they go off after 2.5 s in a cross, smash the first crate each way and set off other bombs. Crates can hide power-ups: 💣 an extra bomb, 🔥 a longer blast, 👟 more speed. Caught in a blast, you lose the round (a trade is a draw); after 90 s the walls close in from the edges. Pick the round wins needed (2, 3 or 5) and how many crates before you start.",
+  "rules": "Bomberman-style, on a 15×11 arena of stone pillars and wooden crates. Walk with the D-pad on your phone (or a controller) and drop bombs with the big button: they go off after 2.5 s in a cross, smash the first crate each way and set off other bombs. Crates can hide power-ups: 💣 an extra bomb, 🔥 a longer blast, 👟 more speed. Caught in a blast, you lose the round (a trade is a draw); after 90 s the walls close in from the edges. A turn pressed a moment after a junction still takes, so a phone's slight delay doesn't carry you past it. Pick the round wins needed (2, 3 or 5) and how many crates before you start.",
   "settings": "Round wins needed: 2, 3 or 5",
   "controls": "<strong>D-pad</strong> or <strong>left stick</strong> to walk (held), <strong>A</strong> / <strong>B</strong> / <strong>X</strong> / <strong>RT</strong> to drop a bomb · Setup: <strong>↑↓</strong> picks a row, <strong>←→</strong> changes it, <strong>A</strong> starts; at the end <strong>A</strong> rematches and <strong>Y</strong> changes the settings"
  },

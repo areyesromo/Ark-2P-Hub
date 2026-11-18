@@ -3,7 +3,8 @@
  * maps where every bomb's blast will reach and when, gets out of the way first, and only drops a
  * bomb where it can see a way out before it goes off. Otherwise it goes for power-ups and crates,
  * and (Normal, Hard) hunts you: a bomb where its blast reaches you. It reacts at human speed.
- *   easy:   slow, careless (it sometimes leaves itself no way out), just blasts crates.
+ *   easy:   slow, now and then careless (it leaves itself no way out), just blasts crates.
+ * Just before the walls start closing in, it makes for the middle.
  *   normal: careful, picks up power-ups, and comes after you once the crates thin out.
  *   hard:   quick, comes after you early, and bombs where you'd have no way out (or a long one).
  */
@@ -11,10 +12,12 @@ import { W, H, RULES, isPillar } from './bomb-duel.js';
 import { reactionMs } from './bot-human.js';
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
-const LEVEL = { easy: { careless: 0.25, hunt: 0 }, normal: { careless: 0, hunt: 0.4 }, hard: { careless: 0, hunt: 1 } };
+const LEVEL = { easy: { careless: 0.03, hunt: 0 }, normal: { careless: 0, hunt: 0.4 }, hard: { careless: 0, hunt: 1 } };
 // How promptly it presses a step of a route it's following (a novice is a touch late).
 const PRESS_MS = { easy: [60, 160], normal: [30, 80], hard: [15, 45] };
 const key = (x, y) => y * W + x;
+const CLOSING_MS = 10000; // it heads for the middle this long before the walls start
+const SLOW_START_MS = 400; // a bomb is dropped only with a way out that holds even this much later
 
 export function bombDuelBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];
@@ -30,14 +33,18 @@ export function bombDuelBot(view, level, rng = Math.random, retries = 0, memory 
   const my = moving ? (fy > 0 ? Math.ceil(me.y) : fy < 0 ? Math.floor(me.y) : Math.round(me.y)) : Math.round(me.y);
   const crates = new Set(view.crates);
   const walls = new Set(view.walls);
+  // How long until it reaches that centre: a turn there is pressed before then (as a person
+  // presses a turn early), or it runs on past the junction.
+  const untilTurnMs = moving ? ((Math.abs(mx - me.x) + Math.abs(my - me.y)) / (me.speedCells || RULES.speed)) * 1000 : Infinity;
   const bombs = new Set(view.bombs.map((b) => key(b.x, b.y)));
   const solid = (x, y) => isPillar(x, y) || crates.has(key(x, y)) || walls.has(key(x, y));
   const pace = reactionMs(level, rng);
   // A step along a route it's following it presses as it gets there (judged afresh then, as a
   // player does); running from a blast is a reaction to what it saw.
+  const press = () => Math.min(PRESS_MS[level][0] + rng() * (PRESS_MS[level][1] - PRESS_MS[level][0]), Math.max(0, untilTurnMs - 20));
   const step = (dir, react) => ((view.want || null) === (dir || null) ? null
     : react ? { type: 'move', dir: dir || 'stop', botDelayMs: pace }
-      : { type: 'move', dir: dir || 'stop', botDelayMs: PRESS_MS[level][0] + rng() * (PRESS_MS[level][1] - PRESS_MS[level][0]), botAnticipate: true });
+      : { type: 'move', dir: dir || 'stop', botDelayMs: press(), botAnticipate: true });
   const go = (dir) => step(dir, false);
   // When each cell burns (ms from now): the bombs' crosses, set off by each other.
   const danger = dangerMap(view, solid);
@@ -55,7 +62,10 @@ export function bombDuelBot(view, level, rng = Math.random, retries = 0, memory 
   const cellMs = 1000 / (me.speedCells || RULES.speed);
   // In danger: to the nearest safe cell it can reach in time.
   if (danger.has(key(mx, my)) || danger.has(key(Math.round(me.x), Math.round(me.y)))) {
-    const way = search(mx, my, (cx, cy) => !wide.has(key(cx, cy)), solid, bombs, danger, cellMs, pace) || escape(mx, my, danger, solid, bombs, cellMs, pace); // (well clear if it can be)
+    // (well clear if it can be; else just clear; and with no way that's safe in time, the one that
+    // cuts it finest: standing on a bomb is certain to lose)
+    const way = search(mx, my, (cx, cy) => !wide.has(key(cx, cy)), solid, bombs, danger, cellMs, pace) || escape(mx, my, danger, solid, bombs, cellMs, pace) ||
+      escape(mx, my, danger, solid, bombs, cellMs, 0, 0);
     // The first move away from a bomb it's only just seen is a reaction; after that it's a route.
     const fresh = view.bombs.some((b) => RULES.fuseMs - b.left < pace + 100);
     return step(way ? way.first : null, fresh);
@@ -90,15 +100,20 @@ export function bombDuelBot(view, level, rng = Math.random, retries = 0, memory 
   if (canDrop && (hitsCrate || (hitsYou && L.hunt > 0))) {
     const after = new Map(danger);
     for (const k of blast) after.set(k, Math.min(after.get(k) ?? Infinity, RULES.fuseMs));
-    const safe = escape(bx, by, after, solid, new Set([...bombs, key(bx, by)]), cellMs, pace);
+    // (a way out even if it's slow to start: it plans the run again once the bomb's down)
+    const safe = escape(bx, by, after, solid, new Set([...bombs, key(bx, by)]), cellMs, pace + SLOW_START_MS);
     if (safe || rng() < L.careless) {
       if (!centred || view.want) return go(null); // (stop in it first)
       return { type: 'bomb', botDelayMs: pace };
     }
   }
-  // Where to go: a power-up, you (hunting), or the nearest spot beside a crate.
+  // Where to go: a power-up, you (hunting), or the nearest spot beside a crate. Once the walls
+  // close in, the middle (the last place they reach).
   const hunting = memory.bombHunt.on;
+  const middle = (x, y) => Math.abs(x - (W - 1) / 2) <= 1 && Math.abs(y - (H - 1) / 2) <= 1;
+  const closing = view.suddenDeath || (view.timeLeftMs > 0 && view.timeLeftMs < CLOSING_MS); // (a little before they start)
   const goal = (x, y) => {
+    if (closing) return middle(x, y);
     const k = key(x, y);
     if (view.powerups.some(([c]) => c === k)) return true;
     if (hunting && (level === 'hard' ? traps(x, y) : cross(x, y, range, solid).includes(key(fcx, fcy)))) return true;
@@ -107,7 +122,9 @@ export function bombDuelBot(view, level, rng = Math.random, retries = 0, memory 
   // Out of danger, it never steps into a blast's way (or right beside one): those cells it treats
   // as walls until the blast has been and gone.
   const blocked = (x, y) => solid(x, y) || wide.has(key(x, y));
-  const way = search(mx, my, (x, y) => goal(x, y), blocked, bombs, new Map(), cellMs, pace);
+  if (closing && middle(mx, my)) return go(null);
+  const way = search(mx, my, (x, y) => goal(x, y), blocked, bombs, new Map(), cellMs, pace) ||
+    (closing ? deepest(mx, my, blocked, bombs) : null); // (crates in the way: as far in as it can get)
   if (way && way.first) return go(way.first);
   return go(null);
 }
@@ -149,13 +166,34 @@ function dangerMap(view, solid) {
   return at;
 }
 
+/** The cell it can walk to that's furthest from the edges (the walls close in from them). */
+function deepest(x, y, blocked, bombs) {
+  const depth = (cx, cy) => Math.min(cx, cy, W - 1 - cx, H - 1 - cy);
+  const seen = new Set([key(x, y)]);
+  const queue = [{ x, y, first: null }];
+  let best = queue[0];
+  for (let q = 0; q < queue.length; q++) {
+    const c = queue[q];
+    if (depth(c.x, c.y) > depth(best.x, best.y)) best = c;
+    for (const [dir, [dx, dy]] of Object.entries(DIRS)) {
+      const nx = c.x + dx;
+      const ny = c.y + dy;
+      const k = key(nx, ny);
+      if (nx < 0 || ny < 0 || nx >= W || ny >= H || seen.has(k) || blocked(nx, ny) || bombs.has(k)) continue;
+      seen.add(k);
+      queue.push({ x: nx, y: ny, first: c.first || dir });
+    }
+  }
+  return best.first ? best : null;
+}
+
 /** The nearest cell no blast will reach, that it can get to in time: { first: direction }. */
-function escape(x, y, danger, solid, bombs, cellMs, lag = 0) {
-  return search(x, y, (cx, cy) => !danger.has(key(cx, cy)), solid, bombs, danger, cellMs, lag);
+function escape(x, y, danger, solid, bombs, cellMs, lag = 0, margin = 1) {
+  return search(x, y, (cx, cy) => !danger.has(key(cx, cy)), solid, bombs, danger, cellMs, lag, margin);
 }
 
 /** A walk (breadth first) to the nearest cell where `want` holds, through cells it can pass in time. */
-function search(x, y, want, solid, bombs, danger, cellMs, lag = 0) {
+function search(x, y, want, solid, bombs, danger, cellMs, lag = 0, margin = 1) {
   const seen = new Set([key(x, y)]);
   const queue = [{ x, y, steps: 0, first: null }];
   for (let q = 0; q < queue.length && q < 400; q++) {
@@ -170,7 +208,7 @@ function search(x, y, want, solid, bombs, danger, cellMs, lag = 0) {
       // time before it sets off, and a margin either side of the blast).
       const burns = danger.get(k);
       const arrive = lag + (c.steps + 1) * cellMs;
-      if (burns !== undefined && burns <= arrive + 600 && burns + RULES.fireMs + 400 >= arrive) continue;
+      if (burns !== undefined && burns <= arrive + 600 * margin && burns + RULES.fireMs + 400 * margin >= arrive) continue;
       seen.add(k);
       queue.push({ x: nx, y: ny, steps: c.steps + 1, first: c.first || dir });
     }

@@ -137,6 +137,8 @@
     g.lineWidth = 0.08;
     g.strokeStyle = 'rgba(255,255,255,0.9)';
     g.stroke();
+    Ark.drawMark(g, s.x, s.y, r * scale, i); // (1 or 2: not by colour alone)
+    g.globalAlpha = alpha;
     // Dash cooldown: a ring that fills back up.
     const ready = 1 - d.dashIn / view.dashCooldownMs;
     g.strokeStyle = ready >= 1 ? 'rgba(255,255,255,0.95)' : 'rgba(255,255,255,0.35)';

@@ -1,11 +1,12 @@
 /**
  * The computer opponent for Connect Four (see `bot` in index.js): it looks a few moves ahead
  * (alpha-beta) and scores a board by its open lines of two and three.
- *   easy:   one move ahead, and a third of the time just any column.
+ *   easy:   two moves ahead (it blocks a four you're about to make), and a quarter of the time
+ *           just any column.
  *   normal: three moves ahead (it takes a win and blocks yours).
  *   hard:   six moves ahead, and it likes the middle columns.
  */
-const DEPTH = { easy: 1, normal: 3, hard: 6 };
+const DEPTH = { easy: 2, normal: 3, hard: 6 };
 const WIN = 1e6;
 
 export function connectFourBot(view, level, rng = Math.random) {
@@ -16,7 +17,7 @@ export function connectFourBot(view, level, rng = Math.random) {
   const open = order(cols).filter((c) => !board[rows - 1][c]);
   if (!open.length) return null;
   const pace = 700 + rng() * 900;
-  if (level === 'easy' && rng() < 0.33) return { type: 'drop', col: open[Math.floor(rng() * open.length)], botDelayMs: pace };
+  if (level === 'easy' && rng() < 0.25) return { type: 'drop', col: open[Math.floor(rng() * open.length)], botDelayMs: pace };
   let best = null;
   let bestScore = -Infinity;
   let bestRaw = -Infinity; // (cuts the search short where a move can't beat it)
