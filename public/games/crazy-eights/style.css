@@ -68,7 +68,7 @@
 .ce-phone .lost { color: var(--bad); }
 .ce-status { display: flex; align-items: center; gap: 12px; text-align: left; }
 .ce-hand { flex: 1; display: flex; flex-wrap: wrap; align-content: flex-start; justify-content: center; gap: 8px; overflow-y: auto; min-height: 0; padding: 6px 0; }
-.ce-hand .ce-card { --w: 62px; cursor: pointer; transition: transform 0.15s; }
+.ce-hand .ce-card { --w: min(88px, calc((100vw - 52px) / 4)); /* four to a row, as big as fits */ cursor: pointer; transition: transform 0.15s; }
 .ce-hand .ce-card.playable { box-shadow: 0 0 0 3px var(--me), 0 4px 10px rgba(0, 0, 0, 0.4); transform: translateY(-4px); }
 .ce-hand .ce-card.dim { opacity: 0.45; cursor: default; }
 .ce-hand .ce-card.new { outline: 3px dashed var(--warn); outline-offset: 2px; }

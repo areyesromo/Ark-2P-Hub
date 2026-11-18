@@ -67,3 +67,18 @@
 .mc-phone .big { font-size: 1.8rem; }
 .mc-phone .mc-board { width: 100%; font-size: 1.45rem; aspect-ratio: 8 / 3.2; }
 .mc-phone .rematch { margin-top: 8px; }
+/* A portrait phone: the board stands up, a quarter turn to the right (so the stones still go round
+   the same way): your pits down the left to your store at the bottom, theirs up the right to theirs
+   at the top. It fills the screen's height instead of a strip across the top. */
+@media (orientation: portrait) {
+  .mc-phone .mc-board {
+    flex: 1 1 0; min-height: 0; width: auto; max-width: 100%; align-self: center; aspect-ratio: 2.8 / 7;
+    grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 6fr 1fr; border-radius: 40% / 999px; font-size: 1.6rem;
+  }
+  .mc-phone .mc-board .store-cell { grid-column: 1 / 3; }
+  .mc-phone .mc-board .store-cell.left { grid-row: 1; }
+  .mc-phone .mc-board .store-cell.right { grid-row: 3; }
+  .mc-phone .mc-board .row { grid-row: 2; grid-template-columns: 1fr; grid-template-rows: repeat(6, 1fr); }
+  .mc-phone .mc-board .row.bottom { grid-column: 1; }
+  .mc-phone .mc-board .row.top { grid-column: 2; }
+}

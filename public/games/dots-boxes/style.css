@@ -41,7 +41,7 @@
 .db-phone .won { color: var(--good); font-weight: 900; }
 .db-phone .lost { color: var(--bad); font-weight: 900; }
 .db-phone .big { font-size: 1.8rem; }
-.db-phone .db-board { width: 100%; }
+.db-phone .db-board { width: 100%; margin: auto 0; } /* (in the middle of the room under the words) */
 .db-phone .rematch { margin-top: 8px; }
 
 /* The line just drawn only flashes; with less motion it stays thicker until the next move instead. */
