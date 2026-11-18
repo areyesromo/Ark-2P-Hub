@@ -140,3 +140,31 @@ Ideas, from cheapest to most work:
   game to game.
 - The only handling gaps found are the missing buzzes above. Input lag wasn't measured here: it
   needs real phones on the home network.
+
+## The computer, game by game (0.1.56)
+
+Every game with a computer was played against it at Easy, Normal and Hard: headless (a player who
+does nothing, many seeds: `test/bots-idle.test.js` keeps the worst cases), then on the real TV page
+(standing still at Easy, playing at Normal and Hard), watching its moves frame by frame.
+
+| Game | What was wrong | Fix |
+|---|---|---|
+| Pong | After a misjudged ball, it kept that misjudgement for the next serve too: a paddle left in the middle won 5:0 | Its read of the ball resets between points |
+| Air Hockey | Shot straight at a mallet left in the goal; Easy chased fast rebounds into its own goal; a puck left on your side sat there for good | Aims at the open side; Easy stays in front of its goal; a slow puck drifts over after 7 s |
+| Bomb Duel | Froze on its own bomb when its escape didn't fit its reaction time; walked into a blast past a late turn; crushed by the closing walls | Plans the way out for a slow start, takes the least bad way when none is safe, presses turns before the junction (and the game takes a turn a moment late), heads inward before the walls |
+| Tank Duel | Steered for you but fired at its own aim: never fired at a tank standing still | Steers for its aim when you stand still |
+| Snake (Easy) | Turned from a wall at the last cell, too late for its slow tap | Turns a cell early |
+| Light Cycles (Easy) | Rode head-on into your cycle (draws) | Sees your cycle coming |
+| Mini Golf | In the room, it stood still for good once every ball had stopped (still planning, and nothing woke it) | Keeps the room looking while it plans; the room looks again every second anyway |
+| Mancala, Memory Match, Connect Four, Dots & Boxes (Easy) | Too easy: lost to random moves, didn't block an obvious four, gave boxes away | A little more careful, still well below Normal |
+
+Fine as they were: Snake (Normal, Hard), Tron (Normal, Hard), Volley Blobs (Easy gives away a point
+now and then), Brick Duel, Asteroid Duel, Rally Tennis, Sumo, Block Battle, Tower Duel, Word Hunt,
+Word Race, Anagram Duel, Checkers, Battleship, Rock Paper Scissors, Dice Party, Crazy Eights,
+Liar's Dice, Ten-Pin, Party Board, Party Minigames, Micro Mayhem, Kitchen Rush.
+
+## Smoothness on the TV
+
+Every 2D game holds 60 frames a second, under half a millisecond of script a frame. The 3D games
+can't be measured in the cloud (no graphics card): tap the version at the bottom right during a game
+on the Steam Deck to see its frame rate.

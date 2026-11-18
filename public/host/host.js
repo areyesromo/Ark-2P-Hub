@@ -718,11 +718,50 @@
       if (run.ranBefore) return loadNews('').then(showNews);
       return null;
     }).catch(function () {});
-    $('version').classList.add('tappable');
     $('version').addEventListener('click', function () {
       if (inLobby()) loadNews('').then(showNews).catch(function () {});
     });
   }
+
+  // A frame counter, to see how smooth a game runs on this screen (the Steam Deck, say): tap the
+  // version during a game (or open the TV with ?fps). Remembered on this screen.
+  const FPS_KEY = 'ark.fps';
+  let fpsBox = null;
+  function fpsMeter(on) {
+    if (fpsBox) { fpsBox.remove(); fpsBox = null; }
+    try { if (on) localStorage.setItem(FPS_KEY, '1'); else localStorage.removeItem(FPS_KEY); } catch (e) { /* (no storage: just for now) */ }
+    if (!on) return;
+    fpsBox = document.createElement('div');
+    fpsBox.className = 'fps-meter';
+    document.body.appendChild(fpsBox);
+    const box = fpsBox;
+    let last = performance.now();
+    let frames = 0;
+    let worst = 0;
+    let since = last;
+    (function frame(t) {
+      if (box !== fpsBox) return;
+      frames++;
+      worst = Math.max(worst, t - last);
+      last = t;
+      if (t - since >= 1000) {
+        box.textContent = Math.round((frames * 1000) / (t - since)) + ' fps · slowest ' + Math.round(worst) + ' ms';
+        box.classList.toggle('slow', worst > 34);
+        frames = 0;
+        worst = 0;
+        since = t;
+      }
+      requestAnimationFrame(frame);
+    })(last);
+  }
+  let fpsOn = /[?&]fps\b/.test(location.search);
+  try { fpsOn = fpsOn || localStorage.getItem(FPS_KEY) === '1'; } catch (e) { /* (none) */ }
+  if (fpsOn) fpsMeter(true);
+  $('version').classList.add('tappable');
+  $('version').addEventListener('click', function () {
+    if (inLobby() && desktop) return; // (in the lobby it opens What's new)
+    fpsMeter(!fpsBox);
+  });
 
   const padName = function (idx) { return 'Controller ' + (idx + 1); };
 

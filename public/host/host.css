@@ -178,7 +178,9 @@ body:not(.cursor-on), body:not(.cursor-on) * { cursor: none !important; }
 .lobby.hidden ~ .update-banner { display: none; }
 
 .version { position: fixed; right: 12px; bottom: 6px; font-size: 0.75rem; color: var(--muted); opacity: 0.5; pointer-events: none; }
-/* In the desktop app the version opens What's new. */
+/* Tap the version: What's new (the desktop app's lobby), or the frame counter (in a game). */
+.fps-meter { position: fixed; right: 12px; bottom: 26px; z-index: 50; padding: 3px 8px; border-radius: var(--r-sm); background: var(--panel); color: var(--good); font: 700 0.8rem ui-monospace, monospace; pointer-events: none; }
+.fps-meter.slow { color: var(--warn); }
 .version.tappable { pointer-events: auto; cursor: pointer; padding: 6px 10px; margin: -6px -10px; }
 
 /* What's new: a card over the lobby after an update. */
