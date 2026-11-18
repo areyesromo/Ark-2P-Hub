@@ -24,7 +24,9 @@ These are the changes that would be felt most, in rough order.
    the countdown.)
 4. 🎨 **Asteroid Duel.** The ships are tiny arrows and the rocks are plain grey. Bigger ships, a
    thrust flame and some shading on the rocks would help.
-5. 🎨 **Phone boards that are too small:** Mancala, Dots & Boxes, Crazy Eights' hand, Dice Party's
+5. 🎨 **Phone boards that are too small:** (0.1.53: Mancala, Crazy Eights, Dice Party and Dots &
+   Boxes done. Anagram Duel's tiles and Brick Duel's court already fill the phone's width; they
+   looked small only beside the empty space under them.) Mancala, Dots & Boxes, Crazy Eights' hand, Dice Party's
    dice, Anagram Duel's tiles and Brick Duel's court. Each leaves half the phone empty. Let the
    board fill the width.
 6. 🎨 **Empty TV space:** Fake Out, Micro Mayhem, Sketch Guess (while a word is being picked),
@@ -94,9 +96,9 @@ Ideas, from cheapest to most work:
 | Brick Duel | 🎨📶 | The phone's court is small. Its phone view is a full copy of the TV's. |
 | Checkers | ✅ | |
 | Connect Four | ✅ | |
-| Crazy Eights | 🎨 | The cards in the phone's hand are small. Fan them bigger across the width. |
-| Dice Party | 🎨 | The TV scorecard text is small, and the dice on the phone are tiny. |
-| Dots & Boxes | 🎨 | Fine on the TV. The phone board is small. |
+| Crazy Eights | ✅ | Bigger cards in the phone's hand (0.1.53). |
+| Dice Party | 🎨 | The TV scorecard text is small. Bigger dice on the phone (0.1.53). |
+| Dots & Boxes | ✅ | The phone board sits in the middle of the screen (0.1.53). |
 | Draw Duel | ✅ | |
 | Dungeon Duo | 🎨 | Dim stand-in 3D. The art is waiting on the local session's models. |
 | Fake Out | 🎨 | A large empty area on the TV. |
@@ -104,7 +106,7 @@ Ideas, from cheapest to most work:
 | Kart Race 3D | ✅📶 | Stand-in shapes until the art lands. Heaviest view of all (see the top list). |
 | Kitchen Rush | ✅📶 | |
 | Liar's Dice | ✅ | |
-| Mancala | 🎨 | The phone board is small. |
+| Mancala | ✅ | The phone board stands up and fills the screen (0.1.53). |
 | Marble Maze | ✅ | Buzzes on a fall and at the goal (0.1.53). |
 | Memory Match | ✅ | |
 | Micro Mayhem | 🎨 | Big empty panels and small emoji targets. |

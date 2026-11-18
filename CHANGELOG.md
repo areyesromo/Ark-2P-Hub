@@ -11,6 +11,9 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   kart's dashboard.
 - 🧱 Falling Blocks Battle: shaded blocks, a faint grid in each well, a landing outline in the
   piece's own colour, and the next piece in a box of its own.
+- 📱 Bigger boards on the phones: Mancala's board stands up and fills the screen (your pits down the
+  left, your store at the bottom), Crazy Eights' cards are bigger, Dice Party's dice are bigger, and
+  the Dots & Boxes board sits in the middle of the screen.
 - 📳 Pong buzzes when your paddle sends the ball back and on every point; Marble Maze buzzes when
   the marble falls and when it reaches the goal.
 
