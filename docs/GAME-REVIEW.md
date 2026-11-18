@@ -34,12 +34,12 @@ These are the changes that would be felt most, in rough order.
    bigger content or a status panel.
 7. ~~🎮 **No buzz (vibration)** in Pong and Marble Maze.~~ Done in 0.1.53. (Micro Mayhem already
    buzzed through the shared minigame frame.)
-8. 🎨 **Small TV text:** the Dice Party scorecard and the Mini Golf and Ten-Pin scorecards are
+8. ~~🎨 **Small TV text:**~~ Done in 0.1.55 (Dice Party has a new two-column scorecard). the Dice Party scorecard and the Mini Golf and Ten-Pin scorecards are
    hard to read from the couch.
-9. 📶 **Ten-Pin.** Each throw's pin physics goes out as one 27 KB view. That is harmless on a home
+9. ~~📶 **Ten-Pin.**~~ Done in 0.1.55: the roll goes packed, only the pins that moved in each step (about 19 KB to 3 KB). Each throw's pin physics goes out as one 27 KB view. That is harmless on a home
    network, but it is the largest single message any game sends.
-10. 📶 *(optional, for tunnel or online play)* Turn on Socket.IO compression (`perMessageDeflate`).
-    The views are repetitive JSON and shrink by about 5–10×. On a home network it isn't needed.
+10. ~~📶 Socket.IO compression (`perMessageDeflate`).~~ On in 0.1.55 (messages over 1 KB).
+    The views are repetitive JSON and shrink by about 3× each (more with the shared context). On a home network it isn't needed.
 
 ## Network
 
@@ -54,14 +54,14 @@ Busiest games (TV plus one phone):
 |---|---|---|---|---|
 | Kart Race 3D | 30 | 8.4 KB | 2.4 KB | 319 |
 | Kart Race | 30 | 3.7 KB | 2.4 KB | 177 |
-| Brick Duel | 30 | 1.7 KB | 1.2 KB | 84 |
+| Brick Duel | ✅ | The walls go only when a brick breaks, to the TV and the phone (0.1.55): about half the traffic. |
 | Kitchen Rush | 30 | 1.3 KB | 1.2 KB | 73 |
 | Marble Maze | 30 | 1.1 KB | 1.0 KB | 64 |
 | Dungeon Duo | 16 | 2.0 KB | 1.9 KB | 59 |
-| Mini Golf | 30 | 1.0 KB | 0.9 KB | 57 |
+| Mini Golf | ✅ | A bigger scorecard on the TV (0.1.55). |
 | Bomb Duel | 30 | 0.9 KB | 0.8 KB | 48 |
 | Asteroid Duel | 30 | 1.2 KB | 0.4 KB | 46 |
-| Air Hockey | 30 | 0.8 KB | 0.7 KB | 45 |
+| Air Hockey | ✅ | Air holes, a puck trail and a goal flash (0.1.55). |
 | Sumo | 30 | 0.8 KB | 0.7 KB | 44 |
 | Tanks, Tower Duel, Pong, Rally Tennis, Volley Blobs | 10–30 | | | 29–36 |
 | Party Minigames | 5 | 2.2 KB | 2.2 KB | 23 |
@@ -86,18 +86,18 @@ Ideas, from cheapest to most work:
 
 | Game | Looks | Notes |
 |---|---|---|
-| Air Hockey | ✅ | Clean but plain. 🎨 A rink texture, a glow on the puck and a goal flash would liven it up. |
+| Air Hockey | ✅ | Air holes, a puck trail and a goal flash (0.1.55). |
 | Anagram Duel | 🎨 | The phone's tiles are small with a lot of empty space below. Make them bigger. |
 | Asteroid Duel | ✅ | Glowing ships, flame, shaded rocks (0.1.54). Kept to the hit size: the ships are drawn only a touch bigger. |
 | Battleship | ✅ | |
 | Block Battle | ✅ | Grid, shaded blocks and coloured landing outline added in 0.1.53. |
 | Bomb Duel | ✅ | |
 | Bomb Squad | ✅ | |
-| Brick Duel | 🎨📶 | The phone's court is small. Its phone view is a full copy of the TV's. |
+| Brick Duel | ✅ | The walls go only when a brick breaks, to the TV and the phone (0.1.55): about half the traffic. |
 | Checkers | ✅ | |
 | Connect Four | ✅ | |
 | Crazy Eights | ✅ | Bigger cards in the phone's hand (0.1.53). |
-| Dice Party | 🎨 | The TV scorecard text is small. Bigger dice on the phone (0.1.53). |
+| Dice Party | ✅ | A two-column scorecard on the TV, bigger dice on the phone (0.1.53, 0.1.55). |
 | Dots & Boxes | ✅ | The phone board sits in the middle of the screen (0.1.53). |
 | Draw Duel | ✅ | |
 | Dungeon Duo | 🎨 | Dim stand-in 3D. The art is waiting on the local session's models. |
@@ -111,7 +111,7 @@ Ideas, from cheapest to most work:
 | Memory Match | ✅ | |
 | Micro Mayhem | ✅ | The minis' pieces grow with the TV (0.1.54). |
 | Mind Meld | ✅ | The dial reads well on the TV and the phone. |
-| Mini Golf | ✅ | The TV scorecard is small. The course could fill more of the TV. |
+| Mini Golf | ✅ | A bigger scorecard on the TV (0.1.55). |
 | Party Board | ✅ | The side panels are mostly empty early in the game (items and stars fill them later). The phone's Roll button has empty space under it. |
 | Party Minigames | ✅ | The intro card reads well. The phone shows a blurred copy of the TV behind the card, which is fine. |
 | Pong | ✅ | Neat neon look. Buzzes on a return and a point (0.1.53). |
@@ -123,7 +123,7 @@ Ideas, from cheapest to most work:
 | Snake | ✅ | The crash burst reads well. |
 | Sumo | ✅ | The ring could use some texture. |
 | Tanks | ✅ | Clean. The walls are plain blocks. |
-| Ten-Pin | ✅📶 | The TV scorecard is small. There is one large view per throw. |
+| Ten-Pin | ✅ | A bigger scorecard, and the roll goes packed (0.1.55). |
 | Tower Duel | ✅ | The phone's tile grid is dense for a finger, but it works. |
 | Tower Stack | ✅ | Dusk sky, plinth and star-height rings (0.1.54). |
 | Trivia Quest | ✅ | |

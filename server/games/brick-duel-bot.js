@@ -48,7 +48,7 @@ export function brickDuelBot(view, level, rng = Math.random, retries = 0, memory
       else if (level === 'easy') off = (rng() * 2 - 1) * half * 0.6;
       else {
         // Where on the paddle to meet it, to send it at its bricks (an edge sends it off at an angle).
-        const aim = level === 'hard' ? thickest(side.bricks) : nearest(side.bricks, x);
+        const aim = level === 'hard' ? thickest(view.wall) : nearest(view.wall, x);
         const want = Math.max(-1, Math.min(1, ((aim + 0.5) - x) / 3)); // -1: hard left .. 1: hard right
         off = -want * half * 0.7; // (hit on the right of the paddle to send it left, and so on)
       }

@@ -4,6 +4,17 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.55
+
+- 🎲 Dice Party: a new scorecard on the TV, big enough to read from the couch: the numbers down the
+  left (a die for each), the combos down the right (3×, 4×, FH, SM, LG, 5×, CH), both players side
+  by side, with the upper, lower and total along the bottom.
+- ⛳🎳 Bigger scorecards on the TV for Mini Golf and Ten-Pin.
+- 🏒 Air Hockey: an air-hole table, a trail behind the puck, and the goal lights up when one goes in.
+- 📶 Lighter on the Wi-Fi again: a bowling throw goes to the TV about a seventh the size, Brick
+  Duel's walls go only when a brick breaks, phones skip the parts of the game that haven't changed
+  (as the TV already did), and everything is compressed, which helps most when playing online.
+
 ## 0.1.54
 
 - ☄️ Asteroid Duel: glowing ships with a cockpit and a flickering thrust flame, shaded rocks with

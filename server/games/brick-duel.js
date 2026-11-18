@@ -339,6 +339,8 @@ export class BrickDuel {
       suddenDeath: this.suddenDeath,
       field: FIELD,
       sides: this.sides.map((s) => this.sideView(s, now)),
+      // (each wall on its own: it changes only when a brick breaks, so the room sends it only then)
+      walls: this.sides.map((s) => this.wallView(s)),
       power: this.power,
       scores: this.sides.map((s) => s.broken), // the room records the result with these
       winner: this.winner,
@@ -350,9 +352,13 @@ export class BrickDuel {
       paddle: s.paddle,
       paddleW: this.paddleW(s, now),
       balls: s.balls.map((b) => ({ x: b.x, y: b.y, vx: b.vx, vy: b.vy, held: b.heldUntil !== null })),
-      bricks: [...s.bricks.values()].map((b) => [b.r, b.c, b.p]),
       broken: s.broken,
     };
+  }
+
+  /** A side's wall: [row, column, power] for each brick still standing. */
+  wallView(s) {
+    return [...s.bricks.values()].map((b) => [b.r, b.c, b.p]);
   }
 
   playerView(slot) {
@@ -363,6 +369,7 @@ export class BrickDuel {
       // Your own side, so the phone can show your wall and balls (the TV shows both).
       field: FIELD,
       side: this.sideView(this.sides[slot], now),
+      wall: this.wallView(this.sides[slot]),
       countdown: this.countdown(),
       timeLeft: this.timeLeft(),
       suddenDeath: this.suddenDeath,

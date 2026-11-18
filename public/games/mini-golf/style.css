@@ -25,8 +25,8 @@
 .mg-overlay .hurry { margin-top: 0.4rem; padding: 0.3rem 1rem; border-radius: 10px; background: rgba(0, 0, 0, 0.6); color: var(--bad-soft); font-weight: 800; }
 .mg-overlay .ark-setup { font-size: 1.4rem; }
 
-.mg-card { border-collapse: collapse; font-size: 1.05rem; }
-.mg-card th, .mg-card td { padding: 0.15rem 0.7rem; text-align: center; border-bottom: 1px solid var(--line); }
+.mg-card { border-collapse: collapse; font-size: clamp(1.15rem, 2.7vh, 1.7rem); } /* (readable from the couch) */
+.mg-card th, .mg-card td { padding: 0.15em 0.6em; text-align: center; border-bottom: 1px solid var(--line); }
 .mg-card th:first-child { text-align: left; max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .mg-card tr.par td { color: var(--muted); }
 .mg-card td { font-weight: 800; min-width: 2rem; }

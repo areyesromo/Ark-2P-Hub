@@ -102,7 +102,7 @@
   function render(v, meta) {
     if (!play || !v.roll || v.roll.id !== play.id) {
       // (from as far in as the roll already is: a TV that reloads mid-roll picks it up there)
-      play = v.roll ? { id: v.roll.id, roll: v.roll, start: performance.now() - (v.roll.at || 0) - ((meta && meta.ageMs) || 0), fallAt: {}, fresh: v.next ? v.next.fresh : true, count: v.standing.length } : null;
+      play = v.roll ? { id: v.roll.id, roll: Object.assign({}, v.roll, { frames: unpackFrames(v.roll.steps || []) }), start: performance.now() - (v.roll.at || 0) - ((meta && meta.ageMs) || 0), fallAt: {}, fresh: v.next ? v.next.fresh : true, count: v.standing.length } : null;
     }
     view = v;
     if (!els) return;
@@ -275,6 +275,19 @@
     gl.aim.rotation.x = -Math.PI / 2;
     gl.aim.visible = false;
     scene.add(gl.aim);
+  }
+
+  /** The roll's frames back in full from the packed steps the server sends (only the pins that moved). */
+  function unpackFrames(steps) {
+    const at = {};
+    const order = [];
+    return steps.map(function (s) {
+      (s.p || []).forEach(function (q) {
+        if (!(q[0] in at)) order.push(q[0]);
+        at[q[0]] = q;
+      });
+      return { t: s.t, b: s.b, p: order.map(function (i) { return at[i]; }) };
+    });
   }
 
   /** Where the roll is `t` ms in: the ball and each pin, between the two recorded frames around it. */

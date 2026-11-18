@@ -26,13 +26,13 @@ const reply = (ack, payload) => {
  *   profile:set   { avatar?, colour?, slot? } -> ack { ok, profile } | { error }  (a phone: its own seat; the TV: slot)
  *   host:kick     { slot }                   -> ack { ok } | { error }  (the TV removes a player)
  *   host:theme    { theme?, layout? }        -> ack { ok, theme?, layout? } | { error }  (Player 1's controller picks the look: THEMES, LAYOUTS)
- *   game:resync   (a TV or remote screen: send the whole view, it has no copy to fill `kept` in from)
+ *   game:resync   (a TV, remote screen or phone: send the whole view, it has no copy to fill `kept` in from)
  *
  * Server -> client:
  *   room:state    Room#publicState()
  *   host:qr       { qr }                     (TV only: join address changed in Settings)
- *   game:view     { gameId, view, kept? }    (host and each player get their own view; the TV's leaves
- *                                             out the big fields named in `kept`, unchanged since the last)
+ *   game:view     { gameId, view, kept? }    (host and each player get their own view, less the big
+ *                                             fields named in `kept`, unchanged since the last)
  *   player:kicked { reason, removed? }       (this phone lost its seat; `removed`: the TV took it away)
  *   player:ping   ack()                      (are you still there? see player:join)
  */
@@ -358,6 +358,7 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
 
     socket.on('game:resync', () => {
       if (room && (role === 'host' || role === 'watch')) room.sendView(socket, 'host');
+      else if (room && role === 'player' && room.players[slot]) room.sendView(socket, 'player', slot);
     });
 
     // The look, picked on the TV with Player 1's controller (the phones' Player 1 has Settings).

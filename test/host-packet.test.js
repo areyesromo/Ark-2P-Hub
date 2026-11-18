@@ -46,3 +46,15 @@ test('a screen that joins gets the whole view, and the next broadcast goes whole
   assert.deepEqual(sent[0], { gameId: 'g', view: { phase: 'play', boxes: big(1) } });
   assert.equal(r.hostPacket('g', r.game.hostView()).kept, undefined, 'the other TVs may hold an older copy');
 });
+
+test('each phone has its own channel: what one was sent is not what the other keeps', () => {
+  const r = new Room('PACK', io, {});
+  r.viewPacket('p0', 'g', { phase: 'play', wall: big(1) });
+  assert.deepEqual(r.viewPacket('p0', 'g', { phase: 'play', wall: big(1) }).kept, ['wall']);
+  assert.equal(r.viewPacket('p1', 'g', { phase: 'play', wall: big(1) }).kept, undefined, "player 2's phone hasn't had it yet");
+  // A phone that (re)joins gets its whole view, and its next update goes whole.
+  r.game = { playerView: () => ({ phase: 'play', wall: big(1) }) };
+  r.gameId = 'g';
+  r.sendView({ emit() {} }, 'player', 0);
+  assert.equal(r.viewPacket('p0', 'g', { phase: 'play', wall: big(1) }).kept, undefined);
+});

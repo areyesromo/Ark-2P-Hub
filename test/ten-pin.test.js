@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
-import { scoreCard, rollBall, rackPins, LANE, PINS } from '../server/games/ten-pin-roll.js';
+import { scoreCard, rollBall, rackPins, packFrames, unpackFrames, LANE, PINS } from '../server/games/ten-pin-roll.js';
 import { TenPin, TIMING } from '../server/games/ten-pin.js';
 import { tenPinBot, bestThrow } from '../server/games/ten-pin-bot.js';
 import { getGame } from '../server/games/index.js';
@@ -207,7 +207,7 @@ test('the view: the roll to play back while it rolls, both score cards, whose tu
   assert.equal(v.cards.length, 2);
   assert.equal(v.frames, 10);
   g.onInput(0, { type: 'throw', stance: 0, aim: 0, power: 0.8, spin: 0 });
-  assert.ok(g.hostView().roll && g.hostView().roll.frames.length > 0);
+  assert.ok(g.hostView().roll && g.hostView().roll.steps.length > 0);
   ctx.advance(30000);
   assert.equal(g.hostView().roll, null);
   assert.deepEqual(g.hostView().bestStreak, [g.balls[0][0] === 10 ? 1 : 0, 0]);
@@ -294,4 +294,13 @@ test('the computer steps to its spot first (so the TV shows where it bowls from)
   const t = tenPinBot(g.playerView(1), 'hard', seeded(1), 0, {});
   assert.equal(t.type, 'throw');
   assert.equal(t.stance, g.hostView().stance);
+});
+
+test('a roll goes to the TV packed (only the pins that moved in each frame) and unpacks to the same frames', () => {
+  for (const t of [{ stance: 0.1, aim: 0.02, power: 0.8, spin: 0.2 }, { stance: -0.5, aim: 0.1, power: 1, spin: -0.6 }, { stance: 0, aim: -1, power: 0.3, spin: 0 }]) {
+    const r = rollBall(t, rackPins(), { rng: seeded(3) });
+    const packed = packFrames(r.frames);
+    assert.deepEqual(unpackFrames(packed), r.frames);
+    assert.ok(JSON.stringify(packed).length < JSON.stringify(r.frames).length / 3, 'well under a third the size');
+  }
 });

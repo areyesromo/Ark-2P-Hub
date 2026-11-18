@@ -43,11 +43,11 @@
 
   function renderTop(v) {
     const t = v.suddenDeath ? 'Sudden death: next brick wins!' : v.timeLeft === null ? '' : Math.floor(v.timeLeft / 60) + ':' + String(v.timeLeft % 60).padStart(2, '0');
-    const key = v.sides.map(function (s) { return s.broken + '/' + s.bricks.length; }).join('|') + t + v.players.map(function (p) { return p.name; }).join('|');
+    const key = v.sides.map(function (s, i) { return s.broken + '/' + v.walls[i].length; }).join('|') + t + v.players.map(function (p) { return p.name; }).join('|');
     if (key === topKey) return;
     topKey = key;
     top.innerHTML = [0, 1].map(function (s) {
-      return '<div class="who">' + nameOf(v, s) + ' <span class="n">🧱 ' + v.sides[s].broken + '</span> <span class="left">' + v.sides[s].bricks.length + ' left</span></div>';
+      return '<div class="who">' + nameOf(v, s) + ' <span class="n">🧱 ' + v.sides[s].broken + '</span> <span class="left">' + v.walls[s].length + ' left</span></div>';
     }).join('<div class="clock' + (v.suddenDeath ? ' sudden' : '') + '">' + t + '</div>');
   }
 
@@ -109,7 +109,7 @@
       g.setTransform(k, 0, 0, k, slot * (f.w + GAP) * k, 0);
       g.fillStyle = '#0b1020';
       g.fillRect(0, 0, f.w, f.h);
-      side.bricks.forEach(function (b) { window.ArkBricks.drawBrick(g, f, b); });
+      view.walls[slot].forEach(function (b) { window.ArkBricks.drawBrick(g, f, b); });
       shown[slot] += (side.paddle - shown[slot]) * 0.5;
       g.fillStyle = colors[slot];
       g.fillRect(shown[slot] - side.paddleW / 2, f.paddleY, side.paddleW, f.paddleH);

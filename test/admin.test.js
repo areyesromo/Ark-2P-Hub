@@ -147,7 +147,11 @@ test('theme: picked in Settings, served as /theme.css, and every screen told whe
     assert.equal((await call('GET', '/api/admin/status')).body.layout, 'classic');
     assert.match(await css(), /classic layout/);
     assert.equal((await call('PUT', '/api/admin/layout', { layout: 'tilted' })).status, 400);
-    const toldLayout = new Promise((resolve) => tv.once('hub:theme', resolve));
+    // (the one for the layout: the default theme's own message can still be on its way)
+    const toldLayout = new Promise((resolve) => {
+      const hear = (msg) => { if (msg.layout === 'shelf') { tv.off('hub:theme', hear); resolve(msg); } };
+      tv.on('hub:theme', hear);
+    });
     assert.deepEqual((await call('PUT', '/api/admin/layout', { layout: 'shelf' })).body, { layout: 'shelf' });
     assert.deepEqual(await toldLayout, { theme: 'default', layout: 'shelf' });
     await call('PUT', '/api/admin/theme', { theme: 'neon' });

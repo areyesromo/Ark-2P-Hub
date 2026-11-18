@@ -1,5 +1,32 @@
 /* ---- TV ---- */
-.dp-host { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.2fr 1fr; align-items: center; gap: 2rem; font-size: 1.4rem; }
+.dp-host { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.9fr); align-items: center; gap: 2rem; font-size: 1.4rem; }
+.dp-host .dp-play .dp-dice { font-size: clamp(1.3rem, 3vh, 2rem); gap: 0.6rem; }
+/* The TV's scorecard: two columns (numbers, combos), each row a label and both players' boxes. */
+.dp-sheet { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1.2rem; align-self: stretch; align-content: center; font-size: clamp(1.1rem, 2.6vh, 1.7rem); }
+.dp-sheet .col { display: flex; flex-direction: column; background: var(--panel); border-radius: var(--radius); overflow: hidden; }
+.dp-row { display: grid; grid-template-columns: 1fr 4.2em 4.2em; align-items: center; gap: 0.4em; padding: 0.3em 0.6em; border-bottom: 1px solid var(--line); min-height: 2.6em; }
+.dp-row:last-child { border-bottom: 0; }
+.dp-row .lab { display: flex; align-items: center; gap: 0.6em; font-weight: 800; min-width: 0; }
+.dp-row .lab .die { font-size: 0.62em; }
+.dp-row .lab small { font-size: 0.6em; color: var(--muted); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dp-row .badge { display: inline-flex; align-items: center; justify-content: center; min-width: 2.3em; height: 1.6em; border-radius: var(--r-sm); background: #f8fafc; color: #111827; font-weight: 900; }
+.dp-row > b { display: flex; align-items: center; justify-content: center; height: 1.8em; border-radius: var(--r-sm); background: var(--bg-2); font-size: 1.15em; font-weight: 900; font-variant-numeric: tabular-nums; }
+.dp-row > b.empty { opacity: 0.5; }
+.dp-row > b.opt { background: transparent; border: 2px dashed var(--line); color: var(--muted); font-style: italic; font-weight: 700; }
+.dp-row > b.opt.zero { opacity: 0.4; }
+.dp-row > b.fresh { background: var(--warn); color: var(--on-warn); }
+.dp-row.cur { background: rgba(250, 204, 21, 0.18); }
+.dp-row.cur > b.opt { border-color: var(--warn); color: var(--text); }
+.dp-row.head { min-height: 0; background: var(--bg-2); }
+.dp-row.head > b { background: transparent; height: auto; font-size: 0.8em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: block; text-align: center; }
+.dp-row.head > b.p1 { color: var(--p1); }
+.dp-row.head > b.p2 { color: var(--p2); }
+.dp-row.head > b.on { text-decoration: underline; text-underline-offset: 0.25em; }
+.dp-row.sum { background: var(--bg-2); }
+.dp-row.sum > b { background: transparent; }
+.dp-row.sum .lab { flex-direction: column; align-items: flex-start; gap: 0; }
+.dp-total { grid-column: 1 / 3; display: flex; justify-content: flex-end; align-items: baseline; gap: 1.2em; padding: 0.5em 0.8em 0; font-weight: 900; font-size: 1.5em; }
+.dp-total span { color: var(--muted); font-size: 0.7em; }
 .dp-play { display: flex; flex-direction: column; align-items: center; gap: 1rem; text-align: center; }
 .dp-play .title { font-size: 2.8rem; font-weight: 900; }
 .dp-play .sub { font-size: 1.5rem; }
