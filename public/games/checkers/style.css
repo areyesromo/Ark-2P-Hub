@@ -29,6 +29,12 @@
 }
 .man.p1 { background: var(--p1); }
 .man.p2 { background: var(--p2); }
+/* A dot on player 1's men, a ring on player 2's: told apart without the colours (colour-blind
+   players), as on Connect Four's discs. (A king's crown covers it.) */
+.man::before { content: ''; position: absolute; border-radius: 50%; }
+.man.p1::before { inset: 38%; background: rgba(255, 255, 255, 0.75); }
+.man.p2::before { inset: 26%; border: 0.18em solid rgba(255, 255, 255, 0.75); }
+.man.king::before { display: none; }
 .man.king::after { content: '♛'; color: #fff8dc; font-size: 0.55em; text-shadow: 0 1px 3px rgba(0, 0, 0, 0.7); }
 
 /* ---- TV ---- */
