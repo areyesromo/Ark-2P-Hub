@@ -32,12 +32,14 @@ export function miniGolfBot(view, level, rng = Math.random, retries = 0, memory 
     memory.golf = { id, aimMs, puttMs, work: plan(view, b, level, rng, millThen), plan: null };
   }
   const g = memory.golf;
-  // It thinks it through a little at a time (a few ms each look), so the hub never stalls.
+  // It thinks it through a little at a time (a few ms each look), so the hub never stalls. Not
+  // done yet: a move the game ignores ('think'), so the room looks again at once (with every ball
+  // at rest the game sends no view to make it look, and it would wait for ever).
   if (!g.plan) {
     const until = Date.now() + THINK_MS;
     for (let step = g.work.next(); ; step = g.work.next()) {
       if (step.done) { g.plan = step.value; break; }
-      if (Date.now() > until) return null;
+      if (Date.now() > until) return { type: 'think', botDelayMs: 0 };
     }
   }
   // Line it up first (the TV shows the aim), then putt.
