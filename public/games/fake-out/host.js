@@ -60,7 +60,14 @@
     let html = '<div class="fo-card"><div class="meta">Round ' + v.round + ' / ' + v.rounds + (v.last ? ' · ⭐ double points' : '') + '</div>' +
       '<div class="q">' + factHtml(v, truth) + '</div></div>';
     if (v.phase === 'write') {
-      html += (v.timed ? '<div class="fo-bar"><div class="fill"></div></div>' : '') + '<div class="fo-hint">✍️ On your phone, write a fake answer that sounds true…</div>';
+      // A notepad for each of you: a pencil at work until your fake is in (never what you wrote).
+      const pads = [0, 1].map(function (slot) {
+        const done = v.written[slot];
+        return '<div class="fo-pad p' + (slot + 1) + (done ? ' done' : '') + '"><div class="who">' + nameOf(v, slot) + '</div>' +
+          '<div class="icon">' + (done ? '✅' : '✍️') + '</div><div class="state">' + (done ? 'Fake written' : 'Writing…') + '</div></div>';
+      }).join('');
+      html += (v.timed ? '<div class="fo-bar"><div class="fill"></div></div>' : '') + '<div class="fo-pads">' + pads + '</div>' +
+        '<div class="fo-hint">✍️ On your phone, write a fake answer that sounds true…</div>';
     } else if (v.phase === 'pick') {
       html += (v.timed ? '<div class="fo-bar"><div class="fill"></div></div>' : '') + '<div class="fo-list">' + v.options.map(function (o) {
         return '<div class="fo-answer"><span class="text">' + esc(o.text) + '</span></div>';

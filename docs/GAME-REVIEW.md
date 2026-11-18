@@ -22,14 +22,14 @@ These are the changes that would be felt most, in rough order.
 3. ~~🎨 **Block Battle.**~~ Done in 0.1.53: shaded blocks, a grid and a coloured landing outline.
    (It already had the landing outline and the next piece; the first screenshot was taken during
    the countdown.)
-4. 🎨 **Asteroid Duel.** The ships are tiny arrows and the rocks are plain grey. Bigger ships, a
+4. ~~🎨 **Asteroid Duel.**~~ Done in 0.1.54. The ships are tiny arrows and the rocks are plain grey. Bigger ships, a
    thrust flame and some shading on the rocks would help.
 5. 🎨 **Phone boards that are too small:** (0.1.53: Mancala, Crazy Eights, Dice Party and Dots &
    Boxes done. Anagram Duel's tiles and Brick Duel's court already fill the phone's width; they
    looked small only beside the empty space under them.) Mancala, Dots & Boxes, Crazy Eights' hand, Dice Party's
    dice, Anagram Duel's tiles and Brick Duel's court. Each leaves half the phone empty. Let the
    board fill the width.
-6. 🎨 **Empty TV space:** Fake Out, Micro Mayhem, Sketch Guess (while a word is being picked),
+6. ~~🎨 **Empty TV space:**~~ Done in 0.1.54. Fake Out, Micro Mayhem, Sketch Guess (while a word is being picked),
    Tower Stack and Rally Tennis (a small court in a big screen). Each of these screens could hold
    bigger content or a status panel.
 7. ~~🎮 **No buzz (vibration)** in Pong and Marble Maze.~~ Done in 0.1.53. (Micro Mayhem already
@@ -88,7 +88,7 @@ Ideas, from cheapest to most work:
 |---|---|---|
 | Air Hockey | ✅ | Clean but plain. 🎨 A rink texture, a glow on the puck and a goal flash would liven it up. |
 | Anagram Duel | 🎨 | The phone's tiles are small with a lot of empty space below. Make them bigger. |
-| Asteroid Duel | 🎨 | Tiny ships and grey rocks (see the top list). |
+| Asteroid Duel | ✅ | Glowing ships, flame, shaded rocks (0.1.54). Kept to the hit size: the ships are drawn only a touch bigger. |
 | Battleship | ✅ | |
 | Block Battle | ✅ | Grid, shaded blocks and coloured landing outline added in 0.1.53. |
 | Bomb Duel | ✅ | |
@@ -101,7 +101,7 @@ Ideas, from cheapest to most work:
 | Dots & Boxes | ✅ | The phone board sits in the middle of the screen (0.1.53). |
 | Draw Duel | ✅ | |
 | Dungeon Duo | 🎨 | Dim stand-in 3D. The art is waiting on the local session's models. |
-| Fake Out | 🎨 | A large empty area on the TV. |
+| Fake Out | ✅ | Notepads for each player while writing (0.1.54). |
 | Kart Race | ✅📶 | Looks good. Heavy phone view (see the top list). |
 | Kart Race 3D | ✅📶 | Stand-in shapes until the art lands. Heaviest view of all (see the top list). |
 | Kitchen Rush | ✅📶 | |
@@ -109,23 +109,23 @@ Ideas, from cheapest to most work:
 | Mancala | ✅ | The phone board stands up and fills the screen (0.1.53). |
 | Marble Maze | ✅ | Buzzes on a fall and at the goal (0.1.53). |
 | Memory Match | ✅ | |
-| Micro Mayhem | 🎨 | Big empty panels and small emoji targets. |
+| Micro Mayhem | ✅ | The minis' pieces grow with the TV (0.1.54). |
 | Mind Meld | ✅ | The dial reads well on the TV and the phone. |
 | Mini Golf | ✅ | The TV scorecard is small. The course could fill more of the TV. |
 | Party Board | ✅ | The side panels are mostly empty early in the game (items and stars fill them later). The phone's Roll button has empty space under it. |
 | Party Minigames | ✅ | The intro card reads well. The phone shows a blurred copy of the TV behind the card, which is fine. |
 | Pong | ✅ | Neat neon look. Buzzes on a return and a point (0.1.53). |
 | Quiz | ✅ | |
-| Rally Tennis | 🎨 | The court is small in the middle of the TV, and the serve text overlaps the net. Make the court bigger and move the text off it. |
+| Rally Tennis | ✅ | Banner off the net, a little more court (0.1.54). The court stays upright: turning it sideways would swap which way ◀ ▶ aim. |
 | Reaction Duel | ✅ | Bold and clear. |
 | Rock Paper Scissors | ✅ | |
-| Sketch Guess | 🎨 | The TV is blank while the drawer picks a word. Show the three difficulty cards face down, or a timer. |
+| Sketch Guess | ✅ | Face-down word cards and the rounds so far while the drawer picks (0.1.54). |
 | Snake | ✅ | The crash burst reads well. |
 | Sumo | ✅ | The ring could use some texture. |
 | Tanks | ✅ | Clean. The walls are plain blocks. |
 | Ten-Pin | ✅📶 | The TV scorecard is small. There is one large view per throw. |
 | Tower Duel | ✅ | The phone's tile grid is dense for a finger, but it works. |
-| Tower Stack | 🎨 | A lot of empty grey stage around the block. Add a backdrop or a height marker. |
+| Tower Stack | ✅ | Dusk sky, plinth and star-height rings (0.1.54). |
 | Trivia Quest | ✅ | |
 | Tron | ✅ | Plain arena. A faint grid would show speed. |
 | Volley Blobs | ✅ | Charming. |

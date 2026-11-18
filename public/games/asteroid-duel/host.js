@@ -126,20 +126,36 @@
     view.rocks.forEach(function (rock) {
       const p = at(rock);
       wrapped(f, p[0], p[1], rock.r, function (x, y) {
+        // Lit from the top left, with a couple of craters (placed by its id, so they stay put).
         rockPath(g, x, y, rock.r, rock.id);
-        g.fillStyle = '#57534e';
-        g.strokeStyle = '#a8a29e';
+        const shade = g.createRadialGradient(x - rock.r * 0.35, y - rock.r * 0.35, rock.r * 0.1, x, y, rock.r * 1.05);
+        shade.addColorStop(0, '#a8a29e');
+        shade.addColorStop(0.55, '#78716c');
+        shade.addColorStop(1, '#3f3a36');
+        g.fillStyle = shade;
+        g.strokeStyle = '#d6d3d1';
         g.fill();
         g.stroke();
+        g.fillStyle = 'rgba(28, 25, 23, 0.45)';
+        for (let i = 0; i < 2; i++) {
+          const a = ((rock.id * 47 + i * 131) % 360) * Math.PI / 180;
+          const d = rock.r * (0.25 + 0.2 * i);
+          g.beginPath();
+          g.arc(x + Math.cos(a) * d, y + Math.sin(a) * d, rock.r * (0.2 - 0.06 * i), 0, Math.PI * 2);
+          g.fill();
+        }
       });
     });
 
     view.bullets.forEach(function (b) {
       const p = at(b);
       g.fillStyle = colors[b.owner];
+      g.shadowColor = colors[b.owner];
+      g.shadowBlur = 12;
       g.beginPath();
       g.arc(p[0], p[1], 0.09, 0, Math.PI * 2);
       g.fill();
+      g.shadowBlur = 0;
     });
 
     const r = view.shipR;
@@ -150,21 +166,41 @@
         g.save();
         g.translate(x, y);
         g.rotate(s.angle);
+        g.scale(1.15, 1.15); // (drawn a touch bigger than its hit circle, so it reads from the couch)
         if (s.thrust) {
+          // A flickering flame: orange outside, yellow inside.
+          const len = 1.5 + 0.25 * Math.sin(performance.now() / 40 + slot);
           g.fillStyle = '#f97316';
           g.beginPath();
-          g.moveTo(-r * 0.7, -r * 0.35);
-          g.lineTo(-r * 1.5, 0);
-          g.lineTo(-r * 0.7, r * 0.35);
+          g.moveTo(-r * 0.6, -r * 0.4);
+          g.lineTo(-r * len, 0);
+          g.lineTo(-r * 0.6, r * 0.4);
+          g.fill();
+          g.fillStyle = '#fde047';
+          g.beginPath();
+          g.moveTo(-r * 0.6, -r * 0.2);
+          g.lineTo(-r * (len - 0.4), 0);
+          g.lineTo(-r * 0.6, r * 0.2);
           g.fill();
         }
         g.fillStyle = colors[slot];
+        g.shadowColor = colors[slot];
+        g.shadowBlur = 16;
         g.beginPath();
         g.moveTo(r * 1.2, 0);
         g.lineTo(-r * 0.8, -r * 0.75);
         g.lineTo(-r * 0.5, 0);
         g.lineTo(-r * 0.8, r * 0.75);
         g.closePath();
+        g.fill();
+        g.shadowBlur = 0;
+        g.strokeStyle = 'rgba(255, 255, 255, 0.85)';
+        g.lineWidth = 0.035;
+        g.stroke();
+        // The cockpit.
+        g.fillStyle = 'rgba(255, 255, 255, 0.9)';
+        g.beginPath();
+        g.ellipse(r * 0.25, 0, r * 0.22, r * 0.14, 0, 0, Math.PI * 2);
         g.fill();
         g.restore();
         if (s.shield) {

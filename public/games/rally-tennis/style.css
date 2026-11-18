@@ -14,6 +14,9 @@
   position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center;
   gap: 0.8rem; pointer-events: none; text-align: center;
 }
+.rt-overlay.banner { justify-content: flex-start; padding-top: 0.6rem; }
+.rt-overlay.banner .big { display: none; }
+.rt-overlay.banner .sub { background: color-mix(in srgb, var(--bg) 85%, transparent); border: 1px solid var(--line); border-radius: var(--r-pill); padding: 0.35rem 1.2rem; font-weight: 800; }
 .rt-overlay .big { font-size: 3.6rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.8); }
 .rt-overlay .sub { font-size: var(--fs-lg); color: var(--text); text-shadow: 0 0 1rem rgba(0, 0, 0, 0.9); }
 

@@ -79,3 +79,19 @@
 .fo-rev li.fake { border-color: var(--warn); }
 .fo-rev li.truth { border-color: var(--good); }
 .fo-mine-result { text-align: center; font-weight: 800; }
+
+/* Writing: a notepad for each player, filling the room under the fact. */
+.fo-pads { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.fo-pad {
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem;
+  background: var(--panel); border: 3px dashed var(--line); border-radius: var(--radius); padding: 1rem;
+}
+.fo-pad.p1.done { border: 3px solid var(--p1); }
+.fo-pad.p2.done { border: 3px solid var(--p2); }
+.fo-pad .who { font-size: var(--fs-lg); font-weight: 800; }
+.fo-pad .icon { font-size: 5rem; line-height: 1; }
+.fo-pad:not(.done) .icon { animation: fo-scribble 0.9s ease-in-out infinite alternate; }
+.fo-pad .state { color: var(--muted); font-weight: 700; font-size: var(--fs-md); }
+.fo-pad.done .state { color: var(--good); }
+@keyframes fo-scribble { from { transform: translateX(-0.6rem) rotate(-8deg); } to { transform: translateX(0.6rem) rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) { .fo-pad .icon { animation: none !important; } }

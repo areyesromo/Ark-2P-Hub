@@ -9,7 +9,7 @@
   const esc = Ark.escapeHtml;
   const DEADZONE = 0.4;
   const SWING_BUTTONS = ['A', 'B', 'RT', 'X'];
-  const MARGIN = 1.4; // court units of surround drawn around the lines
+  const MARGIN = 1.1; // court units of surround drawn around the lines
   const REASON = { winner: 'Winner!', out: 'Out!' };
 
   let root = null;
@@ -61,6 +61,8 @@
     if (key === overlayKey) return;
     overlayKey = key;
     overlay.innerHTML = big || sub ? '<div class="big">' + big + '</div><div class="sub">' + sub + '</div>' : '';
+    // A line on its own ("Ana to serve: swing!") sits in a banner above the court, off the net.
+    overlay.classList.toggle('banner', !big && Boolean(sub));
   }
 
   function resize() {

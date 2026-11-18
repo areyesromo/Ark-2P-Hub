@@ -97,7 +97,20 @@
     renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     els.arena.insertBefore(renderer.domElement, els.arena.firstChild);
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0b1020);
+    // A dusk sky: deep blue up top, warm near the horizon (a fixed backdrop behind the tower).
+    const sky = document.createElement('canvas');
+    sky.width = 2;
+    sky.height = 256;
+    const sg = sky.getContext('2d');
+    const grad = sg.createLinearGradient(0, 0, 0, 256);
+    grad.addColorStop(0, '#0b1020');
+    grad.addColorStop(0.55, '#1e1b4b');
+    grad.addColorStop(0.85, '#7c2d12');
+    grad.addColorStop(1, '#c2410c');
+    sg.fillStyle = grad;
+    sg.fillRect(0, 0, 2, 256);
+    scene.background = new THREE.CanvasTexture(sky);
+    scene.background.colorSpace = THREE.SRGBColorSpace;
     const camera = new THREE.PerspectiveCamera(40, 16 / 9, 0.1, 400);
     scene.add(new THREE.HemisphereLight(0xdbeafe, 0x1e1b4b, 0.9));
     const sun = new THREE.DirectionalLight(0xffffff, 1.6);
@@ -110,14 +123,13 @@
     sc.near = 1;
     sc.far = 60;
     scene.add(sun, sun.target);
-    // The ground: a soft disc under the tower.
-    const ground = new THREE.Mesh(new THREE.CircleGeometry(30, 48), new THREE.MeshStandardMaterial({ color: 0x1e293b, roughness: 1 }));
-    ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -H;
+    // The ground: a round stone plinth under the tower, with the sky all round it.
+    const ground = new THREE.Mesh(new THREE.CylinderGeometry(7, 7.6, 1.2, 64), new THREE.MeshStandardMaterial({ color: 0x334155, roughness: 0.9 }));
+    ground.position.y = -H - 0.6;
     ground.receiveShadow = true;
     scene.add(ground);
     const geo = new THREE.BoxGeometry(1, 1, 1);
-    gl = { renderer: renderer, scene: scene, camera: camera, sun: sun, geo: geo, blocks: [], moving: null, falling: [], flashes: [], camY: 1, camD: 24, lastN: 0 };
+    gl = { renderer: renderer, scene: scene, camera: camera, sun: sun, geo: geo, blocks: [], moving: null, falling: [], flashes: [], camY: 1, camD: 24, lastN: 0, marks: [], marksKey: '' };
     gl.moving = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.4 }));
     gl.moving.castShadow = true;
     gl.moving.visible = false;
@@ -137,8 +149,29 @@
     m.position.set((r.x0 + r.x1) / 2, y + H / 2, (r.z0 + r.z1) / 2);
   }
 
+  /**
+   * A gold ring round the tower at each star's height, so you can see how far the next star is.
+   * Faint until the tower reaches it, then solid.
+   */
+  function syncMarks(v) {
+    const key = v.targets.join(',');
+    if (key !== gl.marksKey) {
+      gl.marksKey = key;
+      gl.marks.forEach(function (m) { gl.scene.remove(m); m.geometry.dispose(); m.material.dispose(); });
+      gl.marks = v.targets.map(function (t) {
+        const m = new THREE.Mesh(new THREE.TorusGeometry(5, 0.05, 8, 96), new THREE.MeshBasicMaterial({ color: 0xfacc15, transparent: true }));
+        m.rotation.x = Math.PI / 2;
+        m.position.y = t * H;
+        gl.scene.add(m);
+        return m;
+      });
+    }
+    gl.marks.forEach(function (m, i) { m.material.opacity = v.height >= v.targets[i] ? 0.9 : 0.3; });
+  }
+
   /** The tower to match the view: new floors added, all of it rebuilt after a rematch. */
   function syncTower(v, prev) {
+    syncMarks(v);
     if (v.floors.length < gl.blocks.length || (prev && v.height < prev.height)) {
       gl.blocks.forEach(function (m) { gl.scene.remove(m); m.material.dispose(); });
       gl.blocks = [];

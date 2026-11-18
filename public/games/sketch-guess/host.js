@@ -74,7 +74,18 @@
   }
 
   function overlayHtml(v) {
-    if (v.phase === 'choose') return '<div class="sub">' + nameOf(v, v.drawer) + ' is choosing a word…</div>';
+    if (v.phase === 'choose') {
+      // Three face-down cards while the drawer picks one on their phone (the words stay secret),
+      // and the rounds so far underneath.
+      const cards = ['easy', 'medium', 'hard'].map(function (lvl, i) {
+        return '<div class="sg-card" style="animation-delay:' + i * 0.25 + 's"><span class="lvl ' + lvl + '">' + LEVEL_NAMES[lvl] + '</span><b>?</b></div>';
+      }).join('');
+      const done = v.history.map(function (h) {
+        return '<span class="sg-chip">' + (h.guessed ? '✅ ' : '❌ ') + esc(h.word) + (h.stars ? ' ' + starsText(h.stars) : '') + '</span>';
+      }).join('');
+      return '<div class="sub">' + nameOf(v, v.drawer) + ' is choosing a word…</div><div class="sg-cards">' + cards + '</div>' +
+        (done ? '<div class="sg-chips">' + done + '</div>' : '');
+    }
     if (v.phase === 'reveal' && v.result) {
       const r = v.result;
       const head = r.guessed

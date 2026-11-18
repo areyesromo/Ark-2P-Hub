@@ -4,6 +4,20 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.54
+
+- ☄️ Asteroid Duel: glowing ships with a cockpit and a flickering thrust flame, shaded rocks with
+  craters, and glowing shots.
+- 🎾 Rally Tennis: a bigger court, and "to serve" sits in a banner above it instead of on the net.
+- 🎨 Sketch & Guess: while the drawer picks, the TV shows three face-down word cards and the rounds
+  so far, not a blank screen.
+- 🏗️ Tower Stack: a dusk sky and a stone plinth under the tower, and a gold ring at each star's
+  height so you can see how far the next star is.
+- 🤥 Fake Out: a notepad for each player while you write, showing who's done.
+- ⚡ Micro Mayhem and Party Minigames: the minigames fill their half of the TV (bigger tiles,
+  arrows and emoji).
+- 🔧 The desktop build tries its download again if the connection drops.
+
 ## 0.1.53
 
 - 📶 Lighter on the Wi-Fi: the TV only receives a race's track, ? boxes and coins when they change

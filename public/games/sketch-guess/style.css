@@ -38,6 +38,18 @@
 .sg-host.phase-reveal .sg-overlay { background: rgba(11, 13, 23, 0.55); text-shadow: 0 2px 12px rgba(0, 0, 0, 0.8); }
 .sg-overlay .result { font-size: 2.4rem; font-weight: 900; }
 
+/* The pick: three face-down cards, bobbing in turn. */
+.sg-cards { display: flex; gap: 2rem; margin-top: 1.5rem; }
+.sg-card {
+  width: 11rem; height: 15rem; border-radius: var(--radius); background: var(--panel); border: 3px solid var(--line);
+  display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 1.2rem 0 2rem;
+  box-shadow: 0 1rem 2rem -1rem rgba(0, 0, 0, 0.7); animation: sg-bob 1.5s ease-in-out infinite;
+}
+.sg-card b { font-size: 6rem; font-weight: 900; color: var(--muted); }
+@keyframes sg-bob { 50% { transform: translateY(-0.8rem); } }
+.sg-chips { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.6rem; margin-top: 1.5rem; max-width: 80%; }
+.sg-chip { background: var(--panel); border-radius: var(--r-pill); padding: 0.3rem 1rem; font-size: 1.1rem; font-weight: 700; }
+@media (prefers-reduced-motion: reduce) { .sg-card { animation: none; } }
 .sg-history { border-collapse: collapse; font-size: 1.25rem; }
 .sg-history td { padding: 0.35rem 1rem; text-align: left; font-weight: 700; }
 .sg-history td:first-child { text-transform: capitalize; }
