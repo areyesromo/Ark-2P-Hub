@@ -17,6 +17,7 @@ const newToken = () => randomBytes(16).toString('hex');
 
 export const BOT_LEVELS = ['easy', 'normal', 'hard'];
 export const BOT_NAME = 'Computer';
+const BOT_RECHECK_MS = 1000; // with nothing to do, the computer looks again this often (see driveBot)
 const BOT_THINK_MS = 1100; // the computer's pause before each move, so you can follow it
 
 export function sanitizeName(name) {
@@ -304,6 +305,7 @@ export class Room {
     this.timers.clear();
     if (this.saves && this.game && !keepSave) this.saves.remove(this.code); // (back to the lobby, or another game)
     this.botTimer = null;
+    this.botRecheck = null;
     this.botRetries = 0;
     this.botLastMove = null;
     this.botMemory = {}; // the computer's memory for a match (see a game's `bot`)
@@ -434,6 +436,20 @@ export class Room {
       clearTimeout(this.botTimer);
       this.timers.delete(this.botTimer);
       this.botTimer = null;
+    }
+    // Nothing to do yet: it looks again in a moment even if no view comes (a game standing still
+    // sends none, and a computer that wasn't ready would wait for ever).
+    if (!first && !this.botRecheck) {
+      const generation = this.generation;
+      const t = setTimeout(() => {
+        this.timers.delete(t);
+        this.botRecheck = null;
+        if (this.generation !== generation || !this.game) return;
+        if (this.botCache && !this.botCache.move) this.botCache = null; // (a fresh look, not the answer it gave that view)
+        this.driveBot();
+      }, BOT_RECHECK_MS);
+      this.timers.add(t);
+      this.botRecheck = t;
     }
     if (!first || this.botTimer) return;
     const generation = this.generation;
