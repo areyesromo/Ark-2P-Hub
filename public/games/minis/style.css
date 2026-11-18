@@ -85,6 +85,16 @@
 .mi-choices .choice.cur { border-color: var(--warn); }
 .mi-choices .picked { border: 3px solid var(--me); background: rgba(255, 255, 255, 0.14); }
 .mi-phone .mi-choices button { font-size: 2rem; }
+/* On the TV, a pick game fills its player's panel: bigger tiles, bigger emoji (Micro Mayhem's
+   panels were mostly empty round a small grid). */
+.mi-pick .mi-side .mi-choices { flex: 1; align-self: stretch; margin-top: 1.8rem; }
+.mi-pick .mi-side .mi-choices .choice { font-size: clamp(2.2rem, 7vh, 5rem); }
+/* …and the other minis' pieces grow with the TV too, so a panel isn't a small thing in a big box. */
+.mi-side .mi-arrows { font-size: clamp(3.4rem, 13vh, 8rem); }
+.mi-side .emoji { font-size: clamp(3.4rem, 11vh, 7rem); }
+.mi-side .mi-sum { font-size: clamp(4rem, 12vh, 8rem); }
+.mi-side .mi-gauge { height: clamp(64px, 11vh, 120px); }
+.mi-side .mi-meter { height: clamp(200px, 40vh, 420px); width: clamp(60px, 8vh, 90px); }
 .mi-field { position: relative; height: 220px; border-radius: var(--radius); background: linear-gradient(#14532d, #166534); margin: 0 auto; width: min(100%, 640px); }
 .mi-field span { position: absolute; font-size: 2.4rem; transform: translate(-50%, -50%); }
 .mi-phone .mi-field { height: 190px; }
