@@ -97,7 +97,7 @@
     airHoles(g, f);
     goalFlash(g, f, T);
     shown = T.easeMallets(shown, view);
-    shown.forEach(function (m, slot) { T.drawMallet(g, f, m.x, m.y, colors[slot]); });
+    shown.forEach(function (m, slot) { T.drawMallet(g, f, m.x, m.y, colors[slot], slot); });
     const p = T.puckNow(view, performance.now() - viewAt);
     // A short fading trail while it moves (none while it waits for the face-off).
     trail.push({ x: p.x, y: p.y });

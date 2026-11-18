@@ -140,6 +140,8 @@
         g.arc(h[0] + 0.5 + e[0], h[1] + 0.5 + e[1], 0.1, 0, Math.PI * 2);
         g.fill();
       });
+      // (1 or 2 on its neck: not by colour alone)
+      if (s.body[1]) Ark.drawMark(g, s.body[1][0] + 0.5, s.body[1][1] + 0.5, 0.7, slot);
       if (s.crashed) {
         g.fillStyle = 'rgba(255,255,255,0.9)';
         g.shadowColor = colors[slot];

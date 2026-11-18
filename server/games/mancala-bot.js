@@ -2,13 +2,13 @@
  * The computer opponent for Mancala (see `bot` in index.js): it looks ahead (alpha-beta, a free
  * turn keeps the same player going) and counts the stones in each store (and, on Hard, on each
  * side).
- *   easy:   one move ahead, and now and then any pit.
+ *   easy:   two moves ahead (its own and your answer), and now and then any pit.
  *   normal: three moves ahead.
  *   hard:   seven moves ahead.
  */
 import { PITS, STORE, sow, legalPits } from './mancala.js';
 
-const DEPTH = { easy: 1, normal: 3, hard: 7 };
+const DEPTH = { easy: 2, normal: 3, hard: 7 };
 
 export function mancalaBot(view, level, rng = Math.random) {
   if (!view || view.phase !== 'play' || view.turn !== view.you || !DEPTH[level]) return null;
@@ -16,7 +16,7 @@ export function mancalaBot(view, level, rng = Math.random) {
   const legal = legalPits(view.pits, me);
   if (!legal.length) return null;
   const pace = 700 + rng() * 900;
-  if (level === 'easy' && rng() < 0.3) return { type: 'sow', pit: legal[Math.floor(rng() * legal.length)], botDelayMs: pace };
+  if (level === 'easy' && rng() < 0.15) return { type: 'sow', pit: legal[Math.floor(rng() * legal.length)], botDelayMs: pace };
   let best = null;
   let bestScore = -Infinity;
   for (const pit of legal) {

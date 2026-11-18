@@ -2,9 +2,10 @@
  * The computer opponent for Air Hockey (see `bot` in index.js). With the puck on its side it
  * gets behind it and strikes through it towards your goal; otherwise it guards its own goal,
  * between the puck and the goal mouth.
- *   easy:   slow to react, unsteady, and only nudges the puck.
+ *   easy:   slow to react, unsteady, and hits the puck only gently; it doesn't chase a fast shot
+ *           at its goal (it would knock it in), it gets in front of it.
  *   normal: quicker; it strikes towards somewhere in your goal mouth (hard to read), and keeps in
- *           line with a fast shot coming at its goal, where it will cross, instead of going at it.
+ *           line with a fast shot coming at its goal, where it will cross.
  *   hard:   the same, and more: it reacts quicker (a sharp player's reactions: bot-human.js),
  *           reads where the puck is going, meets it there and shoots at the open side of your goal
  *           (see meet), off a rail when you cover it.
@@ -20,7 +21,7 @@ import { reactionMs, REACTION } from './bot-human.js';
 // (units / s²); meets: plays the puck where it will be and shoots at the open side (see meet);
 // banks: off a rail when that side's covered; goalie: stays in line with a fast shot, where it will cross.
 const LEVEL = {
-  easy: { through: 0, lead: 0, wobble: 0.7, spread: 0, guard: 0.4, hand: 70 },
+  easy: { through: 0.5, lead: 0, wobble: 0.7, spread: 0, guard: 0.4, hand: 70, goalie: true },
   normal: { through: 1.1, lead: 0.1, wobble: 0.35, spread: 0.3, guard: 0.6, hand: 100, goalie: true },
   hard: { through: 1.1, lead: 0.22, wobble: 0.35, spread: 0.3, guard: 1, hand: 130, meets: true, banks: true, goalie: true }, // (it leads by about its reaction time: where the puck will be when it gets there)
 };
@@ -57,9 +58,15 @@ export function airHockeyBot(view, level, rng = Math.random, _retries = 0, memor
     const gap = Math.hypot(px - m.x, py - m.y) || 1;
     const behind = ((px - m.x) * toward) / gap > 0.35;
     if (behind) {
-      // Strike: through the puck, towards somewhere in their goal mouth (hard to read).
+      // Strike: through the puck, towards somewhere in their goal mouth (hard to read); at the
+      // open side when their mallet stands in the mouth (a shot at it never goes in).
       plan = 'strike';
-      const gy = FIELD.h / 2 + aim(memory, plan, rng, L).goal * FIELD.goalH * L.spread;
+      let gy = FIELD.h / 2 + aim(memory, plan, rng, L).goal * FIELD.goalH * L.spread;
+      const foe = view.mallets[1 - me];
+      if (Math.abs(foe.x - away) < 3 && Math.abs(gy - foe.y) < FIELD.malletR + FIELD.puckR + 0.2) {
+        const side = foe.y > FIELD.h / 2 ? -1 : 1;
+        gy = FIELD.h / 2 + side * (FIELD.goalH / 2 - FIELD.puckR - 0.15) * (0.6 + 0.4 * (aim(memory, plan, rng, L).goal + 0.5));
+      }
       const dx = away - px;
       const dy = gy - py;
       const d = Math.hypot(dx, dy) || 1;
@@ -69,7 +76,7 @@ export function airHockeyBot(view, level, rng = Math.random, _retries = 0, memor
       // Against my end wall, where no mallet can get behind it.
       const corner = py < FIELD.malletR || py > FIELD.h - FIELD.malletR;
       plan = 'wall';
-      if (corner || Math.abs(py - FIELD.h / 2) < FIELD.goalH / 2 + 1) {
+      if (corner || Math.abs(py - FIELD.h / 2) < FIELD.goalH / 2 + 1.6) {
         // In a corner pocket, my goal mouth or beside it (a hit there scores for them): stand
         // off, out of its way, while the table drifts it back out (see AirHockey#unstick).
         tx = home + toward * 2.2;
@@ -102,9 +109,10 @@ export function airHockeyBot(view, level, rng = Math.random, _retries = 0, memor
     const comingY = L.goalie && p.vx * toward < -1 ? yAt(p, tx) : py;
     ty = FIELD.h / 2 + Math.max(-lim, Math.min(lim, L.guard * (comingY - FIELD.h / 2)));
   }
-  // (Easy's aim is the least steady. Stepping round the puck it keeps its distance, whatever its aim.)
+  // (Easy's aim is the least steady. Stepping round the puck, or poking it off its own end wall, it
+  // takes care, whatever its aim: a slip there puts it in its own goal.)
   const off = aim(memory, plan, rng, L);
-  const steady = plan === 'round' ? 0.25 : 1;
+  const steady = plan === 'round' || plan === 'wall' ? 0.25 : 1;
   tx += off.x * L.wobble * steady;
   ty += off.y * L.wobble * steady;
   return { type: 'move', x: Math.max(0, Math.min(FIELD.w, tx)), y: Math.max(0, Math.min(FIELD.h, ty)), hand: L.hand, botDelayMs: delayMs };

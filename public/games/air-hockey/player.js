@@ -97,7 +97,7 @@
       g.globalAlpha = 1;
     }
     shown = T.easeMallets(shown, view);
-    shown.forEach(function (mm, slot) { T.drawMallet(g, f, mm.x, mm.y, colors[slot]); });
+    shown.forEach(function (mm, slot) { T.drawMallet(g, f, mm.x, mm.y, colors[slot], slot); });
     const p = T.puckNow(view, performance.now() - viewAt);
     T.drawPuck(g, f, p.x, p.y);
   }

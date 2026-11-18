@@ -16,6 +16,9 @@ const LEVEL = { easy: { miss: 0.3, hand: 50 }, normal: { miss: 0.12, hand: 70 },
 
 export function pongBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   const L = LEVEL[level];
+  // (between points its read of the last ball goes: a serve straight at it is a fresh ball, not
+  // the one it misjudged)
+  if (view && view.phase !== 'play' && memory.pong) memory.pong = null;
   if (!view || !L || view.phase !== 'play' || !view.ball) return null;
   const me = view.you;
   const b = view.ball;

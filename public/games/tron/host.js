@@ -110,6 +110,8 @@
       } else {
         g.fillStyle = '#ffffff';
         g.fillRect(head[0] - 0.4, head[1] - 0.4, 0.8, 0.8);
+        g.shadowBlur = 0;
+        Ark.drawMark(g, head[0], head[1] - 1.3, 1.1, slot, true); // (1 or 2 above the cycle: not by colour alone)
       }
       g.shadowBlur = 0;
     });

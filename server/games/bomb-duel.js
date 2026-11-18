@@ -16,6 +16,7 @@ export const OPTIONS = {
   wins: [3, 2, 5], // round wins needed
   crates: [65, 40, 85], // % of open cells with a crate
 };
+const TURN_ASSIST = 0.3; // cells past a junction a late turn still takes (see turnLate)
 export const TIMING = { countdownMs: 3000, roundEndMs: 3500, settleMs: 1200, suddenDeathMs: 90000, wallEveryMs: 280 };
 export const RULES = {
   tickMs: 1000 / 30,
@@ -204,6 +205,8 @@ export class BombDuel {
         if (!p.dir) return;
       } else if (p.want && p.want === OPPOSITE[p.dir]) {
         p.dir = p.want;
+      } else if (p.want && p.want !== p.dir && this.turnLate(p)) {
+        continue; // (snapped back to the turn it just missed: it goes on from that centre)
       }
       const [dx, dy] = DIRS[p.dir];
       // The next cell centre along this direction.
@@ -219,6 +222,22 @@ export class BombDuel {
         p.y = ty;
       }
     }
+  }
+
+  /**
+   * A turn pressed a moment late (just past the junction, as a phone's press often arrives) still
+   * takes: back to the centre it just passed, if that's within TURN_ASSIST and the way is open.
+   */
+  turnLate(p) {
+    const [dx, dy] = DIRS[p.dir];
+    const cx = dx > 0 ? Math.floor(p.x) : dx < 0 ? Math.ceil(p.x) : p.x;
+    const cy = dy > 0 ? Math.floor(p.y) : dy < 0 ? Math.ceil(p.y) : p.y;
+    if (Math.abs(p.x - cx) + Math.abs(p.y - cy) > TURN_ASSIST) return false;
+    const [wx, wy] = DIRS[p.want];
+    if (this.blocked(cx + wx, cy + wy)) return false;
+    p.x = cx;
+    p.y = cy;
+    return true;
   }
 
   cellOf(p) {

@@ -725,7 +725,36 @@
     };
   }
 
+  /**
+   * A player's number drawn on a canvas piece (a mallet, a disc, a tank): white with a dark edge,
+   * centred on (x, y), `size` tall in the canvas's units. So the two players can be told apart
+   * without telling cyan from pink (colour-blind players). `badge`: on a dark disc of its own, for
+   * a piece too small or busy to write on (a snake's head, a cycle).
+   */
+  function drawMark(g, x, y, size, slot, badge) {
+    g.save();
+    g.shadowBlur = 0;
+    g.globalAlpha = 1;
+    if (badge) {
+      g.fillStyle = 'rgba(5, 7, 15, 0.8)';
+      g.beginPath();
+      g.arc(x, y, size * 0.75, 0, Math.PI * 2);
+      g.fill();
+    }
+    g.font = '900 ' + size + 'px system-ui, sans-serif';
+    g.textAlign = 'center';
+    g.textBaseline = 'middle';
+    g.lineJoin = 'round';
+    g.lineWidth = size * 0.2;
+    g.strokeStyle = 'rgba(5, 7, 15, 0.85)';
+    g.strokeText(String(slot + 1), x, y + size * 0.05);
+    g.fillStyle = '#ffffff';
+    g.fillText(String(slot + 1), x, y + size * 0.05);
+    g.restore();
+  }
+
   window.Ark = {
+    drawMark: drawMark,
     guide: { load: loadGuide },
     preview: { open: openPreview, pages: previewPages, ms: PREVIEW_MS },
     lobbyEntries: lobbyEntries,

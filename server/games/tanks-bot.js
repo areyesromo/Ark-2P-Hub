@@ -73,8 +73,12 @@ export function tanksBot(view, level, rng = Math.random, retries = 0, memory = {
     // up close.
     // (it turns towards you and fires as its barrel comes round onto its lead: steering for the
     // lead itself goes wrong when you change direction, as its view of your movement is a reaction old)
+    // Steering for you, its barrel can't settle on an aim that's off by its wobble when you stand
+    // still: then it steers for the aim itself.
     const dist = Math.hypot(dx, dy);
-    return move(dx, dy, dist > 5 ? 0.6 : dist < 2.5 ? 0.16 : 0.25);
+    const still = Math.hypot(foe.vx || 0, foe.vy || 0) < 0.2;
+    const [sx, sy] = still ? [Math.cos(want), Math.sin(want)] : [dx, dy];
+    return move(sx, sy, dist > 5 ? 0.6 : dist < 2.5 ? 0.16 : 0.25);
   }
   // No clear line: round the cover towards them.
   const step = route(me, foe, walls, w, h);

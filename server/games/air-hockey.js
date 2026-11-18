@@ -34,6 +34,7 @@ export const PHYSICS = {
 };
 
 export const TIMING = { countdownMs: 3000, goalMs: 1500 };
+const REST_S = 7; // a slow puck kept on one side this long drifts over to the other (see unstick)
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const HALF = FIELD.w / 2;
@@ -138,6 +139,18 @@ export class AirHockey {
     const end = p.x < r || p.x > FIELD.w - r;
     const pocket = end && (p.y < r || p.y > FIELD.h - r || Math.abs(p.y - FIELD.h / 2) < FIELD.goalH / 2);
     this.stuckFor = pocket && Math.hypot(p.vx, p.vy) < 1 ? (this.stuckFor || 0) + dt : 0;
+    // A puck kept on one side, slow, too long (nobody plays it: a face-off on the side of a player
+    // who doesn't move) drifts over the centre line, as air hockey's time limit has it, so nobody
+    // can stall the game.
+    const side = p.x < FIELD.w / 2 ? 0 : 1;
+    this.sideFor = !pocket && side === this.puckSide && Math.hypot(p.vx, p.vy) < 3 ? (this.sideFor || 0) + dt : 0;
+    this.puckSide = side;
+    if (this.sideFor >= REST_S) {
+      this.sideFor = 0;
+      p.vx = (side === 0 ? 1 : -1) * 3.6;
+      p.vy = 0;
+      return;
+    }
     if (this.stuckFor < 0.8) return;
     this.stuckFor = 0;
     const dx = FIELD.w / 2 - p.x;

@@ -4,8 +4,8 @@
  * left (a flood fill), and the nearest food. Like a person it plans its own turns and taps them in
  * time, but takes in your snake a human reaction time late (bot-human.js): a turn your latest move
  * forces on it comes a reaction time later, so a sudden move of yours can catch it out.
- *   easy:   avoids what's right in front of it, heads for food, and is sometimes late to turn.
- *   normal: checks it won't box itself in.
+ *   easy:   avoids what's in front of it and a dead end, heads for food, and is sometimes late to turn.
+ *   normal: also makes for open room.
  *   hard:   quick, finds the way round to food, keeps away from your head, and once it's longer
  *           it hems you in.
  */
@@ -16,7 +16,7 @@ import { REACTION, reactionMs } from './bot-human.js';
 const LEVELS = ['easy', 'normal', 'hard'];
 // How neatly it times a turn it planned: Normal and Hard tap it in time for the cell they meant;
 // a novice (Easy) taps when it gets round to it, late now and then.
-const PRESS_MS = { easy: [60, 220], normal: [25, 80], hard: [15, 40] };
+const PRESS_MS = { easy: [50, 150], normal: [25, 80], hard: [15, 40] };
 
 export function snakeBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   if (!view || !LEVELS.includes(level) || view.phase !== 'play' || !view.snakes) return null;
@@ -56,10 +56,10 @@ function choose(view, level, me, them, noise) {
     const ny = hy + dy;
     if (!free(nx, ny)) { options.push({ dir, score: -1e9 }); continue; }
     let score = 0;
-    if (level !== 'easy') {
-      const room = flood(blocked, w, h, nx, ny, me.body.length * 2 + 10);
-      score += room < me.body.length + 2 ? room * 50 - 1e6 : Math.min(room, 60) * 4; // don't box yourself in
-    }
+    // (Easy only steers clear of a dead end; Normal and Hard also make for open room.)
+    const room = flood(blocked, w, h, nx, ny, me.body.length * 2 + 10);
+    if (room < me.body.length + 2) score += room * 50 - 1e6; // don't box yourself in
+    else if (level !== 'easy') score += Math.min(room, 60) * 4;
     // The nearest food: as the crow flies, or (Hard) by the way round the bodies.
     let best = Infinity;
     if (level === 'hard') best = pathToFood(blocked, w, h, nx, ny, food);
@@ -73,6 +73,8 @@ function choose(view, level, me, them, noise) {
       score += (80 - theirRoom) * 3;
     }
     if (level === 'hard' && theirHead && Math.abs(theirHead[0] - nx) + Math.abs(theirHead[1] - ny) <= 1) score -= 5000; // a head-on
+    // (Easy, slow to tap, turns away from a wall a cell early: at the last cell its tap comes too late.)
+    if (level === 'easy' && !free(nx + dx, ny + dy)) score -= 500;
     if (dir === view.dir) score += 1; // (no needless wiggling)
     options.push({ dir, score: score + noise[dir] });
   }

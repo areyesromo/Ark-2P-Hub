@@ -203,6 +203,7 @@
         g.ellipse(r * 0.25, 0, r * 0.22, r * 0.14, 0, 0, Math.PI * 2);
         g.fill();
         g.restore();
+        Ark.drawMark(g, x, y - r * 1.9, r * 1.1, slot, true); // (1 or 2 above the ship: not by colour alone)
         if (s.shield) {
           g.strokeStyle = 'rgba(255, 255, 255, 0.6)';
           g.lineWidth = 0.05;

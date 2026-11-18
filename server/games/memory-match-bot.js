@@ -1,10 +1,10 @@
 /**
  * The computer opponent for Memory Match (see `bot` in index.js). It remembers the faces it has
  * seen turned over (yours too) in its memory, as well as its level allows:
- *   easy:   keeps about a third of what it sees.   normal: about two thirds.   hard: all of it.
+ *   easy:   keeps about half of what it sees.   normal: about three quarters.   hard: all of it.
  * On its turn: a pair it knows, else a card it hasn't seen (then its match, if it knows one).
  */
-const KEEP = { easy: 0.35, normal: 0.7, hard: 1 };
+const KEEP = { easy: 0.5, normal: 0.75, hard: 1 };
 
 export function memoryMatchBot(view, level, rng = Math.random, retries = 0, memory = {}) {
   if (!view || !KEEP[level] || !view.cards) return null;

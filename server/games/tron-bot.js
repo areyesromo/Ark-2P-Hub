@@ -3,7 +3,8 @@
  * three ways it can go and never rides into a wall or a trail when it has a way out. Like a person
  * it times its own turns, but takes in your trail a human reaction time late (bot-human.js): a
  * turn your latest cells force on it comes a reaction time later, so a sudden move can catch it out.
- *   easy:   rides straight until something's close, then turns to the more open side.
+ *   easy:   rides straight until something's close (your cycle coming at it too), then turns to
+ *           the more open side.
  *   normal: picks the way that gives it the most of the arena it can reach before you can, and
  *           keeps clear of your front wheel.
  *   hard:   the same, and it sees you sooner and times its turns tighter.
@@ -73,8 +74,11 @@ function choose(view, level, blocked, [hx, hy], theirs, noise, theirDir) {
     if (!free(nx, ny)) { options.push({ dir, score: -1e9 }); continue; }
     let score;
     if (level === 'easy') {
+      // (your cycle coming at it counts too: the cells your front wheel will ride through next)
+      const coming = new Set();
+      if (theirs && DIRS[theirDir]) for (let k = 0; k <= 6; k++) coming.add((theirs[0] + DIRS[theirDir][0] * k) + ',' + (theirs[1] + DIRS[theirDir][1] * k));
       let run = 0;
-      while (run < 12 && free(nx + dx * run, ny + dy * run)) run++;
+      while (run < 12 && free(nx + dx * run, ny + dy * run) && !coming.has((nx + dx * run) + ',' + (ny + dy * run))) run++;
       score = run >= 3 && dir === view.dir ? 100 : run; // straight on while it's clear
     } else {
       blocked[ny * w + nx] = 1;
