@@ -1,6 +1,6 @@
 /**
  * The computer opponent for Dots and Boxes (see `bot` in index.js).
- *   easy:   takes a box now and then, otherwise any line.
+ *   easy:   takes a box most of the time, and half the time keeps clear of a box's third side.
  *   normal: takes every box it can, and won't draw a box's third side while a safe line is left.
  *   hard:   as Normal, and when every line gives something away it gives away the fewest boxes.
  */
@@ -14,7 +14,11 @@ export function dotsBoxesBot(view, level, rng = Math.random) {
   const pick = (l) => ({ type: 'line', dir: l[0], r: l[1], c: l[2], botDelayMs: pace });
   const any = (list) => list[Math.floor(rng() * list.length)];
   const taking = lines.filter((l) => closes(state, l) > 0);
-  if (level === 'easy') return pick(taking.length && rng() < 0.5 ? any(taking) : any(lines));
+  if (level === 'easy') {
+    if (taking.length && rng() < 0.85) return pick(any(taking));
+    const careful = lines.filter((l) => !givesThird(state, l));
+    return pick(careful.length && rng() < 0.5 ? any(careful) : any(lines));
+  }
   if (taking.length) return pick(any(taking));
   const safe = lines.filter((l) => !givesThird(state, l));
   if (safe.length) return pick(any(safe));
