@@ -186,6 +186,37 @@ export function rollBall(t, pins, { rng = Math.random, bumpers = false } = {}) {
 }
 
 /**
+ * A roll's frames to send to the TV: each frame keeps its time and ball, but only the pins that
+ * changed since the frame before (most stand still most of the roll). About a seventh the size.
+ * The TV fills the rest back in (unpackFrames in public/games/ten-pin/host.js).
+ */
+export function packFrames(frames) {
+  const was = {};
+  return frames.map((f) => {
+    const p = f.p.filter((q) => {
+      const key = q.join();
+      const moved = was[q[0]] !== key;
+      was[q[0]] = key;
+      return moved;
+    });
+    return p.length ? { t: f.t, b: f.b, p } : { t: f.t, b: f.b };
+  });
+}
+
+/** The frames back in full from packed steps: what the TV does (a copy for the tests). */
+export function unpackFrames(steps) {
+  const at = {};
+  const order = [];
+  return steps.map((s) => {
+    for (const q of s.p || []) {
+      if (!(q[0] in at)) order.push(q[0]);
+      at[q[0]] = q;
+    }
+    return { t: s.t, b: s.b, p: order.map((i) => at[i]) };
+  });
+}
+
+/**
  * A player's score card from the pins each ball knocked down, over `frameCount` frames.
  * Gives { frames: [{ balls, total }], total, done, next: { frame, ball, fresh } }: a frame's
  * total is the running total, null while its bonus balls are still to come; next is the ball

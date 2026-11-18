@@ -30,6 +30,7 @@
   let state = null;
   let current = null; // { gameId, renderer }
   let lastView = null; // newest game view, kept so it can be applied once a renderer mounts
+  let fullView = null; // the last whole view, to fill in the big fields the server leaves out while unchanged (`kept`)
   let wakeLock = null;
 
   // The seat is kept in localStorage, with a cookie as a backup: some phone
@@ -119,6 +120,7 @@
   window.addEventListener('pageshow', function (e) { if (e.persisted) socket.connect(); }); // back from the leaderboard
 
   socket.on('disconnect', function () {
+    fullView = null; // (the server sends a whole view when we're back)
     $('me-conn').textContent = 'Reconnecting…';
   });
 
@@ -377,6 +379,13 @@
   }
 
   socket.on('game:view', function (msg) {
+    if (msg.kept) {
+      if (!fullView || fullView.gameId !== msg.gameId) return socket.emit('game:resync');
+      const view = Object.assign({}, msg.view);
+      msg.kept.forEach(function (key) { view[key] = fullView.view[key]; });
+      msg = { gameId: msg.gameId, view: view };
+    }
+    fullView = msg;
     lastView = msg;
     const v = msg.view;
     showHubSetup(Ark.setup.isHub(v) ? v : null);

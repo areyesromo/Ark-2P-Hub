@@ -62,6 +62,9 @@ export function createApp({
     // Phones on flaky Wi-Fi: keep the default reconnection, but notice dead sockets quickly.
     pingInterval: 10000,
     pingTimeout: 8000,
+    // Views are repetitive JSON: compressed they're several times smaller, which matters over the
+    // online tunnel (at home it hardly shows). Small messages (inputs, pings) go as they are.
+    perMessageDeflate: { threshold: 1024 },
   });
   const settings = new Settings(dataDir);
   const stats = new Stats(dataDir);

@@ -396,7 +396,7 @@ export class Room {
     this.lastPhase = view.phase;
     this.io.to(this.hostChannel).emit('game:view', this.hostPacket(gameId, view));
     this.players.forEach((p, slot) => {
-      if (p) this.io.to(this.playerChannel(slot)).emit('game:view', { gameId, view: this.game.playerView(slot) });
+      if (p) this.io.to(this.playerChannel(slot)).emit('game:view', this.viewPacket('p' + slot, gameId, this.game.playerView(slot)));
     });
     this.saveGame(view);
     this.driveBot();
@@ -603,13 +603,21 @@ export class Room {
     return this.stats && a && b && !a.bot && !b.bot ? this.stats.headToHead(a.name, b.name) : null;
   }
 
-  /**
-   * The TV's view, less its big fields that haven't changed since the last one (a track, the ? boxes
-   * and coins: kilobytes, 30 times a second in a race). `kept` names them: the TV keeps its own copy
-   * (host.js). Small fields always go, so a view that barely changes costs nothing to compare.
-   */
+  /** The TV's view on the wire (see viewPacket). */
   hostPacket(gameId, view) {
-    const last = this.hostSent && this.hostSent.gameId === gameId ? this.hostSent.fields : null;
+    return this.viewPacket('host', gameId, view);
+  }
+
+  /**
+   * A view, less its big fields that haven't changed since the last one sent on that channel ('host'
+   * for the TVs, 'p0' / 'p1' for each phone): a track, the ? boxes and coins, a wall of bricks
+   * (kilobytes, 30 times a second). `kept` names them: the screen keeps its own copy (host.js,
+   * play.js). Small fields always go, so a view that barely changes costs nothing to compare.
+   */
+  viewPacket(channel, gameId, view) {
+    if (!this.sent) this.sent = {};
+    const was = this.sent[channel];
+    const last = was && was.gameId === gameId ? was.fields : null;
     const fields = {};
     const sent = {};
     const kept = [];
@@ -624,7 +632,7 @@ export class Room {
       }
       sent[key] = value;
     }
-    this.hostSent = { gameId, fields };
+    this.sent[channel] = { gameId, fields };
     return kept.length ? { gameId, view: sent, kept } : { gameId, view };
   }
 
@@ -634,12 +642,12 @@ export class Room {
     this.sendView(socket, role, slot);
   }
 
-  /** The whole view (a TV that has no copy to fill `kept` in from asks for this). */
+  /** The whole view (a screen that has no copy to fill `kept` in from asks for this). */
   sendView(socket, role, slot) {
     if (!this.game) return;
     const view = role === 'player' ? this.game.playerView(slot) : this.game.hostView();
-    // (and the next broadcast to the TVs goes whole: this screen has nothing to keep yet)
-    if (role !== 'player') this.hostSent = null;
+    // (and the next one on that channel goes whole: this screen has nothing to keep yet)
+    if (this.sent) delete this.sent[role === 'player' ? 'p' + slot : 'host'];
     socket.emit('game:view', { gameId: this.gameId, view });
   }
 

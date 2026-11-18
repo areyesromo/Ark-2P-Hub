@@ -3,20 +3,20 @@
 .tp-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.5rem; }
 .tp-top { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; }
 .tp-up { color: var(--muted); font-weight: 800; font-size: var(--fs-sm); }
-.tp-card { border-collapse: collapse; font-weight: 800; background: var(--panel); border-radius: var(--r-md); overflow: hidden; }
-.tp-card th { font-size: var(--fs-sm); color: var(--muted); padding: 0.1rem 0.4rem; font-weight: 700; }
+.tp-card { border-collapse: collapse; font-size: clamp(1.1rem, 2.5vh, 1.6rem); font-weight: 800; background: var(--panel); border-radius: var(--r-md); overflow: hidden; }
+.tp-card th { font-size: 0.7em; color: var(--muted); padding: 0.1rem 0.4rem; font-weight: 700; }
 .tp-card td { border: 1px solid var(--line); padding: 0; text-align: center; }
 .tp-card td.who { padding: 0 0.7rem; text-align: left; border-left: 0; white-space: nowrap; }
 .tp-card tr.up td.who { box-shadow: inset 4px 0 0 var(--text); }
-.tp-card td.fr { min-width: 3.4rem; }
-.tp-card td.fr.last { min-width: 4.6rem; }
+.tp-card td.fr { min-width: 3.2em; }
+.tp-card td.fr.last { min-width: 4.4em; }
 .tp-card td.fr.now { background: var(--bg-2); }
-.tp-card .balls { display: flex; justify-content: flex-end; font-size: var(--fs-sm); }
+.tp-card .balls { display: flex; justify-content: flex-end; font-size: 0.75em; }
 .tp-card .balls span { min-width: 1.3em; height: 1.4em; line-height: 1.4em; border-left: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .tp-card .balls span:first-child { border-left: 0; }
 .tp-card .fr:not(.last) .balls span:first-child { border-bottom: 0; }
-.tp-card .run { height: 1.5em; line-height: 1.5em; font-size: var(--fs-md); }
-.tp-card td.tot { min-width: 4rem; font-size: var(--fs-lg); padding: 0 0.6rem; }
+.tp-card .run { height: 1.5em; line-height: 1.5em; font-size: 1.05em; }
+.tp-card td.tot { min-width: 3.4em; font-size: 1.35em; padding: 0 0.5em; }
 .tp-arena { flex: 1; min-height: 0; position: relative; border-radius: var(--r-md); overflow: hidden; }
 .tp-arena canvas { display: block; }
 .tp-banner-box { position: absolute; inset: 0; display: flex; align-items: flex-start; justify-content: center; padding-top: 4%; pointer-events: none; }

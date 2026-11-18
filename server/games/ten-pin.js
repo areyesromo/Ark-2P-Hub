@@ -6,7 +6,7 @@
 // last frame; the higher total wins. Setup: 10 frames or a quick 5, and bumpers (no gutters).
 
 import { settingOf } from './options.js';
-import { rollBall, rackPins, scoreCard, LANE } from './ten-pin-roll.js';
+import { rollBall, rackPins, scoreCard, packFrames, LANE } from './ten-pin-roll.js';
 
 export const TIMING = {
   introMs: 2500,
@@ -145,7 +145,8 @@ export class TenPin {
       standing: this.pins,
       next: cards[this.turn].next,
       // (`at`: how far into the roll it is now, so a TV that reloads mid-roll picks it up there)
-      roll: this.phase === 'rolling' && this.roll ? { id: this.rollId, frames: this.roll.frames, ms: this.roll.ms, at: this.ctx.now() - this.rollAt, gutter: this.roll.gutter, throw: this.lastThrow } : null,
+      // (`steps`: the frames packed, only the pins that moved in each; see packFrames)
+      roll: this.phase === 'rolling' && this.roll ? { id: this.rollId, steps: packFrames(this.roll.frames), ms: this.roll.ms, at: this.ctx.now() - this.rollAt, gutter: this.roll.gutter, throw: this.lastThrow } : null,
       last: this.last,
       cards,
       scores: cards.map((c) => c.total),

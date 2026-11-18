@@ -32,24 +32,46 @@
     }).join('');
   }
 
+  // The lower boxes' short badges (the preview's guide spells them out).
+  const SHORT = { three: '3×', four: '4×', house: 'FH', small: 'SM', large: 'LG', yahtzee: '5×', chance: 'CH' };
+  const FACE = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
+
+  /**
+   * The scorecard, big enough to read from the couch: the six numbers down the left (a die for each),
+   * the combos down the right, both players' scores side by side in each, sums along the bottom.
+   * An open box shows, faintly, what the dice would score there for whoever is rolling.
+   */
   function card(v, c) {
-    let rows = '';
-    v.boxes.forEach(function (b, i) {
-      if (i === 6) {
-        rows += '<tr class="sum"><td>Bonus <span class="muted">(' + v.bonus.at + '+ up top)</span></td>' + [0, 1].map(function (s) {
-          const t = v.totals[s];
-          return '<td>' + (t.bonus ? '+' + t.bonus : '<span class="muted">' + t.upper + '/' + v.bonus.at + '</span>') + '</td>';
-        }).join('') + '</tr>';
-      }
-      rows += '<tr' + (c && c.box === b.id ? ' class="cur"' : '') + '><td>' + esc(b.name) + '</td>' + [0, 1].map(function (s) {
-        const got = v.cards[s][b.id];
-        if (got !== undefined) return '<td class="got' + (v.last && v.last.by === s && v.last.box === b.name ? ' fresh' : '') + '">' + got + '</td>';
-        if (v.phase === 'turn' && s === v.turn && b.id in v.options) return '<td class="opt' + (v.options[b.id] ? '' : ' zero') + '">' + v.options[b.id] + '</td>';
-        return '<td></td>';
-      }).join('') + '</tr>';
-    });
-    rows += '<tr class="total"><td>Total</td><td>' + v.scores[0] + '</td><td>' + v.scores[1] + '</td></tr>';
-    return '<table class="dp-card"><tr><th></th><th>' + nameOf(v, 0) + '</th><th>' + nameOf(v, 1) + '</th></tr>' + rows + '</table>';
+    function cell(b, s) {
+      const got = v.cards[s][b.id];
+      const mine = v.phase === 'turn' && s === v.turn;
+      if (got !== undefined) return '<b class="got' + (v.last && v.last.by === s && v.last.box === b.name ? ' fresh' : '') + '">' + got + '</b>';
+      if (mine && b.id in v.options) return '<b class="opt' + (v.options[b.id] ? '' : ' zero') + '">' + v.options[b.id] + '</b>';
+      return '<b class="empty"></b>';
+    }
+    function row(b) {
+      const label = b.upper
+        ? '<span class="lab">' + ArkDice.html(FACE[b.id]) + '</span>'
+        : '<span class="lab" title="' + esc(b.name) + '"><span class="badge">' + SHORT[b.id] + '</span></span>';
+      return '<div class="dp-row' + (c && c.box === b.id ? ' cur' : '') + '">' + label + cell(b, 0) + cell(b, 1) + '</div>';
+    }
+    function sumRow(name, a, b, cls) {
+      return '<div class="dp-row sum ' + (cls || '') + '"><span class="lab">' + name + '</span><b>' + a + '</b><b>' + b + '</b></div>';
+    }
+    const upper = v.boxes.filter(function (b) { return b.upper; });
+    const lower = v.boxes.filter(function (b) { return !b.upper; });
+    const t = v.totals;
+    const bonus = function (s) { return t[s].bonus ? '+' + t[s].bonus : '<span class="muted">' + t[s].upper + '/' + v.bonus.at + '</span>'; };
+    const head = '<div class="dp-row head"><span class="lab"></span>' + [0, 1].map(function (s) {
+      return '<b class="p' + (s + 1) + (v.phase === 'turn' && v.turn === s ? ' on' : '') + '">' + esc(v.players[s].name) + '</b>';
+    }).join('') + '</div>';
+    return '<div class="dp-sheet turn-' + v.turn + '">' +
+      '<div class="col">' + head + upper.map(row).join('') +
+        '<div class="dp-row sum"><span class="lab">Bonus <small>' + v.bonus.at + '+ up top: +' + v.bonus.points + '</small></span><b>' + bonus(0) + '</b><b>' + bonus(1) + '</b></div>' +
+        sumRow('Upper', t[0].upper + t[0].bonus, t[1].upper + t[1].bonus) + '</div>' +
+      '<div class="col">' + head + lower.map(row).join('') + sumRow('Lower', t[0].lower, t[1].lower) + '</div>' +
+      '<div class="dp-total"><span>Total</span><b class="p1-text">' + v.scores[0] + '</b><b class="p2-text">' + v.scores[1] + '</b></div>' +
+      '</div>';
   }
 
   function status(v) {

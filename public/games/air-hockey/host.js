@@ -16,6 +16,9 @@
   let overlayKey = '';
   let boardKey = '';
   let colors = null;
+  let trail = []; // the puck's last few spots, drawn fading behind it
+  let goalAt = 0; // when the last goal went in (the goal mouth flashes)
+  let goalBy = null;
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -42,6 +45,30 @@
   }
 
   // The TV shows the table sideways: P1's goal on the left, P2's on the right.
+  /** The table's air holes: a faint dot grid, so it reads as an air hockey table. */
+  function airHoles(g, f) {
+    g.fillStyle = 'rgba(160, 190, 255, 0.07)';
+    const step = f.w / 32;
+    for (let x = step; x < f.w; x += step) {
+      for (let y = step; y < f.h; y += step) g.fillRect(x - 0.03, y - 0.03, 0.06, 0.06);
+    }
+  }
+
+  /** A goal: the goal it went into flashes in the scorer's colour, fading over a second. */
+  function goalFlash(g, f, T) {
+    const age = (performance.now() - goalAt) / 1000;
+    if (goalBy === null || age > 1) return;
+    const x = goalBy === 0 ? f.w : 0; // (player 1 scores in the right-hand goal)
+    const r = f.goalH * (0.6 + age);
+    const glow = g.createRadialGradient(x, f.h / 2, 0, x, f.h / 2, r);
+    glow.addColorStop(0, colors[goalBy]);
+    glow.addColorStop(1, 'transparent');
+    g.globalAlpha = 0.55 * (1 - age);
+    g.fillStyle = glow;
+    g.fillRect(x - r, f.h / 2 - r, 2 * r, 2 * r);
+    g.globalAlpha = 1;
+  }
+
   function draw() {
     raf = requestAnimationFrame(draw);
     const T = window.ArkAirHockeyTable;
@@ -67,9 +94,21 @@
     g.setTransform(k, 0, 0, k, T.RINK * k, T.RINK * k);
 
     T.drawTable(g, f, colors);
+    airHoles(g, f);
+    goalFlash(g, f, T);
     shown = T.easeMallets(shown, view);
     shown.forEach(function (m, slot) { T.drawMallet(g, f, m.x, m.y, colors[slot]); });
     const p = T.puckNow(view, performance.now() - viewAt);
+    // A short fading trail while it moves (none while it waits for the face-off).
+    trail.push({ x: p.x, y: p.y });
+    if (trail.length > 10 || view.phase !== 'play') trail.shift();
+    if (view.phase !== 'play') trail = [];
+    trail.forEach(function (q, i) {
+      g.fillStyle = 'rgba(200, 220, 255, ' + (0.03 + (i / trail.length) * 0.22) + ')';
+      g.beginPath();
+      g.arc(q.x, q.y, f.puckR * (0.45 + 0.55 * (i / trail.length)), 0, Math.PI * 2);
+      g.fill();
+    });
     T.drawPuck(g, f, p.x, p.y);
   }
 
@@ -111,6 +150,10 @@
       raf = requestAnimationFrame(draw);
     },
     update: function (v) {
+      if (v.phase === 'goal' && (!view || view.phase !== 'goal')) {
+        goalAt = performance.now();
+        goalBy = v.lastScorer;
+      }
       view = v;
       viewAt = performance.now();
       const key = v.scores.join(':') + v.players.map(function (p) { return p.name; }).join('|');
@@ -123,6 +166,8 @@
     unmount: function () {
       cancelAnimationFrame(raf);
       root = board = arena = canvas = overlay = view = shown = null;
+      trail = [];
+      goalBy = null;
       overlayKey = boardKey = '';
     },
   });

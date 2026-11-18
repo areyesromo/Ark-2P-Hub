@@ -99,7 +99,7 @@
     g.fillStyle = '#0b1020';
     g.fillRect(0, 0, f.w, f.h);
     const side = v.side;
-    side.bricks.forEach(function (b) { window.ArkBricks.drawBrick(g, f, b); });
+    v.wall.forEach(function (b) { window.ArkBricks.drawBrick(g, f, b); });
     shownPaddle = shownPaddle === null ? side.paddle : shownPaddle + (side.paddle - shownPaddle) * 0.5;
     g.fillStyle = myColor;
     g.fillRect(shownPaddle - side.paddleW / 2, f.paddleY, side.paddleW, f.paddleH);
