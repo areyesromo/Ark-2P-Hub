@@ -71,7 +71,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (39)
+## Minigames (46)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -86,6 +86,13 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Swipe it! | `swipe-it` | micro | 2D | Swipe the way each arrow points | `server/games/minis/swipe-it.js`, `public/games/minis/swipe-it.js`, `test/minis-micro.test.js` |
 | Don't touch! | `dont-touch` | micro | 2D | Hands off! Any tap fails | `server/games/minis/dont-touch.js`, `public/games/minis/dont-touch.js`, `test/minis-micro.test.js` |
 | Quick math! | `quick-math` | micro | 2D | Pick the right answer | `server/games/minis/quick-math.js`, `public/games/minis/quick-math.js`, `test/minis-micro.test.js` |
+| Pick the colour! | `pick-colour` | micro | 2D | Pick the colour of the ink, not the word | `server/games/minis/pick-colour.js`, `public/games/minis/pick-colour.js`, `test/minis-micro.test.js` |
+| Bigger number! | `bigger-number` | micro | 2D | Pick the bigger number, three times in a row | `server/games/minis/bigger-number.js`, `public/games/minis/bigger-number.js`, `test/minis-micro.test.js` |
+| Lights out! | `lights-out` | micro | 2D | Tap the moment the last light goes out | `server/games/minis/lights-out.js`, `public/games/minis/lights-out.js`, `test/minis-micro.test.js` |
+| Snap! | `snap` | micro | 2D | Snap when a card matches the one before | `server/games/minis/snap.js`, `public/games/minis/snap.js`, `test/minis-micro.test.js` |
+| Pump it! | `pump-it` | micro | 2D | Pump up to the green, not past it | `server/games/minis/pump-it.js`, `public/games/minis/pump-it.js`, `test/minis-micro.test.js` |
+| Catch it! | `catch-it` | micro | 2D | Let go when the present is over your basket | `server/games/minis/catch-it.js`, `public/games/minis/catch-it.js`, `test/minis-micro.test.js` |
+| Dodge ball! | `dodge-ball` | micro | 2D | Swipe up or down out of the way | `server/games/minis/dodge-ball.js`, `public/games/minis/dodge-ball.js`, `test/minis-micro.test.js` |
 | Balloon Pump | `balloon` | party | 2D | Mash PUMP (or A) to pop your balloon first | `server/games/minis/balloon.js`, `public/games/minis/balloon.js`, `test/minis-party.test.js` |
 | Hot Potato | `hot-potato` | party | 2D | Holding the bomb? Tap PASS (or A) to throw it back | `server/games/minis/hot-potato.js`, `public/games/minis/hot-potato.js`, `test/minis-party.test.js` |
 | Quick Draw | `quick-draw` | party | 2D | Fire (or A) on BANG! Too early loses | `server/games/minis/quick-draw.js`, `public/games/minis/quick-draw.js`, `test/minis-party.test.js` |

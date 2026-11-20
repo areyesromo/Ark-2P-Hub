@@ -38,6 +38,13 @@ import drumBeat from './drum-beat.js';
 import musicalChairs from './musical-chairs.js';
 import archery from './archery.js';
 import curling from './curling.js';
+import pickColour from './pick-colour.js';
+import biggerNumber from './bigger-number.js';
+import lightsOut from './lights-out.js';
+import snap from './snap.js';
+import pumpIt from './pump-it.js';
+import catchIt from './catch-it.js';
+import dodgeBall from './dodge-ball.js';
 
-export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath];
+export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath, pickColour, biggerNumber, lightsOut, snap, pumpIt, catchIt, dodgeBall];
 export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe, cannonLob, stackAttack, bumperCars, paintGrab, drumBeat, musicalChairs, archery, curling];

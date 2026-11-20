@@ -4,6 +4,18 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.57
+
+- ⚡ Seven new quick games in Micro Mayhem:
+  - 🎨 Pick the colour: a colour's name in another colour's ink. Pick the ink, not the word.
+  - 🔢 Bigger number: pick the bigger of two numbers, three times running.
+  - 🚦 Lights out: five lights go out one by one. Tap as the last one goes, not before.
+  - 🃏 Snap: cards turn over on the TV. First to snap on a matching pair wins; a wrong snap loses.
+  - 🛞 Pump it: pump the tyre up into the green, but not past it (it bursts).
+  - 🎁 Catch it: let go of the present when the claw is over your basket.
+  - 🔴 Dodge ball: swipe up or down out of the way of the balls.
+  The computer plays them all, like a person.
+
 ## 0.1.56
 
 - 🤖 The computer no longer loses to someone who does nothing:
