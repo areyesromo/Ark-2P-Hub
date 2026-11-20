@@ -14,18 +14,6 @@ we discuss more. Take an idea off the list when it ships.
 - **3D art**: the base is done here, then the local session adds models, scenery and animation from a
   brief in `docs/3D-HANDOFF.md`.
 
-## Quick reflex (Micro Mayhem size, 5 to 10 seconds)
-
-| Idea | How it plays | Look |
-|---|---|---|
-| Catch It | Something drops from a random spot up top; tap when it's over your basket. | 2D |
-| Pick the Colour | A colour word in a different ink: tap the ink, not the word. | 2D |
-| Bigger Number | Two numbers flash; tap the side with the bigger one. Three right in a row wins. | 2D |
-| Lights Out | A row of lights goes off one at a time; tap the moment the last one goes (a false start loses). | 2D |
-| Snap | Cards flip on the TV; first to tap SNAP on a matching pair wins, a wrong snap loses. | 2D |
-| Dodge Ball | Balls fly across; swipe up or down to dodge. Last one standing. | 2D |
-| Pump It | Tap fast to blow up a tyre to the line, but not past it (it bursts). | 2D |
-
 ## Party minigames (30 to 75 seconds)
 
 | Idea | How it plays | Look |

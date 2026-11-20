@@ -549,3 +549,62 @@
 .mi-curl-phone .sheet .hint { position: absolute; bottom: 80px; left: 0; right: 0; color: #0f172a; font-weight: 900; }
 .mi-curl-phone .sheet.waiting { opacity: 0.5; }
 .mi-curl-phone .sweep { min-height: 140px; touch-action: none; user-select: none; -webkit-user-select: none; }
+
+/* ---- quick reflex micros: Pick the colour, Bigger number, Lights out, Snap, Pump it, Catch it, Dodge ball ---- */
+/* (their colours are the thing itself: inks, lights, cards, a tyre) */
+.mi-word { font-size: clamp(3rem, 12vh, 7rem); font-weight: 900; letter-spacing: 0.06em; text-shadow: 0 0.06em 0 rgba(0, 0, 0, 0.4); }
+.mi-phone .mi-word { font-size: 3rem; }
+.mi-swatch { display: block; width: 70%; height: 70%; min-height: 2.2rem; border-radius: var(--r-md); box-shadow: inset 0 -0.2em 0 rgba(0, 0, 0, 0.25); }
+.mi-choices button .mi-swatch { width: 100%; height: 3.2rem; }
+.mi-dots { display: flex; gap: 0.5rem; justify-content: center; margin-bottom: 0.6rem; }
+.mi-dots i { width: 0.8rem; height: 0.8rem; border-radius: 50%; background: var(--line); }
+.mi-dots i.on { background: var(--good); }
+.mi-pair { display: flex; align-items: center; justify-content: center; gap: 1rem; width: 100%; }
+.mi-num { flex: 1; display: flex; align-items: center; justify-content: center; min-height: 5rem; border-radius: var(--radius); background: rgba(255, 255, 255, 0.06); font-size: clamp(2.6rem, 10vh, 6rem); font-weight: 900; }
+.mi-phone .mi-num { font-size: 3rem; min-height: 9rem; }
+.mi-vs { color: var(--muted); font-weight: 800; }
+.mi-lights { display: flex; gap: 0.6rem; justify-content: center; padding: 0.8rem 1rem; border-radius: var(--radius); background: #111827; }
+.mi-lights i { width: clamp(1.8rem, 7vh, 3.6rem); height: clamp(1.8rem, 7vh, 3.6rem); border-radius: 50%; background: #3f1d1d; box-shadow: inset 0 -0.2em 0 rgba(0, 0, 0, 0.4); transition: background 0.05s; }
+.mi-lights i.on { background: #ef4444; box-shadow: 0 0 1.2rem #ef4444, inset 0 -0.2em 0 rgba(0, 0, 0, 0.25); }
+.mi-phone .mi-lights i { width: 2.6rem; height: 2.6rem; }
+.mi-snap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+.mi-pile { position: relative; width: clamp(8rem, 30vh, 14rem); height: clamp(11rem, 42vh, 19.6rem); }
+.mi-phone .mi-pile { width: 7rem; height: 9.8rem; }
+.mi-card { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; border-radius: var(--r-md); background: #fafaf9; box-shadow: 0 0.3rem 1rem rgba(0, 0, 0, 0.45); font-weight: 900; }
+.mi-card b { font-size: 3.6em; line-height: 1; }
+.mi-card span { font-size: 2.6em; line-height: 1; }
+.mi-card.red { color: #dc2626; }
+.mi-card.black { color: #111827; }
+.mi-card.under { transform: translate(-28%, 4%) rotate(-10deg); filter: brightness(0.82); }
+.mi-card.flip { animation: mi-flip 0.18s ease-out; }
+@keyframes mi-flip { from { transform: rotateY(90deg); } to { transform: none; } }
+.mi-snappers { display: flex; gap: 3rem; font-size: var(--fs-lg); font-weight: 800; order: 2; }
+.mi-snapper .mi-ok, .mi-snapper .mi-bad { position: static; font-size: 1.6rem; }
+.mi-pump { display: flex; align-items: flex-end; justify-content: center; gap: 1.2rem; }
+.mi-pump .tube { position: relative; width: 2.4rem; height: clamp(9rem, 38vh, 18rem); border-radius: var(--r-pill); background: #1e293b; border: 3px solid var(--line); overflow: hidden; }
+.mi-pump .zone { position: absolute; left: 0; right: 0; background: rgba(74, 222, 128, 0.5); }
+.mi-pump .air { position: absolute; left: 0; right: 0; bottom: 0; background: #e2e8f0; transition: height 0.08s; }
+.mi-pump .air.burst { background: #ef4444; }
+.mi-pump .tyre { font-size: calc(5rem * var(--k, 0.6)); line-height: 1; transition: font-size 0.08s; }
+.mi-phone .mi-pump .tube { height: 13rem; }
+.mi-catch { position: relative; width: 100%; height: clamp(10rem, 40vh, 20rem); }
+.mi-catch .rail { position: absolute; left: 0; right: 0; top: 0.8rem; height: 4px; background: var(--line); border-radius: 2px; }
+.mi-catch .claw, .mi-catch .gift, .mi-catch .basket { position: absolute; transform: translateX(-50%); line-height: 1; }
+.mi-catch .claw { top: 0; font-size: 2.2rem; }
+.mi-catch .gift { top: 2.4rem; font-size: 2.4rem; transition: top 0.45s cubic-bezier(0.5, 0, 1, 1); }
+.mi-catch.dropped .gift { top: calc(100% - 3.6rem); }
+.mi-catch .basket { bottom: 0; display: flex; justify-content: center; font-size: 3.4rem; border-bottom: 4px solid var(--warn); }
+.mi-catch.caught .basket { filter: drop-shadow(0 0 0.8rem var(--good)); }
+.mi-dodge { position: relative; width: 100%; height: clamp(9rem, 38vh, 18rem); display: grid; grid-template-rows: repeat(3, 1fr); gap: 4px; }
+.mi-dodge .lane { background: rgba(255, 255, 255, 0.05); border-radius: var(--r-sm); }
+.mi-dodge .me, .mi-dodge .ball { position: absolute; transform: translate(-50%, -50%); line-height: 1; }
+.mi-dodge .me { left: 6%; font-size: 2.6rem; transition: top 0.1s; }
+.mi-dodge .ball { font-size: 2rem; }
+.mi-dodge.out .me { filter: grayscale(1) opacity(0.5); }
+.mi-bn { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+.mi-phone-stage.mi-snap { align-self: stretch; width: 100%; }
+.mi-snap .mi-big-btn { width: 100%; }
+.mi-phone .mi-snap .mi-pile { width: 9rem; height: 12.6rem; font-size: 1.2rem; }
+.mi-phone .mi-choices button .mi-swatch { height: 5rem; }
+.mi-updown { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.mi-updown button { min-height: 120px; font-size: 3rem; }

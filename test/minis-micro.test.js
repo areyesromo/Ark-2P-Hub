@@ -1,4 +1,4 @@
-// The 8 micro-games of Micro Mayhem, each driven directly through its api.
+// The 15 micro-games of Micro Mayhem, each driven directly through its api.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
@@ -11,6 +11,13 @@ import countEm from '../server/games/minis/count-em.js';
 import swipeIt from '../server/games/minis/swipe-it.js';
 import dontTouch from '../server/games/minis/dont-touch.js';
 import quickMath from '../server/games/minis/quick-math.js';
+import pickColour from '../server/games/minis/pick-colour.js';
+import biggerNumber from '../server/games/minis/bigger-number.js';
+import lightsOut from '../server/games/minis/lights-out.js';
+import snap, { cardAt } from '../server/games/minis/snap.js';
+import pumpIt from '../server/games/minis/pump-it.js';
+import catchIt, { clawAt, BASKET } from '../server/games/minis/catch-it.js';
+import dodgeBall, { laneAt } from '../server/games/minis/dodge-ball.js';
 
 function seeded(seed) {
   let s = seed >>> 0;
@@ -35,9 +42,9 @@ function run(def, seed = 1) {
   return { inst, ctx, ended: () => ended, calls: () => calls };
 }
 
-test('there are 8 micros with unique ids, all kind micro', () => {
-  assert.equal(MICROS.length, 8);
-  assert.equal(new Set(MICROS.map((m) => m.id)).size, 8);
+test('there are 15 micros with unique ids, all kind micro', () => {
+  assert.equal(MICROS.length, 15);
+  assert.equal(new Set(MICROS.map((m) => m.id)).size, 15);
   for (const m of MICROS) {
     assert.equal(m.kind, 'micro');
     assert.ok(m.order && m.howTo && m.durationMs > 0, m.id);
@@ -179,4 +186,120 @@ test('tap-it: a miss locks that player out for 300 ms (no free mashing)', () => 
   inst.onInput(0, { type: 'tap', x: p.x, y: p.y, t: 1350 });
   assert.equal(inst.view(0).res[0], true);
   assert.equal(ended(), null);
+});
+
+test('pick-colour: the ink passes, the word (its trap) fails; the word is never its own ink', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const { inst, ended } = run(pickColour, seed);
+    const v = inst.view(0);
+    assert.notEqual(v.word, v.ink);
+    assert.ok(v.choices.includes(v.ink) && v.choices.includes(v.word) && new Set(v.choices).size === 4);
+    inst.onInput(0, { type: 'pick', c: v.ink });
+    inst.onInput(1, { type: 'pick', c: v.word });
+    assert.deepEqual(ended(), { pass: [true, false] });
+  }
+});
+
+test('bigger-number: three right in a row passes, one wrong fails', () => {
+  const { inst, ended } = run(biggerNumber);
+  const { pairs } = inst.view(0);
+  assert.equal(pairs.length, 3);
+  for (const [a, b] of pairs) {
+    assert.notEqual(a, b);
+    inst.onInput(0, { type: 'pick', side: a > b ? 0 : 1 });
+  }
+  assert.equal(ended(), null);
+  const [a, b] = pairs[0];
+  inst.onInput(1, { type: 'pick', side: a > b ? 1 : 0 });
+  assert.deepEqual(ended(), { pass: [true, false] });
+});
+
+test('lights-out: a tap just after the last light passes; before it (a jump) or too late fails', () => {
+  const { inst, ctx, ended } = run(lightsOut);
+  const { off, windowMs } = inst.view(0);
+  assert.equal(off.length, 5);
+  assert.ok(off.every((t, i) => i === 0 || t > off[i - 1]));
+  ctx.advance(off[4] + windowMs + 100);
+  inst.onInput(0, { type: 'tap', t: off[4] + 200 });
+  inst.onInput(1, { type: 'tap', t: off[3] + 50 });
+  assert.deepEqual(ended(), { pass: [true, false] });
+  const late = run(lightsOut);
+  const w = late.inst.view(0);
+  late.ctx.advance(w.off[4] + w.windowMs + 300);
+  late.inst.onInput(0, { type: 'tap', t: w.off[4] + w.windowMs + 200 });
+  late.inst.onTimeUp();
+  assert.deepEqual(late.ended(), { pass: [false, false] });
+});
+
+test('snap: one matching pair, the first good snap wins; a snap on the wrong card loses', () => {
+  for (let seed = 1; seed <= 20; seed++) {
+    const { inst, ctx, ended } = run(snap, seed);
+    const { cards, stepMs } = inst.view(0);
+    const pairs = cards.map((c, i) => (i > 0 && c.rank === cards[i - 1].rank ? i : -1)).filter((i) => i >= 0);
+    assert.equal(pairs.length, 1, 'exactly one match');
+    const match = pairs[0];
+    assert.ok(match >= 2);
+    ctx.advance(6000);
+    assert.equal(cardAt(match * stepMs + 10, stepMs, cards.length), match);
+    inst.onInput(1, { type: 'snap', t: (match - 1) * stepMs + 10 }); // too early: lost
+    assert.equal(inst.view(0).res[1], false);
+    inst.onInput(0, { type: 'snap', t: match * stepMs + 300 });
+    assert.deepEqual(ended(), { pass: [true, false] });
+  }
+  // The first good snap takes it: the other is out.
+  const r = run(snap, 3);
+  const { cards, stepMs } = r.inst.view(0);
+  const match = cards.findIndex((c, i) => i > 0 && c.rank === cards[i - 1].rank);
+  r.ctx.advance(6000);
+  r.inst.onInput(1, { type: 'snap', t: match * stepMs + 200 });
+  assert.deepEqual(r.ended(), { pass: [false, true] });
+});
+
+test('pump-it: in the green at the end passes, short of it fails, past it bursts at once', () => {
+  const { inst, ended } = run(pumpIt);
+  const { zone } = inst.view(0);
+  for (let i = 0; i < zone.from; i++) inst.onInput(0, { type: 'pump' });
+  for (let i = 0; i < zone.to + 1; i++) inst.onInput(1, { type: 'pump' });
+  assert.equal(inst.view(0).burst[1], true);
+  assert.equal(inst.view(0).res[1], false);
+  inst.onTimeUp();
+  assert.deepEqual(ended(), { pass: [true, false] });
+  const short = run(pumpIt);
+  short.inst.onInput(0, { type: 'pump' });
+  short.inst.onTimeUp();
+  assert.deepEqual(short.ended(), { pass: [false, false] });
+});
+
+test('catch-it: let go over the basket passes, elsewhere fails', () => {
+  const { inst, ctx, ended } = run(catchIt);
+  const { periodMs, phase, basket } = inst.view(0);
+  ctx.advance(4000);
+  let tIn = 0;
+  while (Math.abs(clawAt(tIn, periodMs, phase) - basket) > BASKET / 2) tIn++;
+  let tOut = 0;
+  while (Math.abs(clawAt(tOut, periodMs, phase) - basket) <= BASKET + 0.05) tOut++;
+  inst.onInput(0, { type: 'drop', t: tIn });
+  inst.onInput(1, { type: 'drop', t: tOut });
+  assert.deepEqual(ended(), { pass: [true, false] });
+});
+
+test('dodge-ball: out of a ball\'s lane when it arrives you stay in; in it, you\'re out', () => {
+  const { inst, ctx, ended } = run(dodgeBall);
+  const { balls } = inst.view(0);
+  assert.equal(balls[0].lane, 1, 'the first comes down the middle, where you start');
+  assert.equal(laneAt([], 0), 1);
+  // Player 1 steps out of each ball's lane just before it arrives; player 2 never moves.
+  let lane = 1;
+  for (const b of balls) {
+    ctx.advance(b.hit - 300 - ctx.now());
+    if (lane === b.lane) {
+      const dir = lane === 2 ? 'up' : 'down';
+      inst.onInput(0, { type: 'move', dir, t: ctx.now() });
+      lane += dir === 'up' ? -1 : 1;
+    }
+    ctx.advance(600);
+  }
+  assert.equal(inst.view(0).res[1], false, 'the middle ball hit the one who stood still');
+  inst.onTimeUp();
+  assert.deepEqual(ended(), { pass: [true, false] });
 });

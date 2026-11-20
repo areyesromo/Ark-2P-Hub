@@ -29,6 +29,8 @@ import { FRONT_CONE, MAX_SPEED as MAX_CAR_SPEED } from './bumper-cars.js';
 import * as DRUM from './drum-beat.js';
 import * as ARCHERY from './archery.js';
 import * as CURL from './curling.js';
+import { cardAt } from './snap.js';
+import { clawAt } from './catch-it.js';
 
 /** A person at each level: timing error (ms sd), aim wobble, slips, mashing rate, thinking pace. */
 const SKILL = {
@@ -148,6 +150,78 @@ export const PLAYERS = {
       m.ms = react() + (700 + rng() * 900 + (op === '×' ? 600 : 0)) * L.think;
     }
     return { type: 'pick', n: m.n, botDelayMs: m.ms };
+  },
+
+  'pick-colour'({ s, you, L, rng, m, react }) {
+    if (s.picks[you] !== null) return null;
+    if (m.c === undefined) {
+      // Now and then the word wins (the classic slip: it reads the word).
+      m.c = rng() < L.slip * 2.5 ? s.word : s.ink;
+      m.ms = react() + (500 + rng() * 700) * L.think;
+    }
+    return { type: 'pick', c: m.c, botDelayMs: m.ms };
+  },
+  'bigger-number'({ s, you, L, rng, react }) {
+    if (s.res[you] !== null) return null;
+    const k = s.done[you];
+    const [a, b] = s.pairs[k];
+    const right = a > b ? 0 : 1;
+    const side = rng() < L.slip * 1.1 ? 1 - right : right;
+    return { type: 'pick', side, botDelayMs: (k === 0 ? react() : 0) + (380 + rng() * 300) * L.think, botFor: k };
+  },
+  'lights-out'({ s, you, L, rng, m, react, at }) {
+    if (s.res[you] !== null) return null;
+    if (!m.t) {
+      // It watches the last one go and taps, a reaction later; now and then it jumps a light early.
+      const last = s.off[s.off.length - 1];
+      m.t = rng() < L.slip * 1.2 ? s.off[s.off.length - 2] + react() * 0.5 : last + react() + gauss(rng) * L.timing * 0.5;
+      m.t = Math.max(0, Math.round(m.t));
+    }
+    return { type: 'tap', t: m.t, ...at(m.t) };
+  },
+  snap({ s, you, L, rng, m, react, at }) {
+    if (s.res[you] !== null) return null;
+    const match = s.cards.findIndex((c, i) => i > 0 && c.rank === s.cards[i - 1].rank);
+    if (!m.t) {
+      // It snaps a reaction after the matching card turns over; now and then on a look-alike.
+      const wrong = rng() < L.slip * 0.8 && match > 1;
+      const i = wrong ? match - 1 : match;
+      m.t = Math.round(i * s.stepMs + react() + 80 * L.think);
+    }
+    const shows = cardAt(Math.max(0, m.t), s.stepMs, s.cards.length);
+    return { type: 'snap', t: m.t, botFor: shows, ...at(m.t) };
+  },
+  'pump-it'({ s, you, L, rng, m, react }) {
+    if (s.res[you] !== null) return null;
+    // Pumps at its pace, slowing as it nears the line, and stops in the green (a slip: one too many).
+    if (m.stopAt === undefined) m.stopAt = s.zone.from + (rng() < 0.5 ? 0 : 1) + (rng() < L.slip * 1.5 ? 2 : 0);
+    if (s.air[you] >= m.stopAt) return null;
+    const near = s.zone.from - s.air[you] <= 2;
+    return { type: 'pump', botDelayMs: (s.air[you] === 0 ? react() : 0) + (1000 / L.rate) * (near ? 1.6 : 1) * (0.85 + rng() * 0.3), botFor: s.air[you] };
+  },
+  'catch-it'({ s, you, el, L, rng, m, react, at }) {
+    if (s.res[you] !== null) return null;
+    if (!m.t) {
+      // It watches the claw come round and lets go as it passes over the basket.
+      const from = el + react() + 250 * L.think;
+      let best = from;
+      for (let t = from; t < from + s.periodMs; t += 5) if (Math.abs(clawAt(t, s.periodMs, s.phase) - s.basket) < Math.abs(clawAt(best, s.periodMs, s.phase) - s.basket)) best = t;
+      m.t = Math.max(0, Math.round(best + gauss(rng) * L.timing));
+    }
+    return { type: 'drop', t: m.t, ...at(m.t) };
+  },
+  'dodge-ball'({ s, you, el, L, rng, m, react }) {
+    if (s.res[you] !== null) return null;
+    // The next ball still to reach it: if it's in that ball's lane, it steps out (a reaction after
+    // the throw), to the side with more room; now and then it's late.
+    const lane = s.lanes[you];
+    const next = s.balls.find((b) => b.hit > el);
+    if (!next || next.lane !== lane) return null;
+    if (!m.late) m.late = {};
+    if (m.late[next.at] === undefined) m.late[next.at] = rng() < L.slip * 1.5;
+    if (m.late[next.at]) return null;
+    const dir = lane === 0 ? 'down' : lane === 2 ? 'up' : rng() < 0.5 ? 'up' : 'down';
+    return { type: 'move', dir, botDelayMs: Math.max(0, next.at - el) + react(), botFor: next.at + ':' + lane };
   },
 
   // ---- party minigames ----
