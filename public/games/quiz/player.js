@@ -12,6 +12,7 @@
     if (btn && !btn.disabled) {
       api.send({ type: 'answer', choice: Number(btn.getAttribute('data-choice')) });
       api.vibrate(20);
+      Ark.showPick(btn, 'data-choice');
       return;
     }
     if (e.target.closest('.rematch')) api.send({ type: 'rematch' });

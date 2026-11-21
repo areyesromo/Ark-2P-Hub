@@ -14,6 +14,7 @@
     if (pick && !pick.disabled) {
       api.send({ type: 'pick', choice: pick.getAttribute('data-pick') });
       api.vibrate(20);
+      Ark.showPick(pick, 'data-pick');
       return;
     }
     if (e.target.closest('.rematch')) api.send({ type: 'rematch' });

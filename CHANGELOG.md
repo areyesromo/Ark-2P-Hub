@@ -4,6 +4,13 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.58
+
+- ⚡ Snappier phones, most of all online: your move shows the moment you tap. A button you press
+  looks pressed straight away; Connect Four drops your disc at once; your answer in Quiz, Trivia
+  Quest, Rock Paper Scissors and the pick-one minigames lights up at once. The TV confirms it a
+  moment later (and if the move wasn't allowed, the phone puts it back).
+
 ## 0.1.57
 
 - ⚡ Seven new quick games in Micro Mayhem:

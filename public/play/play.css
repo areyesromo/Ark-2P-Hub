@@ -112,3 +112,6 @@ body.slot-1 { --me: var(--p2); }
 .settings-bar strong { font-size: var(--fs-md); }
 .settings-bar button { padding: 10px 22px; min-height: 44px; }
 .settings-sheet iframe { flex: 1; width: 100%; border: 0; background: var(--bg); }
+
+/* A move just sent (play.js: until the server's view comes back): it looks taken at once. */
+#phone-stage .ark-sent { outline: 3px solid var(--me); outline-offset: 2px; filter: brightness(1.15); transform: scale(0.97); transition: transform 0.08s; }
