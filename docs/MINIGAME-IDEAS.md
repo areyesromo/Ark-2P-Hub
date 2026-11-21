@@ -27,7 +27,6 @@ we discuss more. Take an idea off the list when it ships.
 | Hot Air Race | Tap to burn, let it sink; catch the faster wind at each height. | 2D |
 | Snowball Fight | Hide behind your wall, pop up to throw; a hit while you're up costs a heart. | 3D art |
 | Bridge Builder | Take turns placing planks over a gap; a cart rolls over at the end and the side it falls on loses. | 2D |
-| Treasure Dig | A grid of sand, both dig at once; the beeper says warmer or colder. First to the chest. | 2D |
 | Lasso | A calf runs round the pen; time the throw to its path. | 3D art |
 | Bubble Pop | Bubbles in both colours float up; pop yours, popping the other's costs a point. | 2D |
 | Rhythm Jump | A rope swings under you both; jump on time, the beat speeds up. Last one standing. | 3D base |

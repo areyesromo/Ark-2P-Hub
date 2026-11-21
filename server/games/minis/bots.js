@@ -31,6 +31,7 @@ import * as ARCHERY from './archery.js';
 import * as CURL from './curling.js';
 import { cardAt } from './snap.js';
 import { clawAt } from './catch-it.js';
+import { distance as digDistance, heat as digHeat } from './treasure-dig.js';
 
 /** A person at each level: timing error (ms sd), aim wobble, slips, mashing rate, thinking pace. */
 const SKILL = {
@@ -485,6 +486,31 @@ export const PLAYERS = {
     m.dir = m.dir || {};
     if (!m.dir[s.opened]) m.dir[s.opened] = rng() < 0.5 ? -1 : 1;
     return { type: 'turn', by: m.dir[s.opened], botDelayMs: (1000 / (L.rate + 2)) * (0.8 + rng() * 0.4) };
+  },
+  'treasure-dig'({ s, you, L, rng, m, level }) {
+    if (s.found !== null) return null;
+    const mine = s.digs[you];
+    const n = s.size * s.size;
+    const dug = new Set(mine.map((d) => d.cell));
+    // Where the chest can still be, from the beeper's words so far.
+    const fits = [];
+    for (let c = 0; c < n; c++) if (!dug.has(c) && mine.every((d) => digHeat(digDistance(d.cell, c)) === d.heat)) fits.push(c);
+    const open = [...Array(n).keys()].filter((c) => !dug.has(c));
+    let cell;
+    if (!fits.length || (level === 'easy' && rng() < 0.35)) cell = open[Math.floor(rng() * open.length)];
+    else if (level === 'hard' && fits.length > 2 && rng() < 0.7) {
+      // The dig that leaves the fewest places, whatever the beeper says (it splits them best);
+      // now and then it just tries a likely one, as Normal does.
+      let best = Infinity;
+      for (const c of open) {
+        const by = {};
+        for (const f of fits) { const h = digHeat(digDistance(c, f)); by[h] = (by[h] || 0) + 1; }
+        const worst = Math.max(...Object.values(by)) - (fits.includes(c) ? 0.5 : 0);
+        if (worst < best) { best = worst; cell = c; }
+      }
+    } else cell = fits[Math.floor(rng() * fits.length)];
+    // A look at the patch and a dig (a little longer after a new hint), round by round.
+    return { type: 'dig', cell, botDelayMs: s.digMs + (450 + rng() * 600) * L.think, botFor: s.round + ':' + mine.length };
   },
   'reflex-grid'({ s, you, L, rng, react }) {
     const t = react() + 100 * L.think;

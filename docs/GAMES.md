@@ -71,7 +71,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (46)
+## Minigames (47)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -124,6 +124,7 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Musical Chairs | `musical-chairs` | party | 2D | SIT (or A) when the music stops. Too soon and you trip! | `server/games/minis/musical-chairs.js`, `public/games/minis/musical-chairs.js`, `test/minis-party8.test.js` |
 | Archery | `archery` | party | 3D | Aim, hold DRAW to steady the bow, let go to shoot. Mind the wind (controller: stick aims, hold A) | `server/games/minis/archery.js`, `public/games/minis/archery.js`, `test/minis-party8.test.js` |
 | Curling | `curling` | party | 3D | Swipe to throw (curve it for curl), then tap SWEEP to carry it further. Nearest the middle wins | `server/games/minis/curling.js`, `public/games/minis/curling.js`, `test/minis-party8.test.js` |
+| Treasure Dig | `treasure-dig` | party | 2D | Dig a square: hot or cold says how close your chest is. First to find it | `server/games/minis/treasure-dig.js`, `public/games/minis/treasure-dig.js`, `test/minis-party9.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->

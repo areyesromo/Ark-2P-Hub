@@ -608,3 +608,19 @@
 .mi-phone .mi-choices button .mi-swatch { height: 5rem; }
 .mi-updown { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
 .mi-updown button { min-height: 120px; font-size: 3rem; }
+
+/* ---- Treasure Dig: a patch of sand, each hole coloured by how close it is ---- */
+.mi-dig { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 3px; width: min(100%, 46vh); padding: 6px; border-radius: var(--r-md); background: #a16207; }
+.mi-dig .sq { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; border: 0; border-radius: 4px; padding: 0; min-width: 0; background: #fde68a; font-size: clamp(0.9rem, 3vh, 1.6rem); line-height: 1; }
+.mi-dig .sq.dug { background: #78350f; }
+.mi-dig .sq.hot { background: #b91c1c; }
+.mi-dig .sq.warm { background: #c2410c; }
+.mi-dig .sq.cool { background: #0369a1; }
+.mi-dig .sq.cold { background: #1e3a8a; }
+.mi-dig .sq.chest, .mi-dig .sq.found { background: #facc15; box-shadow: 0 0 1rem #facc15; }
+.mi-dig .sq.cur { outline: 3px solid var(--warn); outline-offset: -2px; }
+.mi-phone .mi-dig { width: 100%; }
+.mi-phone .mi-dig .sq { font-size: 1.1rem; }
+.mi-dig-legend { color: var(--muted); font-weight: 700; font-size: var(--fs-sm); }
+.mi-dig-found { font-weight: 900; font-size: var(--fs-lg); color: var(--good); }
+.mi-dig-wrap { width: 100%; display: flex; flex-direction: column; align-items: center; gap: 8px; }
