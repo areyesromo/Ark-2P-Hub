@@ -559,6 +559,21 @@ export const PLAYERS = {
     }
     return { type: 'place', spot, botDelayMs: (900 + rng() * 1100) * L.think, botFor: s.round + ':' + s.n };
   },
+  'pancake-flip'({ s, you, L, rng, at }) {
+    // It watches the meter and the spin like a player and times its presses, off by a person's error.
+    const p = s.pans[you];
+    if (p.stage === 'cook') {
+      const golden = (s.goldenBand[0] + s.goldenBand[1]) / 2;
+      return { type: 'flip', ...at(p.cookAt + s.cookMs * golden + gauss(rng) * L.timing * 1.6), botFor: 'c' + p.cookAt };
+    }
+    if (p.stage === 'air') {
+      // The first time it's flat once it's on its way down.
+      const flatEvery = (180 / p.spin) * 1000;
+      const k = Math.ceil(s.riseMs / flatEvery);
+      return { type: 'catch', ...at(p.airAt + k * flatEvery + gauss(rng) * L.timing), botFor: 'a' + p.airAt };
+    }
+    return null;
+  },
   'treasure-dig'({ s, you, L, rng, m, level }) {
     if (s.found !== null) return null;
     const mine = s.digs[you];

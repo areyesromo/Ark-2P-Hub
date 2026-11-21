@@ -711,3 +711,41 @@ i.bub { display: inline-block; width: 2.4rem; height: 2.4rem; border-radius: 50%
 .mi-bridge.phone .mi-bridge-scene { aspect-ratio: 1.7; }
 .mi-bridge.phone .mi-spot { --crate: 86%; }
 @media (prefers-reduced-motion: reduce) { .mi-crate.now, .mi-crate.drop, .mi-spot.cur::after { animation: none; } .mi-beam { transition: none; } }
+
+/* ---- Pancake Flip ---- */
+.mi-pan-tv .mi-side { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; }
+.mi-pan-tv .who { font-size: 1.6rem; font-weight: 800; }
+.mi-pan-tv .who b { margin-left: 0.6rem; }
+.mi-pan-k { position: relative; display: grid; grid-template-columns: 1.3fr 1fr; grid-template-rows: auto 1fr auto; gap: 0.6rem 1rem; width: min(100%, 30rem); aspect-ratio: 1.25; padding: 0.8rem; border-radius: var(--radius); background: linear-gradient(#fbe9d0, #f1d3a8); box-shadow: inset 0 -10px 0 #d9b383; color: #3b2410; }
+.mi-pan-meter { grid-column: 1 / 3; position: relative; height: 14px; border-radius: 7px; background: linear-gradient(90deg, #f6e7b0, #e9c063 50%, #b8732d 80%, #5a3013); box-shadow: inset 0 0 0 2px rgba(0, 0, 0, 0.25); }
+.mi-pan-meter .band { position: absolute; top: -4px; bottom: -4px; border-radius: 4px; border: 3px solid #2e9e4f; background: rgba(46, 158, 79, 0.25); }
+.mi-pan-meter .needle { position: absolute; top: -7px; width: 5px; height: 28px; margin-left: -2px; border-radius: 3px; background: #222; }
+.mi-pan-air { grid-column: 1; grid-row: 2; position: relative; display: flex; align-items: flex-end; justify-content: center; perspective: 300px; }
+.mi-pan-stove { grid-column: 1; grid-row: 3; display: flex; justify-content: center; }
+.mi-pan { position: relative; display: grid; place-items: center; width: 70%; aspect-ratio: 3.2; border-radius: 0 0 50% 50% / 0 0 100% 100%; background: linear-gradient(#3a3d44, #1f2126); box-shadow: 0 4px 0 #111; }
+.mi-pan::after { content: ''; position: absolute; left: 96%; top: 18%; width: 55%; height: 22%; border-radius: 4px; background: #3a2a1e; }
+.mi-cake { display: block; width: 62%; aspect-ratio: 3.4; border-radius: 50%; background: color-mix(in srgb, #f7e3a4, #b9732e calc(var(--done, 0.7) * 100%)); box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.15); }
+.mi-cake.in { position: absolute; top: -18%; transition: opacity 0.15s; }
+.mi-cake.fly { position: absolute; bottom: 4%; width: 44%; --done: 0.72; transition: opacity 0.1s; }
+.mi-pan-plate { grid-column: 2; grid-row: 2 / 4; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+.mi-pan-stack { display: flex; flex-direction: column-reverse; align-items: center; width: 100%; transform-origin: 50% 100%; animation: mi-wobble calc(1.6s - var(--wob, 0) * 0.35s) ease-in-out infinite; --amp: calc(var(--wob, 0) * 2.5deg); }
+.mi-cake.st { width: 78%; margin-top: -4%; --done: 0.62; transform: translateX(calc(sin(var(--i) * 1.7) * 6%)); }
+.mi-cake.st.golden { --done: 0.78; }
+.mi-plate { width: 100%; height: 10px; border-radius: 50%; background: #fff; box-shadow: 0 3px 0 #c9cfd8; }
+@keyframes mi-wobble { 25% { transform: rotate(var(--amp)); } 75% { transform: rotate(calc(var(--amp) * -1)); } }
+.mi-pan-word { position: absolute; left: 0; right: 0; top: 30%; text-align: center; font-size: 1.6rem; font-weight: 900; opacity: 0; pointer-events: none; text-shadow: 0 2px 0 #fff; }
+.mi-pan-word.show { animation: mi-word 1s ease-out forwards; }
+.mi-pan-word.flat, .mi-pan-word.golden { color: #1f8a43; }
+.mi-pan-word.miss, .mi-pan-word.drop, .mi-pan-word.burnt, .mi-pan-word.raw, .mi-pan-word.topple { color: #c0392b; }
+.mi-pan-word.crooked { color: #b36b00; }
+@keyframes mi-word { 0% { opacity: 0; transform: scale(0.6); } 20% { opacity: 1; transform: scale(1.1); } 80% { opacity: 1; } 100% { opacity: 0; transform: translateY(-20px); } }
+.mi-pan-phone { gap: 12px; }
+.mi-pan-head { display: flex; justify-content: space-between; width: 100%; font-weight: 700; }
+.mi-pan-head b { font-size: 1.6rem; }
+.mi-pan-phone .mi-pan-k { width: 100%; }
+.mi-pan-btn { width: 100%; padding: 26px 0; border: 0; border-radius: var(--radius); background: #e9a53b; color: #3b2410; font-size: 2rem; font-weight: 900; box-shadow: 0 6px 0 #a86c14; touch-action: manipulation; }
+.mi-pan-btn.air { background: #3bb36b; color: #fff; box-shadow: 0 6px 0 #1d7a43; }
+.mi-pan-btn:active { transform: translateY(4px); box-shadow: 0 2px 0 #a86c14; }
+@media (prefers-reduced-motion: reduce) { .mi-pan-stack, .mi-pan-word.show { animation: none; } .mi-pan-word.show { opacity: 1; } }
+.mi-pan-tv .k, .mi-pan-phone .k { display: flex; justify-content: center; width: 100%; }
+.mi-pan-tv .mi-side { width: 100%; }

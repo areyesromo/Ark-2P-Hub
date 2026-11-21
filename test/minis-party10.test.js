@@ -153,3 +153,77 @@ test('bridge-builder: a full bridge: the cart rolls, then the heavier side loses
     assert.equal(v.result.how, 'tip');
   }
 });
+
+import pancakeFlip, { COOK_MS, RAW, GOLDEN, AIR_MS, RISE_MS, NEXT_MS, WOBBLES, tiltAt, spinFor } from '../server/games/minis/pancake-flip.js';
+
+test('pancake-flip: a 2D party minigame in the party list', () => {
+  assert.equal(pancakeFlip.kind, 'party');
+  assert.ok(PARTIES.includes(pancakeFlip));
+  assert.ok(pancakeFlip.durationMs <= 80000 && pancakeFlip.howTo && pancakeFlip.order);
+});
+
+test('pancake-flip: the spin is flat every half turn', () => {
+  assert.equal(tiltAt(0, 540), 0);
+  assert.equal(tiltAt(1000 / 3, 540), 0, 'half a turn');
+  assert.equal(tiltAt(1000 / 6, 540), 90, 'on its edge');
+  assert.ok(spinFor(5) > spinFor(0), 'faster with a taller stack');
+});
+
+/** Flip `slot`'s pancake at `done` of the cook, then catch it `ms` after the flip. */
+function flipCatch(inst, ctx, slot, done, ms) {
+  const p = inst.view().pans[slot];
+  ctx.advance(Math.max(0, p.cookAt + COOK_MS * done - ctx.now()));
+  inst.onInput(slot, { type: 'flip' });
+  if (inst.view().pans[slot].stage !== 'air') return;
+  ctx.advance(ms);
+  inst.onInput(slot, { type: 'catch' });
+}
+
+test('pancake-flip: golden flip and a flat catch stacks it; too soon it splats; too late it burns', () => {
+  const { inst, ctx } = run(pancakeFlip);
+  const flat = (1000 * 180) / spinFor(0) * 2; // the second flat moment (the first is still rising)
+  assert.ok(flat > RISE_MS);
+  flipCatch(inst, ctx, 0, (GOLDEN[0] + GOLDEN[1]) / 2, flat);
+  let p = inst.view().pans[0];
+  assert.deepEqual(p.stack, [true], 'one golden pancake');
+  assert.equal(p.last.kind, 'flat');
+  ctx.advance(NEXT_MS);
+  flipCatch(inst, ctx, 0, RAW / 2, 0);
+  assert.equal(inst.view().pans[0].last.kind, 'raw');
+  ctx.advance(NEXT_MS + COOK_MS);
+  assert.equal(inst.view().pans[0].last.kind, 'burnt');
+  assert.equal(inst.view().pans[0].stack.length, 1);
+});
+
+test('pancake-flip: a catch while it is still rising does nothing; no catch drops it; crooked ones wobble it over', () => {
+  const { inst, ctx } = run(pancakeFlip);
+  const p0 = inst.view().pans[1];
+  ctx.advance(p0.cookAt + COOK_MS * 0.6 - ctx.now());
+  inst.onInput(1, { type: 'flip' });
+  ctx.advance(RISE_MS / 2);
+  inst.onInput(1, { type: 'catch' });
+  assert.equal(inst.view().pans[1].stage, 'air', 'too early to catch');
+  ctx.advance(AIR_MS);
+  assert.equal(inst.view().pans[1].last.kind, 'drop');
+  // Crooked catches: 35 degrees off flat.
+  let crooked = 0;
+  for (let i = 0; i < 12 && crooked < WOBBLES + 2; i++) {
+    ctx.advance(NEXT_MS);
+    const spin = spinFor(inst.view().pans[1].stack.length);
+    const ms = (1000 * 180) / spin * 2 + (1000 * 35) / spin;
+    flipCatch(inst, ctx, 1, 0.6, ms);
+    if (['crooked', 'topple'].includes(inst.view().pans[1].last.kind)) crooked++;
+    if (inst.view().pans[1].last.kind === 'topple') break;
+  }
+  const p = inst.view().pans[1];
+  assert.equal(p.last.kind, 'topple', 'the third wobble topples half the stack');
+  assert.equal(p.stack.length, Math.floor(WOBBLES / 2));
+  assert.equal(p.wobble, 0);
+});
+
+test('pancake-flip: time up, the tallest stack wins; the same height, more golden ones', () => {
+  const { inst, ctx, ended } = run(pancakeFlip);
+  flipCatch(inst, ctx, 0, 0.6, (1000 * 360) / spinFor(0));
+  inst.onTimeUp();
+  assert.deepEqual(ended(), { winner: 0 });
+});
