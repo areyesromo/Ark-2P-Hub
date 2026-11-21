@@ -1,0 +1,101 @@
+/* Five Letters: tiles that flip to their colours. Green, yellow and grey keep their own colours
+   (they are the game's language); the rest follows the theme. A yellow tile also carries a corner
+   dot and a green one a bar, so they're told apart without the colours. */
+
+.fl-board { display: grid; gap: var(--gap, 6px); }
+.fl-row { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: var(--gap, 6px); }
+.fl-tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  aspect-ratio: 1;
+  border-radius: var(--r-sm);
+  border: 2px solid var(--line);
+  background: color-mix(in srgb, var(--panel) 70%, transparent);
+  font-weight: 900;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.fl-tile.typing.filled { border-color: var(--muted); animation: fl-type 0.12s ease-out; }
+.fl-tile.typing.caret { border-color: var(--me, var(--text)); }
+.fl-tile.p { border-color: var(--muted); background: color-mix(in srgb, var(--panel) 90%, var(--text) 10%); }
+.fl-tile.g, .fl-tile.y, .fl-tile.b { border-color: transparent; color: #fff; }
+.fl-tile.g { background: #3e9d5a; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.18); }
+.fl-tile.y { background: #d4a62a; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.18); }
+.fl-tile.b { background: #3b4150; box-shadow: inset 0 -4px 0 rgba(0, 0, 0, 0.2); }
+.fl-tile.y::after { content: ''; position: absolute; top: 9%; right: 9%; width: 14%; height: 14%; border-radius: 50%; background: rgba(255, 255, 255, 0.85); }
+.fl-tile.g::after { content: ''; position: absolute; left: 22%; right: 22%; bottom: 10%; height: 7%; border-radius: 2px; background: rgba(255, 255, 255, 0.8); }
+.fl-tile.flip { animation: fl-flip 0.5s ease-in-out both; }
+.fl-row.shake { animation: fl-shake 0.4s ease-in-out; }
+@keyframes fl-flip {
+  0% { transform: rotateX(0); background: color-mix(in srgb, var(--panel) 70%, transparent); border-color: var(--muted); color: var(--text); }
+  49% { transform: rotateX(90deg); background: color-mix(in srgb, var(--panel) 70%, transparent); border-color: var(--muted); color: var(--text); }
+  50% { transform: rotateX(90deg); }
+  100% { transform: rotateX(0); }
+}
+@keyframes fl-type { 50% { transform: scale(1.1); } }
+@keyframes fl-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+@media (prefers-reduced-motion: reduce) {
+  .fl-tile.flip, .fl-row.shake, .fl-tile.typing.filled { animation: none; }
+}
+
+/* ---- TV ---- */
+
+.fl-host { flex: 1; display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
+.fl-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr minmax(16rem, 0.8fr) 1fr; align-items: center; gap: 2rem; }
+.fl-side { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; height: 100%; min-height: 0; justify-content: center; }
+.fl-side header { font-size: 1.7rem; font-weight: 900; }
+.fl-side .fl-board { --gap: 8px; height: min(62vh, 30rem); aspect-ratio: 5 / 6; font-size: 2.2rem; }
+.fl-side.won .fl-board { filter: drop-shadow(0 0 22px rgba(62, 157, 90, 0.55)); }
+.fl-side.p1 .fl-tile:not(.g):not(.y):not(.b) { border-color: color-mix(in srgb, var(--p1) 35%, var(--line)); }
+.fl-side.p2 .fl-tile:not(.g):not(.y):not(.b) { border-color: color-mix(in srgb, var(--p2) 35%, var(--line)); }
+.fl-side footer { min-height: 2.4rem; }
+.fl-badge { display: inline-block; padding: 0.35em 1em; border-radius: var(--r-pill); background: var(--panel); border: 1px solid var(--line); color: var(--muted); font-weight: 700; font-size: 1.1rem; }
+.fl-badge.solved, .fl-badge.win { background: #3e9d5a; border-color: transparent; color: #fff; }
+.fl-badge.out { color: var(--bad); }
+.fl-mid { display: flex; flex-direction: column; align-items: center; gap: 1rem; text-align: center; }
+.fl-mid p { margin: 0; color: var(--muted); font-size: 1.15rem; line-height: 1.5; }
+.fl-q { font-size: 3.6rem; font-weight: 900; letter-spacing: 0.3em; margin-right: -0.3em; color: var(--muted); opacity: 0.5; }
+.fl-clock { font-size: 2.2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.fl-clock.low { color: var(--bad); }
+.fl-label { text-transform: none; }
+.fl-word { display: grid; grid-template-columns: repeat(5, 4.2rem); gap: 8px; font-size: 2.4rem; }
+.fl-verdict, .fl-mid .ark-result { font-size: 2rem; font-weight: 900; }
+.fl-sub { font-size: 1rem; }
+
+/* ---- phone ---- */
+
+.fl-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 8px; }
+.fl-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); font-weight: 700; padding: 0 4px; }
+.fl-them { display: flex; align-items: center; gap: 8px; }
+.fl-them small { font-weight: 500; }
+.fl-board.small { --gap: 2px; width: 62px; }
+.fl-board.small .fl-tile { border-radius: 2px; border-width: 1px; }
+.fl-board.small .fl-tile::after { display: none; }
+.fl-status { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.fl-status .won { color: var(--good); font-weight: 900; }
+.fl-status .lost { color: var(--bad); font-weight: 900; }
+.fl-answer { text-transform: uppercase; letter-spacing: 0.08em; }
+.fl-phone > .fl-board { width: min(100%, 52vh * 5 / 6); align-self: center; font-size: 1.9rem; }
+.fl-keys { display: flex; flex-direction: column; gap: 7px; margin-top: auto; }
+.fl-krow { display: flex; gap: 5px; justify-content: center; }
+.fl-key {
+  flex: 1;
+  max-width: 44px;
+  height: 54px;
+  padding: 0;
+  border: 0;
+  border-radius: var(--r-sm);
+  background: var(--btn);
+  color: var(--text);
+  font-size: 1.15rem;
+  font-weight: 800;
+  text-transform: uppercase;
+}
+.fl-key.wide { flex: 1.6; max-width: 70px; font-size: 0.85rem; }
+.fl-key.wide[data-key='⌫'] { font-size: 1.3rem; }
+.fl-key.g { background: #3e9d5a; color: #fff; }
+.fl-key.y { background: #d4a62a; color: #fff; }
+.fl-key.b { background: #262a33; color: rgba(255, 255, 255, 0.45); }
+.fl-key:active { transform: translateY(2px); filter: brightness(1.2); }
+.fl-phone .rematch { margin-top: auto; }

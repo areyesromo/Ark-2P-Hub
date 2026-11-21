@@ -32,6 +32,19 @@ const race = async (players) => {
 };
 const HOUSE = [[0.25, 0.85, 0.25, 0.45, 0.75, 0.45, 0.75, 0.85, 0.25, 0.85], [0.2, 0.47, 0.5, 0.15, 0.8, 0.47], [0.44, 0.85, 0.44, 0.65, 0.56, 0.65, 0.56, 0.85]];
 const NUDGE = {
+  // Mid-game boards: some squares dug, a hand dealt, a few guesses in.
+  'mine-duel': async (players) => {
+    for (const cell of [65, 30, 101, 77, 12, 118]) { both(players, { type: 'dig', cell }); await sleep(250); }
+  },
+  blackjack: async (players) => {
+    both(players, { type: 'bet', amount: 100 });
+    await sleep(2200);
+    players[0].emit('game:input', { type: 'hit' });
+  },
+  'five-letters': async (players) => {
+    for (const word of ['slate', 'crown']) { players[0].emit('game:input', { type: 'guess', word }); await sleep(300); }
+    players[1].emit('game:input', { type: 'guess', word: 'pious' });
+  },
   'kart-race': race,
   'kart-race-3d': race,
   'sketch-guess': async (players) => {

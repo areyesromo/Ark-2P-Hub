@@ -1,0 +1,221 @@
+/* Blackjack: a green baize table with the gold lettering of a real one. The felt, cards and chips
+   keep their own colours (they're the things themselves); text and panels follow the theme. */
+
+/* ---- cards ---- */
+
+.bj-cards { display: flex; justify-content: center; }
+.bj-card {
+  position: relative;
+  flex: none;
+  width: var(--card-w, 4.6rem);
+  aspect-ratio: 5 / 7;
+  border-radius: calc(var(--card-w, 4.6rem) * 0.09);
+  background: linear-gradient(160deg, #ffffff, #f1efe9);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 6px 14px -4px rgba(0, 0, 0, 0.6);
+  color: #16181d;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: calc(var(--card-w, 4.6rem) * 0.3);
+}
+.bj-card + .bj-card { margin-left: calc(var(--card-w, 4.6rem) * -0.42); }
+.bj-card.red { color: #c8202f; }
+.bj-card .ix { position: absolute; left: 8%; top: 5%; display: flex; flex-direction: column; align-items: center; line-height: 0.95; font-weight: 700; }
+.bj-card .ix i { font-style: normal; font-size: 0.8em; }
+.bj-card .pip { position: absolute; right: 9%; bottom: 4%; font-size: 1.9em; line-height: 1; }
+.bj-card.back {
+  background:
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.13) 0 2px, transparent 2px 9px),
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.13) 0 2px, transparent 2px 9px),
+    #8c1d2c;
+  box-shadow: inset 0 0 0 calc(var(--card-w, 4.6rem) * 0.06) #fff, 0 6px 14px -4px rgba(0, 0, 0, 0.6);
+}
+.bj-card.deal { animation: bj-deal 0.42s cubic-bezier(0.2, 0.8, 0.3, 1) both; }
+@keyframes bj-deal { from { transform: translate(30vw, -40vh) rotate(-25deg); opacity: 0; } to { transform: none; opacity: 1; } }
+
+/* ---- chips ---- */
+
+.bj-chip {
+  --c: #2e9e5b;
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: var(--chip, 2.4rem);
+  height: var(--chip, 2.4rem);
+  border-radius: 50%;
+  background:
+    repeating-conic-gradient(from 0deg, #fff 0 12deg, transparent 12deg 45deg),
+    var(--c);
+  box-shadow: 0 3px 0 rgba(0, 0, 0, 0.35), 0 4px 8px rgba(0, 0, 0, 0.4);
+  color: #fff;
+  font-weight: 900;
+  font-size: calc(var(--chip, 2.4rem) * 0.3);
+}
+.bj-chip b {
+  display: grid;
+  place-items: center;
+  width: 68%;
+  height: 68%;
+  border-radius: 50%;
+  background: var(--c);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.55);
+}
+.bj-chip.green { --c: #23864c; }
+.bj-chip.orange { --c: #d86a12; }
+.bj-chip.black { --c: #202226; }
+.bj-chip.pink { --c: #c0367a; }
+.bj-chip.purple { --c: #5b2fa3; }
+.bj-chip.gold { --c: #b88a1b; }
+.bj-stack { display: inline-flex; flex-direction: row-reverse; }
+.bj-stack .bj-chip { --chip: 2.5rem; margin-left: -1.5rem; }
+.bj-stack .bj-chip:last-child { margin-left: 0; }
+
+.bj-total { font-weight: 800; font-variant-numeric: tabular-nums; }
+.bj-result {
+  align-self: center;
+  padding: 0.2em 0.7em;
+  border-radius: var(--r-pill);
+  font-weight: 800;
+  background: rgba(0, 0, 0, 0.45);
+  color: #fff;
+  animation: bj-pop 0.3s cubic-bezier(0.3, 1.6, 0.6, 1) both;
+}
+.bj-result.win, .bj-result.blackjack { background: var(--good); color: var(--on-good, #062); }
+.bj-result.blackjack { box-shadow: 0 0 18px rgba(255, 215, 90, 0.8); }
+.bj-result.lose, .bj-result.bust { background: var(--bad); color: #fff; }
+@keyframes bj-pop { from { transform: scale(0.4); opacity: 0; } to { transform: none; opacity: 1; } }
+.bj-tag { font-size: 0.75em; padding: 0.1em 0.5em; border-radius: var(--r-pill); background: rgba(255, 215, 90, 0.25); color: #ffe08a; }
+
+@media (prefers-reduced-motion: reduce) {
+  .bj-card.deal, .bj-result, .bj-banner { animation: none !important; }
+}
+
+/* ---- TV ---- */
+
+.bj-host { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+.bj-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; font-size: 1.15rem; color: var(--muted); }
+.bj-head strong { color: var(--text); font-size: 1.6rem; }
+.bj-clock { font-variant-numeric: tabular-nums; }
+.bj-clock.low { color: var(--bad); }
+.bj-table {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-rows: auto auto 1fr;
+  justify-items: center;
+  padding: 1.4rem 2rem 1.6rem;
+  border-radius: 46% 46% var(--radius) var(--radius) / 30% 30% var(--radius) var(--radius);
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.12), transparent 60%),
+    radial-gradient(ellipse at 50% 120%, rgba(0, 0, 0, 0.35), transparent 60%),
+    #17663f;
+  box-shadow: inset 0 0 0 10px #5a3519, inset 0 0 0 13px #8a5a2f, inset 0 0 60px rgba(0, 0, 0, 0.5), 0 20px 40px -20px rgba(0, 0, 0, 0.8);
+  --card-w: 5.2rem;
+}
+.bj-dealer { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-height: 9.5rem; padding-top: 0.6rem; }
+.bj-total.dealer { color: #fff; font-size: 1.3rem; padding: 0.15em 0.8em; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.3); }
+.bj-shoe { width: 5.2rem; aspect-ratio: 5 / 7; border-radius: 0.5rem; border: 2px dashed rgba(255, 255, 255, 0.25); }
+.bj-felt-text { display: flex; flex-direction: column; align-items: center; margin: 0.6rem 0 0.2rem; color: #f2cf6b; font-family: Georgia, 'Times New Roman', serif; text-shadow: 0 1px 0 rgba(0, 0, 0, 0.4); }
+.bj-felt-text span { font-size: 1.7rem; font-style: italic; letter-spacing: 0.04em; }
+.bj-felt-text small { font-size: 0.95rem; opacity: 0.8; }
+.bj-spots { width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 3rem; align-self: end; }
+.bj-spot {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+  padding: 0.9rem 1.1rem;
+  min-height: 14rem;
+  border-radius: var(--radius);
+  border: 2px solid rgba(242, 207, 107, 0.45);
+  background: rgba(0, 0, 0, 0.16);
+  color: #fff;
+}
+.bj-spot.p1 { border-left: 6px solid var(--p1); }
+.bj-spot.p2 { border-right: 6px solid var(--p2); }
+.bj-spot header { display: flex; justify-content: space-between; align-items: baseline; font-size: 1.35rem; font-weight: 800; }
+.bj-spot header .p1-text, .bj-spot header .p2-text { filter: brightness(1.25); }
+.bj-bank { font-variant-numeric: tabular-nums; }
+.bj-bank small { font-weight: 500; opacity: 0.7; font-size: 0.7em; }
+.bj-spot .bj-result { font-size: 1.25rem; }
+.bj-spot-body { flex: 1; display: flex; justify-content: center; align-items: center; gap: 1.6rem; }
+.bj-spot footer { min-height: 1.4rem; text-align: center; color: rgba(255, 255, 255, 0.8); font-weight: 700; }
+.bj-keys { font-weight: 500; font-size: 0.9rem; color: rgba(255, 255, 255, 0.6); }
+.bj-hand { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.4rem; border-radius: var(--r-md); transition: background 0.2s; }
+.bj-hand.active { background: rgba(255, 255, 255, 0.1); box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.35); }
+.bj-hand.split { --card-w: 4.2rem; }
+.bj-under { display: flex; align-items: center; gap: 0.7rem; font-size: 1.3rem; }
+.bj-wait { color: rgba(255, 255, 255, 0.7); font-size: 1.2rem; font-style: italic; }
+.bj-wait.in { color: #fff; font-style: normal; font-weight: 700; }
+.bj-wait .bj-stack .bj-chip { --chip: 2.6rem; margin-left: -1.6rem; }
+.bj-pick { display: flex; gap: 0.5rem; align-items: center; }
+.bj-pick .bj-chip { opacity: 0.55; }
+.bj-pick .on { opacity: 1; transform: translateY(-6px) scale(1.15); box-shadow: 0 0 0 3px #fff, 0 8px 14px rgba(0, 0, 0, 0.5); }
+.bj-allin { padding: 0.3em 0.7em; border-radius: var(--r-pill); background: #b88a1b; font-weight: 800; opacity: 0.55; }
+.bj-banner {
+  position: absolute;
+  left: 50%;
+  top: 46%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1.2rem 2.4rem;
+  border-radius: var(--radius);
+  background: color-mix(in srgb, var(--panel) 94%, transparent);
+  box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85);
+  font-size: 2.4rem;
+  font-weight: 900;
+  text-align: center;
+  animation: bj-pop 0.35s ease-out both;
+}
+.bj-banner small { font-size: 1.05rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+
+.bj-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 10px 14px; text-align: center; }
+.bj-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.bj-top .bj-bank { font-size: 1.5rem; font-weight: 900; }
+.bj-vs { font-weight: 700; color: var(--muted); }
+.bj-vs.up { color: var(--good); }
+.bj-vs.down { color: var(--bad); }
+.bj-handno { color: var(--muted); }
+.bj-felt {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 14px;
+  padding: 16px 12px;
+  border-radius: var(--radius);
+  background: radial-gradient(ellipse at 50% 0%, rgba(255, 255, 255, 0.12), transparent 65%), #17663f;
+  box-shadow: inset 0 0 0 4px #5a3519, inset 0 0 30px rgba(0, 0, 0, 0.45);
+  color: #fff;
+  --card-w: 25vw;
+}
+.bj-ask { margin: 0; font-size: 1.3rem; font-weight: 800; }
+.bj-rack { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; justify-items: center; }
+.bj-chip-btn { background: none; border: 0; padding: 4px; border-radius: 50%; }
+.bj-chip-btn .bj-chip { --chip: 23vw; max-width: 96px; max-height: 96px; font-size: 1.4rem; }
+.bj-chip-btn:active .bj-chip, .bj-chip-btn.picked .bj-chip { transform: translateY(-4px) scale(1.06); box-shadow: 0 0 0 4px #fff, 0 8px 14px rgba(0, 0, 0, 0.5); }
+.bj-chip-btn.dim, .bj-allin-btn.dim { opacity: 0.35; }
+.bj-allin-btn { align-self: center; padding: 12px 22px; border-radius: var(--r-pill); border: 0; background: #b88a1b; color: #fff; font-weight: 900; font-size: 1.1rem; box-shadow: 0 3px 0 #7a5a0c; }
+.bj-placed { display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: 1.2rem; }
+.bj-placed .bj-stack .bj-chip { --chip: 3.6rem; margin-left: -2.2rem; }
+.bj-note { margin: 0; color: rgba(255, 255, 255, 0.75); font-size: 0.95rem; }
+.bj-mini-dealer { display: flex; align-items: center; justify-content: center; gap: 10px; --card-w: 13vw; font-weight: 700; }
+.bj-mini-dealer b { min-width: 2ch; font-size: 1.2rem; }
+.bj-my-hands { display: flex; justify-content: center; gap: 10px; }
+.bj-my-hands.two { --card-w: 18vw; }
+.bj-total.big { font-size: 2rem; }
+.bj-betline { color: rgba(255, 255, 255, 0.75); }
+.bj-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.bj-act { padding: 18px 0; border: 0; border-radius: var(--r-md); font-size: 1.35rem; font-weight: 900; color: #fff; box-shadow: 0 4px 0 rgba(0, 0, 0, 0.35); }
+.bj-act.hit { background: #2d8f55; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35), 0 4px 0 #145a31; }
+.bj-act.stand { background: #b3372f; box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.35), 0 4px 0 #6e1712; }
+.bj-act.minor { padding: 12px 0; font-size: 1.05rem; background: rgba(0, 0, 0, 0.35); }
+.bj-act:disabled { opacity: 0.3; }
+.bj-act:active:not(:disabled) { transform: translateY(3px); box-shadow: none; }
+.bj-end { display: flex; flex-direction: column; align-items: center; gap: 10px; }
+.bj-end .big { font-size: 2rem; font-weight: 900; }
+.bj-end .won { color: #8dffb5; }
+.bj-end .lost { color: #ffb0a8; }

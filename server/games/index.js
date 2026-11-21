@@ -80,6 +80,16 @@ import checkers from './checkers.js';
 import { PARTIES } from './minis/index.js';
 import mancala from './mancala.js';
 import dotsBoxes from './dots-boxes.js';
+import reversi from './reversi.js';
+import { reversiBot } from './reversi-bot.js';
+import blackjack from './blackjack.js';
+import { blackjackBot } from './blackjack-bot.js';
+import fiveLetters from './five-letters.js';
+import { fiveLettersBot } from './five-letters-bot.js';
+import make24 from './make-24.js';
+import { make24Bot } from './make-24-bot.js';
+import mineDuel from './mine-duel.js';
+import { mineDuelBot } from './mine-duel-bot.js';
 import { withSetup } from './options.js';
 import { BLURBS } from './blurbs.js';
 
@@ -223,6 +233,11 @@ const GAMES = [
     quest: { title: 'Quest', values: [5, 3], label: (n) => (n === 5 ? 'Full: 5 floors (with the Ice Caves and the Armory)' : 'Short: 3 floors') },
   }),
   { ...wordRace, bot: wordRaceBot },
+  withSetup({ ...fiveLetters, bot: fiveLettersBot }, { ...firstTo('Rounds to win', [3, 2, 5]), ...timer('timed', '180 s a word') }),
+  withSetup({ ...make24, bot: make24Bot }, {
+    ...firstTo('Rounds to win', [5, 3, 7]),
+    seconds: { title: 'Time per puzzle', values: [90, 60, 120, 0], label: (n) => (n ? `${n} s` : 'No timer: it waits for you (give up together to move on)') },
+  }),
   withSetup({ ...anagramDuel, bot: anagramDuelBot }, firstTo('Rounds to win', [5, 3, 7])),
   withSetup({ ...wordHunt, bot: wordHuntBot }, {
     mode: { title: 'Mode', values: ['shared', 'race'], label: (k) => (k === 'race' ? 'Race (two phones): your own board each, first to find every word' : 'Shared board: first to mark a word gets it') },
@@ -267,6 +282,12 @@ const GAMES = [
     ...firstTo('Games to win', [1, 2, 3]),
     ...timer('timed', '30 s a move'),
   }),
+  withSetup({ ...reversi, bot: reversiBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
+  withSetup({ ...mineDuel, bot: mineDuelBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '25 s a turn') }),
+  withSetup({ ...blackjack, bot: blackjackBot }, {
+    hands: { title: 'Match', values: [8, 5, 12], label: (n) => `${n} hands` },
+    ...timer('timed', '20 s to bet, 25 s a move'),
+  }),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
@@ -299,12 +320,12 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
-  board: ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
-  cards: ['crazy-eights', 'liars-dice', 'memory-match'],
+  board: ['checkers', 'connect-four', 'reversi', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
+  cards: ['crazy-eights', 'blackjack', 'liars-dice', 'memory-match'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
 

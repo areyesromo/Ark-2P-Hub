@@ -55,7 +55,6 @@ Eights does). Never make up a card at random. Famous trademarked names get our o
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Blackjack | Both play the dealer from a shuffled shoe; most chips after the last hand wins. | 2D, 3D art table |
 | Heads-up Hold'em | 1v1 poker: two hidden cards on your phone, five shared on the TV, blinds go up. | 2D, 3D art table |
 | Roulette | Both bet on the same spin; most chips after ten spins. | 3D base wheel |
 | Baccarat | Bet on player, banker or tie; quick rounds. | 2D |
@@ -111,7 +110,6 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 | Ludo / Parcheesi | Roll to bring pawns out and home, capture, safe squares. | 2D, 3D art board |
 | Backgammon | The classic race with hitting and bearing off; a doubling cube. | 2D, 3D art board |
 | Snakes & Ladders | Pure luck, quick and silly; for kids. | 2D |
-| Reversi | Flip discs by trapping lines; most discs wins. | 2D |
 | Chess | The full game, with a computer at three levels. | 2D, 3D art pieces |
 | Chinese Checkers | The 2-player star board, hop across to the far point. | 2D |
 | Nine Men's Morris | Make mills of three to take pieces. | 2D |
@@ -161,9 +159,6 @@ Crazy Eights, Memory Match, Rock Paper Scissors, Dice Party.
 |---|---|---|
 | Sudoku Race | Same puzzle, both phones; first to finish, mistakes cost time. | 2D |
 | Picture Logic (Nonogram) | Same grid, fill by the number clues; first to the picture. | 2D |
-| Mine Duel | One minefield, turns; find mines for points, hit one and lose your turn. | 2D |
-| Five Letters | Wordle-style: both guess the same hidden word, fewest guesses wins. | 2D |
-| Make 24 | Four numbers, make 24 with + − × ÷; first right. | 2D |
 | Numbers Round | Countdown-style: reach the target with six numbers. | 2D |
 | Slide Puzzle Race | Same scrambled 15-puzzle; fewest moves or first done. | 2D |
 | Spot the Change | Two pictures, tap the differences first. | 2D |
