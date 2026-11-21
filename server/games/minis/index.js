@@ -47,6 +47,7 @@ import catchIt from './catch-it.js';
 import dodgeBall from './dodge-ball.js';
 import treasureDig from './treasure-dig.js';
 import bubblePop from './bubble-pop.js';
+import bridgeBuilder from './bridge-builder.js';
 
 export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath, pickColour, biggerNumber, lightsOut, snap, pumpIt, catchIt, dodgeBall];
-export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe, cannonLob, stackAttack, bumperCars, paintGrab, drumBeat, musicalChairs, archery, curling, treasureDig, bubblePop];
+export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe, cannonLob, stackAttack, bumperCars, paintGrab, drumBeat, musicalChairs, archery, curling, treasureDig, bubblePop, bridgeBuilder];

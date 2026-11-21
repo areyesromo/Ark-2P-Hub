@@ -662,3 +662,52 @@ i.bub { display: inline-block; width: 2.4rem; height: 2.4rem; border-radius: 50%
 .mi-bub-head b { font-size: 1.6rem; }
 .mi-bub-head i.bub { width: 1.4rem; height: 1.4rem; }
 @media (prefers-reduced-motion: reduce) { .mi-bub-board .bub { transition: none; } .mi-bub-float, .mi-bub-board .bub.gone { animation: none; opacity: 0; } }
+
+/* ---- Bridge Builder ---- */
+.mi-bridge { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; width: 100%; }
+.mi-bridge-top { display: flex; justify-content: space-between; align-items: center; width: 100%; font-size: 1.5rem; font-weight: 800; }
+.mi-bridge-top > span { display: flex; align-items: center; gap: 0.5rem; }
+.mi-bridge-say { display: flex; flex-direction: column; align-items: center; gap: 0.3rem; margin: 0; font-weight: 700; text-align: center; }
+.mi-turnbar { display: block; width: 8rem; height: 6px; border-radius: 3px; background: var(--line); overflow: hidden; }
+.mi-turnbar i { display: block; height: 100%; background: var(--warn); animation: mi-turn linear forwards; }
+@keyframes mi-turn { from { width: 100%; } to { width: 0; } }
+.mi-queue { display: flex; align-items: center; gap: 0.6rem; color: var(--muted); }
+.mi-crate { display: grid; place-items: center; width: var(--crate, 2.6rem); height: calc(var(--crate, 2.6rem) * var(--h, 1)); border-radius: 4px; background: repeating-linear-gradient(90deg, #b07a3c 0 22%, #9a6630 22% 25%), #b07a3c; box-shadow: inset 0 0 0 3px #6d441c, 0 3px 6px rgba(0, 0, 0, 0.45); color: #fff4dd; font-weight: 900; text-shadow: 0 1px 2px #000; }
+.mi-crate.w1 { --h: 0.6; }
+.mi-crate.w2 { --h: 0.85; }
+.mi-crate.w3 { --h: 1.1; background: repeating-linear-gradient(90deg, #8c5a2b 0 22%, #774a22 22% 25%), #8c5a2b; }
+.mi-crate.now { --crate: 3.2rem; animation: mi-swing 1.2s ease-in-out infinite; }
+.mi-crate.next { --crate: 2rem; opacity: 0.6; }
+.mi-crate.drop { animation: mi-crate-drop 0.35s cubic-bezier(0.5, 0, 1, 1); }
+@keyframes mi-swing { 50% { transform: rotate(4deg); } }
+@keyframes mi-crate-drop { from { transform: translateY(-160%); } to { transform: none; } }
+.mi-bridge-scene { position: relative; width: min(100%, 60rem); aspect-ratio: 2.6; border-radius: var(--radius); overflow: hidden; background: linear-gradient(#7cc4ff, #cfeaff 70%); }
+.mi-cliff { position: absolute; bottom: 0; width: 13%; height: 46%; background: linear-gradient(#6aa84f 0 14%, #8a6a45 14%); }
+.mi-cliff.l { left: 0; border-top-right-radius: 14px; }
+.mi-cliff.r { right: 0; border-top-left-radius: 14px; }
+.mi-water { position: absolute; left: 13%; right: 13%; bottom: 0; height: 22%; background: linear-gradient(#3a8fd6, #1f5f9c); }
+.mi-post { position: absolute; left: 50%; bottom: 0; width: 4%; height: 54%; transform: translateX(-50%); background: linear-gradient(90deg, #6b6f78, #9aa0aa, #6b6f78); clip-path: polygon(30% 0, 70% 0, 100% 100%, 0 100%); }
+.mi-beam { position: absolute; left: 6%; right: 6%; bottom: 54%; height: 30%; transform-origin: 50% 100%; transform: rotate(var(--tilt)); transition: transform 0.6s cubic-bezier(0.3, 1.4, 0.6, 1); }
+.mi-bridge-scene.over .mi-beam { transition-duration: 0.9s; transition-timing-function: cubic-bezier(0.6, 0, 0.9, 0.6); }
+.mi-plank { position: absolute; left: 0; right: 0; bottom: 0; height: 14%; border-radius: 4px; background: linear-gradient(#c9944f, #8f5f2a); box-shadow: 0 3px 0 #5d3a17; }
+.mi-spots { position: absolute; left: 0; right: 0; bottom: 14%; height: 86%; display: grid; grid-template-columns: repeat(4, 1fr) 0.5fr repeat(4, 1fr); align-items: end; }
+.mi-spot { position: relative; display: flex; justify-content: center; align-items: flex-end; height: 100%; border-bottom: 4px solid transparent; --crate: min(4.2rem, 85%); }
+.mi-spot.l { border-bottom-color: color-mix(in srgb, var(--p1) 70%, transparent); }
+.mi-spot.r { border-bottom-color: color-mix(in srgb, var(--p2) 70%, transparent); }
+.mi-spot[data-spot] { cursor: pointer; background: linear-gradient(transparent 40%, rgba(255, 255, 255, 0.35)); border-radius: 6px 6px 0 0; }
+.mi-spot.tips i { margin-bottom: 10%; font-style: normal; font-weight: 900; color: #d33; }
+.mi-spot.chosen { background: rgba(255, 255, 255, 0.6); }
+.mi-spot.cur::after { content: ''; position: absolute; inset: 10% 6% 0; border: 3px solid; border-radius: 6px; animation: mi-swing 1s ease-in-out infinite; }
+.mi-spot.cur.p1::after { border-color: var(--p1); }
+.mi-spot.cur.p2::after { border-color: var(--p2); }
+.mi-hub { align-self: end; justify-self: center; width: 60%; aspect-ratio: 1; margin-bottom: -6%; border-radius: 50%; background: #555b66; box-shadow: inset 0 0 0 3px #2c3038; }
+.mi-cart { position: absolute; bottom: 12%; left: 0; font-size: 2.4rem; animation: mi-cart linear forwards; }
+@keyframes mi-cart { from { left: -6%; } to { left: 100%; } }
+.mi-lean { display: flex; align-items: center; gap: 0.6rem; width: min(100%, 36rem); color: var(--muted); font-size: 0.9rem; }
+.mi-lean .bar { position: relative; flex: 1; height: 10px; border-radius: 5px; background: linear-gradient(90deg, var(--p1), var(--line) 30% 70%, var(--p2)); }
+.mi-lean .bar i { position: absolute; top: -5px; width: 4px; height: 20px; margin-left: -2px; border-radius: 2px; background: var(--text); transition: left 0.5s; }
+.mi-bridge.phone { gap: 10px; }
+.mi-bridge.phone .mi-bridge-top { font-size: 1.1rem; }
+.mi-bridge.phone .mi-bridge-scene { aspect-ratio: 1.7; }
+.mi-bridge.phone .mi-spot { --crate: 86%; }
+@media (prefers-reduced-motion: reduce) { .mi-crate.now, .mi-crate.drop, .mi-spot.cur::after { animation: none; } .mi-beam { transition: none; } }
