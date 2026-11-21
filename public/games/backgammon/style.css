@@ -1,0 +1,146 @@
+/* Backgammon: a wooden board with long points. The wood and the points keep their own colours
+   (they're the board itself); the checkers are the players' colours, with a dot (player 1) or a
+   ring (player 2) to tell them apart without colour. */
+
+.bg-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: 6fr 0.85fr 6fr 0.85fr;
+  grid-template-rows: 1fr 1fr;
+  aspect-ratio: 13.7 / 10;
+  padding: 2.2%;
+  gap: 0;
+  border-radius: var(--r-md);
+  background: linear-gradient(135deg, #7a4b24, #4f2d13 60%, #6b4120);
+  box-shadow: inset 0 2px 0 rgba(255, 255, 255, 0.15), 0 18px 40px -14px rgba(0, 0, 0, 0.85);
+  --ck: 1;
+}
+.bg-half {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  background: #1f6b45;
+  box-shadow: inset 0 0 0 2px #143f29, inset 0 0 22px rgba(0, 0, 0, 0.35);
+}
+.bg-half.high { grid-row: 1; }
+.bg-half.low { grid-row: 2; }
+.bg-bar { grid-row: 1 / 3; grid-column: 2; display: flex; flex-direction: column; justify-content: space-between; align-items: center; padding: 6px 0; background: linear-gradient(90deg, #5a3519, #7a4b24, #5a3519); }
+.bg-tray { grid-row: 1 / 3; grid-column: 4; display: flex; flex-direction: column; justify-content: space-between; margin-left: 6%; background: #3a200d; border-radius: 4px; box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.6); }
+.bg-half.high.r { grid-column: 3; }
+.bg-half.low.r { grid-column: 3; }
+
+/* A point: a long triangle, checkers stacked from its base. */
+.bg-pt { position: relative; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+.bg-pt.low { flex-direction: column-reverse; }
+.bg-tri { position: absolute; left: 6%; right: 6%; height: 84%; }
+.bg-pt.high .bg-tri { top: 0; clip-path: polygon(0 0, 100% 0, 50% 100%); }
+.bg-pt.low .bg-tri { bottom: 0; clip-path: polygon(0 100%, 100% 100%, 50% 0); }
+.bg-pt.a .bg-tri { background: linear-gradient(#e9d3a3, #d9bc82); }
+.bg-pt.b .bg-tri { background: linear-gradient(#a8362a, #86261d); }
+.bg-stack { position: relative; display: flex; flex-direction: column; align-items: center; width: 100%; height: 100%; }
+.bg-pt.low .bg-stack { flex-direction: column-reverse; }
+
+.bg-ck {
+  position: relative;
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 86%;
+  aspect-ratio: 1;
+  max-height: 19%;
+  border-radius: 50%;
+  box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.4), 0 2px 3px rgba(0, 0, 0, 0.5);
+  font-style: normal;
+}
+.bg-ck.p1 { background: var(--p1); }
+.bg-ck.p2 { background: var(--p2); }
+.bg-ck::after { content: ''; position: absolute; border-radius: 50%; }
+.bg-ck.p1::after { inset: 36%; background: rgba(255, 255, 255, 0.75); }
+.bg-ck.p2::after { inset: 24%; border: 0.14em solid rgba(255, 255, 255, 0.75); }
+.bg-ck b { position: relative; z-index: 1; color: #111; font-size: 0.85em; font-weight: 900; background: rgba(255, 255, 255, 0.9); border-radius: 50%; padding: 0 0.3em; }
+.bg-ck.landed { box-shadow: 0 0 0 2px #fff, 0 0 12px 2px rgba(255, 255, 255, 0.6); }
+.bg-bar-half { flex: 1; display: flex; flex-direction: column; align-items: center; width: 100%; }
+.bg-bar-half.low { flex-direction: column-reverse; }
+.bg-bar-half .bg-ck { max-height: 14%; }
+.bg-cube { display: grid; place-items: center; width: 70%; aspect-ratio: 1; border-radius: 14%; background: #f5f0e4; color: #2b1a0c; font-weight: 900; box-shadow: 0 3px 0 rgba(0, 0, 0, 0.4); }
+.bg-cube.mine, .bg-cube.theirs { outline: 3px solid var(--warn); }
+.bg-tray-half { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 1px; padding: 4px 2px; position: relative; }
+.bg-tray-half.low { flex-direction: column-reverse; }
+.bg-slab { width: 80%; height: 4%; max-height: 7px; border-radius: 2px; }
+.bg-slab.p1 { background: var(--p1); }
+.bg-slab.p2 { background: var(--p2); }
+.bg-tray-half b { position: absolute; left: 0; right: 0; top: 40%; text-align: center; color: #fff; font-weight: 900; text-shadow: 0 1px 3px #000; }
+
+/* Lit up: what can move (a soft glow on its top checker), where it can go (a bright marker). */
+.bg-pt.src, .bg-bar-half.src { cursor: pointer; }
+.bg-pt.src .bg-stack .bg-ck:last-child, .bg-bar-half.src .bg-ck:last-child { box-shadow: 0 0 0 3px #ffe58a, 0 0 14px 3px rgba(255, 229, 138, 0.7); }
+.bg-pt.picked .bg-stack .bg-ck:last-child, .bg-bar-half.picked .bg-ck:last-child { box-shadow: 0 0 0 4px #fff, 0 0 18px 4px #fff; transform: scale(1.08); }
+.bg-pt.tgt::before, .bg-tray-half.tgt::before {
+  content: '';
+  position: absolute;
+  left: 8%;
+  right: 8%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  border: 3px dashed #ffe58a;
+  background: rgba(255, 229, 138, 0.25);
+  z-index: 2;
+  animation: bg-breathe 1.1s ease-in-out infinite;
+}
+.bg-pt.high.tgt::before { bottom: 8%; }
+.bg-pt.low.tgt::before { top: 8%; }
+.bg-tray-half.tgt::before { left: 10%; right: 10%; top: 35%; }
+.bg-pt.tgt, .bg-tray-half.tgt { cursor: pointer; }
+.bg-pt.aim, .bg-bar-half.aim, .bg-tray-half.aim { outline: 3px solid #fff; outline-offset: -3px; border-radius: 4px; }
+@keyframes bg-breathe { 50% { transform: scale(1.15); } }
+
+.bg-dice { position: absolute; left: 56%; right: 12%; top: 50%; transform: translateY(-50%); display: flex; justify-content: center; gap: 4%; pointer-events: none; font-size: var(--die, 1rem); }
+.bg-dice .die.used { opacity: 0.3; }
+.bg-dice .die.p1 { box-shadow: inset 0 -0.18em 0 rgba(0, 0, 0, 0.18), 0 0 0 0.12em var(--p1), 0 0.15em 0.4em rgba(0, 0, 0, 0.4); }
+.bg-dice .die.p2 { box-shadow: inset 0 -0.18em 0 rgba(0, 0, 0, 0.18), 0 0 0 0.12em var(--p2), 0 0.15em 0.4em rgba(0, 0, 0, 0.4); }
+.bg-open { display: flex; flex-direction: column; align-items: center; gap: 0.2em; }
+.bg-open.p1 .die { box-shadow: 0 0 0 0.14em var(--p1); }
+.bg-open.p2 .die { box-shadow: 0 0 0 0.14em var(--p2); }
+@media (prefers-reduced-motion: reduce) { .bg-pt.tgt::before, .bg-tray-half.tgt::before { animation: none; } }
+
+/* ---- TV ---- */
+
+.bg-host { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+.bg-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 1.6rem; }
+.bg-centre { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; height: 100%; justify-content: center; }
+.bg-host .bg-board { height: min(76vh, 100%); --die: 1.6rem; font-size: 1.2rem; }
+.bg-note { color: var(--muted); font-size: 1.1rem; }
+.bg-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.4rem; min-width: 12rem; padding: 1.3rem 1.1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.75; transition: opacity 0.25s, transform 0.25s; }
+.bg-side.active { opacity: 1; transform: scale(1.04); }
+.bg-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -6px var(--p1); }
+.bg-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -6px var(--p2); }
+.bg-name { display: flex; align-items: center; gap: 0.5rem; font-size: 1.5rem; font-weight: 900; }
+.bg-name .bg-ck { width: 1.6rem; max-height: none; }
+.bg-points { font-size: 4rem; font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.bg-points small { font-size: 0.4em; color: var(--muted); }
+.bg-pips { color: var(--muted); text-align: center; }
+.bg-doing { min-height: 1.8rem; font-weight: 800; display: flex; gap: 0.5rem; align-items: center; }
+.bg-clock { color: var(--muted); font-variant-numeric: tabular-nums; }
+.bg-clock.low { color: var(--bad); }
+.bg-keys { font-size: 0.85rem; color: var(--muted); text-align: center; max-width: 12rem; }
+.bg-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2.2rem; font-weight: 900; text-align: center; white-space: nowrap; }
+.bg-banner small { font-size: 1rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+
+.bg-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 6px 14px; }
+.bg-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; padding: 0 4px; color: var(--muted); font-size: 0.95rem; }
+.bg-top span { display: flex; align-items: center; gap: 5px; }
+.bg-top .bg-ck { width: 16px; max-height: none; }
+.bg-top b { color: var(--text); }
+.bg-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.bg-msg small { color: var(--muted); }
+.bg-msg .won { color: var(--good); font-weight: 900; }
+.bg-msg .lost { color: var(--bad); font-weight: 900; }
+.bg-msg .big { font-size: 1.5rem; }
+.bg-phone .bg-board { width: 100%; padding: 2%; font-size: 0.7rem; --die: 0.95rem; }
+.bg-btns { display: flex; gap: 10px; }
+.bg-btn { flex: 1; padding: 16px 0; border: 0; border-radius: var(--r-md); font-size: 1.2rem; font-weight: 900; color: var(--text); background: var(--btn); }
+.bg-btn.go { background: var(--good); color: var(--on-good, #062); }
+.bg-btn.stop { background: var(--bad); color: #fff; }
+.bg-btn.big { font-size: 1.4rem; }
+.bg-btn:disabled { opacity: 0.35; }

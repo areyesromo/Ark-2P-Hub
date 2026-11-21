@@ -90,6 +90,8 @@ import make24 from './make-24.js';
 import { make24Bot } from './make-24-bot.js';
 import mineDuel from './mine-duel.js';
 import { mineDuelBot } from './mine-duel-bot.js';
+import backgammon from './backgammon.js';
+import { backgammonBot } from './backgammon-bot.js';
 import { withSetup } from './options.js';
 import { BLURBS } from './blurbs.js';
 
@@ -283,6 +285,11 @@ const GAMES = [
     ...timer('timed', '30 s a move'),
   }),
   withSetup({ ...reversi, bot: reversiBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
+  withSetup({ ...backgammon, bot: backgammonBot }, {
+    points: { title: 'Match', values: [3, 1, 5, 7], label: (n) => (n === 1 ? 'One game' : `First to ${n} points`) },
+    cube: { title: 'Doubling cube', values: [1, 0], label: (n) => (n ? 'On (not in a one-game match)' : 'Off') },
+    ...timer('timed', '45 s a turn'),
+  }),
   withSetup({ ...mineDuel, bot: mineDuelBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '25 s a turn') }),
   withSetup({ ...blackjack, bot: blackjackBot }, {
     hands: { title: 'Match', values: [8, 5, 12], label: (n) => `${n} hands` },
@@ -320,11 +327,11 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
-  board: ['checkers', 'connect-four', 'reversi', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
+  board: ['checkers', 'connect-four', 'reversi', 'backgammon', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
   cards: ['crazy-eights', 'blackjack', 'liars-dice', 'memory-match'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
