@@ -41,6 +41,8 @@ export const BLURBS = {
   'dots-boxes': 'Join dots, claim boxes.',
   mancala: 'Sow stones, fill your store.',
   reversi: 'Trap a line, flip it to your colour.',
+  backgammon: 'Race home, hit blots, double the stakes.',
+  'gin-rummy': 'Make melds, knock or go gin.',
   'mine-duel': 'One minefield. Dig up the most mines.',
   blackjack: 'Same cards, same dealer. Most chips wins.',
   'five-letters': 'Same hidden word. Fewest guesses wins.',

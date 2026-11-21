@@ -32,6 +32,8 @@ import * as CURL from './curling.js';
 import { cardAt } from './snap.js';
 import { clawAt } from './catch-it.js';
 import { distance as digDistance, heat as digHeat } from './treasure-dig.js';
+import { clump as bubbleClump, worth as bubbleWorth } from './bubble-pop.js';
+import { SPOTS as BRIDGE_SPOTS, LIMIT as BRIDGE_LIMIT, lean as bridgeLean, cartLoser as bridgeCartLoser } from './bridge-builder.js';
 
 /** A person at each level: timing error (ms sd), aim wobble, slips, mashing rate, thinking pace. */
 const SKILL = {
@@ -40,6 +42,7 @@ const SKILL = {
   hard: { timing: 28, aim: 0.03, slip: 0.012, rate: 9, think: 0.9, recall: 9, angle: 2, hold: 40 },
 };
 
+const BUBBLE_DENY = 6; // Hard pops a clump of yours this big when it has nothing good of its own
 const gauss = (rng) => Math.sqrt(-2 * Math.log(1 - rng())) * Math.cos(2 * Math.PI * rng());
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const unit = (x, y) => {
@@ -486,6 +489,90 @@ export const PLAYERS = {
     m.dir = m.dir || {};
     if (!m.dir[s.opened]) m.dir[s.opened] = rng() < 0.5 ? -1 : 1;
     return { type: 'turn', by: m.dir[s.opened], botDelayMs: (1000 / (L.rate + 2)) * (0.8 + rng() * 0.4) };
+  },
+  'bubble-pop'({ s, you, L, rng, level }) {
+    // It looks the grid over for clumps (a person spots the big ones first, but not always the
+    // biggest), and Hard now and then pops a big clump of yours to keep it from you.
+    const kinds = s.grid.map((b) => b[1]);
+    const seen = new Set();
+    const groups = [];
+    for (let c = 0; c < kinds.length; c++) {
+      if (seen.has(c) || kinds[c] !== you) continue;
+      const cells = bubbleClump(kinds, c);
+      cells.forEach((x) => seen.add(x));
+      if (cells.length >= 2) groups.push({ cell: c, w: bubbleWorth(kinds, cells, you), size: cells.length });
+    }
+    let pick = null;
+    if (groups.length) {
+      groups.sort((a, b) => b.w - a.w);
+      // Easy takes whatever it sees first; Normal one of the best few; Hard the best.
+      const reach = level === 'easy' ? groups.length : level === 'normal' ? Math.min(3, groups.length) : 1;
+      pick = groups[Math.floor(rng() * reach)];
+    }
+    if (level === 'hard' && (!pick || pick.w < 4)) {
+      for (let c = 0; c < kinds.length; c++) {
+        if (kinds[c] !== 1 - you) continue;
+        if (bubbleClump(kinds, c).length >= BUBBLE_DENY) { pick = { cell: c }; break; }
+      }
+    }
+    if (!pick) return null;
+    return { type: 'pop', cell: pick.cell, id: s.grid[pick.cell][0], botDelayMs: (380 + rng() * 520) * L.think + s.cooldownMs * 0.2, botFor: s.grid[pick.cell][0] };
+  },
+  'bridge-builder'({ s, you, L, rng, level }) {
+    if (s.phase !== 'place' || s.turn !== you) return null;
+    const free = s.placed.map((w, i) => (w ? -1 : i)).filter((i) => i >= 0);
+    if (!free.length) return null;
+    const tips = (placed, i, w) => Math.abs(bridgeLean(placed) + w * BRIDGE_SPOTS[i]) > BRIDGE_LIMIT;
+    const safe = free.filter((i) => !tips(s.placed, i, s.crates[s.n]));
+    let spot;
+    if (safe.length && s.n < 5 && rng() < { easy: 0.3, normal: 0.12, hard: 0 }[level]) {
+      spot = safe[Math.floor(rng() * safe.length)]; // (early on, now and then just a spot that won't tip it)
+    } else {
+      // Plays it out to the end (eight crates at most: quick); the levels differ in their slips.
+      const depth = 99;
+      const memo = new Map();
+      const value = (placed, n, turn, d) => {
+        if (n === BRIDGE_SPOTS.length) { const lo = bridgeCartLoser(bridgeLean(placed)); return lo === null ? 0 : lo === you ? -1 : 1; }
+        if (d === 0) { const t = bridgeLean(placed); return Math.max(-0.9, Math.min(0.9, (you === 0 ? t : -t) / 20)); }
+        const key = placed.join() + '|' + turn + '|' + d;
+        if (memo.has(key)) return memo.get(key);
+        let best = turn === you ? -Infinity : Infinity;
+        for (let i = 0; i < placed.length; i++) {
+          if (placed[i]) continue;
+          let v;
+          if (tips(placed, i, s.crates[n])) v = turn === you ? -1 : 1;
+          else { placed[i] = s.crates[n]; v = value(placed, n + 1, 1 - turn, d - 1); placed[i] = 0; }
+          best = turn === you ? Math.max(best, v) : Math.min(best, v);
+        }
+        memo.set(key, best);
+        return best;
+      };
+      let top = -Infinity;
+      const placed = s.placed.slice();
+      for (const i of free) {
+        let v;
+        if (tips(placed, i, s.crates[s.n])) v = -1;
+        else { placed[i] = s.crates[s.n]; v = value(placed, s.n + 1, 1 - you, depth); placed[i] = 0; }
+        v += rng() * 0.01;
+        if (v > top) { top = v; spot = i; }
+      }
+    }
+    return { type: 'place', spot, botDelayMs: (900 + rng() * 1100) * L.think, botFor: s.round + ':' + s.n };
+  },
+  'pancake-flip'({ s, you, L, rng, at }) {
+    // It watches the meter and the spin like a player and times its presses, off by a person's error.
+    const p = s.pans[you];
+    if (p.stage === 'cook') {
+      const golden = (s.goldenBand[0] + s.goldenBand[1]) / 2;
+      return { type: 'flip', ...at(p.cookAt + s.cookMs * golden + gauss(rng) * L.timing * 1.6), botFor: 'c' + p.cookAt };
+    }
+    if (p.stage === 'air') {
+      // The first time it's flat once it's on its way down.
+      const flatEvery = (180 / p.spin) * 1000;
+      const k = Math.ceil(s.riseMs / flatEvery);
+      return { type: 'catch', ...at(p.airAt + k * flatEvery + gauss(rng) * L.timing), botFor: 'a' + p.airAt };
+    }
+    return null;
   },
   'treasure-dig'({ s, you, L, rng, m, level }) {
     if (s.found !== null) return null;

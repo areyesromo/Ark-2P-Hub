@@ -1,0 +1,119 @@
+/* Gin Rummy: a dark blue card table. Cards keep their own colours (they're the things); the rest
+   follows the theme. */
+
+.gr-card {
+  position: relative;
+  flex: none;
+  width: var(--card-w, 4rem);
+  aspect-ratio: 5 / 7;
+  border-radius: calc(var(--card-w, 4rem) * 0.09);
+  background: linear-gradient(160deg, #ffffff, #f0eee8);
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6) inset, 0 5px 12px -4px rgba(0, 0, 0, 0.6);
+  color: #16181d;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: calc(var(--card-w, 4rem) * 0.3);
+  transition: transform 0.15s;
+}
+.gr-card.red { color: #c8202f; }
+.gr-card .ix { position: absolute; left: 8%; top: 5%; display: flex; flex-direction: column; align-items: center; line-height: 0.95; font-weight: 700; }
+.gr-card .ix i { font-style: normal; font-size: 0.8em; }
+.gr-card .pip { position: absolute; right: 9%; bottom: 4%; font-size: 1.8em; line-height: 1; }
+.gr-card.back {
+  background:
+    radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.18) 0 18%, transparent 19%),
+    repeating-linear-gradient(45deg, rgba(255, 255, 255, 0.1) 0 3px, transparent 3px 8px),
+    #1f3f8f;
+  box-shadow: inset 0 0 0 calc(var(--card-w, 4rem) * 0.06) #fff, 0 5px 12px -4px rgba(0, 0, 0, 0.6);
+}
+.gr-card.empty { background: transparent; border: 2px dashed rgba(255, 255, 255, 0.25); box-shadow: none; }
+.gr-card.dead { filter: saturate(0.6) brightness(0.92); }
+.gr-card.laid { box-shadow: 0 0 0 3px var(--good), 0 5px 12px -4px rgba(0, 0, 0, 0.6); }
+
+.gr-shown { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 0.6em; }
+.gr-meld { display: flex; padding: 0.25em; border-radius: var(--r-sm); background: rgba(255, 255, 255, 0.08); }
+.gr-meld .gr-card + .gr-card { margin-left: calc(var(--card-w, 4rem) * -0.45); }
+.gr-meld.dead { background: rgba(255, 90, 80, 0.14); }
+.gr-meld.laid { background: rgba(90, 220, 140, 0.14); }
+.gr-count { font-weight: 900; padding: 0.2em 0.7em; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.35); color: #fff; }
+.gr-count.gin { background: var(--good); color: var(--on-good, #062); }
+
+/* ---- TV ---- */
+
+.gr-host { flex: 1; display: flex; min-height: 0; }
+.gr-tv {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr minmax(17rem, 0.7fr) 1fr;
+  gap: 1.4rem;
+  padding: 1.4rem;
+  border-radius: var(--radius);
+  background: radial-gradient(ellipse at 50% 30%, #23407a, #142650 70%);
+  box-shadow: inset 0 0 0 8px #0c1734, inset 0 0 60px rgba(0, 0, 0, 0.5);
+  color: #fff;
+  --card-w: 4.6rem;
+}
+.gr-seat { display: flex; flex-direction: column; gap: 0.7rem; padding: 1rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.2); border: 2px solid rgba(255, 255, 255, 0.1); transition: border-color 0.25s, box-shadow 0.25s; }
+.gr-seat.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.gr-seat.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.gr-seat header { display: flex; justify-content: space-between; align-items: baseline; }
+.gr-name { font-size: 1.6rem; font-weight: 900; filter: brightness(1.2); }
+.gr-name small { font-size: 0.55em; color: rgba(255, 255, 255, 0.6); font-weight: 500; }
+.gr-score { font-size: 2.6rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.gr-score small { font-size: 0.45em; opacity: 0.6; }
+.gr-bar { height: 8px; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.12); overflow: hidden; }
+.gr-bar i { display: block; height: 100%; border-radius: inherit; transition: width 0.6s ease; }
+.gr-seat.p1 .gr-bar i { background: var(--p1); }
+.gr-seat.p2 .gr-bar i { background: var(--p2); }
+.gr-backs { flex: 1; display: flex; justify-content: center; align-items: center; padding-top: 1rem; }
+.gr-backs .gr-card { margin-left: calc(var(--card-w) * -0.62); transform: rotate(calc((var(--i) - 5) * 3deg)) translateY(calc((var(--i) - 5) * (var(--i) - 5) * 0.8px)); }
+.gr-backs .gr-card:first-child { margin-left: 0; }
+.gr-seat .gr-shown { flex: 1; --card-w: 3.6rem; font-size: 1.1rem; align-content: center; }
+.gr-seat footer { min-height: 1.6rem; text-align: center; color: rgba(255, 255, 255, 0.75); font-weight: 700; }
+.gr-clock { font-variant-numeric: tabular-nums; }
+.gr-clock.low { color: #ff8a80; }
+.gr-middle { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; text-align: center; }
+.gr-piles { display: flex; gap: 1.6rem; align-items: flex-end; --card-w: 6.2rem; }
+.gr-deck, .gr-discard { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; }
+.gr-deck small, .gr-discard small { color: rgba(255, 255, 255, 0.7); }
+.gr-deck .gr-card { box-shadow: 3px 3px 0 #d8dce6, 6px 6px 0 #b9bfcc, 0 10px 20px -6px rgba(0, 0, 0, 0.7), inset 0 0 0 calc(var(--card-w) * 0.06) #fff; }
+.gr-discard .gr-card.under { position: absolute; top: 0; transform: rotate(-8deg) translateX(-8px); filter: brightness(0.8); }
+.gr-discard .gr-card.top { animation: gr-land 0.35s ease-out; }
+@keyframes gr-land { from { transform: translateY(-30px) rotate(8deg); opacity: 0; } to { transform: none; opacity: 1; } }
+.gr-caption { font-size: 1.5rem; font-weight: 800; min-height: 2.2rem; }
+.gr-caption .ark-result { font-size: 1.8rem; }
+.gr-hint { margin: 0; color: rgba(255, 255, 255, 0.6); }
+
+/* ---- phone ---- */
+
+.gr-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 14px; }
+.gr-top { display: flex; justify-content: space-between; align-items: baseline; color: var(--muted); padding: 0 4px; }
+.gr-top b { color: var(--text); font-size: 1.15rem; }
+.gr-dw { font-weight: 800; color: var(--text); }
+.gr-dw.low { color: var(--good); }
+.gr-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.gr-msg small { color: var(--muted); }
+.gr-msg .won { color: var(--good); font-weight: 900; }
+.gr-msg .lost { color: var(--bad); font-weight: 900; }
+.gr-msg .big { font-size: 1.6rem; }
+.gr-table { display: flex; justify-content: center; gap: 26px; padding: 12px; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 20%, #23407a, #142650 75%); --card-w: 70px; }
+.gr-take { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 6px; border: 0; border-radius: var(--r-md); background: transparent; color: rgba(255, 255, 255, 0.75); }
+.gr-take.on .gr-card { box-shadow: 0 0 0 3px #ffe58a, 0 0 18px 2px rgba(255, 229, 138, 0.6); animation: gr-glow 1.4s ease-in-out infinite; }
+.gr-take.taking .gr-card { transform: translateY(14px) scale(0.92); }
+@keyframes gr-glow { 50% { transform: translateY(-3px); } }
+.gr-reveal { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 10px; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 20%, #23407a, #142650 75%); --card-w: 40px; font-size: 0.9rem; color: #fff; }
+.gr-hand { display: flex; flex-wrap: wrap; justify-content: center; gap: 12px 8px; --card-w: 60px; padding: 4px 0; }
+.gr-group { display: flex; padding: 5px 5px 5px 5px; border-radius: var(--r-md); }
+.gr-group.meld { background: color-mix(in srgb, var(--good) 22%, transparent); box-shadow: inset 0 0 0 2px color-mix(in srgb, var(--good) 55%, transparent); }
+.gr-group.dead { background: color-mix(in srgb, var(--panel) 80%, transparent); }
+.gr-group .gr-card + .gr-card { margin-left: -27px; }
+.gr-group .gr-card.picked { transform: translateY(-14px); box-shadow: 0 0 0 3px var(--me, var(--p1)), 0 10px 18px -6px rgba(0, 0, 0, 0.7); z-index: 1; }
+.gr-group .gr-card.took::after { content: 'new'; position: absolute; left: 50%; bottom: -8px; transform: translateX(-50%); font: 700 10px/1 system-ui, sans-serif; padding: 2px 5px; border-radius: var(--r-pill); background: var(--warn); color: var(--on-warn, #111); }
+.gr-group .gr-card.knockable::before { content: ''; position: absolute; right: 4px; top: 4px; width: 8px; height: 8px; border-radius: 50%; background: var(--good); }
+.gr-btns { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: auto; }
+.gr-btn { padding: 16px 0; border: 0; border-radius: var(--r-md); background: var(--btn); color: var(--text); font-size: 1.15rem; font-weight: 900; }
+.gr-btn.go { background: var(--good); color: var(--on-good, #062); margin-top: auto; }
+.gr-btn.knock:not(:disabled) { background: var(--warn); color: var(--on-warn, #111); }
+.gr-btn.gin:not(:disabled) { background: var(--good); color: var(--on-good, #062); }
+.gr-btn:disabled { opacity: 0.35; }
+.gr-phone .rematch { margin-top: auto; }
+@media (prefers-reduced-motion: reduce) { .gr-take.on .gr-card, .gr-discard .gr-card.top { animation: none; } }

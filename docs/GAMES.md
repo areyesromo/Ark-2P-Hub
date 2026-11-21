@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (50)
+## Games (52)
 
 ### ⚔️ Competitive (34)
 
@@ -50,7 +50,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four-bot.js`, `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |
 | Memory Match | `memory-match` | Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. Or Race: your own board each, first to clear it. | `server/games/memory-match-bot.js`, `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js` |
 
-### 🎲 Dice & Board (8)
+### 🎲 Dice & Board (10)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -59,7 +59,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Dots and Boxes | `dots-boxes` | Take turns joining two dots. Close the fourth side of a box to claim it and go again; careful not to hand your rival a chain. Most boxes wins. | `server/games/dots-boxes-bot.js`, `server/games/dots-boxes.js`, `public/games/dots-boxes/`, `test/dots-boxes.test.js` |
 | Mancala | `mancala` | Sow stones around the bowls. End in your store to go again; end in an empty bowl of yours to capture across. Fullest store wins. | `server/games/mancala-bot.js`, `server/games/mancala.js`, `public/games/mancala/`, `test/mancala.test.js` |
 | Reversi | `reversi` | Trap a line of their discs between two of yours and they all flip to your colour. Most discs on the board wins. | `server/games/reversi-bot.js`, `server/games/reversi.js`, `public/games/reversi/`, `test/reversi.test.js` |
+| Backgammon | `backgammon` | Race your 15 checkers round and off the board. Hit a lone checker to send it back; double the stakes with the cube. First to 3 points. | `server/games/backgammon-bot.js`, `server/games/backgammon.js`, `public/games/backgammon/`, `test/backgammon.test.js` |
 | Mine Duel | `mine-duel` | One minefield, and you want the mines: dig one up and go again, dig a safe square and it's their turn. First to 13 of the 25 mines. | `server/games/mine-duel-bot.js`, `server/games/mine-duel.js`, `public/games/mine-duel/`, `test/mine-duel.test.js` |
+| Gin Rummy | `gin-rummy` | Draw and throw away to make sets and runs. Knock with 10 or less left over, or go gin. First to 100 points. | `server/games/gin-rummy-bot.js`, `server/games/gin-rummy.js`, `public/games/gin-rummy/`, `test/gin-rummy.test.js` |
 | Blackjack | `blackjack` | Beat the dealer for play chips. You both get the same cards, so the better player wins, not the luckier one. Most chips after the last hand. | `server/games/blackjack-bot.js`, `server/games/blackjack.js`, `public/games/blackjack/`, `test/blackjack.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party-bot.js`, `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
@@ -76,7 +78,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (47)
+## Minigames (50)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -130,6 +132,9 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Archery | `archery` | party | 3D | Aim, hold DRAW to steady the bow, let go to shoot. Mind the wind (controller: stick aims, hold A) | `server/games/minis/archery.js`, `public/games/minis/archery.js`, `test/minis-party8.test.js` |
 | Curling | `curling` | party | 3D | Swipe to throw (curve it for curl), then tap SWEEP to carry it further. Nearest the middle wins | `server/games/minis/curling.js`, `public/games/minis/curling.js`, `test/minis-party8.test.js` |
 | Treasure Dig | `treasure-dig` | party | 2D | Dig a square: hot or cold says how close your chest is. First to find it | `server/games/minis/treasure-dig.js`, `public/games/minis/treasure-dig.js`, `test/minis-party9.test.js` |
+| Bubble Pop | `bubble-pop` | party | 2D | Tap a clump of 2+ of your colour. Gold counts double. Popping theirs costs you a point | `server/games/minis/bubble-pop.js`, `public/games/minis/bubble-pop.js`, `test/minis-party10.test.js` |
+| Bridge Builder | `bridge-builder` | party | 2D | Take turns placing crates. Tip it and you lose; when it is full the heavier side loses | `server/games/minis/bridge-builder.js`, `public/games/minis/bridge-builder.js`, `test/minis-party10.test.js` |
+| Pancake Flip | `pancake-flip` | party | 2D | FLIP when the meter is green, then CATCH it flat. Tallest stack wins | `server/games/minis/pancake-flip.js`, `public/games/minis/pancake-flip.js`, `test/minis-party10.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->
