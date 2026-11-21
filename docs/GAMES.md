@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (45)
+## Games (50)
 
-### ⚔️ Competitive (32)
+### ⚔️ Competitive (34)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -39,6 +39,8 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Crazy Eights | `crazy-eights` | Card game: match the top card's suit or rank, eights are wild (call the suit), 2s make them draw. First to empty their hand wins the hand. | `server/games/crazy-eights-bot.js`, `server/games/crazy-eights.js`, `public/games/crazy-eights/`, `test/crazy-eights.test.js` |
 | Tower Defence Duel | `tower-duel` | Build towers to stop the creeps on your road and spend gold to send creeps down your rival's. Run out of lives and you lose. | `server/games/tower-duel-bot.js`, `server/games/tower-duel.js`, `public/games/tower-duel/`, `test/tower-duel.test.js` |
 | Word Race | `word-race` | Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Or Race: first to the target points takes the round. | `server/games/word-race-bot.js`, `server/games/word-race-common.js`, `server/games/word-race.js`, `public/games/word-race/`, `test/anagram-duel.test.js`, `test/word-race.test.js` |
+| Five Letters | `five-letters` | The same hidden word for you both, six guesses each. Green: right spot. Yellow: in the word. Fewest guesses wins the round. | `server/games/five-letters-bot.js`, `server/games/five-letters.js`, `server/games/anagram-words.js`, `public/games/five-letters/`, `test/five-letters.test.js` |
+| Make 24 | `make-24` | Four numbers: join two with + − × ÷ and they become one. Make 24 before your rival does. | `server/games/make-24-bot.js`, `server/games/make-24.js`, `public/games/make-24/`, `test/make-24.test.js` |
 | Anagram Duel | `anagram-duel` | Same five mixed-up letters for both of you: the first to make a word with all of them takes the round. | `server/games/anagram-duel-bot.js`, `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js` |
 | Word Hunt | `word-hunt` | One word search, two hunters: mark a hidden word first and it's yours. Find more than half to take the grid. | `server/games/word-hunt-bot.js`, `server/games/word-hunt-words.js`, `server/games/word-hunt.js`, `public/games/word-hunt/`, `test/word-hunt.test.js` |
 | Mini Golf | `mini-golf` | Same hole, same time: pull back and putt on your phone. Walls, bumpers, sand, water and a windmill. Fewest strokes wins. | `server/games/mini-golf-bot.js`, `server/games/mini-golf.js`, `public/games/mini-golf/`, `test/mini-golf.test.js` |
@@ -48,7 +50,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four-bot.js`, `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |
 | Memory Match | `memory-match` | Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. Or Race: your own board each, first to clear it. | `server/games/memory-match-bot.js`, `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js` |
 
-### 🎲 Dice & Board (5)
+### 🎲 Dice & Board (8)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -56,6 +58,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Checkers | `checkers` | Classic draughts: move diagonally, jump to capture (jumps are a must, and keep going if you can), reach the far side to crown a king. Take all their pieces or leave them stuck. | `server/games/checkers-bot.js`, `server/games/checkers.js`, `public/games/checkers/`, `test/checkers.test.js` |
 | Dots and Boxes | `dots-boxes` | Take turns joining two dots. Close the fourth side of a box to claim it and go again; careful not to hand your rival a chain. Most boxes wins. | `server/games/dots-boxes-bot.js`, `server/games/dots-boxes.js`, `public/games/dots-boxes/`, `test/dots-boxes.test.js` |
 | Mancala | `mancala` | Sow stones around the bowls. End in your store to go again; end in an empty bowl of yours to capture across. Fullest store wins. | `server/games/mancala-bot.js`, `server/games/mancala.js`, `public/games/mancala/`, `test/mancala.test.js` |
+| Reversi | `reversi` | Trap a line of their discs between two of yours and they all flip to your colour. Most discs on the board wins. | `server/games/reversi-bot.js`, `server/games/reversi.js`, `public/games/reversi/`, `test/reversi.test.js` |
+| Mine Duel | `mine-duel` | One minefield, and you want the mines: dig one up and go again, dig a safe square and it's their turn. First to 13 of the 25 mines. | `server/games/mine-duel-bot.js`, `server/games/mine-duel.js`, `public/games/mine-duel/`, `test/mine-duel.test.js` |
+| Blackjack | `blackjack` | Beat the dealer for play chips. You both get the same cards, so the better player wins, not the luckier one. Most chips after the last hand. | `server/games/blackjack-bot.js`, `server/games/blackjack.js`, `public/games/blackjack/`, `test/blackjack.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party-bot.js`, `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
 ### 🤝 Co-op & casual (8)

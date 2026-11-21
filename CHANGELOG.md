@@ -4,6 +4,19 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.60
+
+- 🎮 Five new games, each against a friend or the computer:
+  - ⚫ Reversi: trap a line of your rival's discs between two of yours and they all flip to your
+    colour. Most discs wins.
+  - 💣 Mine Duel: one minefield, and you want the mines. Dig one up and go again; dig a safe
+    square and it's their turn. First to 13 of the 25.
+  - 🃏 Blackjack: beat the dealer for play chips. You both get the same cards, so the better
+    player wins, not the luckier one.
+  - 🟩 Five Letters: the same hidden word for you both, six guesses each, coloured clues. Fewest
+    guesses wins the round. You see their colours, never their letters.
+  - 🔢 Make 24: four numbers, join them with + − × ÷ until one is left. First to make 24.
+
 ## 0.1.59
 
 - 💰 A new party minigame, Treasure Dig: dig your patch of sand, and each hole tells you how close
