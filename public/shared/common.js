@@ -731,6 +731,22 @@
    * without telling cyan from pink (colour-blind players). `badge`: on a dark disc of its own, for
    * a piece too small or busy to write on (a snake's head, a cycle).
    */
+  /**
+   * Screen first, server later: an answer tapped on a phone shows as picked at once (and the
+   * others dimmed and locked), as the game will draw it when the server's view comes back. `attr`:
+   * the attribute the choices share (data-choice, data-pick). A refused pick: the next view, a
+   * second at most away, draws it as it was.
+   */
+  function showPick(btn, attr) {
+    const box = btn && btn.parentElement;
+    if (!box) return;
+    box.querySelectorAll('[' + attr + ']').forEach(function (b) {
+      b.disabled = true;
+      b.classList.toggle('picked', b === btn);
+      b.classList.toggle('dim', b !== btn);
+    });
+  }
+
   function drawMark(g, x, y, size, slot, badge) {
     g.save();
     g.shadowBlur = 0;
@@ -755,6 +771,7 @@
 
   window.Ark = {
     drawMark: drawMark,
+    showPick: showPick,
     guide: { load: loadGuide },
     preview: { open: openPreview, pages: previewPages, ms: PREVIEW_MS },
     lobbyEntries: lobbyEntries,

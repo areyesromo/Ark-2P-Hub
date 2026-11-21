@@ -316,9 +316,11 @@
     let host = null;
     let phone = null;
 
-    function grid(s, slot, withCursor, buttons) {
+    function grid(s, slot, withCursor, buttons, pending) {
       const values = opts.values(s);
-      const picked = opts.picked(s, slot);
+      // (a pick of ours the server hasn't answered yet shows as made: screen first)
+      const made = opts.picked(s, slot);
+      const picked = made !== null ? made : pending !== undefined ? pending : null;
       return '<div class="mi-choices" style="grid-template-columns:repeat(' + opts.cols + ',1fr)">' + opts.labels(s).map(function (label, i) {
         const cls = (withCursor && cursors[slot] === i ? ' cur' : '') + (picked !== null && picked === values[i] ? ' picked' : '');
         return buttons
@@ -350,19 +352,23 @@
       phone: {
         mount: function (el, mctx) {
           el.innerHTML = '<div class="mi-phone-stage mi-pick"><div class="mi-question"></div><div class="grid"></div></div>';
-          phone = { el: el, slot: mctx.slot };
+          phone = { el: el, slot: mctx.slot, pending: undefined };
           el.addEventListener('click', function (e) {
             const b = e.target.closest('[data-i]');
             if (!b || b.disabled || !phone || !phone.s) return;
-            mctx.send(opts.input(opts.values(phone.s)[Number(b.getAttribute('data-i'))]));
+            const value = opts.values(phone.s)[Number(b.getAttribute('data-i'))];
+            mctx.send(opts.input(value));
             mctx.vibrate(15);
+            phone.pending = value;
+            phone.el.querySelector('.grid').innerHTML = grid(phone.s, phone.slot, false, true, value);
           });
         },
         update: function (s) {
           if (!phone) return;
           phone.s = s;
+          if (opts.picked(s, phone.slot) !== null) phone.pending = undefined;
           phone.el.querySelector('.mi-question').innerHTML = opts.question(s) + mark(s.res[phone.slot]);
-          phone.el.querySelector('.grid').innerHTML = grid(s, phone.slot, false, true);
+          phone.el.querySelector('.grid').innerHTML = grid(s, phone.slot, false, true, phone.pending);
         },
         unmount: function () { phone = null; },
       },

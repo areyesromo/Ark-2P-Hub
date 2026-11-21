@@ -8,6 +8,8 @@
   let loaded = false;
   let lastMoveKey = '';
   let buzzed = '';
+  let served = null; // the server's latest view, while `view` shows a move of ours it hasn't answered yet
+  let guessTimer = null;
 
   function moveKey(v) {
     return v.lastMove ? [v.round, v.lastMove.col, v.lastMove.row].join(':') : '';
@@ -21,6 +23,30 @@
     if (view.board[view.rows - 1][c]) return api.vibrate([30, 30, 30]); // full column
     api.send({ type: 'drop', col: c });
     api.vibrate(20);
+    guess(c);
+  }
+
+  /**
+   * Screen first: the disc drops into the column at once, their turn shows, and the server's view
+   * confirms it (or, if it refused the move, puts the board back: no view in a second, the last one
+   * it sent comes back).
+   */
+  function guess(c) {
+    let row = 0;
+    while (row < view.rows && view.board[row][c]) row++;
+    if (row >= view.rows) return;
+    served = view;
+    const board = view.board.map(function (r) { return r.slice(); });
+    board[row][c] = view.you + 1;
+    view = Object.assign({}, view, { board: board, turn: 1 - view.you, lastMove: { col: c, row: row } });
+    render();
+    clearTimeout(guessTimer);
+    guessTimer = setTimeout(function () {
+      if (!served) return;
+      view = served;
+      served = null;
+      render();
+    }, 1000);
   }
 
   function message(v) {
@@ -67,7 +93,9 @@
       });
     },
     update: function (v) {
-      const prev = view;
+      const prev = served || view;
+      served = null;
+      clearTimeout(guessTimer);
       view = v;
       if (prev && prev.turn !== v.you && v.turn === v.you && v.phase === 'play' && prev.phase === 'play') api.vibrate(40); // your go
       if (v.phase !== 'play' && buzzed !== v.round + v.phase) {
@@ -77,7 +105,8 @@
       render();
     },
     unmount: function () {
-      root = view = null;
+      clearTimeout(guessTimer);
+      root = view = served = null;
       lastMoveKey = buzzed = '';
     },
   });

@@ -15,6 +15,7 @@
     const btn = e.target.closest('[data-choice]');
     if (btn && !btn.disabled) {
       api.send({ type: 'answer', choice: Number(btn.getAttribute('data-choice')) });
+      Ark.showPick(btn, 'data-choice');
       api.vibrate(20);
       return;
     }

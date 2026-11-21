@@ -270,8 +270,34 @@
 
   // ---- game ------------------------------------------------------------
 
+  // Screen first, server later: a tap that sends a move shows on the button straight away (it
+  // looks pressed, "sent"), until the server's next view, or a second at most (a move it refused
+  // sends no view). Over the internet that's a tenth of a second or more saved. The game's own
+  // look for the move follows with the view. (Action games' controls go on touch, not taps.)
+  let tapped = null;
+  let sentTimer = null;
+  const SENT_MS = 1000;
+  $('phone-stage').addEventListener('click', function (e) {
+    tapped = { el: e.target.closest('button, [data-choice], [data-card], [data-pick], [data-col], [data-i], [data-side], [data-c]'), at: performance.now() };
+  }, true);
+  function clearSent() {
+    clearTimeout(sentTimer);
+    sentTimer = null;
+    document.querySelectorAll('#phone-stage .ark-sent').forEach(function (el) { el.classList.remove('ark-sent'); });
+  }
+  function markSent() {
+    if (!tapped || !tapped.el || performance.now() - tapped.at > 300 || !tapped.el.isConnected) return;
+    tapped.el.classList.add('ark-sent');
+    tapped = null;
+    clearTimeout(sentTimer);
+    sentTimer = setTimeout(clearSent, SENT_MS);
+  }
+
   const api = {
-    send: function (input) { socket.emit('game:input', input); },
+    send: function (input) {
+      socket.emit('game:input', input);
+      markSent();
+    },
     vibrate: function (pattern) { if (navigator.vibrate) navigator.vibrate(pattern); },
     get slot() { return me ? me.slot : 0; },
     /**
@@ -393,6 +419,7 @@
     document.body.classList.toggle('match-over', v.phase === 'over'); // (for the themes)
     renderTourneyBar();
     if (Ark.setup.isHub(v)) return; // the game hasn't started: the hub shows its setup screen
+    if (sentTimer) clearSent(); // (the server's word: the game draws the move itself now)
     if (current && current.renderer && current.gameId === msg.gameId) current.renderer.update(v);
     syncZoom();
   });
