@@ -1,0 +1,116 @@
+/* Make 24: the puzzle as the classic square card (a number on each side, 24 in the middle). The
+   card keeps its own colours (it's the thing itself); everything else follows the theme. */
+
+/* ---- TV ---- */
+
+.m24-host { flex: 1; display: flex; flex-direction: column; gap: 1rem; min-height: 0; }
+.m24-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; }
+.m24-centre { display: flex; flex-direction: column; align-items: center; gap: 1.4rem; }
+.m24-card {
+  position: relative;
+  width: min(54vh, 26rem);
+  aspect-ratio: 1;
+  border-radius: 14%;
+  background:
+    radial-gradient(circle at 50% 50%, #fff 0 30%, transparent 30.5%),
+    conic-gradient(from 45deg, #e94b3c 0 25%, #f2b632 0 50%, #3f9c5f 0 75%, #2f6fbf 0);
+  box-shadow: inset 0 0 0 0.9rem #fff, 0 26px 50px -18px rgba(0, 0, 0, 0.85);
+  transform: rotate(-3deg);
+}
+.m24-num {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: 22%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  background: #fff;
+  color: #1b1d22;
+  font-size: min(8vh, 4rem);
+  font-weight: 900;
+  box-shadow: 0 4px 0 rgba(0, 0, 0, 0.18);
+}
+.m24-num.n { top: 7%; left: 39%; }
+.m24-num.s { bottom: 7%; left: 39%; }
+.m24-num.e { right: 7%; top: 39%; }
+.m24-num.w { left: 7%; top: 39%; }
+.m24-medal {
+  position: absolute;
+  inset: 37%;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  background: #1b1d22;
+  color: #f2b632;
+  font-size: min(5.5vh, 2.6rem);
+  font-weight: 900;
+}
+.m24-under { min-height: 7rem; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; }
+.m24-clock { font-size: 2.4rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.m24-clock.low { color: var(--bad); }
+.m24-hint { color: var(--muted); font-size: 1.05rem; margin: 0; }
+.m24-verdict, .m24-under .ark-result { font-size: 2rem; font-weight: 900; }
+.m24-sum { font-size: 2.2rem; font-weight: 700; padding: 0.3em 0.9em; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); }
+.m24-sum b { color: var(--good); }
+.m24-side {
+  justify-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.9rem;
+  min-width: 13rem;
+  padding: 1.6rem 1.4rem;
+  border-radius: var(--radius);
+  background: var(--panel);
+  border: 2px solid var(--line);
+}
+.m24-side.won { border-color: var(--good); box-shadow: 0 0 34px -6px var(--good); }
+.m24-name { font-size: 1.7rem; font-weight: 900; }
+.m24-pips { display: flex; gap: 0.6rem; }
+.m24-pips i { width: 2.2rem; height: 2.2rem; border-radius: 50%; border: 3px solid var(--line); transition: background 0.3s, transform 0.3s; }
+.m24-side.p1 .m24-pips i.on { background: var(--p1); border-color: var(--p1); transform: scale(1.1); }
+.m24-side.p2 .m24-pips i.on { background: var(--p2); border-color: var(--p2); transform: scale(1.1); }
+.m24-side.won .m24-pips i { background: var(--good); border-color: var(--good); }
+.m24-note { color: var(--muted); min-height: 1.4em; font-size: 1.1rem; }
+
+/* ---- phone ---- */
+
+.m24-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 14px; padding: 12px 14px 18px; text-align: center; }
+.m24-top { display: flex; justify-content: space-between; color: var(--muted); font-weight: 700; }
+.m24-msg { margin: 0; min-height: 2.8em; display: flex; flex-direction: column; justify-content: center; font-size: 1.2rem; font-weight: 700; }
+.m24-msg small { font-weight: 500; color: var(--muted); font-size: 0.9rem; }
+.m24-msg .won { color: var(--good); }
+.m24-msg .lost { color: var(--bad); }
+.m24-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px; min-height: calc(2 * (min(42vw, 180px) / 1.15) + 14px); align-content: center; }
+.m24-grid .m24-tile { width: calc(50% - 7px); max-width: 180px; }
+.m24-grid.n1 .m24-tile { width: 70%; max-width: 240px; font-size: 3.6rem; }
+.m24-tile {
+  aspect-ratio: 1.15;
+  border: 0;
+  border-radius: var(--radius);
+  background: #fff;
+  color: #1b1d22;
+  font-size: 2.8rem;
+  font-weight: 900;
+  box-shadow: 0 6px 0 #c9ccd3, 0 10px 18px -8px rgba(0, 0, 0, 0.6);
+  transition: transform 0.12s, box-shadow 0.12s;
+}
+.m24-tile.picked { transform: translateY(-4px); box-shadow: 0 0 0 5px var(--me, var(--p1)), 0 10px 0 #c9ccd3; }
+.m24-tile.fresh { animation: m24-pop 0.3s cubic-bezier(0.3, 1.6, 0.6, 1); }
+.m24-tile.right { background: #3e9d5a; color: #fff; box-shadow: 0 6px 0 #26683a; }
+.m24-tile.wrong { background: var(--bad); color: #fff; box-shadow: 0 6px 0 rgba(0, 0, 0, 0.3); animation: m24-shake 0.4s; }
+.m24-frac { display: inline-flex; flex-direction: column; align-items: center; font-size: 0.62em; line-height: 1; }
+.m24-frac sup { border-bottom: 3px solid currentColor; padding: 0 0.15em 0.05em; }
+.m24-frac sub { padding-top: 0.05em; }
+.m24-ops { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+.m24-op { height: 64px; border: 0; border-radius: var(--r-md); background: var(--btn); color: var(--text); font-size: 2rem; font-weight: 900; }
+.m24-op.on { background: var(--me, var(--p1)); color: var(--on-bright, #111); transform: scale(1.06); }
+.m24-op:disabled { opacity: 0.35; }
+.m24-tools { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px; }
+.m24-tools button { padding: 12px 0; border: 1px solid var(--line); border-radius: var(--r-md); background: transparent; color: var(--text); font-weight: 700; }
+.m24-tools button:disabled { opacity: 0.35; }
+.m24-skip.on { border-color: var(--warn); color: var(--warn); }
+.m24-small { margin: 0; color: var(--muted); font-size: 0.9rem; }
+@keyframes m24-pop { from { transform: scale(0.6); } to { transform: none; } }
+@keyframes m24-shake { 25%, 75% { transform: translateX(-6px); } 50% { transform: translateX(6px); } }
+@media (prefers-reduced-motion: reduce) { .m24-tile.fresh, .m24-tile.wrong { animation: none; } }

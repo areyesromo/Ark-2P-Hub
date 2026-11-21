@@ -86,6 +86,8 @@ import blackjack from './blackjack.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
+import make24 from './make-24.js';
+import { make24Bot } from './make-24-bot.js';
 import { withSetup } from './options.js';
 import { BLURBS } from './blurbs.js';
 
@@ -230,6 +232,10 @@ const GAMES = [
   }),
   { ...wordRace, bot: wordRaceBot },
   withSetup({ ...fiveLetters, bot: fiveLettersBot }, { ...firstTo('Rounds to win', [3, 2, 5]), ...timer('timed', '180 s a word') }),
+  withSetup({ ...make24, bot: make24Bot }, {
+    ...firstTo('Rounds to win', [5, 3, 7]),
+    seconds: { title: 'Time per puzzle', values: [90, 60, 120, 0], label: (n) => (n ? `${n} s` : 'No timer: it waits for you (give up together to move on)') },
+  }),
   withSetup({ ...anagramDuel, bot: anagramDuelBot }, firstTo('Rounds to win', [5, 3, 7])),
   withSetup({ ...wordHunt, bot: wordHuntBot }, {
     mode: { title: 'Mode', values: ['shared', 'race'], label: (k) => (k === 'race' ? 'Race (two phones): your own board each, first to find every word' : 'Shared board: first to mark a word gets it') },
