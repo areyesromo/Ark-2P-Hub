@@ -432,7 +432,7 @@ test('minigames: the computer has a player for every one, beats (or passes, alon
 });
 
 test('minigames: Hard beats Easy where skill decides it', async () => {
-  for (const id of ['balloon', 'quick-draw', 'tug-of-war', 'whack-a-mole', 'reflex-grid', 'hurdle-dash', 'laser-dodge', 'mirror-me', 'sword-duel']) {
+  for (const id of ['balloon', 'quick-draw', 'tug-of-war', 'whack-a-mole', 'reflex-grid', 'hurdle-dash', 'laser-dodge', 'mirror-me', 'sword-duel', 'treasure-dig']) {
     let wins = 0;
     for (let seed = 1; seed <= 4; seed++) {
       const flip = seed % 2;

@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.59
+
+- 💰 A new party minigame, Treasure Dig: dig your patch of sand, and each hole tells you how close
+  your chest is (🔥 hot, ♨️ warm, 🌤️ cool, ❄️ cold). First to dig up three chests wins. In Party
+  Minigames and Party Board, against a friend or the computer (which works it out like a person).
+
 ## 0.1.58
 
 - ⚡ Snappier phones, most of all online: your move shows the moment you tap. A button you press
