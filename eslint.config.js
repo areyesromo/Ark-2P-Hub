@@ -4,7 +4,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 // The helpers the browser scripts share through window (common.js's Ark, and each game's own).
-const ARK = ['Ark', 'ArkMini', 'ArkDice', 'ArkGolf', 'ArkSound', 'ArkMotion', 'ArkSea', 'ArkMemory', 'ArkWords', 'ArkPads', 'ArkKartItems', 'ArkLD', 'ArkMusic', 'ArkTilt', 'ArkDial', 'ArkCK', 'ArkC4', 'ArkDB', 'ArkMC', 'ArkLooks', 'ArkReversi'];
+const ARK = ['Ark', 'ArkMini', 'ArkDice', 'ArkGolf', 'ArkSound', 'ArkMotion', 'ArkSea', 'ArkMemory', 'ArkWords', 'ArkPads', 'ArkKartItems', 'ArkLD', 'ArkMusic', 'ArkTilt', 'ArkDial', 'ArkCK', 'ArkC4', 'ArkDB', 'ArkMC', 'ArkLooks', 'ArkReversi', 'ArkBJ'];
 
 export default [
   { ignores: ['node_modules/', 'dist/', 'data/', 'desktop/bin/', 'docs/', 'asset-references/'] },
