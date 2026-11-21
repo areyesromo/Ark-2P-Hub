@@ -84,6 +84,8 @@ import reversi from './reversi.js';
 import { reversiBot } from './reversi-bot.js';
 import blackjack from './blackjack.js';
 import { blackjackBot } from './blackjack-bot.js';
+import fiveLetters from './five-letters.js';
+import { fiveLettersBot } from './five-letters-bot.js';
 import { withSetup } from './options.js';
 import { BLURBS } from './blurbs.js';
 
@@ -227,6 +229,7 @@ const GAMES = [
     quest: { title: 'Quest', values: [5, 3], label: (n) => (n === 5 ? 'Full: 5 floors (with the Ice Caves and the Armory)' : 'Short: 3 floors') },
   }),
   { ...wordRace, bot: wordRaceBot },
+  withSetup({ ...fiveLetters, bot: fiveLettersBot }, { ...firstTo('Rounds to win', [3, 2, 5]), ...timer('timed', '180 s a word') }),
   withSetup({ ...anagramDuel, bot: anagramDuelBot }, firstTo('Rounds to win', [5, 3, 7])),
   withSetup({ ...wordHunt, bot: wordHuntBot }, {
     mode: { title: 'Mode', values: ['shared', 'race'], label: (k) => (k === 'race' ? 'Race (two phones): your own board each, first to find every word' : 'Shared board: first to mark a word gets it') },
