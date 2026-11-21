@@ -32,6 +32,7 @@ import * as CURL from './curling.js';
 import { cardAt } from './snap.js';
 import { clawAt } from './catch-it.js';
 import { distance as digDistance, heat as digHeat } from './treasure-dig.js';
+import { clump as bubbleClump, worth as bubbleWorth } from './bubble-pop.js';
 
 /** A person at each level: timing error (ms sd), aim wobble, slips, mashing rate, thinking pace. */
 const SKILL = {
@@ -40,6 +41,7 @@ const SKILL = {
   hard: { timing: 28, aim: 0.03, slip: 0.012, rate: 9, think: 0.9, recall: 9, angle: 2, hold: 40 },
 };
 
+const BUBBLE_DENY = 6; // Hard pops a clump of yours this big when it has nothing good of its own
 const gauss = (rng) => Math.sqrt(-2 * Math.log(1 - rng())) * Math.cos(2 * Math.PI * rng());
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 const unit = (x, y) => {
@@ -486,6 +488,34 @@ export const PLAYERS = {
     m.dir = m.dir || {};
     if (!m.dir[s.opened]) m.dir[s.opened] = rng() < 0.5 ? -1 : 1;
     return { type: 'turn', by: m.dir[s.opened], botDelayMs: (1000 / (L.rate + 2)) * (0.8 + rng() * 0.4) };
+  },
+  'bubble-pop'({ s, you, L, rng, level }) {
+    // It looks the grid over for clumps (a person spots the big ones first, but not always the
+    // biggest), and Hard now and then pops a big clump of yours to keep it from you.
+    const kinds = s.grid.map((b) => b[1]);
+    const seen = new Set();
+    const groups = [];
+    for (let c = 0; c < kinds.length; c++) {
+      if (seen.has(c) || kinds[c] !== you) continue;
+      const cells = bubbleClump(kinds, c);
+      cells.forEach((x) => seen.add(x));
+      if (cells.length >= 2) groups.push({ cell: c, w: bubbleWorth(kinds, cells, you), size: cells.length });
+    }
+    let pick = null;
+    if (groups.length) {
+      groups.sort((a, b) => b.w - a.w);
+      // Easy takes whatever it sees first; Normal one of the best few; Hard the best.
+      const reach = level === 'easy' ? groups.length : level === 'normal' ? Math.min(3, groups.length) : 1;
+      pick = groups[Math.floor(rng() * reach)];
+    }
+    if (level === 'hard' && (!pick || pick.w < 4)) {
+      for (let c = 0; c < kinds.length; c++) {
+        if (kinds[c] !== 1 - you) continue;
+        if (bubbleClump(kinds, c).length >= BUBBLE_DENY) { pick = { cell: c }; break; }
+      }
+    }
+    if (!pick) return null;
+    return { type: 'pop', cell: pick.cell, id: s.grid[pick.cell][0], botDelayMs: (380 + rng() * 520) * L.think + s.cooldownMs * 0.2, botFor: s.grid[pick.cell][0] };
   },
   'treasure-dig'({ s, you, L, rng, m, level }) {
     if (s.found !== null) return null;
