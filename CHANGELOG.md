@@ -4,6 +4,18 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.61
+
+- 🎲 Backgammon: race your 15 checkers home and off, hit lone checkers to the bar, and double
+  the stakes with the cube. Tap a checker on your phone and the places it can go light up.
+- 🃏 Gin Rummy: make sets and runs, knock with 10 or less left over, or go gin. Your hand sorts
+  itself into melds on your phone.
+- 🎉 Three new party minigames:
+  - 🫧 Bubble Pop: tap clumps of your colour on one shared grid; gold counts double.
+  - 🌉 Bridge Builder: take turns loading crates on a balancing bridge. Tip it and you lose.
+  - 🥞 Pancake Flip: flip it golden, catch it flat, stack them high.
+  All against a friend or the computer.
+
 ## 0.1.60
 
 - 🎮 Five new games, each against a friend or the computer:

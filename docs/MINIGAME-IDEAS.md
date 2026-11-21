@@ -23,12 +23,9 @@ we discuss more. Take an idea off the list when it ships.
 | Shuffleboard | Slide pucks down a table into the scoring zones, knocking the other's off. Curling's physics, short table. | 3D base |
 | Basket Shot | Swipe to shoot from spots round the arc; the hoop moves in the last round. | 3D art |
 | Paper Plane | Throw angle and power, then tilt (or buttons) to ride the wind; furthest wins. | 3D art |
-| Pancake Flip | Flip on the beat, catch it flat; tallest stack when the time's up. | 2D |
 | Hot Air Race | Tap to burn, let it sink; catch the faster wind at each height. | 2D |
 | Snowball Fight | Hide behind your wall, pop up to throw; a hit while you're up costs a heart. | 3D art |
-| Bridge Builder | Take turns placing planks over a gap; a cart rolls over at the end and the side it falls on loses. | 2D |
 | Lasso | A calf runs round the pen; time the throw to its path. | 3D art |
-| Bubble Pop | Bubbles in both colours float up; pop yours, popping the other's costs a point. | 2D |
 | Rhythm Jump | A rope swings under you both; jump on time, the beat speeds up. Last one standing. | 3D base |
 | Golf Putt Off | One green, one hole, slopes that change each round; nearest to the pin or holed wins. Mini Golf's roll. | 3D base |
 | Cup Stack | Build then unstack a pyramid of cups with a tap pattern; quickest wins. | 2D |
@@ -67,7 +64,6 @@ Eights does). Never make up a card at random. Famous trademarked names get our o
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Gin Rummy | Draw and discard to make sets and runs; knock to end the hand. | 2D |
 | Cribbage | Pegging and counting fifteens, a peg board on the TV. | 2D |
 | Speed (Spit) | Both play at once onto two piles, one up or down; first out wins. Real-time. | 2D |
 | Go Fish | Ask for ranks, make books of four. Easy for kids. | 2D |
@@ -108,7 +104,6 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 |---|---|---|
 | Pawn race ("Sorry"-style) | Draw from a shuffled deck of move cards, bump the other back to start, slides. | 2D, 3D art board |
 | Ludo / Parcheesi | Roll to bring pawns out and home, capture, safe squares. | 2D, 3D art board |
-| Backgammon | The classic race with hitting and bearing off; a doubling cube. | 2D, 3D art board |
 | Snakes & Ladders | Pure luck, quick and silly; for kids. | 2D |
 | Chess | The full game, with a computer at three levels. | 2D, 3D art pieces |
 | Chinese Checkers | The 2-player star board, hop across to the far point. | 2D |
