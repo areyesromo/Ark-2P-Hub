@@ -33,6 +33,7 @@ import { cardAt } from './snap.js';
 import { clawAt } from './catch-it.js';
 import { distance as digDistance, heat as digHeat } from './treasure-dig.js';
 import { clump as bubbleClump, worth as bubbleWorth } from './bubble-pop.js';
+import * as AIR from './hot-air-race.js';
 import { SPOTS as BRIDGE_SPOTS, LIMIT as BRIDGE_LIMIT, lean as bridgeLean, cartLoser as bridgeCartLoser } from './bridge-builder.js';
 
 /** A person at each level: timing error (ms sd), aim wobble, slips, mashing rate, thinking pace. */
@@ -573,6 +574,25 @@ export const PLAYERS = {
       return { type: 'catch', ...at(p.airAt + k * flatEvery + gauss(rng) * L.timing), botFor: 'a' + p.airAt };
     }
     return null;
+  },
+  'hot-air-race'({ s, you, L, rng, m, level, react, el }) {
+    // It heads for the fastest wind it has noticed (a wind change takes it a moment to see, Easy
+    // longer, and Easy now and then settles for the next best), and burns or lets it cool by where
+    // the balloon will be by the time its thumb moves.
+    const b = s.balloons[you];
+    if (s.finish !== null) return null;
+    if (m.shifts !== s.shifts) { m.shifts = s.shifts; m.seenAt = el + react() + 700 * L.think * (1 + rng()); m.settle = level === 'easy' && rng() < 0.35; }
+    if (m.band === undefined || el >= m.seenAt) {
+      const ranked = s.winds.map((w, i) => [w, i]).sort((x, y) => y[0] - x[0]);
+      m.band = ranked[m.settle ? 1 : 0][1];
+      m.seenAt = Infinity;
+    }
+    const centre = (m.band + 0.5) / s.bands;
+    const lag = react() / 1000;
+    const ahead = b.y + (b.burn ? AIR.LIFT : -AIR.SINK) * lag;
+    const want = ahead < centre;
+    if (want === b.burn) return null;
+    return { type: 'burn', on: want, botDelayMs: react() * 0.5, botFor: (want ? 'on' : 'off') + ':' + s.shifts };
   },
   'treasure-dig'({ s, you, L, rng, m, level }) {
     if (s.found !== null) return null;

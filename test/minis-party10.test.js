@@ -227,3 +227,48 @@ test('pancake-flip: time up, the tallest stack wins; the same height, more golde
   inst.onTimeUp();
   assert.deepEqual(ended(), { winner: 0 });
 });
+
+import hotAirRace, { LIFT, SINK, BANDS, bandOf, GROUND_SPEED, SHIFT_MS } from '../server/games/minis/hot-air-race.js';
+
+test('hot-air-race: a 2D party minigame in the party list', () => {
+  assert.equal(hotAirRace.kind, 'party');
+  assert.ok(PARTIES.includes(hotAirRace));
+  assert.ok(hotAirRace.durationMs <= 80000 && hotAirRace.howTo && hotAirRace.order);
+});
+
+test('hot-air-race: burning lifts, letting go sinks; the wind depends on the height; the bands change', () => {
+  const { inst, ctx } = run(hotAirRace, 4);
+  ctx.advance(100);
+  let v = inst.view();
+  assert.equal(v.winds.length, BANDS);
+  assert.equal(Math.max(...v.winds), 4, 'one band has the fastest wind');
+  assert.equal(v.balloons[0].y, 0);
+  const crawl = v.balloons[0].x;
+  assert.ok(Math.abs(crawl - GROUND_SPEED * 0.1) < 0.05, 'on the ground: crawling');
+  inst.onInput(0, { type: 'burn', on: true });
+  inst.onInput(0, { type: 'burn', on: 'yes' }); // (only true burns)
+  inst.onInput(0, { type: 'burn', on: true });
+  ctx.advance(1000);
+  v = inst.view();
+  assert.ok(Math.abs(v.balloons[0].y - LIFT) < 0.06, 'rose');
+  inst.onInput(0, { type: 'burn', on: false });
+  ctx.advance(500);
+  assert.ok(inst.view().balloons[0].y < v.balloons[0].y - SINK * 0.4, 'sinks');
+  assert.equal(bandOf(0.99), BANDS - 1);
+  assert.equal(bandOf(0.05), 0);
+  const shifts = inst.view().shifts;
+  ctx.advance(SHIFT_MS);
+  assert.equal(inst.view().shifts, shifts + 1);
+});
+
+test('hot-air-race: the first to the flag wins; at time up, the one further on', () => {
+  const { inst, ctx, ended } = run(hotAirRace, 2);
+  inst.onInput(1, { type: 'burn', on: true });
+  ctx.advance(60000);
+  assert.deepEqual(ended(), { winner: 1 });
+  const t = run(hotAirRace, 3);
+  t.inst.onInput(0, { type: 'burn', on: true });
+  t.ctx.advance(3000);
+  t.inst.onTimeUp();
+  assert.deepEqual(t.ended(), { winner: 0 });
+});
