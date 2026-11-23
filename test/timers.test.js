@@ -8,7 +8,7 @@ test('a Timer choice in setup: no timer first for the co-op thinking games, time
   const usual = {
     'mind-meld': 'off', 'trivia-quest': 'off',
     'fake-out': 'timed', 'crazy-eights': 'timed', checkers: 'timed', mancala: 'timed',
-    'connect-four': 'timed', 'dots-boxes': 'timed', reversi: 'timed', blackjack: 'timed', 'five-letters': 'timed', 'mine-duel': 'timed', backgammon: 'timed', 'gin-rummy': 'timed', 'colour-clash': 'timed', ludo: 'timed', 'draw-duel': 'timed',
+    'connect-four': 'timed', 'dots-boxes': 'timed', reversi: 'timed', blackjack: 'timed', 'five-letters': 'timed', 'mine-duel': 'timed', backgammon: 'timed', 'gin-rummy': 'timed', 'colour-clash': 'timed', ludo: 'timed', dominoes: 'timed', 'draw-duel': 'timed',
   };
   for (const [id, first] of Object.entries(usual)) {
     const setup = getGame(id).create(fakeCtx());
