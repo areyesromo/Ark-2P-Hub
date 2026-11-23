@@ -32,6 +32,7 @@
   }
 
   function movesHtml(v) {
+    if (!v.moves.length) return '';
     const first = v.moveCount - v.moves.length; // (the list is the last few)
     let html = '<ol class="ch-moves">';
     v.moves.forEach(function (m, i) {
