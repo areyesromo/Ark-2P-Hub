@@ -9,7 +9,7 @@ import { Sight } from '../server/games/bot-human.js';
 
 
 export const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
-export const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'ten-pin', 'reversi', 'blackjack', 'five-letters', 'make-24', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', ...REALTIME];
+export const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'ten-pin', 'reversi', 'blackjack', 'five-letters', 'make-24', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', ...REALTIME];
 export const SOON = [];
 export const COOP = ['kitchen-rush', 'dungeon-duo', 'marble-maze']; // (the computer as your teammate: nobody to beat)
 
@@ -147,6 +147,7 @@ export function hardBeatsEasy(id, n, atLeast, settings) {
  */
 export const HEAVY = {
   'tower-duel': ['tower-duel'],
+  chess: ['chess'],
   'karts-golf': ['kart-race-3d', 'mini-golf'],
   action: ['tron', 'dungeon-duo', 'kitchen-rush', 'block-battle', 'bomb-duel', 'party-board', 'kart-race'],
 };

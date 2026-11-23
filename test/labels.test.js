@@ -8,7 +8,7 @@ import { listGames } from '../server/games/index.js';
 test('📱 No TV needed: the games whose phones show everything (Dice Party with its Handheld screen)', () => {
   const handheld = listGames().filter((g) => g.handheld).map((g) => g.id).sort();
   assert.deepEqual(handheld, [
-    'air-hockey', 'anagram-duel', 'backgammon', 'battleship', 'blackjack', 'bomb-squad', 'brick-duel', 'checkers', 'colour-clash', 'connect-four', 'crazy-eights',
+    'air-hockey', 'anagram-duel', 'backgammon', 'battleship', 'blackjack', 'bomb-squad', 'brick-duel', 'checkers', 'chess', 'colour-clash', 'connect-four', 'crazy-eights',
     'dice-party', 'dots-boxes', 'draw-duel', 'fake-out', 'five-letters', 'gin-rummy', 'liars-dice', 'make-24', 'mancala', 'memory-match', 'mind-meld', 'mine-duel', 'mini-golf',
     'pong', 'quiz', 'reaction-duel', 'reversi', 'rock-paper-scissors', 'sketch-guess', 'snake', 'tower-duel', 'trivia-quest', 'tron', 'word-hunt',
     'word-race',

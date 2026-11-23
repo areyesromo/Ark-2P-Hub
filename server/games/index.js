@@ -96,6 +96,8 @@ import ginRummy from './gin-rummy.js';
 import { ginRummyBot } from './gin-rummy-bot.js';
 import colourClash from './colour-clash.js';
 import { colourClashBot } from './colour-clash-bot.js';
+import chess from './chess.js';
+import { chessBot } from './chess-bot.js';
 import { withSetup } from './options.js';
 import { BLURBS } from './blurbs.js';
 
@@ -288,6 +290,10 @@ const GAMES = [
     ...firstTo('Games to win', [1, 2, 3]),
     ...timer('timed', '30 s a move'),
   }),
+  withSetup({ ...chess, bot: chessBot }, {
+    minutes: { title: 'Clock', values: [10, 5, 15, 0], label: (n) => (n ? `${n} minutes each` : 'No clock: it waits for you') },
+    ...firstTo('Games to win', [1, 2, 3]),
+  }),
   withSetup({ ...reversi, bot: reversiBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
   withSetup({ ...backgammon, bot: backgammonBot }, {
     points: { title: 'Match', values: [3, 1, 5, 7], label: (n) => (n === 1 ? 'One game' : `First to ${n} points`) },
@@ -339,11 +345,11 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
-  board: ['checkers', 'connect-four', 'reversi', 'backgammon', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
+  board: ['chess', 'checkers', 'connect-four', 'reversi', 'backgammon', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
   cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'liars-dice', 'memory-match'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
