@@ -749,3 +749,36 @@ i.bub { display: inline-block; width: 2.4rem; height: 2.4rem; border-radius: 50%
 @media (prefers-reduced-motion: reduce) { .mi-pan-stack, .mi-pan-word.show { animation: none; } .mi-pan-word.show { opacity: 1; } }
 .mi-pan-tv .k, .mi-pan-phone .k { display: flex; justify-content: center; width: 100%; }
 .mi-pan-tv .mi-side { width: 100%; }
+
+/* ---- Hot Air Race ---- */
+.mi-air { display: flex; flex-direction: column; gap: 0.6rem; width: 100%; }
+.mi-air-top { display: flex; justify-content: space-between; align-items: center; gap: 1rem; font-size: 1.4rem; font-weight: 800; }
+.mi-air-top .muted { font-size: 1rem; font-weight: 500; }
+.mi-air-who b { margin-left: 0.4rem; font-variant-numeric: tabular-nums; }
+.mi-air-sky { position: relative; width: 100%; aspect-ratio: 2.4; border-radius: var(--radius); overflow: hidden; background: linear-gradient(#4f9be8, #a9d6ff 80%, #d9f0ff); }
+.mi-air-bands { position: absolute; inset: 0 0 6% 0; display: flex; flex-direction: column; }
+.mi-air-band { position: relative; flex: 1; border-bottom: 1px dashed rgba(255, 255, 255, 0.35); overflow: hidden; }
+.mi-air-band.fast { background: rgba(255, 255, 255, 0.16); }
+.mi-air-band .arrows { position: absolute; inset: 0; background: repeating-linear-gradient(90deg, transparent 0 46px, rgba(255, 255, 255, 0.5) 46px 50px, transparent 50px 96px); mask: linear-gradient(transparent 42%, #000 42% 58%, transparent 58%); -webkit-mask: linear-gradient(transparent 42%, #000 42% 58%, transparent 58%); animation: mi-air-drift var(--speed) linear infinite; }
+.mi-air-band.fast .arrows { background: repeating-linear-gradient(90deg, transparent 0 40px, rgba(255, 255, 255, 0.9) 40px 50px, transparent 50px 96px); }
+.mi-air-band b { position: absolute; left: 0.6em; top: 50%; transform: translateY(-50%); color: rgba(255, 255, 255, 0.85); font-size: 0.9em; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3); }
+.mi-air-band.fast b::after { content: ' ⚡'; }
+@keyframes mi-air-drift { from { background-position: 0 0; } to { background-position: 96px 0; } }
+.mi-air-ground { position: absolute; left: 0; right: 0; bottom: 0; height: 6%; background: linear-gradient(#7bc16b, #4f9446); }
+.mi-air-flag { position: absolute; right: 2%; bottom: 6%; width: 3%; height: 30%; border-left: 3px solid #333; }
+.mi-air-flag::after { content: ''; position: absolute; left: 0; top: 0; width: 100%; height: 30%; background: repeating-conic-gradient(#111 0 25%, #fff 0 50%) 0 0 / 8px 8px; }
+.mi-air-balloon { position: absolute; left: calc(3% + var(--x) * 88%); bottom: calc(6% + var(--y) * 74%); width: 6%; aspect-ratio: 0.75; transform: translateX(-50%); transition: left 0.05s linear, bottom 0.05s linear; z-index: 2; }
+.mi-air-balloon .env { position: absolute; left: 0; right: 0; top: 0; height: 74%; border-radius: 50% 50% 45% 45% / 55% 55% 45% 45%; box-shadow: inset -6px -4px 0 rgba(0, 0, 0, 0.18), inset 4px 4px 0 rgba(255, 255, 255, 0.3); }
+.mi-air-balloon.p1 .env { background: repeating-linear-gradient(90deg, var(--p1) 0 22%, color-mix(in srgb, var(--p1) 70%, #fff) 22% 30%); }
+.mi-air-balloon.p2 .env { background: repeating-linear-gradient(90deg, var(--p2) 0 22%, color-mix(in srgb, var(--p2) 70%, #fff) 22% 30%); }
+.mi-air-balloon .basket { position: absolute; left: 32%; right: 32%; bottom: 0; height: 16%; border-radius: 0 0 3px 3px; background: #8a5a2b; }
+.mi-air-balloon .flame { position: absolute; left: 40%; right: 40%; bottom: 15%; height: 0; border-radius: 50% 50% 30% 30%; background: radial-gradient(#fff6a0, #ff9a1f 60%, transparent 70%); transition: height 0.1s; }
+.mi-air-balloon.burn .flame { height: 14%; }
+.mi-air-balloon.me .env { outline: 3px solid #fff; outline-offset: 2px; }
+.mi-air.phone { gap: 12px; }
+.mi-air.phone .mi-air-sky { aspect-ratio: 1.6; }
+.mi-air.phone .mi-air-balloon { width: 9%; }
+.mi-air-burn { width: 100%; padding: 34px 0; border: 0; border-radius: var(--radius); background: #e8742a; color: #fff; font-size: 2rem; font-weight: 900; box-shadow: 0 6px 0 #a3471a; touch-action: none; user-select: none; -webkit-user-select: none; }
+.mi-air-burn.on { transform: translateY(4px); box-shadow: 0 2px 0 #a3471a, 0 0 30px rgba(255, 160, 40, 0.8); background: #ff8b2e; }
+@media (prefers-reduced-motion: reduce) { .mi-air-band .arrows { animation: none; } }
+.mi-air.phone .mi-air-scene { width: 100%; }

@@ -4,6 +4,17 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.62
+
+- ♟️ Chess: the full game with a chess clock each, on the TV and your phone. The computer plays at
+  three levels.
+- 🎨 Colour Clash: our own match-the-colour card game, with Skips, Reverses, Draw Twos and Wilds.
+  Down to one card? Tap CLASH! before you get caught.
+- 🎲 Ludo: roll a 6 to come out, race round and send their pawns back to the yard.
+- 🁫 Dominoes: the draw game with a double-six set, first to 100.
+- 🎈 A new party minigame, Hot Air Race: hold BURN to rise, let go to sink, and ride the fastest
+  wind to the flag.
+
 ## 0.1.61
 
 - 🎲 Backgammon: race your 15 checkers home and off, hit lone checkers to the bar, and double

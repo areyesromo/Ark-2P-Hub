@@ -41,6 +41,15 @@ const NUDGE = {
     await sleep(2200);
     players[0].emit('game:input', { type: 'hit' });
   },
+  // (each tries every tile: only the one whose turn it is, holding a tile that fits, gets one down)
+  dominoes: async (players) => {
+    const tiles = [];
+    for (let a = 0; a <= 6; a++) for (let b = a; b <= 6; b++) tiles.push(a + '-' + b);
+    for (let round = 0; round < 4; round++) {
+      for (const p of players) for (const tile of tiles) for (const end of ['L', 'R']) p.emit('game:input', { type: 'play', tile, end });
+      await sleep(300);
+    }
+  },
   'five-letters': async (players) => {
     for (const word of ['slate', 'crown']) { players[0].emit('game:input', { type: 'guess', word }); await sleep(300); }
     players[1].emit('game:input', { type: 'guess', word: 'pious' });

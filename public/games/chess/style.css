@@ -1,0 +1,84 @@
+/* Chess: a wooden board with drawn pieces. The squares and pieces keep their own colours (they're
+   the board itself); the rest follows the theme. */
+
+.ch-board {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+  grid-template-rows: repeat(8, 1fr);
+  aspect-ratio: 1;
+  border-radius: var(--r-sm);
+  overflow: hidden;
+  box-shadow: 0 0 0 6px #5a3a1e, 0 0 0 8px #3a2410, 0 20px 40px -14px rgba(0, 0, 0, 0.85);
+}
+.ch-sq { position: relative; display: grid; place-items: center; min-width: 0; }
+.ch-sq.light { background: #ecd9b6; }
+.ch-sq.dark { background: #b07e55; }
+.ch-sq.last.light { background: #f3e48a; }
+.ch-sq.last.dark { background: #cdb34f; }
+.ch-sq.check { background: radial-gradient(circle, #ff3b30 0 30%, rgba(255, 59, 48, 0.4) 60%, transparent 75%), #b07e55; }
+.ch-sq.picked { box-shadow: inset 0 0 0 4px #2f8cff; }
+.ch-sq.target::after { content: ''; position: absolute; width: 30%; height: 30%; border-radius: 50%; background: rgba(30, 40, 30, 0.35); }
+.ch-sq.target.take::after { width: 86%; height: 86%; background: none; box-shadow: inset 0 0 0 5px rgba(30, 40, 30, 0.38); }
+.ch-sq.aim { box-shadow: inset 0 0 0 4px #fff; }
+.ch-sq.aim.p1 { box-shadow: inset 0 0 0 4px var(--p1); }
+.ch-sq.aim.p2 { box-shadow: inset 0 0 0 4px var(--p2); }
+.ch-board.tappable .ch-sq { cursor: pointer; }
+.ch-sq i { position: absolute; font-style: normal; font-size: 0.62em; font-weight: 800; opacity: 0.65; pointer-events: none; }
+.ch-sq i.rk { left: 4%; top: 2%; }
+.ch-sq i.fl { right: 5%; bottom: 1%; }
+.ch-sq.light i { color: #b07e55; }
+.ch-sq.dark i { color: #ecd9b6; }
+
+.ch-piece { width: 88%; height: 88%; position: relative; filter: drop-shadow(0 2px 1px rgba(0, 0, 0, 0.35)); }
+.ch-piece.w { fill: #fbf6ec; stroke: #2a1d12; stroke-width: 1.6; stroke-linejoin: round; }
+.ch-piece.b { fill: #24201c; stroke: #e9dcc5; stroke-width: 1.2; stroke-linejoin: round; }
+.ch-piece .cut { fill: none; stroke-width: 1.6; }
+.ch-piece.w .cut { stroke: #2a1d12; }
+.ch-piece.b .cut { stroke: #e9dcc5; }
+.ch-taken { display: inline-flex; flex-wrap: wrap; }
+.ch-taken .ch-piece { width: 1.3em; height: 1.3em; margin-right: -0.35em; }
+
+/* ---- TV ---- */
+
+.ch-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.ch-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; }
+.ch-centre { position: relative; height: min(76vh, 100%); aspect-ratio: 1; font-size: 1.3rem; }
+.ch-centre .ch-board { height: 100%; }
+.ch-right { display: flex; flex-direction: column; gap: 1rem; align-items: center; justify-self: center; }
+.ch-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 13rem; padding: 1.2rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.75; transition: opacity 0.25s; }
+.ch-side.active { opacity: 1; }
+.ch-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.ch-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.ch-name { display: flex; align-items: center; gap: 0.4rem; font-size: 1.5rem; font-weight: 900; }
+.ch-name .ch-piece { width: 2rem; height: 2rem; }
+.ch-clock { font-size: 2.8rem; font-weight: 900; font-variant-numeric: tabular-nums; padding: 0.1em 0.5em; border-radius: var(--r-md); background: var(--bg-2); }
+.ch-side.active .ch-clock { background: var(--text); color: var(--bg); }
+.ch-clock.low { color: var(--bad) !important; }
+.ch-took { display: flex; align-items: center; gap: 0.5rem; min-height: 1.6rem; font-size: 1.1rem; }
+.ch-took b { color: var(--muted); }
+.ch-state { min-height: 1.4rem; font-weight: 800; }
+.ch-moves { margin: 0; padding: 0.8rem 1rem; list-style: none; columns: 2; column-gap: 1rem; min-width: 13rem; max-height: 14rem; border-radius: var(--radius); background: var(--panel); font-variant-numeric: tabular-nums; color: var(--muted); }
+.ch-moves li { break-inside: avoid; }
+.ch-moves li:last-child { color: var(--text); font-weight: 700; }
+.ch-moves b { color: var(--muted); font-weight: 500; }
+.ch-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2rem; font-weight: 900; text-align: center; white-space: nowrap; }
+.ch-banner small { font-size: 1rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+
+.ch-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 8px 14px; }
+.ch-bar { display: flex; justify-content: space-between; align-items: center; min-height: 2.2rem; padding: 0 4px; font-size: 1rem; }
+.ch-bar .ch-clock { font-size: 1.5rem; }
+.ch-bar.active .ch-clock { background: var(--text); color: var(--bg); }
+.ch-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.ch-msg small { color: var(--muted); }
+.ch-msg .won { color: var(--good); font-weight: 900; }
+.ch-msg .lost { color: var(--bad); font-weight: 900; }
+.ch-msg .big { font-size: 1.6rem; }
+.ch-phone .ch-board { width: calc(100% - 16px); align-self: center; font-size: 0.95rem; }
+.ch-promo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.ch-promo button { aspect-ratio: 1; border: 2px solid var(--line); border-radius: var(--r-md); background: #ecd9b6; }
+.ch-promo .ch-piece { width: 80%; height: 80%; }
+.ch-resign { align-self: center; padding: 10px 26px; border: 1px solid var(--line); border-radius: var(--r-pill); background: transparent; color: var(--muted); font-weight: 700; }
+.ch-resign.sure { border-color: var(--bad); color: var(--bad); }

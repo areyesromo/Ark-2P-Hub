@@ -23,7 +23,6 @@ we discuss more. Take an idea off the list when it ships.
 | Shuffleboard | Slide pucks down a table into the scoring zones, knocking the other's off. Curling's physics, short table. | 3D base |
 | Basket Shot | Swipe to shoot from spots round the arc; the hoop moves in the last round. | 3D art |
 | Paper Plane | Throw angle and power, then tilt (or buttons) to ride the wind; furthest wins. | 3D art |
-| Hot Air Race | Tap to burn, let it sink; catch the faster wind at each height. | 2D |
 | Snowball Fight | Hide behind your wall, pop up to throw; a hit while you're up costs a heart. | 3D art |
 | Lasso | A calf runs round the pen; time the throw to its path. | 3D art |
 | Rhythm Jump | A rope swings under you both; jump on time, the beat speeds up. Last one standing. | 3D base |
@@ -77,7 +76,6 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 
 | Idea | Based on | How it plays | Look |
 |---|---|---|---|
-| Colour Clash | Uno | Match colour or number; Skip, Reverse (another turn in 1v1), Draw Two, Wild, Wild Draw Four. Call it at one card. A new deck, not Crazy Eights. | 2D |
 | Double Match | Dos | Match by number onto two centre rows; a double match makes the other draw and adds a row. | 2D |
 | Ten Phases | Phase 10 | Ten phases in order (two sets of 3, a run of 7, seven of one colour...); first through phase 10 wins. Skips and wilds. | 2D |
 | Build Piles | Skip-Bo | Empty your stock pile by building 1 to 12 on shared piles, with four discard piles each and wilds. | 2D |
@@ -103,9 +101,7 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 | Idea | How it plays | Look |
 |---|---|---|
 | Pawn race ("Sorry"-style) | Draw from a shuffled deck of move cards, bump the other back to start, slides. | 2D, 3D art board |
-| Ludo / Parcheesi | Roll to bring pawns out and home, capture, safe squares. | 2D, 3D art board |
 | Snakes & Ladders | Pure luck, quick and silly; for kids. | 2D |
-| Chess | The full game, with a computer at three levels. | 2D, 3D art pieces |
 | Chinese Checkers | The 2-player star board, hop across to the far point. | 2D |
 | Nine Men's Morris | Make mills of three to take pieces. | 2D |
 | Go (9x9) | Surround territory; a small board keeps it short. | 2D |
@@ -115,7 +111,6 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 | Hidden ranks ("Stratego"-style) | Hidden armies on a board; attacks reveal ranks. Hidden info stays on each phone. | 2D |
 | Code Breaker (Bulls and Cows) | Set a secret code, guess the other's with clues. | 2D |
 | Who Is It (deduction) | Yes/no questions about faces to find the other's secret pick. | 2D |
-| Dominoes | Draw and block versions; match ends. | 2D |
 | Yacht (five dice) | Five dice, three rolls, fill the score card. | 3D base dice |
 | Farkle / Pig | Push your luck dice: roll on or bank. | 3D base dice |
 | Shut the Box | Roll and close numbered tiles that add up; lowest left wins. | 2D |
