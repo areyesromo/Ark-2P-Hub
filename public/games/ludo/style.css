@@ -1,0 +1,89 @@
+/* Ludo: the cross-shaped board. The board's colours are the players' own (their yard, start and
+   home path) on cream squares; the rest follows the theme. */
+
+.lu-board {
+  position: relative;
+  aspect-ratio: 1;
+  border-radius: var(--r-md);
+  background: #f6efe0;
+  box-shadow: 0 0 0 6px #e3d6bb, 0 18px 40px -14px rgba(0, 0, 0, 0.8);
+  --cell: calc(100% / 15);
+  overflow: hidden;
+}
+.lu-sq, .lu-pawn { position: absolute; left: calc(var(--c) * var(--cell)); top: calc(var(--r) * var(--cell)); width: var(--cell); height: var(--cell); }
+.lu-sq { box-sizing: border-box; border: 1px solid #c9bb9c; background: #fffaf0; }
+.lu-sq.path.p1, .lu-sq.start.p1 { background: color-mix(in srgb, var(--p1) 75%, #fff); }
+.lu-sq.path.p2, .lu-sq.start.p2 { background: color-mix(in srgb, var(--p2) 75%, #fff); }
+.lu-sq.path.none { background: #efe6d2; }
+.lu-sq.safe::after { content: '★'; position: absolute; inset: 0; display: grid; place-items: center; color: #a8955f; font-size: calc(var(--fs, 1rem) * 0.9); }
+.lu-sq.start::after { color: #fff; }
+.lu-yard { position: absolute; width: calc(6 * var(--cell)); height: calc(6 * var(--cell)); box-sizing: border-box; border: 6px solid; border-radius: var(--r-sm); }
+.lu-yard::before { content: ''; position: absolute; inset: 14%; border-radius: var(--r-md); background: #fff; }
+.lu-yard.p1 { left: 0; top: 0; background: var(--p1); border-color: color-mix(in srgb, var(--p1) 70%, #000); }
+.lu-yard.p2 { right: 0; bottom: 0; background: var(--p2); border-color: color-mix(in srgb, var(--p2) 70%, #000); }
+.lu-corner { position: absolute; width: calc(6 * var(--cell)); height: calc(6 * var(--cell)); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.4em; padding: 0.4em; box-sizing: border-box; color: #3b2f1e; text-align: center; }
+.lu-corner.tr { right: 0; top: 0; }
+.lu-corner.bl { left: 0; bottom: 0; }
+.lu-centre { position: absolute; left: calc(6 * var(--cell)); top: calc(6 * var(--cell)); width: calc(3 * var(--cell)); height: calc(3 * var(--cell)); background: conic-gradient(from 45deg, var(--p2) 0 25%, #e8dcc0 0 50%, var(--p1) 0 75%, #e8dcc0 0); }
+.lu-pawn {
+  display: grid;
+  place-items: center;
+  z-index: 2;
+  font-style: normal;
+  transition: left 0.35s ease, top 0.35s ease;
+  isolation: isolate;
+}
+.lu-pawn::before { content: ''; position: absolute; z-index: -1; inset: 12%; border-radius: 50% 50% 46% 46%; box-shadow: inset 0 -3px 0 rgba(0, 0, 0, 0.3), inset 0 2px 0 rgba(255, 255, 255, 0.5), 0 2px 4px rgba(0, 0, 0, 0.5); border: 2px solid #fff; }
+.lu-pawn.p1::before { background: var(--p1); }
+.lu-pawn.p2::before { background: var(--p2); }
+.lu-pawn { color: #fff; font-weight: 900; font-size: calc(var(--fs, 1rem) * 0.85); text-shadow: 0 1px 2px #000; }
+.lu-pawn > * { position: relative; }
+.lu-pawn { line-height: 1; }
+.lu-pawn.can { cursor: pointer; z-index: 3; animation: lu-hop 0.9s ease-in-out infinite; }
+.lu-pawn.can::after { content: ''; position: absolute; z-index: -1; inset: 0; border-radius: 50%; box-shadow: 0 0 0 3px #ffe58a, 0 0 12px 3px rgba(255, 229, 138, 0.8); }
+.lu-pawn.aim::after { box-shadow: 0 0 0 4px #fff, 0 0 16px 4px #fff; }
+@keyframes lu-hop { 50% { transform: translateY(-14%); } }
+.lu-dice { font-size: calc(var(--fs, 1rem) * 1.8); }
+.lu-dice .die { transform: rotate(-8deg); }
+.lu-dice .roll1 { animation: lu-roll 0.4s ease-out; }
+.lu-dice .roll0 { animation: lu-roll2 0.4s ease-out; }
+@keyframes lu-roll { from { transform: rotate(-200deg) scale(0.6); } to { transform: rotate(-8deg); } }
+@keyframes lu-roll2 { from { transform: rotate(200deg) scale(0.6); } to { transform: rotate(-8deg); } }
+.lu-dice.p1 .die { box-shadow: 0 0 0 0.12em var(--p1), 0 0.2em 0.5em rgba(0, 0, 0, 0.4); }
+.lu-dice.p2 .die { box-shadow: 0 0 0 0.12em var(--p2), 0 0.2em 0.5em rgba(0, 0, 0, 0.4); }
+.lu-clock { color: #6b5b3e; }
+.lu-status { font-weight: 800; font-size: 1.1em; display: flex; flex-direction: column; gap: 0.2em; }
+.lu-status small { font-weight: 500; font-size: 0.7em; color: #6b5b3e; }
+.lu-who { font-weight: 700; padding: 0.1em 0.6em; border-radius: var(--r-pill); }
+.lu-who.on { background: rgba(0, 0, 0, 0.08); }
+@media (prefers-reduced-motion: reduce) { .lu-pawn.can, .lu-dice .die { animation: none; } .lu-pawn { transition: none; } }
+
+/* ---- TV ---- */
+
+.lu-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.lu-stage { flex: 1; min-height: 0; display: flex; justify-content: center; align-items: center; }
+.lu-host .lu-board { height: min(78vh, 100%); --fs: 1.6rem; font-size: 1.5rem; }
+
+/* ---- phone ---- */
+
+.lu-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 8px 14px; }
+.lu-top { display: flex; justify-content: space-between; color: var(--muted); padding: 0 4px; }
+.lu-top b { color: var(--text); }
+.lu-msg { margin: 0; text-align: center; font-size: 1.15rem; min-height: 1.5em; }
+.lu-msg small { color: var(--muted); }
+.lu-msg .won { color: var(--good); font-weight: 900; }
+.lu-msg .lost { color: var(--bad); font-weight: 900; }
+.lu-msg .big { font-size: 1.6rem; }
+.lu-phone .lu-board { width: calc(100% - 12px); align-self: center; --fs: 0.75rem; font-size: 0.6rem; }
+.lu-phone .lu-corner { display: none; }
+.lu-roll { display: flex; align-items: center; justify-content: center; gap: 12px; padding: 18px 0; border: 0; border-radius: var(--r-md); background: var(--good); color: var(--on-good, #062); font-size: 1.5rem; font-weight: 900; font-size: 1.4rem; }
+.lu-roll .die { font-size: 0.7rem; }
+.lu-picks { display: flex; gap: 8px; align-items: stretch; min-height: 64px; }
+.lu-picks > span { display: grid; place-items: center; font-size: 0.85rem; }
+.lu-picks.quiet { justify-content: center; align-items: center; font-size: 0.85rem; }
+.lu-pick { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; border: 0; border-radius: var(--r-md); color: #fff; }
+.lu-pick.p1 { background: var(--p1); }
+.lu-pick.p2 { background: var(--p2); }
+.lu-pick b { font-size: 1.5rem; text-shadow: 0 1px 2px #000; }
+.lu-pick small { font-size: 0.7rem; text-shadow: 0 1px 2px #000; }
+.lu-phone .rematch { margin-top: 6px; }
