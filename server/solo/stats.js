@@ -26,7 +26,7 @@ const sameBoard = (r, game, variant) => r.game === game && (r.variant || '') ===
  *
  * achievements: what each player has unlocked, nameKey -> { id: when } (see achievements.js).
  *
- * dailies remembers each player's go at a daily puzzle (Word Guess's word of
+ * dailies remembers each player's go at a daily puzzle (Five Letters' word of
  * the day), so it can be played once a day: 'game|YYYY-MM-DD|name' -> what the game saved.
  */
 export class Stats {
@@ -102,7 +102,7 @@ export class Stats {
   /**
    * A player's record, for achievements: runs finished, games scored in,
    * personal bests set (each time a run beat their best), the longest run of
-   * days played in a row, days today's word was found (Word Guess), daily
+   * days played in a row, days today's word was found (Five Letters), daily
    * challenges played, and how many tables they're top of.
    */
   historyOf(name) {
@@ -124,7 +124,7 @@ export class Stats {
     }
     let topSpots = 0;
     for (const [id, score] of best) if (top.get(id) === score) topSpots++;
-    const days = new Set(mine.filter((r) => r.game === 'word-guess' && r.variant === 'Daily').map((r) => Math.floor(r.at / 86400000)));
+    const days = new Set(mine.filter((r) => r.game === 'five-letters' && r.variant === 'Daily').map((r) => Math.floor(r.at / 86400000)));
     return {
       runs: mine.length,
       games: new Set(mine.map((r) => r.game)).size,

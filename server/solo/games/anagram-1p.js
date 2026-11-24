@@ -2,8 +2,7 @@
 // Any real word counts, not just the one the letters came from. 60 seconds;
 // skipping costs 3 of them (and shows what it was). Score: words made.
 
-import { dictionary } from './word-guess-1p.js';
-import { ANSWERS } from './word-guess-words.js';
+import { ANSWERS, dictionary } from './word-guess-words.js';
 
 export const SECONDS = 60;
 export const SKIP_MS = 3000;

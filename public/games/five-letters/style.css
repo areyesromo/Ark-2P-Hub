@@ -99,3 +99,11 @@
 .fl-key.b { background: #262a33; color: rgba(255, 255, 255, 0.45); }
 .fl-key:active { transform: translateY(2px); filter: brightness(1.2); }
 .fl-phone .rematch { margin-top: auto; }
+
+/* 1 player: one board in the middle, the word being typed, a keyboard a controller can type on. */
+.fl-solo { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+.fl-title { font-size: var(--fs-lg); font-weight: 800; }
+.fl-msg { min-height: 1.6em; color: var(--warn); font-size: var(--fs-md); font-weight: 700; }
+.fl-solo .fl-board { --gap: 8px; height: min(46vh, 26rem); aspect-ratio: 5 / 6; font-size: 2.2rem; }
+.fl-solo .fl-keys { width: min(46rem, 90%); margin-top: 0; }
+.fl-key.cursor { outline: 3px solid var(--me, var(--p1)); outline-offset: 2px; }

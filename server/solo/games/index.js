@@ -27,7 +27,7 @@ import blocks from './blocks-1p.js';
 import flappy from './flappy.js';
 import asteroids from './asteroids-1p.js';
 import sudoku, { LEVELS as SUDOKU_LEVELS } from './sudoku.js';
-import wordGuess from './word-guess-1p.js';
+import { soloFiveLetters as wordGuess } from '../../games/five-letters.js'; // (a game for both modes)
 import solitaire from './solitaire.js';
 import invaders from './invaders.js';
 import runner from './runner.js';

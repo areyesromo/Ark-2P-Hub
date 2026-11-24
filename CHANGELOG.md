@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.69
+
+- 🔤 Word Guess 1P is now **Five Letters** in the 1 player lobby: the same game as the 2 player one, on
+  your own, with today's word for everyone or practice words. Type on the phone, the TV's keyboard or
+  a controller. (Its scores start afresh: the words come from Five Letters' list now.)
+
 ## 0.1.68
 
 - 🐍 Snake 1P is now **Snake**: the 1 player mode of Snake Battle, in the same bigger arena with your

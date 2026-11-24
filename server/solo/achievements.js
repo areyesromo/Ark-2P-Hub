@@ -180,10 +180,10 @@ export const ACHIEVEMENTS = [
   ]),
 
   // ---- brain ----
-  ...game('word-guess-1p', [
-    { id: 'word-first', icon: '🔤', name: 'Wordsmith', desc: 'Word Guess: find a word.', check: (r) => scored(r) },
-    { id: 'word-3', icon: '🧠', name: 'Sharp', desc: 'Word Guess: find a word in 3 guesses or fewer.', check: (r) => scored(r) && r.score <= 3 },
-    { id: 'word-daily-5', icon: '📆', name: 'Daily habit', desc: 'Word Guess: find today\'s word on 5 different days.', check: (r, v, h) => h.dailyWords >= 5 },
+  ...game('five-letters', [
+    { id: 'word-first', icon: '🔤', name: 'Wordsmith', desc: 'Five Letters: find a word.', check: (r) => scored(r) },
+    { id: 'word-3', icon: '🧠', name: 'Sharp', desc: 'Five Letters: find a word in 3 guesses or fewer.', check: (r) => scored(r) && r.score <= 3 },
+    { id: 'word-daily-5', icon: '📆', name: 'Daily habit', desc: 'Five Letters: find today\'s word on 5 different days.', check: (r, v, h) => h.dailyWords >= 5 },
   ]),
   ...game('simon', [
     { id: 'simon-10', icon: '🟢', name: 'Good memory', desc: 'Simon: repeat a sequence of 10.', check: (r) => r.score >= 10 },

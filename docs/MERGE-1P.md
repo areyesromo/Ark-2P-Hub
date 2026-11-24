@@ -81,7 +81,7 @@ folder, not in the repo, so the merged app starts fresh.
    | --- | --- | --- |
    | Snake | ~~Snake 1P (`snake-1p`)~~ merged: **Snake**, Snake Battle's 1 player mode (`snake`) | Snake Battle (`snake`) |
    | Hangman | Hangman 1P (`hangman-1p`) | Hangman Duel (`hangman`) |
-   | Word Guess | Word Guess 1P (`word-guess-1p`) | Five Letters |
+   | Word Guess | ~~Word Guess 1P (`word-guess-1p`)~~ merged: **Five Letters**' 1 player mode (`five-letters`) | Five Letters |
    | Anagram Rush | Anagram Rush 1P (`anagram-1p`) | Anagram Duel |
    | Word Search | Word Search 1P (`wordsearch-1p`) | Word Hunt |
    | Mastermind | Mastermind 1P (`mastermind-1p`) | Code Breaker |
@@ -118,7 +118,7 @@ folder, not in the repo, so the merged app starts fresh.
 
 ## The steps
 
-Progress: **steps 1 to 5 done** (the engine on 2P, all 39 solo games, their achievements, daily challenge and pages, phone only at `/phone`, and Ark 1P Hub retired: its last release points here, and its next-games list is the Solo section of `docs/MINIGAME-IDEAS.md`). Step 6 under way: Snake is merged (Snake 1P into Snake Battle's arena).
+Progress: **steps 1 to 5 done** (the engine on 2P, all 39 solo games, their achievements, daily challenge and pages, phone only at `/phone`, and Ark 1P Hub retired: its last release points here, and its next-games list is the Solo section of `docs/MINIGAME-IDEAS.md`). Step 6 under way: Snake and Five Letters are merged.
 
 Each step is one PR to 2P that leaves the app working, with its `CHANGELOG.md` line. After each
 merge, the desktop build is started as 2P's `CLAUDE.md` says.

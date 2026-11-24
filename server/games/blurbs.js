@@ -34,7 +34,7 @@ export const BLURBS = {
   nonogram: 'Use the number clues to draw a picture.',
   lights: 'Turn every light out.',
   'wordsearch-1p': 'Find the hidden words in the grid.',
-  'word-guess-1p': 'Guess the five-letter word in six.',
+  'solo:five-letters': 'Guess the five-letter word in six.',
   simon: 'Repeat the growing sequence.',
   'memory-1p': 'Turn two cards, find the pairs.',
   maths: 'Sums against the clock.',
