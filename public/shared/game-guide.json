@@ -137,7 +137,7 @@
   "settings": "First to 5, 3 or 7; 90, 60 or 120 s a puzzle, or no timer (give up together to move on)"
  },
  "anagram-duel": {
-  "rules": "Both phones get the same five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). The first real word wins the round, and any real word counts, not only the one they came from. A wrong word locks you out for a second and a half, so tapping at random doesn't pay. Nobody in 30 seconds: no point, and the TV shows the word. The TV shows the letters and how far along each of you is (how many letters, not which). First to 5 rounds (or 3, or 7). 🤖 Against the computer: it takes a person's time to see each word (some come quicker than others), about 15 s on Easy, 9 on Normal, 5 on Hard.",
+  "rules": "Both phones get the same five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). The first real word wins the round, and any real word counts, not only the one they came from. A wrong word locks you out for a second and a half, so tapping at random doesn't pay. Nobody in 30 seconds: no point, and the TV shows the word. The TV shows the letters and how far along each of you is (how many letters, not which). First to 5 rounds (or 3, or 7). 🤖 Against the computer: it takes a person's time to see each word (some come quicker than others), about 15 s on Easy, 9 on Normal, 5 on Hard. On your own? <strong>Anagram Rush</strong> in the 1 player lobby: as many words as you can in a minute.",
   "settings": "First to 3, 5 or 7 rounds"
  },
  "word-hunt": {
@@ -404,6 +404,10 @@
   "rules": "Five Letters on your own: find the hidden five-letter word in six guesses, typed on the phone's keyboard (or the TV's, or with a controller). After each guess the letters turn green (right place), yellow (in the word, elsewhere) or grey (not in it), and so do the keyboard's keys. Guesses must be real words. 📅 <strong>Today's word</strong> is the same for everyone and can be played once a day (a new one at midnight UTC; a second go shows how you did); 🎲 <strong>Practice</strong> gives a new word every time. Score: the guesses it took; a word you don't find doesn't count.",
   "controls": "<strong>D-pad</strong> picks a key on the TV's keyboard, <strong>A</strong> types it, <strong>B</strong> deletes, <strong>Start</strong> / <strong>X</strong> enters · keyboard: Just type: letters, <strong>Backspace</strong>, <strong>Enter</strong>"
  },
+ "solo:anagram-duel": {
+  "rules": "Anagram Duel on your own, against the clock. Five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). Any real word counts, not only the one they came from. 60 seconds; ⏭ <strong>Skip</strong> shows the word but costs 3 seconds. Score: words made.",
+  "controls": "<strong>D-pad ← →</strong> picks a letter, <strong>A</strong> uses it, <strong>B</strong> takes one back, <strong>Y</strong> skips · keyboard: Just type the word, <strong>Backspace</strong>, <strong>Tab</strong> skips"
+ },
  "simon": {
   "rules": "The TV lights the four pads (each with its own note) in a sequence; tap them back in the same order on your phone's four big pads. Every round adds one more and plays a little faster. One wrong pad, or 5 s without a press, and it's over. Score: the longest sequence you repeated. Pad finishes to unlock (same four colours, as on the controller): 🍬 Pastel (repeat 10) and 💜 Neon (repeat 20).",
   "controls": "<strong>A</strong> green, <strong>B</strong> red, <strong>Y</strong> yellow, <strong>X</strong> blue, or the <strong>D-pad</strong> by position (↑ green, → red, ← yellow, ↓ blue) · keyboard: Arrows by position"
@@ -423,10 +427,6 @@
  "colours": {
   "rules": "A colour's name shows up written in another colour: tap the colour of the <strong>ink</strong>, not what the word says (BLUE written in red is red). Your brain wants to read the word; that's the trap. 45 seconds; a wrong answer costs 3 of them. Score: right answers.",
   "controls": "The face button of that colour: <strong>B</strong> red, <strong>X</strong> blue, <strong>A</strong> green, <strong>Y</strong> yellow · keyboard: <strong>R</strong>, <strong>B</strong>, <strong>G</strong>, <strong>Y</strong> (or <strong>1</strong>–<strong>4</strong>)"
- },
- "anagram-1p": {
-  "rules": "Five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). Any real word counts, not only the one they came from. 60 seconds; ⏭ <strong>Skip</strong> shows the word but costs 3 seconds. Score: words made.",
-  "controls": "<strong>D-pad ← →</strong> picks a letter, <strong>A</strong> uses it, <strong>B</strong> takes one back, <strong>Y</strong> skips · keyboard: Just type the word, <strong>Backspace</strong>, <strong>Tab</strong> skips"
  },
  "numbers": {
   "rules": "A number shows on the TV for a moment (longer for longer numbers), then hides: type it back on the phone's keypad. Right, and the next one is a digit longer, starting from 3. Miss once and you get another number the same length; miss twice and it's over, with the digits you got wrong shown. Score: the most digits you remembered.",

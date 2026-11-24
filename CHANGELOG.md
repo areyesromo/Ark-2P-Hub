@@ -11,6 +11,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   a controller. (Its scores start afresh: the words come from Five Letters' list now.)
 - 🪢 Hangman 1P is now **Hangman** in the 1 player lobby, on Hangman Duel's board and gallows: a run of
   the hub's words, seven wrong letters and it's over. (A fresh high-score table: one more life than before.)
+- 🔤 Anagram Rush 1P is now **Anagram Rush**, Anagram Duel's 1 player mode: the duel's letters, as many
+  words as you can make in 60 seconds. (A fresh high-score table: the words come from the duel's list.)
 
 ## 0.1.68
 

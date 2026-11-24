@@ -39,7 +39,7 @@ export const BLURBS = {
   'memory-1p': 'Turn two cards, find the pairs.',
   maths: 'Sums against the clock.',
   colours: 'Tap the ink colour, not the word.',
-  'anagram-1p': 'Unscramble five letters, fast.',
+  'solo:anagram-duel': 'Unscramble five letters, fast.',
   numbers: 'Remember the number, type it back.',
   oddone: "Spot the square that's a different shade.",
   'solo:hangman': 'Guess the word, seven wrong and out.',

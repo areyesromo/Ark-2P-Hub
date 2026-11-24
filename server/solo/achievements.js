@@ -204,7 +204,7 @@ export const ACHIEVEMENTS = [
     { id: 'trivia-perfect', icon: '🎓', name: 'Full marks', desc: 'Trivia: get all 12 right.', check: (r, v) => v.of > 0 && v.right === v.of },
     { id: 'trivia-fast', icon: '⚡', name: 'Buzzer beater', desc: 'Trivia: a right answer in under 2 seconds.', check: (r, v) => v.fastest !== null && v.fastest < 2000 },
   ]),
-  ...game('anagram-1p', [
+  ...game('anagram-duel', [
     { id: 'anagram-10', icon: '🔤', name: 'Wordsmith', desc: 'Anagram Rush: make 10 words.', check: (r) => r.score >= 10 },
     { id: 'anagram-20', icon: '📚', name: 'Lexicon', desc: 'Anagram Rush: make 20 words.', check: (r) => r.score >= 20 },
     { id: 'anagram-streak', icon: '🔥', name: 'On a roll', desc: 'Anagram Rush: 8 words in a row without a skip.', check: (r, v) => v.bestStreak >= 8 },

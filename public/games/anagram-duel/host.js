@@ -1,5 +1,8 @@
+// In the 1 player mode (view.solo) the game is Anagram Rush: its screens are in rush.js (ArkRush).
 (function () {
   Ark.loadCss('/games/anagram-duel/style.css');
+  const rushReady = Ark.loadScript('/games/anagram-duel/rush.js');
+  let rush = null; // { el, view }: handing over to Anagram Rush's screen
   const esc = Ark.escapeHtml;
   let root = null;
   let key = '';
@@ -40,7 +43,7 @@
     return line;
   }
 
-  Ark.register('host', 'anagram-duel', {
+  const duel = {
     sounds: function (prev, v) {
       if (v.phase === 'play' && prev.phase !== 'play') return ['go'];
       if (v.phase !== prev.phase && v.result && prev.phase === 'play') return [v.result.winner === null ? 'wrong' : 'correct'];
@@ -61,5 +64,42 @@
       root = null;
       key = '';
     },
-  });
+  };
+
+  /** 1 player: show Anagram Rush's screen in place of the duel's (once the script is in). */
+  function toRush(v) {
+    if (!rush) return false;
+    rush.view = v;
+    if (!rush.on && window.ArkRush) {
+      rush.on = true;
+      duel.unmount();
+      rush.el.innerHTML = '';
+      ArkRush.host.mount(rush.el, rush.api);
+    }
+    if (rush.on) ArkRush.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkRush);
+
+  Ark.register('host', 'anagram-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      rush = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      rushReady.then(function () { if (rush && rush.view && rush.view.solo) toRush(rush.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toRush(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (rush && rush.on) ArkRush.host.unmount();
+      else duel.unmount();
+      rush = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? ArkRush.host.sounds(prev, v) : prev.solo ? [] : duel.sounds(prev, v); },
+    padHint: '1 player: left / right pick a letter · A use it · B take one back · Y skip (−3 s) · keyboard: just type, Tab skips',
+    pad: function (btn, v) { return solo(v) ? ArkRush.host.pad(btn, v) : null; },
+    typing: function (k, v) { return solo(v) ? ArkRush.host.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? ArkRush.host.overHtml(v) : ''; },
+  }));
 })();

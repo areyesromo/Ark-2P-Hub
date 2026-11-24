@@ -51,7 +51,7 @@ import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
 import cave, { MAPS as CAVE_MAPS, VEHICLES as CAVE_VEHICLES } from './cave.js';
 import lights, { LEVELS as LIGHTS_LEVELS } from './lights.js';
 import wordsearch, { SIZES as WORDSEARCH_SIZES } from './wordsearch-1p.js';
-import anagram from './anagram-1p.js';
+import { soloAnagram as anagram } from '../../games/anagram-duel.js'; // (a game for both modes)
 import mahjong from './mahjong.js';
 import freecell from './freecell.js';
 import nonogram from './nonogram.js';

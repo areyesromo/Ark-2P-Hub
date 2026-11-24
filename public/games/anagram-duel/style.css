@@ -43,3 +43,41 @@
 .ad-phone .msg .no { color: var(--bad); font-weight: 800; }
 .ad-phone .back { font-size: var(--fs-md); min-width: 10rem; }
 .ad-phone .ad-tiles { touch-action: manipulation; }
+
+/* ---- Anagram Rush (1 player) ---- */
+/* Letters and the word (TV and phone): tiles like a word game's. */
+.ar-word, .ar-tiles { display: flex; justify-content: center; gap: 0.35em; }
+.ar-slot, .ar-tile { width: 1.5em; height: 1.5em; display: flex; align-items: center; justify-content: center; border-radius: var(--r-md); font-weight: 900; line-height: 1; padding: 0; min-width: 0; font-size: inherit; }
+.ar-slot { border: 0.08em dashed var(--line-strong); color: var(--text); }
+.ar-slot.full { border-style: solid; border-color: var(--me, var(--p1)); background: var(--panel); }
+.ar-tile { background: #fef3c7; color: #422006; border: 0; box-shadow: 0 0.08em 0 #b45309; }
+.ar-tile.used { opacity: 0.2; }
+.ar-tile.cursor { outline: 0.1em solid var(--p1); outline-offset: 0.08em; }
+.ar-main { display: flex; flex-direction: column; gap: 0.6em; align-items: center; justify-content: center; }
+.ar-ready { font-weight: 900; }
+.ar-msg { min-height: 1.4em; }
+.ar-msg .ok { color: var(--good); font-weight: 900; }
+.ar-msg .no { color: var(--bad); font-weight: 900; }
+
+/* ---- TV ---- */
+
+.ar-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
+.ar-top { display: flex; gap: 2.5rem; color: var(--muted); font-size: var(--fs-lg); }
+.ar-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.ar-top .low strong { color: var(--bad); }
+.ar-bar { width: min(60rem, 80%); height: 0.6rem; border-radius: var(--r-pill); background: var(--panel); overflow: hidden; }
+.ar-bar span { display: block; height: 100%; background: var(--good); transition: width 0.25s linear; }
+.ar-host .ar-main { font-size: 5.5rem; min-height: 3.5em; }
+.ar-host .ar-ready { font-size: 0.7em; }
+.ar-host .ar-msg { font-size: var(--fs-xl); }
+.ar-rule { margin: 0; font-size: var(--fs-md); }
+
+/* ---- phone ---- */
+
+.ar-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 12px 12px 16px; text-align: center; justify-content: center; }
+.ar-phone .info { color: var(--muted); }
+.ar-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.ar-phone .ar-main { font-size: min(10vw, 3.2rem); touch-action: manipulation; }
+.ar-phone .ar-msg { font-size: var(--fs-md); }
+.ar-buttons { display: flex; gap: 10px; justify-content: center; }
+.ar-buttons button { flex: 1; max-width: 12rem; }
