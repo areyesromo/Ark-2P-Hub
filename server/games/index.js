@@ -108,6 +108,8 @@ import morris from './morris.js';
 import { morrisBot } from './morris-bot.js';
 import codeBreaker from './code-breaker.js';
 import { codeBreakerBot } from './code-breaker-bot.js';
+import hangman from './hangman.js';
+import { hangmanBot } from './hangman-bot.js';
 import { withSetup } from './options.js';
 import { BLURBS } from './blurbs.js';
 
@@ -252,6 +254,11 @@ const GAMES = [
   }),
   { ...wordRace, bot: wordRaceBot },
   withSetup({ ...codeBreaker, bot: codeBreakerBot }, { ...firstTo('Rounds to win', [2, 1, 3]), ...timer('timed', '60 s to set your code, 60 s a guess') }),
+  withSetup({ ...hangman, bot: hangmanBot }, {
+    words: { title: 'Words', values: ['players', 'hub'], label: (k) => (k === 'hub' ? 'The hub picks a word for each of you' : 'You set a word for each other') },
+    ...firstTo('Rounds to win', [2, 1, 3]),
+    ...timer('timed', '60 s to set your word, 150 s a round'),
+  }),
   withSetup({ ...fiveLetters, bot: fiveLettersBot }, { ...firstTo('Rounds to win', [3, 2, 5]), ...timer('timed', '180 s a word') }),
   withSetup({ ...make24, bot: make24Bot }, {
     ...firstTo('Rounds to win', [5, 3, 7]),

@@ -9,6 +9,17 @@
   let typed = '';
   let buzzed = '';
 
+  // The clock counts down between updates.
+  let gotAt = 0;
+  let tick = null;
+  const secsLeft = () => (view ? Math.ceil(Math.max(0, view.timeLeftMs - (Date.now() - gotAt)) / 1000) : 0);
+  const clock = () => '<b class="ark-clock">' + secsLeft() + 's</b>';
+  function ticking() {
+    tick = setInterval(function () {
+      if (root) root.querySelectorAll('.ark-clock').forEach(function (c) { c.textContent = secsLeft() + 's'; });
+    }, 250);
+  }
+
   function typing() {
     const v = view;
     if (!v) return false;
@@ -69,7 +80,7 @@
     const me = v.you;
     let html = '<div class="cb-top"><span>You ' + v.scores[me] + ' – ' + v.scores[1 - me] + ' Them</span>' +
       (v.code ? '<span class="cb-mine">Your code ' + ArkCode.wheels(v.code, v.length, { small: true }) + '</span>' : '') + '</div>' +
-      '<p class="cb-msg">' + message(v) + (v.timed && v.timeLeftMs && typing() ? ' <small>' + Math.ceil(v.timeLeftMs / 1000) + 's</small>' : '') + '</p>';
+      '<p class="cb-msg">' + message(v) + (v.timed && v.timeLeftMs && typing() ? ' <small>' + clock() + '</small>' : '') + '</p>';
     if (v.phase === 'guess' || v.phase === 'roundEnd' || v.phase === 'over') {
       html += '<div class="cb-two"><div><small>Your guesses</small>' + ArkCode.rows(v.guesses[me], v.length) + '</div>' +
         '<div><small>Theirs at yours</small>' + ArkCode.rows(v.guesses[1 - me], v.length) + '</div></div>';
@@ -88,16 +99,18 @@
       root.addEventListener('click', onClick);
       document.addEventListener('keydown', onKey);
       el.appendChild(root);
+      ticking();
       ready.then(function () { loaded = true; render(); });
     },
     update: function (v) {
       const prev = view;
       view = v;
+      gotAt = Date.now();
       if (prev && (prev.round !== v.round || prev.phase !== v.phase)) typed = '';
       if (prev && v.phase === 'guess' && v.turn === v.you && prev.turn !== v.you) api.vibrate(40);
       if (v.result && buzzed !== v.round + v.phase && v.result.winner !== null) { buzzed = v.round + v.phase; api.vibrate(v.result.winner === v.you ? [60, 40, 60] : 200); }
       render();
     },
-    unmount: function () { document.removeEventListener('keydown', onKey); root = view = null; typed = ''; buzzed = ''; },
+    unmount: function () { clearInterval(tick); document.removeEventListener('keydown', onKey); root = view = null; typed = ''; buzzed = ''; },
   });
 })();

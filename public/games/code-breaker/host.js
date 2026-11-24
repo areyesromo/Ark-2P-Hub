@@ -7,6 +7,17 @@
   let view = null;
   let loaded = false;
 
+  // The clock counts down between updates.
+  let gotAt = 0;
+  let tick = null;
+  const secsLeft = () => (view ? Math.ceil(Math.max(0, view.timeLeftMs - (Date.now() - gotAt)) / 1000) : 0);
+  const clock = () => '<b class="ark-clock">' + secsLeft() + 's</b>';
+  function ticking() {
+    tick = setInterval(function () {
+      if (root) root.querySelectorAll('.ark-clock').forEach(function (c) { c.textContent = secsLeft() + 's'; });
+    }, 250);
+  }
+
   const nameOf = (v, slot) => '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
 
   /** One player's attempt on the other's vault. */
@@ -22,7 +33,7 @@
       '<header>' + (v.phase === 'set' ? nameOf(v, slot) + ' · ' : '') + head + '</header>' +
       '<div class="cb-door">' + ArkCode.wheels(open ? v.codes[target] : null, v.length, { hidden: !open }) + '</div>' +
       ArkCode.rows(v.guesses[slot], v.length, v.phase === 'set' ? 0 : Math.max(6, v.guesses[slot].length + 1)) +
-      '<footer>' + (active ? 'Guessing…' + (v.timed && v.timeLeftMs ? ' ⏱ ' + Math.ceil(v.timeLeftMs / 1000) + 's' : '') : cracked ? '<b>Cracked!</b>' : '') + '</footer></section>';
+      '<footer>' + (active ? 'Guessing…' + (v.timed && v.timeLeftMs ? ' ⏱ ' + clock() : '') : cracked ? '<b>Cracked!</b>' : '') + '</footer></section>';
   }
 
   function caption(v) {
@@ -56,9 +67,10 @@
       root = document.createElement('div');
       root.className = 'cb-host';
       el.appendChild(root);
+      ticking();
       ready.then(function () { loaded = true; render(); });
     },
-    update: function (v) { view = v; render(); },
-    unmount: function () { root = view = null; },
+    update: function (v) { view = v; gotAt = Date.now(); render(); },
+    unmount: function () { clearInterval(tick); root = view = null; },
   });
 })();
