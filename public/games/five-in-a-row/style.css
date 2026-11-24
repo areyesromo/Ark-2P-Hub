@@ -1,0 +1,73 @@
+/* Five in a Row: a light wooden board, stones on the crossings. The board keeps its own colours;
+   the stones are the players' colours, with a dot (player 1) or a ring (player 2). */
+
+.gm-board {
+  display: grid;
+  grid-template-columns: repeat(var(--n), 1fr);
+  aspect-ratio: 1;
+  padding: 2.5%;
+  border-radius: var(--r-md);
+  background: radial-gradient(ellipse at 30% 20%, #f1cf8f, #ddb06a 60%, #c99853);
+  box-shadow: inset 0 0 0 3px rgba(120, 80, 30, 0.35), 0 18px 40px -14px rgba(0, 0, 0, 0.8);
+}
+.gm-pt { position: relative; display: grid; place-items: center; aspect-ratio: 1; }
+/* The lines through each crossing (cut short at the edges). */
+.gm-pt::before, .gm-pt::after { content: ''; position: absolute; background: rgba(70, 40, 10, 0.7); }
+.gm-pt::before { left: 0; right: 0; top: 50%; height: 1px; }
+.gm-pt::after { top: 0; bottom: 0; left: 50%; width: 1px; }
+.gm-pt.l::before { left: 50%; }
+.gm-pt.r::before { right: 50%; }
+.gm-pt.t::after { top: 50%; }
+.gm-pt.b::after { bottom: 50%; }
+.gm-pt .star { position: absolute; width: 18%; height: 18%; border-radius: 50%; background: rgba(70, 40, 10, 0.8); z-index: 1; }
+.gm-stone { position: relative; z-index: 2; display: block; width: 86%; height: 86%; border-radius: 50%; box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.35), inset 0 3px 3px rgba(255, 255, 255, 0.45), 0 2px 3px rgba(0, 0, 0, 0.45); }
+.gm-stone.p1 { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--p1) 60%, #fff), var(--p1) 60%); }
+.gm-stone.p2 { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--p2) 60%, #fff), var(--p2) 60%); }
+.gm-stone::after { content: ''; position: absolute; border-radius: 50%; }
+.gm-stone.p1::after { inset: 38%; background: rgba(255, 255, 255, 0.85); }
+.gm-stone.p2::after { inset: 26%; border: 2px solid rgba(255, 255, 255, 0.85); }
+.gm-stone.last { box-shadow: 0 0 0 2px #fff, 0 2px 3px rgba(0, 0, 0, 0.45); animation: gm-drop 0.25s ease-out; }
+.gm-stone.win { box-shadow: 0 0 0 3px #fff, 0 0 14px 4px #fff; animation: gm-glow 0.8s ease-in-out infinite alternate; }
+.gm-stone.ghost { opacity: 0.5; animation: gm-breathe 1s ease-in-out infinite; }
+.gm-board.tappable .gm-pt[data-c] { cursor: pointer; }
+.gm-pt.aim { outline: 3px solid #fff; outline-offset: -2px; border-radius: 4px; z-index: 3; }
+.gm-pt.aim.p1 { outline-color: var(--p1); }
+.gm-pt.aim.p2 { outline-color: var(--p2); }
+@keyframes gm-drop { from { transform: scale(1.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes gm-glow { to { transform: scale(1.1); } }
+@keyframes gm-breathe { 50% { transform: scale(0.85); } }
+@media (prefers-reduced-motion: reduce) { .gm-stone.last, .gm-stone.win, .gm-stone.ghost { animation: none; } }
+
+/* ---- TV ---- */
+
+.gm-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.gm-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; }
+.gm-centre { position: relative; height: min(78vh, 100%); aspect-ratio: 1; }
+.gm-centre .gm-board { height: 100%; box-sizing: border-box; }
+.gm-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 12rem; padding: 1.4rem 1.2rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.75; transition: opacity 0.25s; }
+.gm-side.active { opacity: 1; }
+.gm-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.gm-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.gm-stone.big { width: 4rem; height: 4rem; }
+.gm-name { font-size: 1.5rem; font-weight: 900; }
+.gm-taken { color: var(--muted); }
+.gm-turn { min-height: 1.8rem; font-weight: 800; display: flex; gap: 0.5rem; align-items: center; }
+.gm-clock { color: var(--muted); font-variant-numeric: tabular-nums; }
+.gm-clock.low { color: var(--bad); }
+.gm-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2rem; font-weight: 900; white-space: nowrap; z-index: 5; }
+.gm-banner small { font-size: 1rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+
+.gm-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 6px 14px; }
+.gm-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); padding: 0 4px; }
+.gm-top .you { display: flex; align-items: center; gap: 6px; }
+.gm-top .gm-stone { width: 18px; height: 18px; }
+.gm-msg { margin: 0; text-align: center; font-size: 1.05rem; min-height: 1.5em; }
+.gm-msg .won { color: var(--good); font-weight: 900; }
+.gm-msg .lost { color: var(--bad); font-weight: 900; }
+.gm-msg .big { font-size: 1.6rem; }
+.gm-phone .gm-board { width: 100%; box-sizing: border-box; padding: 1.5%; }
+.gm-place { padding: 16px 0; border: 0; border-radius: var(--r-md); background: var(--good); color: var(--on-good, #062); font-size: 1.2rem; font-weight: 900; }
+.gm-place:disabled { opacity: 0.35; }
+.gm-phone .rematch { margin-top: 6px; }
