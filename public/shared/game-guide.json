@@ -4,7 +4,7 @@
   "controls": "<strong>D-pad</strong> / stick · keyboard: Arrows · Slide"
  },
  "reaction-duel": {
-  "rules": "The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3.",
+  "rules": "The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. On your own? <strong>Reaction Rush</strong> in the 1 player lobby: five rounds, your average time is your score.",
   "settings": "Points to win: 3, 5 or 7",
   "controls": "any face button, bumper or trigger · Tap"
  },
@@ -396,6 +396,10 @@
   "rules": "Words are hidden in a grid of letters in straight lines: drag on the phone from a word's first letter to its last (or tap both) to mark it. The list says which words to find and crosses them off. 8 × 8 hides 6 words across and down, 10 × 10 hides 8 with diagonals too, and 12 × 12 hides 10 any way at all, even backwards. Score: your time to find them all, per size.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> on a word's first letter then <strong>A</strong> on its last, <strong>B</strong> lets go · keyboard: Arrows, <strong>Enter</strong>, <strong>Backspace</strong> · Drag from the first letter to the last"
  },
+ "solo:reaction-duel": {
+  "rules": "Reaction Duel on your own: the screen says <strong>Wait…</strong> (red), then after a random moment <strong>TAP!</strong> (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate.",
+  "controls": "Any face button, bumper or trigger · keyboard: <strong>Enter</strong> / <strong>Space</strong> · Tap"
+ },
  "solo:hangman": {
   "rules": "Hangman on your own: the hub hides a word behind blanks; tap letters on the phone's keyboard (or on the TV, with its keyboard or a controller) and the right ones fill in. Seven wrong letters and the man is hanged: the run is over, and the word shows. Each word is worth 100 plus 20 for every wrong letter you didn't use, and the next word follows straight away. Score: points over the run.",
   "controls": "<strong>D-pad</strong> moves over the keyboard, <strong>A</strong> guesses · keyboard: Just type the letters"
@@ -415,10 +419,6 @@
  "simon": {
   "rules": "The TV lights the four pads (each with its own note) in a sequence; tap them back in the same order on your phone's four big pads. Every round adds one more and plays a little faster. One wrong pad, or 5 s without a press, and it's over. Score: the longest sequence you repeated. Pad finishes to unlock (same four colours, as on the controller): 🍬 Pastel (repeat 10) and 💜 Neon (repeat 20).",
   "controls": "<strong>A</strong> green, <strong>B</strong> red, <strong>Y</strong> yellow, <strong>X</strong> blue, or the <strong>D-pad</strong> by position (↑ green, → red, ← yellow, ↓ blue) · keyboard: Arrows by position"
- },
- "reaction-1p": {
-  "rules": "The screen says <strong>Wait…</strong> (red), then after a random moment <strong>TAP!</strong> (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate.",
-  "controls": "Any face button, bumper or trigger · keyboard: <strong>Enter</strong> / <strong>Space</strong> · Tap"
  },
  "maths": {
   "rules": "Sums against the clock: pick the right answer of four on the phone's big buttons. They start easy (adding small numbers) and get harder every 5 right answers: taking away, times tables, then a mix with dividing and bigger numbers. 60 seconds; a wrong answer costs 3 of them. Score: right answers.",

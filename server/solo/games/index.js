@@ -62,7 +62,7 @@ import colours from './colours.js';
 import game2048 from './2048.js';
 import minesweeper, { SIZES as MINE_SIZES } from './minesweeper-1p.js';
 import simon from './simon.js';
-import reaction from './reaction-1p.js';
+import { soloReaction as reaction } from '../../games/reaction-duel.js'; // (a game for both modes)
 import { withSetup } from './options.js';
 import { LOOKS } from './looks.js';
 import { getAchievement } from '../achievements.js';

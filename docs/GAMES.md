@@ -15,7 +15,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
-| Reaction Duel | `reaction-duel` | Wait for GO… then tap faster than your rival. Jump early and you lose the point. | `server/games/reaction-duel.js`, `public/games/reaction-duel/`, `test/reaction-duel.test.js` |
+| Reaction Duel | `reaction-duel` | Wait for GO… then tap faster than your rival. Jump early and you lose the point. | `server/games/reaction-duel.js`, `public/games/reaction-duel/`, `test/reaction-duel.test.js`, `test/solo-reaction.test.js` |
 | Rock Paper Scissors | `rock-paper-scissors` | Pick in secret on your phone or controller. The TV reveals both. First to 3. | `server/games/rock-paper-scissors-bot.js`, `server/games/rock-paper-scissors.js`, `public/games/rock-paper-scissors/`, `test/rock-paper-scissors.test.js`, `test/sounds.test.js` |
 | Pong | `pong` | The classic. Drag on your phone or use the stick to move your paddle. First to 5. | `server/games/pong-bot.js`, `server/games/pong.js`, `server/games/hand.js`, `public/games/pong/`, `test/pong.test.js` |
 | Light Cycles | `tron` | Tron-style. Leave a wall behind you and make your rival crash into it. First to 3. | `server/games/tron-bot.js`, `server/games/tron.js`, `public/games/tron/`, `test/tron.test.js` |
@@ -128,12 +128,12 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
+| Reaction Rush | `reaction-duel` | Wait for GO, then tap. Five rounds, your average time is your score. | `server/games/reaction-duel.js`, `public/games/reaction-duel/`, `test/reaction-duel.test.js`, `test/solo-reaction.test.js` |
 | Hangman | `hangman` | Guess the hidden word a letter at a time. Seven wrong letters and it's over. | `server/games/hangman-bot.js`, `server/games/hangman.js`, `public/games/hangman/`, `test/hangman.test.js`, `test/solo-hangman.test.js` |
 | Five Letters | `five-letters` | Find the five-letter word in six guesses. A new daily word for everyone, or practise. | `server/games/five-letters-bot.js`, `server/games/five-letters.js`, `server/games/anagram-words.js`, `public/games/five-letters/`, `test/five-letters.test.js`, `test/solo-five-letters.test.js` |
 | Anagram Rush | `anagram-duel` | Unscramble five letters into a word. As many as you can in 60 seconds. | `server/games/anagram-duel-bot.js`, `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js`, `test/solo-anagram.test.js` |
 | Memory Pairs | `memory-match` | Turn two cards over and find the pairs. Fewer tries is better. | `server/games/memory-match-bot.js`, `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js`, `test/solo-looks.test.js`, `test/solo-memory.test.js` |
 | Simon | `simon` | Watch the pads light up, then play the sequence back. One more each round. | `server/solo/games/simon.js`, `public/games/simon/`, `test/solo-simon.test.js` |
-| Reaction Rush 1P | `reaction-1p` | Wait for GO, then tap. Five rounds, your average time is your score. | `server/solo/games/reaction-1p.js`, `public/games/reaction-1p/`, `test/solo-reaction.test.js` |
 | Quick Maths | `maths` | Sums against the clock: pick the right answer. They get harder as you go. | `server/solo/games/maths.js`, `public/games/maths/`, `test/solo-timed-quiz.test.js` |
 | Colour Trap | `colours` | Tap the colour of the ink, not the word. RED written in blue is blue! | `server/solo/games/colours.js`, `public/games/colours/`, `test/solo-timed-quiz.test.js` |
 | Number Memory | `numbers` | Remember the number, then type it back. One digit longer every time. | `server/solo/games/numbers.js`, `public/games/numbers/`, `test/solo-numbers.test.js` |

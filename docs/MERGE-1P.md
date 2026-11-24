@@ -87,7 +87,7 @@ folder, not in the repo, so the merged app starts fresh.
    | Mastermind | Mastermind 1P (`mastermind-1p`) | Code Breaker |
    | Trivia | Trivia 1P (`trivia-1p`) | Quiz Battle |
    | Memory Pairs | ~~Memory Pairs 1P (`memory-1p`)~~ merged: **Memory Pairs**, Memory Match's 1 player mode (`memory-match`) | Memory Match |
-   | Reaction Rush | Reaction Rush 1P (`reaction-1p`) | Reaction Duel |
+   | Reaction Rush | ~~Reaction Rush 1P (`reaction-1p`)~~ merged: **Reaction Rush**, Reaction Duel's 1 player mode (`reaction-duel`) | Reaction Duel |
    | Brick Breaker | Brick Breaker 1P (`breaker-1p`) | Brick Breaker Duel |
    | Asteroids | Asteroids 1P (`asteroids-1p`) | Asteroid Duel |
    | Blocks | Blocks 1P (`blocks-1p`) | Falling Blocks Battle |
@@ -118,7 +118,7 @@ folder, not in the repo, so the merged app starts fresh.
 
 ## The steps
 
-Progress: **steps 1 to 5 done** (the engine on 2P, all 39 solo games, their achievements, daily challenge and pages, phone only at `/phone`, and Ark 1P Hub retired: its last release points here, and its next-games list is the Solo section of `docs/MINIGAME-IDEAS.md`). Step 6 under way: Snake, Five Letters, Hangman, Anagram Rush and Memory Pairs are merged.
+Progress: **steps 1 to 5 done** (the engine on 2P, all 39 solo games, their achievements, daily challenge and pages, phone only at `/phone`, and Ark 1P Hub retired: its last release points here, and its next-games list is the Solo section of `docs/MINIGAME-IDEAS.md`). Step 6 under way: Snake, Five Letters, Hangman, Anagram Rush, Memory Pairs and Reaction Rush are merged. Mastermind and Code Breaker are different games at heart (colour pegs with levels, against four different digits): merging them is a choice still to make.
 
 Each step is one PR to 2P that leaves the app working, with its `CHANGELOG.md` line. After each
 merge, the desktop build is started as 2P's `CLAUDE.md` says.

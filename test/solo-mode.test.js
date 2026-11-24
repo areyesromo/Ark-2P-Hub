@@ -56,7 +56,7 @@ test('the switch: 2 players lists the 1v1 games, 1 player the solo ones; not in 
   assert.deepEqual(s.games.map((g) => g.id).sort(), listGames().filter((g) => g.solo).map((g) => g.id).sort());
   assert.ok(s.games.length >= 3 && s.games.every((g) => g.solo && g.score && g.score.unit));
   assert.match(r.setMode('trio').error, /1 player or 2 players/);
-  r.startGame('reaction-1p');
+  r.startGame('reaction-duel');
   assert.match(r.setMode('duo').error, /Finish this game/);
   r.dispose();
 });
@@ -136,7 +136,7 @@ test('the computer sits a solo game out, and the 1v1 match history never sees on
   const { r } = room(['Ana']);
   r.seatBot('easy');
   r.setMode('solo');
-  assert.ok(r.startGame('reaction-1p').ok);
+  assert.ok(r.startGame('reaction-duel').ok);
   assert.equal(r.soloSlot, 0, 'the person plays, not the computer');
   r.driveBot(); // nothing to do: no crash, no move
   assert.equal(r.botTimer, null);

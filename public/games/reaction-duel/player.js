@@ -1,5 +1,8 @@
+// In the 1 player mode (view.solo) the game is Reaction Rush: its screens are in rush.js (ArkReactionRush).
 (function () {
   Ark.loadCss('/games/reaction-duel/style.css');
+  const rushReady = Ark.loadScript('/games/reaction-duel/rush.js');
+  let rush = null; // { el, api, on, view }: handing over to Reaction Rush's screen
   let pad = null;
   let api = null;
   let view = null;
@@ -58,7 +61,7 @@
     }
   }
 
-  Ark.register('player', 'reaction-duel', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       pad = document.createElement('div');
@@ -83,5 +86,36 @@
       pad = null;
       view = null;
     },
-  });
+  };
+
+  /** 1 player: show Reaction Rush's screen in place of the duel's (once the script is in). */
+  function toRush(v) {
+    if (!rush) return false;
+    rush.view = v;
+    if (!rush.on && window.ArkReactionRush) {
+      rush.on = true;
+      duel.unmount();
+      rush.el.innerHTML = '';
+      ArkReactionRush.player.mount(rush.el, rush.api);
+    }
+    if (rush.on) ArkReactionRush.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'reaction-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      rush = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      rushReady.then(function () { if (rush && rush.view && rush.view.solo) toRush(rush.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toRush(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (rush && rush.on) ArkReactionRush.player.unmount();
+      else duel.unmount();
+      rush = null;
+    },
+  }));
 })();

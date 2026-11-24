@@ -63,7 +63,7 @@ scans in from the lobby takes its seat.
 
 | Game | How it plays |
 | --- | --- |
-| **Reaction Duel** | The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. |
+| **Reaction Duel** | The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. On your own? **Reaction Rush** in the 1 player lobby: five rounds, your average time is your score. |
 | **Rock Paper Scissors** | Pick in secret on your phone; the TV reveals both. First to 3. |
 | **Pong** | The classic, in real time. The whole court is on your phone too, turned so your paddle is at the bottom: drag left and right anywhere on it (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
 | **Volley Blobs** | Beach volleyball for two bouncy blobs. Hold ◀ ▶ on your phone (or the stick) to slide and tap JUMP; where the ball hits your dome sets where it goes, so jump into it to smash. Up to 3 touches a side, and the one who lost the point serves. First to 7. |
@@ -137,9 +137,10 @@ scans in from the lobby takes its seat.
 ### 👤 Solo (1 player)
 
 The 1 player games (switch the lobby to **👤 1 player**): one of you plays and chases your own best.
-They came from Ark 1P Hub. Games with a 1v1 twin here have **1P** after their name for now (Reaction Rush 1P
-and Reaction Duel, Trivia 1P and Quiz Battle…): each pair is becoming one game, one pair at a time.
-**Snake**, **Five Letters**, **Hangman**, **Anagram Rush** and **Memory Pairs** already are: the 2 player game, played on your own.
+They came from Ark 1P Hub. Games with a 1v1 twin here have **1P** after their name for now (Trivia 1P
+and Quiz Battle, Brick Breaker 1P and Brick Breaker Duel…): each pair is becoming one game, one pair at a time.
+**Snake**, **Five Letters**, **Hangman**, **Anagram Rush**, **Memory Pairs** and **Reaction Rush** already are: the 2 player
+game, played on your own.
 
 - **📅 Daily challenge** (the card after 🎲 Random in the 1 player lobby): one game a day, the same deal
   for everyone (the same board, pieces or questions), one go each. Each day's runs have their own
@@ -204,7 +205,7 @@ and Reaction Duel, Trivia 1P and Quiz Battle…): each pair is becoming one game
 | **Simon** | The TV lights the four pads (each with its own note) in a sequence; tap them back in the same order on your phone's four big pads. Every round adds one more and plays a little faster. One wrong pad, or 5 s without a press, and it's over. Score: the longest sequence you repeated. Pad finishes to unlock (same four colours, as on the controller): 🍬 Pastel (repeat 10) and 💜 Neon (repeat 20). |
 | **Memory Pairs** | Memory Match on your own: the cards lie face down: turn two over. A pair stays face up; two different ones turn back after a moment, so remember where they were. Find every pair in as few tries as you can: 4 × 4 (8 pairs), 6 × 4 (12) or 6 × 6 (18). Score: the tries it took (fewer is better), per size. Face sets to unlock: 🍕 Food (find every pair), 🐠 Sea (clear 4 × 4 in 12 tries or fewer) and 🚀 Space (clear 6 × 6). |
 | **Five Letters** | Five Letters on your own: find the hidden five-letter word in six guesses, typed on the phone's keyboard (or the TV's, or with a controller). After each guess the letters turn green (right place), yellow (in the word, elsewhere) or grey (not in it), and so do the keyboard's keys. Guesses must be real words. 📅 **Today's word** is the same for everyone and can be played once a day (a new one at midnight UTC; a second go shows how you did); 🎲 **Practice** gives a new word every time. Score: the guesses it took; a word you don't find doesn't count. |
-| **Reaction Rush 1P** | The screen says **Wait…** (red), then after a random moment **TAP!** (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate. |
+| **Reaction Rush** | Reaction Duel on your own: the screen says **Wait…** (red), then after a random moment **TAP!** (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate. |
 | **Quick Maths** | Sums against the clock: pick the right answer of four on the phone's big buttons. They start easy (adding small numbers) and get harder every 5 right answers: taking away, times tables, then a mix with dividing and bigger numbers. 60 seconds; a wrong answer costs 3 of them. Score: right answers. |
 | **Colour Trap** | A colour's name shows up written in another colour: tap the colour of the **ink**, not what the word says (BLUE written in red is red). Your brain wants to read the word; that's the trap. 45 seconds; a wrong answer costs 3 of them. Score: right answers. |
 | **Anagram Rush** | Anagram Duel on your own, against the clock. Five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). Any real word counts, not only the one they came from. 60 seconds; ⏭ **Skip** shows the word but costs 3 seconds. Score: words made. |
@@ -382,7 +383,7 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Five Letters (1 player) | **D-pad** picks a key on the TV's keyboard, **A** types it, **B** deletes, **Start** / **X** enters · keyboard: Just type: letters, **Backspace**, **Enter** |  |
 | Simon | **A** green, **B** red, **Y** yellow, **X** blue, or the **D-pad** by position (↑ green, → red, ← yellow, ↓ blue) · keyboard: Arrows by position |  |
 | Memory Pairs | **D-pad** moves, **A** turns a card over · keyboard: Arrows, **Enter** |  |
-| Reaction Rush 1P | Any face button, bumper or trigger · keyboard: **Enter** / **Space** | Tap |
+| Reaction Rush | Any face button, bumper or trigger · keyboard: **Enter** / **Space** | Tap |
 | Quick Maths | **A**, **B**, **X**, **Y**: the answer next to that letter on the TV · keyboard: **1**–**4** |  |
 | Colour Trap | The face button of that colour: **B** red, **X** blue, **A** green, **Y** yellow · keyboard: **R**, **B**, **G**, **Y** (or **1**–**4**) |  |
 | Anagram Rush | **D-pad ← →** picks a letter, **A** uses it, **B** takes one back, **Y** skips · keyboard: Just type the word, **Backspace**, **Tab** skips |  |

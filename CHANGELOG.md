@@ -15,6 +15,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   words as you can make in 60 seconds. (A fresh high-score table: the words come from the duel's list.)
 - 🃏 Memory Pairs 1P is now **Memory Pairs**, Memory Match's 1 player mode, with Memory Match's cards: the
   faces you unlock are its Animals, Food, Ocean and Space & travel sets. (A fresh high-score table.)
+- ⚡ Reaction Rush 1P is now **Reaction Rush**, Reaction Duel's 1 player mode: five rounds of wait for GO,
+  your average time is your score. (A fresh high-score table.)
 
 ## 0.1.68
 

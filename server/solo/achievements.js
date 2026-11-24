@@ -229,7 +229,7 @@ export const ACHIEVEMENTS = [
     { id: 'memory-12', icon: '🧠', name: 'Sharp memory', desc: 'Memory Pairs: clear 4 × 4 in 12 tries or fewer.', check: (r, v) => scored(r) && v.w === 4 && v.h === 4 && r.score <= 12 },
     { id: 'memory-large', icon: '🐘', name: 'Elephant', desc: 'Memory Pairs: clear 6 × 6.', check: (r, v) => scored(r) && v.w === 6 && v.h === 6 },
   ]),
-  ...game('reaction-1p', [
+  ...game('reaction-duel', [
     { id: 'reaction-300', icon: '⚡', name: 'Quick', desc: 'Reaction Rush: average under 300 ms.', check: (r) => scored(r) && r.score < 300 },
     { id: 'reaction-250', icon: '⚡', name: 'Lightning', desc: 'Reaction Rush: average under 250 ms.', check: (r) => scored(r) && r.score < 250 },
     { id: 'reaction-clean', icon: '🎯', name: 'Steady hands', desc: 'Reaction Rush: five rounds, no false starts, every one under 350 ms.', check: (r, v) => scored(r) && v.falseStarts === 0 && v.times.length >= 5 && v.times.every((t) => t < 350) },
