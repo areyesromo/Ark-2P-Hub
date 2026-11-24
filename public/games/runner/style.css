@@ -1,0 +1,24 @@
+/* ---- TV ---- */
+
+.runner-host { flex: 1; min-height: 0; display: flex; }
+.runner-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+/* The sky over the desert is the scene itself. */
+.runner-arena canvas { display: block; border-radius: var(--r-md); border: 2px solid var(--line-strong); background: linear-gradient(#1e1b4b, #3b2f5c 70%, #5b4a3a); }
+.runner-score { position: absolute; top: 1.5rem; right: 3rem; font-size: 3rem; font-weight: 900; font-variant-numeric: tabular-nums; text-shadow: 0 0.2rem 0 rgba(0, 0, 0, 0.5); pointer-events: none; }
+.runner-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; pointer-events: none; text-align: center; }
+.runner-overlay .big { font-size: 5rem; font-weight: 900; }
+.runner-overlay .sub { font-size: var(--fs-xl); text-shadow: 0 0 1rem #000; }
+
+/* ---- phone ---- */
+
+.runner-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; text-align: center; }
+.runner-phone .info { color: var(--muted); }
+.runner-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.runner-phone .jump, .runner-phone .duck { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; border-radius: var(--radius); background: var(--panel); border: 3px solid var(--line-strong); touch-action: none; }
+.runner-phone .jump { flex: 2; border-color: var(--me); }
+.runner-phone .duck { flex: 1; }
+.runner-phone .big { font-size: var(--fs-xl); font-weight: 900; }
+.runner-phone .sub { color: var(--muted); font-weight: 400; font-size: var(--fs-sm); }
+.runner-phone button.on { background: var(--me); color: var(--on-bright); }
+.runner-phone button.on .sub { color: var(--on-bright); }
+.runner-phone .pause { align-self: center; min-width: 10rem; }

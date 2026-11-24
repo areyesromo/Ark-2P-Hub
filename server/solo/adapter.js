@@ -2,7 +2,7 @@
 // onInput(slot, input) and playerView(slot); a solo game has one player, so the room picks
 // whose game it is (ctx.soloSlot: whoever started it), that seat plays, and the other one
 // (if anyone's in it) watches. The game itself is untouched: the solo bits it needs
-// (ctx.player, achievements(), best()) are added to the room's ctx here.
+// (ctx.player, achievements(), best(), daily) are added to the room's ctx here.
 
 export function soloGame(def) {
   return {
@@ -30,6 +30,7 @@ class SoloSeat {
     });
     inner.achievements = () => ctx.solo.achievements();
     inner.best = (variant) => ctx.solo.best(variant);
+    inner.daily = ctx.solo.daily;
     this.game = def.create(inner);
   }
 

@@ -1,0 +1,81 @@
+/* ---- TV ---- */
+
+.g2048-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+.g2048-stats { display: flex; justify-content: center; gap: 3rem; color: var(--muted); font-size: var(--fs-md); }
+.g2048-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.g2048-stats .goal { color: var(--warn); font-weight: 800; }
+.g2048-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; container-type: size; }
+.g2048-board {
+  position: relative;
+  width: min(100cqw, 100cqh);
+  aspect-ratio: 1;
+  border-radius: var(--radius);
+  background: var(--bg-2);
+  border: 2px solid var(--line);
+}
+.g2048-board .cells, .g2048-board .grid, .g2048-board .tile { position: absolute; }
+/* The grid and the tiles share one box; a tile's left/top/size are % of it. */
+.g2048-board .cells { inset: 0.6rem; }
+.g2048-board .grid { inset: 0; display: grid; grid-template-columns: repeat(4, 1fr); }
+.g2048-board .grid i { margin: 0.35rem; border-radius: var(--r-md); background: var(--panel); }
+.g2048-board .tile { padding: 0.35rem; z-index: 1; transition: left 110ms ease-out, top 110ms ease-out; }
+.g2048-board .tile span {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  border-radius: var(--r-md); font-weight: 900; font-size: clamp(1.2rem, 6cqmin, 4.5rem); font-variant-numeric: tabular-nums;
+}
+.g2048-board .tile.fresh span { animation: g2048-pop 160ms ease-out; }
+.g2048-board .tile.merged span { animation: g2048-bump 180ms ease-out; }
+.g2048-board .tile.gone { z-index: 0; opacity: 0.6; }
+@keyframes g2048-pop { from { transform: scale(0.2); opacity: 0; } }
+@keyframes g2048-bump { 50% { transform: scale(1.15); } }
+
+/* Tile colours are the game itself: they climb from cool to hot as the numbers grow. */
+.tile.v2 span { background: #334155; color: #e2e8f0; }
+.tile.v4 span { background: #3f4a6b; color: #e2e8f0; }
+.tile.v8 span { background: #0e7490; color: #ecfeff; }
+.tile.v16 span { background: #0891b2; color: #ecfeff; }
+.tile.v32 span { background: #6d28d9; color: #f5f3ff; }
+.tile.v64 span { background: #9333ea; color: #faf5ff; }
+.tile.v128 span { background: #db2777; color: #fff1f2; font-size: clamp(1rem, 5cqmin, 3.8rem); }
+.tile.v256 span { background: #e11d48; color: #fff1f2; font-size: clamp(1rem, 5cqmin, 3.8rem); }
+.tile.v512 span { background: #ea580c; color: #fff7ed; font-size: clamp(1rem, 5cqmin, 3.8rem); }
+.tile.v1024 span { background: #f59e0b; color: #1c1402; font-size: clamp(0.9rem, 4cqmin, 3rem); }
+.tile.v2048 span { background: #facc15; color: #1c1402; font-size: clamp(0.9rem, 4cqmin, 3rem); box-shadow: 0 0 2rem #facc15; }
+.tile.v4096 span { background: #fde047; color: #1c1402; font-size: clamp(0.9rem, 4cqmin, 3rem); box-shadow: 0 0 2.5rem #fde047; }
+
+/* The unlockable looks (see server/games/looks.js): the tile colours again. They're the tiles themselves. */
+.look-ocean .tile.v2 span { background: #164e63; color: #ecfeff; }
+.look-ocean .tile.v4 span { background: #155e75; color: #ecfeff; }
+.look-ocean .tile.v8 span { background: #0e7490; color: #ecfeff; }
+.look-ocean .tile.v16 span { background: #0891b2; color: #ecfeff; }
+.look-ocean .tile.v32 span { background: #06b6d4; color: #ecfeff; }
+.look-ocean .tile.v64 span { background: #22d3ee; color: #0b1220; }
+.look-ocean .tile.v128 span { background: #2dd4bf; color: #0b1220; }
+.look-ocean .tile.v256 span { background: #14b8a6; color: #0b1220; }
+.look-ocean .tile.v512 span { background: #34d399; color: #0b1220; }
+.look-ocean .tile.v1024 span { background: #a3e635; color: #0b1220; }
+.look-ocean .tile.v2048 span { background: #fde047; color: #0b1220; }
+.look-ocean .tile.v4096 span { background: #fef08a; color: #0b1220; }
+
+.look-neon .tile.v2 span { background: #0b0f1a; color: #00f0ff; box-shadow: inset 0 0 0 0.18rem #00f0ff, 0 0 0.9rem #00f0ff; }
+.look-neon .tile.v4 span { background: #0b0f1a; color: #2d9bff; box-shadow: inset 0 0 0 0.18rem #2d9bff, 0 0 0.9rem #2d9bff; }
+.look-neon .tile.v8 span { background: #0b0f1a; color: #6d6bff; box-shadow: inset 0 0 0 0.18rem #6d6bff, 0 0 0.9rem #6d6bff; }
+.look-neon .tile.v16 span { background: #0b0f1a; color: #a855f7; box-shadow: inset 0 0 0 0.18rem #a855f7, 0 0 0.9rem #a855f7; }
+.look-neon .tile.v32 span { background: #0b0f1a; color: #e040fb; box-shadow: inset 0 0 0 0.18rem #e040fb, 0 0 0.9rem #e040fb; }
+.look-neon .tile.v64 span { background: #0b0f1a; color: #ff2a8a; box-shadow: inset 0 0 0 0.18rem #ff2a8a, 0 0 0.9rem #ff2a8a; }
+.look-neon .tile.v128 span { background: #0b0f1a; color: #ff5a4d; box-shadow: inset 0 0 0 0.18rem #ff5a4d, 0 0 0.9rem #ff5a4d; }
+.look-neon .tile.v256 span { background: #0b0f1a; color: #ff9100; box-shadow: inset 0 0 0 0.18rem #ff9100, 0 0 0.9rem #ff9100; }
+.look-neon .tile.v512 span { background: #0b0f1a; color: #ffd000; box-shadow: inset 0 0 0 0.18rem #ffd000, 0 0 0.9rem #ffd000; }
+.look-neon .tile.v1024 span { background: #0b0f1a; color: #c6ff00; box-shadow: inset 0 0 0 0.18rem #c6ff00, 0 0 0.9rem #c6ff00; }
+.look-neon .tile.v2048 span { background: #0b0f1a; color: #00ff6a; box-shadow: inset 0 0 0 0.18rem #00ff6a, 0 0 0.9rem #00ff6a; }
+.look-neon .tile.v4096 span { background: #0b0f1a; color: #ffffff; box-shadow: inset 0 0 0 0.18rem #ffffff, 0 0 0.9rem #ffffff; }
+.look-ocean { background: #0c2a3a; }
+.look-neon { background: #05060d; }
+
+/* ---- phone ---- */
+
+.g2048-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; text-align: center; }
+.g2048-phone .score { color: var(--muted); font-weight: 700; }
+.g2048-phone .score strong { color: var(--me); font-size: var(--fs-lg); }
+.g2048-phone .status { min-height: 1.4em; }
+.g2048-phone .give-up { align-self: center; }

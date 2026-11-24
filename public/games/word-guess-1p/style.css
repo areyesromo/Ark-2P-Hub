@@ -1,0 +1,41 @@
+/* Green, yellow and grey are the game's own colours (right place, in the word, not in it). */
+.wg-board { display: flex; flex-direction: column; gap: 0.35em; }
+.wg-row { display: grid; grid-template-columns: repeat(5, 1fr); gap: 0.35em; }
+.wg-row i { aspect-ratio: 1; display: flex; align-items: center; justify-content: center; font-style: normal; font-weight: 900; text-transform: uppercase; border: 2px solid var(--line); border-radius: var(--r-sm); }
+.wg-row i.typed { border-color: var(--line-strong); animation: wg-pop 120ms ease-out; }
+.wg-row i.green { background: #16a34a; border-color: #16a34a; color: #fff; }
+.wg-row i.yellow { background: #ca8a04; border-color: #ca8a04; color: #fff; }
+.wg-row i.grey { background: #3f4659; border-color: #3f4659; color: #e2e8f0; }
+.wg-row.flip i { animation: wg-flip 400ms ease-out both; animation-delay: calc(var(--i) * 90ms); }
+.wg-row.shake { animation: wg-shake 360ms; }
+@keyframes wg-pop { 50% { transform: scale(1.12); } }
+@keyframes wg-flip { 0% { transform: rotateX(90deg); } 100% { transform: none; } }
+@keyframes wg-shake { 20%, 60% { transform: translateX(-0.4em); } 40%, 80% { transform: translateX(0.4em); } }
+.wg-keys { display: flex; flex-direction: column; gap: 0.4em; }
+.wg-krow { display: flex; gap: 0.3em; justify-content: center; }
+.wg-keys .key { flex: 1; max-width: 3em; padding: 0.8em 0; font-size: inherit; text-transform: uppercase; background: var(--btn); border-radius: var(--r-sm); }
+.wg-keys .key.wide { flex: 1.5; max-width: 4.6em; text-transform: none; font-size: 0.8em; }
+.wg-keys .key.green { background: #16a34a; }
+.wg-keys .key.yellow { background: #ca8a04; }
+.wg-keys .key.grey { background: #1f2333; color: var(--muted); }
+.wg-keys .key.cursor { box-shadow: 0 0 0 3px var(--p1); }
+
+/* ---- TV ---- */
+
+.wg-host { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.2fr); grid-template-rows: auto 1fr auto; grid-template-areas: "title title" "main kb" "msg kb"; gap: 1rem 3rem; align-items: center; }
+.wg-host .wg-title { grid-area: title; text-align: center; font-size: var(--fs-lg); font-weight: 800; }
+.wg-host .wg-title .muted { font-weight: 400; }
+.wg-host .wg-main { grid-area: main; justify-self: end; height: 100%; display: flex; align-items: center; container-type: size; width: 100%; }
+.wg-host .wg-board { height: min(100cqh, calc(100cqw * 6 / 5)); aspect-ratio: 5 / 6; margin-left: auto; font-size: min(4.5cqh, 2.6rem); }
+.wg-host .wg-msg { grid-area: msg; text-align: right; font-size: var(--fs-lg); font-weight: 800; color: var(--warn); min-height: 1.4em; }
+.wg-host .wg-kb { grid-area: kb; font-size: var(--fs-md); }
+.wg-host .wg-keys .key { max-width: 3.4em; }
+
+/* ---- phone ---- */
+
+.wg-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 8px 6px 10px; text-align: center; }
+.wg-phone .wg-msg { font-weight: 800; min-height: 1.4em; }
+.wg-phone .wg-main { flex: 1; min-height: 0; display: flex; justify-content: center; container-type: size; }
+.wg-phone .wg-board { height: min(100cqh, calc(100cqw * 6 / 5)); aspect-ratio: 5 / 6; font-size: min(5cqh, 1.8rem); }
+.wg-phone .wg-kb { font-size: 1rem; touch-action: manipulation; }
+.wg-phone .wg-keys .key { padding: 0.95em 0; }

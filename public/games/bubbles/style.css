@@ -1,0 +1,22 @@
+/* ---- TV ---- */
+
+.bubbles-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.bubbles-stats { display: flex; justify-content: center; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.bubbles-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.bubbles-stats .soon strong { color: var(--bad); }
+.bubbles-arena { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; }
+.bubbles-arena canvas { display: block; border-radius: var(--r-md); border: 2px solid var(--line-strong); background: #0b1020; }
+
+/* ---- phone ---- */
+
+.bubbles-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; text-align: center; }
+.bubbles-phone .info { color: var(--muted); font-weight: 700; }
+.bubbles-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.bubbles-phone .small { font-weight: 400; font-size: var(--fs-sm); }
+.bubbles-pad { flex: 1; position: relative; border-radius: var(--radius); background: var(--panel); border: 3px solid var(--me); touch-action: none; user-select: none; -webkit-user-select: none; overflow: hidden; }
+/* The launcher at the bottom middle, and a needle showing the aim. */
+.bubbles-pad .now { position: absolute; left: 50%; bottom: 14px; width: 54px; height: 54px; margin-left: -27px; border-radius: 50%; box-shadow: inset -6px -6px 0 rgba(0, 0, 0, 0.2); }
+.bubbles-pad .needle { position: absolute; left: 50%; bottom: 41px; width: 4px; height: 60%; margin-left: -2px; transform-origin: 50% 100%; background: repeating-linear-gradient(to top, var(--text) 0 10px, transparent 10px 20px); opacity: 0.6; }
+.bubbles-pad .hint { position: absolute; top: 12px; left: 0; right: 0; color: var(--muted); font-size: var(--fs-sm); }
+.bubbles-phone .next-row { color: var(--muted); display: flex; align-items: center; justify-content: center; gap: 10px; }
+.bubbles-phone .next { display: inline-block; width: 28px; height: 28px; border-radius: 50%; }

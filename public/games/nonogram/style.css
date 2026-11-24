@@ -1,0 +1,34 @@
+/* The board (TV and phone). --cell is set by board.js to fit the room there is. */
+.nn-board { flex: 1; min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
+.nn-grid { --cell: 24px; display: grid; grid-template-columns: auto repeat(var(--n), var(--cell)); grid-auto-rows: var(--cell); grid-template-rows: auto; gap: 1px; font-size: calc(var(--cell) * 0.5); }
+.nn-corner { grid-row: 1; }
+.nn-clue { display: flex; color: var(--text); font-weight: 700; font-variant-numeric: tabular-nums; border-radius: 4px; }
+.nn-clue i { font-style: normal; }
+.nn-clue.col { flex-direction: column; justify-content: flex-end; align-items: center; padding-bottom: 0.25em; line-height: 1.3; }
+.nn-clue.row { justify-content: flex-end; align-items: center; gap: 0.45em; padding-right: 0.4em; }
+.nn-clue.done { color: var(--muted); opacity: 0.5; }
+.nn-clue.hl { background: rgba(34, 211, 238, 0.16); }
+.nn-clue.col.b5 { margin-right: 2px; }
+.nn-clue.row.b5 { margin-bottom: 2px; }
+.nn-cell { padding: 0; min-width: 0; border-radius: 2px; border: 0; background: #e8ebf5; position: relative; }
+.nn-cell.hl { background: #cdd6f2; }
+.nn-cell.f { background: #1a1f3a; }
+.nn-cell.x::after { content: '✕'; position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; color: #8a93b8; font-size: calc(var(--cell) * 0.6); font-weight: 900; }
+.nn-cell.sel { box-shadow: 0 0 0 3px var(--p1); z-index: 1; }
+.nn-cell.b5r { margin-right: 2px; }
+.nn-cell.b5b { margin-bottom: 2px; }
+.nn-grid.paused .nn-cell { background: var(--panel); }
+.nn-grid.over .nn-cell.x::after { content: none; }
+
+/* TV */
+.nn-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+.nn-stats { display: flex; justify-content: center; align-items: baseline; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.nn-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+
+/* phone */
+.nn-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 8px 8px 12px; text-align: center; }
+.nn-phone .info { color: var(--muted); font-size: var(--fs-sm); }
+.nn-phone .nn-board { touch-action: none; }
+.nn-tools { display: flex; gap: 8px; }
+.nn-tools button { flex: 1; padding: 12px 4px; font-size: var(--fs-md); }
+.nn-tools .mode.on { background: var(--me); color: var(--on-bright); border-color: var(--me); }

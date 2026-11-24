@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (63)
+## Games (99)
 
 ### ⚔️ Competitive (36)
 
@@ -86,23 +86,59 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-### 👤 Solo: 🕹️ Arcade (1)
+### 👤 Solo: 🕹️ Arcade (11)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
 | Snake 1P | `snake-1p` | Eat, grow, don't bite your own tail. It speeds up as you go. | `server/solo/games/snake-1p.js`, `public/games/snake-1p/`, `test/solo-snake.test.js` |
+| Brick Breaker 1P | `breaker-1p` | Bounce the ball off your paddle and smash the wall, brick by brick. | `server/solo/games/breaker-1p.js`, `public/games/breaker-1p/`, `test/solo-breaker-1p.test.js` |
+| Blocks 1P | `blocks-1p` | Turn the falling pieces to fill whole rows. Four rows at once scores big. | `server/solo/games/blocks-1p.js`, `public/games/blocks-1p/`, `test/solo-blocks-1p.test.js` |
+| Flappy | `flappy` | Tap to flap. Fly through the gaps in the pipes, as far as you can. | `server/solo/games/flappy.js`, `public/games/flappy/`, `test/solo-flappy.test.js` |
+| Asteroids 1P | `asteroids-1p` | Turn, thrust and blast the rocks to bits before they hit you. | `server/solo/games/asteroids-1p.js`, `public/games/asteroids-1p/`, `test/solo-asteroids-1p.test.js` |
+| Invaders | `invaders` | Rows of aliens march down on you. Slide, shoot, and hide behind the bunkers. | `server/solo/games/invaders.js`, `public/games/invaders/`, `test/solo-invaders.test.js` |
+| Runner | `runner` | Run, jump the cactuses, duck the birds. How far can you go? | `server/solo/games/runner.js`, `public/games/runner/`, `test/solo-runner.test.js` |
+| Stack 1P | `stack-1p` | Drop the sliding block on the tower. Overhangs get cut off. How high can you go? | `server/solo/games/stack-1p.js`, `public/games/stack-1p/`, `test/solo-stack-1p.test.js` |
+| Helicopter Cave | `cave` | Hold to climb, let go to drop. Fly down the winding cave as far as you can. | `server/solo/games/cave.js`, `public/games/cave/`, `test/solo-cave.test.js` |
+| Bubble Shooter | `bubbles` | Aim, fire, pop three of a colour. Don't let the bubbles reach the bottom. | `server/solo/games/bubbles.js`, `public/games/bubbles/`, `test/solo-bubbles.test.js` |
+| Road Hopper | `hopper` | Hop across the road and the river without getting squashed or soaked. | `server/solo/games/hopper.js`, `public/games/hopper/`, `test/solo-hopper.test.js` |
 
-### 👤 Solo: 🧩 Puzzle (1)
+### 👤 Solo: 🧩 Puzzle (17)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
+| 2048 | `2048` | Swipe to slide the tiles; equal tiles merge. Can you make 2048? | `server/solo/games/2048.js`, `public/games/2048/`, `test/solo-2048.test.js` |
+| Minesweeper 1P | `minesweeper-1p` | Clear the field without setting off a mine. Numbers count the mines next door. | `server/solo/games/minesweeper-1p.js`, `public/games/minesweeper-1p/`, `test/solo-minesweeper-1p.test.js` |
+| Sudoku | `sudoku` | Fill the grid so every row, column and box has 1 to 9. A fresh puzzle every time. | `server/solo/games/sudoku.js`, `public/games/sudoku/`, `test/solo-sudoku.test.js` |
+| Solitaire | `solitaire` | Klondike: build the suits up from ace to king. Tap a card to send it where it fits. | `server/solo/games/solitaire.js`, `public/games/solitaire/`, `test/solo-solitaire.test.js` |
+| FreeCell | `freecell` | Every card face up, four free cells to juggle with. Nearly every deal can be won. | `server/solo/games/freecell.js`, `public/games/freecell/`, `test/solo-freecell.test.js` |
+| Mahjong Solitaire | `mahjong` | Take matching pairs of free tiles off the pile until it’s gone. | `server/solo/games/mahjong.js`, `public/games/mahjong/`, `test/solo-mahjong.test.js` |
+| Sliding Puzzle | `slide` | Slide the numbered tiles back into order. 3×3, 4×4 or 5×5. | `server/solo/games/slide.js`, `public/games/slide/`, `test/solo-slide.test.js` |
+| Gem Swap | `gems` | Swap gems to line up three of a colour. Chains score more. 30 swaps. | `server/solo/games/gems.js`, `public/games/gems/`, `test/solo-gems.test.js` |
+| Mastermind 1P | `mastermind-1p` | Crack the secret colour code. Black: right colour, right place. White: right colour, wrong place. | `server/solo/games/mastermind-1p.js`, `public/games/mastermind-1p/`, `test/solo-mastermind-1p.test.js` |
+| Flood-It | `flood` | Flood the board from the corner, one colour at a time, in as few moves as you can. | `server/solo/games/flood.js`, `public/games/flood/`, `test/solo-flood.test.js` |
+| Color Lines | `lines` | Slide balls round the board and line up five of a colour before it fills up. | `server/solo/games/lines.js`, `public/games/lines/`, `test/solo-lines.test.js` |
 | Dog Park | `dogpark` | One dog per row, column and colour, and no two dogs touching. Can you fill the park? | `server/solo/games/dogpark-gen.js`, `server/solo/games/dogpark-levels.js`, `server/solo/games/dogpark.js`, `public/games/dogpark/`, `test/solo-dogpark.test.js`, `test/solo-mode.test.js` |
+| Sokoban | `sokoban` | Push every box onto a target. You can only push, never pull: think before you shove. | `server/solo/games/sokoban-levels.js`, `server/solo/games/sokoban.js`, `public/games/sokoban/`, `test/solo-sokoban.test.js` |
+| KenKen | `kenken` | Every number once in each row and column, and each cage makes its sum. Maths meets Sudoku. | `server/solo/games/kenken.js`, `public/games/kenken/`, `test/solo-kenken.test.js` |
+| Nonograms | `nonogram` | The numbers say how many squares are filled in each line. Fill them in to reveal the picture. | `server/solo/games/nonogram.js`, `public/games/nonogram/`, `test/solo-nonogram.test.js` |
+| Lights Out | `lights` | Each press flips a light and its neighbours. Switch them all off in as few moves as you can. | `server/solo/games/lights.js`, `public/games/lights/`, `test/solo-lights.test.js` |
+| Word Search 1P | `wordsearch-1p` | Find the hidden words in the grid of letters. Across, down, diagonal, even backwards. | `server/solo/games/wordsearch-1p.js`, `public/games/wordsearch-1p/`, `test/solo-wordsearch-1p.test.js` |
 
-### 👤 Solo: 🧠 Brain (1)
+### 👤 Solo: 🧠 Brain (11)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
+| Word Guess 1P | `word-guess-1p` | Find the five-letter word in six guesses. A new daily word for everyone, or practise. | `server/solo/games/word-guess-1p.js`, `public/games/word-guess-1p/`, `test/solo-word-guess-1p.test.js` |
+| Simon | `simon` | Watch the pads light up, then play the sequence back. One more each round. | `server/solo/games/simon.js`, `public/games/simon/`, `test/solo-simon.test.js` |
+| Memory Pairs 1P | `memory-1p` | Turn two cards over and find the pairs. Fewer tries is better. | `server/solo/games/memory-1p.js`, `public/games/memory-1p/`, `test/solo-looks.test.js`, `test/solo-memory-1p.test.js` |
 | Reaction Rush 1P | `reaction-1p` | Wait for GO, then tap. Five rounds, your average time is your score. | `server/solo/games/reaction-1p.js`, `public/games/reaction-1p/`, `test/solo-reaction.test.js` |
+| Quick Maths | `maths` | Sums against the clock: pick the right answer. They get harder as you go. | `server/solo/games/maths.js`, `public/games/maths/`, `test/solo-timed-quiz.test.js` |
+| Colour Trap | `colours` | Tap the colour of the ink, not the word. RED written in blue is blue! | `server/solo/games/colours.js`, `public/games/colours/`, `test/solo-timed-quiz.test.js` |
+| Anagram Rush 1P | `anagram-1p` | Unscramble five letters into a word. As many as you can in 60 seconds. | `server/solo/games/anagram-1p.js`, `public/games/anagram-1p/`, `test/solo-anagram-1p.test.js` |
+| Number Memory | `numbers` | Remember the number, then type it back. One digit longer every time. | `server/solo/games/numbers.js`, `public/games/numbers/`, `test/solo-numbers.test.js` |
+| Odd One Out | `oddone` | One square is a shade different. Spot it, fast: the grid grows and the shades get closer. | `server/solo/games/oddone.js`, `public/games/oddone/`, `test/solo-oddone.test.js` |
+| Hangman 1P | `hangman-1p` | Guess the hidden word a letter at a time. Six wrong guesses and it's over. | `server/solo/games/hangman-1p.js`, `public/games/hangman-1p/`, `test/solo-hangman-1p.test.js` |
+| Trivia 1P | `trivia-1p` | Twelve questions, four answers, 15 seconds each. Quick right answers score more. | `server/solo/games/trivia-1p.js`, `public/games/trivia-1p/`, `test/solo-trivia-1p.test.js` |
 
 ## Minigames (52)
 

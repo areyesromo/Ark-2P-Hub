@@ -1,0 +1,24 @@
+/* ---- TV ---- */
+
+.asteroids-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.asteroids-stats { display: flex; justify-content: center; gap: 3rem; color: var(--muted); font-size: var(--fs-md); }
+.asteroids-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.asteroids-stats .ships { color: var(--p1); font-size: 1.1em; }
+.asteroids-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.asteroids-arena canvas { display: block; border-radius: var(--r-md); border: 2px solid var(--line-strong); background: #05070f; }
+.asteroids-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; pointer-events: none; text-align: center; }
+.asteroids-overlay .big { font-size: 5rem; font-weight: 900; }
+.asteroids-overlay .sub { font-size: var(--fs-xl); color: var(--muted); }
+
+/* ---- phone ---- */
+
+.asteroids-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 14px 14px; text-align: center; }
+.asteroids-phone .info { color: var(--muted); }
+.asteroids-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.asteroids-pad { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 12px; touch-action: none; }
+.asteroids-pad .turns, .asteroids-pad .acts { display: flex; flex-direction: column; gap: 12px; }
+.asteroids-pad button { flex: 1; font-size: var(--fs-lg); padding: 0; background: var(--panel); border: 2px solid var(--line-strong); border-radius: var(--radius); }
+.asteroids-pad .turns button { font-size: 2.6rem; }
+.asteroids-pad .fire { border-color: var(--me); flex: 1.4; }
+.asteroids-pad button.on { background: var(--me); color: var(--on-bright); }
+.asteroids-phone .pause { align-self: center; min-width: 10rem; }

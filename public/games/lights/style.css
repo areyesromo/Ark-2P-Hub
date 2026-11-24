@@ -1,0 +1,23 @@
+/* The grid (TV and phone). The lights' colours are the lights themselves. */
+.lo-grid { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 0.6em; padding: 0.6em; border-radius: var(--radius); background: #05070f; border: 2px solid var(--line-strong); }
+.lo-cell { aspect-ratio: 1; min-width: 0; padding: 0; border-radius: var(--r-md); background: #1f2937; border: 2px solid #374151; transition: background 0.15s, box-shadow 0.15s; }
+.lo-cell.on { background: #fde047; border-color: #fef08a; box-shadow: 0 0 1.2em rgba(253, 224, 71, 0.6), inset 0 0 0.6em #fff7; }
+.lo-cell.cursor { outline: 0.25em solid var(--p1); outline-offset: 0.15em; }
+
+/* ---- TV ---- */
+
+.lo-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.lo-stats { display: flex; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.lo-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.lo-host .lo-field { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.lo-host .lo-grid { width: min(100cqw, 100cqh); font-size: min(2.4cqh, 1.6rem); }
+.lo-rule { margin: 0; font-size: var(--fs-md); }
+
+/* ---- phone ---- */
+
+.lo-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 14px; padding: 12px 12px 16px; text-align: center; }
+.lo-phone .info { color: var(--muted); }
+.lo-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.lo-phone .lo-field { width: 100%; max-width: 30rem; }
+.lo-phone .lo-grid { font-size: 0.8rem; touch-action: manipulation; }
+.lo-phone .reset { min-width: 12rem; }

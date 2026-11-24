@@ -1,0 +1,24 @@
+/* The squares' colours are the puzzle itself. */
+.oo-grid { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 0.4em; }
+.oo-cell { aspect-ratio: 1; min-width: 0; padding: 0; border: 0; border-radius: 0.5em; }
+.oo-cell.cursor { outline: 0.3em solid var(--text); outline-offset: 0.15em; }
+
+/* ---- TV ---- */
+
+.oo-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.oo-top { display: flex; gap: 2.5rem; color: var(--muted); font-size: var(--fs-lg); }
+.oo-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.oo-top .low strong, .oo-top .miss { color: var(--bad); }
+.oo-host .oo-field { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.oo-host .oo-grid { width: min(100cqw, 100cqh); font-size: 1rem; }
+.oo-field .big { font-size: 4rem; font-weight: 900; }
+.oo-rule { margin: 0; font-size: var(--fs-md); }
+
+/* ---- phone ---- */
+
+.oo-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px; text-align: center; }
+.oo-phone .info { color: var(--muted); }
+.oo-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.oo-phone .oo-field { flex: 1; display: flex; align-items: center; justify-content: center; touch-action: manipulation; }
+.oo-phone .oo-grid { width: min(92vw, 28rem); font-size: 0.6rem; }
+.oo-phone .big { font-size: var(--fs-xl); font-weight: 900; }

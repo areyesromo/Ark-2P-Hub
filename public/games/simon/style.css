@@ -1,0 +1,52 @@
+/* The four pads' colours are the game itself (the classic toy's green, red, yellow, blue). */
+.simon-host .pad.p0, .simon-phone .pad.p0 { --c: #16a34a; --glow: #4ade80; }
+.simon-host .pad.p1, .simon-phone .pad.p1 { --c: #b91c1c; --glow: #f87171; }
+.simon-host .pad.p2, .simon-phone .pad.p2 { --c: #ca8a04; --glow: #fde047; }
+.simon-host .pad.p3, .simon-phone .pad.p3 { --c: #1d4ed8; --glow: #60a5fa; }
+
+/* ---- TV ---- */
+
+.simon-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.simon-wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.simon-board {
+  position: relative; width: min(100cqw, 100cqh); aspect-ratio: 1;
+  display: grid; grid-template-columns: 1fr 1fr; gap: 4%; padding: 4%;
+  border-radius: 50%; background: #05070f; border: 2px solid var(--line);
+}
+.simon-board .pad { background: var(--c); opacity: 0.45; transition: opacity 80ms, box-shadow 80ms, filter 80ms; }
+.simon-board .p0 { border-radius: 100% 0 0 0; }
+.simon-board .p1 { border-radius: 0 100% 0 0; }
+.simon-board .p2 { border-radius: 0 0 0 100%; }
+.simon-board .p3 { border-radius: 0 0 100% 0; }
+.simon-board .pad.lit { opacity: 1; filter: brightness(1.35); box-shadow: 0 0 4rem var(--glow); }
+.simon-board .pad.expected { opacity: 1; outline: 0.4rem solid var(--text); outline-offset: -0.4rem; }
+.simon-board .pad.wrong { opacity: 0.2; }
+.simon-board .hub {
+  position: absolute; left: 50%; top: 50%; width: 30%; aspect-ratio: 1; transform: translate(-50%, -50%);
+  border-radius: 50%; background: var(--bg-2); border: 0.4rem solid #05070f;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+}
+.simon-board .count { font-size: clamp(2rem, 9cqmin, 6rem); font-weight: 900; line-height: 1; font-variant-numeric: tabular-nums; }
+.simon-board .label { color: var(--muted); font-size: clamp(0.8rem, 2.5cqmin, 1.4rem); }
+.simon-msg { font-size: var(--fs-xl); font-weight: 800; min-height: 1.3em; }
+
+/* ---- phone ---- */
+
+.simon-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; text-align: center; }
+.simon-phone .msg { font-size: var(--fs-md); font-weight: 700; min-height: 1.4em; }
+.simon-phone .msg .muted { font-weight: 400; }
+.simon-pads { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 12px; touch-action: none; }
+.simon-phone .pad { background: var(--c); border-radius: var(--radius); opacity: 0.75; padding: 0; }
+.simon-phone .pad:disabled { opacity: 0.35; }
+.simon-phone .pad.lit { opacity: 1; filter: brightness(1.35); box-shadow: 0 0 2rem var(--glow); }
+
+/* ---- looks (see server/games/looks.js): same four hues as the controller's buttons, different finish ---- */
+
+[data-look='pastel'] .pad.p0 { --c: #86efac; --glow: #dcfce7; }
+[data-look='pastel'] .pad.p1 { --c: #fca5a5; --glow: #fee2e2; }
+[data-look='pastel'] .pad.p2 { --c: #fde68a; --glow: #fef9c3; }
+[data-look='pastel'] .pad.p3 { --c: #93c5fd; --glow: #dbeafe; }
+[data-look='neon'] .pad.p0 { --c: #00ff6a; --glow: #7dffb0; }
+[data-look='neon'] .pad.p1 { --c: #ff2d55; --glow: #ff8aa0; }
+[data-look='neon'] .pad.p2 { --c: #ffe600; --glow: #fff58a; }
+[data-look='neon'] .pad.p3 { --c: #1f6bff; --glow: #8ab4ff; }
