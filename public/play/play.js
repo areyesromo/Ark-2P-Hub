@@ -1,9 +1,15 @@
 // Phone controller: join a room, pick a game, then hand the screen to the
 // current game's player renderer. Rejoins automatically after the phone
 // sleeps or the page is refreshed.
+//
+// At /phone it's phone only: no TV and no room code. The phone opens a room of its own
+// (phone:create) and plays the 1 player games whose phone screen shows the whole game, drawing
+// the TV's picture above its controls for the arcade ones ('split'). It keeps its seat apart
+// from the TV one, and plays the sounds itself.
 (function () {
-  const STORE_KEY = 'ark.player';
-  const COOKIE = 'ark_player'; // a backup of the seat (see loadSession)
+  const NO_TV = /^\/phone\/?$/.test(location.pathname);
+  const STORE_KEY = NO_TV ? 'ark.phone' : 'ark.player';
+  const COOKIE = NO_TV ? 'ark_phone' : 'ark_player'; // a backup of the seat (see loadSession)
   const socket = io();
   const $ = (id) => document.getElementById(id);
   Ark.watchVersion(socket);
@@ -54,7 +60,15 @@
 
   // ---- join ------------------------------------------------------------
 
-  const urlCode = (new URLSearchParams(location.search).get('room') || '').toUpperCase();
+  const urlCode = NO_TV ? '' : (new URLSearchParams(location.search).get('room') || '').toUpperCase();
+  if (NO_TV) {
+    document.body.classList.add('no-tv');
+    $('code').required = false;
+    $('code-label').classList.add('hidden');
+    $('join-mode').innerHTML = '📱 Phone only: the 1 player games, no TV needed. <a href="/play/">Got a TV? Join its room instead</a>';
+    $('join-btn').textContent = 'Play';
+    document.title = 'Ark 2P Hub · Phone';
+  }
   // Joining over the internet: the invite's key, from the TV's link (kept with the seat, so the
   // phone gets back in after it sleeps). At home it isn't needed.
   const inviteKey = new URLSearchParams(location.search).get('k') || (session && session.key) || null;
@@ -71,32 +85,55 @@
     $('join-btn').disabled = true;
     socket.emit('player:join', { code: code, name: name, token: token, key: inviteKey }, function (res) {
       $('join-btn').disabled = false;
+      // Phone only: the room went with a server restart, and there's no TV to bring it back. Open a new one.
+      if (NO_TV && silent && res && /No room/.test(res.error || '')) return create(name, true);
       // Rejoining after a restart: the room comes back once the TV reconnects, so keep trying a while.
       if (silent && res && /No room/.test(res.error || '') && attempt < REJOIN_TRIES) {
         $('me-conn').textContent = 'Waiting for the TV…';
         rejoinTimer = setTimeout(function () { join(code, name, token, true, attempt + 1); }, 2000);
         return;
       }
-      if (!res || !res.ok) {
-        if (!silent) $('join-error').textContent = (res && res.error) || 'Could not join.';
-        if (silent) saveSession({ code: '', token: null, name: session ? session.name : '' });
-        showJoin();
-        return;
-      }
-      saveSession({ code: res.code, token: res.token, name: res.name, key: inviteKey });
-      me = { slot: res.slot, name: res.name, code: res.code };
-      $('me-conn').textContent = '';
-      $('join-error').textContent = '';
-      showController();
-      // The room snapshot arrives just before this callback, so apply it now.
-      if (state) applyState();
+      seated(res, silent);
     });
+  }
+
+  /** Phone only: open a room of our own and take its seat. */
+  function create(name, silent) {
+    $('join-btn').disabled = true;
+    socket.emit('phone:create', { name: name }, function (res) {
+      $('join-btn').disabled = false;
+      seated(res, silent);
+    });
+  }
+
+  /** The answer to a join (or a phone-only create): in, or back to the form. */
+  function seated(res, silent) {
+    if (!res || !res.ok) {
+      if (!silent) $('join-error').textContent = (res && res.error) || 'Could not join.';
+      if (silent) saveSession({ code: '', token: null, name: session ? session.name : '' });
+      showJoin();
+      return;
+    }
+    saveSession({ code: res.code, token: res.token, name: res.name, key: inviteKey });
+    me = { slot: res.slot, name: res.name, code: res.code };
+    $('me-conn').textContent = '';
+    $('join-error').textContent = '';
+    showController();
+    // The room snapshot arrives just before this callback, so apply it now.
+    if (state) applyState();
   }
 
   $('join-form').addEventListener('submit', function (e) {
     e.preventDefault();
     const code = $('code').value.trim().toUpperCase();
     const name = $('name').value.trim();
+    if (NO_TV && name) {
+      // Back into our own room while we still have it (same name), else a new one.
+      if (session && session.token && session.code && session.name === name) join(session.code, name, session.token, true);
+      else create(name, false);
+      requestWakeLock();
+      return;
+    }
     if (!code || !name) return;
     // Reuse our token only when rejoining the same room.
     const token = session && session.code === code ? session.token : null;
@@ -145,9 +182,9 @@
   function showController() {
     $('join-screen').classList.add('hidden');
     $('controller').classList.remove('hidden');
-    document.body.className = 'slot-' + me.slot;
+    document.body.className = 'slot-' + me.slot + (NO_TV ? ' no-tv' : '');
     $('me-name').textContent = me.name;
-    $('me-tag').textContent = 'P' + (me.slot + 1) + ' · ' + me.code;
+    $('me-tag').textContent = NO_TV ? '📱 Phone' : 'P' + (me.slot + 1) + ' · ' + me.code;
     // Settings is Player 1's, at home (over the internet it stays shut: see app.js).
     $('settings-btn').classList.toggle('hidden', me.slot !== 0 || Boolean(inviteKey));
   }
@@ -202,7 +239,8 @@
     const solo = state.mode === 'solo';
     document.querySelectorAll('#mode-pick [data-mode]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-mode') === state.mode); });
     let status;
-    if (solo) status = 'Solo games: pick one and chase your best.' + (opponent && !opponent.bot ? '<br><small>Whoever picks a game plays it; the other phone watches.</small>' : '');
+    if (NO_TV) status = 'Pick a game and chase your best. <small>Phone only: these games need no TV.</small>';
+    else if (solo) status = 'Solo games: pick one and chase your best.' + (opponent && !opponent.bot ? '<br><small>Whoever picks a game plays it; the other phone watches.</small>' : '');
     else if (!opponent) status = 'Waiting for an opponent to join…<br>No one around? Play the 🤖 computer: ' + Ark.botLevelsHtml(null);
     else if (opponent.bot) status = 'You vs the 🤖 <strong>computer</strong>: ' + Ark.botLevelsHtml(opponent.bot, true) + '<br><small>Games marked 🤖 Vs computer can be played against it.</small>';
     else if (!opponent.connected) status = Ark.escapeHtml(opponent.name) + ' is reconnecting…';
@@ -224,7 +262,7 @@
     $('phone-games').innerHTML =
       (inFolder ? '' : '<button data-game="random" class="random"' + (state.readyToPlay ? '' : ' disabled') + '><strong>🎲 Random game</strong><span>Can\'t decide? Let the hub pick.</span></button>') +
       // The 1 player lobby: today's daily challenge.
-      (!inFolder && solo && state.daily ? (function (d) {
+      (!inFolder && solo && state.daily && state.daily.playable !== false ? (function (d) {
         return '<button data-game="daily" class="random daily' + (d.done ? ' done' : '') + '"' + (state.readyToPlay ? '' : ' disabled') + '><strong>' + d.name + '</strong><span>' + d.tagline + '</span></button>';
       })(Ark.dailyCard(state.daily)) : '') +
       games.map(function (g, i) {
@@ -331,15 +369,17 @@
       if (location.protocol === 'https:' || !session || !session.token) return null;
       const q = new URLSearchParams({ room: session.code, name: session.name, token: session.token });
       Object.keys(prefs || {}).forEach(function (k) { q.append('pref', k + ':' + prefs[k]); });
-      return 'https://' + location.host + '/play/?' + q.toString();
+      return 'https://' + location.host + (NO_TV ? '/phone' : '/play/') + '?' + q.toString();
     },
   };
 
   function unmountGame() {
     if (current && current.renderer && current.renderer.unmount) current.renderer.unmount();
+    if (current && current.split && current.tv && current.tv.unmount) current.tv.unmount();
     Ark.phoneClock(0); // a game's clock doesn't outlive it
     current = null;
     $('phone-stage').innerHTML = '';
+    $('phone-stage').classList.remove('split');
     showSolo(null);
   }
 
@@ -369,8 +409,12 @@
     }
     if (over) {
       const r = current && current.renderer;
+      const tv = current && current.tv;
       let extra = '';
-      try { extra = r && r.overHtml ? r.overHtml(v) : ''; } catch (e) { /* the end screen shows without it */ }
+      try {
+        // Phone only: the game's line comes from its TV renderer, which reads the TV's view (a split game has it).
+        extra = r && r.overHtml ? r.overHtml(v) : tv && tv.overHtml ? tv.overHtml(lastView && lastView.tv ? lastView.tv : v) : '';
+      } catch (e) { /* the end screen shows without it */ }
       const html = Ark.soloOverHtml(v, g, extra) + (v.daily
         ? '<div class="ro-extra">📅 That was today\'s challenge. A new one comes at midnight (UTC).</div><button class="primary rematch" data-ro="lobby">Pick another game</button>'
         : '<button class="primary rematch" data-ro="rematch">Play again</button>' +
@@ -395,12 +439,30 @@
 
   function mountGame(gameId) {
     unmountGame();
-    const mounting = { gameId: gameId, renderer: null };
+    const game = currentGame();
+    // Phone only and a 'split' game (the arcade ones): the TV's picture on top, the phone's controls below.
+    const split = NO_TV && Boolean(game && game.phone === 'split');
+    const mounting = { gameId: gameId, renderer: null, tv: null, split: split };
     current = mounting;
+    const stage = $('phone-stage');
+    stage.classList.toggle('split', split);
+    if (split) stage.innerHTML = '<div class="split-tv"></div><div class="split-pad"></div>';
+    // Phone only: there's no TV, so borrow its renderer for the sounds and the end screen's line
+    // (and, split, to draw the picture).
+    if (NO_TV) {
+      Ark.loadRenderer('host', gameId).then(function (tv) {
+        if (current !== mounting) return;
+        if (split) {
+          tv.mount(stage.querySelector('.split-tv'), { players: state.players });
+          if (lastView && lastView.gameId === gameId && lastView.tv && !Ark.setup.isHub(lastView.tv)) tv.update(lastView.tv);
+        }
+        mounting.tv = tv;
+      }).catch(function () { /* no sounds, that's all */ });
+    }
     Ark.loadRenderer('player', gameId).then(function (renderer) {
       if (current !== mounting) return;
       mounting.renderer = renderer;
-      renderer.mount($('phone-stage'), api);
+      renderer.mount(split ? stage.querySelector('.split-pad') : stage, api);
       if (lastView && lastView.gameId === gameId && !Ark.setup.isHub(lastView.view) && !lastView.view.watching) renderer.update(lastView.view);
       syncZoom();
     }).catch(function (err) {
@@ -482,11 +544,15 @@
       if (!fullView || fullView.gameId !== msg.gameId) return socket.emit('game:resync');
       const view = Object.assign({}, msg.view);
       msg.kept.forEach(function (key) { view[key] = fullView.view[key]; });
-      msg = { gameId: msg.gameId, view: view };
+      msg = { gameId: msg.gameId, view: view, tv: msg.tv };
     }
+    const old = lastView && lastView.gameId === msg.gameId ? lastView : null;
     fullView = msg;
     lastView = msg;
     const v = msg.view;
+    // Phone only: the sounds go by the TV's view when there is one (the TV renderer's sounds() expects it).
+    if (NO_TV) playSounds(old && (msg.tv ? old.tv : old.view), msg.tv || v);
+    if (msg.tv && current && current.split && current.tv && current.gameId === msg.gameId && !Ark.setup.isHub(msg.tv)) current.tv.update(msg.tv);
     showHubSetup(Ark.setup.isHub(v) ? v : null);
     const g = currentGame();
     // (a solo game's end screen has its own Change settings)
@@ -546,6 +612,38 @@
     if (e.target.closest('.hub-go')) api.send({ type: 'go' });
   });
   $('hub-change').addEventListener('click', function () { api.send({ type: 'setup' }); });
+
+  // ---- sound (phone only) ---------------------------------------------------
+  // With a TV, the TV plays the sounds. Without one, the phone does: the same shared
+  // effects (the countdown, the end of a run) and the game's own, from its TV renderer.
+
+  if (NO_TV) {
+    Ark.loadScript('/host/sound.js').then(function () {
+      const btn = $('sound-btn');
+      btn.classList.remove('hidden');
+      const label = function () { btn.textContent = ArkSound.isMuted() ? '🔇 Sound is off' : '🔊 Sound is on'; };
+      btn.addEventListener('click', function () { ArkSound.setMuted(!ArkSound.isMuted()); });
+      ArkSound.onChange(label);
+      label();
+    });
+  }
+
+  function playSounds(prev, v) {
+    if (!window.ArkSound || !v || Ark.setup.isHub(v)) return;
+    const names = [];
+    if (prev && !Ark.setup.isHub(prev)) {
+      if (v.countdown > 0 && v.countdown !== prev.countdown) names.push('tick');
+      if (prev.countdown > 0 && !(v.countdown > 0) && v.phase !== 'over') names.push('go');
+      if (v.phase === 'over' && prev.phase !== 'over') names.push('fanfare');
+      const tv = current && current.tv;
+      if (tv && tv.sounds) {
+        try { (tv.sounds(prev, v) || []).forEach(function (n) { names.push(n); }); } catch (e) { /* a sound bug never breaks the game */ }
+      }
+    } else if (v.countdown > 0) {
+      names.push('tick');
+    }
+    names.forEach(ArkSound.play);
+  }
 
   // ---- keep the screen awake while playing -----------------------------
 

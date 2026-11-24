@@ -44,11 +44,14 @@ const isValidToken = (t) => typeof t === 'string' && /^[0-9a-f]{32}$/.test(t);
  * views, the room pushes them out.
  */
 export class Room {
-  constructor(code, io, { stats = null, profiles = null, practice = null, trophies = null, saves = null, soloStats = null, hostToken = null } = {}) {
+  constructor(code, io, { stats = null, profiles = null, practice = null, trophies = null, saves = null, soloStats = null, hostToken = null, noTv = false } = {}) {
     this.code = code;
     this.io = io;
+    // Phone only (opened from /phone): no TV, one phone, which shows the whole game. It's the
+    // 1 player mode for good, with only the solo games marked `phone` (see playable).
+    this.noTv = noTv;
     this.soloStats = soloStats; // the solo games' runs, bests and achievements (see solo/stats.js), optional
-    this.mode = 'duo'; // the lobby's 2 players / 1 player switch (see setMode)
+    this.mode = noTv ? 'solo' : 'duo'; // the lobby's 2 players / 1 player switch (see setMode)
     this.soloSlot = -1; // a solo game: the seat whose game it is (the other one watches)
     this.soloResult = null; // and how its last run went, for the end screen
     this.soloChallenge = null; // today's daily challenge, while it's being played (see solo/daily.js)
@@ -148,6 +151,7 @@ export class Room {
    * its own player view.
    */
   seatBot(level) {
+    if (this.noTv) return { error: 'The computer plays on the TV: with no TV, it\'s the 1 player games.' };
     if (!BOT_LEVELS.includes(level)) return { error: 'Pick a level: easy, normal or hard.' };
     const here = this.players.findIndex((p) => p && p.bot);
     if (here !== -1) {
@@ -213,6 +217,7 @@ export class Room {
   /** The lobby's 2 players / 1 player switch: which games it offers. Not in the middle of a game. */
   setMode(mode) {
     if (!MODES.includes(mode)) return { error: 'Pick 1 player or 2 players.' };
+    if (this.noTv && mode !== 'solo') return { error: 'With no TV, it\'s the 1 player games: the 2 player ones need the TV.' };
     if (this.game) return { error: 'Finish this game first.' };
     if (this.mode !== mode) {
       this.mode = mode;
@@ -237,7 +242,7 @@ export class Room {
     const anyLocal = this.players.some((p) => p && p.local && !p.bot); // (the computer isn't a controller: it plays phone-only games)
     const bot = this.botSlot !== -1;
     let pool = this.mode === 'solo'
-      ? listGames().filter((g) => g.solo)
+      ? listGames().filter((g) => g.solo && this.playable(g))
       : listGames().filter((g) => !g.solo && !(g.needsPhone && allLocal) && !(g.phoneOnly && anyLocal) && (!bot || g.vsComputer));
     if (pool.length > 1) pool = pool.filter((g) => g.id !== this.lastGameId);
     return pool[Math.floor(rng() * pool.length)].id;
@@ -256,10 +261,12 @@ export class Room {
         return { error: "You've had your go at today's challenge. A new one comes at midnight (UTC)." };
       }
       gameId = challenge.game;
+      if (!this.playable(getGame(gameId))) return { error: "Today's challenge needs the TV. Play it on the TV, or pick another game." };
     }
     if (gameId === 'random') gameId = this.pickRandomGame();
     const def = getGame(gameId);
     if (!def) return { error: 'Unknown game.' };
+    if (!this.playable(def)) return { error: `${def.name} needs the TV: it can't be played on the phone alone.` };
     if (!resume && Boolean(def.solo) !== (this.mode === 'solo')) return { error: def.solo ? `${def.name} is a 1 player game: switch the lobby to 1 player.` : `${def.name} is for 2 players: switch the lobby to 2 players.` };
     if (!this.readyToPlay && !resume) return { error: this.mode === 'solo' ? 'Join first: scan the code with your phone, or press a button on a controller.' : 'Waiting for two players.' }; // (a saved game waits for its players to come back)
     if (def.phoneOnly && this.players.some((p) => p && p.local && !p.bot)) return { error: `${def.name} needs two phones.` };
@@ -419,6 +426,7 @@ export class Room {
       phase: this.game ? 'playing' : 'lobby',
       gameId: this.gameId,
       hostConnected: this.hostSockets.size > 0,
+      noTv: this.noTv, // phone only (/phone): see the constructor
       readyToPlay: this.readyToPlay,
       mode: this.mode,
       // The 1 player lobby: today's daily challenge, and the first person's solo achievements.
@@ -491,10 +499,24 @@ export class Room {
     if (view.phase === 'over' && this.lastPhase !== 'over') this.recordRun(def, view);
     if (view.phase !== 'over') this.soloResult = null;
     this.lastPhase = view.phase;
-    this.io.to(this.hostChannel).emit('game:view', this.hostPacket(def.id, this.decorateSolo(def, view, view)));
+    const tv = this.decorateSolo(def, view, view);
+    if (!this.noTv) this.io.to(this.hostChannel).emit('game:view', this.hostPacket(def.id, tv)); // (no TV: nobody to send it to)
     this.players.forEach((p, slot) => {
-      if (p) this.io.to(this.playerChannel(slot)).emit('game:view', this.viewPacket('p' + slot, def.id, this.decorateSolo(def, this.game.playerView(slot), view)));
+      if (p) this.io.to(this.playerChannel(slot)).emit('game:view', this.withTv(this.viewPacket('p' + slot, def.id, this.decorateSolo(def, this.game.playerView(slot), view)), def, tv));
     });
+  }
+
+  /** Can this room play the game? Any of them with a TV; with none (noTv), only the solo games marked `phone`. */
+  playable(def) {
+    return Boolean(def) && (!this.noTv || Boolean(def.solo && def.phone));
+  }
+
+  /**
+   * The phone's view of a solo game in a room with no TV: a 'split' game (the arcade ones) also
+   * sends the TV's view as `tv`, whole, for the phone to draw the TV's picture above its controls.
+   */
+  withTv(packet, def, decorated) {
+    return this.noTv && def && def.phone === 'split' ? { ...packet, tv: decorated } : packet;
   }
 
   /** The name a solo game is played under (the seat whose game it is). */
@@ -560,7 +582,7 @@ export class Room {
     const def = getGame(c.game);
     const p = this.players.find((x) => x && !x.bot);
     const mine = this.soloStats && p ? this.soloStats.getDaily('daily', c.day, p.name) : null;
-    return { day: c.day, game: c.game, name: def ? def.name : c.game, done: Boolean(mine), score: mine && Number.isFinite(mine.score) ? mine.score : null, unit: def && def.score ? def.score.unit : 'pts' };
+    return { day: c.day, game: c.game, name: def ? def.name : c.game, done: Boolean(mine), playable: this.playable(def), score: mine && Number.isFinite(mine.score) ? mine.score : null, unit: def && def.score ? def.score.unit : 'pts' };
   }
 
   /** How many solo achievements a player has, overall and per game (the lobby cards and the trophies link). */
@@ -799,7 +821,7 @@ export class Room {
     const ach = solo && first ? this.soloAchievementCounts(first.name).games : {};
     const soloLast = solo && this.soloStats ? this.soloStats.lastPlayed() : {};
     const games = listGames()
-      .filter((g) => Boolean(g.solo) === solo)
+      .filter((g) => Boolean(g.solo) === solo && this.playable(g))
       .map((g, i) => ({ ...g, lastPlayed: (solo ? soloLast[g.id] : last[g.id]) || null, ...(solo ? { best: bests[g.id] || null, achievements: ach[g.id] || null } : {}), order: i }));
     return games
       .sort((a, b) => (a.category === b.category ? (b.lastPlayed || 0) - (a.lastPlayed || 0) || a.order - b.order : a.order - b.order))
@@ -857,6 +879,13 @@ export class Room {
     const view = role === 'player' ? this.game.playerView(slot) : this.game.hostView();
     // (and the next one on that channel goes whole: this screen has nothing to keep yet)
     if (this.sent) delete this.sent[role === 'player' ? 'p' + slot : 'host'];
+    const def = getGame(this.gameId);
+    // (a solo game's views carry the hub's extras: the best, and at the end the run's record)
+    if (def && def.solo) {
+      const host = this.game.hostView();
+      const tv = this.decorateSolo(def, host, host);
+      return socket.emit('game:view', role === 'player' ? this.withTv({ gameId: this.gameId, view: this.decorateSolo(def, view, host) }, def, tv) : { gameId: this.gameId, view: tv });
+    }
     socket.emit('game:view', { gameId: this.gameId, view });
   }
 
@@ -882,7 +911,8 @@ export class RoomManager {
    * A new room with a random code, or (after a server restart) the code and
    * host token a TV asks for, so phones that knew the old room find it again.
    */
-  create({ code: wanted = null, hostToken = null } = {}) {
+  /** noTv: a phone-only room, opened by a phone at /phone (see Room). */
+  create({ code: wanted = null, hostToken = null, noTv = false } = {}) {
     let code = normalizeCode(wanted);
     if (!isValidCode(code) || this.rooms.has(code)) {
       do {
@@ -890,7 +920,7 @@ export class RoomManager {
       } while (this.rooms.has(code));
       hostToken = null;
     }
-    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, practice: this.practice, trophies: this.trophies, saves: this.saves, soloStats: this.soloStats, hostToken: isValidToken(hostToken) ? hostToken : null });
+    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, practice: this.practice, trophies: this.trophies, saves: this.saves, soloStats: this.soloStats, hostToken: isValidToken(hostToken) ? hostToken : null, noTv });
     room.onlineAllowed = () => Boolean(this.online && this.online.allowed);
     this.rooms.set(code, room);
     // The TV re-opening its room after a restart: a game saved in it picks up where it was.

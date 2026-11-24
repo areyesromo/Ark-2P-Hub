@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.67
+
+- 📱 No TV? Play the 1 player games on your phone alone: open /phone (or tap the link under the join
+  form). Every solo game and the daily challenge, with your bests and achievements; the arcade games
+  put the game on top and the controls underneath.
+
 ## 0.1.66
 
 - 📅 A daily challenge in the 1 player mode: one game a day, the same deal for everyone, one go each,

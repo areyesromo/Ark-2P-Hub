@@ -270,6 +270,11 @@ export function createApp({
     const src = fs.readFileSync(file, 'utf8').replace(/from 'three'/g, "from '/vendor/three/three.module.min.js'");
     res.type('text/javascript').set('Cache-Control', 'public, max-age=604800').send(src);
   });
+  // Phone only: the phone page, playing the solo games on its own with no TV (see public/play/play.js).
+  app.get(['/phone', '/phone/'], (_req, res) => {
+    res.setHeader('Cache-Control', 'no-cache');
+    res.sendFile(path.join(PUBLIC_DIR, 'play', 'index.html'));
+  });
   // no-cache: browsers check for a newer copy each time (a quick 304 when unchanged), so an
   // update's new art and code show straight away instead of an old cached copy.
   app.use(express.static(PUBLIC_DIR, { extensions: ['html'], setHeaders: (res) => res.setHeader('Cache-Control', 'no-cache') }));

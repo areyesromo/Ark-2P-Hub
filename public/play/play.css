@@ -135,3 +135,22 @@ body.slot-1 { --me: var(--p2); }
 .phone-games .daily { border-color: var(--warn); }
 .phone-games .daily.done { opacity: 0.7; }
 .solo-links { display: flex; flex-direction: column; gap: 8px; }
+
+/* Phone only (/phone): no room code to type, no 1 player / 2 players switch, no link to itself. */
+.join-mode:empty { display: none; }
+.join-mode a, .join-alt a { color: var(--p1); }
+.no-tv .join-alt, .no-tv #mode-pick { display: none; }
+.join-alt { text-align: center; font-size: var(--fs-sm); margin: 0; }
+
+/* Phone only, a 'split' game (the arcade ones): the TV's picture on top, the phone's controls below
+   (side by side when the phone is turned sideways). The picture pane is laid out like the TV's stage. */
+.phone-stage.split { display: flex; flex-direction: column; gap: 6px; }
+.split-tv { flex: 1 1 0; min-height: 0; display: flex; flex-direction: column; overflow: hidden; border-radius: var(--r-md); background: var(--bg-2); font-size: 0.8rem; }
+.split-pad { flex: 0 0 42%; min-height: 0; display: flex; flex-direction: column; overflow: hidden; }
+/* The controls get less room than a whole phone screen: tighter spacing, and nothing may push past the pane. */
+.split-pad > * { min-height: 0; padding-top: 4px; padding-bottom: 8px; gap: 8px; }
+.split-pad button { min-height: 0; }
+@media (orientation: landscape) {
+  .phone-stage.split { flex-direction: row; }
+  .split-pad { flex-basis: 38%; }
+}

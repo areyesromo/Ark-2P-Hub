@@ -14,6 +14,7 @@ export function soloGame(def) {
     category: def.category,
     music: def.music,
     score: def.score,
+    phone: def.phone, // playable on the phone alone, with no TV (true, or 'split': see Room#noTv)
     solo: true,
     base: def,
     // The daily challenge (ctx.challenge) is played as it's dealt: no setup screen.
