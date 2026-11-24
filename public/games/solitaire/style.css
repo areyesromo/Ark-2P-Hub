@@ -1,0 +1,50 @@
+/* A card is --cw wide (set by each screen) and 1.4 times as tall. Its colours are the cards themselves. */
+.sol-table { --ch: calc(var(--cw) * 1.4); display: flex; flex-direction: column; gap: calc(var(--cw) * 0.3); }
+.sol-top, .sol-tab { display: grid; grid-template-columns: repeat(7, var(--cw)); justify-content: space-between; }
+.sol-top .slot { position: relative; height: var(--ch); border-radius: calc(var(--cw) * 0.1); border: 2px dashed var(--line); display: flex; align-items: center; justify-content: center; color: var(--muted); }
+.sol-top .slot.gap, .sol-top .slot.waste { border-color: transparent; }
+.sol-top .slot .ace, .sol-top .slot .again { font-size: calc(var(--cw) * 0.45); font-weight: 900; opacity: 0.5; }
+.sol-top .slot .count { position: absolute; bottom: -1.3em; font-size: 0.75em; color: var(--muted); }
+.sol-top .slot.cursor, .sol-tab .col.cursor { outline: 3px solid var(--p1); outline-offset: 2px; }
+.sol-top .waste .sol-card { position: absolute; left: 0; top: 0; }
+.sol-top .waste.fan .sol-card.w1 { left: calc(var(--cw) * -0.28); }
+.sol-top .waste.fan .sol-card.w2 { left: calc(var(--cw) * -0.56); }
+.sol-top .waste .sol-card.w0 { z-index: 2; }
+.sol-tab .col { position: relative; height: calc(var(--ch) * var(--h, 1)); min-height: var(--ch); border-radius: calc(var(--cw) * 0.1); }
+.sol-tab .col:empty { border: 2px dashed var(--line); height: var(--ch); }
+.sol-tab .sol-card { position: absolute; left: 0; top: calc(var(--ch) * var(--y)); }
+
+.sol-card { width: var(--cw); height: var(--ch); border-radius: calc(var(--cw) * 0.1); box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5); overflow: hidden; }
+.sol-card.up { background: #f8fafc; color: #0f172a; border: 1px solid #cbd5e1; }
+.sol-card.red { color: #dc2626; }
+.sol-card.down { background: repeating-linear-gradient(45deg, #1d4ed8 0 4px, #1e40af 4px 8px); border: 2px solid #f8fafc; }
+.sol-card .rank, .sol-card .suit { position: absolute; top: calc(var(--cw) * 0.04); font-weight: 900; font-size: calc(var(--cw) * 0.3); line-height: 1; }
+.sol-card .rank { left: calc(var(--cw) * 0.07); }
+.sol-card .suit { right: calc(var(--cw) * 0.07); }
+.sol-card .big { position: absolute; left: 0; right: 0; bottom: calc(var(--cw) * 0.1); text-align: center; font-size: calc(var(--cw) * 0.62); line-height: 1; }
+.sol-card.sel { transform: translateY(-6%); box-shadow: 0 0 0 3px var(--warn), 0 6px 12px rgba(0, 0, 0, 0.6); }
+.sol-card.cursor { box-shadow: 0 0 0 3px var(--p1), 0 4px 10px rgba(0, 0, 0, 0.6); }
+
+/* ---- TV ---- */
+
+.sol-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; container-type: size; }
+.sol-stats { display: flex; justify-content: center; align-items: baseline; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.sol-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.sol-stats .finish-note { color: var(--warn); font-weight: 800; }
+/* Seven cards across, with room for a tall column below. */
+.sol-host .sol-table { --cw: min(9.5cqw, 11cqh); width: calc(var(--cw) * 7 + var(--cw) * 0.25 * 6); margin: 0 auto; }
+
+/* ---- phone ---- */
+
+.sol-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 8px; padding: 8px 6px 10px; overflow: auto; }
+.sol-phone .info { text-align: center; color: var(--muted); font-size: var(--fs-sm); }
+.sol-phone .sol-table { --cw: calc((100vw - 12px - 6 * 4px) / 7); flex: 1; }
+.sol-phone .sol-card .big { font-size: calc(var(--cw) * 0.5); }
+.sol-tools { display: flex; gap: 8px; }
+.sol-tools button { flex: 1; padding: 10px 4px; font-size: var(--fs-sm); }
+
+/* ---- looks (see server/games/looks.js): card backs ---- */
+
+[data-look='midnight'] .sol-card.down { background: radial-gradient(circle at 30% 30%, #fff6 0 1px, transparent 2px) 0 0 / 14px 14px, linear-gradient(160deg, #312e81, #0f0a2e); }
+[data-look='rose'] .sol-card.down { background: repeating-linear-gradient(45deg, #be185d 0 4px, #9d174d 4px 8px); }
+[data-look='gold'] .sol-card.down { background: repeating-linear-gradient(45deg, #d4a017 0 4px, #a87c0a 4px 8px); border-color: #fff7d6; }

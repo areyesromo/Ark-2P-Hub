@@ -1,0 +1,36 @@
+/* The board (TV and phone). Each gem's colour and shape are the gem itself. */
+.gems-frame { position: relative; aspect-ratio: 1; padding: 0.4em; border-radius: var(--radius); background: var(--bg-2); border: 2px solid var(--line); touch-action: none; }
+.gems-cells, .gem-board { position: absolute; inset: 0.4em; display: grid; grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr); gap: 0.15em; }
+.gem { padding: 0; background: none; border-radius: var(--r-sm); min-width: 0; }
+.gem span {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%; border-radius: 30%;
+  background: radial-gradient(circle at 35% 30%, rgba(255, 255, 255, 0.5), transparent 45%), var(--c);
+  color: rgba(0, 0, 0, 0.45); font-size: 0.75em; line-height: 1; box-shadow: inset 0 -0.15em 0 rgba(0, 0, 0, 0.25);
+}
+.gem.selected span { box-shadow: 0 0 0 0.15em var(--warn), 0 0 0.8em var(--warn); transform: scale(0.92); }
+.gem.cursor { box-shadow: 0 0 0 0.15em var(--p1); }
+.gem.moved span { animation: gem-in 200ms ease-out; }
+.gem.pop span { animation: gem-pop 220ms ease-in forwards; }
+.gem.drop span { animation: gem-drop 220ms ease-out; }
+.gem.shake span { animation: gem-shake 300ms; }
+@keyframes gem-in { from { transform: scale(0.6); } }
+@keyframes gem-pop { 40% { transform: scale(1.25); filter: brightness(1.8); } 100% { transform: scale(0); opacity: 0; } }
+@keyframes gem-drop { from { transform: translateY(-70%); opacity: 0.3; } }
+@keyframes gem-shake { 25%, 75% { transform: translateX(-12%); } 50% { transform: translateX(12%); } }
+
+/* ---- TV ---- */
+
+.gems-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+.gems-stats { display: flex; justify-content: center; align-items: baseline; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.gems-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.gems-stats .chain { color: var(--warn); font-weight: 900; font-size: 1.3em; }
+.gems-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; container-type: size; }
+.gems-host .gems-frame { width: min(100cqw, 100cqh); font-size: min(6cqh, 3rem); }
+
+/* ---- phone ---- */
+
+.gems-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 12px 8px 16px; text-align: center; }
+.gems-phone .info { color: var(--muted); }
+.gems-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.gems-phone .gems-frame { width: 100%; font-size: 1.7rem; }
+.gems-phone .hint { margin: 0; font-size: var(--fs-sm); }

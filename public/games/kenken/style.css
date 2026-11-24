@@ -1,0 +1,32 @@
+/* The grid (TV and phone): thin lines between squares, heavy ones round each cage. */
+.kk-grid { display: grid; grid-template-columns: repeat(var(--n), 1fr); background: var(--panel); border-radius: var(--r-sm); }
+.kk-cell { aspect-ratio: 1; position: relative; display: flex; align-items: center; justify-content: center; border: 1px solid var(--line); cursor: pointer; }
+.kk-cell.t { border-top: 0.08em solid var(--text); }
+.kk-cell.l { border-left: 0.08em solid var(--text); }
+.kk-cell.b { border-bottom: 0.08em solid var(--text); }
+.kk-cell.r { border-right: 0.08em solid var(--text); }
+.kk-cell .lbl { position: absolute; top: 0.08em; left: 0.14em; font-size: 0.26em; font-weight: 800; color: var(--muted); }
+.kk-cell .val { font-size: 0.55em; font-weight: 800; }
+.kk-cell.sel { background: color-mix(in srgb, var(--me, var(--p1)) 30%, transparent); }
+.kk-cell.bad .val { color: var(--bad); }
+
+/* ---- TV ---- */
+
+.kk-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.kk-stats { display: flex; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.kk-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.kk-stats .bad { color: var(--bad); }
+.kk-host .kk-field { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.kk-host .kk-grid { width: min(100cqw, 100cqh); font-size: calc(min(100cqw, 100cqh) / var(--n)); }
+.kk-rule { margin: 0; font-size: var(--fs-md); }
+
+/* ---- phone ---- */
+
+.kk-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px; text-align: center; }
+.kk-phone .info { color: var(--muted); }
+.kk-phone .info strong { color: var(--me); }
+.kk-phone .info .bad { color: var(--bad); }
+.kk-phone .kk-grid { font-size: calc(min(92vw, 26rem) / var(--n)); width: min(92vw, 26rem); align-self: center; }
+.kk-keys { display: flex; gap: 6px; }
+.kk-keys button { flex: 1; min-width: 0; padding: 0; font-size: var(--fs-lg); font-weight: 800; min-height: 3rem; }
+.kk-phone .hint { margin: 0; font-size: var(--fs-sm); }

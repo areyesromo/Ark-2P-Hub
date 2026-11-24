@@ -1,0 +1,43 @@
+/* A tile is --tw wide and 1.3 times as tall; each layer up sits a little up and to the left.
+   Its colours are the tiles themselves (ivory faces, the emoji on them). */
+.mj-board { flex: 1; min-height: 0; min-width: 0; display: flex; align-items: center; justify-content: center; }
+.mj-pile { --tw: 40px; --th: calc(var(--tw) * 1.3); --d: calc(var(--tw) * 0.11); position: relative; width: calc(var(--tw) * 10 + var(--d) * 3); height: calc(var(--th) * 5 + var(--d) * 3); }
+.mj-tile {
+  position: absolute; padding: 0;
+  left: calc(var(--x) * var(--tw) + (3 - var(--z)) * var(--d));
+  top: calc(var(--y) * var(--th) + (3 - var(--z)) * var(--d));
+  width: var(--tw); height: var(--th);
+  border-radius: calc(var(--tw) * 0.12);
+  background: linear-gradient(160deg, var(--t1, #fffdf5), var(--t2, #ede4cf));
+  border: 1px solid var(--tb, #b9ad8f);
+  box-shadow: calc(var(--d) * 0.9) calc(var(--d) * 0.9) 0 var(--ts, #9c8f6e), calc(var(--d) * 0.9 + 2px) calc(var(--d) * 0.9 + 2px) 4px rgba(0, 0, 0, 0.45);
+  display: flex; align-items: center; justify-content: center;
+  font-size: calc(var(--tw) * 0.62); line-height: 1;
+  filter: brightness(0.78) saturate(0.85);
+  transition: filter 120ms, transform 120ms;
+}
+.mj-tile.free { filter: none; }
+.mj-tile.gone { display: none; }
+.mj-tile.sel { background: linear-gradient(160deg, #fef9c3, #fde047); transform: translateY(-6%); }
+.mj-tile.hint { animation: mj-hint 900ms ease-in-out infinite alternate; }
+.mj-tile.cursor { outline: 3px solid var(--p1); outline-offset: 2px; }
+@keyframes mj-hint { to { box-shadow: 0 0 0 4px #22d3ee, 0 0 18px #22d3ee; } }
+.mj-board.shake .mj-pile { animation: mj-shake 280ms; }
+@keyframes mj-shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+.mj-stuck { color: var(--warn); font-weight: 800; }
+
+/* TV */
+.mj-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+.mj-stats { display: flex; justify-content: center; align-items: baseline; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.mj-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+
+/* phone */
+.mj-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 8px 6px 12px; text-align: center; }
+.mj-phone .info { color: var(--muted); font-size: var(--fs-sm); }
+.mj-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.mj-tools button { flex: 1 1 22%; padding: 10px 4px; font-size: var(--fs-sm); }
+
+/* ---- looks (see server/games/looks.js): the tiles' own colours; selected and hinted tiles stay yellow and glowing in all of them ---- */
+[data-look='jade'] { --t1: #e8fbea; --t2: #86d9a0; --tb: #4b9e6a; --ts: #2f7a4d; }
+[data-look='ink'] { --t1: #4b5568; --t2: #1f2633; --tb: #0b0e14; --ts: #05070b; }
+[data-look='rose'] { --t1: #fff1f4; --t2: #f6b6c8; --tb: #d4809a; --ts: #b05a78; }

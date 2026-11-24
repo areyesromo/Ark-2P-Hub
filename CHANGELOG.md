@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.65
+
+- 👤 The rest of the solo games join the 1 player mode, all 39 from Ark 1P Hub: arcade games
+  (Flappy, Invaders, Runner, Helicopter Cave, Bubble Shooter, Road Hopper…), puzzles (Solitaire,
+  FreeCell, Mahjong, Sudoku, Sokoban, KenKen, Nonograms, Flood-It, Color Lines…) and brain games
+  (Simon, Quick Maths, Colour Trap, Number Memory, Odd One Out…), each with its bests,
+  achievements and unlockable looks. Those with a 1v1 twin here say 1P for now (Hangman 1P,
+  Word Guess 1P, Brick Breaker 1P…).
+
 ## 0.1.64
 
 - 👤 A new **1 player** mode: flip the switch at the top of the lobby (👥 2 players / 👤 1 player)

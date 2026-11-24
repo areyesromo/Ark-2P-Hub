@@ -18,7 +18,7 @@ export const LOOKS = {
     penguin: { name: '🐧 Penguin', unlock: 'flappy-25' },
     dragon: { name: '🐉 Dragon', unlock: 'flappy-50' },
   },
-  breaker: {
+  'breaker-1p': {
     classic: { name: 'Classic' },
     fire: { name: '🔥 Fireball', unlock: 'breaker-level2' },
     crystal: { name: '💎 Crystal', unlock: 'breaker-level4' },
@@ -30,7 +30,7 @@ export const LOOKS = {
     dino: { name: '🦖 Dino', unlock: 'runner-500' },
     ninja: { name: '🥷 Ninja', unlock: 'runner-1000' },
   },
-  asteroids: {
+  'asteroids-1p': {
     classic: { name: 'Classic' },
     rocket: { name: '🚀 Rocket', unlock: 'asteroids-wave3' },
     saucer: { name: '🛸 Saucer', unlock: 'asteroids-wave6' },
@@ -47,7 +47,7 @@ export const LOOKS = {
     ocean: { name: '🌊 Ocean', unlock: '2048-512' },
     neon: { name: '💜 Neon', unlock: '2048-2048' },
   },
-  blocks: {
+  'blocks-1p': {
     classic: { name: 'Classic' },
     candy: { name: '🍬 Candy', unlock: 'blocks-four' },
     retro: { name: '🟩 Retro green', unlock: 'blocks-40' },
@@ -59,7 +59,7 @@ export const LOOKS = {
     space: { name: '🪐 Space', unlock: 'gems-chain4' },
     candy: { name: '🍬 Candy', unlock: 'gems-3000' },
   },
-  stack: {
+  'stack-1p': {
     classic: { name: 'Classic' },
     candy: { name: '🍬 Candy', unlock: 'stack-10' },
     glass: { name: '🧊 Glass', unlock: 'stack-25' },
@@ -83,7 +83,7 @@ export const LOOKS = {
     ink: { name: '⚫ Ink', unlock: 'mahjong-nohelp' },
     rose: { name: '🌸 Rose', unlock: 'mahjong-10min' },
   },
-  memory: {
+  'memory-1p': {
     animals: { name: '🐶 Animals' },
     food: { name: '🍕 Food', unlock: 'memory-solve' },
     sea: { name: '🐠 Sea', unlock: 'memory-12' },

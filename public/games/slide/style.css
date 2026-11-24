@@ -1,0 +1,28 @@
+/* The board (TV and phone): tiles slide to their place (left/top are % of the board). */
+.slide-frame { position: relative; aspect-ratio: 1; padding: 0.5em; border-radius: var(--radius); background: var(--bg-2); border: 2px solid var(--line); touch-action: none; }
+.slide-cells { position: absolute; inset: 0.5em; }
+.slide-board .tile {
+  position: absolute; width: calc(100% / var(--n)); height: calc(100% / var(--n)); padding: 0.25em; background: none;
+  transition: left 120ms ease-out, top 120ms ease-out;
+}
+.slide-board .tile span {
+  display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;
+  border-radius: var(--r-md); background: var(--btn); color: var(--text); font-weight: 900; font-variant-numeric: tabular-nums;
+  box-shadow: inset 0 -0.2em 0 rgba(0, 0, 0, 0.25);
+}
+.slide-board .tile.home span { background: #0e7490; }
+
+/* ---- TV ---- */
+
+.slide-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+.slide-stats { display: flex; justify-content: center; align-items: baseline; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.slide-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.slide-wrap { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; container-type: size; }
+.slide-host .slide-frame { width: min(100cqw, 100cqh); font-size: min(4.5cqh, 2.6rem); }
+
+/* ---- phone ---- */
+
+.slide-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 12px; padding: 12px 12px 16px; text-align: center; }
+.slide-phone .info { color: var(--muted); }
+.slide-phone .slide-frame { width: 100%; font-size: 1.6rem; }
+.slide-phone .hint { margin: 0; font-size: var(--fs-sm); }

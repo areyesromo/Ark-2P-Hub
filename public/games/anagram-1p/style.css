@@ -1,0 +1,36 @@
+/* Letters and the word (TV and phone): tiles like a word game's. */
+.an-word, .an-tiles { display: flex; justify-content: center; gap: 0.35em; }
+.an-slot, .an-tile { width: 1.5em; height: 1.5em; display: flex; align-items: center; justify-content: center; border-radius: var(--r-md); font-weight: 900; line-height: 1; padding: 0; min-width: 0; font-size: inherit; }
+.an-slot { border: 0.08em dashed var(--line-strong); color: var(--text); }
+.an-slot.full { border-style: solid; border-color: var(--me, var(--p1)); background: var(--panel); }
+.an-tile { background: #fef3c7; color: #422006; border: 0; box-shadow: 0 0.08em 0 #b45309; }
+.an-tile.used { opacity: 0.2; }
+.an-tile.cursor { outline: 0.1em solid var(--p1); outline-offset: 0.08em; }
+.an-main { display: flex; flex-direction: column; gap: 0.6em; align-items: center; justify-content: center; }
+.an-ready { font-weight: 900; }
+.an-msg { min-height: 1.4em; }
+.an-msg .ok { color: var(--good); font-weight: 900; }
+.an-msg .no { color: var(--bad); font-weight: 900; }
+
+/* ---- TV ---- */
+
+.an-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.5rem; }
+.an-top { display: flex; gap: 2.5rem; color: var(--muted); font-size: var(--fs-lg); }
+.an-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.an-top .low strong { color: var(--bad); }
+.an-bar { width: min(60rem, 80%); height: 0.6rem; border-radius: var(--r-pill); background: var(--panel); overflow: hidden; }
+.an-bar span { display: block; height: 100%; background: var(--good); transition: width 0.25s linear; }
+.an-host .an-main { font-size: 5.5rem; min-height: 3.5em; }
+.an-host .an-ready { font-size: 0.7em; }
+.an-host .an-msg { font-size: var(--fs-xl); }
+.an-rule { margin: 0; font-size: var(--fs-md); }
+
+/* ---- phone ---- */
+
+.an-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 12px 12px 16px; text-align: center; justify-content: center; }
+.an-phone .info { color: var(--muted); }
+.an-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.an-phone .an-main { font-size: min(10vw, 3.2rem); touch-action: manipulation; }
+.an-phone .an-msg { font-size: var(--fs-md); }
+.an-buttons { display: flex; gap: 10px; justify-content: center; }
+.an-buttons button { flex: 1; max-width: 12rem; }

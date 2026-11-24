@@ -292,6 +292,11 @@ export class Room {
       solo: {
         achievements: () => (room.soloStats && room.soloName() ? room.soloStats.achievementsOf(room.soloName()) : {}),
         best: (variant) => (room.soloStats && room.soloName() ? room.soloStats.bestFor(def.id, variant, room.soloName(), def.score && def.score.better) : null),
+        // This player's go at the game's puzzle of the day (Word Guess's word), kept with their runs.
+        daily: {
+          get: (day) => (room.soloStats && room.soloName() ? room.soloStats.getDaily(def.id, day, room.soloName()) : null),
+          set: (day, data) => { if (room.soloStats && room.soloName()) room.soloStats.setDaily(def.id, day, room.soloName(), data); },
+        },
       },
     };
 

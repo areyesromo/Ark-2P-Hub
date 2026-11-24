@@ -1,0 +1,9 @@
+/* The inks are the game itself: bright enough to read on the dark screen. */
+.ct-word { letter-spacing: 0.05em; }
+.ct-word.ink-red { color: #ef4444; }
+.ct-word.ink-blue { color: #3b82f6; }
+.ct-word.ink-green { color: #22c55e; }
+.ct-word.ink-yellow { color: #facc15; }
+.tq1-choice, .tq1-phone .tq1-choices button { text-transform: uppercase; }
+.ct-phone { flex: 1; min-height: 0; display: flex; }
+.ct-phone .tq1-prompt { font-size: 3.4rem; }

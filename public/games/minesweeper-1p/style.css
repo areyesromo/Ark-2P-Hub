@@ -1,0 +1,41 @@
+/* The board (TV and phone): a grid of square cells. */
+.mines-grid { display: grid; grid-template-columns: repeat(var(--cols), 1fr); gap: 2px; padding: 4px; width: 100%; height: 100%; border-radius: var(--r-sm); background: #05070f; border: 2px solid var(--line-strong); }
+.mines-grid .cell {
+  padding: 0; min-width: 0; aspect-ratio: 1; border-radius: 4px;
+  background: var(--btn); color: var(--text); font-weight: 900; line-height: 1;
+  display: flex; align-items: center; justify-content: center; font-size: inherit;
+}
+.mines-grid .cell.open { background: var(--panel); }
+.mines-grid .cell.mX { background: var(--bad-strong); }
+.mines-grid .cell.cursor { outline: 3px solid var(--p1); outline-offset: -1px; z-index: 1; }
+/* The classic number colours, brightened for a dark board. */
+.mines-grid .n1 { color: #60a5fa; }
+.mines-grid .n2 { color: #4ade80; }
+.mines-grid .n3 { color: #f87171; }
+.mines-grid .n4 { color: #c084fc; }
+.mines-grid .n5 { color: #fb923c; }
+.mines-grid .n6 { color: #2dd4bf; }
+.mines-grid .n7 { color: #f472b6; }
+.mines-grid .n8 { color: #e2e8f0; }
+
+/* ---- TV ---- */
+
+.mines-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 1rem; }
+.mines-stats { display: flex; justify-content: center; align-items: center; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.mines-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.mines-stats .won { color: var(--good); font-weight: 900; font-size: 1.4em; }
+.mines-stats .lost { color: var(--bad); font-weight: 900; font-size: 1.4em; }
+.mines-host .mines-field { flex: 1; min-height: 0; display: flex; align-items: center; justify-content: center; container-type: size; }
+.mines-host .mines-grid { width: min(100cqw, calc(100cqh * var(--cols) / var(--rows))); height: auto; font-size: min(3.2cqh, 2rem); }
+
+/* ---- phone ---- */
+
+.mines-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 12px; text-align: center; }
+.mines-phone .info { color: var(--muted); }
+.mines-phone .info strong { color: var(--me); }
+.mines-phone .mines-field { flex: 1; min-height: 0; overflow: auto; touch-action: pan-x pan-y; font-size: 0.85rem; }
+.mines-phone .mines-field.big { font-size: 1.3rem; }
+.mines-phone .mines-grid { height: auto; }
+.mines-phone .mode { align-self: center; min-width: 14rem; }
+.mines-phone .mode.on { background: var(--warn); color: var(--on-warn); }
+.mines-phone .hint { margin: 0; font-size: var(--fs-sm); }

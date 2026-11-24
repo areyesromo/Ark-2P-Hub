@@ -142,3 +142,9 @@ test('the computer sits a solo game out, and the 1v1 match history never sees on
   assert.equal(r.botTimer, null);
   r.dispose();
 });
+
+test('every solo game has achievements of its own', async () => {
+  const { ACHIEVEMENTS } = await import('../server/solo/achievements.js');
+  for (const g of listGames().filter((x) => x.solo)) assert.ok(ACHIEVEMENTS.some((a) => a.game === g.id), g.id);
+  for (const a of ACHIEVEMENTS) if (a.game) assert.ok(getGame(a.game), `${a.id}: ${a.game} is a game`);
+});

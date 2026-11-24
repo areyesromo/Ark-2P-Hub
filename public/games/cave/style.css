@@ -1,0 +1,22 @@
+/* ---- TV ---- */
+
+.cave-host { flex: 1; min-height: 0; display: flex; }
+.cave-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.cave-arena canvas { display: block; border-radius: var(--r-md); border: 2px solid var(--line-strong); }
+.cave-score { position: absolute; top: 1.5rem; left: 0; right: 0; text-align: center; font-size: 4rem; font-weight: 900; text-shadow: 0 0.3rem 0 rgba(0, 0, 0, 0.5); pointer-events: none; font-variant-numeric: tabular-nums; }
+.cave-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; pointer-events: none; text-align: center; }
+.cave-overlay .big { font-size: 5rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.8); }
+.cave-overlay .sub { font-size: var(--fs-xl); text-shadow: 0 0 1rem #000; }
+
+/* ---- phone ---- */
+
+.cave-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; text-align: center; }
+.cave-phone .info { color: var(--muted); font-weight: 700; }
+.cave-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.cave-hold { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: var(--radius); background: var(--panel); border: 3px solid var(--me); touch-action: none; user-select: none; -webkit-user-select: none; }
+.cave-hold.on { background: var(--me); color: var(--on-bright); }
+.cave-hold .big { font-size: var(--fs-2xl); font-weight: 900; }
+.cave-hold .sub { color: inherit; opacity: 0.7; font-weight: 400; }
+.cave-hold.off { opacity: 0.4; }
+.cave-phone .pause { align-self: center; min-width: 10rem; }
+.cave-phone .info .where { font-weight: 400; font-size: var(--fs-sm); }

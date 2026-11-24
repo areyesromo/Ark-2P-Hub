@@ -1,0 +1,50 @@
+/* Against-the-clock games (Quick Maths, Colour Trap): see timed-quiz.js. */
+.tq1-host, .tq1-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; text-align: center; }
+.tq1-top { display: flex; gap: 2rem; justify-content: center; align-items: baseline; color: var(--muted); }
+.tq1-top strong { color: var(--text); }
+.tq1-clock { font-weight: 900; color: var(--text); font-variant-numeric: tabular-nums; }
+.tq1-clock.low { color: var(--bad-soft); }
+.tq1-prompt { font-weight: 900; line-height: 1.1; border-radius: var(--radius); padding: 0.2em 0.6em; }
+.tq1-ready { color: var(--muted); font-size: 0.5em; }
+.tq1-choices { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; width: 100%; }
+.tq1-choice { display: flex; align-items: center; justify-content: center; gap: 0.6em; padding: 0.6em; border-radius: var(--r-md); background: var(--panel); border: 2px solid var(--line); font-weight: 900; }
+.tq1-choice .badge { display: inline-flex; align-items: center; justify-content: center; width: 1.6em; height: 1.6em; border-radius: 50%; font-size: 0.6em; background: var(--btn); color: var(--text); }
+/* A controller's face buttons are coloured like the real thing. */
+.tq1-choice .badge.bA { background: #16a34a; }
+.tq1-choice .badge.bB { background: #dc2626; }
+.tq1-choice .badge.bX { background: #2563eb; }
+.tq1-choice .badge.bY { background: #ca8a04; }
+.tq1-bar { width: 100%; height: 0.6rem; border-radius: var(--r-pill); background: var(--bg-2); overflow: hidden; }
+.tq1-bar i { display: block; height: 100%; background: var(--p1); transition: width 250ms linear; }
+.right .tq1-prompt { animation: tq1-right 400ms; }
+.wrong .tq1-prompt { animation: tq1-wrong 400ms; }
+@keyframes tq1-right { 0% { background: rgba(74, 222, 128, 0.45); } }
+@keyframes tq1-wrong { 0% { background: rgba(248, 113, 113, 0.5); transform: translateX(-0.3em); } 30% { transform: translateX(0.3em); } }
+
+/* TV */
+.tq1-host { gap: 2rem; }
+.tq1-host .tq1-top { font-size: var(--fs-xl); }
+.tq1-host .tq1-prompt { font-size: 7rem; }
+.tq1-host .tq1-choices { max-width: 56rem; font-size: 2.6rem; }
+
+/* phone */
+.tq1-phone { justify-content: stretch; padding: 12px 16px 16px; gap: 12px; }
+.tq1-phone .tq1-top { font-size: var(--fs-md); }
+.tq1-phone .tq1-prompt { font-size: 2.6rem; min-height: 1.4em; }
+.tq1-phone .tq1-choices { flex: 1; gap: 12px; }
+.tq1-phone .tq1-choices button { font-size: 2rem; font-weight: 900; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line-strong); touch-action: none; }
+.tq1-phone .tq1-choices button:active { background: var(--me); color: var(--on-bright); }
+
+/* The answer shown (Trivia): the right one lights up, a wrong pick goes red. */
+.tq1-choice.is-answer, .tq1-phone .tq1-choices button.is-answer { background: var(--good); color: var(--on-good); border-color: var(--good); }
+.tq1-choice.is-wrong, .tq1-phone .tq1-choices button.is-wrong { background: var(--bad); color: var(--text); border-color: var(--bad); }
+.tq1-choice.is-off, .tq1-phone .tq1-choices button.is-off { opacity: 0.4; }
+
+/* Longer questions and answers (Trivia). */
+.tq1-long .tq1-prompt { font-size: 3.4rem; max-width: 64rem; line-height: 1.2; }
+.tq1-long .tq1-choices { font-size: 2rem; }
+.tq1-long .tq1-choice { min-height: 4.5rem; }
+.tq1-long .tq1-cat { display: block; font-size: 0.45em; font-weight: 700; color: var(--muted); margin-bottom: 0.5em; }
+.tq1-phone.tq1-long .tq1-prompt { font-size: 1.25rem; min-height: 0; }
+.tq1-phone.tq1-long .tq1-choices button { font-size: 1.15rem; padding: 8px; }
+.tq1-top .good { color: var(--good); font-weight: 900; }

@@ -1,0 +1,21 @@
+/* ---- TV ---- */
+
+.flappy-host { flex: 1; min-height: 0; display: flex; }
+.flappy-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.flappy-arena canvas { display: block; border-radius: var(--r-md); border: 2px solid var(--line-strong); }
+.flappy-score { position: absolute; top: 1.5rem; left: 0; right: 0; text-align: center; font-size: 5rem; font-weight: 900; text-shadow: 0 0.3rem 0 rgba(0, 0, 0, 0.5); pointer-events: none; font-variant-numeric: tabular-nums; }
+.flappy-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.6rem; pointer-events: none; text-align: center; }
+.flappy-overlay .big { font-size: 5rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.8); }
+.flappy-overlay .sub { font-size: var(--fs-xl); text-shadow: 0 0 1rem #000; }
+
+/* ---- phone ---- */
+
+.flappy-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; text-align: center; }
+.flappy-phone .info { color: var(--muted); font-weight: 700; }
+.flappy-phone .info strong { color: var(--me); font-size: var(--fs-lg); }
+.flappy-tap { flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px; border-radius: var(--radius); background: var(--panel); border: 3px solid var(--me); touch-action: none; }
+.flappy-tap:active { background: var(--me); color: var(--on-bright); }
+.flappy-tap .big { font-size: var(--fs-2xl); font-weight: 900; }
+.flappy-tap .sub { color: var(--muted); font-weight: 400; }
+.flappy-tap.off { opacity: 0.4; }
+.flappy-phone .pause { align-self: center; min-width: 10rem; }

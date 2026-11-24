@@ -118,7 +118,7 @@ folder, not in the repo, so the merged app starts fresh.
 
 ## The steps
 
-Progress: **step 1 done** (the engine on 2P, with Dog Park, Snake 1P and Reaction Rush 1P).
+Progress: **steps 1 and 2 done** (the engine on 2P, then all 39 solo games).
 
 Each step is one PR to 2P that leaves the app working, with its `CHANGELOG.md` line. After each
 merge, the desktop build is started as 2P's `CLAUDE.md` says.

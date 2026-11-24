@@ -36,12 +36,12 @@ export const ACHIEVEMENTS = [
     { id: 'snake-25', icon: '🐍', name: 'Long boi', desc: 'Snake: eat 25 in one run.', check: (r) => r.score >= 25 },
     { id: 'snake-50', icon: '🐉', name: 'Dragon', desc: 'Snake: eat 50 in one run.', check: (r) => r.score >= 50 },
   ]),
-  ...game('breaker', [
+  ...game('breaker-1p', [
     { id: 'breaker-level2', icon: '🧱', name: 'Wall breaker', desc: 'Brick Breaker: clear a whole wall.', check: (r, v) => v.level >= 2 },
     { id: 'breaker-level4', icon: '🏗️', name: 'Demolition crew', desc: 'Brick Breaker: reach level 4.', check: (r, v) => v.level >= 4 },
     { id: 'breaker-1000', icon: '💯', name: 'Four figures', desc: 'Brick Breaker: score 1,000.', check: (r) => r.score >= 1000 },
   ]),
-  ...game('blocks', [
+  ...game('blocks-1p', [
     { id: 'blocks-four', icon: '🟦', name: 'Four at once', desc: 'Blocks: clear 4 rows with one piece.', check: (r, v) => v.bestClear >= 4 },
     { id: 'blocks-40', icon: '📏', name: 'Forty lines', desc: 'Blocks: clear 40 rows in one run.', check: (r, v) => v.lines >= 40 },
     { id: 'blocks-10k', icon: '🏆', name: 'Block master', desc: 'Blocks: score 10,000.', check: (r) => r.score >= 10000 },
@@ -51,12 +51,12 @@ export const ACHIEVEMENTS = [
     { id: 'flappy-25', icon: '🕊️', name: 'Taking flight', desc: 'Flappy: pass 25 pipes.', check: (r) => r.score >= 25 },
     { id: 'flappy-50', icon: '🦅', name: 'Eagle', desc: 'Flappy: pass 50 pipes.', check: (r) => r.score >= 50 },
   ]),
-  ...game('asteroids', [
+  ...game('asteroids-1p', [
     { id: 'asteroids-wave3', icon: '☄️', name: 'Rock breaker', desc: 'Asteroids: reach wave 3.', check: (r, v) => v.wave >= 3 },
     { id: 'asteroids-wave6', icon: '🚀', name: 'Deep space', desc: 'Asteroids: reach wave 6.', check: (r, v) => v.wave >= 6 },
     { id: 'asteroids-10k', icon: '⭐', name: 'Ace pilot', desc: 'Asteroids: score 10,000 (an extra ship!).', check: (r) => r.score >= 10000 },
   ]),
-  ...game('stack', [
+  ...game('stack-1p', [
     { id: 'stack-10', icon: '🧱', name: 'Steady hands', desc: 'Stack: stack 10 blocks.', check: (r) => r.score >= 10 },
     { id: 'stack-25', icon: '🏙️', name: 'Skyscraper', desc: 'Stack: stack 25 blocks.', check: (r) => r.score >= 25 },
     { id: 'stack-perfect5', icon: '🎯', name: 'Spot on', desc: 'Stack: 5 perfect drops in a row.', check: (r, v) => v.bestPerfects >= 5 },
@@ -96,7 +96,7 @@ export const ACHIEVEMENTS = [
     { id: '2048-512', icon: '🔢', name: 'Halfway there', desc: '2048: make a 512 tile.', check: (r, v) => v.biggest >= 512 },
     { id: '2048-2048', icon: '🎯', name: '2048!', desc: '2048: make the 2048 tile.', check: (r, v) => v.biggest >= 2048 },
   ]),
-  ...game('minesweeper', [
+  ...game('minesweeper-1p', [
     { id: 'mines-easy', icon: '🚩', name: 'Sweeper', desc: 'Minesweeper: clear an Easy field.', check: (r, v) => scored(r) && r.variant === 'Easy' },
     { id: 'mines-easy-60', icon: '⏱️', name: 'Quick sweep', desc: 'Minesweeper: clear an Easy field in under a minute.', check: (r) => scored(r) && r.variant === 'Easy' && r.score < MIN },
     { id: 'mines-hard', icon: '💣', name: 'Bomb squad', desc: 'Minesweeper: clear a Hard field.', check: (r) => scored(r) && r.variant === 'Hard' },
@@ -138,7 +138,7 @@ export const ACHIEVEMENTS = [
     { id: 'lines-100', icon: '🌈', name: 'Rainbow runner', desc: 'Color Lines: score 100 points.', check: (r) => scored(r) && r.score >= 100 },
     { id: 'lines-300', icon: '🧠', name: 'Board tamer', desc: 'Color Lines: score 300 points.', check: (r) => scored(r) && r.score >= 300 },
   ]),
-  ...game('mastermind', [
+  ...game('mastermind-1p', [
     { id: 'mastermind-solve', icon: '🔐', name: 'Code breaker', desc: 'Mastermind: crack a code.', check: (r) => scored(r) },
     { id: 'mastermind-5', icon: '🕵️', name: 'Sharp deduction', desc: 'Mastermind: crack a code in 5 guesses or fewer.', check: (r) => scored(r) && r.score <= 5 },
     { id: 'mastermind-hard', icon: '🧩', name: 'Cipher master', desc: 'Mastermind: crack a Hard code.', check: (r) => scored(r) && r.variant === 'Hard' },
@@ -158,7 +158,7 @@ export const ACHIEVEMENTS = [
     { id: 'lights-par', icon: '⭐', name: 'On par', desc: 'Lights Out: solve a Hard puzzle in par or fewer.', check: (r, v) => scored(r) && r.variant === 'Hard' && r.score <= v.par },
     { id: 'lights-noreset', icon: '🔦', name: 'No going back', desc: 'Lights Out: solve a Hard puzzle without starting again.', check: (r, v) => scored(r) && r.variant === 'Hard' && v.resets === 0 },
   ]),
-  ...game('wordsearch', [
+  ...game('wordsearch-1p', [
     { id: 'wordsearch-solve', icon: '🔍', name: 'Word finder', desc: 'Word Search: find every word.', check: (r) => scored(r) },
     { id: 'wordsearch-fast', icon: '⏱️', name: 'Eagle eyes', desc: 'Word Search: clear the 8 × 8 in under a minute.', check: (r) => scored(r) && r.variant === '8 × 8' && r.score < MIN },
     { id: 'wordsearch-large', icon: '🗺️', name: 'Every which way', desc: 'Word Search: clear the 12 × 12.', check: (r) => scored(r) && r.variant === '12 × 12' },
@@ -180,7 +180,7 @@ export const ACHIEVEMENTS = [
   ]),
 
   // ---- brain ----
-  ...game('word-guess', [
+  ...game('word-guess-1p', [
     { id: 'word-first', icon: '🔤', name: 'Wordsmith', desc: 'Word Guess: find a word.', check: (r) => scored(r) },
     { id: 'word-3', icon: '🧠', name: 'Sharp', desc: 'Word Guess: find a word in 3 guesses or fewer.', check: (r) => scored(r) && r.score <= 3 },
     { id: 'word-daily-5', icon: '📆', name: 'Daily habit', desc: 'Word Guess: find today\'s word on 5 different days.', check: (r, v, h) => h.dailyWords >= 5 },
@@ -199,12 +199,12 @@ export const ACHIEVEMENTS = [
     { id: 'colours-40', icon: '🌈', name: 'Colour master', desc: 'Colour Trap: 40 right in one go.', check: (r) => r.score >= 40 },
     { id: 'colours-streak', icon: '🔥', name: 'Unshakeable', desc: 'Colour Trap: 25 right in a row.', check: (r, v) => v.bestStreak >= 25 },
   ]),
-  ...game('trivia', [
+  ...game('trivia-1p', [
     { id: 'trivia-1500', icon: '🧠', name: 'Know-it-all', desc: 'Trivia: score 1,500.', check: (r) => r.score >= 1500 },
     { id: 'trivia-perfect', icon: '🎓', name: 'Full marks', desc: 'Trivia: get all 12 right.', check: (r, v) => v.of > 0 && v.right === v.of },
     { id: 'trivia-fast', icon: '⚡', name: 'Buzzer beater', desc: 'Trivia: a right answer in under 2 seconds.', check: (r, v) => v.fastest !== null && v.fastest < 2000 },
   ]),
-  ...game('anagram', [
+  ...game('anagram-1p', [
     { id: 'anagram-10', icon: '🔤', name: 'Wordsmith', desc: 'Anagram Rush: make 10 words.', check: (r) => r.score >= 10 },
     { id: 'anagram-20', icon: '📚', name: 'Lexicon', desc: 'Anagram Rush: make 20 words.', check: (r) => r.score >= 20 },
     { id: 'anagram-streak', icon: '🔥', name: 'On a roll', desc: 'Anagram Rush: 8 words in a row without a skip.', check: (r, v) => v.bestStreak >= 8 },
@@ -219,12 +219,12 @@ export const ACHIEVEMENTS = [
     { id: 'oddone-25', icon: '🦅', name: 'Eagle eye', desc: 'Odd One Out: find 25.', check: (r) => r.score >= 25 },
     { id: 'oddone-clean', icon: '🎯', name: 'Sure thing', desc: 'Odd One Out: find 12 without a wrong tap.', check: (r, v) => r.score >= 12 && v.wrong === 0 },
   ]),
-  ...game('hangman', [
+  ...game('hangman-1p', [
     { id: 'hangman-5', icon: '🔠', name: 'Word detective', desc: 'Hangman: guess 5 words in one run.', check: (r, v) => v.solved >= 5 },
     { id: 'hangman-10', icon: '🗝️', name: 'Escape artist', desc: 'Hangman: guess 10 words in one run.', check: (r, v) => v.solved >= 10 },
     { id: 'hangman-flawless', icon: '✨', name: 'Not a slip', desc: 'Hangman: guess 3 words with no wrong guess in one run.', check: (r, v) => v.perfects >= 3 },
   ]),
-  ...game('memory', [
+  ...game('memory-1p', [
     { id: 'memory-solve', icon: '🃏', name: 'Total recall', desc: 'Memory Pairs: find every pair.', check: (r) => scored(r) },
     { id: 'memory-12', icon: '🧠', name: 'Sharp memory', desc: 'Memory Pairs: clear 4 × 4 in 12 tries or fewer.', check: (r, v) => scored(r) && v.w === 4 && v.h === 4 && r.score <= 12 },
     { id: 'memory-large', icon: '🐘', name: 'Elephant', desc: 'Memory Pairs: clear 6 × 6.', check: (r, v) => scored(r) && v.w === 6 && v.h === 6 },

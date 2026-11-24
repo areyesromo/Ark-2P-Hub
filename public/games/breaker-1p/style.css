@@ -1,0 +1,23 @@
+/* ---- TV ---- */
+
+.breaker-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; }
+.breaker-stats { display: flex; justify-content: center; gap: 3rem; color: var(--muted); font-size: var(--fs-md); }
+.breaker-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.breaker-stats .lives { color: var(--p2); letter-spacing: 0.1em; }
+.breaker-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.breaker-arena canvas { display: block; border-radius: var(--r-md); border: 2px solid var(--line-strong); border-bottom-color: transparent; background: #05070f; }
+.breaker-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem; pointer-events: none; text-align: center; }
+.breaker-overlay .big { font-size: 5rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.9); }
+.breaker-overlay .sub { font-size: 1.6rem; color: var(--muted); text-shadow: 0 0 1rem #000, 0 0 1rem #000; }
+
+/* ---- phone ---- */
+
+.breaker-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 12px; padding: 12px 16px 16px; text-align: center; }
+.breaker-phone .score { color: var(--muted); font-weight: 700; }
+.breaker-phone .score strong { color: var(--me); font-size: var(--fs-lg); }
+.breaker-phone .status { color: var(--muted); }
+.breaker-phone .launch { font-size: var(--fs-md); padding: 16px; }
+.breaker-strip { flex: 1; min-height: 8rem; position: relative; border-radius: 24px; border: 3px solid var(--me); background: var(--panel); touch-action: none; }
+.breaker-strip .knob { position: absolute; top: 50%; left: 50%; width: 30%; height: 1.4rem; transform: translate(-50%, -50%); border-radius: var(--r-pill); background: var(--me); box-shadow: 0 0 1.2rem var(--me); }
+.breaker-strip .hint { position: absolute; inset: auto 0 12px; color: var(--muted); font-size: var(--fs-sm); }
+.breaker-phone .pause { align-self: center; min-width: 10rem; }
