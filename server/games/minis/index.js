@@ -49,7 +49,8 @@ import treasureDig from './treasure-dig.js';
 import bubblePop from './bubble-pop.js';
 import bridgeBuilder from './bridge-builder.js';
 import pancakeFlip from './pancake-flip.js';
+import cupStack from './cup-stack.js';
 import hotAirRace from './hot-air-race.js';
 
 export const MICROS = [tapIt, stopIt, shakeIt, oddOne, countEm, swipeIt, dontTouch, quickMath, pickColour, biggerNumber, lightsOut, snap, pumpIt, catchIt, dodgeBall];
-export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe, cannonLob, stackAttack, bumperCars, paintGrab, drumBeat, musicalChairs, archery, curling, treasureDig, bubblePop, bridgeBuilder, pancakeFlip, hotAirRace];
+export const PARTIES = [balloon, hotPotato, quickDraw, memoryPath, sweetSpot, coinGrab, tugOfWar, towerStack, bowling, penalty, whackAMole, fishing, glassBridge, iceSumo, simonSays, swordDuel, pourIt, hurdleDash, laserDodge, popTheMost, safeCracker, reflexGrid, mirrorMe, cannonLob, stackAttack, bumperCars, paintGrab, drumBeat, musicalChairs, archery, curling, treasureDig, bubblePop, bridgeBuilder, pancakeFlip, hotAirRace, cupStack];
