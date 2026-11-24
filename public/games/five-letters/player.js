@@ -16,6 +16,23 @@
   let gotAt = 0;
   let tick = null;
 
+  let soloShake = 0; // 1 player: the last refusal shown
+
+  /** 1 player: your board, typed a letter at a time (the TV shows it as you go), and the keyboard. */
+  function renderSolo(v) {
+    const msg = v.message ? v.message.text : v.daily ? '📅 Today\'s word' : '🎲 Practice';
+    const shaking = Boolean(v.message && v.message.n !== soloShake);
+    if (shaking) {
+      soloShake = v.message.n;
+      api.vibrate([40, 30, 40]);
+    }
+    if (v.board.length > seen && !v.already) api.vibrate(v.solved ? [60, 40, 120] : 20);
+    root.innerHTML = '<p class="fl-status">' + ArkFL.esc(msg) + '</p>' +
+      ArkFL.board(v.board, { rows: v.maxGuesses, letters: v.letters, seen: seen, typing: v.phase === 'play' ? v.entry : null, shake: shaking }) +
+      (v.phase === 'play' ? ArkFL.keyboard(ArkFL.keyStates(v.board)) : '');
+    seen = v.board.length;
+  }
+
   function canType() {
     return view && view.phase === 'play' && !view.done[view.you] && sentWord === null;
   }
@@ -37,11 +54,25 @@
   function onClick(e) {
     if (e.target.closest('.rematch')) return api.send({ type: 'rematch' });
     const k = e.target.closest('[data-key]');
-    if (k) press(k.getAttribute('data-key'));
+    if (!k) return;
+    if (view && view.solo) {
+      if (view.phase === 'play') { api.send(ArkFL.input(k.getAttribute('data-key'))); api.vibrate(5); }
+      return;
+    }
+    press(k.getAttribute('data-key'));
   }
 
   function onKey(e) {
     if (!root || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (view && view.solo) {
+      // (1 player: the server keeps what's typed, so the TV shows it too)
+      if (view.phase !== 'play') return;
+      if (/^[a-zA-Z]$/.test(e.key)) api.send({ type: 'letter', letter: e.key.toLowerCase() });
+      else if (e.key === 'Backspace') api.send({ type: 'back' });
+      else if (e.key === 'Enter') api.send({ type: 'enter' });
+      else return;
+      return e.preventDefault();
+    }
     if (/^[a-zA-Z]$/.test(e.key)) press(e.key.toLowerCase());
     else if (e.key === 'Backspace') press('⌫');
     else if (e.key === 'Enter') press('⏎');
@@ -82,6 +113,7 @@
   function render() {
     if (!root || !view || !loaded) return;
     const v = view;
+    if (v.solo) return renderSolo(v);
     const me = v.you;
     if (v.round !== seenRound) { seen = 0; seenRound = v.round; typed = ''; sentWord = null; }
     const mine = v.boards[me].slice();
@@ -114,6 +146,10 @@
       const prev = view;
       view = v;
       gotAt = Date.now();
+      if (v.solo) {
+        if (prev && prev.board && v.board.length < prev.board.length) seen = 0; // (a new word)
+        return render();
+      }
       if (sentWord !== null && (v.boards[v.you].length > (prev ? prev.boards[v.you].length : 0) || v.round !== (prev && prev.round))) {
         sentWord = null;
         typed = '';
@@ -132,7 +168,7 @@
       root = view = null;
       typed = '';
       sentWord = null;
-      seen = seenRound = 0;
+      seen = seenRound = soloShake = 0;
     },
   });
 })();

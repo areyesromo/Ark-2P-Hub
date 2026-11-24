@@ -1,5 +1,8 @@
+// In the 1 player mode (view.solo) the game is Memory Pairs: its screens are in pairs.js (ArkPairs).
 (function () {
   Ark.loadCss('/games/memory-match/style.css');
+  const pairsReady = Ark.loadScript('/games/memory-match/pairs.js');
+  let pairs = null; // { el, api, on, view }: handing over to Memory Pairs' screen
   const cardsReady = Ark.loadScript('/games/memory-match/cards.js');
 
   let root = null;
@@ -44,7 +47,7 @@
     els.change.classList.toggle('hidden', v.phase !== 'over');
   }
 
-  Ark.register('player', 'memory-match', {
+  const duel = {
     // Setup and the end screen are menus: pinch zoom stays on.
     zoomable: function (v) { return v.phase === 'setup' || v.phase === 'over'; },
     mount: function (el, a) {
@@ -93,5 +96,36 @@
       root = els = view = null;
       key = '';
     },
-  });
+  };
+
+  /** 1 player: show Memory Pairs' screen in place of Memory Match's (once the script is in). */
+  function toPairs(v) {
+    if (!pairs) return false;
+    pairs.view = v;
+    if (!pairs.on && window.ArkPairs) {
+      pairs.on = true;
+      duel.unmount();
+      pairs.el.innerHTML = '';
+      ArkPairs.player.mount(pairs.el, pairs.api);
+    }
+    if (pairs.on) ArkPairs.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'memory-match', Object.assign({}, duel, {
+    mount: function (el, api) {
+      pairs = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      pairsReady.then(function () { if (pairs && pairs.view && pairs.view.solo) toPairs(pairs.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toPairs(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (pairs && pairs.on) ArkPairs.player.unmount();
+      else duel.unmount();
+      pairs = null;
+    },
+  }));
 })();

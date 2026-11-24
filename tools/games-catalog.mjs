@@ -135,21 +135,30 @@ export function guide() {
   // A game for both modes (two entries, one id): its 1 player rows go under 'solo:<id>'.
   const both = new Set(games.filter((g) => g.solo && games.some((o) => o.id === g.id && !o.solo)).map((g) => g.id));
   const keyOf = (g) => (g.solo && both.has(g.id) ? 'solo:' + g.id : g.id);
-  const byName = new Map(games.map((g) => [g.name.toLowerCase(), keyOf(g)]));
+  // Names: the 1v1 game's own, and for a game in both modes "<name> (1 player)" for its 1 player one
+  // (the rows in the README's 👤 Solo section are 1 player rows whatever they're called).
+  const byName = new Map();
+  for (const g of games.filter((x) => x.solo)) byName.set(g.name.toLowerCase(), keyOf(g));
+  for (const g of games.filter((x) => !x.solo)) byName.set(g.name.toLowerCase(), keyOf(g));
+  const soloName = new Map(games.filter((x) => x.solo).map((g) => [g.name.toLowerCase(), keyOf(g)]));
+  for (const g of games.filter((x) => x.solo && both.has(x.id))) byName.set(g.name.toLowerCase() + ' (1 player)', keyOf(g));
   // A cell names one game ("Dots and Boxes") or several ("Reaction Duel, Rock Paper Scissors").
-  const idsIn = (cell) => {
+  const idsIn = (cell, solo) => {
     const plain = cell.replace(/\*\*/g, '').trim().toLowerCase();
-    if (byName.has(plain)) return [byName.get(plain)];
-    return plain.split(/,| and /).map((n) => byName.get(n.trim())).filter(Boolean);
+    const names = solo ? new Map([...byName, ...soloName]) : byName;
+    if (names.has(plain)) return [names.get(plain)];
+    return plain.split(/,| and /).map((n) => names.get(n.trim())).filter(Boolean);
   };
   const out = Object.fromEntries(games.map((g) => [keyOf(g), {}]));
-  const put = (rows, key, pick) => rows.forEach((r) => idsIn(r[0]).forEach((id) => { if (!out[id][key]) out[id][key] = pick(r); }));
+  const put = (rows, key, pick, solo = false) => rows.forEach((r) => idsIn(r[0], solo).forEach((id) => { if (!out[id][key]) out[id][key] = pick(r); }));
   // How it plays (the three game tables), the setup screen's settings, the controller buttons.
   const gamesAt = at(/^## Games/);
   const settingAt = lines.findIndex((l, i) => i > gamesAt && /^\| Game \| Setting/.test(l));
   const controlsAt = at(/^## Controllers/);
   const next = (i) => { const j = lines.findIndex((l, k) => k > i && /^## /.test(l)); return j === -1 ? lines.length : j; };
-  put(tableRows(lines, gamesAt, settingAt), 'rules', (r) => cellHtml(r[1]));
+  const soloAt = lines.findIndex((l, i) => i > gamesAt && /^### 👤 Solo/.test(l));
+  put(tableRows(lines, gamesAt, soloAt === -1 ? settingAt : soloAt), 'rules', (r) => cellHtml(r[1]));
+  if (soloAt !== -1) put(tableRows(lines, soloAt, settingAt), 'rules', (r) => cellHtml(r[1]), true);
   put(tableRows(lines, settingAt, next(gamesAt)), 'settings', (r) => cellHtml(r[1]));
   put(tableRows(lines, controlsAt, next(controlsAt)), 'controls', (r) => cellHtml(r[1]) + (r[2] ? ' · ' + cellHtml(r[2]) : ''));
   return JSON.stringify(out, null, 1) + '\n';

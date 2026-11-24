@@ -5,13 +5,13 @@
 
 import { hashSeed } from './rng.js';
 
-/** The UTC day of a time: 'YYYY-MM-DD' (a new challenge at midnight UTC, like Word Guess's word). */
+/** The UTC day of a time: 'YYYY-MM-DD' (a new challenge at midnight UTC, like Five Letters' daily word). */
 export const dayOf = (ms) => new Date(ms).toISOString().slice(0, 10);
 
 /**
  * The games that take turns, with the settings they're played at. Games where
  * luck of the deal matters, so a shared deal makes the scores comparable.
- * (Word Guess has its own word of the day.)
+ * (Five Letters has its own word of the day.)
  */
 export const POOL = [
   { game: 'blocks-1p', settings: {} },
@@ -22,7 +22,7 @@ export const POOL = [
   { game: 'nonogram', settings: { size: 10 } },
   { game: 'solitaire', settings: { draw: 1 } },
   { game: 'trivia-1p', settings: { category: 'mix' } },
-  { game: 'memory-1p', settings: { size: 'medium' } },
+  { game: 'memory-match', settings: { size: 'medium' } },
   { game: 'mahjong', settings: {} },
   { game: 'freecell', settings: {} },
   { game: 'snake', settings: { speed: 'normal', walls: 'solid' } },
@@ -33,7 +33,7 @@ export const POOL = [
   { game: 'colours', settings: {} },
   { game: 'lights', settings: { level: 'hard' } },
   { game: 'wordsearch-1p', settings: { size: 'medium' } },
-  { game: 'anagram-1p', settings: {} },
+  { game: 'anagram-duel', settings: {} },
   { game: 'cave', settings: {} },
   { game: 'bubbles', settings: {} },
   { game: 'hopper', settings: {} },

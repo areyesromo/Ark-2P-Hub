@@ -3,8 +3,13 @@
 // turn back over and it's the other player's go. Most pairs when the board
 // is cleared wins. Players pick the board size, the card theme and the time
 // per turn on the setup screen.
+//
+// In the 1 player lobby it's Memory Pairs (soloMemory below): your own board, two cards at a time,
+// a pair stays up and two different ones turn back after a moment. Find every pair in as few tries
+// as you can. Three sizes; the faces are a look you unlock. Score: the tries it took, per size.
 
-import { loadSettings, applySetting } from './options.js';
+import { loadSettings, applySetting, settingOf } from './options.js';
+import { lookOf } from '../solo/games/looks.js';
 
 // Only emoji from 2019 (Emoji 12) or older, so every TV and phone can show them
 // (Windows 10, for one, stops at Emoji 12), and no two in a set that look
@@ -29,22 +34,36 @@ export const OPTIONS = {
 };
 export const TIMING = { countdownMs: 2500, peekMs: 1300, matchMs: 700 };
 
+/** 1 player: the board sizes ({ w, h }), each look's theme (THEMES), and how long two different cards stay up. */
+export const SIZES = { small: { w: 4, h: 4 }, medium: { w: 6, h: 4 }, large: { w: 6, h: 6 } };
+export const LOOK_THEMES = { animals: 'Animals', food: 'Food', sea: 'Ocean', space: 'Space & travel' };
+export const PEEK_MS = 900;
+
 /** Grid shape for a number of cards: [columns, rows]. */
 export function gridOf(cards) {
   return cards === 16 ? [4, 4] : cards === 24 ? [6, 4] : [6, 6];
 }
 
 export class MemoryMatch {
-  constructor(ctx, rng = Math.random) {
+  /** solo: the 1 player mode, Memory Pairs (see the top of this file). */
+  constructor(ctx, rng = Math.random, { solo = false } = {}) {
     this.ctx = ctx;
     this.rng = rng;
     this.timer = null;
+    this.solo = solo;
+    if (solo) {
+      const size = settingOf(ctx, 'size', 'small');
+      this.size = Object.prototype.hasOwnProperty.call(SIZES, size) ? size : 'small';
+      this.look = lookOf(ctx, 'memory-match');
+      return;
+    }
     this.settings = loadSettings(ctx, OPTIONS);
     this.starter = 0; // who goes first; swaps every match
   }
 
   /** The setup screen. */
   start() {
+    if (this.solo) return this.startPairs();
     this.clearTimer();
     this.phase = 'setup';
     this.cards = null;
@@ -199,7 +218,94 @@ export class MemoryMatch {
     this.ctx.update();
   }
 
+  // ---- 1 player: Memory Pairs ----------------------------------------------------------
+
+  startPairs() {
+    this.clearTimer();
+    const { w, h } = SIZES[this.size];
+    const theme = THEMES.find((t) => t.name === LOOK_THEMES[this.look]) || THEMES[0];
+    const faces = this.shuffle(theme.faces.slice()).slice(0, (w * h) / 2);
+    this.cards = this.shuffle(faces.concat(faces));
+    this.matched = Array(this.cards.length).fill(false);
+    this.up = []; // the one or two cards turned over right now
+    this.tries = 0; // pairs of cards turned over
+    this.streak = 0;
+    this.bestStreak = 0; // pairs found in a row
+    this.lastMiss = 0; // tries that didn't match, so the screens can shake
+    this.startedAt = null; // the clock starts with the first card
+    this.endedAt = null;
+    this.phase = 'play';
+    this.ctx.update();
+  }
+
+  /** Turn the two cards that didn't match back over. */
+  hidePair() {
+    this.clearTimer();
+    this.up = [];
+    this.ctx.update();
+  }
+
+  pairsFlip(i) {
+    if (!Number.isInteger(i) || i < 0 || i >= this.cards.length || this.matched[i] || this.up.includes(i)) return;
+    // A third card while two different ones still show: they turn back straight away.
+    if (this.up.length === 2) {
+      this.clearTimer();
+      this.up = [];
+    }
+    if (this.startedAt === null) this.startedAt = this.ctx.now();
+    this.up.push(i);
+    if (this.up.length === 2) {
+      this.tries++;
+      const [a, b] = this.up;
+      if (this.cards[a] === this.cards[b]) {
+        this.matched[a] = this.matched[b] = true;
+        this.up = [];
+        this.streak++;
+        this.bestStreak = Math.max(this.bestStreak, this.streak);
+        if (this.matched.every(Boolean)) {
+          this.endedAt = this.ctx.now();
+          this.phase = 'over';
+        }
+      } else {
+        this.streak = 0;
+        this.lastMiss = this.tries;
+        this.timer = this.ctx.setTimeout(() => this.hidePair(), PEEK_MS);
+      }
+    }
+    this.ctx.update();
+  }
+
+  pairsView() {
+    const { w, h } = SIZES[this.size];
+    const elapsed = this.startedAt === null ? 0 : (this.endedAt !== null ? this.endedAt : this.ctx.now()) - this.startedAt;
+    return {
+      solo: true,
+      look: this.look,
+      phase: this.phase,
+      w,
+      h,
+      // Only the cards that are face up show what they are.
+      cards: this.cards.map((c, i) => (this.matched[i] || this.up.includes(i) ? c : null)),
+      matched: this.matched,
+      up: this.up,
+      tries: this.tries,
+      pairsLeft: this.matched.filter((m) => !m).length / 2,
+      streak: this.streak,
+      bestStreak: this.bestStreak,
+      lastMiss: this.lastMiss,
+      elapsed,
+      score: this.phase === 'over' ? this.tries : null,
+      variant: `${w}×${h}`,
+    };
+  }
+
   onInput(slot, input) {
+    if (this.solo) {
+      if (slot !== 0 || !input) return;
+      if (input.type === 'rematch' && this.phase === 'over') return this.start();
+      if (input.type === 'flip' && this.phase === 'play') this.pairsFlip(input.cell);
+      return;
+    }
     if (this.phase === 'setup') {
       if (input.type === 'setting' && applySetting(this.ctx, OPTIONS, this.settings, input.key, input.value)) this.ctx.update();
       if (input.type === 'go') this.begin();
@@ -262,13 +368,31 @@ export class MemoryMatch {
   }
 
   hostView() {
+    if (this.solo) return { ...this.pairsView(), player: this.ctx.player };
     return Object.assign(this.view(null), { players: this.ctx.players });
   }
 
   playerView(slot) {
+    if (this.solo) return { ...this.pairsView(), you: 0 };
     return Object.assign(this.view(slot), { you: slot });
   }
 }
+
+/** The 1 player mode, Memory Pairs: played as a solo game (see server/solo/). */
+export const soloMemory = {
+  id: 'memory-match',
+  name: 'Memory Pairs',
+  tagline: 'Turn two cards over and find the pairs. Fewer tries is better.',
+  category: 'brain',
+  phone: true,
+  music: 'thinking',
+  score: { better: 'lower', unit: 'tries' },
+  create: (ctx) => {
+    const game = new MemoryMatch(ctx, ctx.rng, { solo: true });
+    // (a solo game takes onInput(input) and playerView(): one player)
+    return { start: () => game.start(), onInput: (input) => game.onInput(0, input), hostView: () => game.hostView(), playerView: () => game.playerView(0), game };
+  },
+};
 
 export default {
   id: 'memory-match',

@@ -1,5 +1,8 @@
+// In the 1 player mode (view.solo) the game is Memory Pairs: its screens are in pairs.js (ArkPairs).
 (function () {
   Ark.loadCss('/games/memory-match/style.css');
+  const pairsReady = Ark.loadScript('/games/memory-match/pairs.js');
+  let pairs = null; // { el, api, on, view }: handing over to Memory Pairs' screen
   const cardsReady = Ark.loadScript('/games/memory-match/cards.js');
   const esc = Ark.escapeHtml;
   const MOVES = { UP: [0, -1], DOWN: [0, 1], LEFT: [-1, 0], RIGHT: [1, 0] };
@@ -74,7 +77,7 @@
     bar.className = 'fill p' + (view.turn + 1) + (frac < 0.25 ? ' low' : '');
   }
 
-  Ark.register('host', 'memory-match', {
+  const duel = {
     // Sound: a click for each flip, a chime for a pair, a soft buzz for a miss.
     sounds: function (prev, v) {
       const out = [];
@@ -132,5 +135,41 @@
       key = '';
       Object.keys(pads).forEach(function (k) { delete pads[k]; });
     },
-  });
+  };
+
+  /** 1 player: show Memory Pairs' screen in place of Memory Match's (once the script is in). */
+  function toPairs(v) {
+    if (!pairs) return false;
+    pairs.view = v;
+    if (!pairs.on && window.ArkPairs) {
+      pairs.on = true;
+      duel.unmount();
+      pairs.el.innerHTML = '';
+      ArkPairs.host.mount(pairs.el, pairs.api);
+    }
+    if (pairs.on) ArkPairs.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkPairs);
+
+  Ark.register('host', 'memory-match', Object.assign({}, duel, {
+    mount: function (el, api) {
+      pairs = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      pairsReady.then(function () { if (pairs && pairs.view && pairs.view.solo) toPairs(pairs.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toPairs(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (pairs && pairs.on) ArkPairs.host.unmount();
+      else duel.unmount();
+      pairs = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? ArkPairs.host.sounds(prev, v) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint ? duel.padHint + ' · 1 player: D-pad move · A turn a card over' : 'D-pad move · A turn a card over',
+    pad: function (btn, v, slot) { return solo(v) ? ArkPairs.host.pad(btn, v) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    overHtml: function (v) { return solo(v) ? ArkPairs.host.overHtml(v) : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

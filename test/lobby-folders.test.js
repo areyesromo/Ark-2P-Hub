@@ -4,7 +4,7 @@ import { listGames, FOLDERS } from '../server/games/index.js';
 
 test('board and card games sit in their lobby folders', () => {
   const games = listGames();
-  const folderOf = Object.fromEntries(games.map((g) => [g.id, g.folder]));
+  const folderOf = Object.fromEntries(games.filter((g) => !g.solo).map((g) => [g.id, g.folder])); // (the folders are the 2 player lobby's)
   for (const id of ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party']) assert.equal(folderOf[id], 'board', id);
   for (const id of ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'liars-dice', 'memory-match']) assert.equal(folderOf[id], 'cards', id);
   assert.equal(folderOf.pong, null);

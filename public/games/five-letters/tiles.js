@@ -53,5 +53,26 @@
     return out;
   }
 
-  window.ArkFL = { board: board, word: word, keyStates: keyStates, esc: esc };
+  const ROWS = ['qwertyuiop', 'asdfghjkl', '⏎zxcvbnm⌫'];
+
+  /** The on-screen keyboard, each key coloured by what's known about it. cursor: { r, c } outlines a key (a controller on the TV). */
+  function keyboard(states, cursor) {
+    return '<div class="fl-keys">' + ROWS.map(function (row, r) {
+      return '<div class="fl-krow">' + row.split('').map(function (k, c) {
+        const wide = k === '⏎' || k === '⌫';
+        const on = cursor && cursor.r === r && cursor.c === c ? ' cursor' : '';
+        return '<button type="button" class="fl-key' + (wide ? ' wide' : '') + (states[k] ? ' ' + states[k] : '') + on + '" data-key="' + k + '"' +
+          (k === '⏎' ? ' aria-label="Enter"' : k === '⌫' ? ' aria-label="Delete"' : '') + '>' + (k === '⏎' ? 'Enter' : k) + '</button>';
+      }).join('') + '</div>';
+    }).join('') + '</div>';
+  }
+
+  /** What a key sends in the 1 player mode (typed a letter at a time, so the TV shows it). */
+  function input(k) {
+    if (k === '⏎') return { type: 'enter' };
+    if (k === '⌫') return { type: 'back' };
+    return { type: 'letter', letter: k };
+  }
+
+  window.ArkFL = { board: board, word: word, keyStates: keyStates, esc: esc, ROWS: ROWS, keyboard: keyboard, input: input };
 })();

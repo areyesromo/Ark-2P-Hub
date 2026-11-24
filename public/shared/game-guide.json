@@ -4,7 +4,7 @@
   "controls": "<strong>D-pad</strong> / stick · keyboard: Arrows · Slide"
  },
  "reaction-duel": {
-  "rules": "The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3.",
+  "rules": "The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. On your own? <strong>Reaction Rush</strong> in the 1 player lobby: five rounds, your average time is your score.",
   "settings": "Points to win: 3, 5 or 7",
   "controls": "any face button, bumper or trigger · Tap"
  },
@@ -125,11 +125,11 @@
   "settings": "First to 2 or 3 rounds, or one round; timed (60 s to set your code, 60 s a guess) or no timer"
  },
  "hangman": {
-  "rules": "Each of you sets a secret word for the other on your phone (any real word of 4 to 10 letters; a made-up one comes back), or let the hub pick them. Then race, both at once: tap letters to guess theirs. A right letter shows everywhere it's in the word; a wrong one draws a bit more of your hangman, and seven wrong and you're out. Reveal the whole word first to take the round; time up (2½ minutes), the one who found more letters takes it.",
+  "rules": "Each of you sets a secret word for the other on your phone (any real word of 4 to 10 letters; a made-up one comes back), or let the hub pick them. Then race, both at once: tap letters to guess theirs. A right letter shows everywhere it's in the word; a wrong one draws a bit more of your hangman, and seven wrong and you're out. Reveal the whole word first to take the round; time up (2½ minutes), the one who found more letters takes it. On your own? <strong>Hangman</strong> in the 1 player lobby is a run of the hub's words.",
   "settings": "You set a word for each other, or the hub picks them; first to 2 or 3 rounds, or one round; timed (60 s to set your word, 150 s a round) or no timer"
  },
  "five-letters": {
-  "rules": "Wordle for two phones: you both hunt the same hidden five-letter word, six guesses each, typed on your phone's keyboard. Every guess comes back coloured: 🟩 the right letter in the right spot, 🟨 in the word but somewhere else, ⬛ not in it (the keyboard keeps track). The TV and your rival see your colours but never your letters, until the round ends and the word is shown. Fewer guesses takes the round; the same number, whoever got there first. Only real words count (a made-up one shakes and costs nothing). 3 minutes a word. First to 3 rounds. 🤖 Against the computer (one phone is enough): it only sees its own colours, and takes a while over each guess like a person.",
+  "rules": "Wordle for two phones: you both hunt the same hidden five-letter word, six guesses each, typed on your phone's keyboard. Every guess comes back coloured: 🟩 the right letter in the right spot, 🟨 in the word but somewhere else, ⬛ not in it (the keyboard keeps track). The TV and your rival see your colours but never your letters, until the round ends and the word is shown. Fewer guesses takes the round; the same number, whoever got there first. Only real words count (a made-up one shakes and costs nothing). 3 minutes a word. First to 3 rounds. On your own? It's in the 1 player lobby too, with a word of the day. 🤖 Against the computer (one phone is enough): it only sees its own colours, and takes a while over each guess like a person.",
   "settings": "First to 3, 2 or 5 rounds; timed (3 minutes a word) or no timer"
  },
  "make-24": {
@@ -137,7 +137,7 @@
   "settings": "First to 5, 3 or 7; 90, 60 or 120 s a puzzle, or no timer (give up together to move on)"
  },
  "anagram-duel": {
-  "rules": "Both phones get the same five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). The first real word wins the round, and any real word counts, not only the one they came from. A wrong word locks you out for a second and a half, so tapping at random doesn't pay. Nobody in 30 seconds: no point, and the TV shows the word. The TV shows the letters and how far along each of you is (how many letters, not which). First to 5 rounds (or 3, or 7). 🤖 Against the computer: it takes a person's time to see each word (some come quicker than others), about 15 s on Easy, 9 on Normal, 5 on Hard.",
+  "rules": "Both phones get the same five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). The first real word wins the round, and any real word counts, not only the one they came from. A wrong word locks you out for a second and a half, so tapping at random doesn't pay. Nobody in 30 seconds: no point, and the TV shows the word. The TV shows the letters and how far along each of you is (how many letters, not which). First to 5 rounds (or 3, or 7). 🤖 Against the computer: it takes a person's time to see each word (some come quicker than others), about 15 s on Easy, 9 on Normal, 5 on Hard. On your own? <strong>Anagram Rush</strong> in the 1 player lobby: as many words as you can in a minute.",
   "settings": "First to 3, 5 or 7 rounds"
  },
  "word-hunt": {
@@ -170,7 +170,7 @@
   "controls": "<strong>D-pad</strong> ← → (or the stick) moves your disc over the columns, <strong>A</strong> or <strong>↓</strong> drops it"
  },
  "memory-match": {
-  "rules": "A grid of face-down picture cards on the TV and your phone. Take turns flipping two: a pair is yours and you go again, otherwise they turn back over (remember them!) and it's your rival's go. Most pairs wins. <strong>Race</strong> mode (two phones): the same cards on each phone, and you both flip at once on your own board (a mismatch stays up until your next flip); the first to clear every pair wins, and the TV shows only how many pairs each of you has.",
+  "rules": "A grid of face-down picture cards on the TV and your phone. Take turns flipping two: a pair is yours and you go again, otherwise they turn back over (remember them!) and it's your rival's go. Most pairs wins. <strong>Race</strong> mode (two phones): the same cards on each phone, and you both flip at once on your own board (a mismatch stays up until your next flip); the first to clear every pair wins, and the TV shows only how many pairs each of you has. On your own? <strong>Memory Pairs</strong> in the 1 player lobby: clear the board in as few tries as you can.",
   "settings": "Take turns or Race, 16, 24 or 36 cards, the pictures (animals, food, sports, things, faces, nature, space &amp; travel, ocean, or a mix), 10, 20 or 30 s per turn, or no timer",
   "controls": "<strong>D-pad</strong> moves a cursor over the cards on the TV, <strong>A</strong> flips one (on your turn)"
  },
@@ -396,21 +396,29 @@
   "rules": "Words are hidden in a grid of letters in straight lines: drag on the phone from a word's first letter to its last (or tap both) to mark it. The list says which words to find and crosses them off. 8 × 8 hides 6 words across and down, 10 × 10 hides 8 with diagonals too, and 12 × 12 hides 10 any way at all, even backwards. Score: your time to find them all, per size.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> on a word's first letter then <strong>A</strong> on its last, <strong>B</strong> lets go · keyboard: Arrows, <strong>Enter</strong>, <strong>Backspace</strong> · Drag from the first letter to the last"
  },
- "word-guess-1p": {
-  "rules": "Find the hidden five-letter word in six guesses, typed on the phone's keyboard. After each guess the letters turn green (right place), yellow (in the word, elsewhere) or grey (not in it), and so do the keyboard's keys. Guesses must be real words (about 12,500 are allowed). 📅 <strong>Today's word</strong> is the same for everyone and can be played once a day (a new one at midnight UTC; a second go shows how you did); 🎲 <strong>Practice</strong> gives a new word every time. Score: the guesses it took; a word you don't find doesn't count.",
+ "solo:reaction-duel": {
+  "rules": "Reaction Duel on your own: the screen says <strong>Wait…</strong> (red), then after a random moment <strong>TAP!</strong> (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate.",
+  "controls": "Any face button, bumper or trigger · keyboard: <strong>Enter</strong> / <strong>Space</strong> · Tap"
+ },
+ "solo:hangman": {
+  "rules": "Hangman on your own: the hub hides a word behind blanks; tap letters on the phone's keyboard (or on the TV, with its keyboard or a controller) and the right ones fill in. Seven wrong letters and the man is hanged: the run is over, and the word shows. Each word is worth 100 plus 20 for every wrong letter you didn't use, and the next word follows straight away. Score: points over the run.",
+  "controls": "<strong>D-pad</strong> moves over the keyboard, <strong>A</strong> guesses · keyboard: Just type the letters"
+ },
+ "solo:five-letters": {
+  "rules": "Five Letters on your own: find the hidden five-letter word in six guesses, typed on the phone's keyboard (or the TV's, or with a controller). After each guess the letters turn green (right place), yellow (in the word, elsewhere) or grey (not in it), and so do the keyboard's keys. Guesses must be real words. 📅 <strong>Today's word</strong> is the same for everyone and can be played once a day (a new one at midnight UTC; a second go shows how you did); 🎲 <strong>Practice</strong> gives a new word every time. Score: the guesses it took; a word you don't find doesn't count.",
   "controls": "<strong>D-pad</strong> picks a key on the TV's keyboard, <strong>A</strong> types it, <strong>B</strong> deletes, <strong>Start</strong> / <strong>X</strong> enters · keyboard: Just type: letters, <strong>Backspace</strong>, <strong>Enter</strong>"
+ },
+ "solo:anagram-duel": {
+  "rules": "Anagram Duel on your own, against the clock. Five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). Any real word counts, not only the one they came from. 60 seconds; ⏭ <strong>Skip</strong> shows the word but costs 3 seconds. Score: words made.",
+  "controls": "<strong>D-pad ← →</strong> picks a letter, <strong>A</strong> uses it, <strong>B</strong> takes one back, <strong>Y</strong> skips · keyboard: Just type the word, <strong>Backspace</strong>, <strong>Tab</strong> skips"
+ },
+ "solo:memory-match": {
+  "rules": "Memory Match on your own: the cards lie face down: turn two over. A pair stays face up; two different ones turn back after a moment, so remember where they were. Find every pair in as few tries as you can: 4 × 4 (8 pairs), 6 × 4 (12) or 6 × 6 (18). Score: the tries it took (fewer is better), per size. Face sets to unlock: 🍕 Food (find every pair), 🐠 Sea (clear 4 × 4 in 12 tries or fewer) and 🚀 Space (clear 6 × 6).",
+  "controls": "<strong>D-pad</strong> moves, <strong>A</strong> turns a card over · keyboard: Arrows, <strong>Enter</strong>"
  },
  "simon": {
   "rules": "The TV lights the four pads (each with its own note) in a sequence; tap them back in the same order on your phone's four big pads. Every round adds one more and plays a little faster. One wrong pad, or 5 s without a press, and it's over. Score: the longest sequence you repeated. Pad finishes to unlock (same four colours, as on the controller): 🍬 Pastel (repeat 10) and 💜 Neon (repeat 20).",
   "controls": "<strong>A</strong> green, <strong>B</strong> red, <strong>Y</strong> yellow, <strong>X</strong> blue, or the <strong>D-pad</strong> by position (↑ green, → red, ← yellow, ↓ blue) · keyboard: Arrows by position"
- },
- "memory-1p": {
-  "rules": "The cards lie face down: turn two over. A pair stays face up; two different ones turn back after a moment, so remember where they were. Find every pair in as few tries as you can: 4 × 4 (8 pairs), 6 × 4 (12) or 6 × 6 (18). Score: the tries it took (fewer is better), per size. Face sets to unlock: 🍕 Food (find every pair), 🐠 Sea (clear 4 × 4 in 12 tries or fewer) and 🚀 Space (clear 6 × 6).",
-  "controls": "<strong>D-pad</strong> moves, <strong>A</strong> turns a card over · keyboard: Arrows, <strong>Enter</strong>"
- },
- "reaction-1p": {
-  "rules": "The screen says <strong>Wait…</strong> (red), then after a random moment <strong>TAP!</strong> (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate.",
-  "controls": "Any face button, bumper or trigger · keyboard: <strong>Enter</strong> / <strong>Space</strong> · Tap"
  },
  "maths": {
   "rules": "Sums against the clock: pick the right answer of four on the phone's big buttons. They start easy (adding small numbers) and get harder every 5 right answers: taking away, times tables, then a mix with dividing and bigger numbers. 60 seconds; a wrong answer costs 3 of them. Score: right answers.",
@@ -420,10 +428,6 @@
   "rules": "A colour's name shows up written in another colour: tap the colour of the <strong>ink</strong>, not what the word says (BLUE written in red is red). Your brain wants to read the word; that's the trap. 45 seconds; a wrong answer costs 3 of them. Score: right answers.",
   "controls": "The face button of that colour: <strong>B</strong> red, <strong>X</strong> blue, <strong>A</strong> green, <strong>Y</strong> yellow · keyboard: <strong>R</strong>, <strong>B</strong>, <strong>G</strong>, <strong>Y</strong> (or <strong>1</strong>–<strong>4</strong>)"
  },
- "anagram-1p": {
-  "rules": "Five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). Any real word counts, not only the one they came from. 60 seconds; ⏭ <strong>Skip</strong> shows the word but costs 3 seconds. Score: words made.",
-  "controls": "<strong>D-pad ← →</strong> picks a letter, <strong>A</strong> uses it, <strong>B</strong> takes one back, <strong>Y</strong> skips · keyboard: Just type the word, <strong>Backspace</strong>, <strong>Tab</strong> skips"
- },
  "numbers": {
   "rules": "A number shows on the TV for a moment (longer for longer numbers), then hides: type it back on the phone's keypad. Right, and the next one is a digit longer, starting from 3. Miss once and you get another number the same length; miss twice and it's over, with the digits you got wrong shown. Score: the most digits you remembered.",
   "controls": "<strong>← →</strong> pick a digit, <strong>A</strong> types it, <strong>B</strong> deletes, <strong>Start</strong> / <strong>X</strong> done · keyboard: Type the digits, <strong>Backspace</strong>, <strong>Enter</strong>"
@@ -431,10 +435,6 @@
  "oddone": {
   "rules": "A grid of squares all the same colour, except one a shade lighter or darker: tap it (on the phone, the same grid). Each find makes the grid bigger (3 × 3 up to 8 × 8) and the difference smaller. A wrong tap costs 3 seconds; 60 seconds in all. Score: odd ones found.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> picks · keyboard: Arrows, <strong>Enter</strong>"
- },
- "hangman-1p": {
-  "rules": "A word is hidden behind blanks: tap letters on the phone's keyboard (or type on the TV) and the right ones fill in. Six wrong guesses and the man is hanged: the run is over, and the word shows. Each word is worth 100 plus 20 for every wrong guess you didn't use, and the next word follows straight away. Score: points over the run.",
-  "controls": "<strong>D-pad</strong> moves over the keyboard, <strong>A</strong> guesses · keyboard: Just type the letters"
  },
  "trivia-1p": {
   "rules": "Twelve questions, four answers each, 15 seconds a question. A right answer scores 100, plus up to 100 more the faster you are; wrong or too slow scores nothing, and the right answer shows for a moment either way. 152 questions in six subjects (science &amp; nature, geography, history, sport &amp; games, film, music &amp; books, food &amp; drink): play a mix, or pick one (each has its own scores). You won't see a question again until you've seen them all. Score: points.",

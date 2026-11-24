@@ -4,6 +4,20 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.69
+
+- 🔤 Word Guess 1P is now **Five Letters** in the 1 player lobby: the same game as the 2 player one, on
+  your own, with today's word for everyone or practice words. Type on the phone, the TV's keyboard or
+  a controller. (Its scores start afresh: the words come from Five Letters' list now.)
+- 🪢 Hangman 1P is now **Hangman** in the 1 player lobby, on Hangman Duel's board and gallows: a run of
+  the hub's words, seven wrong letters and it's over. (A fresh high-score table: one more life than before.)
+- 🔤 Anagram Rush 1P is now **Anagram Rush**, Anagram Duel's 1 player mode: the duel's letters, as many
+  words as you can make in 60 seconds. (A fresh high-score table: the words come from the duel's list.)
+- 🃏 Memory Pairs 1P is now **Memory Pairs**, Memory Match's 1 player mode, with Memory Match's cards: the
+  faces you unlock are its Animals, Food, Ocean and Space & travel sets. (A fresh high-score table.)
+- ⚡ Reaction Rush 1P is now **Reaction Rush**, Reaction Duel's 1 player mode: five rounds of wait for GO,
+  your average time is your score. (A fresh high-score table.)
+
 ## 0.1.68
 
 - 🐍 Snake 1P is now **Snake**: the 1 player mode of Snake Battle, in the same bigger arena with your

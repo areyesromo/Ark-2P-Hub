@@ -65,3 +65,17 @@
 .hg-row button.miss { background: transparent; color: var(--muted); opacity: 0.4; }
 .hg-phone .rematch { margin-top: auto; }
 @media (prefers-reduced-motion: reduce) { .hg-tile.found, .hg-gallows .man .fresh, .hg-entry.shake { animation: none; } }
+
+/* 1 player (Hangman): the run's score on top, the gallows beside the word, the keyboard underneath. */
+.hg-solo { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.hg-solo-top { display: flex; gap: 2.5rem; color: var(--muted); font-size: var(--fs-md); }
+.hg-solo-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.hg-solo-main { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; gap: 3rem; }
+.hg-solo-main .hg-art { flex: none; width: auto; height: min(100%, 22rem); max-height: none; aspect-ratio: 1; }
+.hg-solo-word { display: flex; flex-direction: column; gap: 1rem; font-size: min(5.5rem, 5.5vw); }
+.hg-solo-word .hg-msg { font-size: var(--fs-xl); }
+.hg-solo .hg-keys { font-size: 1.4rem; }
+.hg-keys button.cursor { outline: 3px solid var(--p1); outline-offset: 2px; }
+.hg-score { color: var(--me); font-size: var(--fs-lg); }
+.hg-solo .hg-keys { width: min(44rem, 90%); margin-top: 0; }
+.hg-solo .hg-row button { max-width: 3.6rem; padding: 0.7rem 0; font-size: 1.5rem; }

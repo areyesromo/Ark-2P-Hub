@@ -27,13 +27,13 @@ import blocks from './blocks-1p.js';
 import flappy from './flappy.js';
 import asteroids from './asteroids-1p.js';
 import sudoku, { LEVELS as SUDOKU_LEVELS } from './sudoku.js';
-import wordGuess from './word-guess-1p.js';
+import { soloFiveLetters as wordGuess } from '../../games/five-letters.js'; // (a game for both modes)
 import solitaire from './solitaire.js';
 import invaders from './invaders.js';
 import runner from './runner.js';
 import slide from './slide.js';
 import gems from './gems.js';
-import memory, { SIZES as MEMORY_SIZES } from './memory-1p.js';
+import { soloMemory as memory, SIZES as MEMORY_SIZES } from '../../games/memory-match.js'; // (a game for both modes)
 import stack from './stack-1p.js';
 import sokoban from './sokoban.js';
 import bubbles from './bubbles.js';
@@ -41,7 +41,7 @@ import hopper from './hopper.js';
 import kenken, { SIZES as KENKEN_SIZES } from './kenken.js';
 import numbers from './numbers.js';
 import oddone from './oddone.js';
-import hangman from './hangman-1p.js';
+import { soloHangman as hangman } from '../../games/hangman.js'; // (a game for both modes)
 import lines from './lines.js';
 import dogpark, { PARKS as DOG_PARKS, RANDOM as DOG_RANDOM, EXPERT_FROM as DOG_EXPERT } from './dogpark.js';
 import { LEVELS as DOG_LEVELS } from './dogpark-levels.js';
@@ -51,7 +51,7 @@ import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
 import cave, { MAPS as CAVE_MAPS, VEHICLES as CAVE_VEHICLES } from './cave.js';
 import lights, { LEVELS as LIGHTS_LEVELS } from './lights.js';
 import wordsearch, { SIZES as WORDSEARCH_SIZES } from './wordsearch-1p.js';
-import anagram from './anagram-1p.js';
+import { soloAnagram as anagram } from '../../games/anagram-duel.js'; // (a game for both modes)
 import mahjong from './mahjong.js';
 import freecell from './freecell.js';
 import nonogram from './nonogram.js';
@@ -62,7 +62,7 @@ import colours from './colours.js';
 import game2048 from './2048.js';
 import minesweeper, { SIZES as MINE_SIZES } from './minesweeper-1p.js';
 import simon from './simon.js';
-import reaction from './reaction-1p.js';
+import { soloReaction as reaction } from '../../games/reaction-duel.js'; // (a game for both modes)
 import { withSetup } from './options.js';
 import { LOOKS } from './looks.js';
 import { getAchievement } from '../achievements.js';
@@ -173,7 +173,7 @@ export const SOLO_GAMES = [
   withSetup(simon, lookRow('simon', 'Pads')),
   withSetup(memory, {
     size: { title: 'Cards', values: ['small', 'medium', 'large'], label: (k) => `${MEMORY_SIZES[k].w} × ${MEMORY_SIZES[k].h} (${(MEMORY_SIZES[k].w * MEMORY_SIZES[k].h) / 2} pairs)` },
-    ...lookRow('memory-1p', 'Faces'),
+    ...lookRow('memory-match', 'Faces'),
   }),
   reaction,
   maths,

@@ -1,5 +1,8 @@
+// In the 1 player mode (view.solo) the game is Anagram Rush: its screens are in rush.js (ArkRush).
 (function () {
   Ark.loadCss('/games/anagram-duel/style.css');
+  const rushReady = Ark.loadScript('/games/anagram-duel/rush.js');
+  let rush = null; // { el, view }: handing over to Anagram Rush's screen
   const esc = Ark.escapeHtml;
   let root = null;
   let api = null;
@@ -60,7 +63,7 @@
     }
   }
 
-  Ark.register('player', 'anagram-duel', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       root = document.createElement('div');
@@ -110,5 +113,36 @@
       round = '';
       picks = [];
     },
-  });
+  };
+
+  /** 1 player: show Anagram Rush's screen in place of the duel's (once the script is in). */
+  function toRush(v) {
+    if (!rush) return false;
+    rush.view = v;
+    if (!rush.on && window.ArkRush) {
+      rush.on = true;
+      duel.unmount();
+      rush.el.innerHTML = '';
+      ArkRush.player.mount(rush.el, rush.api);
+    }
+    if (rush.on) ArkRush.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'anagram-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      rush = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      rushReady.then(function () { if (rush && rush.view && rush.view.solo) toRush(rush.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toRush(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (rush && rush.on) ArkRush.player.unmount();
+      else duel.unmount();
+      rush = null;
+    },
+  }));
 })();

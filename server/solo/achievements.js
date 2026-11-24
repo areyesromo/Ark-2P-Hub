@@ -180,10 +180,10 @@ export const ACHIEVEMENTS = [
   ]),
 
   // ---- brain ----
-  ...game('word-guess-1p', [
-    { id: 'word-first', icon: '🔤', name: 'Wordsmith', desc: 'Word Guess: find a word.', check: (r) => scored(r) },
-    { id: 'word-3', icon: '🧠', name: 'Sharp', desc: 'Word Guess: find a word in 3 guesses or fewer.', check: (r) => scored(r) && r.score <= 3 },
-    { id: 'word-daily-5', icon: '📆', name: 'Daily habit', desc: 'Word Guess: find today\'s word on 5 different days.', check: (r, v, h) => h.dailyWords >= 5 },
+  ...game('five-letters', [
+    { id: 'word-first', icon: '🔤', name: 'Wordsmith', desc: 'Five Letters: find a word.', check: (r) => scored(r) },
+    { id: 'word-3', icon: '🧠', name: 'Sharp', desc: 'Five Letters: find a word in 3 guesses or fewer.', check: (r) => scored(r) && r.score <= 3 },
+    { id: 'word-daily-5', icon: '📆', name: 'Daily habit', desc: 'Five Letters: find today\'s word on 5 different days.', check: (r, v, h) => h.dailyWords >= 5 },
   ]),
   ...game('simon', [
     { id: 'simon-10', icon: '🟢', name: 'Good memory', desc: 'Simon: repeat a sequence of 10.', check: (r) => r.score >= 10 },
@@ -204,7 +204,7 @@ export const ACHIEVEMENTS = [
     { id: 'trivia-perfect', icon: '🎓', name: 'Full marks', desc: 'Trivia: get all 12 right.', check: (r, v) => v.of > 0 && v.right === v.of },
     { id: 'trivia-fast', icon: '⚡', name: 'Buzzer beater', desc: 'Trivia: a right answer in under 2 seconds.', check: (r, v) => v.fastest !== null && v.fastest < 2000 },
   ]),
-  ...game('anagram-1p', [
+  ...game('anagram-duel', [
     { id: 'anagram-10', icon: '🔤', name: 'Wordsmith', desc: 'Anagram Rush: make 10 words.', check: (r) => r.score >= 10 },
     { id: 'anagram-20', icon: '📚', name: 'Lexicon', desc: 'Anagram Rush: make 20 words.', check: (r) => r.score >= 20 },
     { id: 'anagram-streak', icon: '🔥', name: 'On a roll', desc: 'Anagram Rush: 8 words in a row without a skip.', check: (r, v) => v.bestStreak >= 8 },
@@ -219,17 +219,17 @@ export const ACHIEVEMENTS = [
     { id: 'oddone-25', icon: '🦅', name: 'Eagle eye', desc: 'Odd One Out: find 25.', check: (r) => r.score >= 25 },
     { id: 'oddone-clean', icon: '🎯', name: 'Sure thing', desc: 'Odd One Out: find 12 without a wrong tap.', check: (r, v) => r.score >= 12 && v.wrong === 0 },
   ]),
-  ...game('hangman-1p', [
+  ...game('hangman', [
     { id: 'hangman-5', icon: '🔠', name: 'Word detective', desc: 'Hangman: guess 5 words in one run.', check: (r, v) => v.solved >= 5 },
     { id: 'hangman-10', icon: '🗝️', name: 'Escape artist', desc: 'Hangman: guess 10 words in one run.', check: (r, v) => v.solved >= 10 },
     { id: 'hangman-flawless', icon: '✨', name: 'Not a slip', desc: 'Hangman: guess 3 words with no wrong guess in one run.', check: (r, v) => v.perfects >= 3 },
   ]),
-  ...game('memory-1p', [
+  ...game('memory-match', [
     { id: 'memory-solve', icon: '🃏', name: 'Total recall', desc: 'Memory Pairs: find every pair.', check: (r) => scored(r) },
     { id: 'memory-12', icon: '🧠', name: 'Sharp memory', desc: 'Memory Pairs: clear 4 × 4 in 12 tries or fewer.', check: (r, v) => scored(r) && v.w === 4 && v.h === 4 && r.score <= 12 },
     { id: 'memory-large', icon: '🐘', name: 'Elephant', desc: 'Memory Pairs: clear 6 × 6.', check: (r, v) => scored(r) && v.w === 6 && v.h === 6 },
   ]),
-  ...game('reaction-1p', [
+  ...game('reaction-duel', [
     { id: 'reaction-300', icon: '⚡', name: 'Quick', desc: 'Reaction Rush: average under 300 ms.', check: (r) => scored(r) && r.score < 300 },
     { id: 'reaction-250', icon: '⚡', name: 'Lightning', desc: 'Reaction Rush: average under 250 ms.', check: (r) => scored(r) && r.score < 250 },
     { id: 'reaction-clean', icon: '🎯', name: 'Steady hands', desc: 'Reaction Rush: five rounds, no false starts, every one under 350 ms.', check: (r, v) => scored(r) && v.falseStarts === 0 && v.times.length >= 5 && v.times.every((t) => t < 350) },

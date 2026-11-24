@@ -30,6 +30,14 @@
 
   function press(k) {
     const v = view;
+    if (v && v.solo) {
+      // 1 player: a letter is a guess (the hub picked the word)
+      if (v.phase === 'play' && /^[a-z]$/.test(k) && !v.tried.includes(k)) {
+        api.send({ type: 'letter', letter: k });
+        api.vibrate(15);
+      }
+      return;
+    }
     if (setting()) {
       if (k === '⌫') typed = typed.slice(0, -1);
       else if (k === 'ok') {
@@ -93,9 +101,21 @@
     return '<strong>Guess their word</strong> · ' + (v.lives - v.misses[me]) + ' wrong left';
   }
 
+  /** 1 player: your score, the gallows and the word, how the last word went, and the keyboard. */
+  function renderSolo(v) {
+    const last = v.last;
+    const msg = v.phase === 'between' && last ? '<span class="won">✓ +' + last.points + '</span>' : v.phase === 'over' && last && !last.ok ? 'It was <strong>' + Ark.escapeHtml(last.word.toUpperCase()) + '</strong>' : (v.lives - v.misses) + ' wrong left';
+    root.innerHTML = '<div class="hg-top"><span><b class="hg-score">' + Ark.formatScore(v.score, 'pts') + '</b> · word ' + v.wordNo + '</span>' +
+      (v.best === null || v.best === undefined ? '' : '<span>best ' + Ark.formatScore(v.best, 'pts') + '</span>') + '</div>' +
+      '<p class="hg-msg">' + msg + '</p>' +
+      '<div class="hg-mine-board">' + ArkHang.gallows(v.misses, v.lives, v.phase === 'over' ? 'hanged' : null) + ArkHang.tiles(v.mask, v.answer) + '</div>' +
+      (v.phase === 'play' ? ArkHang.keyboard(v.tried, v.mask.filter(Boolean)) : '');
+  }
+
   function render() {
     if (!root || !view || !loaded) return;
     const v = view;
+    if (v.solo) return renderSolo(v);
     const me = v.you;
     const theirs = v.masks[1 - me];
     let html = '<div class="hg-top"><span>You ' + v.scores[me] + ' – ' + v.scores[1 - me] + ' Them</span>' +
@@ -131,6 +151,10 @@
       const prev = view;
       view = v;
       gotAt = Date.now();
+      if (v.solo) {
+        if (prev && prev.solo && v.misses > prev.misses) api.vibrate(80);
+        return render();
+      }
       if (prev && (prev.round !== v.round || prev.phase !== v.phase)) { typed = ''; shook = 0; }
       if (prev && v.phase === 'guess' && prev.misses && v.misses[v.you] > prev.misses[v.you]) api.vibrate(80);
       if (v.rejected && prev && (!prev.rejected || prev.rejected.n !== v.rejected.n)) api.vibrate([30, 40, 30]);

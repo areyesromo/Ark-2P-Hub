@@ -29,5 +29,18 @@
     }).join('') + '</div>';
   }
 
-  window.ArkHang = { gallows: gallows, tiles: tiles };
+  const ROWS = ['qwertyuiop', 'asdfghjkl', 'zxcvbnm'];
+
+  /** 1 player: the keyboard, the letters tried marked in the word or not; cursor { r, c } outlines one (a controller on the TV). */
+  function keyboard(tried, mask, cursor) {
+    return '<div class="hg-keys">' + ROWS.map(function (row, r) {
+      return '<div class="hg-row">' + row.split('').map(function (c, i) {
+        const done = tried.includes(c);
+        const on = cursor && cursor.r === r && cursor.c === i ? ' cursor' : '';
+        return '<button type="button" data-k="' + c + '" class="' + (done ? (mask.includes(c) ? 'hit' : 'miss') : '') + on + '"' + (done ? ' disabled' : '') + '>' + c + '</button>';
+      }).join('') + '</div>';
+    }).join('') + '</div>';
+  }
+
+  window.ArkHang = { gallows: gallows, tiles: tiles, keyboard: keyboard, ROWS: ROWS };
 })();

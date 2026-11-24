@@ -1,5 +1,8 @@
+// In the 1 player mode (view.solo) the game is Reaction Rush: its screens are in rush.js (ArkReactionRush).
 (function () {
   Ark.loadCss('/games/reaction-duel/style.css');
+  const rushReady = Ark.loadScript('/games/reaction-duel/rush.js');
+  let rush = null; // { el, api, on, view }: handing over to Reaction Rush's screen
   const esc = Ark.escapeHtml;
   let root = null;
 
@@ -42,7 +45,7 @@
 
   const TAP_BUTTONS = ['A', 'B', 'X', 'Y', 'LB', 'RB', 'LT', 'RT'];
 
-  Ark.register('host', 'reaction-duel', {
+  const duel = {
     // Sound: GO!, and a buzz for jumping the gun (points and the end come from the TV shell).
     sounds: function (prev, v) {
       const out = [];
@@ -70,5 +73,40 @@
         '<div class="rd-best"><span>Best: ' + best(view.bestMs[0]) + '</span><span>Best: ' + best(view.bestMs[1]) + '</span></div>';
     },
     unmount: function () { root = null; },
-  });
+  };
+
+  /** 1 player: show Reaction Rush's screen in place of the duel's (once the script is in). */
+  function toRush(v) {
+    if (!rush) return false;
+    rush.view = v;
+    if (!rush.on && window.ArkReactionRush) {
+      rush.on = true;
+      duel.unmount();
+      rush.el.innerHTML = '';
+      ArkReactionRush.host.mount(rush.el, rush.api);
+    }
+    if (rush.on) ArkReactionRush.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkReactionRush);
+
+  Ark.register('host', 'reaction-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      rush = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      rushReady.then(function () { if (rush && rush.view && rush.view.solo) toRush(rush.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toRush(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (rush && rush.on) ArkReactionRush.host.unmount();
+      else duel.unmount();
+      rush = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkReactionRush.host.sounds ? ArkReactionRush.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    pad: function (btn, v, slot) { return solo(v) ? ArkReactionRush.host.pad(btn, v) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    overHtml: function (v) { return solo(v) ? ArkReactionRush.host.overHtml(v) : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

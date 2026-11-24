@@ -83,7 +83,7 @@ export const LOOKS = {
     ink: { name: '⚫ Ink', unlock: 'mahjong-nohelp' },
     rose: { name: '🌸 Rose', unlock: 'mahjong-10min' },
   },
-  'memory-1p': {
+  'memory-match': {
     animals: { name: '🐶 Animals' },
     food: { name: '🍕 Food', unlock: 'memory-solve' },
     sea: { name: '🐠 Sea', unlock: 'memory-12' },
