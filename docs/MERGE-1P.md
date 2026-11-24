@@ -65,19 +65,17 @@ screen API as 2P's, and the same design tokens (so 2P's themes dress them for fr
 ### Users
 
 Both hubs already know players **by name** (ignoring capitals), so the same name is the same
-person. Merging them is an import, not a matching problem:
+person: one player list, one set of avatars and trophies for both modes.
 
-- `tools/import-1p.mjs` reads a 1P data folder and adds its runs, dailies, achievements and avatars to
-  2P's data. An avatar 2P already has for that name wins.
-- The desktop app does this by itself on first start, if it finds the old 1P app's data. It leaves a
-  note so it only happens once. Docker users run the tool once (one line in the README).
+There's **no data import**. We're still testing, and the players' data lives in each app's data
+folder, not in the repo, so the merged app starts fresh.
 
 ## Things to decide or watch
 
-1. **Clashing names.** 2P has `snake` (Snake Battle) and `hangman` (Hangman Duel). The solo ones get
-   new ids (`snake-solo`, `hangman-solo`), and their names on screen stay "Snake" and "Hangman". The
-   import renames their runs to match. Other look-alikes (Anagram Rush / Anagram Duel, Mastermind /
-   Code Breaker, Word Guess / Five Letters …) have different ids already and live in different modes.
+1. **Clashing names.** 2P has `snake` (Snake Battle) and `hangman` (Hangman Duel). For now the solo
+   ones are renamed with "1P" after them: ids `snake-1p` and `hangman-1p`, shown as **Snake 1P** and
+   **Hangman 1P**. Other look-alikes (Anagram Rush / Anagram Duel, Mastermind / Code Breaker, Word
+   Guess / Five Letters …) have different ids already and live in different modes.
 2. **Two players seated in solo mode.** Suggested: whoever picks the game plays it, and the other
    watches (their phone shows "watching"). A later extra: a **take turns** option, where both play
    the same game one after the other and compare scores.
@@ -89,7 +87,12 @@ person. Merging them is an import, not a matching problem:
 6. **Tests.** 1P's 324 tests move in with the games, as `test/solo-*.test.js`, plus a `test/helpers-solo.js`
    for 1P's `fakeCtx` (the two hubs' helpers differ). Their import paths are rewritten by script. 2P's
    checks cover solo games too: the catalog, the README, lint, the "every game has a renderer" test.
-7. **2P's per-game rules** (blurbs, the games catalog and preview pictures, CHANGELOG lines) apply to
+7. **Later: games that work in both modes.** Where a solo game and a 2P game are the same game at
+   heart (Snake 1P and Snake Battle, Hangman 1P and Hangman Duel, and others), they can become one
+   game on 2P's engine that is played alone in 1-player mode (no CPU, scored like the solo games)
+   and 1v1 in 2-player mode. The same logic can then give more 2P games a solo version. Each is its
+   own PR after the merge (see step 6), so the merge itself stays a move, not a rewrite.
+8. **2P's per-game rules** (blurbs, the games catalog and preview pictures, CHANGELOG lines) apply to
    the solo games as well. The catalog tool and README get a Solo section.
 
 ## The steps
@@ -108,11 +111,11 @@ merge, the desktop build is started as 2P's `CLAUDE.md` says.
 3. **Trophies and the rest:**
    - achievements as trophies, the daily challenge, and looks (with the Collection page)
    - the Calendar and My stats pages, in 2P's themes
-4. **Users:** the import tool, the desktop app's one-time import, the README step for Docker.
-5. **Phone-only for the solo games**, on 2P's terms.
-6. **Retire 1P:** a last 1P release that says where it went (and that the 2P app imports its data),
-   then archive the 1P repo. The next-games list (`docs/minigames-1p.md`) joins
+4. **Phone-only for the solo games**, on 2P's terms.
+5. **Retire 1P:** a last 1P release that says where it went, then archive the 1P repo. The next-games list (`docs/minigames-1p.md`) joins
    `docs/MINIGAME-IDEAS.md`, marked Solo.
+6. **Then, one PR at a time: games for both modes.** Merge each solo/2P pair into one game
+   (Snake 1P into Snake Battle first), and give chosen 2P games a solo version the same way.
 
 ## Rough size
 
@@ -121,9 +124,9 @@ merge, the desktop build is started as 2P's `CLAUDE.md` says.
 | 1 Engine + 3 pilots | Large | the room's solo mode, the adapter, the run store, TV and phone hooks, keyboard, switch |
 | 2 36 games | Medium, mostly scripted | moving files and renaming; each game checked in a browser |
 | 3 Trophies, daily, looks, pages | Medium | 1P's code moved in, and fitted to 2P's pages and themes |
-| 4 Users | Small to medium | the desktop's one-time import is the careful part |
-| 5 Phone-only | Medium | |
-| 6 Retire 1P | Small | |
+| 4 Phone-only | Medium | |
+| 5 Retire 1P | Small | |
+| 6 Games for both modes | Small to medium each | one pair or one 2P game per PR |
 
 Step 1 is where the risk is: it touches 2P's room and lobby, which every 2P game uses. It's checked
 by 2P's own tests and a browser run of 2P games as well as the new solo ones. After step 1, the
