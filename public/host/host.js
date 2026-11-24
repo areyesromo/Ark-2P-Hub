@@ -225,10 +225,12 @@
       : 'Games unlock once both players are in.';
     renderPadHint();
     renderOnline();
-    const h2h = Ark.h2hHtml(state.players, state.h2h);
+    // (no head to head or tournament for the solo games)
+    const solo = state.mode === 'solo';
+    const h2h = solo ? '' : Ark.h2hHtml(state.players, state.h2h);
     $('h2h').innerHTML = h2h;
     $('h2h').classList.toggle('hidden', !h2h);
-    $('tourney').innerHTML = Ark.tournamentHtml(state.players, state.tournament, { controls: true });
+    $('tourney').innerHTML = solo ? '' : Ark.tournamentHtml(state.players, state.tournament, { controls: true });
 
     const padFocus = Object.keys(padSeats).length > 0 && barFocus === null; // (not while a controller is up in the top bar)
     const cards = lobbyCards();
