@@ -1,6 +1,6 @@
 # Game ideas
 
-Ideas for new Party Minigames, Micro Mayhem minis and full games, waiting their turn. This is the working
+Ideas for new Party Minigames, Micro Mayhem minis, full games and solo games, waiting their turn. This is the working
 backlog, not the bucket list: pick from here when choosing what to build next. Each gets a short
 design when its turn comes.
 
@@ -142,10 +142,10 @@ Crazy Eights, Memory Match, Rock Paper Scissors, Dice Party.
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Sudoku Race | Same puzzle, both phones; first to finish, mistakes cost time. | 2D |
-| Picture Logic (Nonogram) | Same grid, fill by the number clues; first to the picture. | 2D |
+| Sudoku Race | Same puzzle, both phones; first to finish, mistakes cost time. (Sudoku is a solo game now: reuse its board maker.) | 2D |
+| Picture Logic (Nonogram) | Same grid, fill by the number clues; first to the picture. (Nonograms is a solo game now: reuse it.) | 2D |
 | Numbers Round | Countdown-style: reach the target with six numbers. | 2D |
-| Slide Puzzle Race | Same scrambled 15-puzzle; fewest moves or first done. | 2D |
+| Slide Puzzle Race | Same scrambled 15-puzzle; fewest moves or first done. (Slide Puzzle is a solo game now: reuse it.) | 2D |
 | Spot the Change | Two pictures, tap the differences first. | 2D |
 
 ## Quiz formats (reuse the quiz questions)
@@ -179,9 +179,114 @@ Not new games: more of what's there (counts as of v0.1.36).
 - Marble Maze levels, Dungeon Duo floors, Kitchen Rush recipes, Mini Golf's second course.
 - Bomb Squad modules. Seasonal themes (Halloween, winter) for Party Board and the minis.
 
+# Solo games (the 1 player mode)
+
+Games for one player, chasing their own best (`server/solo/games/`, see CLAUDE.md's Solo games). They
+came over with Ark 1P Hub. Each is built the way the solo games are: server module and tests, TV and phone
+screens, controller and keyboard, achievements, a README row, and a `phone` flag so it plays on the phone
+alone at `/phone`. No computer player (that's the 2 player games). Best first.
+
+| Idea | How it plays | Size of the job | Look |
+|---|---|---|---|
+| Tango | Fill a grid with suns and moons: no three alike in a line, as many of each per row, = and × signs. | Small: reuses Dog Park's one-answer board maker and level ladder | 2D |
+| Zip | One path through the numbered dots in order, covering every square once. | Small to medium | 2D |
+| Rush Hour | Slide cars and trucks until the red car can drive out. | Medium (level packs) | 2D |
+| Pipes | Turn the pipe pieces until the water reaches every one, no open ends. | Medium | 2D |
+| Futoshiki | A Latin square with < and > signs between squares. | Small: like KenKen | 2D |
+| Peg Solitaire | Jump pegs to take them off; finish with one, ideally in the middle. | Small | 2D |
+| Hashi (Bridges) | Join numbered islands with bridges, as many as each number. | Large: making fair boards is the hard part | 2D |
+| Slitherlink | One closed loop round the dots; each number counts its square's sides used. | Large: as above | 2D |
+
+### How each one plays
+
+#### Tango
+
+A grid (6 × 6 to 10 × 10) to fill with suns ☀️ and moons 🌙.
+
+- No three of the same in a row or column.
+- Every row and column has as many suns as moons.
+- Some pairs of squares have a sign between them: **=** means the same, **×** means different.
+- Some squares are given.
+
+**Plays:** tap a square for sun → moon → empty, like Dog Park. Squares that break a rule light up.
+Hint, Undo and Clear as in Dog Park.
+**Boards:** made like Dog Park's: start from a full legal grid, remove clues while it still has
+exactly one answer. Ladder of levels (6 × 6 up to 10 × 10) that open in turn, plus random boards and a
+daily slot. **Score:** time, per size.
+**Looks to unlock:** sun / moon, cat / dog, ⚪ / ⚫.
+
+#### Zip
+
+A grid with numbered dots (1, 2, 3 …). Draw one path that visits the numbers in order and covers
+every square exactly once. Some levels have walls between squares.
+
+**Plays:** drag a finger along the path; drag back over it to undo. On the TV the D-pad draws it,
+B steps back. **Boards:** make a random path that covers the grid (a Hamiltonian path), drop
+numbers along it, then keep only boards with one answer. Ladder of levels plus random boards.
+**Score:** time.
+
+#### Rush Hour
+
+A 6 × 6 parking lot of cars and trucks that only move forwards and backwards. Slide them until the
+red car can drive out.
+
+**Plays:** drag a car (or pick it with the D-pad and push it). **Boards:** a pack of 40 levels,
+easy to expert, each with its fewest moves worked out by a solver (a par, like Sokoban).
+**Score:** moves (fewer is better), per level; ⭐ for solving in par.
+
+#### Pipes
+
+A grid of pipe pieces (straight, bend, T, cross). Rotate them until water from the tap reaches
+every pipe, with no open ends.
+
+**Plays:** tap a piece to turn it; the water flows live as you connect. **Boards:** grow a random
+tree of pipes over the grid, then scramble the pieces. 5 × 5 to 10 × 10, and a "wrap round the
+edges" mode. **Score:** time, per size.
+
+#### Futoshiki
+
+A Latin square (each number once per row and column, 4 × 4 to 7 × 7) with **<** and **>** signs
+between some squares, and a few numbers given.
+
+**Plays:** like Sudoku and KenKen (pick a square, tap a number, pencil marks). **Boards:** made like
+KenKen's, keeping only boards with one answer. **Score:** time, per size.
+
+#### Peg Solitaire
+
+The classic cross-shaped board of pegs with the middle hole empty. Jump a peg over a neighbour
+into an empty hole; the jumped peg is taken off. Finish with one peg, ideally in the middle.
+
+**Plays:** tap a peg, then where it lands. **Boards:** English and European boards plus a few
+small warm-ups. **Score:** pegs left (fewer is better); one in the middle is a perfect game.
+
+#### Hashi (Bridges)
+
+Islands with numbers. Join them with bridges (straight, at most two between any two islands, no
+crossing) so each island has as many bridges as its number and every island is connected.
+
+**Plays:** drag from one island to another to add a bridge; again for a double; again to remove.
+
+#### Slitherlink
+
+A grid of dots with numbers in some squares. Draw one closed loop along the dots; each number says
+how many of its square's four sides the loop uses.
+
+**Plays:** tap an edge to draw a line, again for ✕ (no line), again to clear.
+
+For both 7 and 8, the work is in making boards that are fair (one answer, solvable without
+guessing) fast enough for a Raspberry Pi, so they'd start as fixed level packs made ahead of time.
+
+### Not games: for the solo games we have
+
+- **Phone-only mode as an app:** "Add to Home Screen" support, so `/phone` opens full screen with
+  its own icon, and a game picks up where you left off.
+- **Asteroids on the phone:** a steering stick instead of four buttons, for the split screen.
+- **Tidy up achievement names** used twice: Steady hands, Clean sweep, Number cruncher,
+  Wordsmith, Elephant.
+
 ## Notes
 
-- Every idea needs a computer player (see `server/games/minis/bots.js`) and a controller mapping.
+- Every idea needs a computer player (see `server/games/minis/bots.js`) and a controller mapping (the solo games need no computer player).
 - Timing ones judge the press on the server with `lagFor` (see `runner.js`), like Musical Chairs.
 - Before building, check the name isn't a famous game's and that it's not the same as an existing
   mini (`server/games/minis/`).

@@ -39,7 +39,7 @@ don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, tex
 ## Solo games (the lobby's 1 player mode)
 
 The lobby switches between 👥 2 players (the 1v1 games) and 👤 1 player (`room.mode`, `lobby:mode`).
-The solo games come from Ark 1P Hub (being moved in: `docs/MERGE-1P.md`) and live in `server/solo/`:
+The solo games came from Ark 1P Hub (now retired: `docs/MERGE-1P.md`) and live in `server/solo/`:
 `server/solo/games/` (one player, so `onInput(input)` and `playerView()`; their contract is at the top
 of `server/solo/games/index.js`, the `SOLO_GAMES` list), with 1P's own `options.js` (choices that
 unlock), `looks.js`, `stats.js` (runs and bests, in `solo-stats.json`) and `achievements.js`.
