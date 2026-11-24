@@ -8,6 +8,7 @@ const reply = (ack, payload) => {
  *   host:create   { origin }                -> ack { ok, code, hostToken }
  *   host:resume   { code, hostToken, origin } -> ack { ok, code, hostToken }  (reopens the room after a restart)
  *   player:join   { code, name, token? }    -> ack { ok, code, slot, token, name }
+ *   phone:create  { name }                  -> ack { ok, code, slot, token, name }  (phone only, /phone: a room of its own, no TV)
  *   player:leave
  *   lobby:start   { gameId | 'random', slot? } -> ack { ok, gameId } | { error }  (slot: the TV's controller seat that picked it)
  *   lobby:mode    { mode: 'duo' | 'solo' }  -> ack { ok, mode } | { error }  (the lobby's 2 players / 1 player switch)
@@ -227,7 +228,8 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
       const target = rooms.get(code);
       const no = shutOut(socket, target, key);
       if (no) return reply(ack, { error: no });
-      if (!target) return reply(ack, { error: 'No room with that code.' });
+      // A phone-only room is that phone's alone: back in with its token, or not at all.
+      if (!target || (target.noTv && !target.players.some((p) => p && p.token === token))) return reply(ack, { error: 'No room with that code.' });
       let seat = target.seatPlayer(name, token);
       // Someone joins under the name of a phone that looks connected. A reloaded page
       // doesn't always close its connection, so the server may not know it's gone yet:
@@ -243,6 +245,21 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
         seat = target.seatPlayer(name, token);
       }
       if (seat.error) return reply(ack, { error: seat.error });
+      bindPlayer(target, seat.slot);
+      reply(ack, { ok: true, code: target.code, slot: seat.slot, token: seat.player.token, name: seat.player.name });
+    });
+
+    // Phone only (/phone): the phone opens a room of its own, with no TV, and takes its seat.
+    socket.on('phone:create', (data, ack) => {
+      if (fromInternet(socket)) return reply(ack, { error: 'Playing on the phone alone works at home, not over the internet.' });
+      const { name } = asObject(data);
+      const target = rooms.create({ noTv: true });
+      const seat = target.seatPlayer(name, null);
+      if (seat.error) {
+        rooms.rooms.delete(target.code);
+        target.dispose();
+        return reply(ack, { error: seat.error });
+      }
       bindPlayer(target, seat.slot);
       reply(ack, { ok: true, code: target.code, slot: seat.slot, token: seat.player.token, name: seat.player.name });
     });

@@ -397,7 +397,7 @@ export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
     .sort((a, b) => byCategory(a) - byCategory(b))
-    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music, handheld, motion, bot, solo, score }) => ({
+    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music, handheld, motion, bot, solo, score, phone }) => ({
       id,
       name,
       tagline,
@@ -413,7 +413,8 @@ export function listGames() {
       fast: FAST.has(id), // played over the internet: "🐢 Best in the same room" (a moment's delay shows)
       // A solo game (the lobby's 1 player mode): one player, scored against their best (see server/solo/).
       solo: Boolean(solo),
-      ...(solo ? { score } : {}),
+      // and phone: true or 'split' when it can be played on the phone alone (/phone; 'split': the TV's picture above the controls).
+      ...(solo ? { score, phone: phone || false } : {}),
       // The TV's background music for this game (see public/host/music.js).
       music: MUSIC_MOODS.includes(music) ? music : SOLO_MOOD[category] || (category === 'casual' ? 'casual' : 'action'),
     }));

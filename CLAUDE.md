@@ -52,6 +52,9 @@ its name and id for now (`snake-1p`). Tests: `test/solo-*.test.js`, with 1P's `f
 `typing(key, view)` takes letters and digits. The solo daily challenge (`server/solo/daily.js`, the
 `daily` game id in 1 player mode) deals the day's game through `ctx.challenge`. The solo pages are in
 `public/solo/` (`/api/solo/*`), and the solo achievements show on the Trophies page.
+Phone only (`/phone`, `phone:create`): a phone opens a room of its own with no TV (`room.noTv`), 1 player
+mode for good, with the solo games marked `phone` (`true`, or `'split'`: the phone also gets the TV's view as
+`tv` and draws the TV renderer above its controls; `play.js` `NO_TV`). A new solo game says which it is.
 
 ## Conventions
 

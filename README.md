@@ -151,6 +151,12 @@ and Snake Battle, Word Guess 1P and Five Letters…): each pair will become one 
 - **Your pages** (from your phone's 1 player lobby, or the Trophies page): **📊 My stats** (runs,
   favourite games, new personal bests, the last two weeks), **🎁 Collection** (every look and level,
   open or still locked) and **📅 Daily calendar** (the days you played and your streaks).
+- **📱 Phone only, no TV**: open **/phone** on your phone (the same address as the TV's, with
+  `/phone` on the end, or tap *No TV? Play the 1 player games on this phone alone* under the join
+  form). Type your name and play: the phone opens a room of its own, with every solo game and the
+  daily challenge, your bests and achievements as on the TV. The phone plays the sounds itself
+  (🔊 in its ⋯ menu). The arcade games and 2048 split the screen: the game on top and the controls
+  underneath (side by side when the phone is turned sideways). It works at home, not over the internet.
 
 #### 🕹️ Arcade
 
