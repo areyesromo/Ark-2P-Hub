@@ -132,14 +132,17 @@ export function guide() {
   const lines = fs.readFileSync(path.join(ROOT, 'README.md'), 'utf8').replace(/\r\n/g, '\n').split('\n');
   const at = (re) => lines.findIndex((l) => re.test(l));
   const games = listGames();
-  const byName = new Map(games.map((g) => [g.name.toLowerCase(), g.id]));
+  // A game for both modes (two entries, one id): its 1 player rows go under 'solo:<id>'.
+  const both = new Set(games.filter((g) => g.solo && games.some((o) => o.id === g.id && !o.solo)).map((g) => g.id));
+  const keyOf = (g) => (g.solo && both.has(g.id) ? 'solo:' + g.id : g.id);
+  const byName = new Map(games.map((g) => [g.name.toLowerCase(), keyOf(g)]));
   // A cell names one game ("Dots and Boxes") or several ("Reaction Duel, Rock Paper Scissors").
   const idsIn = (cell) => {
     const plain = cell.replace(/\*\*/g, '').trim().toLowerCase();
     if (byName.has(plain)) return [byName.get(plain)];
     return plain.split(/,| and /).map((n) => byName.get(n.trim())).filter(Boolean);
   };
-  const out = Object.fromEntries(games.map((g) => [g.id, {}]));
+  const out = Object.fromEntries(games.map((g) => [keyOf(g), {}]));
   const put = (rows, key, pick) => rows.forEach((r) => idsIn(r[0]).forEach((id) => { if (!out[id][key]) out[id][key] = pick(r); }));
   // How it plays (the three game tables), the setup screen's settings, the controller buttons.
   const gamesAt = at(/^## Games/);

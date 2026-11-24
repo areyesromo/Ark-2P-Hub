@@ -31,7 +31,7 @@ export const ACHIEVEMENTS = [
   { id: 'daily-7', icon: '🗓️', name: 'Seven deals', desc: 'Play 7 daily challenges.', check: (r, v, h) => h.dailyChallenges >= 7 },
 
   // ---- arcade ----
-  ...game('snake-1p', [
+  ...game('snake', [
     { id: 'snake-10', icon: '🐍', name: 'Snack time', desc: 'Snake: eat 10 in one run.', check: (r) => r.score >= 10 },
     { id: 'snake-25', icon: '🐍', name: 'Long boi', desc: 'Snake: eat 25 in one run.', check: (r) => r.score >= 25 },
     { id: 'snake-50', icon: '🐉', name: 'Dragon', desc: 'Snake: eat 50 in one run.', check: (r) => r.score >= 50 },

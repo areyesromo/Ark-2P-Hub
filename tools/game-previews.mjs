@@ -89,7 +89,7 @@ const NUDGE = {
 };
 
 const only = process.argv.slice(2);
-const games = listGames().filter((g) => !only.length || only.includes(g.id));
+const games = listGames().filter((g) => !only.length || only.includes(g.solo && g.bothModes ? 'solo:' + g.id : g.id)); // ('solo:snake': just a game's 1 player picture)
 const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark-previews-'));
 const hub = createApp({ port: 0, dataDir: dir, https: false });
 const { port } = await hub.listen();
@@ -114,7 +114,8 @@ for (const g of games) {
   players[0].emit('game:input', { type: 'go' }); // (past the setup screen, on its usual settings)
   if (NUDGE[g.id]) await NUDGE[g.id](players);
   await sleep(WAIT[g.id] || 4500);
-  const out = path.join(ROOT, 'public', 'games', g.id, 'preview.jpg');
+  // (a game for both modes: its 1 player picture is preview-solo.jpg)
+  const out = path.join(ROOT, 'public', 'games', g.id, g.solo && g.bothModes ? 'preview-solo.jpg' : 'preview.jpg');
   await tv.locator('#stage').screenshot({ path: out, type: 'jpeg', quality: 72 });
   console.log(g.id, Math.round(fs.statSync(out).size / 1024) + ' KB');
   players[0].emit('lobby:return');

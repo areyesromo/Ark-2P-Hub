@@ -54,7 +54,7 @@
   "controls": "<strong>D-pad ← →</strong> (or stick), <strong>↓</strong>, <strong>↑</strong>, <strong>A</strong> / <strong>B</strong> · Move (hold to repeat), soft drop, hard drop, rotate"
  },
  "snake": {
-  "rules": "Two snakes, one arena. Eat the glowing food to grow; hit a wall, yourself or your rival and you lose the round. After 60 seconds the longer snake wins. Same controls as Light Cycles, with the arena on your phone too. First to 3.",
+  "rules": "Two snakes, one arena. Eat the glowing food to grow; hit a wall, yourself or your rival and you lose the round. After 60 seconds the longer snake wins. Same controls as Light Cycles, with the arena on your phone too. First to 3. On your own? It's <strong>Snake</strong> in the 1 player lobby: the same arena, one snake.",
   "settings": "Round wins needed: 2, 3 or 5",
   "controls": "<strong>D-pad</strong> / <strong>left stick</strong> (or <strong>Y</strong>↑ <strong>A</strong>↓ <strong>X</strong>← <strong>B</strong>→) · Turn"
  },
@@ -288,8 +288,8 @@
   "rules": "One of you picks a secret word (easy, medium or hard, from 400) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a \"so close!\"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw.",
   "settings": "4, 6, 8 or 10 rounds"
  },
- "snake-1p": {
-  "rules": "The classic: eat the glowing food to grow, don't hit a wall or your own tail. Every 4 bites the snake speeds up. Tap a side of the phone pad or swipe to turn (turns can be chained in one swipe). Before you start, pick the speed (Normal or ⚡ Fast) and the walls (🧱 Solid, or 🌀 Wrap round: come out on the other side). ⏸ Pause on the phone (or Start on a controller). Snakes to unlock (just for looks): 🌈 Rainbow (eat 10), 💜 Neon (25) and 👑 Gold (50). Score: food eaten; each speed and wall setting keeps its own bests.",
+ "solo:snake": {
+  "rules": "The classic, in Snake Battle's arena with just your snake: eat the glowing food to grow, don't hit a wall or your own tail. Every 4 bites the snake speeds up. Tap a side of the phone pad or swipe to turn (turns can be chained in one swipe); the arena is on your phone too. Before you start, pick the speed (Normal or ⚡ Fast) and the walls (🧱 Solid, or 🌀 Wrap round: come out on the other side). ⏸ Pause on the phone (or Start on a controller). Snakes to unlock (just for looks): 🌈 Rainbow (eat 10), 💜 Neon (25) and 👑 Gold (50). Score: food eaten; each speed and wall setting keeps its own bests.",
   "controls": "<strong>D-pad</strong> / stick (or <strong>Y</strong>↑ <strong>A</strong>↓ <strong>X</strong>← <strong>B</strong>→), <strong>Start</strong> pauses · keyboard: Arrows, <strong>P</strong> pauses · Turn"
  },
  "breaker-1p": {

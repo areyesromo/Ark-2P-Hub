@@ -47,6 +47,12 @@
 .snake-overlay .sub { font-size: 1.7rem; color: var(--muted); text-shadow: 0 0 1rem #000, 0 0 1rem #000; }
 .snake-overlay .sub strong { color: var(--text); }
 
+/* 1 player (Snake): no scoreboard, the score and speed in the middle; wrap-round walls have a dashed edge. */
+.snake-host.solo .snake-board { display: none; }
+.snake-host.solo .snake-stats { justify-content: center; gap: 3rem; font-size: var(--fs-md); }
+.snake-host.solo .snake-stats strong { font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.snake-arena canvas.wrap { border-style: dashed; }
+
 /* ---- phone ---- */
 
 .snake-phone {
@@ -68,3 +74,6 @@
 /* The arena on the phone, above the pad. */
 .snake-arena { flex: none; }
 .snake-arena canvas { display: block; width: 100%; border-radius: var(--r-sm); border: 2px solid var(--line); }
+/* 1 player: your score, and the pause button under the pad. */
+.snake-phone .score strong { color: var(--me); font-size: var(--fs-lg); }
+.snake-phone .pause { align-self: center; min-width: 10rem; }

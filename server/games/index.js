@@ -352,9 +352,16 @@ const GAMES = [
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
   }),
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
-  // The solo games: the lobby's 1 player mode (see server/solo/games/index.js).
-  ...SOLO_GAMES.map(soloGame),
 ];
+
+// The solo games: the lobby's 1 player mode (see server/solo/games/index.js). One with a 1v1 game's id
+// is that game's 1 player mode (Snake, in Snake Battle's arena): it rides on the 1v1 game as `soloDef`,
+// so the game is one game in both lobbies (one id, one set of screens). The others are games of their own.
+for (const def of SOLO_GAMES.map(soloGame)) {
+  const twin = GAMES.find((g) => g.id === def.id);
+  if (twin) twin.soloDef = def;
+  else GAMES.push(def);
+}
 
 export const CATEGORIES = ['competitive', 'board', 'casual', ...SOLO_CATEGORIES];
 /** Background music moods a game can ask for; by default competitive games get 'action', casual ones 'casual'. */
@@ -393,15 +400,22 @@ export const FOLDERS = {
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
 
+/**
+ * Every game's lobby entry. A game for both modes has two (the same id): its 1v1 one and its
+ * 1 player one (solo: true), each listed in its own lobby.
+ */
 export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
-  return GAMES.slice()
+  const both = new Set(GAMES.filter((g) => g.soloDef).map((g) => g.id));
+  return GAMES.flatMap((g) => (g.soloDef ? [g, g.soloDef] : [g]))
     .sort((a, b) => byCategory(a) - byCategory(b))
     .map(({ id, name, tagline, category, needsPhone, phoneOnly, music, handheld, motion, bot, solo, score, phone }) => ({
       id,
+      bothModes: both.has(id), // a game for both modes: its 1 player entry has its own preview picture (preview-solo.jpg)
       name,
       tagline,
-      blurb: BLURBS[id] || tagline, // the lobby card's short line (the tagline is on the setup screen)
+      // the lobby card's short line (the tagline is on the setup screen); 'solo:<id>' is a both-modes game's 1 player one
+      blurb: (solo && BLURBS['solo:' + id]) || BLURBS[id] || tagline,
       category: category || 'competitive',
       folder: folderOf(id), // in a lobby folder (see FOLDERS), or null
       needsPhone: Boolean(needsPhone || phoneOnly),
@@ -420,6 +434,20 @@ export function listGames() {
     }));
 }
 
+/** A game by id: the 1v1 one for a game in both modes (see soloGameOf for its 1 player one). */
 export function getGame(id) {
   return GAMES.find((g) => g.id === id) || null;
+}
+
+/** The 1 player game with this id: a solo game, or a 1v1 game's 1 player mode; null if there's none. */
+export function soloGameOf(id) {
+  const g = getGame(id);
+  return g ? (g.solo ? g : g.soloDef || null) : null;
+}
+
+/** The game with this id as the given lobby mode plays it ('duo' or 'solo'), or null. */
+export function gameFor(id, mode) {
+  if (mode === 'solo') return soloGameOf(id);
+  const g = getGame(id);
+  return g && !g.solo ? g : null;
 }

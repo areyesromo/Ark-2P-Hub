@@ -1,3 +1,5 @@
+// Snake Battle on the TV, and the 1 player mode's Snake (view.solo: one snake in a look the
+// player unlocked, the score and speed instead of the scoreboard and clock).
 (function () {
   Ark.loadCss('/games/snake/style.css');
   const esc = Ark.escapeHtml;
@@ -17,6 +19,14 @@
   let boardKey = '';
   let statsKey = '';
   let colors = null;
+  // 1 player: the unlockable looks (server/solo/games/looks.js), a colour per segment (0 is the head).
+  // These colours are the snake itself.
+  const LOOKS = {
+    classic: { glow: 10, colour: function () { return colors[0]; } },
+    rainbow: { glow: 10, colour: function (i, now) { return 'hsl(' + Math.round((i * 24 + now / 12) % 360) + ', 90%, 60%)'; } },
+    neon: { glow: 22, colour: function (i) { return i % 2 ? '#c026d3' : '#e879f9'; } },
+    gold: { glow: 14, colour: function (i) { return i % 3 === 1 ? '#ca8a04' : '#facc15'; } },
+  };
 
   function nameOf(v, slot) {
     return '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
@@ -26,11 +36,24 @@
     return Math.floor(sec / 60) + ':' + String(sec % 60).padStart(2, '0');
   }
 
+  function soloOverlay(v) {
+    if (v.phase === 'countdown') return [String(v.countdown || ''), 'Eat the food to grow · don\'t hit ' + (v.wrap ? 'your own tail' : 'the walls or your tail')];
+    if (v.phase === 'paused') return ['⏸', 'Paused · press pause again to carry on'];
+    return ['', '']; // (the hub draws the end of a run)
+  }
+
   function renderOverlay(v) {
     let big = '';
     let sub = '';
+    if (v.solo) {
+      const o = soloOverlay(v);
+      big = o[0];
+      sub = o[1];
+    }
     const len = v.snakes.map(function (s) { return s.body.length; });
-    if (v.phase === 'countdown') {
+    if (v.solo) {
+      // (done above)
+    } else if (v.phase === 'countdown') {
       big = String(v.countdown || '');
       sub = 'Round ' + v.round + ' · eat to grow · longest snake wins at ' + clock(v.timeLeft);
     } else if (v.phase === 'roundEnd' && v.result) {
@@ -59,6 +82,13 @@
   }
 
   function renderStats(v) {
+    if (v.solo) {
+      const k = v.score + '|' + v.length + '|' + v.cps;
+      if (k === statsKey) return;
+      statsKey = k;
+      stats.innerHTML = '<span>Score <strong>' + v.score + '</strong></span><span>Length <strong>' + v.length + '</strong></span><span>Speed <strong>' + v.cps + '</strong></span>';
+      return;
+    }
     const len = v.snakes.map(function (s) { return s.body.length; });
     const key = len.join(':') + '|' + v.timeLeft + v.phase;
     if (key === statsKey) return;
@@ -122,6 +152,7 @@
     });
     g.shadowBlur = 0;
 
+    if (view.solo) return drawSolo(g, view.snakes[0], now || 0);
     view.snakes.forEach(function (s, slot) {
       g.fillStyle = g.shadowColor = colors[slot];
       g.shadowBlur = 10;
@@ -154,10 +185,55 @@
     });
   }
 
+  /** 1 player: the one snake, in its look (with the neon stripe or the gold glint). */
+  function drawSolo(g, s, now) {
+    const body = s.body;
+    const look = LOOKS[view.look] || LOOKS.classic;
+    g.shadowBlur = look.glow;
+    for (let i = body.length - 1; i >= 1; i--) {
+      g.fillStyle = g.shadowColor = look.colour(i, now);
+      g.globalAlpha = 0.55 + 0.45 * (1 - i / body.length); // the tail fades a little
+      roundCell(g, body[i][0], body[i][1], 0.08, 0.22);
+    }
+    g.globalAlpha = 1;
+    const h = body[0];
+    g.fillStyle = g.shadowColor = look.colour(0, now);
+    roundCell(g, h[0], h[1], 0.02, 0.3);
+    g.shadowBlur = 0;
+    if (view.look === 'neon') {
+      // A bright line down the middle of each segment.
+      g.fillStyle = 'rgba(255, 255, 255, 0.7)';
+      for (let i = 0; i < body.length; i++) roundCell(g, body[i][0], body[i][1], 0.38, 0.1);
+    } else if (view.look === 'gold') {
+      // A glint that runs along the body.
+      const at = Math.floor(now / 90) % (body.length + 6);
+      if (body[at]) {
+        g.fillStyle = 'rgba(255, 255, 255, 0.75)';
+        roundCell(g, body[at][0], body[at][1], 0.3, 0.2);
+      }
+    }
+    g.fillStyle = '#05070f';
+    EYES[s.dir].forEach(function (e) {
+      g.beginPath();
+      g.arc(h[0] + 0.5 + e[0], h[1] + 0.5 + e[1], 0.1, 0, Math.PI * 2);
+      g.fill();
+    });
+    if (s.crashed) {
+      g.fillStyle = 'rgba(255,255,255,0.9)';
+      g.shadowColor = colors[0];
+      g.shadowBlur = 40;
+      g.beginPath();
+      g.arc(h[0] + 0.5, h[1] + 0.5, 0.9, 0, Math.PI * 2);
+      g.fill();
+      g.shadowBlur = 0;
+    }
+  }
+
   Ark.register('host', 'snake', {
     // Sound: a blip when a snake eats, a crash when one dies.
     sounds: function (prev, v) {
       const out = [];
+      if (!prev.snakes) return out;
       v.snakes.forEach(function (s, i) {
         const p = prev.snakes[i];
         if (v.phase === 'play' && p && s.body.length > p.body.length) out.push('eat');
@@ -165,9 +241,10 @@
       });
       return out;
     },
-    padHint: 'D-pad or stick to steer (Y↑ A↓ X← B→ work too) · A: rematch at the end',
+    padHint: 'D-pad, stick or arrows to steer (Y↑ A↓ X← B→ work too) · A: rematch at the end · 1 player: Start / P pauses',
     pad: function (btn, v) {
-      if (v.phase === 'over') return btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
+      if (v.solo && btn === 'START') return v.phase === 'over' ? null : { type: 'pause' }; // (the hub's end screen has Play again)
+      if (v.phase === 'over') return v.solo ? null : btn === 'A' || btn === 'START' ? { type: 'rematch' } : null;
       return PAD_DIRS[btn] ? { type: 'turn', dir: PAD_DIRS[btn] } : null;
     },
     mount: function (el) {
@@ -186,8 +263,20 @@
       overlay = root.querySelector('.snake-overlay');
       raf = requestAnimationFrame(draw);
     },
+    // 1 player: the line under the score on the hub's end screen.
+    overHtml: function (v) {
+      return v.solo ? 'Length ' + v.length + (v.crashed ? '' : ' · you filled the board!') : '';
+    },
     update: function (v) {
       view = v;
+      root.classList.toggle('solo', Boolean(v.solo));
+      canvas.classList.toggle('wrap', Boolean(v.wrap));
+      if (v.solo) {
+        if (boardKey) board.innerHTML = '';
+        boardKey = '';
+        renderStats(v);
+        return renderOverlay(v);
+      }
       const key = v.scores.join(':') + v.round + v.players.map(function (p) { return p.name; }).join('|');
       if (key !== boardKey) {
         boardKey = key;

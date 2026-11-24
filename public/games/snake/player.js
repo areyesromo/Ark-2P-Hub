@@ -1,5 +1,6 @@
 // Snake Battle on the phone (server/games/snake.js): the whole arena, small, above the steering
-// pad (tap a side or swipe to turn), so you can play without watching the TV.
+// pad (tap a side or swipe to turn), so you can play without watching the TV. The 1 player
+// mode's Snake (view.solo) shows your score and best instead, and has a pause button.
 (function () {
   Ark.loadCss('/games/snake/style.css');
   Ark.loadCss('/shared/steer-pad.css');
@@ -12,8 +13,11 @@
   let view = null;
   let lastKey = '';
   let prevLen = 0; // your length on the last view, to buzz when you grow
+  let prevPhase = ''; // (1 player: to buzz once when the run ends)
   let arena = null;
   let colors = null;
+  // 1 player: the snake's look, simplified (the TV draws it properly). These colours are the snake itself.
+  const LOOK_COLOURS = { rainbow: null, neon: '#e879f9', gold: '#facc15' };
 
   /** The board as on the TV, simpler: the food, both snakes (heads brighter), yours ringed. */
   function drawArena(v) {
@@ -40,12 +44,15 @@
     });
     v.snakes.forEach(function (s, slot) {
       g.fillStyle = colors[slot];
+      const look = v.solo && LOOK_COLOURS[v.look] !== undefined ? v.look : null;
+      if (look && LOOK_COLOURS[look]) g.fillStyle = LOOK_COLOURS[look];
       s.body.forEach(function (c, i) {
+        if (look === 'rainbow') g.fillStyle = 'hsl(' + ((i * 24) % 360) + ', 90%, 60%)';
         g.globalAlpha = i === 0 ? 1 : s.crashed ? 0.35 : 0.7;
         g.fillRect(c[0] + 0.08, c[1] + 0.08, 0.84, 0.84);
       });
       g.globalAlpha = 1;
-      if (slot === v.you && s.body[0]) {
+      if (slot === v.you && s.body[0] && !v.solo) {
         g.strokeStyle = '#ffffff';
         g.lineWidth = 0.15;
         g.strokeRect(s.body[0][0] - 0.1, s.body[0][1] - 0.1, 1.2, 1.2);
@@ -60,10 +67,35 @@
     pad.show(dir);
   }
 
+  /** 1 player: your score and best, a pause button (the hub draws the end of the run). */
+  function renderSolo(v) {
+    if (v.phase === 'play' && prevLen && v.length > prevLen) api.vibrate(25);
+    if (v.phase === 'over' && prevPhase && prevPhase !== 'over') api.vibrate(200); // crashed
+    prevLen = v.length;
+    prevPhase = v.phase;
+    let status = '';
+    if (v.phase === 'countdown') status = 'Starting in ' + v.countdown + '…';
+    else if (v.phase === 'play') status = 'Tap a side or swipe to turn';
+    else if (v.phase === 'paused') status = 'Paused';
+    const best = v.best === null || v.best === undefined ? '' : ' · best ' + v.best;
+    const key = ['solo', v.phase, v.score, v.dir, status, best].join('|');
+    if (key === lastKey) return; // views arrive every tick; only touch the DOM on change
+    lastKey = key;
+    info.innerHTML = '<div class="score">Score <strong>' + v.score + '</strong>' + best + '</div><div class="status">' + status + '</div>';
+    if (v.phase === 'play' || v.phase === 'countdown') pad.show(v.dir);
+    pad.el.classList.toggle('hidden', v.phase === 'over');
+    root.querySelector('.rematch').classList.add('hidden');
+    const pause = root.querySelector('.pause');
+    pause.classList.remove('hidden');
+    pause.textContent = v.phase === 'paused' ? '▶ Carry on' : '⏸ Pause';
+    pause.disabled = v.phase !== 'play' && v.phase !== 'paused';
+  }
+
   function render(v) {
     view = v;
     drawArena(v);
     if (!pad) return;
+    if (v.solo) return renderSolo(v);
     const you = v.you;
     const score = 'You ' + v.scores[you] + ' – ' + v.scores[1 - you] + ' Them · first to ' + v.winScore;
     const mins = Math.floor(v.timeLeft / 60) + ':' + String(v.timeLeft % 60).padStart(2, '0');
@@ -100,13 +132,14 @@
       api = a;
       root = document.createElement('div');
       root.className = 'snake-phone';
-      root.innerHTML = '<div class="info"></div><div class="snake-arena"><canvas></canvas></div><button class="primary rematch hidden">Rematch</button>';
+      root.innerHTML = '<div class="info"></div><div class="snake-arena"><canvas></canvas></div><button class="primary rematch hidden">Rematch</button><button class="ghost pause hidden">⏸ Pause</button>';
       el.appendChild(root);
       info = root.querySelector('.info');
       arena = root.querySelector('.snake-arena canvas');
       const css = getComputedStyle(document.documentElement);
       colors = [css.getPropertyValue('--p1').trim() || '#22d3ee', css.getPropertyValue('--p2').trim() || '#f472b6'];
       root.querySelector('.rematch').addEventListener('click', function () { api.send({ type: 'rematch' }); });
+      root.querySelector('.pause').addEventListener('click', function () { api.send({ type: 'pause' }); });
       const mounted = root;
       padReady.then(function () {
         if (root !== mounted) return; // unmounted while loading
@@ -118,7 +151,7 @@
     update: render,
     unmount: function () {
       root = pad = info = view = arena = null;
-      lastKey = '';
+      lastKey = prevPhase = '';
       prevLen = 0;
     },
   });

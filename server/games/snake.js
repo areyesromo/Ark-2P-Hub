@@ -2,8 +2,14 @@
 // own body or your rival and you lose the round (both at once is a draw).
 // Rounds last at most ROUND_MS; when time runs out the longer snake wins.
 // First to WIN_SCORE rounds. Same turn controls as Light Cycles.
+//
+// The same arena is the 1 player mode's Snake (soloSnake below): one snake, one
+// food, no rounds and no clock. It speeds up every few bites, the run ends when
+// it crashes, and the score is what it ate. It can pause, its walls can wrap
+// round, and its look is one the player has unlocked (../solo/games/looks.js).
 
 import { settingOf } from './options.js';
+import { lookOf } from '../solo/games/looks.js';
 
 export const GRID = { w: 32, h: 18 };
 export const WIN_SCORE = 3;
@@ -12,6 +18,12 @@ export const FOOD_COUNT = 3;
 export const TIMING = { countdownMs: 3000, roundEndMs: 2500, roundMs: 60000 };
 export const SPEED = { startCps: 8, maxCps: 13, rampEveryMs: 6000 }; // cells per second
 const MAX_QUEUE = 2; // turns buffered per player, so quick double-turns both count
+// 1 player: how fast the snake starts and how fast it can get, in cells per second; one step faster every few bites.
+export const SOLO_SPEEDS = {
+  normal: { startCps: 7, maxCps: 14 },
+  fast: { startCps: 10, maxCps: 18 },
+};
+export const FASTER_EVERY = 4;
 
 const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
@@ -23,9 +35,17 @@ const START = [
 const key = (x, y) => y * GRID.w + x;
 
 export class SnakeBattle {
-  constructor(ctx, rng = Math.random) {
+  /** solo: the 1 player mode's Snake (one snake: see the top of this file). */
+  constructor(ctx, rng = Math.random, { solo = false } = {}) {
     this.ctx = ctx;
+    this.solo = solo;
     this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
+    if (solo) {
+      const speed = settingOf(ctx, 'speed', 'normal');
+      this.speed = Object.prototype.hasOwnProperty.call(SOLO_SPEEDS, speed) ? speed : 'normal';
+      this.wrap = settingOf(ctx, 'walls', 'solid') === 'wrap';
+      this.look = lookOf(ctx, 'snake');
+    }
     this.rng = rng;
     this.timer = null;
   }
@@ -34,21 +54,22 @@ export class SnakeBattle {
     this.scores = [0, 0];
     this.round = 0;
     this.winner = null;
+    this.eaten = 0;
     this.nextRound();
   }
 
   nextRound() {
     this.round++;
-    this.snakes = START.map((s) => {
+    this.snakes = (this.solo ? START.slice(0, 1) : START).map((s) => {
       const [dx] = DIRS[s.dir];
       // Head first; the body trails away behind the direction of travel.
       const body = Array.from({ length: START_LENGTH }, (_, i) => [s.x - dx * i, s.y]);
       return { body, dir: s.dir, queue: [], crashed: false };
     });
     this.food = [];
-    for (let i = 0; i < FOOD_COUNT; i++) this.spawnFood();
+    for (let i = 0; i < (this.solo ? 1 : FOOD_COUNT); i++) this.spawnFood();
     this.result = null;
-    this.cps = SPEED.startCps;
+    this.cps = this.solo ? SOLO_SPEEDS[this.speed].startCps : SPEED.startCps;
     this.enter('countdown', TIMING.countdownMs);
     this.schedule(() => this.countdownStep(), Math.min(1000, TIMING.countdownMs));
   }
@@ -120,6 +141,7 @@ export class SnakeBattle {
       if (s.queue.length) s.dir = s.queue.shift();
       const [dx, dy] = DIRS[s.dir];
       const head = [s.body[0][0] + dx, s.body[0][1] + dy];
+      if (this.wrap) head.splice(0, 2, (head[0] + GRID.w) % GRID.w, (head[1] + GRID.h) % GRID.h); // (out the other side)
       const eats = this.food.findIndex(([fx, fy]) => fx === head[0] && fy === head[1]);
       return { head, eats };
     });
@@ -133,7 +155,7 @@ export class SnakeBattle {
 
     const crashed = moves.map(({ head: [x, y] }) => x < 0 || y < 0 || x >= GRID.w || y >= GRID.h || blocked.has(key(x, y)));
     const [a, b] = moves.map((m) => m.head);
-    if (a[0] === b[0] && a[1] === b[1]) crashed[0] = crashed[1] = true; // head-on
+    if (b && a[0] === b[0] && a[1] === b[1]) crashed[0] = crashed[1] = true; // head-on
 
     const eaten = new Set();
     this.snakes.forEach((s, i) => {
@@ -150,6 +172,8 @@ export class SnakeBattle {
       for (let i = 0; i < eaten.size; i++) this.spawnFood();
     }
 
+    if (this.solo) return this.soloTick(crashed[0], eaten.size);
+
     if (crashed[0] || crashed[1]) {
       const draw = crashed[0] && crashed[1];
       return this.endRound({ reason: 'crash', crashed, draw, roundWinner: draw ? null : crashed[0] ? 1 : 0 });
@@ -164,6 +188,31 @@ export class SnakeBattle {
 
     this.cps = Math.min(SPEED.maxCps, SPEED.startCps + Math.floor((now - this.playStart) / SPEED.rampEveryMs));
     this.ctx.update();
+  }
+
+  /** 1 player: count the bite and speed up every few; a crash (or a board full of snake) ends the run. */
+  soloTick(crashed, ate) {
+    this.eaten += ate;
+    const speed = SOLO_SPEEDS[this.speed];
+    this.cps = Math.min(speed.maxCps, speed.startCps + Math.floor(this.eaten / FASTER_EVERY));
+    if (crashed || !this.food.length) {
+      if (this.timer) this.ctx.clearTimeout(this.timer);
+      this.timer = null;
+      return this.enter('over');
+    }
+    this.ctx.update();
+  }
+
+  /** 1 player only: stop the snake where it is, and carry on. */
+  togglePause() {
+    if (this.phase === 'play') {
+      if (this.timer) this.ctx.clearTimeout(this.timer);
+      this.timer = null;
+      this.enter('paused');
+    } else if (this.phase === 'paused') {
+      this.enter('play');
+      this.loop();
+    }
   }
 
   endRound(result) {
@@ -184,7 +233,8 @@ export class SnakeBattle {
 
   onInput(slot, input) {
     if (input.type === 'rematch' && this.phase === 'over') return this.start();
-    if (input.type !== 'turn' || !DIRS[input.dir]) return;
+    if (input.type === 'pause' && this.solo) return this.togglePause();
+    if (input.type !== 'turn' || !Object.prototype.hasOwnProperty.call(DIRS, input.dir) || !this.snakes[slot]) return;
     if (this.phase !== 'play' && this.phase !== 'countdown') return;
     const s = this.snakes[slot];
     const last = s.queue.length ? s.queue[s.queue.length - 1] : s.dir;
@@ -203,7 +253,32 @@ export class SnakeBattle {
     return Math.max(0, Math.ceil((this.roundEnds - this.ctx.now()) / 1000));
   }
 
+  /** 1 player: the scores table this run goes on (its speed and walls). */
+  get variant() {
+    return (this.speed === 'fast' ? 'Fast' : 'Normal') + (this.wrap ? ' · Wrap' : '');
+  }
+
+  /** What the 1 player mode's screens show (no rounds or clock: the score, the speed and the look). */
+  soloView() {
+    return {
+      solo: true,
+      phase: this.phase,
+      countdown: this.countdown(),
+      ...this.arena(),
+      wrap: this.wrap,
+      look: this.look,
+      dir: this.snakes[0].dir,
+      cps: this.cps,
+      tickMs: this.tickMs,
+      score: this.eaten,
+      length: this.snakes[0].body.length,
+      crashed: this.snakes[0].crashed,
+      variant: this.variant,
+    };
+  }
+
   hostView() {
+    if (this.solo) return { ...this.soloView(), player: this.ctx.player };
     return {
       phase: this.phase,
       round: this.round,
@@ -224,6 +299,7 @@ export class SnakeBattle {
   }
 
   playerView(slot) {
+    if (this.solo) return { ...this.soloView(), you: 0 };
     return {
       phase: this.phase,
       round: this.round,
@@ -241,6 +317,21 @@ export class SnakeBattle {
     };
   }
 }
+
+/** The 1 player mode's Snake: the same game with one snake, played as a solo game (see server/solo/). */
+export const soloSnake = {
+  id: 'snake',
+  name: 'Snake',
+  tagline: 'Eat, grow, don\'t bite your own tail. It speeds up as you go.',
+  category: 'arcade',
+  phone: true, // the phone shows the arena too
+  score: { better: 'higher', unit: 'pts' },
+  create: (ctx) => {
+    const game = new SnakeBattle(ctx, ctx.rng, { solo: true });
+    // (a solo game takes onInput(input) and playerView(): one player, in seat 0 of the arena)
+    return { start: () => game.start(), onInput: (input) => game.onInput(0, input), hostView: () => game.hostView(), playerView: () => game.playerView(0), game };
+  },
+};
 
 export default {
   id: 'snake',

@@ -22,7 +22,7 @@ import { collectionFor, countOpen } from './solo/collection.js';
 import { monthDays, shiftMonth, weekOffset, streaks } from './solo/calendar.js';
 import { challengeFor, dayOf } from './solo/daily.js';
 import { profileFor } from './solo/profile.js';
-import { listGames, getGame } from './games/index.js';
+import { listGames, soloGameOf } from './games/index.js';
 import { Profiles, AVATARS, COLOURS } from './profiles.js';
 import { Practice } from './practice.js';
 import { Trophies, TROPHIES } from './trophies.js';
@@ -216,7 +216,7 @@ export function createApp({
     const played = name ? soloStats.dailyDaysOf(name) : new Map();
     const days = monthDays(month).map((day) => {
       const p = played.get(day);
-      const game = p ? getGame(p.game) : day >= today ? getGame(challengeFor(day).game) : null; // a missed day's game isn't known any more
+      const game = p ? soloGameOf(p.game) : day >= today ? soloGameOf(challengeFor(day).game) : null; // a missed day's game isn't known any more
       let status = day > today ? 'future' : day === today ? 'today' : 'missed';
       if (p) status = p.score === null ? 'started' : 'done';
       return { day, today: day === today, status, game: game ? game.id : null, gameName: game ? game.name : null, unit: game && game.score ? game.score.unit : null, score: p ? p.score : null };

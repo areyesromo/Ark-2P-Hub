@@ -16,10 +16,12 @@
 // the game's puzzle of the day) and rng (undefined: games use Math.random).
 //
 // soloGame() in ../adapter.js makes each one a game of this hub (see server/games/index.js).
-// Games whose twin is a 2P game have "1P" after their name and id for now (Snake 1P beside
-// Snake Battle): they're to be merged into one game later (docs/MERGE-1P.md).
+// Games whose twin is a 2P game have "1P" after their name and id for now (Word Guess 1P beside
+// Five Letters): they're to be merged into one game later (docs/MERGE-1P.md). A merged one, like
+// Snake, is the 2P game's own module with a solo def (soloSnake), under the 2P game's id: see
+// server/games/index.js, which plays it in either mode.
 
-import snake from './snake-1p.js';
+import { soloSnake as snake } from '../../games/snake.js'; // (Snake Battle's arena, one snake: a game for both modes)
 import breaker from './breaker-1p.js';
 import blocks from './blocks-1p.js';
 import flappy from './flappy.js';
@@ -88,7 +90,7 @@ export const SOLO_GAMES = [
   withSetup(snake, {
     speed: { title: 'Speed', values: ['normal', 'fast'], label: (s) => (s === 'fast' ? '⚡ Fast' : 'Normal') },
     walls: { title: 'Walls', values: ['solid', 'wrap'], label: (w) => (w === 'wrap' ? '🌀 Wrap round (come out the other side)' : '🧱 Solid') },
-    ...lookRow('snake-1p', 'Snake'),
+    ...lookRow('snake', 'Snake'),
   }),
   withSetup(breaker, {
     lives: { title: 'Lives', values: ['normal', 'easy'], label: (l) => (l === 'easy' ? '5 lives (easy, its own scores)' : '3 lives') },
