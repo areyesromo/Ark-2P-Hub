@@ -72,10 +72,31 @@ folder, not in the repo, so the merged app starts fresh.
 
 ## Things to decide or watch
 
-1. **Clashing names.** 2P has `snake` (Snake Battle) and `hangman` (Hangman Duel). For now the solo
-   ones are renamed with "1P" after them: ids `snake-1p` and `hangman-1p`, shown as **Snake 1P** and
-   **Hangman 1P**. Other look-alikes (Anagram Rush / Anagram Duel, Mastermind / Code Breaker, Word
-   Guess / Five Letters …) have different ids already and live in different modes.
+1. **Solo games with a 2P twin.** 14 of the solo games are the same game at heart as a 2P one. For
+   now each gets "1P" after its name and `-1p` after its id. Only Snake and Hangman actually clash
+   by id, but the suffix on all of them marks the pairs to merge later (see 7), and keeps them apart
+   in searches and records:
+
+   | Solo game (1P) | Becomes | Its 2P twin |
+   | --- | --- | --- |
+   | Snake | Snake 1P (`snake-1p`) | Snake Battle (`snake`) |
+   | Hangman | Hangman 1P (`hangman-1p`) | Hangman Duel (`hangman`) |
+   | Word Guess | Word Guess 1P (`word-guess-1p`) | Five Letters |
+   | Anagram Rush | Anagram Rush 1P (`anagram-1p`) | Anagram Duel |
+   | Word Search | Word Search 1P (`wordsearch-1p`) | Word Hunt |
+   | Mastermind | Mastermind 1P (`mastermind-1p`) | Code Breaker |
+   | Trivia | Trivia 1P (`trivia-1p`) | Quiz Battle |
+   | Memory Pairs | Memory Pairs 1P (`memory-1p`) | Memory Match |
+   | Reaction Rush | Reaction Rush 1P (`reaction-1p`) | Reaction Duel |
+   | Brick Breaker | Brick Breaker 1P (`breaker-1p`) | Brick Breaker Duel |
+   | Asteroids | Asteroids 1P (`asteroids-1p`) | Asteroid Duel |
+   | Blocks | Blocks 1P (`blocks-1p`) | Falling Blocks Battle |
+   | Stack | Stack 1P (`stack-1p`) | Tower Stack (co-op) |
+   | Minesweeper | Minesweeper 1P (`minesweeper-1p`) | Mine Duel (same field, a different goal) |
+
+   Cousins, not twins (kept as they are): Quick Maths and Make 24 (both arithmetic, different
+   games), and Colour Trap and Colour Clash (the names are alike, but Colour Clash is a card game).
+   The other 23 solo games have nothing like them in 2P.
 2. **Two players seated in solo mode.** Suggested: whoever picks the game plays it, and the other
    watches (their phone shows "watching"). A later extra: a **take turns** option, where both play
    the same game one after the other and compare scores.
@@ -88,7 +109,7 @@ folder, not in the repo, so the merged app starts fresh.
    for 1P's `fakeCtx` (the two hubs' helpers differ). Their import paths are rewritten by script. 2P's
    checks cover solo games too: the catalog, the README, lint, the "every game has a renderer" test.
 7. **Later: games that work in both modes.** Where a solo game and a 2P game are the same game at
-   heart (Snake 1P and Snake Battle, Hangman 1P and Hangman Duel, and others), they can become one
+   heart (the 14 pairs in the table in 1, starting with Snake 1P and Snake Battle), they can become one
    game on 2P's engine that is played alone in 1-player mode (no CPU, scored like the solo games)
    and 1v1 in 2-player mode. The same logic can then give more 2P games a solo version. Each is its
    own PR after the merge (see step 6), so the merge itself stays a move, not a rewrite.
