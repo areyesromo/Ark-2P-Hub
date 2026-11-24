@@ -41,7 +41,7 @@ import hopper from './hopper.js';
 import kenken, { SIZES as KENKEN_SIZES } from './kenken.js';
 import numbers from './numbers.js';
 import oddone from './oddone.js';
-import hangman from './hangman-1p.js';
+import { soloHangman as hangman } from '../../games/hangman.js'; // (a game for both modes)
 import lines from './lines.js';
 import dogpark, { PARKS as DOG_PARKS, RANDOM as DOG_RANDOM, EXPERT_FROM as DOG_EXPERT } from './dogpark.js';
 import { LEVELS as DOG_LEVELS } from './dogpark-levels.js';

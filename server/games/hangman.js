@@ -3,6 +3,10 @@
 // both at once. A right letter shows everywhere it's in the word; a wrong one adds to your gallows,
 // and seven wrong and you're out. Reveal the whole word first and you take the round (both out:
 // level). First to the rounds needed.
+//
+// In the 1 player lobby it's Hangman on your own (soloHangman below): the hub picks a word, you guess
+// it a letter at a time, seven wrong and the run is over. Each word you get is worth 100 plus 20 for
+// every wrong letter you didn't use, and the next word comes straight after. Score: points over the run.
 
 import { settingOf } from './options.js';
 import { isWord } from './word-race.js';
@@ -13,7 +17,9 @@ export const LIVES = 7;
 export const MIN = 4;
 export const MAX = 10;
 export const WIN_SCORE = 2;
-export const TIMING = { setMs: 60000, roundMs: 150000, roundEndMs: 6000 };
+export const TIMING = { setMs: 60000, roundMs: 150000, roundEndMs: 6000, nextMs: 1600 };
+/** 1 player: a word's points, and the bonus for each wrong letter left. */
+export const POINTS = { word: 100, spare: 20 };
 
 /** Everyday words the hub (and the computer) picks from: 5 to 8 letters. */
 export const PICKS = [...new Set(HUNT.concat(ANSWERS))].filter((w) => /^[a-z]{5,8}$/.test(w));
@@ -21,9 +27,11 @@ export const PICKS = [...new Set(HUNT.concat(ANSWERS))].filter((w) => /^[a-z]{5,
 export const validWord = (w) => typeof w === 'string' && new RegExp('^[a-z]{' + MIN + ',' + MAX + '}$').test(w) && (PICKS.includes(w) || isWord(w));
 
 export class Hangman {
-  constructor(ctx, rng = Math.random) {
+  /** solo: the 1 player mode (see the top of this file). */
+  constructor(ctx, rng = Math.random, { solo = false } = {}) {
     this.ctx = ctx;
     this.rng = rng;
+    this.solo = solo;
     this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     this.hubPicks = settingOf(ctx, 'words', 'players') === 'hub';
     this.clock = settingOf(ctx, 'timer', 'timed') === 'timed';
@@ -31,6 +39,7 @@ export class Hangman {
   }
 
   start() {
+    if (this.solo) return this.startSolo();
     this.clearTimer();
     this.scores = [0, 0];
     this.round = 0;
@@ -143,8 +152,81 @@ export class Hangman {
     this.timer = this.ctx.setTimeout(() => { this.timer = null; this[then](); }, ms);
   }
 
+  // ---- 1 player ------------------------------------------------------------------
+
+  startSolo() {
+    this.clearTimer();
+    this.score = 0;
+    this.solved = 0;
+    this.perfects = 0; // words got with no wrong letter
+    this.used = [];
+    this.last = null; // { ok, word, points, n }: the last word, for the screens
+    this.n = 0;
+    this.nextWord();
+  }
+
+  nextWord() {
+    this.timer = null;
+    let fresh = PICKS.filter((w) => !this.used.includes(w));
+    if (!fresh.length) { this.used = []; fresh = PICKS; }
+    // (the word is "set" by player 1's side, so slot 0 guesses words[1], as in the duel)
+    this.words = [null, fresh[Math.floor(this.rng() * fresh.length)]];
+    this.used.push(this.words[1]);
+    this.tried = [[], []];
+    this.phase = 'play';
+    this.ctx.update();
+  }
+
+  soloGuess(ch) {
+    if (typeof ch !== 'string' || !/^[a-zA-Z]$/.test(ch)) return;
+    ch = ch.toLowerCase();
+    if (this.tried[0].includes(ch)) return;
+    this.tried[0].push(ch);
+    const word = this.words[1];
+    if ([...word].every((c) => this.tried[0].includes(c))) {
+      const wrong = this.misses(0);
+      const points = POINTS.word + (LIVES - wrong) * POINTS.spare;
+      this.score += points;
+      this.solved++;
+      if (wrong === 0) this.perfects++;
+      this.last = { ok: true, word, points, n: ++this.n };
+      this.phase = 'between';
+      this.timer = this.ctx.setTimeout(() => this.nextWord(), TIMING.nextMs);
+    } else if (this.misses(0) >= LIVES) {
+      this.last = { ok: false, word, points: 0, n: ++this.n };
+      this.phase = 'over';
+    }
+    this.ctx.update();
+  }
+
+  /** The 1 player view: the word's tiles, the letters tried, the run so far (the word itself once it's done). */
+  soloView() {
+    const word = this.words[1];
+    const done = this.phase !== 'play';
+    return {
+      solo: true,
+      phase: this.phase,
+      lives: LIVES,
+      mask: this.mask(0),
+      answer: done ? word : null,
+      tried: this.tried[0],
+      misses: this.misses(0),
+      wordNo: this.solved + 1,
+      solved: this.solved,
+      perfects: this.perfects,
+      last: this.last,
+      score: this.score,
+    };
+  }
+
   onInput(slot, input) {
     if (!input || (slot !== 0 && slot !== 1)) return;
+    if (this.solo) {
+      if (slot !== 0) return;
+      if (input.type === 'rematch' && this.phase === 'over') return this.start();
+      if (this.phase === 'play' && (input.type === 'letter' || input.type === 'guess')) this.soloGuess(input.letter);
+      return;
+    }
     if (input.type === 'rematch' && this.phase === 'over') return this.start();
     if (input.type === 'word' && this.phase === 'set' && !this.words[slot]) {
       const w = typeof input.word === 'string' ? input.word.toLowerCase() : '';
@@ -193,13 +275,31 @@ export class Hangman {
   }
 
   hostView() {
+    if (this.solo) return { ...this.soloView(), player: this.ctx.player };
     return Object.assign(this.view(null), { players: this.ctx.players });
   }
 
   playerView(slot) {
+    if (this.solo) return { ...this.soloView(), you: 0 };
     return Object.assign(this.view(slot), { you: slot, rejected: this.rejected[slot] });
   }
 }
+
+/** The 1 player mode: Hangman on your own, played as a solo game (see server/solo/). */
+export const soloHangman = {
+  id: 'hangman',
+  name: 'Hangman',
+  tagline: 'Guess the hidden word a letter at a time. Seven wrong letters and it\'s over.',
+  category: 'brain',
+  phone: true,
+  music: 'thinking',
+  score: { better: 'higher', unit: 'pts' },
+  create: (ctx) => {
+    const game = new Hangman(ctx, ctx.rng, { solo: true });
+    // (a solo game takes onInput(input) and playerView(): one player, guessing the hub's word)
+    return { start: () => game.start(), onInput: (input) => game.onInput(0, input), hostView: () => game.hostView(), playerView: () => game.playerView(0), game };
+  },
+};
 
 export default {
   id: 'hangman',

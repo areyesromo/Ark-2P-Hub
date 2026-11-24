@@ -9,6 +9,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 - 🔤 Word Guess 1P is now **Five Letters** in the 1 player lobby: the same game as the 2 player one, on
   your own, with today's word for everyone or practice words. Type on the phone, the TV's keyboard or
   a controller. (Its scores start afresh: the words come from Five Letters' list now.)
+- 🪢 Hangman 1P is now **Hangman** in the 1 player lobby, on Hangman Duel's board and gallows: a run of
+  the hub's words, seven wrong letters and it's over. (A fresh high-score table: one more life than before.)
 
 ## 0.1.68
 

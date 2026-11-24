@@ -40,7 +40,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Tower Defence Duel | `tower-duel` | Build towers to stop the creeps on your road and spend gold to send creeps down your rival's. Run out of lives and you lose. | `server/games/tower-duel-bot.js`, `server/games/tower-duel.js`, `public/games/tower-duel/`, `test/tower-duel.test.js` |
 | Word Race | `word-race` | Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Or Race: first to the target points takes the round. | `server/games/word-race-bot.js`, `server/games/word-race-common.js`, `server/games/word-race.js`, `public/games/word-race/`, `test/anagram-duel.test.js`, `test/word-race.test.js` |
 | Code Breaker | `code-breaker` | Set a secret four-digit code, then crack theirs: bulls are right digits in the right place, cows right digits in the wrong place. | `server/games/code-breaker-bot.js`, `server/games/code-breaker.js`, `public/games/code-breaker/`, `test/code-breaker.test.js` |
-| Hangman Duel | `hangman` | Set a secret word for each other, then race to guess theirs letter by letter. Seven wrong letters and you're out. | `server/games/hangman-bot.js`, `server/games/hangman.js`, `public/games/hangman/`, `test/hangman.test.js` |
+| Hangman Duel | `hangman` | Set a secret word for each other, then race to guess theirs letter by letter. Seven wrong letters and you're out. | `server/games/hangman-bot.js`, `server/games/hangman.js`, `public/games/hangman/`, `test/hangman.test.js`, `test/solo-hangman.test.js` |
 | Five Letters | `five-letters` | The same hidden word for you both, six guesses each. Green: right spot. Yellow: in the word. Fewest guesses wins the round. | `server/games/five-letters-bot.js`, `server/games/five-letters.js`, `server/games/anagram-words.js`, `public/games/five-letters/`, `test/five-letters.test.js`, `test/solo-five-letters.test.js` |
 | Make 24 | `make-24` | Four numbers: join two with + − × ÷ and they become one. Make 24 before your rival does. | `server/games/make-24-bot.js`, `server/games/make-24.js`, `public/games/make-24/`, `test/make-24.test.js` |
 | Anagram Duel | `anagram-duel` | Same five mixed-up letters for both of you: the first to make a word with all of them takes the round. | `server/games/anagram-duel-bot.js`, `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js` |
@@ -128,6 +128,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
+| Hangman | `hangman` | Guess the hidden word a letter at a time. Seven wrong letters and it's over. | `server/games/hangman-bot.js`, `server/games/hangman.js`, `public/games/hangman/`, `test/hangman.test.js`, `test/solo-hangman.test.js` |
 | Five Letters | `five-letters` | Find the five-letter word in six guesses. A new daily word for everyone, or practise. | `server/games/five-letters-bot.js`, `server/games/five-letters.js`, `server/games/anagram-words.js`, `public/games/five-letters/`, `test/five-letters.test.js`, `test/solo-five-letters.test.js` |
 | Simon | `simon` | Watch the pads light up, then play the sequence back. One more each round. | `server/solo/games/simon.js`, `public/games/simon/`, `test/solo-simon.test.js` |
 | Memory Pairs 1P | `memory-1p` | Turn two cards over and find the pairs. Fewer tries is better. | `server/solo/games/memory-1p.js`, `public/games/memory-1p/`, `test/solo-looks.test.js`, `test/solo-memory-1p.test.js` |
@@ -137,7 +138,6 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Anagram Rush 1P | `anagram-1p` | Unscramble five letters into a word. As many as you can in 60 seconds. | `server/solo/games/anagram-1p.js`, `public/games/anagram-1p/`, `test/solo-anagram-1p.test.js` |
 | Number Memory | `numbers` | Remember the number, then type it back. One digit longer every time. | `server/solo/games/numbers.js`, `public/games/numbers/`, `test/solo-numbers.test.js` |
 | Odd One Out | `oddone` | One square is a shade different. Spot it, fast: the grid grows and the shades get closer. | `server/solo/games/oddone.js`, `public/games/oddone/`, `test/solo-oddone.test.js` |
-| Hangman 1P | `hangman-1p` | Guess the hidden word a letter at a time. Six wrong guesses and it's over. | `server/solo/games/hangman-1p.js`, `public/games/hangman-1p/`, `test/solo-hangman-1p.test.js` |
 | Trivia 1P | `trivia-1p` | Twelve questions, four answers, 15 seconds each. Quick right answers score more. | `server/solo/games/trivia-1p.js`, `public/games/trivia-1p/`, `test/solo-trivia-1p.test.js` |
 
 ## Minigames (52)
