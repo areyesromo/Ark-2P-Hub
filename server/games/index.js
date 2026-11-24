@@ -106,6 +106,8 @@ import fiveInARow from './five-in-a-row.js';
 import { fiveInARowBot } from './five-in-a-row-bot.js';
 import morris from './morris.js';
 import { morrisBot } from './morris-bot.js';
+import codeBreaker from './code-breaker.js';
+import { codeBreakerBot } from './code-breaker-bot.js';
 import { withSetup } from './options.js';
 import { BLURBS } from './blurbs.js';
 
@@ -249,6 +251,7 @@ const GAMES = [
     quest: { title: 'Quest', values: [5, 3], label: (n) => (n === 5 ? 'Full: 5 floors (with the Ice Caves and the Armory)' : 'Short: 3 floors') },
   }),
   { ...wordRace, bot: wordRaceBot },
+  withSetup({ ...codeBreaker, bot: codeBreakerBot }, { ...firstTo('Rounds to win', [2, 1, 3]), ...timer('timed', '60 s to set your code, 60 s a guess') }),
   withSetup({ ...fiveLetters, bot: fiveLettersBot }, { ...firstTo('Rounds to win', [3, 2, 5]), ...timer('timed', '180 s a word') }),
   withSetup({ ...make24, bot: make24Bot }, {
     ...firstTo('Rounds to win', [5, 3, 7]),
