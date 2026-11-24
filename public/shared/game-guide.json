@@ -170,7 +170,7 @@
   "controls": "<strong>D-pad</strong> ← → (or the stick) moves your disc over the columns, <strong>A</strong> or <strong>↓</strong> drops it"
  },
  "memory-match": {
-  "rules": "A grid of face-down picture cards on the TV and your phone. Take turns flipping two: a pair is yours and you go again, otherwise they turn back over (remember them!) and it's your rival's go. Most pairs wins. <strong>Race</strong> mode (two phones): the same cards on each phone, and you both flip at once on your own board (a mismatch stays up until your next flip); the first to clear every pair wins, and the TV shows only how many pairs each of you has.",
+  "rules": "A grid of face-down picture cards on the TV and your phone. Take turns flipping two: a pair is yours and you go again, otherwise they turn back over (remember them!) and it's your rival's go. Most pairs wins. <strong>Race</strong> mode (two phones): the same cards on each phone, and you both flip at once on your own board (a mismatch stays up until your next flip); the first to clear every pair wins, and the TV shows only how many pairs each of you has. On your own? <strong>Memory Pairs</strong> in the 1 player lobby: clear the board in as few tries as you can.",
   "settings": "Take turns or Race, 16, 24 or 36 cards, the pictures (animals, food, sports, things, faces, nature, space &amp; travel, ocean, or a mix), 10, 20 or 30 s per turn, or no timer",
   "controls": "<strong>D-pad</strong> moves a cursor over the cards on the TV, <strong>A</strong> flips one (on your turn)"
  },
@@ -408,13 +408,13 @@
   "rules": "Anagram Duel on your own, against the clock. Five mixed-up letters: tap them in order to make a word that uses all five, and it goes off by itself once the last letter's in (⌫ takes one back). Any real word counts, not only the one they came from. 60 seconds; ⏭ <strong>Skip</strong> shows the word but costs 3 seconds. Score: words made.",
   "controls": "<strong>D-pad ← →</strong> picks a letter, <strong>A</strong> uses it, <strong>B</strong> takes one back, <strong>Y</strong> skips · keyboard: Just type the word, <strong>Backspace</strong>, <strong>Tab</strong> skips"
  },
+ "solo:memory-match": {
+  "rules": "Memory Match on your own: the cards lie face down: turn two over. A pair stays face up; two different ones turn back after a moment, so remember where they were. Find every pair in as few tries as you can: 4 × 4 (8 pairs), 6 × 4 (12) or 6 × 6 (18). Score: the tries it took (fewer is better), per size. Face sets to unlock: 🍕 Food (find every pair), 🐠 Sea (clear 4 × 4 in 12 tries or fewer) and 🚀 Space (clear 6 × 6).",
+  "controls": "<strong>D-pad</strong> moves, <strong>A</strong> turns a card over · keyboard: Arrows, <strong>Enter</strong>"
+ },
  "simon": {
   "rules": "The TV lights the four pads (each with its own note) in a sequence; tap them back in the same order on your phone's four big pads. Every round adds one more and plays a little faster. One wrong pad, or 5 s without a press, and it's over. Score: the longest sequence you repeated. Pad finishes to unlock (same four colours, as on the controller): 🍬 Pastel (repeat 10) and 💜 Neon (repeat 20).",
   "controls": "<strong>A</strong> green, <strong>B</strong> red, <strong>Y</strong> yellow, <strong>X</strong> blue, or the <strong>D-pad</strong> by position (↑ green, → red, ← yellow, ↓ blue) · keyboard: Arrows by position"
- },
- "memory-1p": {
-  "rules": "The cards lie face down: turn two over. A pair stays face up; two different ones turn back after a moment, so remember where they were. Find every pair in as few tries as you can: 4 × 4 (8 pairs), 6 × 4 (12) or 6 × 6 (18). Score: the tries it took (fewer is better), per size. Face sets to unlock: 🍕 Food (find every pair), 🐠 Sea (clear 4 × 4 in 12 tries or fewer) and 🚀 Space (clear 6 × 6).",
-  "controls": "<strong>D-pad</strong> moves, <strong>A</strong> turns a card over · keyboard: Arrows, <strong>Enter</strong>"
  },
  "reaction-1p": {
   "rules": "The screen says <strong>Wait…</strong> (red), then after a random moment <strong>TAP!</strong> (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate.",

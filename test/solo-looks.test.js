@@ -45,7 +45,10 @@ test('a look doesn\'t change the scores\' table', () => {
 });
 
 test('every Memory look has enough different faces for the biggest board', async () => {
-  const { FACE_SETS } = await import('../server/solo/games/memory-1p.js');
-  assert.deepEqual(Object.keys(FACE_SETS), Object.keys(LOOKS['memory-1p']));
-  for (const [look, faces] of Object.entries(FACE_SETS)) assert.ok(new Set(faces).size >= 18, look);
+  const { THEMES, LOOK_THEMES } = await import('../server/games/memory-match.js');
+  assert.deepEqual(Object.keys(LOOK_THEMES), Object.keys(LOOKS['memory-match']));
+  for (const [look, name] of Object.entries(LOOK_THEMES)) {
+    const theme = THEMES.find((t) => t.name === name);
+    assert.ok(theme && new Set(theme.faces).size >= 18, look);
+  }
 });

@@ -22,7 +22,7 @@ export const POOL = [
   { game: 'nonogram', settings: { size: 10 } },
   { game: 'solitaire', settings: { draw: 1 } },
   { game: 'trivia-1p', settings: { category: 'mix' } },
-  { game: 'memory-1p', settings: { size: 'medium' } },
+  { game: 'memory-match', settings: { size: 'medium' } },
   { game: 'mahjong', settings: {} },
   { game: 'freecell', settings: {} },
   { game: 'snake', settings: { speed: 'normal', walls: 'solid' } },

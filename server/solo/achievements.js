@@ -224,7 +224,7 @@ export const ACHIEVEMENTS = [
     { id: 'hangman-10', icon: '🗝️', name: 'Escape artist', desc: 'Hangman: guess 10 words in one run.', check: (r, v) => v.solved >= 10 },
     { id: 'hangman-flawless', icon: '✨', name: 'Not a slip', desc: 'Hangman: guess 3 words with no wrong guess in one run.', check: (r, v) => v.perfects >= 3 },
   ]),
-  ...game('memory-1p', [
+  ...game('memory-match', [
     { id: 'memory-solve', icon: '🃏', name: 'Total recall', desc: 'Memory Pairs: find every pair.', check: (r) => scored(r) },
     { id: 'memory-12', icon: '🧠', name: 'Sharp memory', desc: 'Memory Pairs: clear 4 × 4 in 12 tries or fewer.', check: (r, v) => scored(r) && v.w === 4 && v.h === 4 && r.score <= 12 },
     { id: 'memory-large', icon: '🐘', name: 'Elephant', desc: 'Memory Pairs: clear 6 × 6.', check: (r, v) => scored(r) && v.w === 6 && v.h === 6 },

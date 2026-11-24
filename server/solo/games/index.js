@@ -33,7 +33,7 @@ import invaders from './invaders.js';
 import runner from './runner.js';
 import slide from './slide.js';
 import gems from './gems.js';
-import memory, { SIZES as MEMORY_SIZES } from './memory-1p.js';
+import { soloMemory as memory, SIZES as MEMORY_SIZES } from '../../games/memory-match.js'; // (a game for both modes)
 import stack from './stack-1p.js';
 import sokoban from './sokoban.js';
 import bubbles from './bubbles.js';
@@ -173,7 +173,7 @@ export const SOLO_GAMES = [
   withSetup(simon, lookRow('simon', 'Pads')),
   withSetup(memory, {
     size: { title: 'Cards', values: ['small', 'medium', 'large'], label: (k) => `${MEMORY_SIZES[k].w} × ${MEMORY_SIZES[k].h} (${(MEMORY_SIZES[k].w * MEMORY_SIZES[k].h) / 2} pairs)` },
-    ...lookRow('memory-1p', 'Faces'),
+    ...lookRow('memory-match', 'Faces'),
   }),
   reaction,
   maths,

@@ -36,7 +36,7 @@ export const BLURBS = {
   'wordsearch-1p': 'Find the hidden words in the grid.',
   'solo:five-letters': 'Guess the five-letter word in six.',
   simon: 'Repeat the growing sequence.',
-  'memory-1p': 'Turn two cards, find the pairs.',
+  'solo:memory-match': 'Turn two cards, find the pairs.',
   maths: 'Sums against the clock.',
   colours: 'Tap the ink colour, not the word.',
   'solo:anagram-duel': 'Unscramble five letters, fast.',

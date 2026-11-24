@@ -47,13 +47,13 @@ unlock), `looks.js`, `stats.js` (runs and bests, in `solo-stats.json`) and `achi
 (`ctx.soloSlot`), the other seat watches. The room records each run and adds `best` and, at the
 end, `record` to the views; the TV and phone draw the end screen (`Ark.soloOverHtml`), with the
 game's own line from its renderer's `overHtml(view)`. A solo game with a 2P twin has "1P" after
-its name and id for now (`mastermind-1p`) until the pair is merged into **a game for both modes**: the 2P
+its name and id for now (`reaction-1p`) until the pair is merged into **a game for both modes**: the 2P
 game's module also exports a solo def under the same id (`soloSnake` in `snake.js`, listed in `SOLO_GAMES`),
 `server/games/index.js` hangs it on the 2P game as `soloDef`, and the room picks the one for its mode
 (`gameFor(id, mode)`, `soloGameOf(id)`; `room.gameDef` is the running one). `listGames()` has an entry for
 each mode (same id, `solo` tells them apart), blurbs.js and the game guide take `'solo:<id>'`, its 1 player
 preview picture is `preview-solo.jpg`, and one set of renderers draws both (`view.solo`; a mode whose screens differ a lot can hand over to its own file,
-like Anagram Duel's `rush.js`). Tests: `test/solo-*.test.js`, with 1P's `fakeCtx` in
+like Anagram Duel's `rush.js` and Memory Match's `pairs.js`). Tests: `test/solo-*.test.js`, with 1P's `fakeCtx` in
 `test/helpers-solo.js`. The TV's keyboard is a controller (`ArkPads.KEYBOARD`); a renderer's
 `typing(key, view)` takes letters and digits. The solo daily challenge (`server/solo/daily.js`, the
 `daily` game id in 1 player mode) deals the day's game through `ctx.challenge`. The solo pages are in

@@ -417,7 +417,7 @@ export function listGames() {
       // the lobby card's short line (the tagline is on the setup screen); 'solo:<id>' is a both-modes game's 1 player one
       blurb: (solo && BLURBS['solo:' + id]) || BLURBS[id] || tagline,
       category: category || 'competitive',
-      folder: folderOf(id), // in a lobby folder (see FOLDERS), or null
+      folder: solo ? null : folderOf(id), // in a lobby folder (see FOLDERS), or null (the folders are the 2 player lobby's)
       needsPhone: Boolean(needsPhone || phoneOnly),
       phoneOnly: Boolean(phoneOnly),
       handheld: Boolean(handheld), // lobby label: 📱 No TV needed
