@@ -1,0 +1,62 @@
+/* Nine Men's Morris: a slate board with chalk lines. The board keeps its own colours; the pieces are
+   the players' colours, with a dot (player 1) or a ring (player 2). */
+
+.mo-board { position: relative; aspect-ratio: 1; border-radius: var(--radius); background: radial-gradient(ellipse at 35% 25%, #4b5563, #2b313b 70%); box-shadow: inset 0 0 0 6px #1d2128, 0 18px 40px -14px rgba(0, 0, 0, 0.8); }
+.mo-lines { position: absolute; inset: 0; width: 100%; height: 100%; }
+.mo-lines rect, .mo-lines path { fill: none; stroke: #e9e4d6; stroke-width: 0.8; stroke-linecap: round; opacity: 0.85; }
+.mo-pt { position: absolute; width: 3%; aspect-ratio: 1; border-radius: 50%; background: #e9e4d6; transform: translate(-50%, -50%); }
+.mo-pt.open { width: 5%; background: rgba(255, 229, 138, 0.35); box-shadow: 0 0 0 2px #ffe58a; animation: mo-breathe 1.4s ease-in-out infinite; cursor: pointer; }
+.mo-pt.aim { width: 9%; background: transparent; box-shadow: 0 0 0 4px #fff; }
+.mo-pt.aim.p1 { box-shadow: 0 0 0 4px var(--p1); }
+.mo-pt.aim.p2 { box-shadow: 0 0 0 4px var(--p2); }
+.mo-piece { position: absolute; width: 9%; aspect-ratio: 1; border-radius: 50%; transform: translate(-50%, -50%); box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.35), inset 0 3px 3px rgba(255, 255, 255, 0.4), 0 3px 5px rgba(0, 0, 0, 0.5); transition: left 0.3s ease, top 0.3s ease; z-index: 2; }
+.mo-piece.p1 { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--p1) 60%, #fff), var(--p1) 60%); }
+.mo-piece.p2 { background: radial-gradient(circle at 35% 30%, color-mix(in srgb, var(--p2) 60%, #fff), var(--p2) 60%); }
+.mo-piece::after { content: ''; position: absolute; border-radius: 50%; }
+.mo-piece.p1::after { inset: 38%; background: rgba(255, 255, 255, 0.85); }
+.mo-piece.p2::after { inset: 26%; border: 2px solid rgba(255, 255, 255, 0.85); }
+.mo-piece.can { box-shadow: 0 0 0 3px #ffe58a, 0 0 14px 3px rgba(255, 229, 138, 0.6); cursor: pointer; }
+.mo-piece.picked { box-shadow: 0 0 0 4px #fff, 0 0 18px 4px #fff; transform: translate(-50%, -50%) scale(1.12); }
+.mo-piece.take { box-shadow: 0 0 0 3px #ff4d4d, 0 0 14px 3px rgba(255, 77, 77, 0.7); cursor: pointer; animation: mo-shake 0.9s ease-in-out infinite; }
+.mo-piece.take::before { content: '✕'; position: absolute; inset: 0; display: grid; place-items: center; color: #fff; font-weight: 900; text-shadow: 0 0 4px #000; z-index: 1; }
+.mo-piece.mill { box-shadow: 0 0 0 3px #fff, 0 0 20px 6px rgba(255, 255, 255, 0.8); }
+.mo-piece.last { animation: mo-pop 0.3s ease-out; }
+.mo-piece.small { position: relative; display: inline-block; width: 1.1em; height: 1.1em; transform: none; margin-right: -0.35em; }
+.mo-hand { display: inline-flex; flex-wrap: wrap; }
+@keyframes mo-breathe { 50% { opacity: 0.45; } }
+@keyframes mo-shake { 25% { transform: translate(-54%, -50%); } 75% { transform: translate(-46%, -50%); } }
+@keyframes mo-pop { from { transform: translate(-50%, -50%) scale(1.5); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .mo-pt.open, .mo-piece.take, .mo-piece.last { animation: none; } .mo-piece { transition: none; } }
+
+/* ---- TV ---- */
+.mo-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.mo-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; }
+.mo-centre { position: relative; height: min(76vh, 100%); aspect-ratio: 1; }
+.mo-centre .mo-board { height: 100%; }
+.mo-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 13rem; padding: 1.3rem 1.1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.75; transition: opacity 0.25s; font-size: 1.4rem; }
+.mo-side.active { opacity: 1; }
+.mo-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.mo-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.mo-name { font-size: 1.5rem; font-weight: 900; }
+.mo-count { font-size: 3rem; font-weight: 900; line-height: 1; }
+.mo-count small { font-size: 0.35em; color: var(--muted); font-weight: 500; }
+.mo-sub { color: var(--muted); font-size: 0.9rem; }
+.mo-doing { min-height: 1.8rem; font-weight: 800; font-size: 1.1rem; display: flex; gap: 0.5rem; align-items: center; }
+.mo-millcall { color: var(--warn); }
+.mo-clock { color: var(--muted); font-variant-numeric: tabular-nums; }
+.mo-clock.low { color: var(--bad); }
+.mo-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2rem; font-weight: 900; white-space: nowrap; z-index: 5; }
+.mo-banner small { font-size: 1rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+.mo-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 8px 14px; }
+.mo-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); padding: 0 4px; }
+.mo-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.mo-msg .won { color: var(--good); font-weight: 900; }
+.mo-msg .lost { color: var(--bad); font-weight: 900; }
+.mo-msg .big { font-size: 1.6rem; }
+.mo-phone .mo-board { width: 100%; }
+.mo-phone .mo-piece:not(.small) { width: 11%; }
+.mo-phone .mo-pt.open { width: 8%; }
+.mo-top .mo-piece.small { margin-right: 4px; vertical-align: middle; }
+.mo-phone .rematch { margin-top: 6px; }
