@@ -161,7 +161,7 @@ test('two phones take turns drawing; the match ends after ROUNDS with a team tot
 test('the lobby lists competitive games first, then dice & board, then casual ones', () => {
   const games = listGames();
   const cats = games.map((g) => g.category);
-  assert.deepEqual([...new Set(cats)], ['competitive', 'board', 'casual']);
+  assert.deepEqual([...new Set(cats)], ['competitive', 'board', 'casual', 'arcade', 'puzzle', 'brain'], 'the solo ones (1 player) after them');
   assert.equal(cats.lastIndexOf('competitive') < cats.indexOf('board'), true);
   assert.equal(cats.lastIndexOf('board') < cats.indexOf('casual'), true);
   assert.equal(games.find((g) => g.id === 'sketch-guess').category, 'casual');

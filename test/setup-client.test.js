@@ -11,7 +11,7 @@ function tapSetting(value) {
   const el = { addEventListener: (type, fn) => { handler = fn; } };
   const sent = [];
   window.Ark.setup.bind(el, { send: (m) => sent.push(m) });
-  const btn = { getAttribute: (a) => ({ 'data-key': 'k', 'data-value': String(value) })[a] };
+  const btn = { getAttribute: (a) => ({ 'data-key': 'k', 'data-value': String(value) })[a], classList: { contains: () => false } };
   handler({ target: { closest: () => btn } });
   return sent[0].value;
 }

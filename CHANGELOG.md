@@ -4,6 +4,16 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.64
+
+- 👤 A new **1 player** mode: flip the switch at the top of the lobby (👥 2 players / 👤 1 player)
+  for solo games where you chase your own best, no computer needed. The first three, from Ark 1P
+  Hub: 🐕 Dog Park (one dog per row, column and colour, 36 levels), 🐍 Snake 1P and ⚡ Reaction
+  Rush 1P. Your best shows on the game's card, in the game and on the end screen, with 🎉 New best!
+  and achievements to unlock.
+- ⌨️ The TV's keyboard is a controller now: arrows or WASD move, Enter or Space is A, Backspace B,
+  Esc goes back. A laptop or the Steam Deck's keyboard can join and play like a controller.
+
 ## 0.1.63
 
 - ⚫ Five in a Row: five stones in a line on a big grid wins, with Pente's captures as an option.

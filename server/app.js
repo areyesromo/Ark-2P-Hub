@@ -16,6 +16,7 @@ import { loadOrCreateCert } from './tls.js';
 import { Settings } from './settings.js';
 import { adminRouter } from './admin.js';
 import { Stats } from './stats.js';
+import { Stats as SoloStats } from './solo/stats.js';
 import { Profiles, AVATARS, COLOURS } from './profiles.js';
 import { Practice } from './practice.js';
 import { Trophies, TROPHIES } from './trophies.js';
@@ -71,7 +72,8 @@ export function createApp({
   const profiles = new Profiles(dataDir);
   const practice = new Practice(dataDir);
   const trophies = new Trophies(dataDir);
-  const rooms = new RoomManager(io, { stats, profiles, practice, trophies, saves: new GameSaves(dataDir) });
+  const soloStats = new SoloStats(dataDir);
+  const rooms = new RoomManager(io, { stats, profiles, practice, trophies, saves: new GameSaves(dataDir), soloStats });
   // Online play: a quick tunnel (or the owner's own address) for a friend somewhere else.
   let online = null;
   const tunnel = new Tunnel({ port: () => (listener.address() && listener.address().port) || port, onChange: () => online && online.refresh() });

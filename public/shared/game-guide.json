@@ -283,5 +283,17 @@
  "sketch-guess": {
   "rules": "One of you picks a secret word (easy, medium or hard, from 400) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a \"so close!\"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw.",
   "settings": "4, 6, 8 or 10 rounds"
+ },
+ "snake-1p": {
+  "rules": "The classic: eat the glowing food to grow, don't hit a wall or your own tail. Every 4 bites the snake speeds up. Tap a side of the phone pad or swipe to turn (turns can be chained in one swipe). Before you start, pick the speed (Normal or ⚡ Fast) and the walls (🧱 Solid, or 🌀 Wrap round: come out on the other side). ⏸ Pause on the phone (or Start on a controller). Snakes to unlock (just for looks): 🌈 Rainbow (eat 10), 💜 Neon (25) and 👑 Gold (50). Score: food eaten; each speed and wall setting keeps its own bests.",
+  "controls": "<strong>D-pad</strong> / stick (or <strong>Y</strong>↑ <strong>A</strong>↓ <strong>X</strong>← <strong>B</strong>→), <strong>Start</strong> pauses · keyboard: Arrows, <strong>P</strong> pauses"
+ },
+ "dogpark": {
+  "rules": "The park is split into coloured areas: put one dog in every row, every column and every area, and no two dogs may touch, not even corner to corner. Trees and water take no dog. Tap a square for a ball (\"no dog here\"), again for a dog, again to clear it, or drag across the park to drop balls; <strong>Fill</strong> puts a ball on every square your dogs already rule out. Dogs that break a rule light up red. Every park has exactly one answer, so it's all logic, no guessing. 36 levels from 5 × 5 up to an Expert pack of 13 × 13, each opened by solving the one before (each with a par time), or a new random park of 7, 9 or 11 squares a side. Play with a golden retriever, or unlock the Aussie (and its bones) by solving your first park. <strong>Hint</strong> puts right one thing that's wrong, or places a dog, for 30 s. Score: the time it took (lower is better), per level or size.",
+  "controls": "<strong>D-pad</strong> moves, <strong>A</strong> ball / dog / empty, <strong>B</strong> empties the square, <strong>LB</strong> / <strong>RB</strong> fill balls, <strong>X</strong> hint, <strong>Y</strong> undo, <strong>Start</strong> pause · keyboard: <strong>F</strong> fills balls, <strong>Q</strong> hint, <strong>E</strong> undo, <strong>P</strong> pause"
+ },
+ "reaction-1p": {
+  "rules": "The screen says <strong>Wait…</strong> (red), then after a random moment <strong>TAP!</strong> (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate.",
+  "controls": "Any face button, bumper or trigger · keyboard: <strong>Enter</strong> / <strong>Space</strong>"
  }
 }

@@ -5,8 +5,11 @@ import { defaultProfile } from './profiles.js';
 import { Sight } from './games/bot-human.js';
 import { stateOf, restoreState } from './saves.js';
 import { contextFor } from './trophies.js';
+import { newlyEarned, describe } from './solo/achievements.js';
 
 export const MAX_PLAYERS = 2;
+/** The lobby's two modes: 'duo' (the 1v1 games, as ever) and 'solo' (one player, the solo games). */
+export const MODES = ['duo', 'solo'];
 const NAME_MAX = 16;
 const CODE_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ'; // no I or O, they look like 1 and 0
 const CODE_LENGTH = 4;
@@ -40,9 +43,13 @@ const isValidToken = (t) => typeof t === 'string' && /^[0-9a-f]{32}$/.test(t);
  * views, the room pushes them out.
  */
 export class Room {
-  constructor(code, io, { stats = null, profiles = null, practice = null, trophies = null, saves = null, hostToken = null } = {}) {
+  constructor(code, io, { stats = null, profiles = null, practice = null, trophies = null, saves = null, soloStats = null, hostToken = null } = {}) {
     this.code = code;
     this.io = io;
+    this.soloStats = soloStats; // the solo games' runs, bests and achievements (see solo/stats.js), optional
+    this.mode = 'duo'; // the lobby's 2 players / 1 player switch (see setMode)
+    this.soloSlot = -1; // a solo game: the seat whose game it is (the other one watches)
+    this.soloResult = null; // and how its last run went, for the end screen
     this.stats = stats; // match history (see stats.js), optional
     this.practice = practice; // records against the computer (see practice.js), optional
     this.trophies = trophies; // each player's trophies (see trophies.js), optional
@@ -195,8 +202,29 @@ export class Room {
     else this.broadcastState();
   }
 
+  /** Two players for the 1v1 games; one person is enough in 1 player mode. */
   get readyToPlay() {
+    if (this.mode === 'solo') return this.players.some((p) => p && p.connected && !p.bot);
     return this.players.every((p) => p && p.connected);
+  }
+
+  /** The lobby's 2 players / 1 player switch: which games it offers. Not in the middle of a game. */
+  setMode(mode) {
+    if (!MODES.includes(mode)) return { error: 'Pick 1 player or 2 players.' };
+    if (this.game) return { error: 'Finish this game first.' };
+    if (this.mode !== mode) {
+      this.mode = mode;
+      this.touch();
+      this.broadcastState();
+    }
+    return { ok: true, mode };
+  }
+
+  /** The seat that plays a solo game: the one asked for if it's a person who's here, else the first one. */
+  soloSeatFor(slot) {
+    const here = (s) => Number.isInteger(s) && this.players[s] && this.players[s].connected && !this.players[s].bot;
+    if (here(slot)) return slot;
+    return this.players.findIndex((p, s) => here(s));
   }
 
   // ---- games -------------------------------------------------------------
@@ -206,18 +234,24 @@ export class Room {
     const allLocal = this.players.every((p) => p && p.local);
     const anyLocal = this.players.some((p) => p && p.local && !p.bot); // (the computer isn't a controller: it plays phone-only games)
     const bot = this.botSlot !== -1;
-    let pool = listGames().filter((g) => !(g.needsPhone && allLocal) && !(g.phoneOnly && anyLocal) && (!bot || g.vsComputer));
+    let pool = this.mode === 'solo'
+      ? listGames().filter((g) => g.solo)
+      : listGames().filter((g) => !g.solo && !(g.needsPhone && allLocal) && !(g.phoneOnly && anyLocal) && (!bot || g.vsComputer));
     if (pool.length > 1) pool = pool.filter((g) => g.id !== this.lastGameId);
     return pool[Math.floor(rng() * pool.length)].id;
   }
 
-  startGame(gameId, { resume = null, downMs = 0 } = {}) {
+  /** slot: who picked the game (a solo game is theirs to play). */
+  startGame(gameId, { resume = null, downMs = 0, slot = null } = {}) {
     if (gameId === 'random') gameId = this.pickRandomGame();
     const def = getGame(gameId);
     if (!def) return { error: 'Unknown game.' };
-    if (!this.readyToPlay && !resume) return { error: 'Waiting for two players.' }; // (a saved game waits for its players to come back)
+    if (!resume && Boolean(def.solo) !== (this.mode === 'solo')) return { error: def.solo ? `${def.name} is a 1 player game: switch the lobby to 1 player.` : `${def.name} is for 2 players: switch the lobby to 2 players.` };
+    if (!this.readyToPlay && !resume) return { error: this.mode === 'solo' ? 'Join first: scan the code with your phone, or press a button on a controller.' : 'Waiting for two players.' }; // (a saved game waits for its players to come back)
     if (def.phoneOnly && this.players.some((p) => p && p.local && !p.bot)) return { error: `${def.name} needs two phones.` };
-    if (this.botSlot !== -1 && !def.bot) return { error: `${def.name} can't be played against the computer (yet).` };
+    if (!def.solo && this.botSlot !== -1 && !def.bot) return { error: `${def.name} can't be played against the computer (yet).` };
+    this.soloSlot = def.solo ? this.soloSeatFor(slot) : -1;
+    this.soloResult = null;
 
     this.stopGame({ silent: true });
     this.trophyNews = null; // (last game's: gone with the new one)
@@ -250,6 +284,14 @@ export class Room {
       },
       update() {
         if (live()) room.pushGameViews();
+      },
+      // A solo game (see solo/adapter.js): whose game it is, and that player's achievements and bests.
+      get soloSlot() {
+        return room.soloSlot;
+      },
+      solo: {
+        achievements: () => (room.soloStats && room.soloName() ? room.soloStats.achievementsOf(room.soloName()) : {}),
+        best: (variant) => (room.soloStats && room.soloName() ? room.soloStats.bestFor(def.id, variant, room.soloName(), def.score && def.score.better) : null),
       },
     };
 
@@ -301,6 +343,8 @@ export class Room {
   }
 
   stopGame({ silent = false, keepSave = false } = {}) {
+    this.soloResult = null;
+    this.soloBestCache = null;
     for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
     if (this.saves && this.game && !keepSave) this.saves.remove(this.code); // (back to the lobby, or another game)
@@ -348,6 +392,8 @@ export class Room {
       gameId: this.gameId,
       hostConnected: this.hostSockets.size > 0,
       readyToPlay: this.readyToPlay,
+      mode: this.mode,
+      soloSlot: this.game && this.soloSlot !== -1 ? this.soloSlot : null,
       players: this.players.map((p, slot) =>
         p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local), ...(p.bot ? { bot: p.bot } : {}), profile: p.bot ? { ...this.profileOf(p.name), avatar: '🤖' } : this.profileOf(p.name) } : null,
       ),
@@ -386,6 +432,8 @@ export class Room {
   pushGameViews() {
     if (!this.game) return;
     const { gameId } = this;
+    const def = getGame(gameId);
+    if (def && def.solo) return this.pushSoloViews(def);
     const view = this.game.hostView();
     if (view.phase === 'over' && this.lastPhase !== 'over') this.recordResult(view);
     if (this.lastPhase === 'over' && view.phase !== 'over') { // a rematch: the computer starts afresh
@@ -404,6 +452,81 @@ export class Room {
     this.driveBot();
   }
 
+  // ---- solo games --------------------------------------------------------
+
+  /** A solo game's views: the TV's and each seat's, with the best to beat and, at the end, how the run went. */
+  pushSoloViews(def) {
+    const view = this.game.hostView();
+    if (view.phase === 'over' && this.lastPhase !== 'over') this.recordRun(def, view);
+    if (view.phase !== 'over') this.soloResult = null;
+    this.lastPhase = view.phase;
+    this.io.to(this.hostChannel).emit('game:view', this.hostPacket(def.id, this.decorateSolo(def, view, view)));
+    this.players.forEach((p, slot) => {
+      if (p) this.io.to(this.playerChannel(slot)).emit('game:view', this.viewPacket('p' + slot, def.id, this.decorateSolo(def, this.game.playerView(slot), view)));
+    });
+  }
+
+  /** The name a solo game is played under (the seat whose game it is). */
+  soloName() {
+    const p = this.players[this.soloSlot];
+    return p ? p.name : null;
+  }
+
+  /** The scores table a solo run goes on: the game's variant ('Hard', 'Level 3'), or none. */
+  soloVariant(view) {
+    return typeof view.variant === 'string' ? view.variant : '';
+  }
+
+  /** The player's best in the running solo game (in the variant on screen), or null. */
+  soloBest(def, view) {
+    const name = this.soloName();
+    if (!this.soloStats || !name) return null;
+    const variant = this.soloVariant(view);
+    // Views go out up to 30 times a second: look the best up again only when something changed.
+    const key = [def.id, variant, name, this.soloStats.version].join('\u0000');
+    if (!this.soloBestCache || this.soloBestCache.key !== key) {
+      this.soloBestCache = { key, best: this.soloStats.bestFor(def.id, variant, name, def.score.better) };
+    }
+    return this.soloBestCache.best;
+  }
+
+  /** What the hub adds to a solo game's views: the best to beat, and on the end screen how the run went. */
+  decorateSolo(def, view, hostView) {
+    const out = { ...view, best: this.soloBest(def, hostView) };
+    if (hostView.phase === 'over' && this.soloResult) out.record = this.soloResult;
+    return out;
+  }
+
+  /**
+   * A solo run just ended: add it to the history, unless it doesn't count (score null, e.g. a
+   * lost Minesweeper) or scored nothing where more is better (that's no best). Then the
+   * achievements it earned, which any run can (even one that doesn't count).
+   */
+  recordRun(def, view) {
+    const name = this.soloName();
+    const score = Number(view.score);
+    const variant = this.soloVariant(view);
+    if (view.score === null || view.score === undefined || !Number.isFinite(score)) {
+      this.soloResult = { score: null };
+    } else if (def.score.better === 'higher' && score <= 0) {
+      this.soloResult = { score: null, zero: true };
+    } else {
+      const run = { game: def.id, gameName: def.name, player: name, score, variant, better: def.score.better, unit: def.score.unit };
+      this.soloResult = this.soloStats && name ? this.soloStats.record(run) : { score, best: null, newBest: true, rank: 1 };
+    }
+    this.soloResult.unlocked = this.soloAchievements({ game: def.id, score: this.soloResult.score, variant }, view);
+  }
+
+  /** Unlock what this run earned; returns them, to show on the end screen. */
+  soloAchievements(run, view) {
+    const name = this.soloName();
+    if (!this.soloStats || !name) return [];
+    const history = { ...this.soloStats.historyOf(name), gamesInHub: listGames().filter((g) => g.solo).length };
+    const earned = newlyEarned(run, view, history, this.soloStats.achievementsOf(name));
+    this.soloStats.unlock(name, earned.map((a) => a.id));
+    return earned.map((a) => describe(a));
+  }
+
   /**
    * The computer's move, if it has one: it works it out when it sees the game, then plays it
    * after the move's pause (its reaction time, or time to think), unless by then it no longer
@@ -413,6 +536,7 @@ export class Room {
     const slot = this.botSlot;
     if (slot === -1 || !this.game) return;
     const def = this.botDef();
+    if (def && def.solo) return; // (a solo game has no computer: it just sits it out)
     if (def && def.steers) return this.steerBot(slot, def);
     // The same move again means the game refused it: `retries` lets the bot try something else.
     // One answer per position: the clock ticking down doesn't make it think again.
@@ -605,9 +729,16 @@ export class Room {
     return this.stats ? this.stats.lastPlayed() : {};
   }
 
+  /** The lobby's games, for its mode (the solo ones with the best of whoever is seated first). */
   lobbyGames() {
     const last = this.lastPlayedOrder();
-    const games = listGames().map((g, i) => ({ ...g, lastPlayed: last[g.id] || null, order: i }));
+    const solo = this.mode === 'solo';
+    const first = this.players.find((p) => p && !p.bot);
+    const bests = solo && this.soloStats && first ? this.soloStats.bestsOf(first.name) : {};
+    const soloLast = solo && this.soloStats ? this.soloStats.lastPlayed() : {};
+    const games = listGames()
+      .filter((g) => Boolean(g.solo) === solo)
+      .map((g, i) => ({ ...g, lastPlayed: (solo ? soloLast[g.id] : last[g.id]) || null, ...(solo ? { best: bests[g.id] || null } : {}), order: i }));
     return games
       .sort((a, b) => (a.category === b.category ? (b.lastPlayed || 0) - (a.lastPlayed || 0) || a.order - b.order : a.order - b.order))
       .map(({ order, ...g }) => g);
@@ -674,8 +805,9 @@ export class Room {
 }
 
 export class RoomManager {
-  constructor(io, { stats = null, profiles = null, practice = null, trophies = null, saves = null } = {}) {
+  constructor(io, { stats = null, profiles = null, practice = null, trophies = null, saves = null, soloStats = null } = {}) {
     this.io = io;
+    this.soloStats = soloStats;
     this.saves = saves;
     this.stats = stats;
     this.profiles = profiles;
@@ -696,7 +828,7 @@ export class RoomManager {
       } while (this.rooms.has(code));
       hostToken = null;
     }
-    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, practice: this.practice, trophies: this.trophies, saves: this.saves, hostToken: isValidToken(hostToken) ? hostToken : null });
+    const room = new Room(code, this.io, { stats: this.stats, profiles: this.profiles, practice: this.practice, trophies: this.trophies, saves: this.saves, soloStats: this.soloStats, hostToken: isValidToken(hostToken) ? hostToken : null });
     room.onlineAllowed = () => Boolean(this.online && this.online.allowed);
     this.rooms.set(code, room);
     // The TV re-opening its room after a restart: a game saved in it picks up where it was.
