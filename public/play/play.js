@@ -211,6 +211,9 @@
     const h2h = Ark.h2hHtml(state.players, state.h2h);
     $('h2h').innerHTML = h2h;
     $('h2h').classList.toggle('hidden', !h2h || solo);
+    // The 1 player lobby: your solo pages (stats, achievements, unlocks, the daily calendar).
+    $('solo-links').classList.toggle('hidden', !solo);
+    document.querySelectorAll('#solo-links [data-solo]').forEach(function (a) { a.href = a.getAttribute('data-solo') + '?name=' + encodeURIComponent(me.name); });
     $('tourney').innerHTML = solo ? '' : Ark.tournamentHtml(state.players, state.tournament, { controls: true });
 
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
@@ -220,6 +223,10 @@
     if (!inFolder) openFolder = null;
     $('phone-games').innerHTML =
       (inFolder ? '' : '<button data-game="random" class="random"' + (state.readyToPlay ? '' : ' disabled') + '><strong>🎲 Random game</strong><span>Can\'t decide? Let the hub pick.</span></button>') +
+      // The 1 player lobby: today's daily challenge.
+      (!inFolder && solo && state.daily ? (function (d) {
+        return '<button data-game="daily" class="random daily' + (d.done ? ' done' : '') + '"' + (state.readyToPlay ? '' : ' disabled') + '><strong>' + d.name + '</strong><span>' + d.tagline + '</span></button>';
+      })(Ark.dailyCard(state.daily)) : '') +
       games.map(function (g, i) {
       if (g.back) return '<button data-back class="random back"><strong>' + Ark.escapeHtml(g.name) + '</strong><span>' + Ark.escapeHtml(g.tagline) + '</span></button>';
       if (g.folderCard) {
@@ -364,10 +371,11 @@
       const r = current && current.renderer;
       let extra = '';
       try { extra = r && r.overHtml ? r.overHtml(v) : ''; } catch (e) { /* the end screen shows without it */ }
-      const html = Ark.soloOverHtml(v, g, extra) +
-        '<button class="primary rematch" data-ro="rematch">Play again</button>' +
-        '<div class="ro-row">' + (v.hubSetup ? '<button class="ghost" data-ro="setup">⚙ Change settings</button>' : '') +
-        '<button class="ghost" data-ro="lobby">Pick another game</button></div>';
+      const html = Ark.soloOverHtml(v, g, extra) + (v.daily
+        ? '<div class="ro-extra">📅 That was today\'s challenge. A new one comes at midnight (UTC).</div><button class="primary rematch" data-ro="lobby">Pick another game</button>'
+        : '<button class="primary rematch" data-ro="rematch">Play again</button>' +
+          '<div class="ro-row">' + (v.hubSetup ? '<button class="ghost" data-ro="setup">⚙ Change settings</button>' : '') +
+          '<button class="ghost" data-ro="lobby">Pick another game</button></div>');
       if (html !== soloKey) {
         soloKey = html;
         $('run-over').innerHTML = html;

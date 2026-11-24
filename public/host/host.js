@@ -188,7 +188,9 @@
     const entries = Ark.lobbyEntries(state.games, openFolder);
     if (entries[0] && entries[0].back) return entries;
     openFolder = null; // (it's gone, or was never open)
-    return [RANDOM].concat(entries);
+    // The 1 player lobby: today's daily challenge after Random.
+    const daily = state.mode === 'solo' && state.daily ? [Ark.dailyCard(state.daily)] : [];
+    return [RANDOM].concat(daily, entries);
   }
   /** Opens a folder (or closes it with null); a controller's pick goes to the first game, or back to the folder. */
   function showFolder(key) {
@@ -247,7 +249,7 @@
       const tag = newest && g.lastPlayed === newest ? '<em class="tag">⏱ Last played</em>' : '';
       return (
         heading +
-        '<button class="game-card' + (g.id === 'random' ? ' random' : '') + (g.folderCard ? ' folder' : '') + (i === focus ? ' at' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" ' +
+        '<button class="game-card' + (g.id === 'random' || g.id === 'daily' ? ' random' : '') + (g.id === 'daily' ? ' daily' + (g.done ? ' done' : '') : '') + (g.folderCard ? ' folder' : '') + (i === focus ? ' at' : '') + (padFocus && i === focus ? ' pad-focus' : '') + (off ? ' phone-only' : '') + '" ' +
         (g.folderCard ? 'data-folder="' + Ark.escapeHtml(g.folderCard) + '">' : 'data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>') +
         '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag || Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.blurb || g.tagline) + '</span>' +
@@ -584,7 +586,8 @@
     const pads = Object.keys(padSeats).length > 0;
     const html = Ark.soloOverHtml(v, g, extra) +
       '<div class="ro-next">' + (p ? '<strong>' + Ark.escapeHtml(p.name) + '</strong> · ' : '') +
-      (pads ? '<strong>A</strong> play again · ' + (v.hubSetup ? '<strong>Y</strong> change settings · ' : '') + '<strong>B</strong> lobby' : 'Play again or pick another game on your phone') + '</div>';
+      (v.daily ? '📅 That was today\'s challenge. A new one comes at midnight (UTC).' + (pads ? ' · <strong>A</strong> lobby' : '')
+        : pads ? '<strong>A</strong> play again · ' + (v.hubSetup ? '<strong>Y</strong> change settings · ' : '') + '<strong>B</strong> lobby' : 'Play again or pick another game on your phone') + '</div>';
     if (html === soloOverKey) return;
     soloOverKey = html;
     $('run-over').innerHTML = html;
@@ -1133,7 +1136,8 @@
       // A solo game's end screen (the hub's): A plays again, B goes back to the lobby.
       const g = currentGame();
       if (seat && g && g.solo && lastView && lastView.phase === 'over') {
-        if (btn === 'A' || btn === 'START') return socket.emit('pad:input', { slot: seat.slot, input: { type: 'rematch' } });
+        // (the daily challenge is one go: A goes back to the lobby)
+        if (btn === 'A' || btn === 'START') return lastView.daily ? socket.emit('lobby:return') : socket.emit('pad:input', { slot: seat.slot, input: { type: 'rematch' } });
         if (btn === 'B') return socket.emit('lobby:return');
       }
       const r = current && current.renderer;

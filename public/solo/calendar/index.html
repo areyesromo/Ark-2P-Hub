@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" href="/shared/icon.svg">
+  <title>Ark 2P Hub · Daily calendar</title>
+  <link rel="stylesheet" href="/shared/common.css">
+  <link rel="stylesheet" id="ark-theme" href="/theme.css"> <!-- the look picked in Settings -->
+  <style>
+    body { overflow-y: auto; }
+    main { max-width: 900px; margin: 0 auto; padding: 28px 16px 48px; display: flex; flex-direction: column; gap: 20px; }
+    header { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+    header nav { display: flex; gap: 8px; flex-wrap: wrap; }
+    #content { display: flex; flex-direction: column; gap: 20px; }
+    h1 { font-size: 2rem; margin: 0; }
+    .who { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+    .who .name { font-size: 1.5rem; font-weight: 900; }
+    .stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 10px; }
+    .stat { padding: 12px 14px; border-radius: var(--r-md); background: var(--bg-2); border: 1px solid var(--line); text-align: center; }
+    .stat strong { display: block; font-size: 1.8rem; font-variant-numeric: tabular-nums; }
+    .stat span { color: var(--muted); font-size: 0.9rem; }
+    .months { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+    .months h2 { margin: 0; font-size: 1.3rem; }
+    .months .btn[aria-disabled="true"] { visibility: hidden; }
+    .dow, .cal { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+    .dow span { text-align: center; color: var(--muted); font-size: 0.8rem; font-weight: 700; }
+    .day { min-height: 4.6rem; padding: 6px 8px; border-radius: var(--r-md); border: 1px solid var(--line); background: var(--bg-2); display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+    .day .n { font-weight: 800; font-size: 0.9rem; color: var(--muted); }
+    .day .g { font-size: 0.72rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .day .s { font-size: 0.8rem; font-weight: 700; margin-top: auto; }
+    .day.done { border-color: var(--good); background: linear-gradient(160deg, rgba(74, 222, 128, 0.18), var(--bg-2)); }
+    .day.done .n { color: var(--text); }
+    .day.done .s { color: var(--good); }
+    .day.started { border-color: var(--warn); background: linear-gradient(160deg, rgba(250, 204, 21, 0.14), var(--bg-2)); }
+    .day.started .s { color: var(--warn); }
+    .day.missed { opacity: 0.5; }
+    .day.future { opacity: 0.35; border-style: dashed; }
+    .day.is-today { outline: 2px solid var(--p1); outline-offset: 1px; }
+    .legend { color: var(--muted); font-size: 0.85rem; display: flex; gap: 16px; flex-wrap: wrap; }
+    .players { display: flex; flex-wrap: wrap; gap: 8px; }
+    .empty { color: var(--muted); text-align: center; padding: 48px 16px; font-size: 1.1rem; }
+    @media (max-width: 560px) { .day { min-height: 3.6rem; padding: 4px 5px; } .day .g { display: none; } .day .s { font-size: 0.62rem; } .months .btn { padding: 0.4em 0.7em; } .months h2 { font-size: 1.1rem; text-align: center; } }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1 class="brand"><span class="p1">ARK</span> <span class="p2">2P</span> HUB <span class="muted">· Daily calendar</span></h1>
+      <nav id="nav"></nav>
+    </header>
+    <div id="content"><p class="empty">Loading…</p></div>
+  </main>
+  <script src="/shared/common.js"></script>
+  <script src="/solo/calendar/calendar.js"></script>
+</body>
+</html>

@@ -16,7 +16,13 @@ import { loadOrCreateCert } from './tls.js';
 import { Settings } from './settings.js';
 import { adminRouter } from './admin.js';
 import { Stats } from './stats.js';
-import { Stats as SoloStats } from './solo/stats.js';
+import { Stats as SoloStats, MAX_RUNS as SOLO_MAX_RUNS, nameKey } from './solo/stats.js';
+import { ACHIEVEMENTS as SOLO_ACHIEVEMENTS, describe as describeAchievement } from './solo/achievements.js';
+import { collectionFor, countOpen } from './solo/collection.js';
+import { monthDays, shiftMonth, weekOffset, streaks } from './solo/calendar.js';
+import { challengeFor, dayOf } from './solo/daily.js';
+import { profileFor } from './solo/profile.js';
+import { listGames, getGame } from './games/index.js';
 import { Profiles, AVATARS, COLOURS } from './profiles.js';
 import { Practice } from './practice.js';
 import { Trophies, TROPHIES } from './trophies.js';
@@ -157,6 +163,77 @@ export function createApp({
   app.get('/api/trophies/:name', (req, res) => {
     const name = String(req.params.name || '').slice(0, 40);
     res.json({ ...trophies.forName(name), profile: profiles.get(name) });
+  });
+  // ---- the solo games' pages (the 1 player mode: server/solo/, public/solo/) ----
+  const soloGames = () => listGames().filter((g) => g.solo);
+  const soloName = (req) => String(req.query.name || '').slice(0, 32);
+  // Who has played solo games: the pages' "whose?" pickers.
+  app.get('/api/solo/players', (_req, res) => {
+    const { players } = soloStats.leaderboard();
+    res.json({ players, profiles: profiles.forNames(players.map((p) => p.name)) });
+  });
+  // Every solo achievement, and which ones a player has (?name=): their trophies page's Solo section.
+  app.get('/api/solo/achievements', (req, res) => {
+    const name = soloName(req);
+    const have = name ? soloStats.achievementsOf(name) : {};
+    const games = Object.fromEntries(soloGames().map((g) => [g.id, g.name]));
+    const list = SOLO_ACHIEVEMENTS.map((a) => ({ ...describeAchievement(a, have[a.id] || null), gameName: a.game ? games[a.game] : null }));
+    res.json({ name, profile: name ? profiles.get(name) : null, got: list.filter((a) => a.at).length, total: list.length, list });
+  });
+  // What a player has unlocked in each solo game (looks, levels), and what's still locked (?name=).
+  app.get('/api/solo/collection', (req, res) => {
+    const name = soloName(req);
+    const groups = collectionFor({ have: name ? soloStats.achievementsOf(name) : {}, bestOf: (game, variant, better) => (name ? soloStats.bestFor(game, variant, name, better) : null) });
+    res.json({ name, profile: name ? profiles.get(name) : null, ...countOpen(groups), groups });
+  });
+  // A player's own solo numbers (?name=): runs, favourite games, new records, the last two weeks. Only the
+  // latest runs are kept, so `trimmed` says when it's not the whole story.
+  app.get('/api/solo/me', (req, res) => {
+    const name = soloName(req);
+    const key = nameKey(name);
+    const names = Object.fromEntries(soloGames().map((g) => [g.id, g.name]));
+    const mine = name ? soloStats.runs.filter((r) => nameKey(r.player) === key) : [];
+    const have = name ? soloStats.achievementsOf(name) : {};
+    res.json({
+      name,
+      profile: name ? profiles.get(name) : null,
+      ...profileFor({ runs: mine, names, now: Date.now() }),
+      since: mine.length ? mine[0].at : null,
+      trimmed: soloStats.runs.length >= SOLO_MAX_RUNS,
+      achievements: { got: Object.keys(have).length, total: SOLO_ACHIEVEMENTS.length },
+      daily: { ...streaks((name ? soloStats.dailyDaysOf(name) : new Map()).keys(), dayOf(Date.now())) },
+      gamesInHub: soloGames().length,
+    });
+  });
+  // A month of the daily challenge for a player (?name=&month=YYYY-MM): each day's game, whether they
+  // took part, and their streaks.
+  app.get('/api/solo/calendar', (req, res) => {
+    const name = soloName(req);
+    const today = dayOf(Date.now());
+    const thisMonth = today.slice(0, 7);
+    let month = monthDays(String(req.query.month || '')) ? String(req.query.month) : thisMonth;
+    if (month > thisMonth) month = thisMonth; // nothing to show beyond the current month
+    const played = name ? soloStats.dailyDaysOf(name) : new Map();
+    const days = monthDays(month).map((day) => {
+      const p = played.get(day);
+      const game = p ? getGame(p.game) : day >= today ? getGame(challengeFor(day).game) : null; // a missed day's game isn't known any more
+      let status = day > today ? 'future' : day === today ? 'today' : 'missed';
+      if (p) status = p.score === null ? 'started' : 'done';
+      return { day, today: day === today, status, game: game ? game.id : null, gameName: game ? game.name : null, unit: game && game.score ? game.score.unit : null, score: p ? p.score : null };
+    });
+    const oldest = shiftMonth(thisMonth, -12);
+    res.json({
+      name,
+      profile: name ? profiles.get(name) : null,
+      today,
+      month,
+      offset: weekOffset(month),
+      prev: month > oldest ? shiftMonth(month, -1) : null,
+      next: month < thisMonth ? shiftMonth(month, 1) : null,
+      ...streaks(played.keys(), today),
+      total: played.size,
+      days,
+    });
   });
   // What a profile can be: the avatars and colours to pick from.
   app.get('/api/profile-choices', (_req, res) => res.json({ avatars: AVATARS, colours: COLOURS }));

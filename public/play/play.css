@@ -130,3 +130,8 @@ body.slot-1 { --me: var(--p2); }
 .mode-pick button { flex: 1; }
 .mode-pick button.on { border-color: var(--me); color: var(--me); }
 .phone-games .best { display: block; font-style: normal; font-size: var(--fs-sm); font-weight: 700; color: var(--warn); margin-top: 4px; }
+
+/* The 1 player lobby: the daily challenge card, and the links to your solo pages */
+.phone-games .daily { border-color: var(--warn); }
+.phone-games .daily.done { opacity: 0.7; }
+.solo-links { display: flex; flex-direction: column; gap: 8px; }

@@ -148,3 +148,57 @@ test('every solo game has achievements of its own', async () => {
   for (const g of listGames().filter((x) => x.solo)) assert.ok(ACHIEVEMENTS.some((a) => a.game === g.id), g.id);
   for (const a of ACHIEVEMENTS) if (a.game) assert.ok(getGame(a.game), `${a.id}: ${a.game} is a game`);
 });
+
+test('the daily challenge: today\'s game as dealt, its own table, one go, and no playing it again', async () => {
+  const { challengeFor, dayOf, variantFor } = await import('../server/solo/daily.js');
+  const soloStats = new SoloStats(null);
+  const { r, io } = room(['Ana'], { soloStats });
+  assert.match(r.startGame('daily').error, /1 player game/);
+  r.setMode('solo');
+  const c = challengeFor(dayOf(Date.now()));
+  assert.deepEqual(r.publicState().daily && { game: r.publicState().daily.game, done: r.publicState().daily.done }, { game: c.game, done: false });
+  const res = r.startGame('daily', { slot: 0 });
+  assert.ok(res.ok);
+  assert.equal(res.gameId, c.game);
+  const v = lastView(io, 'h:TEST');
+  assert.equal(v.variant, variantFor(c.day));
+  assert.deepEqual(v.daily, { day: c.day });
+  assert.equal(v.hubSetup, undefined, 'no setup screen: it\'s played as dealt');
+  assert.ok(soloStats.getDaily('daily', c.day, 'Ana'), 'the go counts from the start');
+  r.stopGame();
+  assert.match(r.startGame('daily', { slot: 0 }).error, /had your go/);
+  assert.equal(r.publicState().daily.done, true);
+  r.dispose();
+});
+
+test('a daily challenge\'s rematch and setup are refused; the run goes on the day\'s table', async () => {
+  const { variantFor } = await import('../server/solo/daily.js');
+  const soloStats = new SoloStats(null);
+  const { r } = room(['Ana'], { soloStats });
+  r.setMode('solo');
+  r.startGame('daily', { slot: 0 });
+  const def = getGame(r.gameId);
+  // End it however the game ends (a pretend over view), then try to play again.
+  r.recordRun(def, { phase: 'over', score: def.score.better === 'higher' ? 5 : 5000 });
+  assert.equal(soloStats.runs.at(-1).variant, variantFor(r.soloChallenge.day));
+  const before = r.game;
+  r.handleInput(0, { type: 'rematch' });
+  r.handleInput(0, { type: 'setup' });
+  assert.equal(r.game, before);
+  assert.notEqual(soloStats.getDaily('daily', r.soloChallenge.day, 'Ana').score, null, 'its score is the day\'s');
+  r.dispose();
+});
+
+test('the 1 player lobby counts each player\'s solo achievements, per game and in all', () => {
+  const soloStats = new SoloStats(null);
+  soloStats.unlock('Ana', ['dogpark-solve', 'snake-10']);
+  const { r } = room(['Ana'], { soloStats });
+  r.setMode('solo');
+  const s = r.publicState();
+  assert.equal(s.soloAchievements.got, 2);
+  assert.ok(s.soloAchievements.total > 100);
+  assert.deepEqual(s.games.find((g) => g.id === 'dogpark').achievements, { got: 1, total: s.games.find((g) => g.id === 'dogpark').achievements.total });
+  r.setMode('duo');
+  assert.equal(r.publicState().soloAchievements, null);
+  r.dispose();
+});

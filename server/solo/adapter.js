@@ -4,6 +4,8 @@
 // (if anyone's in it) watches. The game itself is untouched: the solo bits it needs
 // (ctx.player, achievements(), best(), daily) are added to the room's ctx here.
 
+import { seeded } from './rng.js';
+
 export function soloGame(def) {
   return {
     id: def.id,
@@ -14,7 +16,8 @@ export function soloGame(def) {
     score: def.score,
     solo: true,
     base: def,
-    create: (ctx) => new SoloSeat(ctx, def),
+    // The daily challenge (ctx.challenge) is played as it's dealt: no setup screen.
+    create: (ctx) => new SoloSeat(ctx, ctx.challenge ? def.base || def : def),
   };
 }
 
@@ -31,6 +34,12 @@ class SoloSeat {
     inner.achievements = () => ctx.solo.achievements();
     inner.best = (variant) => ctx.solo.best(variant);
     inner.daily = ctx.solo.daily;
+    if (ctx.challenge) {
+      // Everyone gets the same deal today: the day's settings, and randomness seeded by the day.
+      inner.settings = ctx.challenge.settings;
+      inner.rng = seeded(ctx.challenge.seed);
+      inner.challenge = true;
+    }
     this.game = def.create(inner);
   }
 

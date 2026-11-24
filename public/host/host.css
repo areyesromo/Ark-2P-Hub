@@ -316,3 +316,6 @@ body.own-setup #pad-footer { grid-column: 1 / -1; }
 /* The lobby's 2 players / 1 player switch (in the top bar) */
 .mode-switch.solo { border-color: var(--p1); color: var(--p1); }
 .game-card .best { display: block; font-style: normal; font-size: 0.85rem; font-weight: 700; color: var(--warn); margin-top: 0.3rem; }
+
+.game-card.daily { border-color: var(--warn); }
+.game-card.daily.done { opacity: 0.7; }
