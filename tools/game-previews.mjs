@@ -54,6 +54,26 @@ const NUDGE = {
     for (const word of ['slate', 'crown']) { players[0].emit('game:input', { type: 'guess', word }); await sleep(300); }
     players[1].emit('game:input', { type: 'guess', word: 'pious' });
   },
+  // (moves sent by both: only the one whose turn it is counts)
+  'five-in-a-row': async (players) => {
+    for (const [x, y] of [[7, 7], [8, 8], [8, 7], [9, 7], [6, 7], [5, 7], [7, 8], [7, 6], [9, 9]]) { both(players, { type: 'place', cell: y * 15 + x }); await sleep(200); }
+  },
+  morris: async (players) => {
+    for (const at of [0, 9, 2, 17, 19, 12, 22, 6, 14]) { both(players, { type: 'place', at }); await sleep(200); }
+  },
+  'code-breaker': async (players) => {
+    players[0].emit('game:input', { type: 'code', code: '4071' });
+    players[1].emit('game:input', { type: 'code', code: '9265' });
+    await sleep(400);
+    for (const guess of ['1234', '5678', '2591', '4017']) { both(players, { type: 'guess', guess }); await sleep(300); }
+  },
+  hangman: async (players) => {
+    players[0].emit('game:input', { type: 'word', word: 'garden' });
+    players[1].emit('game:input', { type: 'word', word: 'puzzle' });
+    await sleep(400);
+    for (const letter of 'eatsr') { players[0].emit('game:input', { type: 'letter', letter }); await sleep(150); }
+    for (const letter of 'eaorn') { players[1].emit('game:input', { type: 'letter', letter }); await sleep(150); }
+  },
   'kart-race': race,
   'kart-race-3d': race,
   'sketch-guess': async (players) => {

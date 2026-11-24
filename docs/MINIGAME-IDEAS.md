@@ -27,7 +27,6 @@ we discuss more. Take an idea off the list when it ships.
 | Lasso | A calf runs round the pen; time the throw to its path. | 3D art |
 | Rhythm Jump | A rope swings under you both; jump on time, the beat speeds up. Last one standing. | 3D base |
 | Golf Putt Off | One green, one hole, slopes that change each round; nearest to the pin or holed wins. Mini Golf's roll. | 3D base |
-| Cup Stack | Build then unstack a pyramid of cups with a tap pattern; quickest wins. | 2D |
 
 ## Games of guessing and reading the other player
 
@@ -103,20 +102,16 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 | Pawn race ("Sorry"-style) | Draw from a shuffled deck of move cards, bump the other back to start, slides. | 2D, 3D art board |
 | Snakes & Ladders | Pure luck, quick and silly; for kids. | 2D |
 | Chinese Checkers | The 2-player star board, hop across to the far point. | 2D |
-| Nine Men's Morris | Make mills of three to take pieces. | 2D |
 | Go (9x9) | Surround territory; a small board keeps it short. | 2D |
-| Five in a Row (Gomoku) | Five in a line on a big grid; Pente's captures as an option. | 2D |
 | Hex | Join your two sides of a rhombus board; no draws. | 2D |
 | Wall maze race ("Quoridor"-style) | Move to the far side or place a wall to block; path must stay open. | 2D, 3D base |
 | Hidden ranks ("Stratego"-style) | Hidden armies on a board; attacks reveal ranks. Hidden info stays on each phone. | 2D |
-| Code Breaker (Bulls and Cows) | Set a secret code, guess the other's with clues. | 2D |
 | Who Is It (deduction) | Yes/no questions about faces to find the other's secret pick. | 2D |
 | Yacht (five dice) | Five dice, three rolls, fill the score card. | 3D base dice |
 | Farkle / Pig | Push your luck dice: roll on or bank. | 3D base dice |
 | Shut the Box | Roll and close numbered tiles that add up; lowest left wins. | 2D |
 | Ultimate Tic-tac-toe | Nine boards; where you play sends the other to that board. | 2D |
 | Word Tiles ("Scrabble"-style) | Letter tiles on a bonus board, our word list. | 2D |
-| Hangman duel | Each sets a word, the other guesses. | 2D |
 
 Already in the hub: Checkers, Connect Four, Mancala, Dots and Boxes, Battleship, Liar's Dice,
 Crazy Eights, Memory Match, Rock Paper Scissors, Dice Party.
