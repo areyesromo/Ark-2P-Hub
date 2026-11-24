@@ -9,7 +9,7 @@ import { io as connect } from 'socket.io-client';
 import { createApp } from '../server/app.js';
 import { Room } from '../server/rooms.js';
 import { Stats as SoloStats } from '../server/solo/stats.js';
-import { listGames, getGame } from '../server/games/index.js';
+import { listGames, soloGameOf as getGame } from '../server/games/index.js';
 import { challengeFor, dayOf } from '../server/solo/daily.js';
 
 function fakeIo() {
@@ -69,11 +69,11 @@ test('a phone-only room\'s daily challenge: playable only when the day\'s game i
 
 test('a split game sends the phone the TV\'s view too; a phone one doesn\'t, and nothing goes to the TV channel', () => {
   const { r, io } = phoneRoom();
-  r.startGame('snake-1p', { slot: 0 });
+  r.startGame('flappy', { slot: 0 });
   r.handleInput(0, { type: 'go' });
   const mine = io.sent.filter((s) => s.channel === 'p:TEST:0' && s.event === 'game:view').at(-1).msg;
-  assert.equal(mine.gameId, 'snake-1p');
-  assert.ok(mine.tv && Array.isArray(mine.tv.body) && mine.tv.grid, 'the TV\'s picture of the board');
+  assert.equal(mine.gameId, 'flappy');
+  assert.ok(mine.tv && Array.isArray(mine.tv.pipes) && mine.tv.field, 'the TV\'s picture of the course');
   assert.equal(io.sent.filter((s) => s.channel === 'h:TEST' && s.event === 'game:view').length, 0);
   r.startGame('dogpark', { slot: 0 });
   r.handleInput(0, { type: 'go' });

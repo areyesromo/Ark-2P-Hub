@@ -18,9 +18,9 @@ before(async () => {
   dataDir = fs.mkdtempSync(path.join(os.tmpdir(), 'ark1p-pages-'));
   // Ana: the daily played the last three days (the oldest quit, no score), and 100 m in Helicopter Cave.
   fs.writeFileSync(path.join(dataDir, 'solo-stats.json'), JSON.stringify({
-    runs: [[10, 3], [14, 2], [8, 2]].map(([score, back]) => ({ at: Date.now() - back * 86400000, game: 'snake-1p', player: 'Ana', score, better: 'higher', unit: 'pts', variant: 'Normal' })).concat([{ at: Date.now(), game: 'snake-1p', player: 'Bo', score: 99, better: 'higher', unit: 'pts', variant: 'Normal' }]),
+    runs: [[10, 3], [14, 2], [8, 2]].map(([score, back]) => ({ at: Date.now() - back * 86400000, game: 'snake', player: 'Ana', score, better: 'higher', unit: 'pts', variant: 'Normal' })).concat([{ at: Date.now(), game: 'snake', player: 'Bo', score: 99, better: 'higher', unit: 'pts', variant: 'Normal' }]),
     dailies: {
-      [`daily|${day(0)}|ana`]: { game: 'snake-1p', score: 12 },
+      [`daily|${day(0)}|ana`]: { game: 'snake', score: 12 },
       [`daily|${day(1)}|ana`]: { game: 'gems', score: 900 },
       [`daily|${day(2)}|ana`]: { game: 'blocks-1p', score: null },
     },
@@ -56,7 +56,7 @@ test('the calendar marks played, started and missed days, with streaks, in UTC',
   assert.equal(by[today].status, 'done');
   assert.equal(by[today].today, true, 'today stays marked once it is played');
   assert.equal(by[day(1)].today, false);
-  assert.equal(by[today].gameName, 'Snake 1P');
+  assert.equal(by[today].gameName, 'Snake');
   assert.equal(by[day(2)].status, 'started');
   assert.equal(d.total, 3);
   assert.equal(d.current, 3);
@@ -83,7 +83,7 @@ test('a player\'s stats: their runs, favourites, records and the daily streak, a
   assert.equal(d.runs, 3, 'only her own');
   assert.equal(d.games, 1);
   assert.equal(d.recordCount, 1);
-  assert.equal(d.favourites[0].gameName, 'Snake 1P');
+  assert.equal(d.favourites[0].gameName, 'Snake');
   assert.equal(d.favourites[0].board.best, 14);
   assert.equal(d.activity.length, 14);
   assert.equal(d.achievements.got, 1);

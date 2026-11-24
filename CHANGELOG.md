@@ -4,6 +4,12 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.68
+
+- 🐍 Snake 1P is now **Snake**: the 1 player mode of Snake Battle, in the same bigger arena with your
+  own snake, and the arena on your phone too. Speed, wrap-round walls, pause and the unlockable snakes
+  are all still there. (Its high-score table starts afresh: it's a new board.)
+
 ## 0.1.67
 
 - 📱 No TV? Play the 1 player games on your phone alone: open /phone (or tap the link under the join

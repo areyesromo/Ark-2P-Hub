@@ -1,5 +1,5 @@
 import { randomBytes, randomInt } from 'node:crypto';
-import { getGame, listGames } from './games/index.js';
+import { getGame, gameFor, soloGameOf, listGames } from './games/index.js';
 import { Tournament } from './tournament.js';
 import { defaultProfile } from './profiles.js';
 import { Sight } from './games/bot-human.js';
@@ -74,6 +74,7 @@ export class Room {
     this.joinGuess = false; // true when the join address is probably unreachable (see network.js)
     this.qr = null;
     this.gameId = null;
+    this.gameDef = null; // the running game's def, as this mode plays it (see gameFor: a game in both modes has two)
     this.game = null;
     this.generation = 0;
     this.timers = new Set();
@@ -131,7 +132,7 @@ export class Room {
     }
 
     // A controller can't step into a phone-only game that's already running.
-    const running = this.gameId && getGame(this.gameId);
+    const running = this.runningDef();
     if (local && running && running.phoneOnly) return { error: `${running.name} needs two phones: join from the lobby.` };
 
     let slot = this.players.findIndex((p) => p === null);
@@ -171,9 +172,15 @@ export class Room {
     return { slot, ok: true };
   }
 
+  /** The running game's def as this mode plays it (a game in both modes has two: see gameFor). */
+  runningDef() {
+    if (!this.gameId) return null;
+    return this.gameDef && this.gameDef.id === this.gameId ? this.gameDef : getGame(this.gameId);
+  }
+
   /** The running game's definition, for its `bot`. */
   botDef() {
-    return this.gameId ? getGame(this.gameId) : null;
+    return this.runningDef();
   }
 
   get botSlot() {
@@ -261,13 +268,18 @@ export class Room {
         return { error: "You've had your go at today's challenge. A new one comes at midnight (UTC)." };
       }
       gameId = challenge.game;
-      if (!this.playable(getGame(gameId))) return { error: "Today's challenge needs the TV. Play it on the TV, or pick another game." };
+      if (!this.playable(soloGameOf(gameId))) return { error: "Today's challenge needs the TV. Play it on the TV, or pick another game." };
     }
     if (gameId === 'random') gameId = this.pickRandomGame();
-    const def = getGame(gameId);
-    if (!def) return { error: 'Unknown game.' };
+    // (a saved game is a 1v1 one; otherwise the game as this lobby's mode plays it)
+    const def = resume ? getGame(gameId) : gameFor(gameId, this.mode);
+    if (!def) {
+      const other = getGame(gameId);
+      if (!other) return { error: 'Unknown game.' };
+      if (this.noTv) return { error: `${other.name} needs the TV: it can't be played on the phone alone.` };
+      return { error: other.solo ? `${other.name} is a 1 player game: switch the lobby to 1 player.` : `${other.name} is for 2 players: switch the lobby to 2 players.` };
+    }
     if (!this.playable(def)) return { error: `${def.name} needs the TV: it can't be played on the phone alone.` };
-    if (!resume && Boolean(def.solo) !== (this.mode === 'solo')) return { error: def.solo ? `${def.name} is a 1 player game: switch the lobby to 1 player.` : `${def.name} is for 2 players: switch the lobby to 2 players.` };
     if (!this.readyToPlay && !resume) return { error: this.mode === 'solo' ? 'Join first: scan the code with your phone, or press a button on a controller.' : 'Waiting for two players.' }; // (a saved game waits for its players to come back)
     if (def.phoneOnly && this.players.some((p) => p && p.local && !p.bot)) return { error: `${def.name} needs two phones.` };
     if (!def.solo && this.botSlot !== -1 && !def.bot) return { error: `${def.name} can't be played against the computer (yet).` };
@@ -283,6 +295,7 @@ export class Room {
     const room = this;
     const live = () => room.generation === generation;
 
+    const savedKey = (def.solo ? 'solo:' : '') + def.id;
     const ctx = {
       get players() {
         return room.players.map((p, slot) => ({ slot, name: p ? p.name : `Player ${slot + 1}`, local: Boolean(p && p.local), connected: Boolean(p && p.connected), ...(p && p.bot ? { bot: p.bot } : {}) }));
@@ -292,7 +305,8 @@ export class Room {
       lapRecord: (track) => (room.stats ? room.stats.lapRecord(def.id, track) : null),
       // Kept by the room between launches of this game, e.g. the settings picked last time
       // (not for the daily challenge, which is played as it's dealt).
-      saved: challenge ? {} : (this.saved[def.id] = this.saved[def.id] || {}),
+      // (a game in both modes keeps each mode's apart)
+      saved: challenge ? {} : (this.saved[savedKey] = this.saved[savedKey] || {}),
       // The solo daily challenge: { day, settings, seed } (see solo/adapter.js), or null.
       challenge,
       setTimeout(fn, ms) {
@@ -326,6 +340,7 @@ export class Room {
     };
 
     this.gameId = def.id;
+    this.gameDef = def;
     // The daily challenge's go counts from the start, so quitting and trying again isn't a second go.
     if (challenge && this.soloStats) this.soloStats.setDaily('daily', challenge.day, this.soloName(), { game: def.id, score: null });
     this.game = def.create(ctx);
@@ -351,7 +366,7 @@ export class Room {
    */
   saveGame(view) {
     if (!this.saves || !this.game) return;
-    const def = getGame(this.gameId);
+    const def = this.runningDef();
     if (!def || !def.resumes) return;
     if (view.phase === 'over') return this.saves.remove(this.code);
     this.saves.save(this.code, {
@@ -391,6 +406,7 @@ export class Room {
     this.generation++;
     this.game = null;
     this.gameId = null;
+    this.gameDef = null;
     if (!silent) this.broadcastState();
   }
 
@@ -471,7 +487,7 @@ export class Room {
   pushGameViews() {
     if (!this.game) return;
     const { gameId } = this;
-    const def = getGame(gameId);
+    const def = this.runningDef();
     if (def && def.solo) return this.pushSoloViews(def);
     const view = this.game.hostView();
     if (view.phase === 'over' && this.lastPhase !== 'over') this.recordResult(view);
@@ -579,7 +595,7 @@ export class Room {
   /** Today's daily challenge for the 1 player lobby: which game, and whether the first person here has had their go. */
   dailyInfo(now = Date.now()) {
     const c = challengeFor(dayOf(now));
-    const def = getGame(c.game);
+    const def = soloGameOf(c.game);
     const p = this.players.find((x) => x && !x.bot);
     const mine = this.soloStats && p ? this.soloStats.getDaily('daily', c.day, p.name) : null;
     return { day: c.day, game: c.game, name: def ? def.name : c.game, done: Boolean(mine), playable: this.playable(def), score: mine && Number.isFinite(mine.score) ? mine.score : null, unit: def && def.score ? def.score.unit : 'pts' };
@@ -721,7 +737,7 @@ export class Room {
    * games report the team's stars.
    */
   recordResult(view) {
-    const def = getGame(this.gameId);
+    const def = this.runningDef();
     const category = def.category || 'competitive';
     let title = null; // a series just won (for the Champion trophy)
     if (category !== 'casual' && this.tournament.record({ game: def.name, winner: view.winner })) {
@@ -879,7 +895,7 @@ export class Room {
     const view = role === 'player' ? this.game.playerView(slot) : this.game.hostView();
     // (and the next one on that channel goes whole: this screen has nothing to keep yet)
     if (this.sent) delete this.sent[role === 'player' ? 'p' + slot : 'host'];
-    const def = getGame(this.gameId);
+    const def = this.runningDef();
     // (a solo game's views carry the hub's extras: the best, and at the end the run's record)
     if (def && def.solo) {
       const host = this.game.hostView();

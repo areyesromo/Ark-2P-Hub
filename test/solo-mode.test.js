@@ -3,7 +3,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { Room } from '../server/rooms.js';
 import { Stats as SoloStats } from '../server/solo/stats.js';
-import { listGames, getGame } from '../server/games/index.js';
+import { listGames, getGame, soloGameOf } from '../server/games/index.js';
 import { answerOf } from '../server/solo/games/dogpark-gen.js';
 import { parseLevel } from '../server/solo/games/dogpark.js';
 import { LEVELS } from '../server/solo/games/dogpark-levels.js';
@@ -64,13 +64,13 @@ test('the switch: 2 players lists the 1v1 games, 1 player the solo ones; not in 
 test('one person is enough in 1 player mode, and each mode only starts its own games', () => {
   const { r } = room(['Ana']);
   assert.equal(r.readyToPlay, false, 'a 1v1 game waits for two');
-  assert.match(r.startGame('snake-1p').error, /1 player game/);
+  assert.match(r.startGame('dogpark').error, /1 player game/);
   r.setMode('solo');
   assert.equal(r.readyToPlay, true);
   assert.match(r.startGame('pong').error, /for 2 players/);
   for (let i = 0; i < 20; i++) {
     const res = r.startGame('random');
-    assert.ok(res.ok && getGame(res.gameId).solo, 'random picks a solo game');
+    assert.ok(res.ok && soloGameOf(res.gameId), 'random picks a solo game');
   }
   r.dispose();
 });
@@ -177,7 +177,7 @@ test('a daily challenge\'s rematch and setup are refused; the run goes on the da
   const { r } = room(['Ana'], { soloStats });
   r.setMode('solo');
   r.startGame('daily', { slot: 0 });
-  const def = getGame(r.gameId);
+  const def = soloGameOf(r.gameId);
   // End it however the game ends (a pretend over view), then try to play again.
   r.recordRun(def, { phase: 'over', score: def.score.better === 'higher' ? 5 : 5000 });
   assert.equal(soloStats.runs.at(-1).variant, variantFor(r.soloChallenge.day));

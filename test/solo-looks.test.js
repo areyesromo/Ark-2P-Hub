@@ -35,7 +35,7 @@ test('a new player sees the looks locked with how to open them; an earned one ca
 test('a look doesn\'t change the scores\' table', () => {
   const variant = (look) => {
     const ctx = fakeCtx('Ana', { look, speed: 'fast', walls: 'wrap' });
-    const def = getGame('snake-1p').base;
+    const def = getGame('snake').base;
     const g = def.create(ctx);
     g.start();
     return g.hostView().variant;

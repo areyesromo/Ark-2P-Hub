@@ -11,7 +11,7 @@ test('every game with something to unlock is listed, rows and all', () => {
   const names = gs.map((g) => g.game);
   for (const game of ['cave', 'sokoban', ...Object.keys(LOOKS)]) assert.ok(names.includes(game), game);
   assert.deepEqual(find(gs, 'cave', 'map').items.map((i) => i.label), ['Crystal Cave', 'Old Mine', 'Ice Tunnel', 'Volcano']);
-  assert.equal(find(gs, 'snake-1p', 'look').items.length, 4);
+  assert.equal(find(gs, 'snake', 'look').items.length, 4);
 });
 
 test('a new player has the first of each open and the rest locked with how to open them', () => {
@@ -29,7 +29,7 @@ test('a new player has the first of each open and the rest locked with how to op
 test('achievements open their items; Sokoban levels need the level before solved', () => {
   const gs = groups({ 'cave-100': 1, 'snake-25': 1 }, ['Level 1', 'Level 2']);
   assert.deepEqual(find(gs, 'cave', 'map').items.map((i) => i.open), [true, true, false, false]);
-  assert.deepEqual(find(gs, 'snake-1p', 'look').items.map((i) => i.open), [true, false, true, false]);
+  assert.deepEqual(find(gs, 'snake', 'look').items.map((i) => i.open), [true, false, true, false]);
   const levels = find(gs, 'sokoban', 'level').items.map((i) => i.open);
   assert.deepEqual(levels.slice(0, 4), [true, true, true, false]);
   assert.match(find(gs, 'sokoban', 'level').items[3].how, /level 3/);

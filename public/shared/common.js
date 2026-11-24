@@ -796,7 +796,7 @@
     let timer = null;
     let stopped = false;
     el.innerHTML =
-      '<div class="pv-shot"><img alt="" src="/games/' + encodeURIComponent(game ? game.id : '') + '/preview.jpg"></div>' +
+      '<div class="pv-shot"><img alt="" src="/games/' + encodeURIComponent(game ? game.id : '') + '/' + (game && game.solo && game.bothModes ? 'preview-solo.jpg' : 'preview.jpg') + '"></div>' +
       '<div class="pv-box" role="button" tabindex="-1" aria-live="polite"></div>';
     const img = el.querySelector('img');
     img.addEventListener('error', function () { el.querySelector('.pv-shot').classList.add('none'); });
@@ -819,7 +819,9 @@
     show();
     loadGuide().then(function (all) {
       if (stopped) return;
-      pages = previewPages(game, (all && game && all[game.id]) || {});
+      // (a game for both modes keeps its 1 player rules under 'solo:<id>')
+      const key = game && game.solo && all && all['solo:' + game.id] ? 'solo:' + game.id : game && game.id;
+      pages = previewPages(game, (all && key && all[key]) || {});
       show();
     });
     return {

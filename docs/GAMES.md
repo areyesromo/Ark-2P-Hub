@@ -25,7 +25,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Asteroid Duel | `asteroid-duel` | Two ships in a field of drifting rocks. Turn, thrust and shoot your rival; mind the rocks. Three lives a round. | `server/games/asteroid-duel-bot.js`, `server/games/asteroid-duel.js`, `public/games/asteroid-duel/`, `test/asteroid-duel.test.js` |
 | Rally Tennis | `rally-tennis` | Tennis from above: your player runs to the ball, you time the swing and aim. Spot-on timing hits hardest. | `server/games/rally-tennis-bot.js`, `server/games/rally-tennis.js`, `public/games/rally-tennis/`, `test/rally-tennis.test.js` |
 | Falling Blocks Battle | `block-battle` | Side-by-side falling blocks. Clear lines to send junk rows to your rival; fill your well and you lose the round. | `server/games/block-battle-bot.js`, `server/games/block-battle.js`, `public/games/block-battle/`, `test/block-battle.test.js` |
-| Snake Battle | `snake` | Two snakes, one arena. Eat to grow, make your rival crash. Longest snake wins when time runs out. First to 3. | `server/games/snake-bot.js`, `server/games/snake.js`, `public/games/snake/`, `test/snake.test.js` |
+| Snake Battle | `snake` | Two snakes, one arena. Eat to grow, make your rival crash. Longest snake wins when time runs out. First to 3. | `server/games/snake-bot.js`, `server/games/snake.js`, `public/games/snake/`, `test/snake.test.js`, `test/solo-snake.test.js` |
 | Tank Duel | `tanks` | Top-down tank battle. Drive with the joystick, fire bouncing shells around cover. 3 hits and you are out. First to 3. | `server/games/tanks-bot.js`, `server/games/tanks.js`, `public/games/tanks/`, `test/tanks.test.js` |
 | Sumo | `sumo` | Shove your rival off a shrinking ring. Steer with the stick, DASH to hit hard. First to 3. | `server/games/sumo-bot.js`, `server/games/sumo.js`, `public/games/sumo/`, `test/sounds.test.js`, `test/sumo.test.js` |
 | Party Board | `party-board` | A Mario Party-style board for two: roll, pick your path across one of seven maps, grab coins, buy ⭐ stars, raid the shop for items, and battle in a party minigame every round. Most stars wins. | `server/games/party-board-bot.js`, `server/games/party-board.js`, `server/games/board/`, `public/games/minis/`, `public/games/party-board/`, `test/party-board-twists.test.js`, `test/party-board.test.js`, `test/sounds.test.js` |
@@ -90,7 +90,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
-| Snake 1P | `snake-1p` | Eat, grow, don't bite your own tail. It speeds up as you go. | `server/solo/games/snake-1p.js`, `public/games/snake-1p/`, `test/solo-snake.test.js` |
+| Snake | `snake` | Eat, grow, don't bite your own tail. It speeds up as you go. | `server/games/snake-bot.js`, `server/games/snake.js`, `public/games/snake/`, `test/snake.test.js`, `test/solo-snake.test.js` |
 | Brick Breaker 1P | `breaker-1p` | Bounce the ball off your paddle and smash the wall, brick by brick. | `server/solo/games/breaker-1p.js`, `public/games/breaker-1p/`, `test/solo-breaker-1p.test.js` |
 | Blocks 1P | `blocks-1p` | Turn the falling pieces to fill whole rows. Four rows at once scores big. | `server/solo/games/blocks-1p.js`, `public/games/blocks-1p/`, `test/solo-blocks-1p.test.js` |
 | Flappy | `flappy` | Tap to flap. Fly through the gaps in the pipes, as far as you can. | `server/solo/games/flappy.js`, `public/games/flappy/`, `test/solo-flappy.test.js` |

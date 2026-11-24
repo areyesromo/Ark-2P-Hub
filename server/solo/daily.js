@@ -25,7 +25,7 @@ export const POOL = [
   { game: 'memory-1p', settings: { size: 'medium' } },
   { game: 'mahjong', settings: {} },
   { game: 'freecell', settings: {} },
-  { game: 'snake-1p', settings: { speed: 'normal', walls: 'solid' } },
+  { game: 'snake', settings: { speed: 'normal', walls: 'solid' } },
   { game: 'slide', settings: { size: 4 } },
   { game: 'asteroids-1p', settings: {} },
   { game: 'maths', settings: {} },

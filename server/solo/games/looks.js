@@ -6,7 +6,7 @@
 import { settingOf } from './options.js';
 
 export const LOOKS = {
-  'snake-1p': {
+  snake: {
     classic: { name: 'Classic' },
     rainbow: { name: '🌈 Rainbow', unlock: 'snake-10' },
     neon: { name: '💜 Neon', unlock: 'snake-25' },
