@@ -118,7 +118,7 @@ folder, not in the repo, so the merged app starts fresh.
 
 ## The steps
 
-Progress: **steps 1 and 2 done** (the engine on 2P, then all 39 solo games).
+Progress: **steps 1 to 3 done** (the engine on 2P, all 39 solo games, then their achievements, daily challenge and pages).
 
 Each step is one PR to 2P that leaves the app working, with its `CHANGELOG.md` line. After each
 merge, the desktop build is started as 2P's `CLAUDE.md` says.

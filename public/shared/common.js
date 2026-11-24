@@ -322,10 +322,12 @@
     return 'Your best <strong>' + formatScore(r.best, unit) + '</strong> · ' + rank;
   }
 
-  /** A solo game's lobby card line: the best (and its variant). */
+  /** A solo game's lobby card line: the best (and its variant), and the achievements got in it. */
   function bestLine(g) {
-    if (!g.best || g.best.score === null || !g.score) return '';
-    return '🏅 ' + formatScore(g.best.score, g.score.unit) + (g.best.variant ? ' <span class="muted">· ' + escapeHtml(g.best.variant) + '</span>' : '');
+    const parts = [];
+    if (g.best && g.best.score !== null && g.score) parts.push('🏅 ' + formatScore(g.best.score, g.score.unit) + (g.best.variant ? ' <span class="muted">· ' + escapeHtml(g.best.variant) + '</span>' : ''));
+    if (g.achievements && g.achievements.got) parts.push('<span class="ach-count">⭐ ' + g.achievements.got + '/' + g.achievements.total + '</span>');
+    return parts.join(' ');
   }
 
   /** The achievements a solo run unlocked, as cards for its end screen. */
@@ -336,6 +338,30 @@
       return '<div class="ach" style="--i:' + i + '"><span class="icon">' + escapeHtml(a.icon) + '</span><span class="what"><strong>' + escapeHtml(a.name) + '</strong>' +
         '<span class="desc">' + escapeHtml(a.desc) + '</span></span><span class="tag">Achievement unlocked</span></div>';
     }).join('') + '</div>';
+  }
+
+  /**
+   * The links across the top of the solo pages (<nav id="nav">): the other pages for the same
+   * player, their trophies, and a way back (to the phone if that's where they came from).
+   */
+  function mountNav(current) {
+    const nav = document.getElementById('nav');
+    if (!nav) return;
+    const name = new URLSearchParams(location.search).get('name') || '';
+    const q = name ? '?name=' + encodeURIComponent(name) : '';
+    const pages = [['me', '/solo/me/', '📊 My stats'], ['trophies', '/trophies/', '🏆 Trophies'], ['collection', '/solo/collection/', '🎁 Collection'], ['calendar', '/solo/calendar/', '📅 Calendar']];
+    const back = /\/play\//.test(document.referrer) ? '/play/' : '/';
+    nav.innerHTML = pages.filter(function (p) { return p[0] !== current; }).map(function (p) {
+      return '<a class="btn ghost" href="' + p[1] + q + '">' + p[2] + '</a>';
+    }).join('') + '<a class="btn ghost" id="back" href="' + back + '">← Back</a>';
+  }
+
+  /** The daily challenge's lobby card (the 1 player lobby): today's game, or how your go went. */
+  function dailyCard(d) {
+    const tagline = d.done
+      ? 'Done for today' + (d.score !== null ? ': ' + formatScore(d.score, d.unit) : '') + '. A new one at midnight (UTC).'
+      : 'Today: <strong>' + escapeHtml(d.name) + '</strong>. The same deal for everyone, one go a day.';
+    return { id: 'daily', name: '📅 Daily challenge', tagline: tagline, done: d.done };
   }
 
   /**
@@ -880,6 +906,8 @@
     bestLine: bestLine,
     unlockedHtml: unlockedHtml,
     soloOverHtml: soloOverHtml,
+    mountNav: mountNav,
+    dailyCard: dailyCard,
     loadRenderer: loadRenderer,
     loadCss: loadCss,
     loadScript: loadScript,

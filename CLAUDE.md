@@ -49,7 +49,9 @@ end, `record` to the views; the TV and phone draw the end screen (`Ark.soloOverH
 game's own line from its renderer's `overHtml(view)`. A solo game with a 2P twin has "1P" after
 its name and id for now (`snake-1p`). Tests: `test/solo-*.test.js`, with 1P's `fakeCtx` in
 `test/helpers-solo.js`. The TV's keyboard is a controller (`ArkPads.KEYBOARD`); a renderer's
-`typing(key, view)` takes letters and digits.
+`typing(key, view)` takes letters and digits. The solo daily challenge (`server/solo/daily.js`, the
+`daily` game id in 1 player mode) deals the day's game through `ctx.challenge`. The solo pages are in
+`public/solo/` (`/api/solo/*`), and the solo achievements show on the Trophies page.
 
 ## Conventions
 

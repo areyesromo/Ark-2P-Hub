@@ -140,6 +140,18 @@ The 1 player games (switch the lobby to **👤 1 player**): one of you plays and
 They came from Ark 1P Hub. Games with a 1v1 twin here have **1P** after their name for now (Snake 1P
 and Snake Battle, Word Guess 1P and Five Letters…): each pair will become one game later.
 
+- **📅 Daily challenge** (the card after 🎲 Random in the 1 player lobby): one game a day, the same deal
+  for everyone (the same board, pieces or questions), one go each. Each day's runs have their own
+  high-score table, and a new challenge comes at midnight (UTC).
+- **Achievements**: every solo game has a few to unlock (eat 25 in Snake 1P, clear a level of Sokoban
+  without a restart…), plus some for the hub as a whole. They're on your **🏆 Trophies** page, under
+  👤 Solo achievements, and each game's card in the lobby shows how many you have.
+- **Unlockable looks and levels**: some looks (snakes, card backs, dogs…) and levels (Dog Park,
+  Sokoban, Helicopter Cave's maps) open as you play; the setup screen shows 🔒 and what opens each.
+- **Your pages** (from your phone's 1 player lobby, or the Trophies page): **📊 My stats** (runs,
+  favourite games, new personal bests, the last two weeks), **🎁 Collection** (every look and level,
+  open or still locked) and **📅 Daily calendar** (the days you played and your streaks).
+
 #### 🕹️ Arcade
 
 | Game | How it plays |

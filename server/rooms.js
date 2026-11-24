@@ -5,7 +5,8 @@ import { defaultProfile } from './profiles.js';
 import { Sight } from './games/bot-human.js';
 import { stateOf, restoreState } from './saves.js';
 import { contextFor } from './trophies.js';
-import { newlyEarned, describe } from './solo/achievements.js';
+import { newlyEarned, describe, ACHIEVEMENTS as SOLO_ACHIEVEMENTS } from './solo/achievements.js';
+import { challengeFor, dayOf, variantFor } from './solo/daily.js';
 
 export const MAX_PLAYERS = 2;
 /** The lobby's two modes: 'duo' (the 1v1 games, as ever) and 'solo' (one player, the solo games). */
@@ -50,6 +51,7 @@ export class Room {
     this.mode = 'duo'; // the lobby's 2 players / 1 player switch (see setMode)
     this.soloSlot = -1; // a solo game: the seat whose game it is (the other one watches)
     this.soloResult = null; // and how its last run went, for the end screen
+    this.soloChallenge = null; // today's daily challenge, while it's being played (see solo/daily.js)
     this.stats = stats; // match history (see stats.js), optional
     this.practice = practice; // records against the computer (see practice.js), optional
     this.trophies = trophies; // each player's trophies (see trophies.js), optional
@@ -243,6 +245,18 @@ export class Room {
 
   /** slot: who picked the game (a solo game is theirs to play). */
   startGame(gameId, { resume = null, downMs = 0, slot = null } = {}) {
+    // The solo daily challenge: today's game, dealt the same for everyone, one go each.
+    let challenge = null;
+    if (gameId === 'daily') {
+      if (this.mode !== 'solo') return { error: 'The daily challenge is a 1 player game: switch the lobby to 1 player.' };
+      if (!this.readyToPlay) return { error: 'Join first: scan the code with your phone, or press a button on a controller.' };
+      challenge = challengeFor(dayOf(Date.now()));
+      const p = this.players[this.soloSeatFor(slot)];
+      if (this.soloStats && p && this.soloStats.getDaily('daily', challenge.day, p.name)) {
+        return { error: "You've had your go at today's challenge. A new one comes at midnight (UTC)." };
+      }
+      gameId = challenge.game;
+    }
     if (gameId === 'random') gameId = this.pickRandomGame();
     const def = getGame(gameId);
     if (!def) return { error: 'Unknown game.' };
@@ -254,6 +268,7 @@ export class Room {
     this.soloResult = null;
 
     this.stopGame({ silent: true });
+    this.soloChallenge = challenge; // (after the old game is cleared away)
     this.trophyNews = null; // (last game's: gone with the new one)
     this.lastPhase = null;
     this.lastGameId = def.id;
@@ -268,8 +283,11 @@ export class Room {
       now: () => Date.now(),
       // The fastest lap on a track in this game's history (Kart Race), or null.
       lapRecord: (track) => (room.stats ? room.stats.lapRecord(def.id, track) : null),
-      // Kept by the room between launches of this game, e.g. the settings picked last time.
-      saved: (this.saved[def.id] = this.saved[def.id] || {}),
+      // Kept by the room between launches of this game, e.g. the settings picked last time
+      // (not for the daily challenge, which is played as it's dealt).
+      saved: challenge ? {} : (this.saved[def.id] = this.saved[def.id] || {}),
+      // The solo daily challenge: { day, settings, seed } (see solo/adapter.js), or null.
+      challenge,
       setTimeout(fn, ms) {
         const t = setTimeout(() => {
           room.timers.delete(t);
@@ -301,6 +319,8 @@ export class Room {
     };
 
     this.gameId = def.id;
+    // The daily challenge's go counts from the start, so quitting and trying again isn't a second go.
+    if (challenge && this.soloStats) this.soloStats.setDaily('daily', challenge.day, this.soloName(), { game: def.id, score: null });
     this.game = def.create(ctx);
     this.broadcastState();
     if (resume) {
@@ -349,6 +369,7 @@ export class Room {
 
   stopGame({ silent = false, keepSave = false } = {}) {
     this.soloResult = null;
+    this.soloChallenge = null;
     this.soloBestCache = null;
     for (const t of this.timers) clearTimeout(t);
     this.timers.clear();
@@ -379,6 +400,8 @@ export class Room {
     if (!this.game || !input || typeof input !== 'object') return;
     // (the computer's own moves aren't someone here: they don't keep an empty room alive)
     if (!(this.players[slot] && this.players[slot].bot)) this.touch();
+    // The daily challenge is one go: no playing it again, no changing its settings.
+    if (this.soloChallenge && (input.type === 'rematch' || input.type === 'setup')) return;
     try {
       this.game.onInput(slot, input);
     } catch (err) {
@@ -398,6 +421,9 @@ export class Room {
       hostConnected: this.hostSockets.size > 0,
       readyToPlay: this.readyToPlay,
       mode: this.mode,
+      // The 1 player lobby: today's daily challenge, and the first person's solo achievements.
+      daily: this.mode === 'solo' ? this.dailyInfo() : null,
+      soloAchievements: this.mode === 'solo' ? (({ got, total }) => ({ got, total }))(this.soloAchievementCounts((this.players.find((p) => p && !p.bot) || {}).name)) : null,
       soloSlot: this.game && this.soloSlot !== -1 ? this.soloSlot : null,
       players: this.players.map((p, slot) =>
         p ? { slot, name: p.name, connected: p.connected, local: Boolean(p.local), ...(p.bot ? { bot: p.bot } : {}), profile: p.bot ? { ...this.profileOf(p.name), avatar: '🤖' } : this.profileOf(p.name) } : null,
@@ -477,8 +503,9 @@ export class Room {
     return p ? p.name : null;
   }
 
-  /** The scores table a solo run goes on: the game's variant ('Hard', 'Level 3'), or none. */
+  /** The scores table a solo run goes on: the game's variant ('Hard', 'Level 3'), or the day's for the daily challenge. */
   soloVariant(view) {
+    if (this.soloChallenge) return variantFor(this.soloChallenge.day);
     return typeof view.variant === 'string' ? view.variant : '';
   }
 
@@ -498,6 +525,10 @@ export class Room {
   /** What the hub adds to a solo game's views: the best to beat, and on the end screen how the run went. */
   decorateSolo(def, view, hostView) {
     const out = { ...view, best: this.soloBest(def, hostView) };
+    if (this.soloChallenge) {
+      out.variant = this.soloVariant(hostView);
+      out.daily = { day: this.soloChallenge.day };
+    }
     if (hostView.phase === 'over' && this.soloResult) out.record = this.soloResult;
     return out;
   }
@@ -519,7 +550,32 @@ export class Room {
       const run = { game: def.id, gameName: def.name, player: name, score, variant, better: def.score.better, unit: def.score.unit };
       this.soloResult = this.soloStats && name ? this.soloStats.record(run) : { score, best: null, newBest: true, rank: 1 };
     }
+    if (this.soloChallenge && this.soloStats && name) this.soloStats.setDaily('daily', this.soloChallenge.day, name, { game: def.id, score: this.soloResult.score });
     this.soloResult.unlocked = this.soloAchievements({ game: def.id, score: this.soloResult.score, variant }, view);
+  }
+
+  /** Today's daily challenge for the 1 player lobby: which game, and whether the first person here has had their go. */
+  dailyInfo(now = Date.now()) {
+    const c = challengeFor(dayOf(now));
+    const def = getGame(c.game);
+    const p = this.players.find((x) => x && !x.bot);
+    const mine = this.soloStats && p ? this.soloStats.getDaily('daily', c.day, p.name) : null;
+    return { day: c.day, game: c.game, name: def ? def.name : c.game, done: Boolean(mine), score: mine && Number.isFinite(mine.score) ? mine.score : null, unit: def && def.score ? def.score.unit : 'pts' };
+  }
+
+  /** How many solo achievements a player has, overall and per game (the lobby cards and the trophies link). */
+  soloAchievementCounts(name) {
+    const have = this.soloStats && name ? this.soloStats.achievementsOf(name) : {};
+    const out = { got: 0, total: SOLO_ACHIEVEMENTS.length, games: {} };
+    for (const a of SOLO_ACHIEVEMENTS) {
+      const got = Boolean(have[a.id]);
+      if (got) out.got++;
+      if (!a.game) continue;
+      const g = out.games[a.game] || (out.games[a.game] = { got: 0, total: 0 });
+      g.total++;
+      if (got) g.got++;
+    }
+    return out;
   }
 
   /** Unlock what this run earned; returns them, to show on the end screen. */
@@ -740,10 +796,11 @@ export class Room {
     const solo = this.mode === 'solo';
     const first = this.players.find((p) => p && !p.bot);
     const bests = solo && this.soloStats && first ? this.soloStats.bestsOf(first.name) : {};
+    const ach = solo && first ? this.soloAchievementCounts(first.name).games : {};
     const soloLast = solo && this.soloStats ? this.soloStats.lastPlayed() : {};
     const games = listGames()
       .filter((g) => Boolean(g.solo) === solo)
-      .map((g, i) => ({ ...g, lastPlayed: (solo ? soloLast[g.id] : last[g.id]) || null, ...(solo ? { best: bests[g.id] || null } : {}), order: i }));
+      .map((g, i) => ({ ...g, lastPlayed: (solo ? soloLast[g.id] : last[g.id]) || null, ...(solo ? { best: bests[g.id] || null, achievements: ach[g.id] || null } : {}), order: i }));
     return games
       .sort((a, b) => (a.category === b.category ? (b.lastPlayed || 0) - (a.lastPlayed || 0) || a.order - b.order : a.order - b.order))
       .map(({ order, ...g }) => g);

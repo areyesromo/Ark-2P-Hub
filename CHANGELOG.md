@@ -4,6 +4,14 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.66
+
+- 📅 A daily challenge in the 1 player mode: one game a day, the same deal for everyone, one go each,
+  with its own high-score table.
+- 🏆 The solo games' achievements are on the Trophies page now (👤 Solo achievements), and each
+  game's card shows how many you have. New solo pages: 📊 My stats, 🎁 Collection (the looks and
+  levels you've unlocked) and 📅 Daily calendar, all in your theme.
+
 ## 0.1.65
 
 - 👤 The rest of the solo games join the 1 player mode, all 39 from Ark 1P Hub: arcade games
