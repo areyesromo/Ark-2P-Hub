@@ -90,7 +90,8 @@ test('all four home wins; out of time rolls and moves for you; no timer waits', 
 
 test('the computer: takes a pawn when it can, brings one out on a 6', () => {
   const base = { phase: 'move', turn: 0, you: 0, game: 1, rollNo: 3 };
-  const hit = ludoBot({ ...base, die: 4, pawns: [[10, 2, -1, -1], [40, -1, -1, -1]], movable: [0, 1] }, 'easy', Math.random);
+  // (a fixed rng: Easy plays a random pawn one time in ten, which this isn't testing)
+  const hit = ludoBot({ ...base, die: 4, pawns: [[10, 2, -1, -1], [40, -1, -1, -1]], movable: [0, 1] }, 'easy', () => 0.5);
   assert.equal(hit.pawn, 0);
   for (const level of ['easy', 'normal', 'hard']) {
     const out = ludoBot({ ...base, die: 6, pawns: [[-1, 30, -1, -1], [-1, -1, -1, -1]], movable: [0, 1, 2, 3] }, level, () => 0.5);

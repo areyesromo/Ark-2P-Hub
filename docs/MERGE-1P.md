@@ -118,7 +118,7 @@ folder, not in the repo, so the merged app starts fresh.
 
 ## The steps
 
-Progress: **steps 1 to 4 done** (the engine on 2P, all 39 solo games, their achievements, daily challenge and pages, then phone only at `/phone`).
+Progress: **steps 1 to 5 done** (the engine on 2P, all 39 solo games, their achievements, daily challenge and pages, phone only at `/phone`, and Ark 1P Hub retired: its last release points here, and its next-games list is the Solo section of `docs/MINIGAME-IDEAS.md`). Next: step 6, one pair at a time.
 
 Each step is one PR to 2P that leaves the app working, with its `CHANGELOG.md` line. After each
 merge, the desktop build is started as 2P's `CLAUDE.md` says.
