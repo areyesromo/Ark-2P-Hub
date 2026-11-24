@@ -200,10 +200,19 @@
       return '<div class="row' + f + '"><div class="title">' + row.title + '</div><div class="seg">' +
         setupChoices(v, row.key).map(function (value) {
           const on = v.settings[row.key] === value;
+          // A choice still to be earned (a solo game's look or level): shown, with how to get it.
+          const why = lockedWhy(v, row.key, value);
+          if (why) return '<button type="button" class="opt locked" disabled>🔒 ' + row.fmt(value) + '<span class="why">' + escapeHtml(why) + '</span></button>';
           return '<button type="button" class="opt' + (on ? ' on' : '') + '" aria-pressed="' + on + '" data-key="' + row.key + '" data-value="' + value + '">' +
             row.fmt(value) + '</button>';
         }).join('') + '</div></div>';
     }).join('') + '</div>';
+  }
+
+  /** Why a setup choice is locked ("Eat 10 to unlock"), or null when it's open (views' locked: { key: { value: why } }). */
+  function lockedWhy(v, key, value) {
+    const l = v.locked && v.locked[key];
+    return l && Object.prototype.hasOwnProperty.call(l, value) ? l[value] : null;
   }
 
   /** One line summing the settings up, e.g. "5×5 · 2 min · Best of 3". */
@@ -224,7 +233,8 @@
     }
     if (btn === 'LEFT' || btn === 'RIGHT') {
       const key = rows[state.row || 0].key;
-      const list = setupChoices(v, key);
+      // Locked choices are shown but stepped over.
+      const list = setupChoices(v, key).filter(function (value) { return value === v.settings[key] || !lockedWhy(v, key, value); });
       // Wraps round, so the far end of a long list is one press away.
       const i = (list.indexOf(v.settings[key]) + (btn === 'LEFT' ? -1 : 1) + list.length) % list.length;
       return { type: 'setting', key: key, value: list[i] };
@@ -256,7 +266,7 @@
     const h = v.hubSetup;
     return {
       rows: h.rows.map(function (r) { return { key: r.key, title: escapeHtml(r.title), fmt: function (value) { return escapeHtml(r.labels[value] || String(value)); } }; }),
-      view: { settings: h.settings, options: h.options, players: v.players },
+      view: { settings: h.settings, options: h.options, locked: h.locked || {}, players: v.players },
     };
   }
 
@@ -264,12 +274,80 @@
   function bindSetup(el, api) {
     el.addEventListener('click', function (e) {
       const btn = e.target.closest && e.target.closest('.ark-setup .opt');
-      if (!btn) return;
+      if (!btn || btn.classList.contains('locked')) return;
       // Numbers go as numbers; word choices ('fast', '3d') as they are.
       const raw = btn.getAttribute('data-value');
       api.send({ type: 'setting', key: btn.getAttribute('data-key'), value: raw !== '' && !isNaN(raw) ? Number(raw) : raw });
       if (api.vibrate) api.vibrate(8);
     });
+  }
+
+  // ---- solo games (the lobby's 1 player mode, see server/solo/) -----------------
+
+  /** The solo games' lobby groups. */
+  const SOLO_GROUPS = {
+    arcade: '🕹️ Arcade <span>Solo · real time: quick hands</span>',
+    puzzle: '🧩 Puzzle <span>Solo · think it through, at your own pace</span>',
+    brain: '🧠 Brain <span>Solo · memory and reflexes</span>',
+  };
+
+  /** A duration in ms as m:ss.s (or s.s s under a minute). */
+  function clock(ms) {
+    const tenths = Math.floor(Math.max(0, ms) / 100);
+    const s = Math.floor(tenths / 10);
+    const m = Math.floor(s / 60);
+    const rest = (s % 60) + '.' + (tenths % 10);
+    return m ? m + ':' + (s % 60 < 10 ? '0' : '') + rest : rest + ' s';
+  }
+
+  /** A solo score as the game counts it: unit is 'pts', 'ms', 'time', 'tries', 'moves' or 'm'. */
+  function formatScore(score, unit) {
+    if (score === null || score === undefined) return '–';
+    if (unit === 'ms') return Math.round(score) + ' ms';
+    if (unit === 'time') return clock(score);
+    if (unit === 'tries') return score + (score === 1 ? ' try' : ' tries');
+    if (unit === 'moves') return score + (score === 1 ? ' move' : ' moves');
+    if (unit === 'm') return Math.round(score).toLocaleString('en-US') + ' m';
+    return Math.round(score).toLocaleString('en-US');
+  }
+
+  /** How a solo run went (its view's record, from the room): a new best, the best to beat, its rank. */
+  function recordHtml(view, unit) {
+    const r = view && view.record;
+    if (!r) return '';
+    if (r.zero) return 'No points this time. Have another go!';
+    if (r.score === null) return '<span class="muted">This run doesn\'t count for the scores.</span>' + (view.best !== null && view.best !== undefined ? ' · Best <strong>' + formatScore(view.best, unit) + '</strong>' : '');
+    const rank = r.rank === 1 ? '🥇 The best on this hub!' : '#' + r.rank + ' on this hub';
+    if (r.newBest) return '<span class="new-best">🎉 New best!</span>' + (r.best !== null ? ' <span class="muted">(was ' + formatScore(r.best, unit) + ')</span>' : '') + ' · ' + rank;
+    return 'Your best <strong>' + formatScore(r.best, unit) + '</strong> · ' + rank;
+  }
+
+  /** A solo game's lobby card line: the best (and its variant). */
+  function bestLine(g) {
+    if (!g.best || g.best.score === null || !g.score) return '';
+    return '🏅 ' + formatScore(g.best.score, g.score.unit) + (g.best.variant ? ' <span class="muted">· ' + escapeHtml(g.best.variant) + '</span>' : '');
+  }
+
+  /** The achievements a solo run unlocked, as cards for its end screen. */
+  function unlockedHtml(record) {
+    const list = (record && record.unlocked) || [];
+    if (!list.length) return '';
+    return '<div class="ark-unlocked">' + list.map(function (a, i) {
+      return '<div class="ach" style="--i:' + i + '"><span class="icon">' + escapeHtml(a.icon) + '</span><span class="what"><strong>' + escapeHtml(a.name) + '</strong>' +
+        '<span class="desc">' + escapeHtml(a.desc) + '</span></span><span class="tag">Achievement unlocked</span></div>';
+    }).join('') + '</div>';
+  }
+
+  /**
+   * The end of a solo run, the same for every solo game (TV and phone): the score, how it went
+   * against the best, what it unlocked, and the game's own line (its renderer's overHtml).
+   */
+  function soloOverHtml(v, g, extra) {
+    return '<div class="ro-game">' + escapeHtml(g.name) + (v.variant ? ' · ' + escapeHtml(v.variant) : '') + '</div>' +
+      '<div class="ro-score">' + formatScore(v.score, g.score.unit) + '</div>' +
+      '<div class="ro-record">' + recordHtml(v, g.score.unit) + '</div>' +
+      unlockedHtml(v.record) +
+      (extra ? '<div class="ro-extra">' + extra + '</div>' : '');
   }
 
   /**
@@ -795,6 +873,13 @@
     botLevelsHtml: botLevelsHtml,
     botLevelNames: BOT_LEVEL_NAMES,
     register: register,
+    SOLO_GROUPS: SOLO_GROUPS,
+    clock: clock,
+    formatScore: formatScore,
+    recordHtml: recordHtml,
+    bestLine: bestLine,
+    unlockedHtml: unlockedHtml,
+    soloOverHtml: soloOverHtml,
     loadRenderer: loadRenderer,
     loadCss: loadCss,
     loadScript: loadScript,

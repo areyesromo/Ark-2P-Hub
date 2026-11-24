@@ -20,6 +20,7 @@
         <span id="conn" class="conn">Connecting…</span>
         <span class="room-chip">Room <strong id="room-code">····</strong></span>
         <button id="to-lobby" class="ghost hidden">Lobby</button>
+        <button id="mode" class="ghost mode-switch" title="The lobby's games: 1v1, or solo">👥 2 players</button>
         <button id="sound" class="ghost" title="Sound on/off">🔊</button>
         <button id="music" class="ghost" title="Music on/off">🎵</button>
         <button id="graphics" class="ghost" title="3D graphics: HD or standard">HD</button>
@@ -65,6 +66,7 @@
     <section id="side-preview" class="side-preview hidden"></section> <!-- a game's preview beside its own setup menu -->
     <section id="stage" class="stage hidden"></section>
     <section id="hub-setup" class="hub-setup hidden"></section>
+    <div id="run-over" class="run-over hidden" aria-live="polite"></div>
     <button id="update" class="update-banner hidden"></button>
     <div id="version" class="version"></div>
     <div id="whats-new" class="whats-new hidden"></div>

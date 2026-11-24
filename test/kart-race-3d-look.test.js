@@ -69,7 +69,7 @@ test('the pad reader reports the right stick and its click', () => {
   buttons[11] = { pressed: true, value: 1 };
   const pad = { index: 0, connected: true, axes: [0, 0, 0.7, 0.8], buttons };
   let frames = 0;
-  const window = {};
+  const window = { addEventListener() {} }; // (the keyboard's listeners: no keys here)
   const navigator = { getGamepads: () => [pad] };
   vm.runInNewContext(fs.readFileSync('public/host/gamepads.js', 'utf8'), {
     window, navigator, requestAnimationFrame: (fn) => { if (frames++ < 1) fn(); },

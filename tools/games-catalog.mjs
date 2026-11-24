@@ -11,7 +11,7 @@ import { MICROS, PARTIES } from '../server/games/minis/index.js';
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 export const CATALOG = path.join(ROOT, 'docs', 'GAMES.md');
 export const IDEAS_MARK = '<!-- ideas: hand-written below this line, kept when the file is regenerated -->';
-const CATEGORY = { competitive: '⚔️ Competitive', board: '🎲 Dice & Board', casual: '🤝 Co-op & casual' };
+const CATEGORY = { competitive: '⚔️ Competitive', board: '🎲 Dice & Board', casual: '🤝 Co-op & casual', arcade: '👤 Solo: 🕹️ Arcade', puzzle: '👤 Solo: 🧩 Puzzle', brain: '👤 Solo: 🧠 Brain' };
 // Helper files a game uses that don't start with its id.
 const EXTRA = {
   'draw-duel': ['server/games/draw-shapes.js', 'server/games/shape-library.js'],
@@ -41,8 +41,9 @@ function gameFiles(id, ids) {
   // `<id>.js` and `<id>-*.js`, unless the file is another game's (`party-board` isn't `party`'s).
   const mine = (f, g) => f === g + '.js' || (f.startsWith(g + '-') && f.endsWith('.js'));
   const server = ls('server/games').filter((f) => mine(f, id) && !ids.some((g) => g.length > id.length && mine(f, g))).map((f) => 'server/games/' + f);
+  const solo = ls('server/solo/games').filter((f) => mine(f, id) && !ids.some((g) => g.length > id.length && mine(f, g))).map((f) => 'server/solo/games/' + f);
   const pub = exists('public/games/' + id) ? ['public/games/' + id + '/'] : [];
-  return server.concat(EXTRA[id] || [], pub, testsFor('games/' + id + '.js'));
+  return server.concat(solo, EXTRA[id] || [], pub, testsFor('games/' + id + '.js'));
 }
 
 function miniFiles(id) {

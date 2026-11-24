@@ -18,7 +18,8 @@ function create(id, saved = {}) {
 }
 
 test('every game opens on a setup screen, its own or the hub\'s', () => {
-  for (const { id } of listGames()) {
+  // (The solo games keep Ark 1P Hub's ways: a setup screen only where there's something to pick.)
+  for (const { id } of listGames().filter((g) => !g.solo)) {
     const { game } = create(id);
     const v = game.hostView();
     assert.equal(v.phase, 'setup', id);

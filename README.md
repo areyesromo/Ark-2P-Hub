@@ -28,6 +28,13 @@ everything, the board, the question, the reveal and the result, so nobody has to
 the TV once you've joined: most board, card, word and quiz games, with the time left in the phone's header;
 Dice Party with its Handheld screen) and **🤸 Motion** (you can tilt or move your phone to play; buttons
 or a joystick always work too).
+**👥 2 players / 👤 1 player.** The switch at the top of the lobby (on the TV, in its top bar, or on
+your phone) picks which games it lists: the 1v1 games above, or the **solo games** further down,
+where one of you plays and chases your own best (no computer). One person is enough to start a
+solo game; with two of you seated, whoever picks it plays and the other's phone watches. Each solo
+run is scored (the best to beat shows on the lobby card, in the game and on the end screen, with
+**🎉 New best!**), and solo games have achievements of their own.
+
 No one to play with? Games labelled **🤖 Vs computer** can be played against the computer:
 Battleship (Classic and Ultimate), Connect Four, Chess, Checkers, Reversi, Backgammon, Ludo, Dominoes, Five in a Row, Nine Men's Morris, Mine Duel, Blackjack, Gin Rummy, Colour Clash, Dots and Boxes, Mancala, Rock Paper
 Scissors, Memory Match, Dice Party, Pong, Air Hockey, Snake Battle,
@@ -127,6 +134,18 @@ scans in from the lobby takes its seat.
 | **Mind Meld** | Co-op guessing on a scale, Wavelength-style. The TV shows a scale like *Cold ↔ Hot*; the clue-giver's phone shows a secret target on it, and they type a clue ("tea"). The other turns the dial (drag it on the phone, or the stick on a controller) and locks in: dead on is ⭐⭐⭐, close is ⭐⭐ or ⭐. 60 scales; you swap who gives the clue every round (a controller player always guesses). |
 | **Air Hockey** | The whole table is on your phone too, upright and turned so your goal is at the bottom: slide your mallet and smash the puck into their goal. Watch the phone or the TV. A slow puck left on one side for 7 seconds drifts over to the other. First to 7. |
 
+### 👤 Solo (1 player)
+
+The 1 player games: one of you plays and chases your own best (switch the lobby to **👤 1 player**).
+**Snake 1P** and **Reaction Rush 1P** have a 2P twin (Snake Battle, Reaction Duel) that they'll
+be merged with later.
+
+| Game | How it plays |
+| --- | --- |
+| **Snake 1P** | The classic: eat the glowing food to grow, don't hit a wall or your own tail. Every 4 bites the snake speeds up. Tap a side of the phone pad or swipe to turn (turns can be chained in one swipe). Before you start, pick the speed (Normal or ⚡ Fast) and the walls (🧱 Solid, or 🌀 Wrap round: come out on the other side). ⏸ Pause on the phone (or Start on a controller). Snakes to unlock (just for looks): 🌈 Rainbow (eat 10), 💜 Neon (25) and 👑 Gold (50). Score: food eaten; each speed and wall setting keeps its own bests. |
+| **Dog Park** | The park is split into coloured areas: put one dog in every row, every column and every area, and no two dogs may touch, not even corner to corner. Trees and water take no dog. Tap a square for a ball ("no dog here"), again for a dog, again to clear it, or drag across the park to drop balls; **Fill** puts a ball on every square your dogs already rule out. Dogs that break a rule light up red. Every park has exactly one answer, so it's all logic, no guessing. 36 levels from 5 × 5 up to an Expert pack of 13 × 13, each opened by solving the one before (each with a par time), or a new random park of 7, 9 or 11 squares a side. Play with a golden retriever, or unlock the Aussie (and its bones) by solving your first park. **Hint** puts right one thing that's wrong, or places a dog, for 30 s. Score: the time it took (lower is better), per level or size. |
+| **Reaction Rush 1P** | The screen says **Wait…** (red), then after a random moment **TAP!** (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate. |
+
 **Every game opens on a setup screen** where either player picks the match
 settings on their phone (or a controller: ↑↓ picks a row, ←→ changes it, A
 starts). The numbers above are the defaults; you can change, for example:
@@ -199,6 +218,10 @@ Mini Golf, Memory Match…) show it beside their menu.
 
 ## Controllers
 
+The TV's **keyboard** is a controller too, so a laptop (or the Steam Deck's keyboard) plays on its own:
+arrows or WASD move, **Enter** / **Space** = A, **Backspace** = B, **Q** = X, **E** = Y, **P** = Start,
+**Esc** = Back. Games that take letters or digits (the solo word and number games) take them typed.
+
 Each player can use a phone **or** a game controller. Mix and match: two
 controllers, two phones, or one of each. Connect Xbox, PlayStation or most
 other controllers (Bluetooth or USB) to the device showing the TV screen: the
@@ -261,6 +284,9 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Memory Match | **D-pad** moves a cursor over the cards on the TV, **A** flips one (on your turn) | |
 | Word Hunt | **D-pad** moves your cursor on the TV (in your colour), **A** on a word's first letter then **A** on its last, **B** lets go | |
 | Game over | **A** / **Start** | Rematch |
+| Snake 1P | **D-pad** / stick (or **Y**↑ **A**↓ **X**← **B**→), **Start** pauses · keyboard: Arrows, **P** pauses | |
+| Dog Park | **D-pad** moves, **A** ball / dog / empty, **B** empties the square, **LB** / **RB** fill balls, **X** hint, **Y** undo, **Start** pause · keyboard: **F** fills balls, **Q** hint, **E** undo, **P** pause | |
+| Reaction Rush 1P | Any face button, bumper or trigger · keyboard: **Enter** / **Space** | |
 
 Buttons use Xbox names. On a PlayStation controller A = ✕, B = ○, X = □, Y = △.
 Browsers only notice a controller after one of its buttons is pressed, so

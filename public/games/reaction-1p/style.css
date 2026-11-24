@@ -1,0 +1,35 @@
+/* Red means wait, green means go: the colours are the game. */
+
+/* ---- TV ---- */
+
+.reaction-host { flex: 1; min-height: 0; display: flex; gap: 2rem; }
+.reaction-screen {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem;
+  border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); text-align: center;
+}
+.reaction-screen .big { font-size: 8rem; font-weight: 900; line-height: 1; }
+.reaction-screen .sub { font-size: var(--fs-xl); color: var(--muted); }
+.reaction-screen.wait { background: #7f1d1d; border-color: #b91c1c; }
+.reaction-screen.go { background: #15803d; border-color: #4ade80; }
+.reaction-screen.go .big { font-size: 12rem; }
+.reaction-screen.early { background: #78350f; }
+.reaction-screen.wait .sub, .reaction-screen.early .sub { color: var(--text); }
+.reaction-times { list-style: none; margin: 0; padding: 0; width: 14rem; display: flex; flex-direction: column; gap: 0.6rem; justify-content: center; }
+.reaction-times li { padding: 0.8rem 1rem; border-radius: var(--r-md); background: var(--panel); font-size: var(--fs-lg); font-weight: 800; text-align: center; font-variant-numeric: tabular-nums; }
+.reaction-times li.todo { color: var(--muted); }
+.reaction-times li.early { color: var(--warn); font-size: var(--fs-sm); background: transparent; }
+
+/* ---- phone ---- */
+
+.reaction-phone { flex: 1; min-height: 0; display: flex; padding: 12px 16px 16px; }
+.reaction-tap {
+  flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+  border-radius: var(--radius); background: var(--panel); border: 3px solid var(--me); touch-action: none;
+}
+.reaction-tap .big { font-size: var(--fs-2xl); font-weight: 900; }
+.reaction-tap .sub { color: var(--muted); font-weight: 400; }
+.reaction-tap.wait { background: #7f1d1d; border-color: #b91c1c; }
+.reaction-tap.go { background: #15803d; border-color: #4ade80; }
+.reaction-tap.go .big { font-size: 4rem; }
+.reaction-tap.early { background: #78350f; }
+.reaction-tap.wait .sub, .reaction-tap.go .sub, .reaction-tap.early .sub { color: var(--text); }

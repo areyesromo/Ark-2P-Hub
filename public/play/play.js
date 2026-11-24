@@ -190,6 +190,7 @@
   // ---- lobby -----------------------------------------------------------
 
   const GROUPS = {
+    ...Ark.SOLO_GROUPS, // the solo games (the lobby's 1 player mode)
     competitive: '⚔️ Competitive <span>Head to head: one of you wins</span>',
     board: '🎲 Dice &amp; Board <span>Classic games, head to head</span>',
     casual: '🎨 Casual <span>Play together, just for fun</span>',
@@ -198,16 +199,19 @@
   let openFolder = null; // the lobby folder open on this phone, or null
   function renderLobby() {
     const opponent = state.players[1 - me.slot];
+    const solo = state.mode === 'solo';
+    document.querySelectorAll('#mode-pick [data-mode]').forEach(function (b) { b.classList.toggle('on', b.getAttribute('data-mode') === state.mode); });
     let status;
-    if (!opponent) status = 'Waiting for an opponent to join…<br>No one around? Play the 🤖 computer: ' + Ark.botLevelsHtml(null);
+    if (solo) status = 'Solo games: pick one and chase your best.' + (opponent && !opponent.bot ? '<br><small>Whoever picks a game plays it; the other phone watches.</small>' : '');
+    else if (!opponent) status = 'Waiting for an opponent to join…<br>No one around? Play the 🤖 computer: ' + Ark.botLevelsHtml(null);
     else if (opponent.bot) status = 'You vs the 🤖 <strong>computer</strong>: ' + Ark.botLevelsHtml(opponent.bot, true) + '<br><small>Games marked 🤖 Vs computer can be played against it.</small>';
     else if (!opponent.connected) status = Ark.escapeHtml(opponent.name) + ' is reconnecting…';
     else status = 'You vs <strong>' + Ark.escapeHtml(opponent.name) + '</strong>. Pick a game!';
     $('lobby-status').innerHTML = status;
     const h2h = Ark.h2hHtml(state.players, state.h2h);
     $('h2h').innerHTML = h2h;
-    $('h2h').classList.toggle('hidden', !h2h);
-    $('tourney').innerHTML = Ark.tournamentHtml(state.players, state.tournament, { controls: true });
+    $('h2h').classList.toggle('hidden', !h2h || solo);
+    $('tourney').innerHTML = solo ? '' : Ark.tournamentHtml(state.players, state.tournament, { controls: true });
 
     const newest = Math.max.apply(null, state.games.map(function (g) { return g.lastPlayed || 0; }));
     const pads = Ark.controllerSeated(state);
@@ -232,10 +236,21 @@
         '<button data-game="' + Ark.escapeHtml(g.id) + '"' + (off ? ' class="phone-only"' : '') + (state.readyToPlay && !off ? '' : ' disabled') + '>' +
         '<strong>' + Ark.escapeHtml(g.name) + (newest && g.lastPlayed === newest ? ' <em class="tag">⏱ Last played</em>' : '') + (pads && g.phoneOnly ? ' <em class="tag">📱 Phones only</em>' : botTag ? ' ' + botTag : ' ' + Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.blurb || g.tagline) + '</span>' +
+        (g.solo && Ark.bestLine(g) ? '<em class="best">' + Ark.bestLine(g) + '</em>' : '') +
         '</button>'
       );
     }).join('');
   }
+
+  // The lobby's 2 players / 1 player switch: which games it lists (the 1v1 ones, or the solo ones).
+  $('mode-pick').addEventListener('click', function (e) {
+    const b = e.target.closest('[data-mode]');
+    if (!b || !state || b.getAttribute('data-mode') === state.mode) return;
+    openFolder = null;
+    socket.emit('lobby:mode', { mode: b.getAttribute('data-mode') }, function (res) {
+      if (res && res.error) alert(res.error);
+    });
+  });
 
   Ark.bindTournament($('tourney'), socket);
 
@@ -318,7 +333,57 @@
     Ark.phoneClock(0); // a game's clock doesn't outlive it
     current = null;
     $('phone-stage').innerHTML = '';
+    showSolo(null);
   }
+
+  /** The running game's lobby entry (its name, whether it's a solo game, how it's scored). */
+  function currentGame() {
+    return state && (state.games || []).find(function (g) { return g.id === state.gameId; });
+  }
+
+  /**
+   * A solo game (the lobby's 1 player mode): the phone whose game it is gets the hub's end screen
+   * (score, best, what it unlocked, play again); the other phone just watches. The game's own
+   * screen shows the rest of the time. Returns true when the game's screen is covered.
+   */
+  let soloKey = '';
+  function showSolo(v) {
+    const g = v && currentGame();
+    const solo = Boolean(g && g.solo && state && state.phase === 'playing');
+    const watching = solo && v.watching;
+    const over = solo && !watching && v.phase === 'over';
+    $('solo-watch').classList.toggle('hidden', !watching);
+    $('run-over').classList.toggle('hidden', !over);
+    if (watching) {
+      const p = state.players[v.soloSlot];
+      const html = '<div>👀 Watching</div><strong>' + Ark.escapeHtml(p ? p.name : '') + '</strong><div>play ' + Ark.escapeHtml(g.name) + (v.variant ? ' · ' + Ark.escapeHtml(v.variant) : '') + '</div>' +
+        (v.phase === 'over' ? '<div class="ro-score">' + Ark.formatScore(v.score, g.score.unit) + '</div>' : '');
+      if ($('solo-watch').innerHTML !== html) $('solo-watch').innerHTML = html;
+    }
+    if (over) {
+      const r = current && current.renderer;
+      let extra = '';
+      try { extra = r && r.overHtml ? r.overHtml(v) : ''; } catch (e) { /* the end screen shows without it */ }
+      const html = Ark.soloOverHtml(v, g, extra) +
+        '<button class="primary rematch" data-ro="rematch">Play again</button>' +
+        '<div class="ro-row">' + (v.hubSetup ? '<button class="ghost" data-ro="setup">⚙ Change settings</button>' : '') +
+        '<button class="ghost" data-ro="lobby">Pick another game</button></div>';
+      if (html !== soloKey) {
+        soloKey = html;
+        $('run-over').innerHTML = html;
+        if (v.record && ((v.record.newBest && v.record.score !== null) || (v.record.unlocked && v.record.unlocked.length))) api.vibrate([60, 40, 60, 40, 120]);
+      }
+    } else soloKey = '';
+    const covered = watching || over;
+    if (state && state.phase === 'playing' && !Ark.setup.isHub(v)) $('phone-stage').classList.toggle('hidden', covered);
+    return covered;
+  }
+  $('run-over').addEventListener('click', function (e) {
+    const btn = e.target.closest('[data-ro]');
+    if (!btn) return;
+    if (btn.getAttribute('data-ro') === 'lobby') socket.emit('lobby:return');
+    else api.send({ type: btn.getAttribute('data-ro') });
+  });
 
   function mountGame(gameId) {
     unmountGame();
@@ -328,7 +393,7 @@
       if (current !== mounting) return;
       mounting.renderer = renderer;
       renderer.mount($('phone-stage'), api);
-      if (lastView && lastView.gameId === gameId && !Ark.setup.isHub(lastView.view)) renderer.update(lastView.view);
+      if (lastView && lastView.gameId === gameId && !Ark.setup.isHub(lastView.view) && !lastView.view.watching) renderer.update(lastView.view);
       syncZoom();
     }).catch(function (err) {
       $('phone-stage').textContent = err.message;
@@ -415,9 +480,15 @@
     lastView = msg;
     const v = msg.view;
     showHubSetup(Ark.setup.isHub(v) ? v : null);
-    $('hub-change').classList.toggle('hidden', !(v.hubSetup && v.phase === 'over'));
+    const g = currentGame();
+    // (a solo game's end screen has its own Change settings)
+    $('hub-change').classList.toggle('hidden', !(v.hubSetup && v.phase === 'over') || Boolean(g && g.solo));
     document.body.classList.toggle('match-over', v.phase === 'over'); // (for the themes)
     renderTourneyBar();
+    if (showSolo(v)) {
+      if (current && current.renderer && current.gameId === msg.gameId && !v.watching) current.renderer.update(v);
+      return;
+    }
     if (Ark.setup.isHub(v)) return; // the game hasn't started: the hub shows its setup screen
     if (sentTimer) clearSent(); // (the server's word: the game draws the move itself now)
     if (current && current.renderer && current.gameId === msg.gameId) current.renderer.update(v);
@@ -456,7 +527,7 @@
     hubSetupKey = key;
     const parts = Ark.setup.hubParts(v);
     $('hub-setup').querySelector('.hub-settings').innerHTML =
-      '<p class="muted">Pick the settings (either of you can), then start.</p>' +
+      '<p class="muted">' + (game && game.solo ? 'Pick the settings, then start.' : 'Pick the settings (either of you can), then start.') + '</p>' +
       Ark.setup.html(parts.view, parts.rows) +
       '<button class="primary hub-go">Start</button>';
   }

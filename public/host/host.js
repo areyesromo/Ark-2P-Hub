@@ -175,6 +175,7 @@
   });
 
   const GROUPS = {
+    ...Ark.SOLO_GROUPS, // the solo games (the lobby's 1 player mode)
     competitive: '⚔️ Competitive <span>Head to head: one of you wins</span>',
     board: '🎲 Dice &amp; Board <span>Classic games, head to head</span>',
     casual: '🎨 Casual <span>Play together, just for fun</span>',
@@ -214,7 +215,10 @@
       : ' · the QR code comes back when a seat is free.';
     state.players.forEach(function (p, i) { renderSeat(i, p); });
 
-    $('games-hint').textContent = Ark.botSeat(state)
+    renderMode();
+    $('games-hint').textContent = state.mode === 'solo'
+      ? (state.readyToPlay ? 'Solo games: one of you plays and chases your best. Whoever picks it plays it.' : 'Solo games unlock once someone has joined.')
+      : Ark.botSeat(state)
       ? 'Games marked 🤖 Vs computer can be played against the computer. Choose here, from your phone, or with a controller (D-pad + A).'
       : state.readyToPlay
       ? 'Choose here, from either phone, or with a controller (D-pad + A).'
@@ -245,6 +249,7 @@
         (g.folderCard ? 'data-folder="' + Ark.escapeHtml(g.folderCard) + '">' : 'data-game="' + Ark.escapeHtml(g.id) + '"' + (state.readyToPlay && !off ? '' : ' disabled') + '>') +
         '<strong>' + Ark.escapeHtml(g.name) + tag + (pads && g.phoneOnly ? '<em class="tag">📱 Phones only</em>' : botTag || Ark.practiceTag(state, g)) + Ark.onlineTag(state, g) + Ark.gameLabels(g) + '</strong>' +
         '<span>' + Ark.escapeHtml(g.blurb || g.tagline) + '</span>' +
+        (g.solo && Ark.bestLine(g) ? '<em class="best">' + Ark.bestLine(g) + '</em>' : '') +
         '</button>'
       );
     }).join('');
@@ -267,6 +272,22 @@
   });
 
   $('to-lobby').addEventListener('click', function () { socket.emit('lobby:return'); });
+
+  // The lobby's 2 players / 1 player switch: which games it lists (the 1v1 ones, or the solo ones).
+  function renderMode() {
+    const solo = Boolean(state && state.mode === 'solo');
+    $('mode').textContent = solo ? '👤 1 player' : '👥 2 players';
+    $('mode').classList.toggle('solo', solo);
+  }
+  $('mode').addEventListener('click', function () {
+    if (!state) return;
+    socket.emit('lobby:mode', { mode: state.mode === 'solo' ? 'duo' : 'solo' }, function (res) {
+      if (res && res.error) return flashPad('⚠️ ' + res.error);
+      focus = 0;
+      openFolder = null;
+      flashPad(res.mode === 'solo' ? '👤 1 player: the solo games' : '👥 2 players: the 1v1 games');
+    });
+  });
 
   // Removing a player: tap ✕ on their seat, then "Remove?" within a few seconds.
   function kick(slot) {
@@ -442,6 +463,7 @@
     Object.keys(hubPads).forEach(function (k) { delete hubPads[k]; });
     $('stage').innerHTML = '';
     showHubSetup(null);
+    showSoloOver(null);
   }
 
   function mountGame(gameId) {
@@ -493,6 +515,8 @@
     $('lobby').classList.toggle('hidden', playing);
     $('stage').classList.toggle('hidden', !playing);
     $('to-lobby').classList.toggle('hidden', !playing);
+    $('mode').classList.toggle('hidden', playing);
+    if (!playing) showSoloOver(null);
 
     if (playing) {
       if (!current || current.gameId !== s.gameId) mountGame(s.gameId);
@@ -524,6 +548,7 @@
     if (setup !== wasSetup) renderPadFooter();
     markMatch(setup ? null : msg.view);
     showSidePreview(!setup && msg.view.phase === 'setup' && !msg.view.hidePreview); // (a game with its own setup menu)
+    showSoloOver(setup ? null : msg.view);
     if (setup) return; // the game hasn't started: the hub shows its setup screen
     if (current.renderer) current.renderer.update(msg.view);
     else {
@@ -531,6 +556,37 @@
       pendingAt = performance.now();
     }
   });
+
+  /** The running game's lobby entry (its name, whether it's a solo game, how it's scored). */
+  function currentGame() {
+    return state && current && state.games.find(function (g) { return g.id === current.gameId; });
+  }
+
+  /**
+   * The end of a solo game's run, the same for every solo game: the score, the best, what it
+   * unlocked and the game's own line (its renderer's overHtml). The 1v1 games draw their own.
+   */
+  let soloOverKey = '';
+  function showSoloOver(v) {
+    const g = v && currentGame();
+    const show = Boolean(g && g.solo && v.phase === 'over' && state && state.phase === 'playing');
+    $('run-over').classList.toggle('hidden', !show);
+    if (!show) {
+      soloOverKey = '';
+      return;
+    }
+    const r = current && current.renderer;
+    let extra = '';
+    try { extra = r && r.overHtml ? r.overHtml(v) : ''; } catch (e) { /* the end screen shows without it */ }
+    const p = state.players[v.soloSlot];
+    const pads = Object.keys(padSeats).length > 0;
+    const html = Ark.soloOverHtml(v, g, extra) +
+      '<div class="ro-next">' + (p ? '<strong>' + Ark.escapeHtml(p.name) + '</strong> · ' : '') +
+      (pads ? '<strong>A</strong> play again · ' + (v.hubSetup ? '<strong>Y</strong> change settings · ' : '') + '<strong>B</strong> lobby' : 'Play again or pick another game on your phone') + '</div>';
+    if (html === soloOverKey) return;
+    soloOverKey = html;
+    $('run-over').innerHTML = html;
+  }
 
   /**
    * A match on the TV: body.in-game while one is on, body.match-over once it has ended, with
@@ -1033,6 +1089,18 @@
     });
   });
 
+  // Typing on the TV's keyboard, for a game with a typing(key, view) hook (the solo word and number
+  // games): it returns the input to send, true (the key is taken, nothing to send) or null.
+  ArkPads.setTyping(function (key) {
+    const seat = padSeats[ArkPads.KEYBOARD];
+    const r = current && current.renderer;
+    if (!seat || !state || state.phase !== 'playing' || !r || !r.typing || !lastView || Ark.setup.isHub(lastView) || lastView.phase === 'over') return false;
+    const res = r.typing(key, lastView);
+    if (!res) return false;
+    if (res !== true) socket.emit('pad:input', { slot: seat.slot, input: res });
+    return true;
+  });
+
   ArkPads.onPress(function (idx, btn) {
     if (WATCH) return;
     if (newsOpen) {
@@ -1059,6 +1127,12 @@
       }
       if (seat && lastView && lastView.hubSetup && lastView.phase === 'over' && btn === 'Y') {
         return socket.emit('pad:input', { slot: seat.slot, input: { type: 'setup' } });
+      }
+      // A solo game's end screen (the hub's): A plays again, B goes back to the lobby.
+      const g = currentGame();
+      if (seat && g && g.solo && lastView && lastView.phase === 'over') {
+        if (btn === 'A' || btn === 'START') return socket.emit('pad:input', { slot: seat.slot, input: { type: 'rematch' } });
+        if (btn === 'B') return socket.emit('lobby:return');
       }
       const r = current && current.renderer;
       if (!seat || !r || !r.pad || !lastView) return;
@@ -1141,10 +1215,11 @@
       if (btn === 'UP' && next === focus) return enterBar(); // nothing above: up to the top bar
       focus = next;
     } else if (btn === 'A' || btn === 'START') {
-      if (!state.readyToPlay) flashPad('🎮 Waiting for a second player.');
+      if (!state.readyToPlay) flashPad(state.mode === 'solo' ? '🎮 Join first.' : '🎮 Waiting for a second player.');
       else if (cards[focus].phoneOnly && Ark.controllerSeated(state)) flashPad('📱 ' + cards[focus].name + ' needs two phones (no controllers).');
       else if (Ark.botTag(state, cards[focus])) flashPad('🤖 ' + cards[focus].name + (cards[focus].botSoon ? ': the computer can\'t play it yet (coming soon).' : ' needs a person, not the computer.'));
-      else socket.emit('lobby:start', { gameId: cards[focus].id }, function (res) {
+      // (seat.slot: a solo game is played by whoever picks it)
+      else socket.emit('lobby:start', { gameId: cards[focus].id, slot: seat.slot }, function (res) {
         if (res && res.error) flashPad('⚠️ ' + res.error);
       });
       return;

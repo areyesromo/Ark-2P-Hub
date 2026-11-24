@@ -258,3 +258,22 @@ em.tag.online-slow { color: var(--muted); }
   .hub-cols { grid-template-columns: minmax(0, 1fr); gap: 1rem; }
   .pv-box { font-size: 0.95em; min-height: 8.5em; }
 }
+
+/* ---- solo games (the lobby's 1 player mode) ---- */
+/* Setup choices still to be earned (a look, a level), and the end of a solo run. */
+.ark-setup .opt.on { background: var(--good); color: var(--on-good); }
+.ark-setup .opt.locked { opacity: 0.55; cursor: default; border: 1px dashed var(--line-strong); }
+.ark-setup .opt .why { display: block; font-size: var(--fs-sm); font-weight: 400; color: var(--muted); margin-top: 0.2em; }
+
+/* How a finished run went (Ark.recordHtml), on the TV and the phone */
+.new-best { color: var(--warn); font-weight: 900; }
+
+/* Achievements a run unlocked (Ark.unlockedHtml), popping in one after another */
+.ark-unlocked { display: flex; flex-direction: column; gap: 0.5em; width: 100%; }
+.ark-unlocked .ach { display: flex; align-items: center; gap: 0.8em; padding: 0.55em 0.9em; border-radius: var(--r-md); border: 2px solid var(--warn); background: linear-gradient(90deg, rgba(250, 204, 21, 0.16), rgba(250, 204, 21, 0.04)); text-align: left; animation: ach-pop 500ms cubic-bezier(0.2, 1.4, 0.4, 1) both; animation-delay: calc(400ms + var(--i) * 350ms); }
+.ark-unlocked .icon { font-size: 1.8em; line-height: 1; }
+.ark-unlocked .what { display: flex; flex-direction: column; flex: 1; min-width: 0; }
+.ark-unlocked .desc { color: var(--muted); font-size: 0.85em; }
+.ark-unlocked .tag { color: var(--warn); font-size: 0.7em; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em; white-space: nowrap; }
+@keyframes ach-pop { from { opacity: 0; transform: translateY(0.6em) scale(0.9); } }
+.ach-count { color: var(--warn); font-weight: 700; }

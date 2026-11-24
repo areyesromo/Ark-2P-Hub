@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (60)
+## Games (63)
 
 ### ⚔️ Competitive (36)
 
@@ -85,6 +85,24 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Marble Maze | `marble-maze` | Co-op 3D: tilt the board together to roll the marble to the goal. One of you tilts left and right, the other forwards and back. Mind the holes! | `server/games/marble-maze-bot.js`, `server/games/marble-maze.js`, `public/games/marble-maze/`, `test/marble-maze.test.js` |
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
+
+### 👤 Solo: 🕹️ Arcade (1)
+
+| Game | id | What it is | Files |
+| --- | --- | --- | --- |
+| Snake 1P | `snake-1p` | Eat, grow, don't bite your own tail. It speeds up as you go. | `server/solo/games/snake-1p.js`, `public/games/snake-1p/`, `test/solo-snake.test.js` |
+
+### 👤 Solo: 🧩 Puzzle (1)
+
+| Game | id | What it is | Files |
+| --- | --- | --- | --- |
+| Dog Park | `dogpark` | One dog per row, column and colour, and no two dogs touching. Can you fill the park? | `server/solo/games/dogpark-gen.js`, `server/solo/games/dogpark-levels.js`, `server/solo/games/dogpark.js`, `public/games/dogpark/`, `test/solo-dogpark.test.js`, `test/solo-mode.test.js` |
+
+### 👤 Solo: 🧠 Brain (1)
+
+| Game | id | What it is | Files |
+| --- | --- | --- | --- |
+| Reaction Rush 1P | `reaction-1p` | Wait for GO, then tap. Five rounds, your average time is your score. | `server/solo/games/reaction-1p.js`, `public/games/reaction-1p/`, `test/solo-reaction.test.js` |
 
 ## Minigames (52)
 

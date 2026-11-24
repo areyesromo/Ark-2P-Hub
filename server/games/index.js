@@ -1,4 +1,6 @@
 import reactionDuel from './reaction-duel.js';
+import { SOLO_GAMES, SOLO_CATEGORIES } from '../solo/games/index.js';
+import { soloGame } from '../solo/adapter.js';
 import rockPaperScissors from './rock-paper-scissors.js';
 import pong from './pong.js';
 import tron from './tron.js';
@@ -121,6 +123,9 @@ import { BLURBS } from './blurbs.js';
  * category is 'competitive' (the default: you play against each other),
  * 'board' (dice, cards and board games, also head to head) or 'casual'
  * (you play together, nobody really loses). The lobby groups them.
+ * The solo games (the lobby's 1 player mode, from Ark 1P Hub) add 'arcade', 'puzzle'
+ * and 'brain', with solo: true and score: { better, unit }: they keep their own contract
+ * (server/solo/games/index.js) and the room plays them through soloGame (server/solo/adapter.js).
  * needsPhone: true keeps a game out of "random" when both players use
  * controllers (one of them needs a private screen).
  * phoneOnly: true means both players need a phone: with a controller seated, the
@@ -347,11 +352,16 @@ const GAMES = [
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
   }),
   withSetup(sketchGuess, { rounds: { title: 'Rounds (you take turns drawing)', values: [6, 4, 8, 10], label: (n) => `${n} rounds` } }),
+  // The solo games: the lobby's 1 player mode (see server/solo/games/index.js).
+  ...SOLO_GAMES.map(soloGame),
 ];
 
-export const CATEGORIES = ['competitive', 'board', 'casual'];
+export const CATEGORIES = ['competitive', 'board', 'casual', ...SOLO_CATEGORIES];
 /** Background music moods a game can ask for; by default competitive games get 'action', casual ones 'casual'. */
 export const MUSIC_MOODS = ['action', 'thinking', 'casual'];
+
+/** The solo games' music by category (a game can still ask for its own). */
+const SOLO_MOOD = { arcade: 'action', puzzle: 'thinking', brain: 'casual' };
 
 /** Games the computer opponent is planned for: "⏳ Coming soon" in the lobby while it's seated. */
 const BOT_SOON = new Set([
@@ -387,7 +397,7 @@ export function listGames() {
   const byCategory = (g) => CATEGORIES.indexOf(g.category || 'competitive');
   return GAMES.slice()
     .sort((a, b) => byCategory(a) - byCategory(b))
-    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music, handheld, motion, bot }) => ({
+    .map(({ id, name, tagline, category, needsPhone, phoneOnly, music, handheld, motion, bot, solo, score }) => ({
       id,
       name,
       tagline,
@@ -401,8 +411,11 @@ export function listGames() {
       vsComputer: Boolean(bot), // lobby label: 🤖 Vs computer (a `bot` plays the other seat: see Room#driveBot)
       botSoon: !bot && BOT_SOON.has(id), // the computer can't play it yet, but will: "⏳ Coming soon"
       fast: FAST.has(id), // played over the internet: "🐢 Best in the same room" (a moment's delay shows)
+      // A solo game (the lobby's 1 player mode): one player, scored against their best (see server/solo/).
+      solo: Boolean(solo),
+      ...(solo ? { score } : {}),
       // The TV's background music for this game (see public/host/music.js).
-      music: MUSIC_MOODS.includes(music) ? music : category === 'casual' ? 'casual' : 'action',
+      music: MUSIC_MOODS.includes(music) ? music : SOLO_MOOD[category] || (category === 'casual' ? 'casual' : 'action'),
     }));
 }
 

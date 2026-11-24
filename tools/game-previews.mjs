@@ -32,6 +32,11 @@ const race = async (players) => {
 };
 const HOUSE = [[0.25, 0.85, 0.25, 0.45, 0.75, 0.45, 0.75, 0.85, 0.25, 0.85], [0.2, 0.47, 0.5, 0.15, 0.8, 0.47], [0.44, 0.85, 0.44, 0.65, 0.56, 0.65, 0.56, 0.85]];
 const NUDGE = {
+  // A solo game a little way in: Dog Park with a few balls and a dog down.
+  dogpark: async (players) => {
+    for (const cell of [0, 1, 5, 6]) { players[0].emit('game:input', { type: 'mark', cell, mark: 1 }); await sleep(120); }
+    players[0].emit('game:input', { type: 'mark', cell: 4, mark: 2 });
+  },
   // Mid-game boards: some squares dug, a hand dealt, a few guesses in.
   'mine-duel': async (players) => {
     for (const cell of [65, 30, 101, 77, 12, 118]) { both(players, { type: 'dig', cell }); await sleep(250); }
@@ -102,6 +107,7 @@ for (const name of ['Ana', 'Ben']) {
   players.push(s);
 }
 for (const g of games) {
+  await emit(players[0], 'lobby:mode', { mode: g.solo ? 'solo' : 'duo' }); // (the solo games are the 1 player lobby's)
   const res = await emit(players[0], 'lobby:start', { gameId: g.id });
   if (!res || !res.ok) { console.log(g.id, 'did not start:', res && res.error); continue; }
   await sleep(800);

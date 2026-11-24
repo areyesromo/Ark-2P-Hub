@@ -9,7 +9,8 @@ const reply = (ack, payload) => {
  *   host:resume   { code, hostToken, origin } -> ack { ok, code, hostToken }  (reopens the room after a restart)
  *   player:join   { code, name, token? }    -> ack { ok, code, slot, token, name }
  *   player:leave
- *   lobby:start   { gameId | 'random' }     -> ack { ok, gameId } | { error }
+ *   lobby:start   { gameId | 'random', slot? } -> ack { ok, gameId } | { error }  (slot: the TV's controller seat that picked it)
+ *   lobby:mode    { mode: 'duo' | 'solo' }  -> ack { ok, mode } | { error }  (the lobby's 2 players / 1 player switch)
  *   lobby:return
  *   lobby:tournament { bestOf } | { reset: true } -> ack { ok, tournament } | { error }
  *   game:input    { type, ... }              (players only, game-specific)
@@ -274,7 +275,15 @@ export function registerSocketHandlers(io, rooms, { refreshJoin, online = null, 
     socket.on('lobby:start', (data, ack) => {
       if (!room) return reply(ack, { error: 'Not in a room.' });
       if (watching()) return reply(ack, { error: watching() });
-      reply(ack, room.startGame(asObject(data).gameId));
+      const d = asObject(data);
+      // Who picked it (a solo game is theirs to play): this phone, or the TV's controller seat it names.
+      reply(ack, room.startGame(d.gameId, { slot: role === 'player' ? slot : Number.isInteger(d.slot) ? d.slot : null }));
+    });
+
+    socket.on('lobby:mode', (data, ack) => {
+      if (!room) return reply(ack, { error: 'Not in a room.' });
+      if (watching()) return reply(ack, { error: watching() });
+      reply(ack, room.setMode(asObject(data).mode));
     });
 
     socket.on('lobby:return', (_data, ack) => {

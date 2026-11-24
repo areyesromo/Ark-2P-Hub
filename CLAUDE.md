@@ -36,6 +36,21 @@ don't lower visual quality for a Raspberry Pi (pixel ratio, shadows, lights, tex
 - `test/<id>.test.js`: game tests use `fakeCtx()` from `test/helpers.js` (manual clock: `ctx.advance(ms)`), and
   pass a fixed rng into the game class where randomness matters.
 
+## Solo games (the lobby's 1 player mode)
+
+The lobby switches between 👥 2 players (the 1v1 games) and 👤 1 player (`room.mode`, `lobby:mode`).
+The solo games come from Ark 1P Hub (being moved in: `docs/MERGE-1P.md`) and live in `server/solo/`:
+`server/solo/games/` (one player, so `onInput(input)` and `playerView()`; their contract is at the top
+of `server/solo/games/index.js`, the `SOLO_GAMES` list), with 1P's own `options.js` (choices that
+unlock), `looks.js`, `stats.js` (runs and bests, in `solo-stats.json`) and `achievements.js`.
+`soloGame()` (`server/solo/adapter.js`) runs one on this hub's room: whoever picks it plays it
+(`ctx.soloSlot`), the other seat watches. The room records each run and adds `best` and, at the
+end, `record` to the views; the TV and phone draw the end screen (`Ark.soloOverHtml`), with the
+game's own line from its renderer's `overHtml(view)`. A solo game with a 2P twin has "1P" after
+its name and id for now (`snake-1p`). Tests: `test/solo-*.test.js`, with 1P's `fakeCtx` in
+`test/helpers-solo.js`. The TV's keyboard is a controller (`ArkPads.KEYBOARD`); a renderer's
+`typing(key, view)` takes letters and digits.
+
 ## Conventions
 
 - Server state is the truth; views are plain objects. Never send one player's hidden info in the other's

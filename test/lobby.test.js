@@ -28,7 +28,7 @@ test('the lobby lists recently played games first within each category', () => {
   assert.equal(games[2].lastPlayed, null);
   const cats = games.map((g) => g.category);
   assert.equal(cats.lastIndexOf('competitive') < cats.indexOf('casual'), true, 'categories stay grouped');
-  assert.equal(games.length, listGames().length);
+  assert.equal(games.length, listGames().filter((g) => !g.solo).length, 'the 2 players lobby: every game but the solo ones');
 });
 
 test('random picks a playable game that is not the one just played', () => {
@@ -52,11 +52,11 @@ test('random picks a playable game that is not the one just played', () => {
   for (let i = 0; i < 400; i++) seen.add(withPhone.pickRandomGame());
   assert.ok(seen.has('mind-meld'), 'the phone player can give the clues');
   for (const g of listGames().filter((x) => x.phoneOnly)) assert.ok(!seen.has(g.id), g.id);
-  // Two phones: every game can come up.
+  // Two phones: every 2 player game can come up (the solo ones are the 1 player lobby's).
   const phones = room({ phones: [true, true] });
   const all = new Set();
   for (let i = 0; i < 600; i++) all.add(phones.pickRandomGame());
-  assert.equal(all.size, listGames().length);
+  assert.equal(all.size, listGames().filter((g) => !g.solo).length);
 });
 
 test('a phone-only game will not start while a controller holds a seat', () => {

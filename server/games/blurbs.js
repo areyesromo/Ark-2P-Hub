@@ -4,6 +4,10 @@
  * setup screen (Ark.preview, with public/shared/game-guide.json). Keep each under 50 letters.
  */
 export const BLURBS = {
+  // The solo games (1 player)
+  'snake-1p': 'Eat, grow, beat your best.',
+  dogpark: 'One dog per row, column and colour.',
+  'reaction-1p': 'Five taps: your average is your score.',
   'reaction-duel': 'Wait for GO, then tap first.',
   'rock-paper-scissors': 'Secret picks, revealed on the TV.',
   pong: 'The classic paddle duel.',

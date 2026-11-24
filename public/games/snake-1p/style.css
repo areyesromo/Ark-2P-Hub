@@ -1,0 +1,20 @@
+/* ---- TV ---- */
+
+.snk1-host { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 0.8rem; font-size: 1.2rem; }
+.snk1-stats { display: flex; justify-content: center; gap: 3rem; color: var(--muted); font-size: var(--fs-md); }
+.snk1-stats strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.snk1-arena { flex: 1; min-height: 0; position: relative; display: flex; align-items: center; justify-content: center; }
+.snk1-arena canvas { display: block; border-radius: var(--r-md); border: 2px solid var(--line-strong); background: #05070f; }
+/* Wrap-round walls: a dashed edge, you come out the other side. */
+.snk1-arena canvas.wrap { border-style: dashed; border-color: var(--line); }
+.snk1-overlay { position: absolute; inset: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.8rem; pointer-events: none; text-align: center; }
+.snk1-overlay .big { font-size: 7rem; font-weight: 900; text-shadow: 0 0 2rem rgba(0, 0, 0, 0.9); }
+.snk1-overlay .sub { font-size: 1.7rem; color: var(--muted); text-shadow: 0 0 1rem #000, 0 0 1rem #000; }
+
+/* ---- phone ---- */
+
+.snk1-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 12px 16px 16px; text-align: center; }
+.snk1-phone .score { color: var(--muted); font-weight: 700; }
+.snk1-phone .score strong { color: var(--me); font-size: var(--fs-lg); }
+.snk1-phone .status { font-size: var(--fs-md); min-height: 1.4em; }
+.snk1-phone .pause { align-self: center; min-width: 10rem; }

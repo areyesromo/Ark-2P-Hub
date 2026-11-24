@@ -283,3 +283,36 @@ body.own-setup #pad-footer { grid-column: 1 / -1; }
 .side-preview .hub-title { font-size: 2rem; font-weight: 900; }
 .side-preview .hub-blurb { margin: -0.4rem 0 0; color: var(--muted); font-size: 1.1rem; }
 .side-preview .pv-box { font-size: 1.05rem; }
+
+/* ---- solo games: the end of a run, drawn by the hub over the bottom of the game (see showSoloOver) ---- */
+.run-over {
+  position: fixed;
+  left: 50%;
+  bottom: 2.5rem;
+  transform: translateX(-50%);
+  z-index: 5;
+  min-width: min(34rem, 90vw);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 1rem 2rem;
+  border-radius: var(--radius);
+  border: 2px solid var(--p1);
+  background: var(--panel);
+  box-shadow: 0 1rem 3rem rgba(0, 0, 0, 0.6);
+  text-align: center;
+  animation: ro-in 260ms ease-out;
+}
+.run-over .ro-game { color: var(--muted); font-weight: 800; }
+.run-over .ro-score { font-size: var(--fs-2xl); font-weight: 900; font-variant-numeric: tabular-nums; }
+.run-over .ro-record { font-size: var(--fs-lg); }
+.run-over .ro-extra { color: var(--muted); }
+.run-over .ro-next { font-size: 1rem; color: var(--muted); }
+.run-over .ro-next strong { color: var(--text); }
+.run-over .ark-unlocked { font-size: 1.05rem; margin: 0.3rem 0; }
+@keyframes ro-in { from { opacity: 0; transform: translate(-50%, 1rem); } }
+
+/* The lobby's 2 players / 1 player switch (in the top bar) */
+.mode-switch.solo { border-color: var(--p1); color: var(--p1); }
+.game-card .best { display: block; font-style: normal; font-size: 0.85rem; font-weight: 700; color: var(--warn); margin-top: 0.3rem; }
