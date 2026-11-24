@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.63
+
+- ⚫ Five in a Row: five stones in a line on a big grid wins, with Pente's captures as an option.
+- ⚪ Nine Men's Morris: place your nine pieces, slide them, and make mills to take theirs.
+- 🔐 Code Breaker: set a secret four-digit code on your phone, then crack theirs with bulls and cows.
+- 🪢 Hangman Duel: set a secret word for each other, then race to guess theirs letter by letter.
+- 🥤 A new party minigame, Cup Stack: build the cup pyramids and take them down, tapping the hand
+  the strip shows.
+
 ## 0.1.62
 
 - ♟️ Chess: the full game with a chess clock each, on the TV and your phone. The computer plays at

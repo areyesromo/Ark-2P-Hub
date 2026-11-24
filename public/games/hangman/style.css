@@ -1,0 +1,67 @@
+/* Hangman Duel: chalk on a blackboard. The chalkboard and wood keep their own colours (they're the
+   picture); the frame and text follow the theme. */
+
+.hg-gallows { width: 100%; height: 100%; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.hg-gallows .wood, .hg-gallows .brace { stroke: #b07a45; stroke-width: 5; }
+.hg-gallows .man { stroke: #f4f1e6; stroke-width: 4; }
+.hg-gallows .man .fresh { animation: hg-draw 0.45s ease-out; }
+.hg-gallows .face { stroke-width: 2; }
+.hg-gallows.hanged .man { stroke: #ff7a7a; }
+.hg-gallows.solved .man { stroke: #8af0a8; }
+@keyframes hg-draw { from { opacity: 0; transform: translateY(-4px); } }
+
+.hg-tiles { display: flex; justify-content: center; gap: 0.3em; flex-wrap: wrap; }
+.hg-tile { display: grid; place-items: center; width: 1.3em; height: 1.5em; border-bottom: 0.14em solid #f4f1e6; color: #f4f1e6; font-family: 'Comic Sans MS', 'Chalkboard SE', 'Segoe Print', cursive; font-weight: 700; text-transform: uppercase; }
+.hg-tile.found { animation: hg-pop 0.3s ease-out; }
+.hg-tile.missed { color: #ff9a9a; }
+@keyframes hg-pop { from { transform: scale(1.5); opacity: 0; } }
+
+/* ---- TV ---- */
+.hg-host { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+.hg-caption { text-align: center; font-size: 1.4rem; font-weight: 800; min-height: 2rem; }
+.hg-caption .ark-result { font-size: 2rem; }
+.hg-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.hg-board { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; padding: 1.2rem 1.4rem; border-radius: var(--radius); background: radial-gradient(ellipse at 40% 30%, #2f4a3c, #1a2a22 75%); border: 10px solid #6b4526; box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.55), 0 6px 18px rgba(0, 0, 0, 0.4); color: #f4f1e6; overflow: hidden; }
+.hg-board.p1 header { border-color: var(--p1); }
+.hg-board.p2 header { border-color: var(--p2); }
+.hg-board.solved { border-color: #c9a227; }
+.hg-board header { align-self: stretch; font-size: 1.15rem; font-weight: 800; padding-bottom: 0.4rem; border-bottom: 3px solid; }
+.hg-art { flex: 1; min-height: 0; width: 100%; max-height: 16rem; display: flex; justify-content: center; }
+.hg-art .hg-gallows { width: auto; }
+.hg-board .hg-tiles { font-size: 2.6rem; }
+.hg-tiles.waiting { font-size: 2.4rem; opacity: 0.6; }
+.hg-wrong { min-height: 2rem; display: flex; gap: 0.5rem; font-size: 1.5rem; font-family: 'Comic Sans MS', 'Chalkboard SE', cursive; text-transform: uppercase; color: #ff9a9a; }
+.hg-wrong span { text-decoration: line-through; }
+.hg-board footer { min-height: 1.6rem; font-size: 1.1rem; color: #c8d3c9; }
+.hg-board footer b { color: #ffd23f; }
+
+/* ---- phone ---- */
+.hg-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 6px 14px; }
+.hg-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); padding: 0 4px; }
+.hg-mine { color: var(--text); text-transform: uppercase; letter-spacing: 0.08em; }
+.hg-msg { margin: 0; text-align: center; font-size: 1.15rem; min-height: 1.5em; }
+.hg-msg small { color: var(--muted); }
+.hg-msg .won { color: var(--good); font-weight: 900; }
+.hg-msg .lost { color: var(--bad); font-weight: 900; }
+.hg-msg .big { font-size: 1.6rem; }
+.hg-mine-board { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 10px; border-radius: var(--r-md); background: radial-gradient(ellipse at 40% 30%, #2f4a3c, #1a2a22 75%); border: 6px solid #6b4526; }
+.hg-mine-board .hg-gallows { height: 140px; width: auto; }
+.hg-mine-board .hg-tiles { font-size: 1.9rem; }
+.hg-them { margin: 0; display: flex; flex-direction: column; align-items: center; gap: 4px; color: var(--muted); }
+.hg-them .hg-tiles { font-size: 1.25rem; }
+.hg-them .hg-tile { color: var(--text); border-color: var(--muted); }
+.hg-entry { display: flex; justify-content: center; gap: 0.25em; min-height: 3rem; padding: 10px; border-radius: var(--r-md); background: #1a2a22; font-size: 1.8rem; }
+.hg-entry.shake { animation: hg-shake 0.4s; }
+.hg-hint { align-self: center; font-size: 1rem; color: #9fb0a4; }
+@keyframes hg-shake { 20%, 60% { transform: translateX(-8px); } 40%, 80% { transform: translateX(8px); } }
+.hg-rejected { margin: 0; text-align: center; color: var(--bad); }
+.hg-keys { margin-top: auto; display: flex; flex-direction: column; gap: 6px; }
+.hg-row { display: flex; justify-content: center; gap: 4px; }
+.hg-row button { flex: 1; max-width: 2.6rem; padding: 13px 0; border: 0; border-radius: var(--r-sm); background: var(--btn); color: var(--text); font-size: 1.2rem; font-weight: 800; text-transform: uppercase; }
+.hg-row button.wide { flex: 1.6; max-width: 4.4rem; font-size: 1rem; text-transform: none; }
+.hg-row button.ok { background: var(--good); color: var(--on-good, #062); }
+.hg-row button:disabled { opacity: 0.35; }
+.hg-row button.hit { background: var(--good); color: var(--on-good, #062); opacity: 0.7; }
+.hg-row button.miss { background: transparent; color: var(--muted); opacity: 0.4; }
+.hg-phone .rematch { margin-top: auto; }
+@media (prefers-reduced-motion: reduce) { .hg-tile.found, .hg-gallows .man .fresh, .hg-entry.shake { animation: none; } }

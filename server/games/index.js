@@ -102,6 +102,14 @@ import ludo from './ludo.js';
 import { ludoBot } from './ludo-bot.js';
 import dominoes from './dominoes.js';
 import { dominoesBot } from './dominoes-bot.js';
+import fiveInARow from './five-in-a-row.js';
+import { fiveInARowBot } from './five-in-a-row-bot.js';
+import morris from './morris.js';
+import { morrisBot } from './morris-bot.js';
+import codeBreaker from './code-breaker.js';
+import { codeBreakerBot } from './code-breaker-bot.js';
+import hangman from './hangman.js';
+import { hangmanBot } from './hangman-bot.js';
 import { withSetup } from './options.js';
 import { BLURBS } from './blurbs.js';
 
@@ -245,6 +253,12 @@ const GAMES = [
     quest: { title: 'Quest', values: [5, 3], label: (n) => (n === 5 ? 'Full: 5 floors (with the Ice Caves and the Armory)' : 'Short: 3 floors') },
   }),
   { ...wordRace, bot: wordRaceBot },
+  withSetup({ ...codeBreaker, bot: codeBreakerBot }, { ...firstTo('Rounds to win', [2, 1, 3]), ...timer('timed', '60 s to set your code, 60 s a guess') }),
+  withSetup({ ...hangman, bot: hangmanBot }, {
+    words: { title: 'Words', values: ['players', 'hub'], label: (k) => (k === 'hub' ? 'The hub picks a word for each of you' : 'You set a word for each other') },
+    ...firstTo('Rounds to win', [2, 1, 3]),
+    ...timer('timed', '60 s to set your word, 150 s a round'),
+  }),
   withSetup({ ...fiveLetters, bot: fiveLettersBot }, { ...firstTo('Rounds to win', [3, 2, 5]), ...timer('timed', '180 s a word') }),
   withSetup({ ...make24, bot: make24Bot }, {
     ...firstTo('Rounds to win', [5, 3, 7]),
@@ -303,6 +317,12 @@ const GAMES = [
     ...timer('timed', '30 s a turn'),
   }),
   withSetup({ ...ludo, bot: ludoBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '12 s to roll, 15 s to move') }),
+  withSetup({ ...fiveInARow, bot: fiveInARowBot }, {
+    ...firstTo('Games to win', [1, 2, 3]),
+    captures: { title: 'Captures', values: [0, 1], label: (n) => (n ? 'On: take pairs (five pairs also wins)' : 'Off: just five in a row') },
+    ...timer('timed', '30 s a move'),
+  }),
+  withSetup({ ...morris, bot: morrisBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
   withSetup({ ...reversi, bot: reversiBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
   withSetup({ ...backgammon, bot: backgammonBot }, {
     points: { title: 'Match', values: [3, 1, 5, 7], label: (n) => (n === 1 ? 'One game' : `First to ${n} points`) },
@@ -354,11 +374,11 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
-  board: ['chess', 'checkers', 'connect-four', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
+  board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
   cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'liars-dice', 'memory-match'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;

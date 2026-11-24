@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (56)
+## Games (60)
 
-### ⚔️ Competitive (34)
+### ⚔️ Competitive (36)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -39,6 +39,8 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Crazy Eights | `crazy-eights` | Card game: match the top card's suit or rank, eights are wild (call the suit), 2s make them draw. First to empty their hand wins the hand. | `server/games/crazy-eights-bot.js`, `server/games/crazy-eights.js`, `public/games/crazy-eights/`, `test/crazy-eights.test.js` |
 | Tower Defence Duel | `tower-duel` | Build towers to stop the creeps on your road and spend gold to send creeps down your rival's. Run out of lives and you lose. | `server/games/tower-duel-bot.js`, `server/games/tower-duel.js`, `public/games/tower-duel/`, `test/tower-duel.test.js` |
 | Word Race | `word-race` | Same letter grid, against the clock: swipe words on your phone. Words you both find cancel out, so go rare. Or Race: first to the target points takes the round. | `server/games/word-race-bot.js`, `server/games/word-race-common.js`, `server/games/word-race.js`, `public/games/word-race/`, `test/anagram-duel.test.js`, `test/word-race.test.js` |
+| Code Breaker | `code-breaker` | Set a secret four-digit code, then crack theirs: bulls are right digits in the right place, cows right digits in the wrong place. | `server/games/code-breaker-bot.js`, `server/games/code-breaker.js`, `public/games/code-breaker/`, `test/code-breaker.test.js` |
+| Hangman Duel | `hangman` | Set a secret word for each other, then race to guess theirs letter by letter. Seven wrong letters and you're out. | `server/games/hangman-bot.js`, `server/games/hangman.js`, `public/games/hangman/`, `test/hangman.test.js` |
 | Five Letters | `five-letters` | The same hidden word for you both, six guesses each. Green: right spot. Yellow: in the word. Fewest guesses wins the round. | `server/games/five-letters-bot.js`, `server/games/five-letters.js`, `server/games/anagram-words.js`, `public/games/five-letters/`, `test/five-letters.test.js` |
 | Make 24 | `make-24` | Four numbers: join two with + − × ÷ and they become one. Make 24 before your rival does. | `server/games/make-24-bot.js`, `server/games/make-24.js`, `public/games/make-24/`, `test/make-24.test.js` |
 | Anagram Duel | `anagram-duel` | Same five mixed-up letters for both of you: the first to make a word with all of them takes the round. | `server/games/anagram-duel-bot.js`, `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js` |
@@ -50,7 +52,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four-bot.js`, `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |
 | Memory Match | `memory-match` | Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. Or Race: your own board each, first to clear it. | `server/games/memory-match-bot.js`, `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js` |
 
-### 🎲 Dice & Board (14)
+### 🎲 Dice & Board (16)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -61,6 +63,8 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Chess | `chess` | The full game on the TV and your phone, with a chess clock each. Checkmate to win. | `server/games/chess-bot.js`, `server/games/chess-rules.js`, `server/games/chess.js`, `public/games/chess/`, `test/chess.test.js` |
 | Dominoes | `dominoes` | Match the numbers at either end of the line; can't, and you draw from the boneyard. Play your last tile to score what they hold. First to 100. | `server/games/dominoes-bot.js`, `server/games/dominoes.js`, `public/games/dominoes/`, `test/dominoes.test.js` |
 | Ludo | `ludo` | Roll a 6 to bring a pawn out, race round the board and send theirs back to the yard. First to bring all four home. | `server/games/ludo-bot.js`, `server/games/ludo.js`, `public/games/ludo/`, `test/ludo.test.js` |
+| Five in a Row | `five-in-a-row` | Take turns placing stones on a big grid. Five in a line, any direction, wins. | `server/games/five-in-a-row-bot.js`, `server/games/five-in-a-row.js`, `public/games/five-in-a-row/`, `test/five-in-a-row.test.js` |
+| Nine Men's Morris | `morris` | Place your nine pieces, then slide them. Three in a line (a mill) takes one of theirs. Leave them with two. | `server/games/morris-bot.js`, `server/games/morris.js`, `public/games/morris/`, `test/morris.test.js` |
 | Reversi | `reversi` | Trap a line of their discs between two of yours and they all flip to your colour. Most discs on the board wins. | `server/games/reversi-bot.js`, `server/games/reversi.js`, `public/games/reversi/`, `test/reversi.test.js` |
 | Backgammon | `backgammon` | Race your 15 checkers round and off the board. Hit a lone checker to send it back; double the stakes with the cube. First to 3 points. | `server/games/backgammon-bot.js`, `server/games/backgammon.js`, `public/games/backgammon/`, `test/backgammon.test.js` |
 | Mine Duel | `mine-duel` | One minefield, and you want the mines: dig one up and go again, dig a safe square and it's their turn. First to 13 of the 25 mines. | `server/games/mine-duel-bot.js`, `server/games/mine-duel.js`, `public/games/mine-duel/`, `test/mine-duel.test.js` |
@@ -82,7 +86,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Mind Meld | `mind-meld` | Co-op: one of you secretly sees a spot on a scale (Cold ↔ Hot) and gives a clue; the other turns the dial to it. Closer means more stars. | `server/games/mind-meld.js`, `public/games/mind-meld/`, `test/mind-meld.test.js` |
 | Sketch & Guess | `sketch-guess` | One of you draws a secret word on your phone, the other guesses. Play as a team and collect stars. 6 rounds. | `server/games/sketch-guess.js`, `server/games/sketch-words.js`, `public/games/sketch-guess/`, `test/sketch-guess.test.js`, `test/sounds.test.js` |
 
-## Minigames (51)
+## Minigames (52)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -140,6 +144,7 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Bridge Builder | `bridge-builder` | party | 2D | Take turns placing crates. Tip it and you lose; when it is full the heavier side loses | `server/games/minis/bridge-builder.js`, `public/games/minis/bridge-builder.js`, `test/minis-party10.test.js` |
 | Pancake Flip | `pancake-flip` | party | 2D | FLIP when the meter is green, then CATCH it flat. Tallest stack wins | `server/games/minis/pancake-flip.js`, `public/games/minis/pancake-flip.js`, `test/minis-party10.test.js` |
 | Hot Air Race | `hot-air-race` | party | 2D | Hold BURN to rise, let go to sink. Find the fastest wind and race to the flag | `server/games/minis/hot-air-race.js`, `public/games/minis/hot-air-race.js`, `test/minis-party10.test.js` |
+| Cup Stack | `cup-stack` | party | 2D | Tap LEFT or RIGHT as the strip shows: build each pyramid, then take it down. Wrong hand fumbles | `server/games/minis/cup-stack.js`, `public/games/minis/cup-stack.js`, `test/minis-party10.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->

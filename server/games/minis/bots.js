@@ -575,6 +575,17 @@ export const PLAYERS = {
     }
     return null;
   },
+  'cup-stack'({ s, you, L, rng, el, react }) {
+    // It reads the strip and taps at a person's pace (a beat longer at each new pyramid), now and then
+    // with the wrong hand; after a fumble it waits it out and reads the strip again.
+    const k = s.step[you];
+    if (s.doneAt[you] !== null || k >= s.total) return null;
+    const wait = Math.max(0, s.lockUntil[you] - el);
+    let ms = (2400 / L.rate) * (0.8 + rng() * 0.4);
+    if (wait || k === 0 || s.stacks.reduce((a, n) => a.concat(a.at(-1) + n, a.at(-1) + 2 * n), [0]).includes(k)) ms += react();
+    const hand = rng() < L.slip * 1.5 ? (s.seq[k] === 'L' ? 'R' : 'L') : s.seq[k];
+    return { type: 'tap', hand, botDelayMs: wait + ms, botFor: k + ':' + s.fumbles[you] };
+  },
   'hot-air-race'({ s, you, L, rng, m, level, react, el }) {
     // It heads for the fastest wind it has noticed (a wind change takes it a moment to see, Easy
     // longer, and Easy now and then settles for the next best), and burns or lets it cool by where

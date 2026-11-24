@@ -1,4 +1,4 @@
-// Bubble Pop, Bridge Builder and Pancake Flip, driven directly through their api.
+// Bubble Pop, Bridge Builder, Pancake Flip and Cup Stack, driven directly through their api.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
@@ -271,4 +271,52 @@ test('hot-air-race: the first to the flag wins; at time up, the one further on',
   t.ctx.advance(3000);
   t.inst.onTimeUp();
   assert.deepEqual(t.ended(), { winner: 0 });
+});
+
+import cupStack, { STACKS, TOTAL, FUMBLE_MS, segments } from '../server/games/minis/cup-stack.js';
+
+test('cup-stack: a 2D party minigame in the party list; three pyramids up and down', () => {
+  assert.equal(cupStack.kind, 'party');
+  assert.ok(PARTIES.includes(cupStack));
+  assert.ok(cupStack.durationMs <= 80000 && cupStack.howTo && cupStack.order);
+  assert.equal(TOTAL, STACKS.reduce((a, n) => a + 2 * n, 0));
+  assert.deepEqual(segments()[1], { size: 6, from: 6, peak: 12, to: 18 });
+});
+
+test('cup-stack: the right hand stacks a cup; the wrong one fumbles and locks you out a moment', () => {
+  const { inst, ctx } = run(cupStack);
+  const v = () => inst.view();
+  const seq = v().seq;
+  assert.match(seq, /^[LR]{38}$/);
+  const other = (h) => (h === 'L' ? 'R' : 'L');
+  inst.onInput(0, { type: 'tap', hand: seq[0] });
+  assert.deepEqual(v().step, [1, 0]);
+  inst.onInput(0, { type: 'tap', hand: other(seq[1]) });
+  assert.equal(v().fumbles[0], 1);
+  assert.equal(v().last[0].kind, 'fumble');
+  inst.onInput(0, { type: 'tap', hand: seq[1] });
+  assert.equal(v().step[0], 1, 'still fumbling');
+  ctx.advance(FUMBLE_MS);
+  inst.onInput(0, { type: 'tap', hand: seq[1] });
+  inst.onInput(0, { type: 'tap', hand: seq[2] });
+  assert.equal(v().step[0], 3);
+  assert.equal(v().last[0].kind, 'built');
+  for (const bad of [{ type: 'tap', hand: 'X' }, { type: 'tap' }, { type: 'nope', hand: 'L' }]) inst.onInput(0, bad);
+  inst.onInput(2, { type: 'tap', hand: seq[0] });
+  assert.deepEqual(v().step, [3, 0]);
+});
+
+test('cup-stack: the first to finish all three wins; at time up the one further along', () => {
+  const a = run(cupStack);
+  const seq = a.inst.view().seq;
+  for (const h of seq) a.inst.onInput(1, { type: 'tap', hand: h });
+  assert.deepEqual(a.ended(), { winner: 1 });
+  const b = run(cupStack, 2);
+  const s2 = b.inst.view().seq;
+  b.inst.onInput(0, { type: 'tap', hand: s2[0] });
+  b.inst.onTimeUp();
+  assert.deepEqual(b.ended(), { winner: 0 });
+  const c = run(cupStack, 3);
+  c.inst.onTimeUp();
+  assert.deepEqual(c.ended(), { winner: null });
 });
