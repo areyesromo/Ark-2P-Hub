@@ -228,7 +228,7 @@
   "controls": "<strong>A</strong> rolls · <strong>◀ ▶</strong> picks a checker, <strong>A</strong> moves it (◀ ▶ picks where), <strong>B</strong> puts it back · <strong>X</strong> undoes · <strong>Y</strong> doubles · on a double: <strong>A</strong> takes, <strong>B</strong> drops · Gin Rummy needs phones (the hands are secret)"
  },
  "mine-duel": {
-  "rules": "One minefield (12×12, 25 mines) and here you *want* the mines. Take turns digging a square: a mine is yours, with your flag on it, and you go again. A safe square shows how many mines touch it (an empty one opens up around it) and it's your rival's turn, so a careless dig hands them clues. First to 13 mines wins. Tap a square on your phone. 25 s a turn (a random square if you run out). 🤖 Against the computer: it reads the numbers like a person; Hard works out mines from two numbers together.",
+  "rules": "One minefield (12×12, 25 mines) and here you *want* the mines. Take turns digging a square: a mine is yours, with your flag on it, and you go again. A safe square shows how many mines touch it (an empty one opens up around it) and it's your rival's turn, so a careless dig hands them clues. First to 13 mines wins. Tap a square on your phone. 25 s a turn (a random square if you run out). 🤖 Against the computer: it reads the numbers like a person; Hard works out mines from two numbers together. On your own? <strong>Minesweeper</strong> in the 1 player lobby: the classic, clear the field without a bang.",
   "settings": "One game, or first to 2 or 3; timed (30 s a move in Reversi, 25 s a turn in Mine Duel) or no timer",
   "controls": "<strong>D-pad</strong> moves your spade · <strong>A</strong> digs"
  },
@@ -336,8 +336,8 @@
   "rules": "Word Hunt on your own, every word yours to find: Words are hidden in a grid of letters in straight lines: drag on the phone from a word's first letter to its last (or tap both) to mark it. The list says which words to find and crosses them off. 8 × 8 hides 6 words across and down, 10 × 10 hides 8 with diagonals too, and 12 × 12 hides 10 any way at all, even backwards. Score: your time to find them all, per size.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> on a word's first letter then <strong>A</strong> on its last, <strong>B</strong> lets go · keyboard: Arrows, <strong>Enter</strong>, <strong>Backspace</strong> · Drag from the first letter to the last"
  },
- "minesweeper-1p": {
-  "rules": "Open every cell that isn't a mine. A number counts the mines in the 8 cells around it. Tap to dig, hold to flag (or switch the phone to 🚩 flag mode); tapping a number whose mines are all flagged opens the rest around it. The first cell you open is always safe. Three fields: Easy 9×9 (10 mines), Medium 16×16 (40), Hard 30×16 (99, shown turned on an upright phone). Score: your time, only when you clear the field; lower is better, and each field has its own bests.",
+ "solo:mine-duel": {
+  "rules": "Mine Duel's field, the other goal: open every cell that isn't a mine. A number counts the mines in the 8 cells around it. Tap to dig, hold to flag (or switch the phone to 🚩 flag mode); tapping a number whose mines are all flagged opens the rest around it. The first cell you open is always safe. Three fields: Easy 9×9 (10 mines), Medium 16×16 (40), Hard 30×16 (99, shown turned on an upright phone). Score: your time, only when you clear the field; lower is better, and each field has its own bests.",
   "controls": "<strong>D-pad</strong> moves a cursor on the TV, <strong>A</strong> opens, <strong>X</strong> / <strong>B</strong> flags · keyboard: Arrows, <strong>Enter</strong>, <strong>Q</strong> / <strong>Backspace</strong>"
  },
  "sudoku": {

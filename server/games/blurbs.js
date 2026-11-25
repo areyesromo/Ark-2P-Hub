@@ -19,7 +19,7 @@ export const BLURBS = {
   bubbles: 'Aim and pop three of a colour.',
   hopper: 'Hop the road and the river.',
   '2048': 'Slide and merge the tiles to 2048.',
-  'minesweeper-1p': 'Clear the field, flag the mines.',
+  'solo:mine-duel': 'Clear the field, flag the mines.',
   sudoku: 'Nine boxes, nine numbers, no repeats.',
   solitaire: 'Klondike: build the suits up to the king.',
   freecell: 'Every card face up; four cells to help.',

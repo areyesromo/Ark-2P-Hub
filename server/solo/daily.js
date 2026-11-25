@@ -17,7 +17,7 @@ export const POOL = [
   { game: 'blocks-1p', settings: {} },
   { game: 'gems', settings: {} },
   { game: '2048', settings: {} },
-  { game: 'minesweeper-1p', settings: { size: 'medium' } },
+  { game: 'mine-duel', settings: { size: 'medium' } },
   { game: 'sudoku', settings: { level: 'medium' } },
   { game: 'nonogram', settings: { size: 10 } },
   { game: 'solitaire', settings: { draw: 1 } },

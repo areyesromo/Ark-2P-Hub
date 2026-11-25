@@ -1,7 +1,9 @@
+// Minesweeper, the 1 player mode of Mine Duel (it was 1P's Minesweeper): server/games/mine-duel.js, soloMinesweeper.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx, seeded } from './helpers-solo.js';
-import { Minesweeper, SIZES } from '../server/solo/games/minesweeper-1p.js';
+import { Minesweeper, SIZES, soloMinesweeper } from '../server/games/mine-duel.js';
+import { getGame, soloGameOf, listGames } from '../server/games/index.js';
 
 function game(size = 'easy') {
   const ctx = fakeCtx('Ana', { size });
@@ -83,4 +85,15 @@ test('bad cells are ignored', () => {
   const { g } = game();
   for (const cell of [-1, 81, 1.5, '3', null]) g.onInput({ type: 'open', cell });
   assert.equal(g.mines, null);
+});
+
+test('one game in both lobbies: Mine Duel and Minesweeper, under one id', () => {
+  assert.equal(getGame('mine-duel').name, 'Mine Duel');
+  assert.equal(soloGameOf('mine-duel').name, 'Minesweeper');
+  const run = soloMinesweeper.create(fakeCtx('Ana', { size: 'hard' }));
+  assert.equal(run.cfg.w, 30);
+  run.start();
+  assert.equal(run.hostView().solo, true, 'its screens are Minesweeper\'s');
+  assert.equal(run.playerView().solo, true);
+  assert.ok(!listGames().some((g) => g.id === 'minesweeper-1p'), 'Minesweeper 1P is gone');
 });

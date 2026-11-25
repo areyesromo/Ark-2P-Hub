@@ -10,6 +10,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   mix or one topic. (A fresh high-score table.)
 - 🔍 Word Search 1P is now **Word Search**, Word Hunt's 1 player mode: Word Hunt's grids and words, one
   more word to find in each size. (A fresh high-score table.)
+- 💣 Minesweeper 1P is now **Minesweeper**, Mine Duel's 1 player mode: the same game as before (three
+  fields, chording, flags), now beside Mine Duel. (A fresh high-score table.)
 
 ## 0.1.69
 

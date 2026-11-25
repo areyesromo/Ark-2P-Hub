@@ -59,7 +59,7 @@ import { soloTrivia as trivia, TOPICS as TRIVIA_TOPICS } from '../../games/quiz.
 import maths from './maths.js';
 import colours from './colours.js';
 import game2048 from './2048.js';
-import minesweeper, { SIZES as MINE_SIZES } from './minesweeper-1p.js';
+import { soloMinesweeper as minesweeper, SIZES as MINE_SIZES } from '../../games/mine-duel.js'; // (a game for both modes)
 import simon from './simon.js';
 import { soloReaction as reaction } from '../../games/reaction-duel.js'; // (a game for both modes)
 import { withSetup } from './options.js';

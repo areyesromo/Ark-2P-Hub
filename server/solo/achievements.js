@@ -96,7 +96,7 @@ export const ACHIEVEMENTS = [
     { id: '2048-512', icon: '🔢', name: 'Halfway there', desc: '2048: make a 512 tile.', check: (r, v) => v.biggest >= 512 },
     { id: '2048-2048', icon: '🎯', name: '2048!', desc: '2048: make the 2048 tile.', check: (r, v) => v.biggest >= 2048 },
   ]),
-  ...game('minesweeper-1p', [
+  ...game('mine-duel', [
     { id: 'mines-easy', icon: '🚩', name: 'Sweeper', desc: 'Minesweeper: clear an Easy field.', check: (r, v) => scored(r) && r.variant === 'Easy' },
     { id: 'mines-easy-60', icon: '⏱️', name: 'Quick sweep', desc: 'Minesweeper: clear an Easy field in under a minute.', check: (r) => scored(r) && r.variant === 'Easy' && r.score < MIN },
     { id: 'mines-hard', icon: '💣', name: 'Bomb squad', desc: 'Minesweeper: clear a Hard field.', check: (r) => scored(r) && r.variant === 'Hard' },
