@@ -36,7 +36,7 @@ export const ACHIEVEMENTS = [
     { id: 'snake-25', icon: '🐍', name: 'Long boi', desc: 'Snake: eat 25 in one run.', check: (r) => r.score >= 25 },
     { id: 'snake-50', icon: '🐉', name: 'Dragon', desc: 'Snake: eat 50 in one run.', check: (r) => r.score >= 50 },
   ]),
-  ...game('breaker-1p', [
+  ...game('brick-duel', [
     { id: 'breaker-level2', icon: '🧱', name: 'Wall breaker', desc: 'Brick Breaker: clear a whole wall.', check: (r, v) => v.level >= 2 },
     { id: 'breaker-level4', icon: '🏗️', name: 'Demolition crew', desc: 'Brick Breaker: reach level 4.', check: (r, v) => v.level >= 4 },
     { id: 'breaker-1000', icon: '💯', name: 'Four figures', desc: 'Brick Breaker: score 1,000.', check: (r) => r.score >= 1000 },
@@ -56,7 +56,7 @@ export const ACHIEVEMENTS = [
     { id: 'asteroids-wave6', icon: '🚀', name: 'Deep space', desc: 'Asteroids: reach wave 6.', check: (r, v) => v.wave >= 6 },
     { id: 'asteroids-10k', icon: '⭐', name: 'Ace pilot', desc: 'Asteroids: score 10,000 (an extra ship!).', check: (r) => r.score >= 10000 },
   ]),
-  ...game('stack-1p', [
+  ...game('tower-stack', [
     { id: 'stack-10', icon: '🧱', name: 'Steady hands', desc: 'Stack: stack 10 blocks.', check: (r) => r.score >= 10 },
     { id: 'stack-25', icon: '🏙️', name: 'Skyscraper', desc: 'Stack: stack 25 blocks.', check: (r) => r.score >= 25 },
     { id: 'stack-perfect5', icon: '🎯', name: 'Spot on', desc: 'Stack: 5 perfect drops in a row.', check: (r, v) => v.bestPerfects >= 5 },
@@ -96,7 +96,7 @@ export const ACHIEVEMENTS = [
     { id: '2048-512', icon: '🔢', name: 'Halfway there', desc: '2048: make a 512 tile.', check: (r, v) => v.biggest >= 512 },
     { id: '2048-2048', icon: '🎯', name: '2048!', desc: '2048: make the 2048 tile.', check: (r, v) => v.biggest >= 2048 },
   ]),
-  ...game('minesweeper-1p', [
+  ...game('mine-duel', [
     { id: 'mines-easy', icon: '🚩', name: 'Sweeper', desc: 'Minesweeper: clear an Easy field.', check: (r, v) => scored(r) && r.variant === 'Easy' },
     { id: 'mines-easy-60', icon: '⏱️', name: 'Quick sweep', desc: 'Minesweeper: clear an Easy field in under a minute.', check: (r) => scored(r) && r.variant === 'Easy' && r.score < MIN },
     { id: 'mines-hard', icon: '💣', name: 'Bomb squad', desc: 'Minesweeper: clear a Hard field.', check: (r) => scored(r) && r.variant === 'Hard' },
@@ -158,7 +158,7 @@ export const ACHIEVEMENTS = [
     { id: 'lights-par', icon: '⭐', name: 'On par', desc: 'Lights Out: solve a Hard puzzle in par or fewer.', check: (r, v) => scored(r) && r.variant === 'Hard' && r.score <= v.par },
     { id: 'lights-noreset', icon: '🔦', name: 'No going back', desc: 'Lights Out: solve a Hard puzzle without starting again.', check: (r, v) => scored(r) && r.variant === 'Hard' && v.resets === 0 },
   ]),
-  ...game('wordsearch-1p', [
+  ...game('word-hunt', [
     { id: 'wordsearch-solve', icon: '🔍', name: 'Word finder', desc: 'Word Search: find every word.', check: (r) => scored(r) },
     { id: 'wordsearch-fast', icon: '⏱️', name: 'Eagle eyes', desc: 'Word Search: clear the 8 × 8 in under a minute.', check: (r) => scored(r) && r.variant === '8 × 8' && r.score < MIN },
     { id: 'wordsearch-large', icon: '🗺️', name: 'Every which way', desc: 'Word Search: clear the 12 × 12.', check: (r) => scored(r) && r.variant === '12 × 12' },
@@ -199,7 +199,7 @@ export const ACHIEVEMENTS = [
     { id: 'colours-40', icon: '🌈', name: 'Colour master', desc: 'Colour Trap: 40 right in one go.', check: (r) => r.score >= 40 },
     { id: 'colours-streak', icon: '🔥', name: 'Unshakeable', desc: 'Colour Trap: 25 right in a row.', check: (r, v) => v.bestStreak >= 25 },
   ]),
-  ...game('trivia-1p', [
+  ...game('quiz', [
     { id: 'trivia-1500', icon: '🧠', name: 'Know-it-all', desc: 'Trivia: score 1,500.', check: (r) => r.score >= 1500 },
     { id: 'trivia-perfect', icon: '🎓', name: 'Full marks', desc: 'Trivia: get all 12 right.', check: (r, v) => v.of > 0 && v.right === v.of },
     { id: 'trivia-fast', icon: '⚡', name: 'Buzzer beater', desc: 'Trivia: a right answer in under 2 seconds.', check: (r, v) => v.fastest !== null && v.fastest < 2000 },

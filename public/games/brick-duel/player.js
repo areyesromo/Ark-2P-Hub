@@ -1,7 +1,10 @@
 // Brick Breaker Duel on the phone (server/games/brick-duel.js): your own wall, balls and
 // paddle, and you drag left and right anywhere on it to move the paddle (it follows your finger
 // at its top speed, as in Pong). Your rival's count is at the top; no need to watch the TV.
+// In the 1 player mode (view.solo) the game is Brick Breaker: its screens are in breaker.js (ArkBreaker).
 (function () {
+  const soloReady = Ark.loadScript('/games/brick-duel/breaker.js');
+  let alone = null; // { el, api, on, view }: handing over to Brick Breaker' screen
   Ark.loadCss('/games/brick-duel/style.css');
   // The bricks are drawn by a helper shared with the other screen; if it fails to load, try again.
   let bricksLoading = null;
@@ -114,7 +117,7 @@
     });
   }
 
-  Ark.register('player', 'brick-duel', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       root = document.createElement('div');
@@ -141,5 +144,36 @@
       pendingX = null;
       powerN = undefined;
     },
-  });
+  };
+
+  /** 1 player: show Brick Breaker' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkBreaker) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkBreaker.player.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkBreaker.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'brick-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkBreaker.player.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+  }));
 })();

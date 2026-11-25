@@ -1,4 +1,7 @@
+// In the 1 player mode (view.solo) the game is Minesweeper: its screens are in sweeper.js (ArkSweeper).
 (function () {
+  const soloReady = Ark.loadScript('/games/mine-duel/sweeper.js');
+  let alone = null; // { el, api, on, view }: handing over to Minesweeper' screen
   Ark.loadCss('/games/mine-duel/style.css');
   const ready = Ark.loadScript('/games/mine-duel/field.js');
   const esc = Ark.escapeHtml;
@@ -55,7 +58,7 @@
     return cursors[slot];
   }
 
-  Ark.register('host', 'mine-duel', {
+  const duel = {
     padHint: 'D-pad (or stick) moves your spade · A digs · A: rematch at the end',
     sounds: function (prev, v) {
       const k = ArkMD.moveKey(v);
@@ -93,5 +96,42 @@
       lastKey = '';
       Object.keys(cursors).forEach(function (k) { delete cursors[k]; });
     },
-  });
+  };
+
+  /** 1 player: show Minesweeper' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkSweeper) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkSweeper.host.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkSweeper.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkSweeper);
+
+  Ark.register('host', 'mine-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkSweeper.host.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkSweeper.host.sounds ? ArkSweeper.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint || 'D-pad / arrows move · A / Enter open · X / Q flag',
+    pad: function (btn, v, slot) { return solo(v) ? (ArkSweeper.host.pad ? ArkSweeper.host.pad(btn, v) : null) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    typing: function (k, v) { return solo(v) ? (ArkSweeper.host.typing ? ArkSweeper.host.typing(k, v) : null) : duel.typing ? duel.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? (ArkSweeper.host.overHtml ? ArkSweeper.host.overHtml(v) : '') : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

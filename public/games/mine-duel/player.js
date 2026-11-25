@@ -1,4 +1,7 @@
+// In the 1 player mode (view.solo) the game is Minesweeper: its screens are in sweeper.js (ArkSweeper).
 (function () {
+  const soloReady = Ark.loadScript('/games/mine-duel/sweeper.js');
+  let alone = null; // { el, api, on, view }: handing over to Minesweeper' screen
   Ark.loadCss('/games/mine-duel/style.css');
   const ready = Ark.loadScript('/games/mine-duel/field.js');
 
@@ -48,7 +51,7 @@
       (v.phase === 'over' ? '<button class="primary rematch">Rematch</button>' : '');
   }
 
-  Ark.register('player', 'mine-duel', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       root = document.createElement('div');
@@ -73,5 +76,36 @@
       root = view = null;
       lastKey = buzzed = '';
     },
-  });
+  };
+
+  /** 1 player: show Minesweeper' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkSweeper) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkSweeper.player.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkSweeper.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'mine-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkSweeper.player.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+  }));
 })();

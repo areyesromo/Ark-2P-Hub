@@ -22,7 +22,7 @@
 // server/games/index.js, which plays it in either mode.
 
 import { soloSnake as snake } from '../../games/snake.js'; // (Snake Battle's arena, one snake: a game for both modes)
-import breaker from './breaker-1p.js';
+import { soloBreaker as breaker } from '../../games/brick-duel-solo.js'; // (a game for both modes: Brick Breaker Duel's 1 player one)
 import blocks from './blocks-1p.js';
 import flappy from './flappy.js';
 import asteroids from './asteroids-1p.js';
@@ -34,7 +34,7 @@ import runner from './runner.js';
 import slide from './slide.js';
 import gems from './gems.js';
 import { soloMemory as memory, SIZES as MEMORY_SIZES } from '../../games/memory-match.js'; // (a game for both modes)
-import stack from './stack-1p.js';
+import { soloStack as stack } from '../../games/tower-stack-solo.js'; // (a game for both modes: Tower Stack's 1 player one)
 import sokoban from './sokoban.js';
 import bubbles from './bubbles.js';
 import hopper from './hopper.js';
@@ -50,17 +50,16 @@ import mastermind, { LEVELS as MASTER_LEVELS } from './mastermind-1p.js';
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
 import cave, { MAPS as CAVE_MAPS, VEHICLES as CAVE_VEHICLES } from './cave.js';
 import lights, { LEVELS as LIGHTS_LEVELS } from './lights.js';
-import wordsearch, { SIZES as WORDSEARCH_SIZES } from './wordsearch-1p.js';
+import { soloWordSearch as wordsearch, SIZES as WORDSEARCH_SIZES } from '../../games/word-hunt.js'; // (a game for both modes)
 import { soloAnagram as anagram } from '../../games/anagram-duel.js'; // (a game for both modes)
 import mahjong from './mahjong.js';
 import freecell from './freecell.js';
 import nonogram from './nonogram.js';
-import trivia from './trivia-1p.js';
-import { CATEGORIES as TRIVIA_CATEGORIES } from './trivia-questions.js';
+import { soloTrivia as trivia, TOPICS as TRIVIA_TOPICS } from '../../games/quiz.js'; // (a game for both modes)
 import maths from './maths.js';
 import colours from './colours.js';
 import game2048 from './2048.js';
-import minesweeper, { SIZES as MINE_SIZES } from './minesweeper-1p.js';
+import { soloMinesweeper as minesweeper, SIZES as MINE_SIZES } from '../../games/mine-duel.js'; // (a game for both modes)
 import simon from './simon.js';
 import { soloReaction as reaction } from '../../games/reaction-duel.js'; // (a game for both modes)
 import { withSetup } from './options.js';
@@ -94,14 +93,14 @@ export const SOLO_GAMES = [
   }),
   withSetup(breaker, {
     lives: { title: 'Lives', values: ['normal', 'easy'], label: (l) => (l === 'easy' ? '5 lives (easy, its own scores)' : '3 lives') },
-    ...lookRow('breaker-1p', 'Ball and paddle'),
+    ...lookRow('brick-duel', 'Ball and paddle'),
   }),
   withSetup(blocks, lookRow('blocks-1p', 'Pieces')),
   withSetup(flappy, lookRow('flappy', 'Fly as')),
   withSetup(asteroids, lookRow('asteroids-1p', 'Ship')),
   withSetup(invaders, lookRow('invaders', 'Invaders')),
   withSetup(runner, lookRow('runner', 'Run as')),
-  withSetup(stack, lookRow('stack-1p', 'Blocks')),
+  withSetup(stack, lookRow('tower-stack', 'Blocks')),
   withSetup(cave, {
     map: { title: 'Map', values: Object.keys(CAVE_MAPS), label: (k) => CAVE_MAPS[k].name, lock: byAchievement(CAVE_MAPS) },
     vehicle: { title: 'Fly a', values: Object.keys(CAVE_VEHICLES), label: (k) => CAVE_VEHICLES[k].name, lock: byAchievement(CAVE_VEHICLES) },
@@ -183,6 +182,6 @@ export const SOLO_GAMES = [
   oddone,
   hangman,
   withSetup(trivia, {
-    category: { title: 'Questions', values: ['mix', ...Object.keys(TRIVIA_CATEGORIES)], label: (c) => (c === 'mix' ? '🎲 A mix of everything' : `${TRIVIA_CATEGORIES[c]} (its own scores)`) },
+    topic: { title: 'Questions', values: TRIVIA_TOPICS.map((_, i) => i).concat(TRIVIA_TOPICS.length), label: (n) => (n === 0 ? '🎲 A mix of everything' : `${TRIVIA_TOPICS[n - 1]} (its own scores)`) },
   }),
 ];

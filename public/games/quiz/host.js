@@ -1,4 +1,7 @@
+// In the 1 player mode (view.solo) the game is Trivia: its screens are in trivia.js (ArkTrivia).
 (function () {
+  const soloReady = Ark.loadScript('/games/quiz/trivia.js');
+  let alone = null; // { el, api, on, view }: handing over to Trivia' screen
   Ark.loadCss('/games/quiz/style.css');
   const esc = Ark.escapeHtml;
 
@@ -87,7 +90,7 @@
   // diamond with the same layout (↓ A, → B, ← X, ↑ Y).
   const PAD_ANSWERS = { A: 0, B: 1, X: 2, Y: 3, DOWN: 0, RIGHT: 1, LEFT: 2, UP: 3 };
 
-  Ark.register('host', 'quiz', {
+  const duel = {
     // Sound: a click as each answer locks in; right or wrong at the reveal.
     sounds: function (prev, v) {
       const out = [];
@@ -122,5 +125,42 @@
       root = bar = view = null;
       lastKey = '';
     },
-  });
+  };
+
+  /** 1 player: show Trivia' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkTrivia) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkTrivia.host.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkTrivia.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkTrivia);
+
+  Ark.register('host', 'quiz', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkTrivia.host.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkTrivia.host.sounds ? ArkTrivia.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint || 'A, B, X, Y pick the answer under that letter · keyboard: 1 to 4',
+    pad: function (btn, v, slot) { return solo(v) ? (ArkTrivia.host.pad ? ArkTrivia.host.pad(btn, v) : null) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    typing: function (k, v) { return solo(v) ? (ArkTrivia.host.typing ? ArkTrivia.host.typing(k, v) : null) : duel.typing ? duel.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? (ArkTrivia.host.overHtml ? ArkTrivia.host.overHtml(v) : '') : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

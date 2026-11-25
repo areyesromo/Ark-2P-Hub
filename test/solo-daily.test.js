@@ -27,7 +27,7 @@ test('the same day is the same challenge; every game comes round once in a lap',
 
 test('the same seed deals the same game (a puzzle from the pool)', () => {
   const c = challengeFor('2026-10-22');
-  for (const id of ['sudoku', 'gems', 'nonogram', 'trivia-1p', 'blocks-1p']) {
+  for (const id of ['sudoku', 'gems', 'nonogram', 'quiz', 'blocks-1p']) {
     const def = getGame(id);
     const deal = () => {
       const ctx = fakeCtx('Ana', POOL.find((p) => p.game === id).settings);

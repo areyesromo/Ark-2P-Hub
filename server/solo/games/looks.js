@@ -18,7 +18,7 @@ export const LOOKS = {
     penguin: { name: '🐧 Penguin', unlock: 'flappy-25' },
     dragon: { name: '🐉 Dragon', unlock: 'flappy-50' },
   },
-  'breaker-1p': {
+  'brick-duel': {
     classic: { name: 'Classic' },
     fire: { name: '🔥 Fireball', unlock: 'breaker-level2' },
     crystal: { name: '💎 Crystal', unlock: 'breaker-level4' },
@@ -59,7 +59,7 @@ export const LOOKS = {
     space: { name: '🪐 Space', unlock: 'gems-chain4' },
     candy: { name: '🍬 Candy', unlock: 'gems-3000' },
   },
-  'stack-1p': {
+  'tower-stack': {
     classic: { name: 'Classic' },
     candy: { name: '🍬 Candy', unlock: 'stack-10' },
     glass: { name: '🧊 Glass', unlock: 'stack-25' },

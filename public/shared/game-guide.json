@@ -34,7 +34,7 @@
   "controls": "<strong>Left stick</strong> or <strong>D-pad ← →</strong>, <strong>A</strong> · Slide, jump"
  },
  "brick-duel": {
-  "rules": "A race to break your own wall, side by side on the TV. Your wall, balls and paddle are on your phone too: drag left and right on it (or use the stick) to move your paddle; a missed ball puts back the last brick you broke (or, if you pick it, just costs a moment). Power bricks shrink your rival's paddle, give you an extra ball or add a row to their wall. First to clear their wall wins; after 2 minutes, most bricks broken (level: next brick wins).",
+  "rules": "A race to break your own wall, side by side on the TV. Your wall, balls and paddle are on your phone too: drag left and right on it (or use the stick) to move your paddle; a missed ball puts back the last brick you broke (or, if you pick it, just costs a moment). Power bricks shrink your rival's paddle, give you an extra ball or add a row to their wall. First to clear their wall wins; after 2 minutes, most bricks broken (level: next brick wins). On your own? <strong>Brick Breaker</strong> in the 1 player lobby: the classic, lives and levels.",
   "settings": "Wall: 3, 5 or 7 rows of bricks; missed ball: a brick comes back, or just a moment lost",
   "controls": "<strong>Left stick</strong> or <strong>D-pad ← →</strong> · Move your paddle"
  },
@@ -99,7 +99,7 @@
   "controls": "As Kart Race"
  },
  "quiz": {
-  "rules": "10 trivia questions from a bank of 250 (science, geography, history, movies, music, sports, games, food, nature and tech; play them mixed or pick one topic). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions.",
+  "rules": "10 trivia questions from a bank of 250 (science, geography, history, movies, music, sports, games, food, nature and tech; play them mixed or pick one topic). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. On your own? <strong>Trivia</strong> in the 1 player lobby: twelve questions against the clock.",
   "settings": "5, 10, 15 or 20 questions, and the topic (mixed or one category)",
   "controls": "<strong>A</strong> / <strong>B</strong> / <strong>X</strong> / <strong>Y</strong> to answer, or the <strong>D-pad</strong> as a diamond (↓ A, → B, ← X, ↑ Y) · Answer tiles on the TV are coloured like the buttons"
  },
@@ -141,7 +141,7 @@
   "settings": "First to 3, 5 or 7 rounds"
  },
  "word-hunt": {
-  "rules": "One word search on the TV and both phones, with the list of words to find. Drag from a word's first letter to its last (or tap both): the first to mark a word gets it, in their colour, and it's crossed off for both. Find more than half the words and the grid is yours; after 3 minutes, whoever has more takes it. 8 × 8 hides 7 words across and down, 10 × 10 hides 9 with diagonals too, and 12 × 12 hides 11 any way, even backwards; the words nobody found are outlined at the end. Works with controllers too (a cursor each on the TV). First to 2 grids (or 1, or 3). <strong>Race</strong> mode (two phones): the same grid, but your own copy each on your phone. You can both find every word, your finds stay on your phone (the TV and your rival only see how many you have), and the first to find them all takes the grid; when time's up, more words takes it.",
+  "rules": "One word search on the TV and both phones, with the list of words to find. Drag from a word's first letter to its last (or tap both): the first to mark a word gets it, in their colour, and it's crossed off for both. Find more than half the words and the grid is yours; after 3 minutes, whoever has more takes it. 8 × 8 hides 7 words across and down, 10 × 10 hides 9 with diagonals too, and 12 × 12 hides 11 any way, even backwards; the words nobody found are outlined at the end. Works with controllers too (a cursor each on the TV). First to 2 grids (or 1, or 3). <strong>Race</strong> mode (two phones): the same grid, but your own copy each on your phone. You can both find every word, your finds stay on your phone (the TV and your rival only see how many you have), and the first to find them all takes the grid; when time's up, more words takes it. On your own? <strong>Word Search</strong> in the 1 player lobby: find them all against the clock.",
   "settings": "Shared board or Race (your own board each), grid size (8 × 8, 10 × 10 or 12 × 12) and first to 1, 2 or 3 grids",
   "controls": "<strong>D-pad</strong> moves your cursor on the TV (in your colour), <strong>A</strong> on a word's first letter then <strong>A</strong> on its last, <strong>B</strong> lets go"
  },
@@ -228,7 +228,7 @@
   "controls": "<strong>A</strong> rolls · <strong>◀ ▶</strong> picks a checker, <strong>A</strong> moves it (◀ ▶ picks where), <strong>B</strong> puts it back · <strong>X</strong> undoes · <strong>Y</strong> doubles · on a double: <strong>A</strong> takes, <strong>B</strong> drops · Gin Rummy needs phones (the hands are secret)"
  },
  "mine-duel": {
-  "rules": "One minefield (12×12, 25 mines) and here you *want* the mines. Take turns digging a square: a mine is yours, with your flag on it, and you go again. A safe square shows how many mines touch it (an empty one opens up around it) and it's your rival's turn, so a careless dig hands them clues. First to 13 mines wins. Tap a square on your phone. 25 s a turn (a random square if you run out). 🤖 Against the computer: it reads the numbers like a person; Hard works out mines from two numbers together.",
+  "rules": "One minefield (12×12, 25 mines) and here you *want* the mines. Take turns digging a square: a mine is yours, with your flag on it, and you go again. A safe square shows how many mines touch it (an empty one opens up around it) and it's your rival's turn, so a careless dig hands them clues. First to 13 mines wins. Tap a square on your phone. 25 s a turn (a random square if you run out). 🤖 Against the computer: it reads the numbers like a person; Hard works out mines from two numbers together. On your own? <strong>Minesweeper</strong> in the 1 player lobby: the classic, clear the field without a bang.",
   "settings": "One game, or first to 2 or 3; timed (30 s a move in Reversi, 25 s a turn in Mine Duel) or no timer",
   "controls": "<strong>D-pad</strong> moves your spade · <strong>A</strong> digs"
  },
@@ -261,7 +261,7 @@
   "controls": "<strong>Left stick</strong> or <strong>D-pad</strong> to walk, <strong>A</strong> picks up / puts down / serves, hold <strong>X</strong> (or <strong>B</strong>) to chop · The tile you're facing is outlined in your colour"
  },
  "tower-stack": {
-  "rules": "Co-op stacking in 3D: build one tower together, a block at a time. Each new block slides back and forth over the top; tap <strong>DROP</strong> on your phone (or <strong>A</strong>) and whatever hangs over the edge is cut off and falls, so the tower (and every block after it) gets narrower. Drop it dead on and it snaps into place whole; three of those in a row and the blocks start growing back. You take turns: player 1 drops the blocks sliding left-right, player 2 the ones sliding front-back. Missing the tower costs one of your shared lives (3, or 5 on Easy) and you try that floor again. It speeds up as it grows. Stars for height (15, 35 and 60 floors; 10, 25 and 40 on Easy). 🤖 With the computer as your teammate: it times its drops as the block crosses the middle; Hard is nearly always dead on, Easy cuts it often.",
+  "rules": "Co-op stacking in 3D: build one tower together, a block at a time. Each new block slides back and forth over the top; tap <strong>DROP</strong> on your phone (or <strong>A</strong>) and whatever hangs over the edge is cut off and falls, so the tower (and every block after it) gets narrower. Drop it dead on and it snaps into place whole; three of those in a row and the blocks start growing back. You take turns: player 1 drops the blocks sliding left-right, player 2 the ones sliding front-back. Missing the tower costs one of your shared lives (3, or 5 on Easy) and you try that floor again. It speeds up as it grows. Stars for height (15, 35 and 60 floors; 10, 25 and 40 on Easy). 🤖 With the computer as your teammate: it times its drops as the block crosses the middle; Hard is nearly always dead on, Easy cuts it often. On your own? <strong>Stack</strong> in the 1 player lobby: the classic, one block at a time.",
   "settings": "Normal (3 lives) or Easy (slower blocks, 5 lives, an easier perfect)",
   "controls": "<strong>A</strong> (or <strong>RT</strong>) drops the block on your turn · Player 1 drops the blocks sliding left-right, player 2 the ones sliding front-back. <strong>A</strong> rematches at the end"
  },
@@ -288,13 +288,17 @@
   "rules": "One of you picks a secret word (easy, medium or hard, from 400) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a \"so close!\"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw.",
   "settings": "4, 6, 8 or 10 rounds"
  },
+ "solo:brick-duel": {
+  "rules": "Brick Breaker Duel's 1 player game: Keep the ball in play with your paddle and smash the wall. Slide a finger along the phone's strip to move the paddle (or the stick / D-pad). Where the ball hits the paddle sets its angle, and it speeds up a little on every hit. Higher rows score more (1, 3, 5, 7 points). Clear the wall for a new, faster level with a different pattern (and a life back); lose the ball 3 times and it's over. 🚀 Launch on the phone, or it goes by itself after 3 s. Pick 3 lives or 5 (easy, with its own scores). Ball and paddle styles to unlock (just for looks): 🔥 Fireball (clear a wall), 💎 Crystal (reach level 4) and 🌈 Rainbow (score 1,000).",
+  "controls": "Stick or <strong>D-pad ← →</strong>, <strong>A</strong> launches, <strong>Start</strong> pauses · keyboard: Arrows, <strong>Enter</strong>, <strong>P</strong> · Move the paddle"
+ },
  "solo:snake": {
   "rules": "The classic, in Snake Battle's arena with just your snake: eat the glowing food to grow, don't hit a wall or your own tail. Every 4 bites the snake speeds up. Tap a side of the phone pad or swipe to turn (turns can be chained in one swipe); the arena is on your phone too. Before you start, pick the speed (Normal or ⚡ Fast) and the walls (🧱 Solid, or 🌀 Wrap round: come out on the other side). ⏸ Pause on the phone (or Start on a controller). Snakes to unlock (just for looks): 🌈 Rainbow (eat 10), 💜 Neon (25) and 👑 Gold (50). Score: food eaten; each speed and wall setting keeps its own bests.",
   "controls": "<strong>D-pad</strong> / stick (or <strong>Y</strong>↑ <strong>A</strong>↓ <strong>X</strong>← <strong>B</strong>→), <strong>Start</strong> pauses · keyboard: Arrows, <strong>P</strong> pauses · Turn"
  },
- "breaker-1p": {
-  "rules": "Keep the ball in play with your paddle and smash the wall. Slide a finger along the phone's strip to move the paddle (or the stick / D-pad). Where the ball hits the paddle sets its angle, and it speeds up a little on every hit. Higher rows score more (1, 3, 5, 7 points). Clear the wall for a new, faster level with a different pattern (and a life back); lose the ball 3 times and it's over. 🚀 Launch on the phone, or it goes by itself after 3 s. Pick 3 lives or 5 (easy, with its own scores). Ball and paddle styles to unlock (just for looks): 🔥 Fireball (clear a wall), 💎 Crystal (reach level 4) and 🌈 Rainbow (score 1,000).",
-  "controls": "Stick or <strong>D-pad ← →</strong>, <strong>A</strong> launches, <strong>Start</strong> pauses · keyboard: Arrows, <strong>Enter</strong>, <strong>P</strong> · Move the paddle"
+ "solo:tower-stack": {
+  "rules": "Tower Stack's 1 player game: A block slides back and forth above the tower: tap (the phone's big DROP button) to drop it. The part hanging over the edge is cut off and falls away, so the blocks get narrower; drop it right on top for a <strong>Perfect!</strong> and nothing is lost, and every third perfect drop in a row wins a little width back. Miss the tower and it's over. It speeds up as the tower grows. Block styles to unlock (just for looks): 🍬 Candy (10 blocks), 🧊 Glass (25) and 👑 Gold (5 perfect drops in a row). Score: blocks stacked.",
+  "controls": "<strong>A</strong> (or any face button, bumper or trigger) drops, <strong>Start</strong> pauses · keyboard: <strong>Space</strong> / <strong>Enter</strong>, <strong>P</strong>"
  },
  "blocks-1p": {
   "rules": "The falling-block classic: pieces of four squares drop into a 10×20 well. Move and turn them so they fill whole rows, which clear. Every 10 rows the level goes up and pieces fall faster. Clearing several rows at once scores far more (100, 300, 500 or 800 points for 1 to 4 rows, times the level), plus a point a row when you drop a piece yourself. <strong>Hold</strong> puts a piece aside for later (once per piece); the TV shows it, the next three pieces and a shadow where yours will land. On the phone: ◀ ▶ move (hold to repeat), ⟲ ⟳ turn, ▼ soft drop, <strong>⤓ Drop</strong> drops it at once. Pieces come in shuffled sets of seven, so you never wait long for a straight piece. The run ends when a new piece has no room. Piece colours to unlock (just for looks): 🍬 Candy (clear 4 rows at once), 🟩 Retro green (40 rows in a run) and 💜 Neon (score 10,000).",
@@ -316,10 +320,6 @@
   "rules": "You run on and on: jump the cactuses (one to three together, short or tall) and duck under the birds (low ones you can jump, high ones fly over you). Hold JUMP for a higher jump. The run gets faster the further you go. Your first jump starts it. Run as someone else (just for looks): a 🤖 Robot (100 m), a 🦖 Dino (500 m) or a 🥷 Ninja (1,000 m). Score: how far you got, in metres.",
   "controls": "<strong>A</strong> / <strong>↑</strong> (or any face button) jump, hold for higher; <strong>↓</strong> / <strong>LT</strong> / <strong>LB</strong> duck; <strong>Start</strong> pauses · keyboard: <strong>↑</strong> / <strong>Space</strong> jump, <strong>↓</strong> duck, <strong>P</strong>"
  },
- "stack-1p": {
-  "rules": "A block slides back and forth above the tower: tap (the phone's big DROP button) to drop it. The part hanging over the edge is cut off and falls away, so the blocks get narrower; drop it right on top for a <strong>Perfect!</strong> and nothing is lost, and every third perfect drop in a row wins a little width back. Miss the tower and it's over. It speeds up as the tower grows. Block styles to unlock (just for looks): 🍬 Candy (10 blocks), 🧊 Glass (25) and 👑 Gold (5 perfect drops in a row). Score: blocks stacked.",
-  "controls": "<strong>A</strong> (or any face button, bumper or trigger) drops, <strong>Start</strong> pauses · keyboard: <strong>Space</strong> / <strong>Enter</strong>, <strong>P</strong>"
- },
  "cave": {
   "rules": "Hold the phone's big CLIMB button to rise, let go to drop, and fly down a winding cave without touching the walls. The cave gets narrower and faster the further you go, and after a while rocks stick out of the ceiling and the floor. The first hold takes off. Four maps, each with its own scores: the 💎 Crystal Cave, then the ⛏️ Old Mine (wooden props everywhere, unlocked by flying 100 m), the 🧊 Ice Tunnel (twistier, icicles; 300 m in the mine) and the 🌋 Volcano (faster; 300 m on the ice). Flying far also unlocks new things to fly (just for looks): a Jet (500 m), a UFO (300 m in the Volcano) and a Dragon (1,000 m). Locked choices show on the setup screen with what opens them. Score: metres flown.",
   "controls": "Hold <strong>A</strong>, <strong>↑</strong> (or any face button, bumper or trigger) to climb; <strong>Start</strong> pauses · keyboard: Hold <strong>Space</strong>, <strong>Enter</strong> or <strong>↑</strong>; <strong>P</strong> · Climb"
@@ -332,8 +332,12 @@
   "rules": "Get the frog to the far bank: hop across five lanes of traffic (cars and trucks, each lane its own speed), rest on the verge, then cross the river on the logs. Cars squash you, the water's deadly, and a log carries you along, off the edge if you stay on too long. Tap the phone's arrows or swipe. Three frogs, and 30 seconds for each go. Every crossing scores 50 plus 2 for each second left, and the next crossing is faster; each row further than before is 10. Score: points.",
   "controls": "<strong>D-pad</strong> / arrows hop, <strong>Start</strong> pauses · keyboard: Arrows, <strong>P</strong>"
  },
- "minesweeper-1p": {
-  "rules": "Open every cell that isn't a mine. A number counts the mines in the 8 cells around it. Tap to dig, hold to flag (or switch the phone to 🚩 flag mode); tapping a number whose mines are all flagged opens the rest around it. The first cell you open is always safe. Three fields: Easy 9×9 (10 mines), Medium 16×16 (40), Hard 30×16 (99, shown turned on an upright phone). Score: your time, only when you clear the field; lower is better, and each field has its own bests.",
+ "solo:word-hunt": {
+  "rules": "Word Hunt on your own, every word yours to find: Words are hidden in a grid of letters in straight lines: drag on the phone from a word's first letter to its last (or tap both) to mark it. The list says which words to find and crosses them off. 8 × 8 hides 6 words across and down, 10 × 10 hides 8 with diagonals too, and 12 × 12 hides 10 any way at all, even backwards. Score: your time to find them all, per size.",
+  "controls": "<strong>D-pad</strong> moves, <strong>A</strong> on a word's first letter then <strong>A</strong> on its last, <strong>B</strong> lets go · keyboard: Arrows, <strong>Enter</strong>, <strong>Backspace</strong> · Drag from the first letter to the last"
+ },
+ "solo:mine-duel": {
+  "rules": "Mine Duel's field, the other goal: open every cell that isn't a mine. A number counts the mines in the 8 cells around it. Tap to dig, hold to flag (or switch the phone to 🚩 flag mode); tapping a number whose mines are all flagged opens the rest around it. The first cell you open is always safe. Three fields: Easy 9×9 (10 mines), Medium 16×16 (40), Hard 30×16 (99, shown turned on an upright phone). Score: your time, only when you clear the field; lower is better, and each field has its own bests.",
   "controls": "<strong>D-pad</strong> moves a cursor on the TV, <strong>A</strong> opens, <strong>X</strong> / <strong>B</strong> flags · keyboard: Arrows, <strong>Enter</strong>, <strong>Q</strong> / <strong>Backspace</strong>"
  },
  "sudoku": {
@@ -392,13 +396,13 @@
   "rules": "A 5 × 5 grid of lights, some on. Tap a light to flip it and the four next to it (on goes off, off goes on): switch them all off. Every puzzle is made by flipping lights on a dark board, so it can always be solved, and par is how many flips made it. ↺ <strong>Start again</strong> puts the board back (the moves keep counting). Easy (par 4), Medium (8) or Hard (13). Score: the moves it took (fewer is better), per level.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> flips, <strong>Y</strong> starts again · keyboard: Arrows, <strong>Enter</strong>, <strong>E</strong>"
  },
- "wordsearch-1p": {
-  "rules": "Words are hidden in a grid of letters in straight lines: drag on the phone from a word's first letter to its last (or tap both) to mark it. The list says which words to find and crosses them off. 8 × 8 hides 6 words across and down, 10 × 10 hides 8 with diagonals too, and 12 × 12 hides 10 any way at all, even backwards. Score: your time to find them all, per size.",
-  "controls": "<strong>D-pad</strong> moves, <strong>A</strong> on a word's first letter then <strong>A</strong> on its last, <strong>B</strong> lets go · keyboard: Arrows, <strong>Enter</strong>, <strong>Backspace</strong> · Drag from the first letter to the last"
- },
  "solo:reaction-duel": {
   "rules": "Reaction Duel on your own: the screen says <strong>Wait…</strong> (red), then after a random moment <strong>TAP!</strong> (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate.",
   "controls": "Any face button, bumper or trigger · keyboard: <strong>Enter</strong> / <strong>Space</strong> · Tap"
+ },
+ "solo:quiz": {
+  "rules": "Quiz Battle on your own: twelve of its questions, four answers each, 15 seconds a question. A right answer scores 100, plus up to 100 more the faster you are; wrong or too slow scores nothing, and the right answer shows for a moment either way. Quiz Battle's 250 questions: play a mix, or pick a topic (each has its own scores). You won't see a question again until you've seen them all. Score: points.",
+  "controls": "<strong>A</strong>, <strong>B</strong>, <strong>X</strong>, <strong>Y</strong>: the answer next to that letter on the TV · keyboard: <strong>1</strong>–<strong>4</strong>"
  },
  "solo:hangman": {
   "rules": "Hangman on your own: the hub hides a word behind blanks; tap letters on the phone's keyboard (or on the TV, with its keyboard or a controller) and the right ones fill in. Seven wrong letters and the man is hanged: the run is over, and the word shows. Each word is worth 100 plus 20 for every wrong letter you didn't use, and the next word follows straight away. Score: points over the run.",
@@ -435,9 +439,5 @@
  "oddone": {
   "rules": "A grid of squares all the same colour, except one a shade lighter or darker: tap it (on the phone, the same grid). Each find makes the grid bigger (3 × 3 up to 8 × 8) and the difference smaller. A wrong tap costs 3 seconds; 60 seconds in all. Score: odd ones found.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> picks · keyboard: Arrows, <strong>Enter</strong>"
- },
- "trivia-1p": {
-  "rules": "Twelve questions, four answers each, 15 seconds a question. A right answer scores 100, plus up to 100 more the faster you are; wrong or too slow scores nothing, and the right answer shows for a moment either way. 152 questions in six subjects (science &amp; nature, geography, history, sport &amp; games, film, music &amp; books, food &amp; drink): play a mix, or pick one (each has its own scores). You won't see a question again until you've seen them all. Score: points.",
-  "controls": "<strong>A</strong>, <strong>B</strong>, <strong>X</strong>, <strong>Y</strong>: the answer next to that letter on the TV · keyboard: <strong>1</strong>–<strong>4</strong>"
  }
 }

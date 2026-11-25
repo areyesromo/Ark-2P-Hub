@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers-solo.js';
-import { Stack, BASE, PERFECT, GROW, LAG } from '../server/solo/games/stack-1p.js';
+import { Stack, BASE, PERFECT, GROW, LAG } from '../server/games/tower-stack-solo.js';
 
 function game() {
   const ctx = fakeCtx('Ana');
@@ -101,4 +101,15 @@ test('pause freezes the block; bad input is ignored', () => {
   assert.equal(g.xAt(g.movingFor), x);
   for (const input of [{ type: 'zap' }, { type: 'drop', t: 'soon' }, { type: 'rematch' }]) g.onInput(input);
   assert.equal(g.phase, 'play');
+});
+
+test('one game in both lobbies: Tower Stack and Stack, under one id; its views say so', async () => {
+  const { getGame, soloGameOf, listGames } = await import('../server/games/index.js');
+  assert.equal(getGame('tower-stack').name, 'Tower Stack');
+  assert.equal(soloGameOf('tower-stack').name, 'Stack');
+  const g = new Stack(fakeCtx());
+  g.start();
+  assert.equal(g.hostView().solo, true);
+  assert.equal(g.playerView().solo, true);
+  assert.ok(!listGames().some((x) => x.id === 'stack-1p'), 'Stack 1P is gone');
 });

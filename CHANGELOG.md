@@ -4,6 +4,19 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.70
+
+- ❓ Trivia 1P is now **Trivia**, Quiz Battle's 1 player mode: twelve of Quiz Battle's 250 questions, a
+  mix or one topic. (A fresh high-score table.)
+- 🔍 Word Search 1P is now **Word Search**, Word Hunt's 1 player mode: Word Hunt's grids and words, one
+  more word to find in each size. (A fresh high-score table.)
+- 💣 Minesweeper 1P is now **Minesweeper**, Mine Duel's 1 player mode: the same game as before (three
+  fields, chording, flags), now beside Mine Duel. (A fresh high-score table.)
+- 🧱 Brick Breaker 1P is now **Brick Breaker**, beside Brick Breaker Duel as its 1 player mode: the same
+  game as before (lives, levels, the unlockable balls). (A fresh high-score table.)
+- 🏗️ Stack 1P is now **Stack**, beside Tower Stack as its 1 player mode: the same game as before
+  (perfect drops, the unlockable blocks). (A fresh high-score table.)
+
 ## 0.1.69
 
 - 🔤 Word Guess 1P is now **Five Letters** in the 1 player lobby: the same game as the 2 player one, on
