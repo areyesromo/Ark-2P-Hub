@@ -32,7 +32,7 @@ export const POOL = [
   { game: 'flappy', settings: {} },
   { game: 'colours', settings: {} },
   { game: 'lights', settings: { level: 'hard' } },
-  { game: 'wordsearch-1p', settings: { size: 'medium' } },
+  { game: 'word-hunt', settings: { size: 'medium' } },
   { game: 'anagram-duel', settings: {} },
   { game: 'cave', settings: {} },
   { game: 'bubbles', settings: {} },

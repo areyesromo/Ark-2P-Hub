@@ -33,7 +33,7 @@ export const BLURBS = {
   kenken: 'Fill the cages to their targets.',
   nonogram: 'Use the number clues to draw a picture.',
   lights: 'Turn every light out.',
-  'wordsearch-1p': 'Find the hidden words in the grid.',
+  'solo:word-hunt': 'Find the hidden words in the grid.',
   'solo:five-letters': 'Guess the five-letter word in six.',
   simon: 'Repeat the growing sequence.',
   'solo:memory-match': 'Turn two cards, find the pairs.',

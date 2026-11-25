@@ -9,6 +9,9 @@
 // Race mode: the same grid, but your own copy each. You can both find every word; your
 // finds stay on your phone (the TV and your rival only see how many), and the first to
 // find them all takes the grid. Time up: more words takes it.
+//
+// In the 1 player lobby it's Word Search (soloWordSearch below): the same grids, every word yours to
+// find. Score: the time it takes to find them all (lower is better), per size.
 
 import { settingOf } from './options.js';
 import { WORDS } from './word-hunt-words.js';
@@ -44,11 +47,13 @@ export function line(n, a, b) {
 }
 
 export class WordHunt {
-  constructor(ctx, rng = Math.random) {
+  /** solo: the 1 player mode, Word Search (see the top of this file). */
+  constructor(ctx, rng = Math.random, { solo = false } = {}) {
     this.ctx = ctx;
     this.rng = rng;
-    const size = settingOf(ctx, 'size', 'medium');
-    this.size = Object.prototype.hasOwnProperty.call(SIZES, size) ? size : 'medium';
+    this.solo = solo;
+    const size = settingOf(ctx, 'size', solo ? 'small' : 'medium');
+    this.size = Object.prototype.hasOwnProperty.call(SIZES, size) ? size : solo ? 'small' : 'medium';
     this.winScore = settingOf(ctx, 'wins', WIN_SCORE);
     // Race keeps your finds on your phone; a controller player only has the TV, where both
     // would see them, so with one in the game it's the shared board.
@@ -95,6 +100,7 @@ export class WordHunt {
   }
 
   start() {
+    if (this.solo) return this.startSearch();
     this.scores = [0, 0];
     this.round = 0;
     this.winner = null;
@@ -162,8 +168,77 @@ export class WordHunt {
     this.schedule(() => this.nextGrid(), TIMING.resultMs);
   }
 
+  // ---- 1 player: Word Search ------------------------------------------------------------
+
+  startSearch() {
+    this.cancel();
+    const { grid, placed } = this.make();
+    this.grid = grid;
+    this.placed = placed;
+    this.found = []; // { word, a, b, slot } in the order found
+    this.nope = [0, 0];
+    this.startedAt = this.ctx.now();
+    this.endedAt = null;
+    this.phase = 'play';
+    this.searchClock();
+    this.ctx.update();
+  }
+
+  /** One update a second keeps the clock moving on screen. */
+  searchClock() {
+    this.cancel();
+    this.timer = this.ctx.setTimeout(() => {
+      this.timer = null;
+      if (this.phase !== 'play') return;
+      this.ctx.update();
+      this.searchClock();
+    }, 1000);
+  }
+
+  searchMark(a, b) {
+    const hit = this.placed.find((p) => !this.found.some((f) => f.word === p.word) && ((p.a === a && p.b === b) || (p.a === b && p.b === a)));
+    if (!hit) {
+      this.nope[0]++;
+      return;
+    }
+    this.found.push({ ...hit, slot: 0 });
+    if (this.found.length === this.placed.length) {
+      this.endedAt = this.ctx.now();
+      this.phase = 'over';
+      this.cancel();
+    }
+  }
+
+  /** The 1 player view: the grid, the words to find (in a steady order) and where the found ones are. */
+  searchView() {
+    const n = SIZES[this.size].n;
+    const elapsed = (this.endedAt !== null ? this.endedAt : this.ctx.now()) - this.startedAt;
+    return {
+      solo: true,
+      phase: this.phase,
+      n,
+      grid: this.grid.join(''),
+      words: this.placed.map((p) => p.word).sort().map((w) => ({ word: w, found: this.found.some((f) => f.word === w) })),
+      found: this.found.map((f) => ({ a: f.a, b: f.b })),
+      nope: this.nope[0],
+      elapsed,
+      score: this.phase === 'over' ? elapsed : null,
+      variant: SIZES[this.size].name,
+    };
+  }
+
   onInput(slot, input) {
     if (slot !== 0 && slot !== 1) return;
+    if (this.solo) {
+      if (slot !== 0 || !input) return;
+      if (input.type === 'rematch' && this.phase === 'over') return this.start();
+      if (input.type !== 'mark' || this.phase !== 'play') return;
+      const n = SIZES[this.size].n;
+      const ok = (i) => Number.isInteger(i) && i >= 0 && i < n * n;
+      if (!ok(input.a) || !ok(input.b) || !line(n, input.a, input.b)) return;
+      this.searchMark(input.a, input.b);
+      return this.ctx.update();
+    }
     if (input.type === 'rematch' && this.phase === 'over') return this.start();
     if (input.type !== 'mark' || this.phase !== 'play') return;
     const n = SIZES[this.size].n;
@@ -219,13 +294,31 @@ export class WordHunt {
   }
 
   hostView() {
+    if (this.solo) return { ...this.searchView(), player: this.ctx.player };
     return { ...this.view(null), players: this.ctx.players };
   }
 
   playerView(slot) {
+    if (this.solo) return { ...this.searchView(), you: 0 };
     return { ...this.view(slot), you: slot };
   }
 }
+
+/** The 1 player mode, Word Search: played as a solo game (see server/solo/). */
+export const soloWordSearch = {
+  id: 'word-hunt',
+  name: 'Word Search',
+  tagline: 'Find the hidden words in the grid of letters. Across, down, diagonal, even backwards.',
+  category: 'puzzle',
+  phone: true,
+  music: 'thinking',
+  score: { better: 'lower', unit: 'time' },
+  create: (ctx) => {
+    const game = new WordHunt(ctx, ctx.rng, { solo: true });
+    // (a solo game takes onInput(input) and playerView(): one player)
+    return { start: () => game.start(), onInput: (input) => game.onInput(0, input), hostView: () => game.hostView(), playerView: () => game.playerView(0), game };
+  },
+};
 
 export default {
   id: 'word-hunt',

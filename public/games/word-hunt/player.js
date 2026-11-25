@@ -1,4 +1,7 @@
+// In the 1 player mode (view.solo) the game is Word Search: its screens are in search.js (ArkWordSearch).
 (function () {
+  const soloReady = Ark.loadScript('/games/word-hunt/search.js');
+  let alone = null; // { el, api, on, view }: handing over to Word Search' screen
   Ark.loadCss('/games/word-hunt/style.css');
   const ready = Ark.loadScript('/games/word-hunt/board.js');
 
@@ -82,7 +85,7 @@
     if (to !== from) finish(from, to); // a drag; a plain tap waits for the last letter
   }
 
-  Ark.register('player', 'word-hunt', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       root = document.createElement('div');
@@ -113,5 +116,36 @@
       from = to = null;
       dragging = false;
     },
-  });
+  };
+
+  /** 1 player: show Word Search' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkWordSearch) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkWordSearch.player.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkWordSearch.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'word-hunt', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkWordSearch.player.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+  }));
 })();

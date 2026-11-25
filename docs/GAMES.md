@@ -44,7 +44,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Five Letters | `five-letters` | The same hidden word for you both, six guesses each. Green: right spot. Yellow: in the word. Fewest guesses wins the round. | `server/games/five-letters-bot.js`, `server/games/five-letters.js`, `server/games/anagram-words.js`, `public/games/five-letters/`, `test/five-letters.test.js`, `test/solo-five-letters.test.js` |
 | Make 24 | `make-24` | Four numbers: join two with + − × ÷ and they become one. Make 24 before your rival does. | `server/games/make-24-bot.js`, `server/games/make-24.js`, `public/games/make-24/`, `test/make-24.test.js` |
 | Anagram Duel | `anagram-duel` | Same five mixed-up letters for both of you: the first to make a word with all of them takes the round. | `server/games/anagram-duel-bot.js`, `server/games/anagram-duel.js`, `server/games/anagram-words.js`, `public/games/anagram-duel/`, `test/anagram-duel.test.js`, `test/solo-anagram.test.js` |
-| Word Hunt | `word-hunt` | One word search, two hunters: mark a hidden word first and it's yours. Find more than half to take the grid. | `server/games/word-hunt-bot.js`, `server/games/word-hunt-words.js`, `server/games/word-hunt.js`, `public/games/word-hunt/`, `test/word-hunt.test.js` |
+| Word Hunt | `word-hunt` | One word search, two hunters: mark a hidden word first and it's yours. Find more than half to take the grid. | `server/games/word-hunt-bot.js`, `server/games/word-hunt-words.js`, `server/games/word-hunt.js`, `public/games/word-hunt/`, `test/solo-word-search.test.js`, `test/word-hunt.test.js` |
 | Mini Golf | `mini-golf` | Same hole, same time: pull back and putt on your phone. Walls, bumpers, sand, water and a windmill. Fewest strokes wins. | `server/games/mini-golf-bot.js`, `server/games/mini-golf.js`, `public/games/mini-golf/`, `test/mini-golf.test.js` |
 | Bowling | `ten-pin` | Ten-pin bowling in 3D: swipe the ball down the lane, curve it into the pocket, and bowl strikes and spares over ten frames. | `server/games/ten-pin-bot.js`, `server/games/ten-pin-roll.js`, `server/games/ten-pin.js`, `public/games/ten-pin/`, `test/ten-pin.test.js` |
 | Draw Duel | `draw-duel` | A shape flashes up, then vanishes. Redraw it from memory on your phone; the closest match scores the most. 5 rounds. | `server/games/draw-duel.js`, `server/games/draw-shapes.js`, `server/games/shape-library.js`, `public/games/draw-duel/`, `test/draw-duel.test.js`, `test/sounds.test.js` |
@@ -106,6 +106,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
+| Word Search | `word-hunt` | Find the hidden words in the grid of letters. Across, down, diagonal, even backwards. | `server/games/word-hunt-bot.js`, `server/games/word-hunt-words.js`, `server/games/word-hunt.js`, `public/games/word-hunt/`, `test/solo-word-search.test.js`, `test/word-hunt.test.js` |
 | 2048 | `2048` | Swipe to slide the tiles; equal tiles merge. Can you make 2048? | `server/solo/games/2048.js`, `public/games/2048/`, `test/solo-2048.test.js` |
 | Minesweeper 1P | `minesweeper-1p` | Clear the field without setting off a mine. Numbers count the mines next door. | `server/solo/games/minesweeper-1p.js`, `public/games/minesweeper-1p/`, `test/solo-minesweeper-1p.test.js` |
 | Sudoku | `sudoku` | Fill the grid so every row, column and box has 1 to 9. A fresh puzzle every time. | `server/solo/games/sudoku.js`, `public/games/sudoku/`, `test/solo-sudoku.test.js` |
@@ -122,7 +123,6 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | KenKen | `kenken` | Every number once in each row and column, and each cage makes its sum. Maths meets Sudoku. | `server/solo/games/kenken.js`, `public/games/kenken/`, `test/solo-kenken.test.js` |
 | Nonograms | `nonogram` | The numbers say how many squares are filled in each line. Fill them in to reveal the picture. | `server/solo/games/nonogram.js`, `public/games/nonogram/`, `test/solo-nonogram.test.js` |
 | Lights Out | `lights` | Each press flips a light and its neighbours. Switch them all off in as few moves as you can. | `server/solo/games/lights.js`, `public/games/lights/`, `test/solo-lights.test.js` |
-| Word Search 1P | `wordsearch-1p` | Find the hidden words in the grid of letters. Across, down, diagonal, even backwards. | `server/solo/games/wordsearch-1p.js`, `public/games/wordsearch-1p/`, `test/solo-wordsearch-1p.test.js` |
 
 ### 👤 Solo: 🧠 Brain (11)
 

@@ -158,7 +158,7 @@ export const ACHIEVEMENTS = [
     { id: 'lights-par', icon: '⭐', name: 'On par', desc: 'Lights Out: solve a Hard puzzle in par or fewer.', check: (r, v) => scored(r) && r.variant === 'Hard' && r.score <= v.par },
     { id: 'lights-noreset', icon: '🔦', name: 'No going back', desc: 'Lights Out: solve a Hard puzzle without starting again.', check: (r, v) => scored(r) && r.variant === 'Hard' && v.resets === 0 },
   ]),
-  ...game('wordsearch-1p', [
+  ...game('word-hunt', [
     { id: 'wordsearch-solve', icon: '🔍', name: 'Word finder', desc: 'Word Search: find every word.', check: (r) => scored(r) },
     { id: 'wordsearch-fast', icon: '⏱️', name: 'Eagle eyes', desc: 'Word Search: clear the 8 × 8 in under a minute.', check: (r) => scored(r) && r.variant === '8 × 8' && r.score < MIN },
     { id: 'wordsearch-large', icon: '🗺️', name: 'Every which way', desc: 'Word Search: clear the 12 × 12.', check: (r) => scored(r) && r.variant === '12 × 12' },

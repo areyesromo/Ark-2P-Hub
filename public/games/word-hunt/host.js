@@ -1,4 +1,7 @@
+// In the 1 player mode (view.solo) the game is Word Search: its screens are in search.js (ArkWordSearch).
 (function () {
+  const soloReady = Ark.loadScript('/games/word-hunt/search.js');
+  let alone = null; // { el, api, on, view }: handing over to Word Search' screen
   Ark.loadCss('/games/word-hunt/style.css');
   const ready = Ark.loadScript('/games/word-hunt/board.js');
   const esc = Ark.escapeHtml;
@@ -68,7 +71,7 @@
     nope = v.nope.slice();
   }
 
-  Ark.register('host', 'word-hunt', {
+  const duel = {
     sounds: function (prev, v) {
       if (v.phase === 'play' && prev.phase !== 'play') return ['go'];
       if (v.counts[0] + v.counts[1] > prev.counts[0] + prev.counts[1]) return ['correct']; // (in Race the TV doesn't see where)
@@ -117,5 +120,42 @@
       key = '';
       Object.keys(pads).forEach(function (k) { delete pads[k]; });
     },
-  });
+  };
+
+  /** 1 player: show Word Search' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkWordSearch) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkWordSearch.host.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkWordSearch.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkWordSearch);
+
+  Ark.register('host', 'word-hunt', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkWordSearch.host.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkWordSearch.host.sounds ? ArkWordSearch.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint || 'D-pad move · A on the first letter, then A on the last · B let go',
+    pad: function (btn, v, slot) { return solo(v) ? (ArkWordSearch.host.pad ? ArkWordSearch.host.pad(btn, v) : null) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    typing: function (k, v) { return solo(v) ? (ArkWordSearch.host.typing ? ArkWordSearch.host.typing(k, v) : null) : duel.typing ? duel.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? (ArkWordSearch.host.overHtml ? ArkWordSearch.host.overHtml(v) : '') : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

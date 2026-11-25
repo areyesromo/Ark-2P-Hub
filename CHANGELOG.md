@@ -8,6 +8,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
 
 - ❓ Trivia 1P is now **Trivia**, Quiz Battle's 1 player mode: twelve of Quiz Battle's 250 questions, a
   mix or one topic. (A fresh high-score table.)
+- 🔍 Word Search 1P is now **Word Search**, Word Hunt's 1 player mode: Word Hunt's grids and words, one
+  more word to find in each size. (A fresh high-score table.)
 
 ## 0.1.69
 

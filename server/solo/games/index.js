@@ -50,7 +50,7 @@ import mastermind, { LEVELS as MASTER_LEVELS } from './mastermind-1p.js';
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
 import cave, { MAPS as CAVE_MAPS, VEHICLES as CAVE_VEHICLES } from './cave.js';
 import lights, { LEVELS as LIGHTS_LEVELS } from './lights.js';
-import wordsearch, { SIZES as WORDSEARCH_SIZES } from './wordsearch-1p.js';
+import { soloWordSearch as wordsearch, SIZES as WORDSEARCH_SIZES } from '../../games/word-hunt.js'; // (a game for both modes)
 import { soloAnagram as anagram } from '../../games/anagram-duel.js'; // (a game for both modes)
 import mahjong from './mahjong.js';
 import freecell from './freecell.js';
