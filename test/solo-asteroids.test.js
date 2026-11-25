@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx, seeded } from './helpers-solo.js';
-import { Asteroids, FIELD, ROCKS, LIVES, TIMING, SHOT } from '../server/solo/games/asteroids-1p.js';
+import { Asteroids, FIELD, ROCKS, LIVES, TIMING, SHOT } from '../server/games/asteroid-duel-solo.js';
 
 function game() {
   const ctx = fakeCtx();
@@ -97,4 +97,17 @@ test('clearing the rocks brings a bigger wave; pause stops everything', () => {
   assert.equal(ctx.pendingTimers(), 0);
   g.onInput({ type: 'pause' });
   assert.equal(g.phase, 'play');
+});
+
+test('one game in both lobbies: Asteroid Duel and Asteroids, under one id; its views say so', async () => {
+  const { getGame, soloGameOf, listGames } = await import('../server/games/index.js');
+  const { fakeCtx: ctxOf } = await import('./helpers-solo.js');
+  assert.equal(getGame('asteroid-duel').name, 'Asteroid Duel');
+  assert.equal(soloGameOf('asteroid-duel').name, 'Asteroids');
+  const g = new Asteroids(ctxOf());
+  g.start();
+  assert.equal(g.hostView().solo, true);
+  assert.equal(g.playerView().solo, true);
+  if (g.timer) g.ctx.clearTimeout(g.timer);
+  assert.ok(!listGames().some((x) => x.id === 'asteroids-1p'), 'Asteroids 1P is gone');
 });

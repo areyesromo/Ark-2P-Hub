@@ -27,7 +27,7 @@ export const POOL = [
   { game: 'freecell', settings: {} },
   { game: 'snake', settings: { speed: 'normal', walls: 'solid' } },
   { game: 'slide', settings: { size: 4 } },
-  { game: 'asteroids-1p', settings: {} },
+  { game: 'asteroid-duel', settings: {} },
   { game: 'maths', settings: {} },
   { game: 'flappy', settings: {} },
   { game: 'colours', settings: {} },

@@ -30,7 +30,7 @@ export const LOOKS = {
     dino: { name: '🦖 Dino', unlock: 'runner-500' },
     ninja: { name: '🥷 Ninja', unlock: 'runner-1000' },
   },
-  'asteroids-1p': {
+  'asteroid-duel': {
     classic: { name: 'Classic' },
     rocket: { name: '🚀 Rocket', unlock: 'asteroids-wave3' },
     saucer: { name: '🛸 Saucer', unlock: 'asteroids-wave6' },

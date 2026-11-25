@@ -1,3 +1,6 @@
+// Asteroids, the 1 player mode of Asteroid Duel (asteroid-duel.js): its own engine, under Asteroid Duel's id, so the two are one game
+// in the lobby (see soloGameOf in index.js). It came from Ark 1P Hub.
+//
 // Asteroids. Turn your ship, thrust and shoot. Big rocks split into two
 // middle ones, middle ones into two small ones, small ones are gone. Hit a
 // rock and you lose a ship (you come back in the middle, safe for a moment).
@@ -5,7 +8,7 @@
 // edges. Score: 20 for a big rock, 50 a middle one, 100 a small one; an extra
 // ship every 10,000 points.
 
-import { lookOf } from './looks.js';
+import { lookOf } from '../solo/games/looks.js';
 
 export const FIELD = { w: 160, h: 90 };
 export const SHIP = { r: 2.2, turn: 4.2, thrust: 60, drag: 0.6, maxSpeed: 55 }; // turn: radians/s; thrust: units/s²
@@ -30,7 +33,7 @@ function dist2(a, b) {
 export class Asteroids {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
-    this.look = lookOf(ctx, 'asteroids-1p');
+    this.look = lookOf(ctx, 'asteroid-duel');
     this.rng = rng;
     this.timer = null;
   }
@@ -231,6 +234,7 @@ export class Asteroids {
     const s = this.ship;
     const r1 = (v) => Math.round(v * 100) / 100;
     return {
+      solo: true, // (the screens: Asteroids', not Asteroid Duel's)
       look: this.look,
       phase: this.phase,
       player: this.ctx.player,
@@ -247,13 +251,15 @@ export class Asteroids {
   }
 
   playerView() {
-    return { phase: this.phase, score: this.score, lives: this.lives, wave: this.wave, alive: this.ship.alive };
+    return {
+      solo: true, phase: this.phase, score: this.score, lives: this.lives, wave: this.wave, alive: this.ship.alive };
   }
 }
 
-export default {
-  id: 'asteroids-1p',
-  name: 'Asteroids 1P',
+/** The 1 player mode: played as a solo game (see server/solo/). */
+export const soloAsteroids = {
+  id: 'asteroid-duel',
+  name: 'Asteroids',
   tagline: 'Turn, thrust and blast the rocks to bits before they hit you.',
   category: 'arcade',
   phone: 'split',

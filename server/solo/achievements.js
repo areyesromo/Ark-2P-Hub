@@ -51,7 +51,7 @@ export const ACHIEVEMENTS = [
     { id: 'flappy-25', icon: '🕊️', name: 'Taking flight', desc: 'Flappy: pass 25 pipes.', check: (r) => r.score >= 25 },
     { id: 'flappy-50', icon: '🦅', name: 'Eagle', desc: 'Flappy: pass 50 pipes.', check: (r) => r.score >= 50 },
   ]),
-  ...game('asteroids-1p', [
+  ...game('asteroid-duel', [
     { id: 'asteroids-wave3', icon: '☄️', name: 'Rock breaker', desc: 'Asteroids: reach wave 3.', check: (r, v) => v.wave >= 3 },
     { id: 'asteroids-wave6', icon: '🚀', name: 'Deep space', desc: 'Asteroids: reach wave 6.', check: (r, v) => v.wave >= 6 },
     { id: 'asteroids-10k', icon: '⭐', name: 'Ace pilot', desc: 'Asteroids: score 10,000 (an extra ship!).', check: (r) => r.score >= 10000 },

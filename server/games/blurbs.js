@@ -11,7 +11,7 @@ export const BLURBS = {
   'solo:brick-duel': 'Keep the ball up, smash the wall.',
   'blocks-1p': 'Fill whole rows with falling pieces.',
   flappy: 'Tap to flap through the pipes.',
-  'asteroids-1p': 'Turn, thrust, blast the rocks.',
+  'solo:asteroid-duel': 'Turn, thrust, blast the rocks.',
   invaders: 'Slide, shoot, hide behind the bunkers.',
   runner: 'Jump the cactuses, duck the birds.',
   'solo:tower-stack': 'Drop the block, keep the tower wide.',

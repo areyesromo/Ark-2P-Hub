@@ -25,7 +25,7 @@ import { soloSnake as snake } from '../../games/snake.js'; // (Snake Battle's ar
 import { soloBreaker as breaker } from '../../games/brick-duel-solo.js'; // (a game for both modes: Brick Breaker Duel's 1 player one)
 import blocks from './blocks-1p.js';
 import flappy from './flappy.js';
-import asteroids from './asteroids-1p.js';
+import { soloAsteroids as asteroids } from '../../games/asteroid-duel-solo.js'; // (a game for both modes: Asteroid Duel's 1 player one)
 import sudoku, { LEVELS as SUDOKU_LEVELS } from './sudoku.js';
 import { soloFiveLetters as wordGuess } from '../../games/five-letters.js'; // (a game for both modes)
 import solitaire from './solitaire.js';
@@ -97,7 +97,7 @@ export const SOLO_GAMES = [
   }),
   withSetup(blocks, lookRow('blocks-1p', 'Pieces')),
   withSetup(flappy, lookRow('flappy', 'Fly as')),
-  withSetup(asteroids, lookRow('asteroids-1p', 'Ship')),
+  withSetup(asteroids, lookRow('asteroid-duel', 'Ship')),
   withSetup(invaders, lookRow('invaders', 'Invaders')),
   withSetup(runner, lookRow('runner', 'Run as')),
   withSetup(stack, lookRow('tower-stack', 'Blocks')),
