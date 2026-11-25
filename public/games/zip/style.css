@@ -1,0 +1,36 @@
+/* Zip: a pale grid with one bold orange path. The path, walls and numbers keep their own colours
+   (they're the puzzle); the frame and text follow the theme. */
+.zp-board { position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr); aspect-ratio: 1; background: #e8e3f2; padding: 0; gap: 0; border-radius: var(--r-md); overflow: hidden; touch-action: none; user-select: none; -webkit-user-select: none; box-shadow: inset 0 0 0 3px #2e2645; }
+.zp-sq { border: 1px solid #d3cbe4; background: #f7f4fc; }
+.zp-sq.on { background: #ffe9dc; }
+.zp-sq.hint { animation: zp-hint 900ms ease-in-out infinite alternate; }
+@keyframes zp-hint { from { background: #ffe9dc; } to { background: #9ed2ff; } }
+.zp-art { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.zp-path { fill: none; stroke: #ff6b35; stroke-width: 0.42; stroke-linecap: round; stroke-linejoin: round; }
+.zp-head { fill: #ff6b35; stroke: #fff; stroke-width: 0.06; }
+.zp-cursor { fill: none; stroke: #2e2645; stroke-width: 0.06; stroke-dasharray: 0.12 0.08; }
+.zp-wall { stroke: #2e2645; stroke-width: 0.14; stroke-linecap: round; }
+.zp-num { position: absolute; z-index: 2; transform: translate(-50%, -50%); width: calc(100% / var(--n) * 0.58); aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: #2e2645; color: #fff; font-weight: 900; font-size: 0.5em; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3); pointer-events: none; }
+.zp-num.reached { background: #ff6b35; }
+.zp-num.next { box-shadow: 0 0 0 0.12em #fff, 0 0 0 0.24em #ff6b35; }
+.zp-board.won .zp-path { animation: zp-glow 700ms ease-in-out 3 alternate; }
+@keyframes zp-glow { to { stroke: #ffb347; filter: drop-shadow(0 0 0.15px #ffb347); } }
+.zp-rules { color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+.zp-paused { color: var(--warn); font-weight: 800; }
+
+/* ---- TV ---- */
+.zp-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.zp-top { display: flex; gap: 2.2rem; align-items: baseline; color: var(--muted); font-size: var(--fs-md); }
+.zp-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.zp-host .zp-wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.zp-host .zp-board { width: min(100cqw, 100cqh); font-size: calc(min(100cqw, 100cqh) / var(--n) * 0.62); }
+
+/* ---- phone ---- */
+.zp-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 14px; text-align: center; }
+.zp-phone .info { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: var(--fs-sm); padding: 0 4px; }
+.zp-phone .info strong { color: var(--me); }
+.zp-phone .zp-board { width: 100%; font-size: calc((100vw - 22px) / var(--n) * 0.62); }
+.zp-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.zp-tools button { flex: 1 1 22%; padding: 10px 4px; font-size: var(--fs-sm); min-width: 0; }
+.zp-tools .armed { background: var(--bad); color: var(--on-bright); }
+@media (prefers-reduced-motion: reduce) { .zp-sq.hint, .zp-board.won .zp-path { animation: none; } }

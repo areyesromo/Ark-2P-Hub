@@ -93,6 +93,11 @@ export const LOOKS = {
     golden: { name: '🐕 Golden retriever' },
     aussie: { name: '🐾 Aussie', unlock: 'dogpark-solve' },
   },
+  tango: {
+    sky: { name: '☀️ Suns and moons' },
+    pets: { name: '🐱 Cats and dogs', unlock: 'tango-solve' },
+    stones: { name: '⚪ Stones', unlock: 'tango-10' },
+  },
   simon: {
     classic: { name: 'Classic' },
     pastel: { name: '🍬 Pastel', unlock: 'simon-10' },

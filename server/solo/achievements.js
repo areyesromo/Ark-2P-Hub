@@ -133,6 +133,18 @@ export const ACHIEVEMENTS = [
     { id: 'dogpark-30', icon: '🏆', name: 'Top dog', desc: 'Dog Park: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
     { id: 'dogpark-expert', icon: '🎖️', name: 'Best in show', desc: 'Dog Park: solve level 36, the last of the Expert pack.', check: (r) => scored(r) && r.variant === 'Level 36' },
   ]),
+  ...game('tango', [
+    { id: 'tango-solve', icon: '☀️', name: 'Sun and moon', desc: 'Tango: solve a board.', check: (r) => scored(r) },
+    { id: 'tango-10', icon: '🌗', name: 'In balance', desc: 'Tango: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+    { id: 'tango-nohint', icon: '💃', name: 'Two left feet? Not you', desc: 'Tango: solve an 8 × 8 board or bigger without a hint.', check: (r, v) => scored(r) && v.n >= 8 && !v.hints },
+    { id: 'tango-30', icon: '🌌', name: 'Day and night', desc: 'Tango: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
+  ]),
+  ...game('zip', [
+    { id: 'zip-solve', icon: '〰️', name: 'Zipped up', desc: 'Zip: solve a board.', check: (r) => scored(r) },
+    { id: 'zip-10', icon: '🧵', name: 'Join the dots', desc: 'Zip: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+    { id: 'zip-fast', icon: '⚡', name: 'Lightning path', desc: 'Zip: solve a 7 × 7 board or bigger in under a minute, without a hint.', check: (r, v) => scored(r) && v.n >= 7 && !v.hints && r.score < MIN },
+    { id: 'zip-30', icon: '🏁', name: 'All the way through', desc: 'Zip: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
+  ]),
   ...game('lines', [
     { id: 'lines-first', icon: '🎱', name: 'Five of a kind', desc: 'Color Lines: finish a game with 10 points or more.', check: (r) => scored(r) && r.score >= 10 },
     { id: 'lines-100', icon: '🌈', name: 'Rainbow runner', desc: 'Color Lines: score 100 points.', check: (r) => scored(r) && r.score >= 100 },
@@ -147,6 +159,12 @@ export const ACHIEVEMENTS = [
     { id: 'sokoban-3', icon: '📦', name: 'Warehouse worker', desc: 'Sokoban: solve level 3.', check: (r) => scored(r) && r.variant === 'Level 3' },
     { id: 'sokoban-par', icon: '⭐', name: 'By the book', desc: 'Sokoban: solve a level from 4 on in par.', check: (r, v) => scored(r) && v.levelNo >= 4 && r.score <= v.par },
     { id: 'sokoban-10', icon: '🏭', name: 'Head of logistics', desc: 'Sokoban: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+  ]),
+  ...game('traffic', [
+    { id: 'traffic-solve', icon: '🚗', name: 'On the road', desc: 'Traffic Jam: get the red car out.', check: (r) => scored(r) },
+    { id: 'traffic-par', icon: '⭐', name: 'Shortest way out', desc: 'Traffic Jam: solve a level from 10 on in par, without a hint.', check: (r, v) => scored(r) && v.level >= 10 && v.starred },
+    { id: 'traffic-20', icon: '🚦', name: 'Gridlock buster', desc: 'Traffic Jam: solve level 20.', check: (r) => scored(r) && r.variant === 'Level 20' },
+    { id: 'traffic-40', icon: '🏆', name: 'Traffic controller', desc: 'Traffic Jam: solve level 40.', check: (r) => scored(r) && r.variant === 'Level 40' },
   ]),
   ...game('kenken', [
     { id: 'kenken-solve', icon: '➗', name: 'Number cruncher', desc: 'KenKen: solve a puzzle.', check: (r) => scored(r) },

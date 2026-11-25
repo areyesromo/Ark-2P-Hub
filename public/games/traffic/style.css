@@ -1,0 +1,46 @@
+/* Traffic Jam: a grey car park with painted bays, a gap in the right-hand wall, and bright cars.
+   The cars keep their own paint (the red one is the one to get out); the frame follows the theme. */
+.tj-lot { position: relative; aspect-ratio: 1; border-radius: var(--r-md); background:
+  repeating-linear-gradient(90deg, transparent 0 calc(100% / var(--n) - 1px), rgba(255, 255, 255, 0.08) calc(100% / var(--n) - 1px) calc(100% / var(--n))),
+  repeating-linear-gradient(0deg, transparent 0 calc(100% / var(--n) - 1px), rgba(255, 255, 255, 0.08) calc(100% / var(--n) - 1px) calc(100% / var(--n))),
+  #3a3f47; box-shadow: 0 0 0 6px #6b7280, 0 0 0 9px #374151; touch-action: none; user-select: none; -webkit-user-select: none; }
+.tj-exit { position: absolute; right: -9px; width: 12px; background: repeating-linear-gradient(0deg, #fbbf24 0 6px, #111827 6px 12px); border-radius: 2px; }
+.tj-exit::after { content: '➜'; position: absolute; left: 14px; top: 50%; transform: translateY(-50%); color: #fbbf24; font-weight: 900; font-size: 1.1em; }
+.tj-car { position: absolute; padding: 0.35%; transition: left 160ms ease-out, top 160ms ease-out; touch-action: none; }
+.tj-car .body { position: absolute; inset: 7%; border-radius: 22%/34%; background: linear-gradient(160deg, color-mix(in srgb, var(--paint) 70%, #fff), var(--paint) 45%, color-mix(in srgb, var(--paint) 70%, #000)); box-shadow: 0 4px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 2px rgba(255, 255, 255, 0.18); }
+.tj-car.down .body { border-radius: 34%/22%; }
+.tj-car.truck .body { border-radius: 14%/30%; }
+.tj-car.truck.down .body { border-radius: 30%/14%; }
+.tj-car .glass { position: absolute; background: rgba(20, 30, 45, 0.75); border-radius: 18%; }
+.tj-car.across .glass { top: 18%; bottom: 18%; width: 16%; }
+.tj-car.across .glass.front { right: 14%; }
+.tj-car.across .glass.back { left: 12%; width: 10%; }
+.tj-car.down .glass { left: 18%; right: 18%; height: 16%; }
+.tj-car.down .glass.front { bottom: 14%; }
+.tj-car.down .glass.back { top: 12%; height: 10%; }
+.tj-car.truck.across .glass.back { left: 8%; width: 44%; background: rgba(255, 255, 255, 0.16); }
+.tj-car.truck.down .glass.back { top: 8%; height: 44%; background: rgba(255, 255, 255, 0.16); }
+.tj-car.red .body { box-shadow: 0 0 14px rgba(225, 29, 72, 0.7), 0 4px 8px rgba(0, 0, 0, 0.45), inset 0 0 0 2px rgba(255, 255, 255, 0.25); }
+.tj-car.grabbed { z-index: 3; transition: none; filter: brightness(1.15) drop-shadow(0 6px 10px rgba(0, 0, 0, 0.5)); }
+.tj-car.hinted .body { animation: tj-hint 900ms ease-in-out 2; }
+@keyframes tj-hint { 50% { box-shadow: 0 0 0 4px #fff, 0 0 22px #fff; } }
+.tj-car.out { animation: tj-out 900ms ease-in 200ms forwards; }
+@keyframes tj-out { to { transform: translateX(260%); opacity: 0; } }
+.tj-cursor { position: absolute; z-index: 4; outline: 4px solid #fff; outline-offset: -4px; border-radius: 6px; pointer-events: none; }
+.tj-rules { color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+
+/* ---- TV ---- */
+.tj-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.tj-top { display: flex; gap: 2.2rem; align-items: baseline; color: var(--muted); font-size: var(--fs-md); }
+.tj-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.tj-host .tj-wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; padding: 12px 40px; }
+.tj-host .tj-lot { width: min(100cqw, 100cqh); font-size: calc(min(100cqw, 100cqh) / 12); }
+
+/* ---- phone ---- */
+.tj-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 14px; padding: 14px 34px 14px 14px; text-align: center; }
+.tj-phone .info { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: var(--fs-sm); padding: 0 4px; }
+.tj-phone .info strong { color: var(--me); }
+.tj-phone .tj-lot { width: 100%; font-size: 1rem; }
+.tj-tools { display: flex; gap: 6px; }
+.tj-tools button { flex: 1; padding: 10px 4px; font-size: var(--fs-sm); min-width: 0; }
+@media (prefers-reduced-motion: reduce) { .tj-car { transition: none; } .tj-car.hinted .body, .tj-car.out { animation: none; } }

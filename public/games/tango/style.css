@@ -1,0 +1,35 @@
+/* Tango: a cream board with soft lines; the pieces and the signs keep their own colours (they're
+   the puzzle). The frame and text follow the theme. */
+.tg-board { position: relative; display: grid; grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr); aspect-ratio: 1; background: #d8cfbd; padding: 3px; gap: 2px; border-radius: var(--r-md); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.tg-sq { position: relative; aspect-ratio: 1; min-width: 0; padding: 0; margin: 0; border: 0; border-radius: 4px; background: #fbf7ee; display: flex; align-items: center; justify-content: center; font-size: inherit; line-height: 1; }
+.tg-sq.given { background: #e6dfd0; }
+.tg-sq svg { width: 74%; height: 74%; pointer-events: none; animation: tg-pop 180ms ease-out; }
+.tg-sq.given svg { animation: none; }
+.tg-emoji { font-size: 0.95em; pointer-events: none; animation: tg-pop 180ms ease-out; }
+@keyframes tg-pop { from { transform: scale(0.5); opacity: 0.3; } }
+.tg-sq.clash { box-shadow: inset 0 0 0 3px #e11d48; background: #fde6ea; }
+.tg-sq.hint::after { content: ''; position: absolute; inset: 1px; border-radius: 4px; animation: tg-hint 900ms ease-in-out infinite alternate; pointer-events: none; }
+@keyframes tg-hint { from { box-shadow: 0 0 0 3px #3b82f6; } to { box-shadow: 0 0 0 3px #3b82f6, 0 0 16px #3b82f6; } }
+.tg-sq.cursor { outline: 4px solid #1f2937; outline-offset: -4px; z-index: 1; }
+.tg-sign { position: absolute; z-index: 2; transform: translate(-50%, -50%); width: calc(100% / var(--n) * 0.34); aspect-ratio: 1; display: grid; place-items: center; border-radius: 50%; background: #fff; color: #7c5a2c; box-shadow: 0 0 0 2px #d8cfbd; font-weight: 900; font-size: 0.42em; pointer-events: none; }
+.tg-board.won .tg-sq svg, .tg-board.won .tg-emoji { animation: tg-dance 600ms ease-in-out 3; }
+@keyframes tg-dance { 25% { transform: rotate(-12deg) scale(1.08); } 75% { transform: rotate(12deg) scale(1.08); } }
+.tg-rules { color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+.tg-paused { color: var(--warn); font-weight: 800; }
+
+/* ---- TV ---- */
+.tg-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.tg-top { display: flex; gap: 2.2rem; align-items: baseline; color: var(--muted); font-size: var(--fs-md); }
+.tg-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.tg-host .tg-wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.tg-host .tg-board { width: min(100cqw, 100cqh); font-size: calc(min(100cqw, 100cqh) / var(--n) * 0.62); }
+
+/* ---- phone ---- */
+.tg-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 14px; text-align: center; }
+.tg-phone .info { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: var(--fs-sm); padding: 0 4px; }
+.tg-phone .info strong { color: var(--me); }
+.tg-phone .tg-board { width: 100%; font-size: calc((100vw - 22px) / var(--n) * 0.62); }
+.tg-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.tg-tools button { flex: 1 1 22%; padding: 10px 4px; font-size: var(--fs-sm); min-width: 0; }
+.tg-tools .armed { background: var(--bad); color: var(--on-bright); }
+@media (prefers-reduced-motion: reduce) { .tg-sq svg, .tg-emoji, .tg-board.won .tg-sq svg, .tg-board.won .tg-emoji, .tg-sq.hint::after { animation: none; } }

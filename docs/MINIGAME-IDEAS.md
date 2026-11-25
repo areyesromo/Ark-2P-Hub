@@ -188,9 +188,6 @@ alone at `/phone`. No computer player (that's the 2 player games). Best first.
 
 | Idea | How it plays | Size of the job | Look |
 |---|---|---|---|
-| Tango | Fill a grid with suns and moons: no three alike in a line, as many of each per row, = and × signs. | Small: reuses Dog Park's one-answer board maker and level ladder | 2D |
-| Zip | One path through the numbered dots in order, covering every square once. | Small to medium | 2D |
-| Rush Hour | Slide cars and trucks until the red car can drive out. | Medium (level packs) | 2D |
 | Pipes | Turn the pipe pieces until the water reaches every one, no open ends. | Medium | 2D |
 | Futoshiki | A Latin square with < and > signs between squares. | Small: like KenKen | 2D |
 | Peg Solitaire | Jump pegs to take them off; finish with one, ideally in the middle. | Small | 2D |
@@ -198,41 +195,6 @@ alone at `/phone`. No computer player (that's the 2 player games). Best first.
 | Slitherlink | One closed loop round the dots; each number counts its square's sides used. | Large: as above | 2D |
 
 ### How each one plays
-
-#### Tango
-
-A grid (6 × 6 to 10 × 10) to fill with suns ☀️ and moons 🌙.
-
-- No three of the same in a row or column.
-- Every row and column has as many suns as moons.
-- Some pairs of squares have a sign between them: **=** means the same, **×** means different.
-- Some squares are given.
-
-**Plays:** tap a square for sun → moon → empty, like Dog Park. Squares that break a rule light up.
-Hint, Undo and Clear as in Dog Park.
-**Boards:** made like Dog Park's: start from a full legal grid, remove clues while it still has
-exactly one answer. Ladder of levels (6 × 6 up to 10 × 10) that open in turn, plus random boards and a
-daily slot. **Score:** time, per size.
-**Looks to unlock:** sun / moon, cat / dog, ⚪ / ⚫.
-
-#### Zip
-
-A grid with numbered dots (1, 2, 3 …). Draw one path that visits the numbers in order and covers
-every square exactly once. Some levels have walls between squares.
-
-**Plays:** drag a finger along the path; drag back over it to undo. On the TV the D-pad draws it,
-B steps back. **Boards:** make a random path that covers the grid (a Hamiltonian path), drop
-numbers along it, then keep only boards with one answer. Ladder of levels plus random boards.
-**Score:** time.
-
-#### Rush Hour
-
-A 6 × 6 parking lot of cars and trucks that only move forwards and backwards. Slide them until the
-red car can drive out.
-
-**Plays:** drag a car (or pick it with the D-pad and push it). **Boards:** a pack of 40 levels,
-easy to expert, each with its fewest moves worked out by a solver (a par, like Sokoban).
-**Score:** moves (fewer is better), per level; ⭐ for solving in par.
 
 #### Pipes
 
@@ -273,7 +235,7 @@ how many of its square's four sides the loop uses.
 
 **Plays:** tap an edge to draw a line, again for ✕ (no line), again to clear.
 
-For both 7 and 8, the work is in making boards that are fair (one answer, solvable without
+For both Hashi and Slitherlink, the work is in making boards that are fair (one answer, solvable without
 guessing) fast enough for a Raspberry Pi, so they'd start as fixed level packs made ahead of time.
 
 ### Not games: for the solo games we have

@@ -45,6 +45,12 @@ import { soloHangman as hangman } from '../../games/hangman.js'; // (a game for 
 import lines from './lines.js';
 import dogpark, { PARKS as DOG_PARKS, RANDOM as DOG_RANDOM, EXPERT_FROM as DOG_EXPERT } from './dogpark.js';
 import { LEVELS as DOG_LEVELS } from './dogpark-levels.js';
+import tango, { BOARDS as TANGO_BOARDS, RANDOM as TANGO_RANDOM } from './tango.js';
+import { LEVELS as TANGO_LEVELS } from './tango-levels.js';
+import zip, { BOARDS as ZIP_BOARDS, RANDOM as ZIP_RANDOM } from './zip.js';
+import { LEVELS as ZIP_LEVELS } from './zip-levels.js';
+import traffic, { BOARDS as TRAFFIC_BOARDS } from './traffic.js';
+import { LEVELS as TRAFFIC_LEVELS } from './traffic-levels.js';
 import flood, { SIZES as FLOOD_SIZES } from './flood.js';
 import { soloMastermind as mastermind, LEVELS as MASTER_LEVELS } from '../../games/code-breaker-solo.js'; // (a game for both modes: Code Breaker's 1 player one)
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
@@ -145,6 +151,33 @@ export const SOLO_GAMES = [
     },
     ...lookRow('dogpark', 'Dogs'),
   }),
+  withSetup(tango, {
+    board: {
+      title: 'Board',
+      values: TANGO_BOARDS,
+      label: (b) => {
+        if (typeof b !== 'number') return `🎲 Random ${TANGO_RANDOM[b]} × ${TANGO_RANDOM[b]} (a new board every time)`;
+        const n = TANGO_LEVELS[b - 1].rows.length;
+        return `Level ${b} · ${n} × ${n}`;
+      },
+      // Each level opens once the one before it is solved; the random boards are open from the start.
+      lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
+    },
+    ...lookRow('tango', 'Pieces'),
+  }),
+  withSetup(zip, {
+    board: {
+      title: 'Board',
+      values: ZIP_BOARDS,
+      label: (b) => {
+        if (typeof b !== 'number') return `🎲 Random ${ZIP_RANDOM[b]} × ${ZIP_RANDOM[b]} (a new board every time)`;
+        const l = ZIP_LEVELS[b - 1];
+        return `Level ${b} · ${l.n} × ${l.n}${l.walls ? ' · walls' : ''}`;
+      },
+      // Each level opens once the one before it is solved; the random boards are open from the start.
+      lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
+    },
+  }),
   withSetup(sokoban, {
     level: {
       title: 'Level',
@@ -152,6 +185,15 @@ export const SOLO_GAMES = [
       label: (n) => `${n} · par ${SOKOBAN_LEVELS[n - 1].par}`,
       // Each level opens once the one before it is solved.
       lock: (n, have, ctx) => (n === 1 || (ctx.best && ctx.best(`Level ${n - 1}`) !== null) ? null : `Solve level ${n - 1} to unlock`),
+    },
+  }),
+  withSetup(traffic, {
+    board: {
+      title: 'Car park',
+      values: TRAFFIC_BOARDS,
+      label: (b) => (typeof b !== 'number' ? '🎲 Random (a new car park every time, its own scores)' : `Level ${b} · par ${TRAFFIC_LEVELS[b - 1].par}`),
+      // Each level opens once the one before it is solved; a random car park is open from the start.
+      lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
     },
   }),
   withSetup(kenken, {
