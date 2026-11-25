@@ -55,8 +55,7 @@ import { soloAnagram as anagram } from '../../games/anagram-duel.js'; // (a game
 import mahjong from './mahjong.js';
 import freecell from './freecell.js';
 import nonogram from './nonogram.js';
-import trivia from './trivia-1p.js';
-import { CATEGORIES as TRIVIA_CATEGORIES } from './trivia-questions.js';
+import { soloTrivia as trivia, TOPICS as TRIVIA_TOPICS } from '../../games/quiz.js'; // (a game for both modes)
 import maths from './maths.js';
 import colours from './colours.js';
 import game2048 from './2048.js';
@@ -183,6 +182,6 @@ export const SOLO_GAMES = [
   oddone,
   hangman,
   withSetup(trivia, {
-    category: { title: 'Questions', values: ['mix', ...Object.keys(TRIVIA_CATEGORIES)], label: (c) => (c === 'mix' ? '🎲 A mix of everything' : `${TRIVIA_CATEGORIES[c]} (its own scores)`) },
+    topic: { title: 'Questions', values: TRIVIA_TOPICS.map((_, i) => i).concat(TRIVIA_TOPICS.length), label: (n) => (n === 0 ? '🎲 A mix of everything' : `${TRIVIA_TOPICS[n - 1]} (its own scores)`) },
   }),
 ];

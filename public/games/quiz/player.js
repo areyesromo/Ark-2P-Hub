@@ -1,4 +1,7 @@
+// In the 1 player mode (view.solo) the game is Trivia: its screens are in trivia.js (ArkTrivia).
 (function () {
+  const soloReady = Ark.loadScript('/games/quiz/trivia.js');
+  let alone = null; // { el, api, on, view }: handing over to Trivia' screen
   Ark.loadCss('/games/quiz/style.css');
   const esc = Ark.escapeHtml;
 
@@ -72,7 +75,7 @@
     );
   }
 
-  Ark.register('player', 'quiz', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       root = document.createElement('div');
@@ -98,5 +101,36 @@
       lastKey = '';
       buzzed = 0;
     },
-  });
+  };
+
+  /** 1 player: show Trivia' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkTrivia) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkTrivia.player.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkTrivia.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'quiz', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkTrivia.player.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+  }));
 })();

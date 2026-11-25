@@ -43,7 +43,7 @@ export const BLURBS = {
   numbers: 'Remember the number, type it back.',
   oddone: "Spot the square that's a different shade.",
   'solo:hangman': 'Guess the word, seven wrong and out.',
-  'trivia-1p': 'Twelve questions; quick answers score more.',
+  'solo:quiz': 'Twelve questions; quick answers score more.',
   'reaction-duel': 'Wait for GO, then tap first.',
   'rock-paper-scissors': 'Secret picks, revealed on the TV.',
   pong: 'The classic paddle duel.',

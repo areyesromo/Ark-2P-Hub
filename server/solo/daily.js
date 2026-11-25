@@ -21,7 +21,7 @@ export const POOL = [
   { game: 'sudoku', settings: { level: 'medium' } },
   { game: 'nonogram', settings: { size: 10 } },
   { game: 'solitaire', settings: { draw: 1 } },
-  { game: 'trivia-1p', settings: { category: 'mix' } },
+  { game: 'quiz', settings: { topic: 0 } },
   { game: 'memory-match', settings: { size: 'medium' } },
   { game: 'mahjong', settings: {} },
   { game: 'freecell', settings: {} },

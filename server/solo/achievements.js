@@ -199,7 +199,7 @@ export const ACHIEVEMENTS = [
     { id: 'colours-40', icon: '🌈', name: 'Colour master', desc: 'Colour Trap: 40 right in one go.', check: (r) => r.score >= 40 },
     { id: 'colours-streak', icon: '🔥', name: 'Unshakeable', desc: 'Colour Trap: 25 right in a row.', check: (r, v) => v.bestStreak >= 25 },
   ]),
-  ...game('trivia-1p', [
+  ...game('quiz', [
     { id: 'trivia-1500', icon: '🧠', name: 'Know-it-all', desc: 'Trivia: score 1,500.', check: (r) => r.score >= 1500 },
     { id: 'trivia-perfect', icon: '🎓', name: 'Full marks', desc: 'Trivia: get all 12 right.', check: (r, v) => v.of > 0 && v.right === v.of },
     { id: 'trivia-fast', icon: '⚡', name: 'Buzzer beater', desc: 'Trivia: a right answer in under 2 seconds.', check: (r, v) => v.fastest !== null && v.fastest < 2000 },

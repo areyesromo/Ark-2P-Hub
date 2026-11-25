@@ -4,6 +4,11 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.70
+
+- ❓ Trivia 1P is now **Trivia**, Quiz Battle's 1 player mode: twelve of Quiz Battle's 250 questions, a
+  mix or one topic. (A fresh high-score table.)
+
 ## 0.1.69
 
 - 🔤 Word Guess 1P is now **Five Letters** in the 1 player lobby: the same game as the 2 player one, on

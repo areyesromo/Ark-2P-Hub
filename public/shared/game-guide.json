@@ -99,7 +99,7 @@
   "controls": "As Kart Race"
  },
  "quiz": {
-  "rules": "10 trivia questions from a bank of 250 (science, geography, history, movies, music, sports, games, food, nature and tech; play them mixed or pick one topic). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions.",
+  "rules": "10 trivia questions from a bank of 250 (science, geography, history, movies, music, sports, games, food, nature and tech; play them mixed or pick one topic). Answers stay secret until the reveal; a right answer scores 500 plus up to 500 for speed. Most points wins, and rematches don't repeat questions. On your own? <strong>Trivia</strong> in the 1 player lobby: twelve questions against the clock.",
   "settings": "5, 10, 15 or 20 questions, and the topic (mixed or one category)",
   "controls": "<strong>A</strong> / <strong>B</strong> / <strong>X</strong> / <strong>Y</strong> to answer, or the <strong>D-pad</strong> as a diamond (↓ A, → B, ← X, ↑ Y) · Answer tiles on the TV are coloured like the buttons"
  },
@@ -400,6 +400,10 @@
   "rules": "Reaction Duel on your own: the screen says <strong>Wait…</strong> (red), then after a random moment <strong>TAP!</strong> (green): hit the phone's big button as fast as you can. Five rounds. Tap before green and it's a false start: that round starts again and 100 ms goes on your time. Score: your average time plus penalties, in ms (lower is better). No music, so you can concentrate.",
   "controls": "Any face button, bumper or trigger · keyboard: <strong>Enter</strong> / <strong>Space</strong> · Tap"
  },
+ "solo:quiz": {
+  "rules": "Quiz Battle on your own: twelve of its questions, four answers each, 15 seconds a question. A right answer scores 100, plus up to 100 more the faster you are; wrong or too slow scores nothing, and the right answer shows for a moment either way. Quiz Battle's 250 questions: play a mix, or pick a topic (each has its own scores). You won't see a question again until you've seen them all. Score: points.",
+  "controls": "<strong>A</strong>, <strong>B</strong>, <strong>X</strong>, <strong>Y</strong>: the answer next to that letter on the TV · keyboard: <strong>1</strong>–<strong>4</strong>"
+ },
  "solo:hangman": {
   "rules": "Hangman on your own: the hub hides a word behind blanks; tap letters on the phone's keyboard (or on the TV, with its keyboard or a controller) and the right ones fill in. Seven wrong letters and the man is hanged: the run is over, and the word shows. Each word is worth 100 plus 20 for every wrong letter you didn't use, and the next word follows straight away. Score: points over the run.",
   "controls": "<strong>D-pad</strong> moves over the keyboard, <strong>A</strong> guesses · keyboard: Just type the letters"
@@ -435,9 +439,5 @@
  "oddone": {
   "rules": "A grid of squares all the same colour, except one a shade lighter or darker: tap it (on the phone, the same grid). Each find makes the grid bigger (3 × 3 up to 8 × 8) and the difference smaller. A wrong tap costs 3 seconds; 60 seconds in all. Score: odd ones found.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> picks · keyboard: Arrows, <strong>Enter</strong>"
- },
- "trivia-1p": {
-  "rules": "Twelve questions, four answers each, 15 seconds a question. A right answer scores 100, plus up to 100 more the faster you are; wrong or too slow scores nothing, and the right answer shows for a moment either way. 152 questions in six subjects (science &amp; nature, geography, history, sport &amp; games, film, music &amp; books, food &amp; drink): play a mix, or pick one (each has its own scores). You won't see a question again until you've seen them all. Score: points.",
-  "controls": "<strong>A</strong>, <strong>B</strong>, <strong>X</strong>, <strong>Y</strong>: the answer next to that letter on the TV · keyboard: <strong>1</strong>–<strong>4</strong>"
  }
 }
