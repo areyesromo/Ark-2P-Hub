@@ -139,6 +139,12 @@ export const ACHIEVEMENTS = [
     { id: 'tango-nohint', icon: '💃', name: 'Two left feet? Not you', desc: 'Tango: solve an 8 × 8 board or bigger without a hint.', check: (r, v) => scored(r) && v.n >= 8 && !v.hints },
     { id: 'tango-30', icon: '🌌', name: 'Day and night', desc: 'Tango: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
   ]),
+  ...game('zip', [
+    { id: 'zip-solve', icon: '〰️', name: 'Zipped up', desc: 'Zip: solve a board.', check: (r) => scored(r) },
+    { id: 'zip-10', icon: '🧵', name: 'Join the dots', desc: 'Zip: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+    { id: 'zip-fast', icon: '⚡', name: 'Lightning path', desc: 'Zip: solve a 7 × 7 board or bigger in under a minute, without a hint.', check: (r, v) => scored(r) && v.n >= 7 && !v.hints && r.score < MIN },
+    { id: 'zip-30', icon: '🏁', name: 'All the way through', desc: 'Zip: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
+  ]),
   ...game('lines', [
     { id: 'lines-first', icon: '🎱', name: 'Five of a kind', desc: 'Color Lines: finish a game with 10 points or more.', check: (r) => scored(r) && r.score >= 10 },
     { id: 'lines-100', icon: '🌈', name: 'Rainbow runner', desc: 'Color Lines: score 100 points.', check: (r) => scored(r) && r.score >= 100 },
