@@ -18,7 +18,7 @@ export const LOOKS = {
     penguin: { name: '🐧 Penguin', unlock: 'flappy-25' },
     dragon: { name: '🐉 Dragon', unlock: 'flappy-50' },
   },
-  'breaker-1p': {
+  'brick-duel': {
     classic: { name: 'Classic' },
     fire: { name: '🔥 Fireball', unlock: 'breaker-level2' },
     crystal: { name: '💎 Crystal', unlock: 'breaker-level4' },

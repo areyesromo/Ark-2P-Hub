@@ -34,7 +34,7 @@
   "controls": "<strong>Left stick</strong> or <strong>D-pad ← →</strong>, <strong>A</strong> · Slide, jump"
  },
  "brick-duel": {
-  "rules": "A race to break your own wall, side by side on the TV. Your wall, balls and paddle are on your phone too: drag left and right on it (or use the stick) to move your paddle; a missed ball puts back the last brick you broke (or, if you pick it, just costs a moment). Power bricks shrink your rival's paddle, give you an extra ball or add a row to their wall. First to clear their wall wins; after 2 minutes, most bricks broken (level: next brick wins).",
+  "rules": "A race to break your own wall, side by side on the TV. Your wall, balls and paddle are on your phone too: drag left and right on it (or use the stick) to move your paddle; a missed ball puts back the last brick you broke (or, if you pick it, just costs a moment). Power bricks shrink your rival's paddle, give you an extra ball or add a row to their wall. First to clear their wall wins; after 2 minutes, most bricks broken (level: next brick wins). On your own? <strong>Brick Breaker</strong> in the 1 player lobby: the classic, lives and levels.",
   "settings": "Wall: 3, 5 or 7 rows of bricks; missed ball: a brick comes back, or just a moment lost",
   "controls": "<strong>Left stick</strong> or <strong>D-pad ← →</strong> · Move your paddle"
  },
@@ -288,13 +288,13 @@
   "rules": "One of you picks a secret word (easy, medium or hard, from 400) and draws it on your phone with colours, undo and an eraser; the other watches it appear on the TV and their own phone and types guesses (near misses get a \"so close!\"). Letters are hinted as time runs out. Team up for stars: faster and harder words earn more. 6 rounds, taking turns to draw.",
   "settings": "4, 6, 8 or 10 rounds"
  },
+ "solo:brick-duel": {
+  "rules": "Brick Breaker Duel's 1 player game: Keep the ball in play with your paddle and smash the wall. Slide a finger along the phone's strip to move the paddle (or the stick / D-pad). Where the ball hits the paddle sets its angle, and it speeds up a little on every hit. Higher rows score more (1, 3, 5, 7 points). Clear the wall for a new, faster level with a different pattern (and a life back); lose the ball 3 times and it's over. 🚀 Launch on the phone, or it goes by itself after 3 s. Pick 3 lives or 5 (easy, with its own scores). Ball and paddle styles to unlock (just for looks): 🔥 Fireball (clear a wall), 💎 Crystal (reach level 4) and 🌈 Rainbow (score 1,000).",
+  "controls": "Stick or <strong>D-pad ← →</strong>, <strong>A</strong> launches, <strong>Start</strong> pauses · keyboard: Arrows, <strong>Enter</strong>, <strong>P</strong> · Move the paddle"
+ },
  "solo:snake": {
   "rules": "The classic, in Snake Battle's arena with just your snake: eat the glowing food to grow, don't hit a wall or your own tail. Every 4 bites the snake speeds up. Tap a side of the phone pad or swipe to turn (turns can be chained in one swipe); the arena is on your phone too. Before you start, pick the speed (Normal or ⚡ Fast) and the walls (🧱 Solid, or 🌀 Wrap round: come out on the other side). ⏸ Pause on the phone (or Start on a controller). Snakes to unlock (just for looks): 🌈 Rainbow (eat 10), 💜 Neon (25) and 👑 Gold (50). Score: food eaten; each speed and wall setting keeps its own bests.",
   "controls": "<strong>D-pad</strong> / stick (or <strong>Y</strong>↑ <strong>A</strong>↓ <strong>X</strong>← <strong>B</strong>→), <strong>Start</strong> pauses · keyboard: Arrows, <strong>P</strong> pauses · Turn"
- },
- "breaker-1p": {
-  "rules": "Keep the ball in play with your paddle and smash the wall. Slide a finger along the phone's strip to move the paddle (or the stick / D-pad). Where the ball hits the paddle sets its angle, and it speeds up a little on every hit. Higher rows score more (1, 3, 5, 7 points). Clear the wall for a new, faster level with a different pattern (and a life back); lose the ball 3 times and it's over. 🚀 Launch on the phone, or it goes by itself after 3 s. Pick 3 lives or 5 (easy, with its own scores). Ball and paddle styles to unlock (just for looks): 🔥 Fireball (clear a wall), 💎 Crystal (reach level 4) and 🌈 Rainbow (score 1,000).",
-  "controls": "Stick or <strong>D-pad ← →</strong>, <strong>A</strong> launches, <strong>Start</strong> pauses · keyboard: Arrows, <strong>Enter</strong>, <strong>P</strong> · Move the paddle"
  },
  "blocks-1p": {
   "rules": "The falling-block classic: pieces of four squares drop into a 10×20 well. Move and turn them so they fill whole rows, which clear. Every 10 rows the level goes up and pieces fall faster. Clearing several rows at once scores far more (100, 300, 500 or 800 points for 1 to 4 rows, times the level), plus a point a row when you drop a piece yourself. <strong>Hold</strong> puts a piece aside for later (once per piece); the TV shows it, the next three pieces and a shadow where yours will land. On the phone: ◀ ▶ move (hold to repeat), ⟲ ⟳ turn, ▼ soft drop, <strong>⤓ Drop</strong> drops it at once. Pieces come in shuffled sets of seven, so you never wait long for a straight piece. The run ends when a new piece has no room. Piece colours to unlock (just for looks): 🍬 Candy (clear 4 rows at once), 🟩 Retro green (40 rows in a run) and 💜 Neon (score 10,000).",

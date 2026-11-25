@@ -2,7 +2,10 @@
 // canvas. Views come ~30 times a second; balls are carried on between them. Power bricks are
 // drawn with a mark (no emoji on the canvas): a bar for shrink, a dot for an extra ball, stripes
 // for an added row.
+// In the 1 player mode (view.solo) the game is Brick Breaker: its screens are in breaker.js (ArkBreaker).
 (function () {
+  const soloReady = Ark.loadScript('/games/brick-duel/breaker.js');
+  let alone = null; // { el, api, on, view }: handing over to Brick Breaker' screen
   Ark.loadCss('/games/brick-duel/style.css');
   // The bricks are drawn by a helper shared with the other screen; if it fails to load, try again.
   let bricksLoading = null;
@@ -125,7 +128,7 @@
     g.setTransform(1, 0, 0, 1, 0, 0);
   }
 
-  Ark.register('host', 'brick-duel', {
+  const duel = {
     sounds: function (prev, v) {
       if (prev.phase !== 'play' || v.phase !== 'play') return [];
       const out = [];
@@ -172,5 +175,42 @@
       overlayKey = topKey = '';
       powerN = undefined;
     },
-  });
+  };
+
+  /** 1 player: show Brick Breaker' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkBreaker) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkBreaker.host.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkBreaker.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkBreaker);
+
+  Ark.register('host', 'brick-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkBreaker.host.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkBreaker.host.sounds ? ArkBreaker.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint || 'Stick, D-pad or arrows move · A / Enter launch · Start / P pause',
+    pad: function (btn, v, slot) { return solo(v) ? (ArkBreaker.host.pad ? ArkBreaker.host.pad(btn, v) : null) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    typing: function (k, v) { return solo(v) ? (ArkBreaker.host.typing ? ArkBreaker.host.typing(k, v) : null) : duel.typing ? duel.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? (ArkBreaker.host.overHtml ? ArkBreaker.host.overHtml(v) : '') : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

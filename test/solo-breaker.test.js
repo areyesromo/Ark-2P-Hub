@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers-solo.js';
-import { Breaker, FIELD, PADDLE, TIMING, LIVES, ROW_POINTS } from '../server/solo/games/breaker-1p.js';
+import { Breaker, FIELD, PADDLE, TIMING, LIVES, ROW_POINTS } from '../server/games/brick-duel-solo.js';
 
 function game(settings) {
   const ctx = fakeCtx('Ana', settings);
@@ -103,4 +103,17 @@ test('pause freezes everything; easy mode has its own scores', () => {
   g.onInput({ type: 'pause' });
   ctx.advance(100);
   assert.notEqual(g.ball.y, at.y);
+});
+
+test('one game in both lobbies: Brick Breaker Duel and Brick Breaker, under one id; its views say so', async () => {
+  const { getGame, soloGameOf, listGames } = await import('../server/games/index.js');
+  const { fakeCtx: ctxOf } = await import('./helpers-solo.js');
+  assert.equal(getGame('brick-duel').name, 'Brick Breaker Duel');
+  assert.equal(soloGameOf('brick-duel').name, 'Brick Breaker');
+  const g = new Breaker(ctxOf());
+  g.start();
+  assert.equal(g.hostView().solo, true);
+  assert.equal(g.playerView().solo, true);
+  g.ctx.clearTimeout(g.timer);
+  assert.ok(!listGames().some((x) => x.id === 'breaker-1p'), 'Brick Breaker 1P is gone');
 });

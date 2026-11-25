@@ -22,7 +22,7 @@
 // server/games/index.js, which plays it in either mode.
 
 import { soloSnake as snake } from '../../games/snake.js'; // (Snake Battle's arena, one snake: a game for both modes)
-import breaker from './breaker-1p.js';
+import { soloBreaker as breaker } from '../../games/brick-duel-solo.js'; // (a game for both modes: Brick Breaker Duel's 1 player one)
 import blocks from './blocks-1p.js';
 import flappy from './flappy.js';
 import asteroids from './asteroids-1p.js';
@@ -93,7 +93,7 @@ export const SOLO_GAMES = [
   }),
   withSetup(breaker, {
     lives: { title: 'Lives', values: ['normal', 'easy'], label: (l) => (l === 'easy' ? '5 lives (easy, its own scores)' : '3 lives') },
-    ...lookRow('breaker-1p', 'Ball and paddle'),
+    ...lookRow('brick-duel', 'Ball and paddle'),
   }),
   withSetup(blocks, lookRow('blocks-1p', 'Pieces')),
   withSetup(flappy, lookRow('flappy', 'Fly as')),

@@ -1,3 +1,6 @@
+// Brick Breaker, the 1 player mode of Brick Breaker Duel (brick-duel.js): its own engine, under Brick Breaker Duel's id, so the two are one game
+// in the lobby (see soloGameOf in index.js). It came from Ark 1P Hub.
+//
 // Brick Breaker. Keep the ball in play with your paddle and smash every
 // brick. Where the ball hits the paddle sets the angle it flies off at, and it
 // speeds up a little on every paddle hit. Higher rows score more. Clear the
@@ -8,7 +11,7 @@
 // controller or the keyboard sends a direction (axis -1..1).
 
 import { settingOf } from './options.js';
-import { lookOf } from './looks.js';
+import { lookOf } from '../solo/games/looks.js';
 
 export const FIELD = { w: 100, h: 75 };
 export const PADDLE = { y: 70, h: 2, w: 16, speed: 110 }; // speed: units per second on the stick
@@ -32,7 +35,7 @@ const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
 export class Breaker {
   constructor(ctx) {
     this.ctx = ctx;
-    this.look = lookOf(ctx, 'breaker-1p');
+    this.look = lookOf(ctx, 'brick-duel');
     this.easy = settingOf(ctx, 'lives', 'normal') === 'easy';
     this.timer = null;
   }
@@ -219,6 +222,7 @@ export class Breaker {
 
   hostView() {
     return {
+      solo: true, // (the screens: Brick Breaker's, not Brick Breaker Duel's)
       look: this.look,
       phase: this.phase,
       player: this.ctx.player,
@@ -235,6 +239,7 @@ export class Breaker {
 
   playerView() {
     return {
+      solo: true, // (the screens: Brick Breaker's, not Brick Breaker Duel's)
       phase: this.phase,
       level: this.level + 1,
       lives: this.lives,
@@ -246,9 +251,10 @@ export class Breaker {
   }
 }
 
-export default {
-  id: 'breaker-1p',
-  name: 'Brick Breaker 1P',
+/** The 1 player mode: played as a solo game (see server/solo/). */
+export const soloBreaker = {
+  id: 'brick-duel',
+  name: 'Brick Breaker',
   tagline: 'Bounce the ball off your paddle and smash the wall, brick by brick.',
   category: 'arcade',
   phone: 'split',

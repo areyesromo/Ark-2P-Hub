@@ -12,6 +12,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   more word to find in each size. (A fresh high-score table.)
 - 💣 Minesweeper 1P is now **Minesweeper**, Mine Duel's 1 player mode: the same game as before (three
   fields, chording, flags), now beside Mine Duel. (A fresh high-score table.)
+- 🧱 Brick Breaker 1P is now **Brick Breaker**, beside Brick Breaker Duel as its 1 player mode: the same
+  game as before (lives, levels, the unlockable balls). (A fresh high-score table.)
 
 ## 0.1.69
 

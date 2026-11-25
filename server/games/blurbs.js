@@ -8,7 +8,7 @@ export const BLURBS = {
   'solo:snake': 'Eat, grow, beat your best.', // (a game for both modes: its 1 player line)
   dogpark: 'One dog per row, column and colour.',
   'solo:reaction-duel': 'Five taps: your average is your score.',
-  'breaker-1p': 'Keep the ball up, smash the wall.',
+  'solo:brick-duel': 'Keep the ball up, smash the wall.',
   'blocks-1p': 'Fill whole rows with falling pieces.',
   flappy: 'Tap to flap through the pipes.',
   'asteroids-1p': 'Turn, thrust, blast the rocks.',

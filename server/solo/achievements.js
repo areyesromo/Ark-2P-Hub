@@ -36,7 +36,7 @@ export const ACHIEVEMENTS = [
     { id: 'snake-25', icon: '🐍', name: 'Long boi', desc: 'Snake: eat 25 in one run.', check: (r) => r.score >= 25 },
     { id: 'snake-50', icon: '🐉', name: 'Dragon', desc: 'Snake: eat 50 in one run.', check: (r) => r.score >= 50 },
   ]),
-  ...game('breaker-1p', [
+  ...game('brick-duel', [
     { id: 'breaker-level2', icon: '🧱', name: 'Wall breaker', desc: 'Brick Breaker: clear a whole wall.', check: (r, v) => v.level >= 2 },
     { id: 'breaker-level4', icon: '🏗️', name: 'Demolition crew', desc: 'Brick Breaker: reach level 4.', check: (r, v) => v.level >= 4 },
     { id: 'breaker-1000', icon: '💯', name: 'Four figures', desc: 'Brick Breaker: score 1,000.', check: (r) => r.score >= 1000 },
