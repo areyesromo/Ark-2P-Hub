@@ -84,7 +84,7 @@ folder, not in the repo, so the merged app starts fresh.
    | Word Guess | ~~Word Guess 1P (`word-guess-1p`)~~ merged: **Five Letters**' 1 player mode (`five-letters`) | Five Letters |
    | Anagram Rush | ~~Anagram Rush 1P (`anagram-1p`)~~ merged: **Anagram Rush**, Anagram Duel's 1 player mode (`anagram-duel`) | Anagram Duel |
    | Word Search | ~~Word Search 1P (`wordsearch-1p`)~~ merged: **Word Search**, Word Hunt's 1 player mode (`word-hunt`) | Word Hunt |
-   | Mastermind | Mastermind 1P (`mastermind-1p`) | Code Breaker |
+   | Mastermind | ~~Mastermind 1P (`mastermind-1p`)~~ merged: **Mastermind**, Code Breaker's 1 player mode (`code-breaker`) | Code Breaker |
    | Trivia | ~~Trivia 1P (`trivia-1p`)~~ merged: **Trivia**, Quiz Battle's 1 player mode (`quiz`) | Quiz Battle |
    | Memory Pairs | ~~Memory Pairs 1P (`memory-1p`)~~ merged: **Memory Pairs**, Memory Match's 1 player mode (`memory-match`) | Memory Match |
    | Reaction Rush | ~~Reaction Rush 1P (`reaction-1p`)~~ merged: **Reaction Rush**, Reaction Duel's 1 player mode (`reaction-duel`) | Reaction Duel |
@@ -118,7 +118,7 @@ folder, not in the repo, so the merged app starts fresh.
 
 ## The steps
 
-Progress: **steps 1 to 5 done** (the engine on 2P, all 39 solo games, their achievements, daily challenge and pages, phone only at `/phone`, and Ark 1P Hub retired: its last release points here, and its next-games list is the Solo section of `docs/MINIGAME-IDEAS.md`). Step 6 under way: Snake, Five Letters, Hangman, Anagram Rush, Memory Pairs, Reaction Rush, Trivia, Word Search, Minesweeper, Brick Breaker, Stack, Asteroids and Blocks are merged. Where the two games are different at heart (Minesweeper's goal, Brick Breaker's physics, Stack against Tower Stack's 3D co-op), the 1 player one keeps its own engine (`brick-duel-solo.js`, `tower-stack-solo.js`) under the 2 player game's id and screens folder. Mastermind and Code Breaker are different games at heart (colour pegs with levels, against four different digits): merging them is a choice still to make.
+Progress: **all six steps done** (the engine on 2P, all 39 solo games, their achievements, daily challenge and pages, phone only at `/phone`, and Ark 1P Hub retired: its last release points here, and its next-games list is the Solo section of `docs/MINIGAME-IDEAS.md`). Step 6, games for both modes: Snake, Five Letters, Hangman, Anagram Rush, Memory Pairs, Reaction Rush, Trivia, Word Search, Minesweeper, Brick Breaker, Stack, Asteroids, Blocks and Mastermind are merged. Where the two games are different at heart (Minesweeper's goal, Brick Breaker's physics, Stack against Tower Stack's 3D co-op), the 1 player one keeps its own engine (`brick-duel-solo.js`, `tower-stack-solo.js`) under the 2 player game's id and screens folder. Mastermind kept its colour pegs and levels as Code Breaker's 1 player mode (`code-breaker-solo.js`). **Step 6 is done: all 14 pairs are one game in both lobbies.**
 
 Each step is one PR to 2P that leaves the app working, with its `CHANGELOG.md` line. After each
 merge, the desktop build is started as 2P's `CLAUDE.md` says.

@@ -121,7 +121,7 @@
   "settings": "Grid size, time per round, match length, and the mode: timed (shared words cancel) or Race to 20, 35 or 50 points"
  },
  "code-breaker": {
-  "rules": "Bulls and cows for two phones. Each of you sets a secret code of four different digits, then take turns guessing the other's. Every guess comes back with <strong>bulls</strong> (a right digit in the right place, gold) and <strong>cows</strong> (a right digit in the wrong place, silver). Crack it first to take the round; you both get the same number of goes, so if the second player cracks it on the same turn, it's level. Ten goes each at most. The TV shows both vaults and every guess, never the codes.",
+  "rules": "Bulls and cows for two phones. Each of you sets a secret code of four different digits, then take turns guessing the other's. Every guess comes back with <strong>bulls</strong> (a right digit in the right place, gold) and <strong>cows</strong> (a right digit in the wrong place, silver). Crack it first to take the round; you both get the same number of goes, so if the second player cracks it on the same turn, it's level. Ten goes each at most. The TV shows both vaults and every guess, never the codes. On your own? <strong>Mastermind</strong> in the 1 player lobby: crack the hub's colour code, three levels.",
   "settings": "First to 2 or 3 rounds, or one round; timed (60 s to set your code, 60 s a guess) or no timer"
  },
  "hangman": {
@@ -332,6 +332,10 @@
   "rules": "Get the frog to the far bank: hop across five lanes of traffic (cars and trucks, each lane its own speed), rest on the verge, then cross the river on the logs. Cars squash you, the water's deadly, and a log carries you along, off the edge if you stay on too long. Tap the phone's arrows or swipe. Three frogs, and 30 seconds for each go. Every crossing scores 50 plus 2 for each second left, and the next crossing is faster; each row further than before is 10. Score: points.",
   "controls": "<strong>D-pad</strong> / arrows hop, <strong>Start</strong> pauses · keyboard: Arrows, <strong>P</strong>"
  },
+ "solo:code-breaker": {
+  "rules": "Code Breaker's 1 player game: The hub picks a secret code of coloured pegs (a colour can come up more than once). Tap colours on the phone to fill a row of pegs and press <strong>Guess</strong>: you're told how many are the right colour in the right place (⚫) and how many more are a right colour in the wrong place (⚪), but not which. Crack it in ten guesses. Every colour has a number too, so it plays without colour. Easy (4 pegs, 6 colours), Normal (4, 8) or Hard (5, 8). Score: the guesses it took (fewer is better), per level; a code you don't crack doesn't count.",
+  "controls": "<strong>← →</strong> pick a peg, <strong>↑ ↓</strong> change its colour, <strong>A</strong> guesses (or jumps to the next empty peg), <strong>B</strong> clears the peg · keyboard: Type <strong>1</strong>–<strong>8</strong> to set a peg, <strong>Backspace</strong>, <strong>Enter</strong> guesses"
+ },
  "solo:word-hunt": {
   "rules": "Word Hunt on your own, every word yours to find: Words are hidden in a grid of letters in straight lines: drag on the phone from a word's first letter to its last (or tap both) to mark it. The list says which words to find and crosses them off. 8 × 8 hides 6 words across and down, 10 × 10 hides 8 with diagonals too, and 12 × 12 hides 10 any way at all, even backwards. Score: your time to find them all, per size.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> on a word's first letter then <strong>A</strong> on its last, <strong>B</strong> lets go · keyboard: Arrows, <strong>Enter</strong>, <strong>Backspace</strong> · Drag from the first letter to the last"
@@ -363,10 +367,6 @@
  "gems": {
   "rules": "Swap two touching gems to line up three or more of a colour: they vanish, the gems above fall and new ones drop in, and any new lines vanish too (a chain, each step scoring more). A swap that makes no line doesn't happen. Swipe a gem into its neighbour, or tap one then the other. 30 swaps; a board with no moves left is reshuffled. Gem sets to unlock (just for looks, every gem keeps its own shape): 🍒 Fruit (line up 5), 🪐 Space (a chain of 4) and 🍬 Candy (score 3,000). Score: 10 a gem, +50 for a line of four, +150 for five, times the chain step.",
   "controls": "<strong>D-pad</strong> moves, <strong>A</strong> picks a gem, then a direction swaps it; <strong>B</strong> lets go · keyboard: Arrows, <strong>Enter</strong>, <strong>Backspace</strong>"
- },
- "mastermind-1p": {
-  "rules": "The hub picks a secret code of coloured pegs (a colour can come up more than once). Tap colours on the phone to fill a row of pegs and press <strong>Guess</strong>: you're told how many are the right colour in the right place (⚫) and how many more are a right colour in the wrong place (⚪), but not which. Crack it in ten guesses. Every colour has a number too, so it plays without colour. Easy (4 pegs, 6 colours), Normal (4, 8) or Hard (5, 8). Score: the guesses it took (fewer is better), per level; a code you don't crack doesn't count.",
-  "controls": "<strong>← →</strong> pick a peg, <strong>↑ ↓</strong> change its colour, <strong>A</strong> guesses (or jumps to the next empty peg), <strong>B</strong> clears the peg · keyboard: Type <strong>1</strong>–<strong>8</strong> to set a peg, <strong>Backspace</strong>, <strong>Enter</strong> guesses"
  },
  "flood": {
   "rules": "A square of coloured cells, and you own the top-left corner. Pick a colour on the phone: your whole area turns that colour and swallows the matching cells beside it. Flood the entire board before the moves run out. The move limit is worked out for each board (a computer player's go, plus two spare), so every board can be done. Every colour has a number and a shape too. 10 × 10, 14 × 14 or 18 × 18. Score: the moves you used (fewer is better), per size; running out doesn't count.",

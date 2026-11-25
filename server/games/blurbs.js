@@ -26,7 +26,7 @@ export const BLURBS = {
   mahjong: 'Match free tiles until the pile is gone.',
   slide: 'Slide the tiles back into order.',
   gems: 'Swap gems to line up three or more.',
-  'mastermind-1p': 'Crack the secret colour code.',
+  'solo:code-breaker': 'Crack the secret colour code.',
   flood: 'Flood the board from the corner.',
   lines: 'Line up five balls of a colour.',
   sokoban: 'Push every box onto its target.',

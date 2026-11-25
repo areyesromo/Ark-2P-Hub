@@ -46,7 +46,7 @@ import lines from './lines.js';
 import dogpark, { PARKS as DOG_PARKS, RANDOM as DOG_RANDOM, EXPERT_FROM as DOG_EXPERT } from './dogpark.js';
 import { LEVELS as DOG_LEVELS } from './dogpark-levels.js';
 import flood, { SIZES as FLOOD_SIZES } from './flood.js';
-import mastermind, { LEVELS as MASTER_LEVELS } from './mastermind-1p.js';
+import { soloMastermind as mastermind, LEVELS as MASTER_LEVELS } from '../../games/code-breaker-solo.js'; // (a game for both modes: Code Breaker's 1 player one)
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
 import cave, { MAPS as CAVE_MAPS, VEHICLES as CAVE_VEHICLES } from './cave.js';
 import lights, { LEVELS as LIGHTS_LEVELS } from './lights.js';

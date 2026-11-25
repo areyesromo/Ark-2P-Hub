@@ -43,7 +43,7 @@ export const POOL = [
   { game: 'lines', settings: {} },
   { game: 'dogpark', settings: { park: 'random9' } },
   { game: 'flood', settings: { size: 'small' } },
-  { game: 'mastermind-1p', settings: { level: 'normal' } },
+  { game: 'code-breaker', settings: { level: 'normal' } },
 ];
 
 /**

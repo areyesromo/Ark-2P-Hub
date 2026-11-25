@@ -1,10 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx, seeded } from './helpers-solo.js';
-import { Mastermind, LEVELS, MAX_GUESSES, rate } from '../server/solo/games/mastermind-1p.js';
-import { SOLO_GAMES } from '../server/solo/games/index.js';
-
-const getGame = (id) => SOLO_GAMES.find((g) => g.id === id) || null;
+import { Mastermind, LEVELS, MAX_GUESSES, rate } from '../server/games/code-breaker-solo.js';
 
 function game(level = 'easy', seed = 3) {
   const ctx = fakeCtx('Ana', { level });
@@ -70,5 +67,15 @@ test('bad guesses are ignored, and the level is checked', () => {
   g.onInput({ type: 'zap' });
   assert.equal(g.guesses.length, 0);
   assert.equal(new Mastermind(fakeCtx('Ana', { level: 'toString' })).level, 'easy');
-  assert.ok(getGame('mastermind-1p'));
+});
+
+test('one game in both lobbies: Code Breaker and Mastermind, under one id; its views say so', async () => {
+  const { getGame: gameOf, soloGameOf, listGames } = await import('../server/games/index.js');
+  assert.equal(gameOf('code-breaker').name, 'Code Breaker');
+  assert.equal(soloGameOf('code-breaker').name, 'Mastermind');
+  const g = new Mastermind(fakeCtx('Ana', { level: 'hard' }));
+  g.start();
+  assert.equal(g.hostView().solo, true);
+  assert.equal(g.hostView().variant, 'Hard', 'its levels are still there');
+  assert.ok(!listGames().some((x) => x.id === 'mastermind-1p'), 'Mastermind 1P is gone');
 });

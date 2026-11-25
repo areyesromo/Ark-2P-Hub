@@ -1,4 +1,7 @@
+// In the 1 player mode (view.solo) the game is Mastermind: its screens are in pegs.js (ArkMastermind).
 (function () {
+  const soloReady = Ark.loadScript('/games/code-breaker/pegs.js');
+  let alone = null; // { el, api, on, view }: handing over to Mastermind' screen
   Ark.loadCss('/games/code-breaker/style.css');
   const ready = Ark.loadScript('/games/code-breaker/vault.js');
   const esc = Ark.escapeHtml;
@@ -52,7 +55,7 @@
       '<div class="cb-caption">' + caption(v) + '</div><div class="cb-stage">' + vault(v, 0) + vault(v, 1) + '</div>';
   }
 
-  Ark.register('host', 'code-breaker', {
+  const duel = {
     sounds: function (prev, v) {
       const n = function (x) { return x.guesses[0].length + x.guesses[1].length; };
       if (v.phase !== 'set' && prev.phase === 'set') return ['lock'];
@@ -72,5 +75,42 @@
     },
     update: function (v) { view = v; gotAt = Date.now(); render(); },
     unmount: function () { clearInterval(tick); root = view = null; },
-  });
+  };
+
+  /** 1 player: show Mastermind' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkMastermind) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkMastermind.host.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkMastermind.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkMastermind);
+
+  Ark.register('host', 'code-breaker', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkMastermind.host.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkMastermind.host.sounds ? ArkMastermind.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint || '← → pick a peg · ↑ ↓ its colour · A guess · B clear the peg · keyboard: type 1–8, Enter to guess',
+    pad: function (btn, v, slot) { return solo(v) ? (ArkMastermind.host.pad ? ArkMastermind.host.pad(btn, v) : null) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    typing: function (k, v) { return solo(v) ? (ArkMastermind.host.typing ? ArkMastermind.host.typing(k, v) : null) : duel.typing ? duel.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? (ArkMastermind.host.overHtml ? ArkMastermind.host.overHtml(v) : '') : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

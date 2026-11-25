@@ -138,7 +138,7 @@ export const ACHIEVEMENTS = [
     { id: 'lines-100', icon: '🌈', name: 'Rainbow runner', desc: 'Color Lines: score 100 points.', check: (r) => scored(r) && r.score >= 100 },
     { id: 'lines-300', icon: '🧠', name: 'Board tamer', desc: 'Color Lines: score 300 points.', check: (r) => scored(r) && r.score >= 300 },
   ]),
-  ...game('mastermind-1p', [
+  ...game('code-breaker', [
     { id: 'mastermind-solve', icon: '🔐', name: 'Code breaker', desc: 'Mastermind: crack a code.', check: (r) => scored(r) },
     { id: 'mastermind-5', icon: '🕵️', name: 'Sharp deduction', desc: 'Mastermind: crack a code in 5 guesses or fewer.', check: (r) => scored(r) && r.score <= 5 },
     { id: 'mastermind-hard', icon: '🧩', name: 'Cipher master', desc: 'Mastermind: crack a Hard code.', check: (r) => scored(r) && r.variant === 'Hard' },

@@ -1,4 +1,7 @@
+// In the 1 player mode (view.solo) the game is Mastermind: its screens are in pegs.js (ArkMastermind).
 (function () {
+  const soloReady = Ark.loadScript('/games/code-breaker/pegs.js');
+  let alone = null; // { el, api, on, view }: handing over to Mastermind' screen
   Ark.loadCss('/games/code-breaker/style.css');
   const ready = Ark.loadScript('/games/code-breaker/vault.js');
 
@@ -91,7 +94,7 @@
     root.innerHTML = html;
   }
 
-  Ark.register('player', 'code-breaker', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       root = document.createElement('div');
@@ -112,5 +115,36 @@
       render();
     },
     unmount: function () { clearInterval(tick); document.removeEventListener('keydown', onKey); root = view = null; typed = ''; buzzed = ''; },
-  });
+  };
+
+  /** 1 player: show Mastermind' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkMastermind) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkMastermind.player.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkMastermind.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'code-breaker', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkMastermind.player.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+  }));
 })();

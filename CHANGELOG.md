@@ -10,6 +10,8 @@ notes. Newest first; one `## x.y.z` heading per release and one `- ` line per ch
   before (waves, extra ships, the unlockable ships). (A fresh high-score table.)
 - 🟦 Blocks 1P is now **Blocks**, beside Falling Blocks Battle as its 1 player mode: the same game as
   before (hold, ghost piece, the unlockable pieces). (A fresh high-score table.)
+- 🎯 Mastermind 1P is now **Mastermind**, beside Code Breaker as its 1 player mode: the same game as
+  before (colour pegs, Easy, Normal and Hard). (A fresh high-score table.)
 
 ## 0.1.70
 
