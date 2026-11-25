@@ -32,7 +32,8 @@ test('🤸 Motion: every game whose phone controls can use tilt or movement', ()
   };
   const usesMotion = (id) => loads('public/games/' + id + '/player.js');
   for (const id of ['party-minis', 'micro-mayhem', 'kart-race-3d']) assert.ok(usesMotion(id), id + ' found through what it loads');
-  for (const g of listGames()) if (usesMotion(g.id)) assert.ok(g.motion, g.id + ' uses motion but has no label');
+  // (a game's 1 player entry draws with its own solo screens: the label is the 2 player game's)
+  for (const g of listGames().filter((x) => !x.solo)) if (usesMotion(g.id)) assert.ok(g.motion, g.id + ' uses motion but has no label');
 });
 
 test('the labels are booleans on every game', () => {

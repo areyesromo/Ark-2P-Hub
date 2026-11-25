@@ -22,7 +22,7 @@ before(async () => {
     dailies: {
       [`daily|${day(0)}|ana`]: { game: 'snake', score: 12 },
       [`daily|${day(1)}|ana`]: { game: 'gems', score: 900 },
-      [`daily|${day(2)}|ana`]: { game: 'blocks-1p', score: null },
+      [`daily|${day(2)}|ana`]: { game: 'block-battle', score: null },
     },
     achievements: { ana: { 'cave-100': 1 } },
   }));

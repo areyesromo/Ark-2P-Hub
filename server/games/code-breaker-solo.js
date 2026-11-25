@@ -1,3 +1,6 @@
+// Mastermind, the 1 player mode of Code Breaker (code-breaker.js): its own engine, under Code Breaker's id, so the two are one game
+// in the lobby (see soloGameOf in index.js). It came from Ark 1P Hub.
+//
 // Mastermind. The hub picks a secret code of coloured pegs (a colour can come up
 // more than once). Guess it: after each guess you're told how many pegs are the
 // right colour in the right place (black), and how many more are a right colour
@@ -65,6 +68,7 @@ export class Mastermind {
   view() {
     const over = this.phase === 'over';
     return {
+      solo: true, // (the screens: Mastermind's, not Code Breaker's)
       phase: this.phase,
       pegs: LEVELS[this.level].pegs,
       colours: LEVELS[this.level].colours,
@@ -87,9 +91,10 @@ export class Mastermind {
   }
 }
 
-export default {
-  id: 'mastermind-1p',
-  name: 'Mastermind 1P',
+/** The 1 player mode: played as a solo game (see server/solo/). */
+export const soloMastermind = {
+  id: 'code-breaker',
+  name: 'Mastermind',
   tagline: 'Crack the secret colour code. Black: right colour, right place. White: right colour, wrong place.',
   category: 'puzzle',
   phone: true,

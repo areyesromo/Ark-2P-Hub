@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx, seeded } from './helpers-solo.js';
-import { Blocks, W, H, TIMING, LINE_POINTS, cellsOf, gravityMs } from '../server/solo/games/blocks-1p.js';
+import { Blocks, W, H, TIMING, LINE_POINTS, cellsOf, gravityMs } from '../server/games/block-battle-solo.js';
 
 function game(seed = 1) {
   const ctx = fakeCtx();
@@ -110,4 +110,17 @@ test('no room for a new piece ends the run; pause and rematch work', () => {
   g.onInput({ type: 'rematch' });
   assert.equal(g.phase, 'play');
   assert.equal(g.score, 0);
+});
+
+test('one game in both lobbies: Falling Blocks Battle and Blocks, under one id; its views say so', async () => {
+  const { getGame, soloGameOf, listGames } = await import('../server/games/index.js');
+  const { fakeCtx: ctxOf } = await import('./helpers-solo.js');
+  assert.equal(getGame('block-battle').name, 'Falling Blocks Battle');
+  assert.equal(soloGameOf('block-battle').name, 'Blocks');
+  const g = new Blocks(ctxOf());
+  g.start();
+  assert.equal(g.hostView().solo, true);
+  assert.equal(g.playerView().solo, true);
+  if (g.timer) g.ctx.clearTimeout(g.timer);
+  assert.ok(!listGames().some((x) => x.id === 'blocks-1p'), 'Blocks 1P is gone');
 });

@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.71
+
+- ☄️ Asteroids 1P is now **Asteroids**, beside Asteroid Duel as its 1 player mode: the same game as
+  before (waves, extra ships, the unlockable ships). (A fresh high-score table.)
+- 🟦 Blocks 1P is now **Blocks**, beside Falling Blocks Battle as its 1 player mode: the same game as
+  before (hold, ghost piece, the unlockable pieces). (A fresh high-score table.)
+- 🎯 Mastermind 1P is now **Mastermind**, beside Code Breaker as its 1 player mode: the same game as
+  before (colour pegs, Easy, Normal and Hard). (A fresh high-score table.)
+
 ## 0.1.70
 
 - ❓ Trivia 1P is now **Trivia**, Quiz Battle's 1 player mode: twelve of Quiz Battle's 250 questions, a

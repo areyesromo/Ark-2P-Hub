@@ -30,7 +30,7 @@ export const LOOKS = {
     dino: { name: '🦖 Dino', unlock: 'runner-500' },
     ninja: { name: '🥷 Ninja', unlock: 'runner-1000' },
   },
-  'asteroids-1p': {
+  'asteroid-duel': {
     classic: { name: 'Classic' },
     rocket: { name: '🚀 Rocket', unlock: 'asteroids-wave3' },
     saucer: { name: '🛸 Saucer', unlock: 'asteroids-wave6' },
@@ -47,7 +47,7 @@ export const LOOKS = {
     ocean: { name: '🌊 Ocean', unlock: '2048-512' },
     neon: { name: '💜 Neon', unlock: '2048-2048' },
   },
-  'blocks-1p': {
+  'block-battle': {
     classic: { name: 'Classic' },
     candy: { name: '🍬 Candy', unlock: 'blocks-four' },
     retro: { name: '🟩 Retro green', unlock: 'blocks-40' },

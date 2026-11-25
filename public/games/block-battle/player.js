@@ -1,7 +1,10 @@
 // Falling Blocks Battle on the phone (server/games/block-battle.js): ◀ ▶ (hold to keep moving:
 // the hub repeats it), rotate either way, hold ▼ to soft drop, DROP to drop it at once.
 // Watch your well on the TV. Everything held lets go if the phone locks or switches app.
+// In the 1 player mode (view.solo) the game is Blocks: its screens are in pieces.js (ArkBlocks).
 (function () {
+  const soloReady = Ark.loadScript('/games/block-battle/pieces.js');
+  let alone = null; // { el, api, on, view }: handing over to Blocks' screen
   Ark.loadCss('/games/block-battle/style.css');
 
   let root = null;
@@ -77,7 +80,7 @@
     root.querySelector('.rematch').classList.toggle('hidden', v.phase !== 'over');
   }
 
-  Ark.register('player', 'block-battle', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       held = { left: new Set(), right: new Set(), soft: new Set() };
@@ -111,5 +114,36 @@
       root = info = null;
       lastKey = '';
     },
-  });
+  };
+
+  /** 1 player: show Blocks' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkBlocks) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkBlocks.player.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkBlocks.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'block-battle', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkBlocks.player.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+  }));
 })();

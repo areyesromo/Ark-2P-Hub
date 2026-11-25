@@ -1,7 +1,10 @@
 // Asteroid Duel on the TV (server/games/asteroid-duel.js): ships, shots and rocks on a canvas.
 // Views come ~30 times a second; between them everything is carried on along its velocity (a
 // little way), and anything near an edge is drawn on the far side too, as the field wraps.
+// In the 1 player mode (view.solo) the game is Asteroids: its screens are in ship.js (ArkAsteroids).
 (function () {
+  const soloReady = Ark.loadScript('/games/asteroid-duel/ship.js');
+  let alone = null; // { el, api, on, view }: handing over to Asteroids' screen
   Ark.loadCss('/games/asteroid-duel/style.css');
   const esc = Ark.escapeHtml;
   const DEADZONE = 0.2;
@@ -215,7 +218,7 @@
     });
   }
 
-  Ark.register('host', 'asteroid-duel', {
+  const duel = {
     sounds: function (prev, v) {
       if (prev.phase !== 'play' || v.phase === 'countdown') return [];
       const out = [];
@@ -292,5 +295,42 @@
       root = board = stats = arena = canvas = overlay = view = null;
       overlayKey = boardKey = statsKey = '';
     },
-  });
+  };
+
+  /** 1 player: show Asteroids' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkAsteroids) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkAsteroids.host.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkAsteroids.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkAsteroids);
+
+  Ark.register('host', 'asteroid-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkAsteroids.host.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkAsteroids.host.sounds ? ArkAsteroids.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint || 'Stick / D-pad ←→ turn · ↑, B or RT thrust · A or X fire · Start pause',
+    pad: function (btn, v, slot) { return solo(v) ? (ArkAsteroids.host.pad ? ArkAsteroids.host.pad(btn, v) : null) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    typing: function (k, v) { return solo(v) ? (ArkAsteroids.host.typing ? ArkAsteroids.host.typing(k, v) : null) : duel.typing ? duel.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? (ArkAsteroids.host.overHtml ? ArkAsteroids.host.overHtml(v) : '') : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

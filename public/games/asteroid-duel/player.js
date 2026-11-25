@@ -1,7 +1,10 @@
 // Asteroid Duel on the phone (server/games/asteroid-duel.js): the shared movement pad steers
 // (point where to face; push further to thrust) and FIRE shoots, again and again while held
 // (the hub keeps firing until it hears you let go).
+// In the 1 player mode (view.solo) the game is Asteroids: its screens are in ship.js (ArkAsteroids).
 (function () {
+  const soloReady = Ark.loadScript('/games/asteroid-duel/ship.js');
+  let alone = null; // { el, api, on, view }: handing over to Asteroids' screen
   Ark.loadCss('/games/asteroid-duel/style.css');
   Ark.loadCss('/shared/move-pad.css');
   const padReady = Ark.loadScript('/shared/move-pad.js');
@@ -89,7 +92,7 @@
     if (over) onFireUp();
   }
 
-  Ark.register('player', 'asteroid-duel', {
+  const duel = {
     mount: function (el, a) {
       api = a;
       firing = true; // so the next line sends it
@@ -124,5 +127,36 @@
       lastKey = '';
       prevLives = null;
     },
-  });
+  };
+
+  /** 1 player: show Asteroids' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkAsteroids) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkAsteroids.player.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkAsteroids.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'asteroid-duel', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkAsteroids.player.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+  }));
 })();

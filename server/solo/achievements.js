@@ -41,7 +41,7 @@ export const ACHIEVEMENTS = [
     { id: 'breaker-level4', icon: '🏗️', name: 'Demolition crew', desc: 'Brick Breaker: reach level 4.', check: (r, v) => v.level >= 4 },
     { id: 'breaker-1000', icon: '💯', name: 'Four figures', desc: 'Brick Breaker: score 1,000.', check: (r) => r.score >= 1000 },
   ]),
-  ...game('blocks-1p', [
+  ...game('block-battle', [
     { id: 'blocks-four', icon: '🟦', name: 'Four at once', desc: 'Blocks: clear 4 rows with one piece.', check: (r, v) => v.bestClear >= 4 },
     { id: 'blocks-40', icon: '📏', name: 'Forty lines', desc: 'Blocks: clear 40 rows in one run.', check: (r, v) => v.lines >= 40 },
     { id: 'blocks-10k', icon: '🏆', name: 'Block master', desc: 'Blocks: score 10,000.', check: (r) => r.score >= 10000 },
@@ -51,7 +51,7 @@ export const ACHIEVEMENTS = [
     { id: 'flappy-25', icon: '🕊️', name: 'Taking flight', desc: 'Flappy: pass 25 pipes.', check: (r) => r.score >= 25 },
     { id: 'flappy-50', icon: '🦅', name: 'Eagle', desc: 'Flappy: pass 50 pipes.', check: (r) => r.score >= 50 },
   ]),
-  ...game('asteroids-1p', [
+  ...game('asteroid-duel', [
     { id: 'asteroids-wave3', icon: '☄️', name: 'Rock breaker', desc: 'Asteroids: reach wave 3.', check: (r, v) => v.wave >= 3 },
     { id: 'asteroids-wave6', icon: '🚀', name: 'Deep space', desc: 'Asteroids: reach wave 6.', check: (r, v) => v.wave >= 6 },
     { id: 'asteroids-10k', icon: '⭐', name: 'Ace pilot', desc: 'Asteroids: score 10,000 (an extra ship!).', check: (r) => r.score >= 10000 },
@@ -138,7 +138,7 @@ export const ACHIEVEMENTS = [
     { id: 'lines-100', icon: '🌈', name: 'Rainbow runner', desc: 'Color Lines: score 100 points.', check: (r) => scored(r) && r.score >= 100 },
     { id: 'lines-300', icon: '🧠', name: 'Board tamer', desc: 'Color Lines: score 300 points.', check: (r) => scored(r) && r.score >= 300 },
   ]),
-  ...game('mastermind-1p', [
+  ...game('code-breaker', [
     { id: 'mastermind-solve', icon: '🔐', name: 'Code breaker', desc: 'Mastermind: crack a code.', check: (r) => scored(r) },
     { id: 'mastermind-5', icon: '🕵️', name: 'Sharp deduction', desc: 'Mastermind: crack a code in 5 guesses or fewer.', check: (r) => scored(r) && r.score <= 5 },
     { id: 'mastermind-hard', icon: '🧩', name: 'Cipher master', desc: 'Mastermind: crack a Hard code.', check: (r) => scored(r) && r.variant === 'Hard' },

@@ -14,7 +14,7 @@ export const dayOf = (ms) => new Date(ms).toISOString().slice(0, 10);
  * (Five Letters has its own word of the day.)
  */
 export const POOL = [
-  { game: 'blocks-1p', settings: {} },
+  { game: 'block-battle', settings: {} },
   { game: 'gems', settings: {} },
   { game: '2048', settings: {} },
   { game: 'mine-duel', settings: { size: 'medium' } },
@@ -27,7 +27,7 @@ export const POOL = [
   { game: 'freecell', settings: {} },
   { game: 'snake', settings: { speed: 'normal', walls: 'solid' } },
   { game: 'slide', settings: { size: 4 } },
-  { game: 'asteroids-1p', settings: {} },
+  { game: 'asteroid-duel', settings: {} },
   { game: 'maths', settings: {} },
   { game: 'flappy', settings: {} },
   { game: 'colours', settings: {} },
@@ -43,7 +43,7 @@ export const POOL = [
   { game: 'lines', settings: {} },
   { game: 'dogpark', settings: { park: 'random9' } },
   { game: 'flood', settings: { size: 'small' } },
-  { game: 'mastermind-1p', settings: { level: 'normal' } },
+  { game: 'code-breaker', settings: { level: 'normal' } },
 ];
 
 /**

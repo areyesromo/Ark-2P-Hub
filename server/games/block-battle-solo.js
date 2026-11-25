@@ -1,3 +1,6 @@
+// Blocks, the 1 player mode of Falling Blocks Battle (block-battle.js): its own engine, under Falling Blocks Battle's id, so the two are one game
+// in the lobby (see soloGameOf in index.js). It came from Ark 1P Hub.
+//
 // Blocks. The falling-block classic: pieces of four squares drop into a
 // 10×20 well; move and turn them so they fill whole rows, which clear. Clear
 // 10 rows and the level goes up (pieces fall faster). Clearing several rows at
@@ -8,7 +11,7 @@
 // Pieces come in "bags": every 7 pieces have one of each shape, so a long
 // wait for a straight piece can't happen.
 
-import { lookOf } from './looks.js';
+import { lookOf } from '../solo/games/looks.js';
 
 export const W = 10;
 export const H = 20;
@@ -48,7 +51,7 @@ export class Blocks {
   constructor(ctx, rng = Math.random) {
     this.ctx = ctx;
     this.rng = rng;
-    this.look = lookOf(ctx, 'blocks-1p');
+    this.look = lookOf(ctx, 'block-battle');
     this.timer = null;
   }
 
@@ -258,6 +261,7 @@ export class Blocks {
   hostView() {
     const paused = this.phase === 'paused';
     return {
+      solo: true, // (the screens: Blocks', not Falling Blocks Battle's)
       phase: this.phase,
       player: this.ctx.player,
       look: this.look,
@@ -280,6 +284,7 @@ export class Blocks {
 
   playerView() {
     return {
+      solo: true, // (the screens: Blocks', not Falling Blocks Battle's)
       phase: this.phase,
       score: this.score,
       lines: this.lines,
@@ -293,9 +298,10 @@ export class Blocks {
   }
 }
 
-export default {
-  id: 'blocks-1p',
-  name: 'Blocks 1P',
+/** The 1 player mode: played as a solo game (see server/solo/). */
+export const soloBlocks = {
+  id: 'block-battle',
+  name: 'Blocks',
   tagline: 'Turn the falling pieces to fill whole rows. Four rows at once scores big.',
   category: 'arcade',
   phone: 'split',

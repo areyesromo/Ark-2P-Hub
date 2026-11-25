@@ -23,9 +23,9 @@
 
 import { soloSnake as snake } from '../../games/snake.js'; // (Snake Battle's arena, one snake: a game for both modes)
 import { soloBreaker as breaker } from '../../games/brick-duel-solo.js'; // (a game for both modes: Brick Breaker Duel's 1 player one)
-import blocks from './blocks-1p.js';
+import { soloBlocks as blocks } from '../../games/block-battle-solo.js'; // (a game for both modes: Falling Blocks Battle's 1 player one)
 import flappy from './flappy.js';
-import asteroids from './asteroids-1p.js';
+import { soloAsteroids as asteroids } from '../../games/asteroid-duel-solo.js'; // (a game for both modes: Asteroid Duel's 1 player one)
 import sudoku, { LEVELS as SUDOKU_LEVELS } from './sudoku.js';
 import { soloFiveLetters as wordGuess } from '../../games/five-letters.js'; // (a game for both modes)
 import solitaire from './solitaire.js';
@@ -46,7 +46,7 @@ import lines from './lines.js';
 import dogpark, { PARKS as DOG_PARKS, RANDOM as DOG_RANDOM, EXPERT_FROM as DOG_EXPERT } from './dogpark.js';
 import { LEVELS as DOG_LEVELS } from './dogpark-levels.js';
 import flood, { SIZES as FLOOD_SIZES } from './flood.js';
-import mastermind, { LEVELS as MASTER_LEVELS } from './mastermind-1p.js';
+import { soloMastermind as mastermind, LEVELS as MASTER_LEVELS } from '../../games/code-breaker-solo.js'; // (a game for both modes: Code Breaker's 1 player one)
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
 import cave, { MAPS as CAVE_MAPS, VEHICLES as CAVE_VEHICLES } from './cave.js';
 import lights, { LEVELS as LIGHTS_LEVELS } from './lights.js';
@@ -95,9 +95,9 @@ export const SOLO_GAMES = [
     lives: { title: 'Lives', values: ['normal', 'easy'], label: (l) => (l === 'easy' ? '5 lives (easy, its own scores)' : '3 lives') },
     ...lookRow('brick-duel', 'Ball and paddle'),
   }),
-  withSetup(blocks, lookRow('blocks-1p', 'Pieces')),
+  withSetup(blocks, lookRow('block-battle', 'Pieces')),
   withSetup(flappy, lookRow('flappy', 'Fly as')),
-  withSetup(asteroids, lookRow('asteroids-1p', 'Ship')),
+  withSetup(asteroids, lookRow('asteroid-duel', 'Ship')),
   withSetup(invaders, lookRow('invaders', 'Invaders')),
   withSetup(runner, lookRow('runner', 'Run as')),
   withSetup(stack, lookRow('tower-stack', 'Blocks')),
