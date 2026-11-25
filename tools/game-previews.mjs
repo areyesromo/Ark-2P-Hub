@@ -37,6 +37,16 @@ const NUDGE = {
     for (const cell of [0, 1, 5, 6]) { players[0].emit('game:input', { type: 'mark', cell, mark: 1 }); await sleep(120); }
     players[0].emit('game:input', { type: 'mark', cell: 4, mark: 2 });
   },
+  // The new puzzles a little way in (a few hints put right squares down).
+  tango: async (players) => {
+    for (let i = 0; i < 8; i++) { players[0].emit('game:input', { type: 'hint' }); await sleep(120); }
+  },
+  zip: async (players) => {
+    for (let i = 0; i < 9; i++) { players[0].emit('game:input', { type: 'hint' }); await sleep(120); }
+  },
+  traffic: async (players) => {
+    players[0].emit('game:input', { type: 'hint' });
+  },
   // Mid-game boards: some squares dug, a hand dealt, a few guesses in.
   'mine-duel': async (players) => {
     for (const cell of [65, 30, 101, 77, 12, 118]) { both(players, { type: 'dig', cell }); await sleep(250); }

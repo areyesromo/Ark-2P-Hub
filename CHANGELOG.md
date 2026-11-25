@@ -4,6 +4,15 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.72
+
+- ☀️ Tango, a new 1 player puzzle: fill the grid with suns and moons (no three alike in a line, as
+  many of each in every row and column, and keep the = and × signs). 30 levels and random boards.
+- 〰️ Zip, a new 1 player puzzle: draw one path through the numbers in order that fills every
+  square. 30 levels (walls in the later ones) and random boards.
+- 🚗 Traffic Jam, a new 1 player puzzle: slide the cars and trucks so the red car can drive out.
+  40 levels, each with a par, and a pack of random car parks.
+
 ## 0.1.71
 
 - ☄️ Asteroids 1P is now **Asteroids**, beside Asteroid Duel as its 1 player mode: the same game as
