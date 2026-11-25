@@ -133,6 +133,12 @@ export const ACHIEVEMENTS = [
     { id: 'dogpark-30', icon: '🏆', name: 'Top dog', desc: 'Dog Park: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
     { id: 'dogpark-expert', icon: '🎖️', name: 'Best in show', desc: 'Dog Park: solve level 36, the last of the Expert pack.', check: (r) => scored(r) && r.variant === 'Level 36' },
   ]),
+  ...game('tango', [
+    { id: 'tango-solve', icon: '☀️', name: 'Sun and moon', desc: 'Tango: solve a board.', check: (r) => scored(r) },
+    { id: 'tango-10', icon: '🌗', name: 'In balance', desc: 'Tango: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+    { id: 'tango-nohint', icon: '💃', name: 'Two left feet? Not you', desc: 'Tango: solve an 8 × 8 board or bigger without a hint.', check: (r, v) => scored(r) && v.n >= 8 && !v.hints },
+    { id: 'tango-30', icon: '🌌', name: 'Day and night', desc: 'Tango: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
+  ]),
   ...game('lines', [
     { id: 'lines-first', icon: '🎱', name: 'Five of a kind', desc: 'Color Lines: finish a game with 10 points or more.', check: (r) => scored(r) && r.score >= 10 },
     { id: 'lines-100', icon: '🌈', name: 'Rainbow runner', desc: 'Color Lines: score 100 points.', check: (r) => scored(r) && r.score >= 100 },
