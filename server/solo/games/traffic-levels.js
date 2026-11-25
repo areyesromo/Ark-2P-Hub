@@ -1,0 +1,48 @@
+// Traffic Jam's 40 levels, easy to expert. Our own car parks: random vehicles, each set at the
+// start farthest from the way out (see hardestFrom in traffic-gen.js), picked to climb from 2 moves
+// to 36. par: the fewest moves, worked out by the solver (test/solo-traffic.test.js checks it).
+// rows: '.' empty, 'r' the red car, any other letter a car or a truck. The way out is on the right
+// of the third row.
+
+export const LEVELS = [
+  { par: 2, rows: ["ib....","ibddc.","rr..c.","fffhh.",".e..aa",".e.gg."] },
+  { par: 3, rows: ["gabb..","gac...","rrc...","f...ee","fhddd.",".hiii."] },
+  { par: 3, rows: ["gdiiff","gdaaae","rr...e","...ccc","h.....","h..bb."] },
+  { par: 4, rows: ["...ee.","..fff.","rr..c.","baaac.","bdddhh","iiggg."] },
+  { par: 4, rows: ["h.....","h..dfg","brrdfg","baa...","ii....","eeecc."] },
+  { par: 5, rows: ["...b.g",".ddbcg","rrface","h.faie","h..aie","h....."] },
+  { par: 5, rows: ["ii.baa",".ffbgg","rr.b..","..cc..","..ee..","hhhdd."] },
+  { par: 6, rows: ["..ffgg",".dde.h","rr.e.h",".cccbb",".ii...",".aaa.."] },
+  { par: 6, rows: ["a...dd","a...ff","grrchi","g..chi","e..chb","e....b"] },
+  { par: 7, rows: ["..fff.","..ddi.","rre.i.","hhe.bb","..aaag","...ccg"] },
+  { par: 7, rows: ["...fii","ebbfcg","e.rrcg","...add",".hha..","...a.."] },
+  { par: 8, rows: ["...fff",".iiddh","b.rreh","b..geh","..age.","..agcc"] },
+  { par: 8, rows: ["..ihhh","..ieee","drrafc","dg.afc","dg.afb",".....b"] },
+  { par: 9, rows: [".ee.dk","ggmadk","rrmafh","..b.fh","..bjj.","cciill"] },
+  { par: 9, rows: [".eeff.",".bbccd","rr.hkd","ll.hk.","a.iimm","ajj.gg"] },
+  { par: 10, rows: ["j.f..g","jdf.ag","edrram","echbbm",".chlii","...lkk"] },
+  { par: 10, rows: [".ifgga","mifkka","mirrea","bbb.e.","cjjdd.","chhhll"] },
+  { par: 11, rows: ["..ehbb","jjehgi","krragi","k.cad.",".lc.d.",".lffmm"] },
+  { par: 11, rows: ["i..hdd","ieehf.","rr.hf.","..ccaa","gllbbj","gmmkkj"] },
+  { par: 12, rows: ["fhj...","fhjick","rrlick","b.l.mm","beee.a","ddgg.a"] },
+  { par: 12, rows: ["ckhhmm","ckeef.","rrg.f.","bbg.aa","ddiiij","...llj"] },
+  { par: 13, rows: ["jcaakk","jcgeee","rrgl..","fddl.m","fhbb.m","fhii.."] },
+  { par: 13, rows: ["ebccg.","ebffgk","rrl..k","mml...","ajhhdd","ajii.."] },
+  { par: 14, rows: ["...lhh",".bbldg",".rr.dg","aaffdm","jjkccm","iikee."] },
+  { par: 15, rows: ["edhhhg","edlffg","rrl..j","biii.j","b..cmm","kk.caa"] },
+  { par: 16, rows: ["jeggmk","jefdmk","rrfd..","ihcdbb","ihc..l","iaa..l"] },
+  { par: 17, rows: [".d.bbl",".dkggl","rrkfhl","cccfh.","m.eeaa","miijjj"] },
+  { par: 18, rows: ["meefil","m.kfil","rrk..a",".j.hha",".jddcc","ggg.bb"] },
+  { par: 19, rows: ["l..kii","lhhkgc","rre.gc","ffe.a.",".bdda.",".b.jj."] },
+  { par: 20, rows: [".jkk..",".jbbeg","rrfheg","ddfhl.","caahlm","c.iiim"] },
+  { par: 21, rows: ["cebhh.","cebgga","rrki.a","..kid.","fff.d.","lljj.."] },
+  { par: 22, rows: [".lbb.c",".laaac","rrkhgd","iikhgd","fee.j.","fmm.j."] },
+  { par: 22, rows: ["ggccck",".ffiik","rra..e","d.ahhe","d.alje","bbblj."] },
+  { par: 23, rows: ["ciiggl","c.kaal","rrk.bh","fdjjbh","fd.e..","f..emm"] },
+  { par: 24, rows: [".mdddh",".m.jlh",".rrjle","iiabbe","f.aggg","fkk.cc"] },
+  { par: 24, rows: ["dbee.c","db.i.c","frrigj","fhhhgj","aal...","..l.kk"] },
+  { par: 25, rows: ["ee..d.","gg..d.",".jrrd.",".jbaii","ffba.h",".ccc.h"] },
+  { par: 26, rows: ["hcc.i.","hjaaib","hj.rrb","lldg.b","k.dgee","kfff.."] },
+  { par: 28, rows: ["effjba","e.cjba","rrcj..",".gggkk","..hhd.","iii.d."] },
+  { par: 36, rows: ["fffllh","..iddh","rri..m","kaaggm","kjjec.","bb.ec."] },
+];

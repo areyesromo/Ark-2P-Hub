@@ -160,6 +160,12 @@ export const ACHIEVEMENTS = [
     { id: 'sokoban-par', icon: '⭐', name: 'By the book', desc: 'Sokoban: solve a level from 4 on in par.', check: (r, v) => scored(r) && v.levelNo >= 4 && r.score <= v.par },
     { id: 'sokoban-10', icon: '🏭', name: 'Head of logistics', desc: 'Sokoban: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
   ]),
+  ...game('traffic', [
+    { id: 'traffic-solve', icon: '🚗', name: 'On the road', desc: 'Traffic Jam: get the red car out.', check: (r) => scored(r) },
+    { id: 'traffic-par', icon: '⭐', name: 'Shortest way out', desc: 'Traffic Jam: solve a level from 10 on in par, without a hint.', check: (r, v) => scored(r) && v.level >= 10 && v.starred },
+    { id: 'traffic-20', icon: '🚦', name: 'Gridlock buster', desc: 'Traffic Jam: solve level 20.', check: (r) => scored(r) && r.variant === 'Level 20' },
+    { id: 'traffic-40', icon: '🏆', name: 'Traffic controller', desc: 'Traffic Jam: solve level 40.', check: (r) => scored(r) && r.variant === 'Level 40' },
+  ]),
   ...game('kenken', [
     { id: 'kenken-solve', icon: '➗', name: 'Number cruncher', desc: 'KenKen: solve a puzzle.', check: (r) => scored(r) },
     { id: 'kenken-5-3', icon: '⏱️', name: 'Mental maths', desc: 'KenKen: solve a 5 × 5 in under 3 minutes.', check: (r, v) => scored(r) && v.n === 5 && r.score < 3 * MIN },

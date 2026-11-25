@@ -46,6 +46,7 @@ export const POOL = [
   { game: 'code-breaker', settings: { level: 'normal' } },
   { game: 'tango', settings: { board: 'random8' } },
   { game: 'zip', settings: { board: 'random7' } },
+  { game: 'traffic', settings: { board: 'random' } },
 ];
 
 /**
