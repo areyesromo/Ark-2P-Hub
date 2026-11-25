@@ -56,7 +56,7 @@ export const ACHIEVEMENTS = [
     { id: 'asteroids-wave6', icon: '🚀', name: 'Deep space', desc: 'Asteroids: reach wave 6.', check: (r, v) => v.wave >= 6 },
     { id: 'asteroids-10k', icon: '⭐', name: 'Ace pilot', desc: 'Asteroids: score 10,000 (an extra ship!).', check: (r) => r.score >= 10000 },
   ]),
-  ...game('stack-1p', [
+  ...game('tower-stack', [
     { id: 'stack-10', icon: '🧱', name: 'Steady hands', desc: 'Stack: stack 10 blocks.', check: (r) => r.score >= 10 },
     { id: 'stack-25', icon: '🏙️', name: 'Skyscraper', desc: 'Stack: stack 25 blocks.', check: (r) => r.score >= 25 },
     { id: 'stack-perfect5', icon: '🎯', name: 'Spot on', desc: 'Stack: 5 perfect drops in a row.', check: (r, v) => v.bestPerfects >= 5 },

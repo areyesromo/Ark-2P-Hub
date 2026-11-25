@@ -59,7 +59,7 @@ export const LOOKS = {
     space: { name: '🪐 Space', unlock: 'gems-chain4' },
     candy: { name: '🍬 Candy', unlock: 'gems-3000' },
   },
-  'stack-1p': {
+  'tower-stack': {
     classic: { name: 'Classic' },
     candy: { name: '🍬 Candy', unlock: 'stack-10' },
     glass: { name: '🧊 Glass', unlock: 'stack-25' },

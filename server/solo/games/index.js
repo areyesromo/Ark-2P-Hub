@@ -34,7 +34,7 @@ import runner from './runner.js';
 import slide from './slide.js';
 import gems from './gems.js';
 import { soloMemory as memory, SIZES as MEMORY_SIZES } from '../../games/memory-match.js'; // (a game for both modes)
-import stack from './stack-1p.js';
+import { soloStack as stack } from '../../games/tower-stack-solo.js'; // (a game for both modes: Tower Stack's 1 player one)
 import sokoban from './sokoban.js';
 import bubbles from './bubbles.js';
 import hopper from './hopper.js';
@@ -100,7 +100,7 @@ export const SOLO_GAMES = [
   withSetup(asteroids, lookRow('asteroids-1p', 'Ship')),
   withSetup(invaders, lookRow('invaders', 'Invaders')),
   withSetup(runner, lookRow('runner', 'Run as')),
-  withSetup(stack, lookRow('stack-1p', 'Blocks')),
+  withSetup(stack, lookRow('tower-stack', 'Blocks')),
   withSetup(cave, {
     map: { title: 'Map', values: Object.keys(CAVE_MAPS), label: (k) => CAVE_MAPS[k].name, lock: byAchievement(CAVE_MAPS) },
     vehicle: { title: 'Fly a', values: Object.keys(CAVE_VEHICLES), label: (k) => CAVE_VEHICLES[k].name, lock: byAchievement(CAVE_VEHICLES) },

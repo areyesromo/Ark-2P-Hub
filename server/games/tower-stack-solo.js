@@ -1,3 +1,6 @@
+// Stack, the 1 player mode of Tower Stack (tower-stack.js): its own engine, under Tower Stack's id, so the two are one game
+// in the lobby (see soloGameOf in index.js). It came from Ark 1P Hub.
+//
 // Stack. A block slides back and forth above the tower: tap to drop it. The
 // part hanging over the edge is cut off, so the blocks get narrower; drop it
 // right on top (a perfect drop) and nothing is lost, and a few perfect drops
@@ -7,7 +10,7 @@
 // The sliding block moves on a fixed schedule, so it needs no ticking: the
 // screens draw it from its start time, and a drop says when the player saw it.
 
-import { lookOf } from './looks.js';
+import { lookOf } from '../solo/games/looks.js';
 
 export const FIELD = { w: 100 };
 export const BASE = { x: 20, w: 60 };
@@ -19,7 +22,7 @@ export const LAG = { early: 600, late: 120 }; // how far a drop's own time may b
 export class Stack {
   constructor(ctx) {
     this.ctx = ctx;
-    this.look = lookOf(ctx, 'stack-1p');
+    this.look = lookOf(ctx, 'tower-stack');
     this.timer = null;
   }
 
@@ -129,6 +132,7 @@ export class Stack {
   view() {
     const m = this.moving;
     return {
+      solo: true, // (the screens: Stack's, not Tower Stack's)
       phase: this.phase,
       field: FIELD,
       // The top of the tower is enough to draw (the screens scroll up with it).
@@ -154,9 +158,10 @@ export class Stack {
   }
 }
 
-export default {
-  id: 'stack-1p',
-  name: 'Stack 1P',
+/** The 1 player mode: played as a solo game (see server/solo/). */
+export const soloStack = {
+  id: 'tower-stack',
+  name: 'Stack',
   tagline: 'Drop the sliding block on the tower. Overhangs get cut off. How high can you go?',
   category: 'arcade',
   phone: 'split',

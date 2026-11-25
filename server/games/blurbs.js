@@ -14,7 +14,7 @@ export const BLURBS = {
   'asteroids-1p': 'Turn, thrust, blast the rocks.',
   invaders: 'Slide, shoot, hide behind the bunkers.',
   runner: 'Jump the cactuses, duck the birds.',
-  'stack-1p': 'Drop the block, keep the tower wide.',
+  'solo:tower-stack': 'Drop the block, keep the tower wide.',
   cave: 'Hold to climb, let go to drop.',
   bubbles: 'Aim and pop three of a colour.',
   hopper: 'Hop the road and the river.',

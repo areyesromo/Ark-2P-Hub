@@ -1,6 +1,9 @@
 // Tower Stack on the phone: one big DROP button for your turns (it lights up in your colour), and
 // how the tower's doing. Watch the block slide on the TV and tap as it's right over the tower.
+// In the 1 player mode (view.solo) the game is Stack: its screens are in stack.js (ArkStackSolo).
 (function () {
+  const soloReady = Ark.loadScript('/games/tower-stack/stack.js');
+  let alone = null; // { el, api, on, view }: handing over to Stack' screen
   Ark.loadCss('/games/tower-stack/style.css');
 
   let root = null;
@@ -42,7 +45,7 @@
     els.rematch.classList.toggle('hidden', v.phase !== 'over');
   }
 
-  Ark.register('player', 'tower-stack', {
+  const duel = {
     zoomable: function (v) { return v.phase === 'over'; },
     mount: function (el, a) {
       api = a;
@@ -61,5 +64,36 @@
       root = els = view = null;
       textKey = '';
     },
-  });
+  };
+
+  /** 1 player: show Stack' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkStackSolo) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkStackSolo.player.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkStackSolo.player.update(v);
+    return true;
+  }
+
+  Ark.register('player', 'tower-stack', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkStackSolo.player.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+  }));
 })();

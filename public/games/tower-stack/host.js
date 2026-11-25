@@ -3,7 +3,10 @@
 // sliding over the top (moved here on the TV's own clock, from how far along the server said it
 // was), the pieces that get cut off tumbling away, and a flash for a perfect drop. The camera
 // climbs with the tower and pulls back to show it all at the end.
+// In the 1 player mode (view.solo) the game is Stack: its screens are in stack.js (ArkStackSolo).
 (function () {
+  const soloReady = Ark.loadScript('/games/tower-stack/stack.js');
+  let alone = null; // { el, api, on, view }: handing over to Stack' screen
   Ark.loadCss('/games/tower-stack/style.css');
   const esc = Ark.escapeHtml;
   const H = 1; // a floor's height
@@ -270,7 +273,7 @@
     gl.camera.updateProjectionMatrix();
   }
 
-  Ark.register('host', 'tower-stack', {
+  const duel = {
     sounds: function (prev, v) {
       const out = [];
       if (prev.phase === 'intro' && v.phase === 'drop') out.push('go');
@@ -338,5 +341,42 @@
       root = els = view = null;
       hudKey = overlayKey = '';
     },
-  });
+  };
+
+  /** 1 player: show Stack' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkStackSolo) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkStackSolo.host.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkStackSolo.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkStackSolo);
+
+  Ark.register('host', 'tower-stack', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkStackSolo.host.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkStackSolo.host.sounds ? ArkStackSolo.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint || 'A (or any face button) drops the block · Start pause',
+    pad: function (btn, v, slot) { return solo(v) ? (ArkStackSolo.host.pad ? ArkStackSolo.host.pad(btn, v) : null) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    typing: function (k, v) { return solo(v) ? (ArkStackSolo.host.typing ? ArkStackSolo.host.typing(k, v) : null) : duel.typing ? duel.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? (ArkStackSolo.host.overHtml ? ArkStackSolo.host.overHtml(v) : '') : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();
