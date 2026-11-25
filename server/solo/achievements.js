@@ -41,7 +41,7 @@ export const ACHIEVEMENTS = [
     { id: 'breaker-level4', icon: '🏗️', name: 'Demolition crew', desc: 'Brick Breaker: reach level 4.', check: (r, v) => v.level >= 4 },
     { id: 'breaker-1000', icon: '💯', name: 'Four figures', desc: 'Brick Breaker: score 1,000.', check: (r) => r.score >= 1000 },
   ]),
-  ...game('blocks-1p', [
+  ...game('block-battle', [
     { id: 'blocks-four', icon: '🟦', name: 'Four at once', desc: 'Blocks: clear 4 rows with one piece.', check: (r, v) => v.bestClear >= 4 },
     { id: 'blocks-40', icon: '📏', name: 'Forty lines', desc: 'Blocks: clear 40 rows in one run.', check: (r, v) => v.lines >= 40 },
     { id: 'blocks-10k', icon: '🏆', name: 'Block master', desc: 'Blocks: score 10,000.', check: (r) => r.score >= 10000 },

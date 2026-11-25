@@ -1,7 +1,10 @@
 // Falling Blocks Battle on the TV (server/games/block-battle.js): both wells side by side on one
 // canvas, each with its falling piece, an outline where it will land, the next piece, and a red
 // bar for junk on its way in. Views come when something changes.
+// In the 1 player mode (view.solo) the game is Blocks: its screens are in pieces.js (ArkBlocks).
 (function () {
+  const soloReady = Ark.loadScript('/games/block-battle/pieces.js');
+  let alone = null; // { el, api, on, view }: handing over to Blocks' screen
   Ark.loadCss('/games/block-battle/style.css');
   const esc = Ark.escapeHtml;
   const DEADZONE = 0.5;
@@ -157,7 +160,7 @@
     });
   }
 
-  Ark.register('host', 'block-battle', {
+  const duel = {
     sounds: function (prev, v) {
       if (prev.phase !== 'play') return [];
       const out = [];
@@ -211,5 +214,42 @@
       root = board = arena = canvas = overlay = view = null;
       overlayKey = boardKey = '';
     },
-  });
+  };
+
+  /** 1 player: show Blocks' screen in place of the 2 player one (once the script is in). */
+  function toSolo(v) {
+    if (!alone) return false;
+    alone.view = v;
+    if (!alone.on && window.ArkBlocks) {
+      alone.on = true;
+      duel.unmount();
+      alone.el.innerHTML = '';
+      ArkBlocks.host.mount(alone.el, alone.api);
+    }
+    if (alone.on) ArkBlocks.host.update(v);
+    return true;
+  }
+  const solo = (v) => Boolean(v && v.solo && window.ArkBlocks);
+
+  Ark.register('host', 'block-battle', Object.assign({}, duel, {
+    mount: function (el, api) {
+      alone = { el: el, api: api, on: false, view: null };
+      duel.mount(el, api);
+      soloReady.then(function () { if (alone && alone.view && alone.view.solo) toSolo(alone.view); });
+    },
+    update: function (v) {
+      if (v.solo) return toSolo(v);
+      duel.update(v);
+    },
+    unmount: function () {
+      if (alone && alone.on) ArkBlocks.host.unmount();
+      else duel.unmount();
+      alone = null;
+    },
+    sounds: function (prev, v) { return solo(v) ? (ArkBlocks.host.sounds ? ArkBlocks.host.sounds(prev, v) : []) : prev.solo ? [] : duel.sounds ? duel.sounds(prev, v) : []; },
+    padHint: duel.padHint || '←→ move · ↓ soft drop · ↑ hard drop · A / B turn · Y / LB hold · Start pause',
+    pad: function (btn, v, slot) { return solo(v) ? (ArkBlocks.host.pad ? ArkBlocks.host.pad(btn, v) : null) : duel.pad ? duel.pad(btn, v, slot) : null; },
+    typing: function (k, v) { return solo(v) ? (ArkBlocks.host.typing ? ArkBlocks.host.typing(k, v) : null) : duel.typing ? duel.typing(k, v) : null; },
+    overHtml: function (v) { return solo(v) ? (ArkBlocks.host.overHtml ? ArkBlocks.host.overHtml(v) : '') : duel.overHtml ? duel.overHtml(v) : ''; },
+  }));
 })();

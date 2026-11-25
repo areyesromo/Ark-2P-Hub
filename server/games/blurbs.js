@@ -9,7 +9,7 @@ export const BLURBS = {
   dogpark: 'One dog per row, column and colour.',
   'solo:reaction-duel': 'Five taps: your average is your score.',
   'solo:brick-duel': 'Keep the ball up, smash the wall.',
-  'blocks-1p': 'Fill whole rows with falling pieces.',
+  'solo:block-battle': 'Fill whole rows with falling pieces.',
   flappy: 'Tap to flap through the pipes.',
   'solo:asteroid-duel': 'Turn, thrust, blast the rocks.',
   invaders: 'Slide, shoot, hide behind the bunkers.',

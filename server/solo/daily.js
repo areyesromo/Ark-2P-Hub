@@ -14,7 +14,7 @@ export const dayOf = (ms) => new Date(ms).toISOString().slice(0, 10);
  * (Five Letters has its own word of the day.)
  */
 export const POOL = [
-  { game: 'blocks-1p', settings: {} },
+  { game: 'block-battle', settings: {} },
   { game: 'gems', settings: {} },
   { game: '2048', settings: {} },
   { game: 'mine-duel', settings: { size: 'medium' } },
