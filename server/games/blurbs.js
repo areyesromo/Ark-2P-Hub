@@ -10,6 +10,7 @@ export const BLURBS = {
   tango: 'Suns and moons in balance.',
   zip: 'One path, every square, numbers in order.',
   traffic: 'Slide the cars, get the red one out.',
+  pipes: 'Turn the pipes till the water flows.',
   'solo:reaction-duel': 'Five taps: your average is your score.',
   'solo:brick-duel': 'Keep the ball up, smash the wall.',
   'solo:block-battle': 'Fill whole rows with falling pieces.',

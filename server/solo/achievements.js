@@ -166,6 +166,12 @@ export const ACHIEVEMENTS = [
     { id: 'traffic-20', icon: '🚦', name: 'Gridlock buster', desc: 'Traffic Jam: solve level 20.', check: (r) => scored(r) && r.variant === 'Level 20' },
     { id: 'traffic-40', icon: '🏆', name: 'Traffic controller', desc: 'Traffic Jam: solve level 40.', check: (r) => scored(r) && r.variant === 'Level 40' },
   ]),
+  ...game('pipes', [
+    { id: 'pipes-solve', icon: '🚰', name: 'Plumber', desc: 'Pipes: get the water everywhere.', check: (r) => scored(r) },
+    { id: 'pipes-7-2', icon: '⏱️', name: 'Quick fix', desc: 'Pipes: solve a 7 × 7 in under 2 minutes.', check: (r, v) => scored(r) && v.n === 7 && r.score < 2 * MIN },
+    { id: 'pipes-9', icon: '🛁', name: 'Mains water', desc: 'Pipes: solve a 9 × 9 without a hint.', check: (r, v) => scored(r) && v.n === 9 && !v.hints },
+    { id: 'pipes-wrap', icon: '🌀', name: 'Round the bend', desc: 'Pipes: solve a Wrap round board.', check: (r, v) => scored(r) && v.wrap },
+  ]),
   ...game('kenken', [
     { id: 'kenken-solve', icon: '➗', name: 'Number cruncher', desc: 'KenKen: solve a puzzle.', check: (r) => scored(r) },
     { id: 'kenken-5-3', icon: '⏱️', name: 'Mental maths', desc: 'KenKen: solve a 5 × 5 in under 3 minutes.', check: (r, v) => scored(r) && v.n === 5 && r.score < 3 * MIN },

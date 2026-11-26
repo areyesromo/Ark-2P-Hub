@@ -1,0 +1,39 @@
+/* Pipes: dark tiles, grey pipes that turn blue as the water reaches them, a brass tap. The pipes
+   and water keep their own colours (they're the puzzle); the frame follows the theme. */
+.pp-board { display: grid; grid-template-columns: repeat(var(--n), 1fr); grid-template-rows: repeat(var(--n), 1fr); aspect-ratio: 1; gap: 2px; padding: 3px; background: #11161f; border-radius: var(--r-md); touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.pp-board.wrap { box-shadow: 0 0 0 3px #11161f, 0 0 0 6px #7c3aed; background: repeating-linear-gradient(45deg, #11161f 0 8px, #1a1430 8px 16px); }
+.pp-sq { position: relative; aspect-ratio: 1; min-width: 0; padding: 0; margin: 0; border: 0; border-radius: 4px; background: #1f2735; overflow: hidden; }
+.pp-sq.locked { background: #2d3a50; box-shadow: inset 0 0 0 2px #64748b; }
+.pp-spin { position: absolute; inset: 0; display: block; transition: transform 140ms ease-out; pointer-events: none; }
+.pp-spin svg { width: 100%; height: 100%; display: block; }
+.pp-pipe { fill: none; stroke: #7b8596; stroke-width: 9; stroke-linecap: butt; }
+.pp-joint, .pp-end { fill: #7b8596; }
+.pp-end { stroke: #11161f; stroke-width: 2; }
+.pp-sq.wet .pp-pipe { stroke: #38bdf8; }
+.pp-sq.wet .pp-joint, .pp-sq.wet .pp-end { fill: #38bdf8; }
+.pp-sq.wet { background: #1d3147; }
+.pp-tap { fill: #d4a24c; stroke: #8a6321; stroke-width: 2; }
+.pp-tap-x { stroke: #5b3f12; stroke-width: 3; stroke-linecap: round; }
+.pp-sq.hint { box-shadow: inset 0 0 0 3px #facc15; }
+.pp-sq.cursor { outline: 4px solid #fff; outline-offset: -4px; z-index: 1; }
+.pp-board.won .pp-sq.wet .pp-pipe { animation: pp-flow 800ms ease-in-out 3 alternate; }
+@keyframes pp-flow { to { stroke: #a5f3fc; } }
+.pp-rules { color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+.pp-paused { color: var(--warn); font-weight: 800; }
+
+/* ---- TV ---- */
+.pp-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.pp-top { display: flex; gap: 2.2rem; align-items: baseline; color: var(--muted); font-size: var(--fs-md); }
+.pp-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.pp-host .pp-wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; padding: 6px; }
+.pp-host .pp-board { width: min(100cqw, 100cqh); }
+
+/* ---- phone ---- */
+.pp-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 14px; text-align: center; }
+.pp-phone .info { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: var(--fs-sm); padding: 0 4px; }
+.pp-phone .info strong { color: var(--me); }
+.pp-phone .pp-board { width: 100%; }
+.pp-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.pp-tools button { flex: 1 1 22%; padding: 10px 4px; font-size: var(--fs-sm); min-width: 0; }
+.pp-tools .on { background: var(--warn); color: var(--on-warn); }
+@media (prefers-reduced-motion: reduce) { .pp-spin { transition: none; } .pp-board.won .pp-sq.wet .pp-pipe { animation: none; } }
