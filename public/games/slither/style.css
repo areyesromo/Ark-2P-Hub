@@ -1,0 +1,35 @@
+/* Slitherlink: pencil on paper. The board keeps its own paper and ink (it's the puzzle); the frame
+   and text follow the theme. */
+.sl-board { aspect-ratio: var(--ratio, 1); border-radius: var(--r-md); background: #f8f5ec; box-shadow: inset 0 0 0 3px #ddd5c0; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.sl-svg { width: 100%; height: 100%; display: block; }
+.sl-dot { fill: #2b2a27; }
+.sl-dot.bad { fill: #e11d48; r: 0.14; }
+.sl-clue { fill: #2b2a27; font-size: 0.56px; font-weight: 800; text-anchor: middle; dominant-baseline: middle; font-family: inherit; }
+.sl-clue.done { fill: #a8a29e; }
+.sl-clue.bad { fill: #e11d48; }
+.sl-line { stroke: #ea580c; stroke-width: 0.13; stroke-linecap: round; }
+.sl-line.hint { stroke: #2563eb; }
+.sl-cross { stroke: #9a948a; stroke-width: 0.05; stroke-linecap: round; fill: none; }
+.sl-hit { stroke: transparent; stroke-width: 0.42; stroke-linecap: butt; cursor: pointer; }
+.sl-cursor { stroke: #2563eb; stroke-width: 0.26; stroke-linecap: round; opacity: 0.35; }
+.sl-board.won .sl-line { animation: sl-win 700ms ease-in-out 3 alternate; }
+@keyframes sl-win { to { stroke: #16a34a; } }
+.sl-rules { color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+.sl-paused { color: var(--warn); font-weight: 800; }
+
+/* ---- TV ---- */
+.sl-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.sl-top { display: flex; gap: 2.2rem; align-items: baseline; color: var(--muted); font-size: var(--fs-md); }
+.sl-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.sl-host .sl-wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.sl-host .sl-board { height: min(100cqh, 100cqw / var(--ratio, 1)); }
+
+/* ---- phone ---- */
+.sl-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 14px; text-align: center; }
+.sl-phone .info { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: var(--fs-sm); padding: 0 4px; }
+.sl-phone .info strong { color: var(--me); }
+.sl-phone .sl-board { width: 100%; }
+.sl-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.sl-tools button { flex: 1 1 22%; padding: 10px 4px; font-size: var(--fs-sm); min-width: 0; }
+.sl-tools .armed { background: var(--bad); color: var(--on-bright); }
+@media (prefers-reduced-motion: reduce) { .sl-board.won .sl-line { animation: none; } }

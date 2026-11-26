@@ -1,0 +1,35 @@
+/* Bridges (Hashi): a blue sea, cream islands, wooden bridges. The sea, islands and bridges keep
+   their own colours (they're the puzzle); the frame and text follow the theme. */
+.hs-board { aspect-ratio: var(--ratio, 1); border-radius: var(--r-md); background: radial-gradient(ellipse at 40% 30%, #2a7bbf, #17507f 75%); box-shadow: inset 0 0 30px rgba(0, 0, 0, 0.35); touch-action: none; user-select: none; -webkit-user-select: none; }
+.hs-svg { width: 100%; height: 100%; display: block; }
+.hs-dot { fill: rgba(255, 255, 255, 0.18); }
+.hs-bridge { stroke: #e8c58a; stroke-width: 0.1; stroke-linecap: round; }
+.hs-bridge.hint { stroke: #fde047; filter: drop-shadow(0 0 0.08px #fde047); }
+.hs-drag { stroke: rgba(255, 255, 255, 0.7); stroke-width: 0.08; stroke-dasharray: 0.15 0.1; stroke-linecap: round; }
+.hs-island circle { fill: #fdf6e3; stroke: #b88a4a; stroke-width: 0.06; }
+.hs-island text { fill: #2b2112; font-size: 0.46px; font-weight: 800; text-anchor: middle; dominant-baseline: middle; font-family: inherit; }
+.hs-island.done circle { fill: #86efac; stroke: #15803d; }
+.hs-island.over circle { fill: #fda4af; stroke: #be123c; }
+.hs-island.picked circle { stroke: #facc15; stroke-width: 0.12; }
+.hs-island.cursor circle { stroke: #fff; stroke-width: 0.12; stroke-dasharray: 0.16 0.08; }
+.hs-board.won .hs-bridge { animation: hs-glow 700ms ease-in-out 3 alternate; }
+@keyframes hs-glow { to { stroke: #fff7d6; } }
+.hs-rules { color: var(--muted); font-size: var(--fs-sm); text-align: center; }
+.hs-paused { color: var(--warn); font-weight: 800; }
+
+/* ---- TV ---- */
+.hs-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.8rem; }
+.hs-top { display: flex; gap: 2.2rem; align-items: baseline; color: var(--muted); font-size: var(--fs-md); }
+.hs-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.hs-host .hs-wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.hs-host .hs-board { height: min(100cqh, 100cqw / var(--ratio, 1)); }
+
+/* ---- phone ---- */
+.hs-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 14px; text-align: center; }
+.hs-phone .info { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: var(--fs-sm); padding: 0 4px; }
+.hs-phone .info strong { color: var(--me); }
+.hs-phone .hs-board { width: 100%; }
+.hs-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.hs-tools button { flex: 1 1 22%; padding: 10px 4px; font-size: var(--fs-sm); min-width: 0; }
+.hs-tools .armed { background: var(--bad); color: var(--on-bright); }
+@media (prefers-reduced-motion: reduce) { .hs-board.won .hs-bridge { animation: none; } }

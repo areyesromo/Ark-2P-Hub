@@ -300,13 +300,14 @@
     return m ? m + ':' + (s % 60 < 10 ? '0' : '') + rest : rest + ' s';
   }
 
-  /** A solo score as the game counts it: unit is 'pts', 'ms', 'time', 'tries', 'moves' or 'm'. */
+  /** A solo score as the game counts it: unit is 'pts', 'ms', 'time', 'tries', 'moves', 'pegs' or 'm'. */
   function formatScore(score, unit) {
     if (score === null || score === undefined) return '–';
     if (unit === 'ms') return Math.round(score) + ' ms';
     if (unit === 'time') return clock(score);
     if (unit === 'tries') return score + (score === 1 ? ' try' : ' tries');
     if (unit === 'moves') return score + (score === 1 ? ' move' : ' moves');
+    if (unit === 'pegs') return score + (score === 1 ? ' peg' : ' pegs');
     if (unit === 'm') return Math.round(score).toLocaleString('en-US') + ' m';
     return Math.round(score).toLocaleString('en-US');
   }

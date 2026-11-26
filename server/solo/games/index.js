@@ -7,7 +7,7 @@
 // with an instance's start(), onInput(input), hostView() and playerView(). category is
 // 'arcade' (real time), 'puzzle' (think at your own pace) or 'brain' (memory and reflexes).
 // score.better is 'higher' or 'lower'; score.unit says how to show a score: 'pts', 'ms', 'time'
-// (a duration in ms), 'tries', 'moves' or 'm'. A run ends with phase 'over' and a score (null
+// (a duration in ms), 'tries', 'moves', 'pegs' or 'm'. A run ends with phase 'over' and a score (null
 // when it doesn't count); an optional variant ('Hard', 'Level 3') keeps separate bests.
 //
 // ctx gives a solo game: player ({ name, local }), now(), setTimeout / clearTimeout, update(),
@@ -51,6 +51,13 @@ import zip, { BOARDS as ZIP_BOARDS, RANDOM as ZIP_RANDOM } from './zip.js';
 import { LEVELS as ZIP_LEVELS } from './zip-levels.js';
 import traffic, { BOARDS as TRAFFIC_BOARDS } from './traffic.js';
 import { LEVELS as TRAFFIC_LEVELS } from './traffic-levels.js';
+import pipes, { SIZES as PIPE_SIZES } from './pipes.js';
+import futoshiki, { SIZES as FUTOSHIKI_SIZES } from './futoshiki.js';
+import peg, { BOARDS as PEG_BOARDS, ORDER as PEG_ORDER } from './peg.js';
+import hashi, { BOARDS as HASHI_BOARDS, RANDOM as HASHI_RANDOM } from './hashi.js';
+import { LEVELS as HASHI_LEVELS } from './hashi-levels.js';
+import slither, { BOARDS as SLITHER_BOARDS, RANDOM as SLITHER_RANDOM } from './slither.js';
+import { LEVELS as SLITHER_LEVELS } from './slither-levels.js';
 import flood, { SIZES as FLOOD_SIZES } from './flood.js';
 import { soloMastermind as mastermind, LEVELS as MASTER_LEVELS } from '../../games/code-breaker-solo.js'; // (a game for both modes: Code Breaker's 1 player one)
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
@@ -196,8 +203,40 @@ export const SOLO_GAMES = [
       lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
     },
   }),
+  withSetup(pipes, {
+    size: { title: 'Size', values: PIPE_SIZES, label: (n) => `${n} × ${n}${n === 5 ? ' (a warm-up)' : n === 9 ? ' (a long one)' : ''}` },
+    edges: { title: 'Edges', values: ['solid', 'wrap'], label: (k) => (k === 'wrap' ? '🌀 Wrap round (pipes can run off one edge and on at the other; its own scores)' : '🧱 Solid') },
+  }),
   withSetup(kenken, {
     size: { title: 'Size', values: KENKEN_SIZES, label: (n) => `${n} × ${n} (numbers 1 to ${n})${n === 4 ? ', a warm-up' : n === 6 ? ', a real test' : ''}` },
+  }),
+  withSetup(futoshiki, {
+    size: { title: 'Size', values: FUTOSHIKI_SIZES, label: (n) => `${n} × ${n} (numbers 1 to ${n})${n === 4 ? ', a warm-up' : n === 7 ? ', a real test' : ''}` },
+  }),
+  withSetup(peg, {
+    board: { title: 'Board', values: PEG_ORDER, label: (k) => PEG_BOARDS[k].name },
+  }),
+  withSetup(hashi, {
+    board: {
+      title: 'Board',
+      values: HASHI_BOARDS,
+      label: (b) => {
+        if (typeof b !== 'number') return `🎲 Random ${HASHI_RANDOM[b][0]} × ${HASHI_RANDOM[b][0]} (a new board every time)`;
+        const rows = HASHI_LEVELS[b - 1];
+        return `Level ${b} · ${rows.length} × ${rows.length} · ${rows.join('').replace(/\./g, '').length} islands`;
+      },
+      // Each level opens once the one before it is solved; the random boards are open from the start.
+      lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
+    },
+  }),
+  withSetup(slither, {
+    board: {
+      title: 'Board',
+      values: SLITHER_BOARDS,
+      label: (b) => (typeof b !== 'number' ? `🎲 Random ${SLITHER_RANDOM[b]} × ${SLITHER_RANDOM[b]} (a new board every time)` : `Level ${b} · ${SLITHER_LEVELS[b - 1].length} × ${SLITHER_LEVELS[b - 1].length}`),
+      // Each level opens once the one before it is solved; the random boards are open from the start.
+      lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
+    },
   }),
   withSetup(nonogram, {
     size: { title: 'Size', values: [10, 5, 15], label: (n) => `${n} × ${n}${n === 5 ? ' (a warm-up)' : n === 15 ? ' (a long one)' : ''}` },

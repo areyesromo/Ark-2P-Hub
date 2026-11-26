@@ -166,10 +166,38 @@ export const ACHIEVEMENTS = [
     { id: 'traffic-20', icon: '🚦', name: 'Gridlock buster', desc: 'Traffic Jam: solve level 20.', check: (r) => scored(r) && r.variant === 'Level 20' },
     { id: 'traffic-40', icon: '🏆', name: 'Traffic controller', desc: 'Traffic Jam: solve level 40.', check: (r) => scored(r) && r.variant === 'Level 40' },
   ]),
+  ...game('pipes', [
+    { id: 'pipes-solve', icon: '🚰', name: 'Plumber', desc: 'Pipes: get the water everywhere.', check: (r) => scored(r) },
+    { id: 'pipes-7-2', icon: '⏱️', name: 'Quick fix', desc: 'Pipes: solve a 7 × 7 in under 2 minutes.', check: (r, v) => scored(r) && v.n === 7 && r.score < 2 * MIN },
+    { id: 'pipes-9', icon: '🛁', name: 'Mains water', desc: 'Pipes: solve a 9 × 9 without a hint.', check: (r, v) => scored(r) && v.n === 9 && !v.hints },
+    { id: 'pipes-wrap', icon: '🌀', name: 'Round the bend', desc: 'Pipes: solve a Wrap round board.', check: (r, v) => scored(r) && v.wrap },
+  ]),
   ...game('kenken', [
     { id: 'kenken-solve', icon: '➗', name: 'Number cruncher', desc: 'KenKen: solve a puzzle.', check: (r) => scored(r) },
     { id: 'kenken-5-3', icon: '⏱️', name: 'Mental maths', desc: 'KenKen: solve a 5 × 5 in under 3 minutes.', check: (r, v) => scored(r) && v.n === 5 && r.score < 3 * MIN },
     { id: 'kenken-6', icon: '🧮', name: 'Calculator brain', desc: 'KenKen: solve a 6 × 6.', check: (r, v) => scored(r) && v.n === 6 },
+  ]),
+  ...game('futoshiki', [
+    { id: 'futoshiki-solve', icon: '⋖', name: 'More or less', desc: 'Futoshiki: solve a puzzle.', check: (r) => scored(r) },
+    { id: 'futoshiki-5-3', icon: '⏱️', name: 'Greater than', desc: 'Futoshiki: solve a 5 × 5 in under 3 minutes.', check: (r, v) => scored(r) && v.n === 5 && r.score < 3 * MIN },
+    { id: 'futoshiki-7', icon: '🧠', name: 'Seven up', desc: 'Futoshiki: solve a 7 × 7 without a hint.', check: (r, v) => scored(r) && v.n === 7 && !v.hints },
+  ]),
+  ...game('peg', [
+    { id: 'peg-one', icon: '📍', name: 'Last one standing', desc: 'Peg Solitaire: finish with one peg.', check: (r) => scored(r) && r.score === 1 },
+    { id: 'peg-perfect', icon: '🎯', name: 'Dead centre', desc: 'Peg Solitaire: finish the English board with one peg in the middle.', check: (r, v) => scored(r) && v.board === 'english' && v.perfect },
+    { id: 'peg-european', icon: '🇪🇺', name: 'Continental', desc: 'Peg Solitaire: finish the European board with three pegs or fewer.', check: (r, v) => scored(r) && v.board === 'european' && r.score <= 3 },
+  ]),
+  ...game('hashi', [
+    { id: 'hashi-solve', icon: '🌉', name: 'Bridge builder', desc: 'Bridges: join up a board.', check: (r) => scored(r) },
+    { id: 'hashi-10', icon: '🏝️', name: 'Island hopper', desc: 'Bridges: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+    { id: 'hashi-nohint', icon: '⚓', name: 'Chief engineer', desc: 'Bridges: solve a board of 25 islands or more without a hint.', check: (r, v) => scored(r) && v.islands.length >= 25 && !v.hints },
+    { id: 'hashi-30', icon: '🌊', name: 'Archipelago', desc: 'Bridges: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
+  ]),
+  ...game('slither', [
+    { id: 'slither-solve', icon: '➰', name: 'In the loop', desc: 'Slitherlink: close a loop.', check: (r) => scored(r) },
+    { id: 'slither-10', icon: '🐍', name: 'Slither on', desc: 'Slitherlink: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+    { id: 'slither-nohint', icon: '🧶', name: 'Unbroken', desc: 'Slitherlink: solve a 10 × 10 without a hint.', check: (r, v) => scored(r) && v.w === 10 && !v.hints },
+    { id: 'slither-30', icon: '🏁', name: 'Full circle', desc: 'Slitherlink: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
   ]),
   ...game('lights', [
     { id: 'lights-solve', icon: '💡', name: 'Lights out', desc: 'Lights Out: switch every light off.', check: (r) => scored(r) },
