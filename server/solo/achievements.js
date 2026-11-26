@@ -182,6 +182,11 @@ export const ACHIEVEMENTS = [
     { id: 'futoshiki-5-3', icon: '⏱️', name: 'Greater than', desc: 'Futoshiki: solve a 5 × 5 in under 3 minutes.', check: (r, v) => scored(r) && v.n === 5 && r.score < 3 * MIN },
     { id: 'futoshiki-7', icon: '🧠', name: 'Seven up', desc: 'Futoshiki: solve a 7 × 7 without a hint.', check: (r, v) => scored(r) && v.n === 7 && !v.hints },
   ]),
+  ...game('peg', [
+    { id: 'peg-one', icon: '📍', name: 'Last one standing', desc: 'Peg Solitaire: finish with one peg.', check: (r) => scored(r) && r.score === 1 },
+    { id: 'peg-perfect', icon: '🎯', name: 'Dead centre', desc: 'Peg Solitaire: finish the English board with one peg in the middle.', check: (r, v) => scored(r) && v.board === 'english' && v.perfect },
+    { id: 'peg-european', icon: '🇪🇺', name: 'Continental', desc: 'Peg Solitaire: finish the European board with three pegs or fewer.', check: (r, v) => scored(r) && v.board === 'european' && r.score <= 3 },
+  ]),
   ...game('lights', [
     { id: 'lights-solve', icon: '💡', name: 'Lights out', desc: 'Lights Out: switch every light off.', check: (r) => scored(r) },
     { id: 'lights-par', icon: '⭐', name: 'On par', desc: 'Lights Out: solve a Hard puzzle in par or fewer.', check: (r, v) => scored(r) && r.variant === 'Hard' && r.score <= v.par },

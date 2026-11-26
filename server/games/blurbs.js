@@ -12,6 +12,7 @@ export const BLURBS = {
   traffic: 'Slide the cars, get the red one out.',
   pipes: 'Turn the pipes till the water flows.',
   futoshiki: 'A number grid with greater-than signs.',
+  peg: 'Jump the pegs till one is left.',
   'solo:reaction-duel': 'Five taps: your average is your score.',
   'solo:brick-duel': 'Keep the ball up, smash the wall.',
   'solo:block-battle': 'Fill whole rows with falling pieces.',
