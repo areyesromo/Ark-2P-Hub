@@ -54,6 +54,8 @@ import { LEVELS as TRAFFIC_LEVELS } from './traffic-levels.js';
 import pipes, { SIZES as PIPE_SIZES } from './pipes.js';
 import futoshiki, { SIZES as FUTOSHIKI_SIZES } from './futoshiki.js';
 import peg, { BOARDS as PEG_BOARDS, ORDER as PEG_ORDER } from './peg.js';
+import hashi, { BOARDS as HASHI_BOARDS, RANDOM as HASHI_RANDOM } from './hashi.js';
+import { LEVELS as HASHI_LEVELS } from './hashi-levels.js';
 import flood, { SIZES as FLOOD_SIZES } from './flood.js';
 import { soloMastermind as mastermind, LEVELS as MASTER_LEVELS } from '../../games/code-breaker-solo.js'; // (a game for both modes: Code Breaker's 1 player one)
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
@@ -211,6 +213,19 @@ export const SOLO_GAMES = [
   }),
   withSetup(peg, {
     board: { title: 'Board', values: PEG_ORDER, label: (k) => PEG_BOARDS[k].name },
+  }),
+  withSetup(hashi, {
+    board: {
+      title: 'Board',
+      values: HASHI_BOARDS,
+      label: (b) => {
+        if (typeof b !== 'number') return `🎲 Random ${HASHI_RANDOM[b][0]} × ${HASHI_RANDOM[b][0]} (a new board every time)`;
+        const rows = HASHI_LEVELS[b - 1];
+        return `Level ${b} · ${rows.length} × ${rows.length} · ${rows.join('').replace(/\./g, '').length} islands`;
+      },
+      // Each level opens once the one before it is solved; the random boards are open from the start.
+      lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
+    },
   }),
   withSetup(nonogram, {
     size: { title: 'Size', values: [10, 5, 15], label: (n) => `${n} × ${n}${n === 5 ? ' (a warm-up)' : n === 15 ? ' (a long one)' : ''}` },

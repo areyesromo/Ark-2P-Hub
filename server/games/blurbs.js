@@ -13,6 +13,7 @@ export const BLURBS = {
   pipes: 'Turn the pipes till the water flows.',
   futoshiki: 'A number grid with greater-than signs.',
   peg: 'Jump the pegs till one is left.',
+  hashi: 'Join every island with bridges.',
   'solo:reaction-duel': 'Five taps: your average is your score.',
   'solo:brick-duel': 'Keep the ball up, smash the wall.',
   'solo:block-battle': 'Fill whole rows with falling pieces.',

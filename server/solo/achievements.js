@@ -187,6 +187,12 @@ export const ACHIEVEMENTS = [
     { id: 'peg-perfect', icon: '🎯', name: 'Dead centre', desc: 'Peg Solitaire: finish the English board with one peg in the middle.', check: (r, v) => scored(r) && v.board === 'english' && v.perfect },
     { id: 'peg-european', icon: '🇪🇺', name: 'Continental', desc: 'Peg Solitaire: finish the European board with three pegs or fewer.', check: (r, v) => scored(r) && v.board === 'european' && r.score <= 3 },
   ]),
+  ...game('hashi', [
+    { id: 'hashi-solve', icon: '🌉', name: 'Bridge builder', desc: 'Bridges: join up a board.', check: (r) => scored(r) },
+    { id: 'hashi-10', icon: '🏝️', name: 'Island hopper', desc: 'Bridges: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+    { id: 'hashi-nohint', icon: '⚓', name: 'Chief engineer', desc: 'Bridges: solve a board of 25 islands or more without a hint.', check: (r, v) => scored(r) && v.islands.length >= 25 && !v.hints },
+    { id: 'hashi-30', icon: '🌊', name: 'Archipelago', desc: 'Bridges: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
+  ]),
   ...game('lights', [
     { id: 'lights-solve', icon: '💡', name: 'Lights out', desc: 'Lights Out: switch every light off.', check: (r) => scored(r) },
     { id: 'lights-par', icon: '⭐', name: 'On par', desc: 'Lights Out: solve a Hard puzzle in par or fewer.', check: (r, v) => scored(r) && r.variant === 'Hard' && r.score <= v.par },
