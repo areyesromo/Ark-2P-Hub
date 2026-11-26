@@ -1,0 +1,56 @@
+/* Baccarat: Blackjack's cards and chips (loaded with it) on a deep red felt. The cards and felt
+   keep their own colours; text and panels follow the theme. */
+.bc-hands { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; }
+.bc-hand { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; padding: 0.8rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.2); transition: box-shadow 0.3s; }
+.bc-hand h3 { margin: 0; font-size: 1.5rem; letter-spacing: 0.08em; text-transform: uppercase; }
+.bc-hand h3 b { margin-left: 0.4rem; font-size: 1.3em; color: #facc15; }
+.bc-hand.won { box-shadow: 0 0 0 4px #facc15, 0 0 40px -6px rgba(250, 204, 21, 0.7); }
+.bc-road { display: flex; justify-content: center; gap: 0.35rem; min-height: 2rem; }
+.bc-road i { width: 1.9rem; height: 1.9rem; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 900; font-size: 0.95rem; background: #fff; }
+/* (the road's colours are the table's own: blue Player, red Banker, green Tie, as in a casino) */
+.bc-road i.player { color: #1d4ed8; box-shadow: inset 0 0 0 3px #1d4ed8; }
+.bc-road i.banker { color: #b91c1c; box-shadow: inset 0 0 0 3px #b91c1c; }
+.bc-road i.tie { color: #15803d; box-shadow: inset 0 0 0 3px #15803d; }
+
+/* ---- TV ---- */
+.bc-host { flex: 1; display: flex; flex-direction: column; gap: 0.7rem; min-height: 0; }
+.bc-head { display: flex; justify-content: center; gap: 3rem; color: var(--muted); font-size: 1.15rem; }
+.bc-head strong { color: var(--text); font-size: 1.3rem; }
+.bc-table { flex: 1; min-height: 0; display: flex; flex-direction: column; justify-content: center; gap: 1.2rem; padding: 1.4rem; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 25%, #8b1f2b, #4b0d15 75%); box-shadow: inset 0 0 0 6px #b88a1b, inset 0 0 50px rgba(0, 0, 0, 0.5); color: #fff; --card-w: 5.6rem; }
+.bc-seats { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+.bc-seat { padding: 0.8rem 1.2rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.28); }
+.bc-seat.p1 { box-shadow: inset 0 0 0 3px var(--p1); }
+.bc-seat.p2 { box-shadow: inset 0 0 0 3px var(--p2); }
+.bc-seat.won { background: rgba(250, 204, 21, 0.16); }
+.bc-seat header { display: flex; justify-content: space-between; font-size: 1.35rem; font-weight: 800; }
+.bc-seat header > span:first-child { filter: brightness(1.2); }
+.bc-state { min-height: 2rem; margin-top: 0.3rem; font-size: 1.25rem; }
+.bc-state small { opacity: 0.7; margin-left: 0.5rem; font-size: 0.85rem; }
+.bc-state b.up { color: #86efac; }
+.bc-state b.down { color: #fca5a5; }
+.bc-caption { text-align: center; font-size: 1.5rem; font-weight: 800; min-height: 2rem; }
+.bc-caption .ark-result { font-size: 2rem; }
+
+/* ---- phone ---- */
+.bc-phone { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 10px 10px 14px; }
+.bc-ptop { display: flex; justify-content: space-between; color: var(--muted); }
+.bc-ptop b { color: var(--text); }
+.bc-phands { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; padding: 10px 6px; border-radius: var(--r-md); background: #4b0d15; color: #fff; --card-w: 13vw; }
+.bc-phand { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 4px; border-radius: var(--r-sm); }
+.bc-phand.won { box-shadow: 0 0 0 3px #facc15; }
+.bc-phand h4 { margin: 0; }
+.bc-phand h4 b { color: #facc15; }
+.bc-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 2.6em; }
+.bc-msg small { color: var(--muted); }
+.bc-msg .won { color: var(--good); }
+.bc-msg .lost { color: var(--bad); }
+.bc-msg .big { font-size: 1.6rem; font-weight: 900; }
+.bc-sides { flex: 1; display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr auto; gap: 10px; }
+.bc-sides button { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; font-size: 1.5rem; font-weight: 900; background: var(--panel); border: 3px solid var(--line); }
+.bc-sides button.tie { grid-column: span 2; font-size: 1.2rem; padding: 10px; }
+.bc-sides button small { font-size: 0.85rem; font-weight: 500; color: var(--muted); }
+.bc-sides button.on { border-color: var(--me); background: var(--bg-2); }
+.bc-amounts { display: flex; justify-content: space-between; gap: 4px; }
+.bc-amounts button { flex: 1; padding: 6px 0; border: 3px solid transparent; border-radius: var(--r-md); background: none; }
+.bc-amounts button.on { border-color: var(--me); }
+.bc-amounts button:disabled { opacity: 0.3; }
