@@ -104,6 +104,8 @@ import oddEven from './odd-even.js';
 import { whichBoxBot, oddEvenBot } from './guess-bots.js';
 import hex from './hex.js';
 import { hexBot } from './hex-bot.js';
+import ultimateTtt from './ultimate-ttt.js';
+import { ultimateTttBot } from './ultimate-ttt-bot.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
@@ -399,6 +401,7 @@ const GAMES = [
     ...firstTo('Games to win', [1, 2, 3]),
     ...timer('timed', '30 s a move'),
   }),
+  withSetup({ ...ultimateTtt, bot: ultimateTttBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
@@ -443,11 +446,11 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem', 'cribbage', 'lucky-seven', 'video-poker', 'go-fish', 'spades', 'hex'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem', 'cribbage', 'lucky-seven', 'video-poker', 'go-fish', 'spades', 'hex', 'ultimate-ttt'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
-  board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'hex', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
+  board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'hex', 'ultimate-ttt', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
   cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'speed', 'cribbage', 'lucky-seven', 'liars-dice', 'memory-match', 'video-poker', 'go-fish', 'spades'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
