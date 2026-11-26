@@ -20,8 +20,9 @@
 .sp-middle { display: flex; align-items: center; justify-content: center; gap: 2rem; }
 .sp-pile { position: relative; --card-w: 8.5rem; width: var(--card-w); aspect-ratio: 5 / 7; }
 .sp-under, .sp-top { position: absolute; inset: 0; }
-.sp-under { transform: rotate(-7deg); opacity: 0.85; }
-.sp-top .bj-card { animation: sp-slap 0.22s ease-out; }
+.sp-under { transform: rotate(-6deg) translate(-3%, 2%); }
+.sp-edge { width: 100%; height: 100%; border-radius: calc(var(--card-w) * 0.09); background: linear-gradient(160deg, #ececec, #d6d3cc); box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.6); }
+.sp-pile.fresh .sp-top .bj-card { animation: sp-slap 0.22s ease-out; }
 .sp-pile.by-p1 .sp-top .bj-card { box-shadow: 0 0 0 4px var(--p1), 0 8px 18px rgba(0, 0, 0, 0.5); }
 .sp-pile.by-p2 .sp-top .bj-card { box-shadow: 0 0 0 4px var(--p2), 0 8px 18px rgba(0, 0, 0, 0.5); }
 @keyframes sp-slap { from { transform: scale(1.25) rotate(8deg); opacity: 0.4; } }
@@ -46,4 +47,4 @@
 .sp-hcard.ok { opacity: 1; box-shadow: 0 0 0 3px #4ade80; }
 .sp-hcard.picked { transform: translateY(-10px); box-shadow: 0 0 0 4px #facc15; }
 .sp-phone .rematch { margin-top: auto; }
-@media (prefers-reduced-motion: reduce) { .sp-top .bj-card { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .sp-pile.fresh .sp-top .bj-card { animation: none; } }

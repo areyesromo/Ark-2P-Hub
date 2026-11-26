@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (107)
+## Games (111)
 
 ### ⚔️ Competitive (36)
 
@@ -52,7 +52,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four-bot.js`, `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |
 | Memory Match | `memory-match` | Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. Or Race: your own board each, first to clear it. | `server/games/memory-match-bot.js`, `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js`, `test/solo-looks.test.js`, `test/solo-memory.test.js` |
 
-### 🎲 Dice & Board (16)
+### 🎲 Dice & Board (20)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -71,6 +71,10 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Colour Clash | `colour-clash` | Match the colour or the number; Skips, Reverses, Draw Twos and Wilds. Down to one card? Shout CLASH! before you get caught. First to 200. | `server/games/colour-clash-bot.js`, `server/games/colour-clash.js`, `public/games/colour-clash/`, `test/colour-clash.test.js` |
 | Gin Rummy | `gin-rummy` | Draw and throw away to make sets and runs. Knock with 10 or less left over, or go gin. First to 100 points. | `server/games/gin-rummy-bot.js`, `server/games/gin-rummy.js`, `public/games/gin-rummy/`, `test/gin-rummy.test.js` |
 | Blackjack | `blackjack` | Beat the dealer for play chips. You both get the same cards, so the better player wins, not the luckier one. Most chips after the last hand. | `server/games/blackjack-bot.js`, `server/games/blackjack.js`, `public/games/blackjack/`, `test/blackjack.test.js` |
+| Heads-up Hold'em | `holdem` | Texas hold'em for two, with play chips: two secret cards each, five shared on the TV. Bet, bluff or fold; take every chip to win. | `server/games/holdem-bot.js`, `server/games/holdem-hands.js`, `server/games/holdem.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/holdem/`, `test/holdem.test.js` |
+| Speed | `speed` | Both at once: slap cards one higher or lower onto the two middle piles. First to play every card wins the round. | `server/games/speed-bot.js`, `server/games/speed.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/speed/`, `test/speed.test.js` |
+| Cribbage | `cribbage` | Lay two for the crib, peg fifteens, pairs and runs as you play to 31, then count your hand. First to 121. | `server/games/cribbage-bot.js`, `server/games/cribbage.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/cribbage/`, `test/cribbage.test.js` |
+| Lucky Seven | `lucky-seven` | Flip a card or bank what you have: a number you already hold and you're bust. Seven different numbers is a Lucky Seven. First to 200. | `server/games/lucky-seven-bot.js`, `server/games/lucky-seven.js`, `public/games/lucky-seven/`, `test/lucky-seven.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party-bot.js`, `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
 ### 🤝 Co-op & casual (8)
@@ -148,7 +152,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Number Memory | `numbers` | Remember the number, then type it back. One digit longer every time. | `server/solo/games/numbers.js`, `public/games/numbers/`, `test/solo-numbers.test.js` |
 | Odd One Out | `oddone` | One square is a shade different. Spot it, fast: the grid grows and the shades get closer. | `server/solo/games/oddone.js`, `public/games/oddone/`, `test/solo-oddone.test.js` |
 
-## Minigames (52)
+## Minigames (53)
 
 Micro minigames (a few seconds each) play in **Micro Mayhem**; party minigames (up to about 30 s)
 play in **Party Minigames** and after every round of **Party Board**. 3D ones use three.js.
@@ -207,6 +211,7 @@ play in **Party Minigames** and after every round of **Party Board**. 3D ones us
 | Pancake Flip | `pancake-flip` | party | 2D | FLIP when the meter is green, then CATCH it flat. Tallest stack wins | `server/games/minis/pancake-flip.js`, `public/games/minis/pancake-flip.js`, `test/minis-party10.test.js` |
 | Hot Air Race | `hot-air-race` | party | 2D | Hold BURN to rise, let go to sink. Find the fastest wind and race to the flag | `server/games/minis/hot-air-race.js`, `public/games/minis/hot-air-race.js`, `test/minis-party10.test.js` |
 | Cup Stack | `cup-stack` | party | 2D | Tap LEFT or RIGHT as the strip shows: build each pyramid, then take it down. Wrong hand fumbles | `server/games/minis/cup-stack.js`, `public/games/minis/cup-stack.js`, `test/minis-party10.test.js` |
+| Higher or Lower | `higher-lower` | party | 2D | Is the next card higher or lower? Right calls in a row score more | `server/games/minis/higher-lower.js`, `public/games/minis/higher-lower.js`, `test/minis-party10.test.js` |
 
 ## Ideas (not built yet)
 <!-- ideas: hand-written below this line, kept when the file is regenerated -->

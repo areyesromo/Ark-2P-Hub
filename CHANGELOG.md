@@ -4,6 +4,19 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.74
+
+- ♠️ Heads-up Hold'em: Texas hold'em for two with play chips, your two cards secret on your phone,
+  the blinds going up as you play. The computer plays at three levels.
+- ⚡ Speed: both at once, slap cards one higher or one lower onto the middle piles; first to play
+  every card takes the round.
+- 📍 Cribbage: lay two in the crib, peg fifteens, pairs and runs to 31, count your hand on a peg
+  board. First to 121 (or 61).
+- 🍀 Lucky Seven: our own push-your-luck card game: flip or bank, a repeat busts you, seven
+  different numbers is a Lucky Seven. First to 200.
+- 🃏 A new party minigame, Higher or Lower: call the next card in secret; right calls in a row
+  score more.
+
 ## 0.1.73
 
 - 🚰 Pipes, a new 1 player puzzle: turn the pipe pieces until the water from the tap reaches every

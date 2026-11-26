@@ -8,6 +8,7 @@
   let root = null;
   let view = null;
   let loaded = false;
+  let shownTops = [null, null]; // (only a pile whose top card just changed slaps down)
 
   const nameOf = (v, slot) => '<span class="p' + (slot + 1) + '-text">' + esc(v.players[slot].name) + '</span>';
 
@@ -23,9 +24,10 @@
   }
 
   function pile(v, p) {
-    const fresh = v.last && v.last.pile === p ? ' by-p' + (v.last.by + 1) : '';
-    return '<div class="sp-pile' + fresh + '" data-n="' + (v.last && v.last.pile === p ? v.last.n : '') + '">' +
-      (v.under[p] ? '<div class="sp-under">' + ArkBJ.card(v.under[p]) + '</div>' : '') +
+    const by = v.last && v.last.pile === p ? ' by-p' + (v.last.by + 1) : '';
+    const fresh = shownTops[p] !== v.tops[p] ? ' fresh' : '';
+    return '<div class="sp-pile' + by + fresh + '">' +
+      (v.under[p] ? '<div class="sp-under"><div class="sp-edge"></div></div>' : '') + // (the pile beneath: just its edge)
       '<div class="sp-top">' + ArkBJ.card(v.tops[p]) + '</div></div>';
   }
 
@@ -49,6 +51,7 @@
       '<div class="sp-table">' + side(v, 0) +
       '<div class="sp-middle">' + spare(v.spares[0]) + pile(v, 0) + pile(v, 1) + spare(v.spares[1]) + '</div>' +
       side(v, 1) + '</div>';
+    shownTops = v.tops.slice();
   }
 
   Ark.register('host', 'speed', {

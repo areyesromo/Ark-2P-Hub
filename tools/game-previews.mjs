@@ -107,6 +107,19 @@ const NUDGE = {
     for (const letter of 'eatsr') { players[0].emit('game:input', { type: 'letter', letter }); await sleep(150); }
     for (const letter of 'eaorn') { players[1].emit('game:input', { type: 'letter', letter }); await sleep(150); }
   },
+  // The new card games a little way in.
+  holdem: async (players) => {
+    for (let k = 0; k < 4; k++) { both(players, { type: 'act', action: 'call' }); await sleep(150); both(players, { type: 'act', action: 'check' }); await sleep(1400); }
+  },
+  speed: async () => { await sleep(500); }, // (before the idle flip turns the spares over)
+  cribbage: async (players) => {
+    both(players, { type: 'discard', cards: [0, 1] });
+    await sleep(2200);
+    for (let k = 0; k < 3; k++) { for (const p of players) for (let i = 0; i < 4; i++) p.emit('game:input', { type: 'lay', card: i }); await sleep(400); }
+  },
+  'lucky-seven': async (players) => {
+    for (let k = 0; k < 5; k++) { both(players, { type: 'flip' }); await sleep(300); }
+  },
   'kart-race': race,
   'kart-race-3d': race,
   'sketch-guess': async (players) => {

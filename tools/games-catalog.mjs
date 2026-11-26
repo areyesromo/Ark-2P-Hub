@@ -26,6 +26,9 @@ const EXTRA = {
   'air-hockey': ['server/games/hand.js'],
   pong: ['server/games/hand.js'],
   'brick-duel': ['server/games/hand.js'],
+  holdem: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  speed: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  cribbage: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
 };
 
 const exists = (rel) => fs.existsSync(path.join(ROOT, rel));
