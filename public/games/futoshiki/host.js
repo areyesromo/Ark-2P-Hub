@@ -37,7 +37,7 @@
       if (JSON.stringify(v.notes) !== JSON.stringify(prev.notes)) return ['tick'];
       return [];
     },
-    padHint: 'D-pad move · LB / RB pick a number · A put it in · B pencil it · X clear · Y (E) undo · RT (Q) hint +30 s · Start (P) pause · keyboard: type the number',
+    padHint: 'D-pad move · LB / RB pick a number · A put it in · B pencil it · RT clear (or type 0) · X (Q) hint +30 s · Y (E) undo · Start (P) pause · keyboard: type the number',
     pad: function (btn, v) {
       if (btn === 'START') return { type: 'pause' };
       if (v.phase !== 'play') return null;
@@ -52,9 +52,9 @@
       else if (btn === 'RB') digit = (digit % n) + 1;
       else if (btn === 'A') return { type: 'set', cell: v.selected, value: digit };
       else if (btn === 'B') return { type: 'note', cell: v.selected, value: digit };
-      else if (btn === 'X') return { type: 'set', cell: v.selected, value: 0 };
+      else if (btn === 'RT') return { type: 'set', cell: v.selected, value: 0 };
       else if (btn === 'Y') return { type: 'undo' };
-      else if (btn === 'RT') return { type: 'hint' };
+      else if (btn === 'X') return { type: 'hint' };
       render();
       return null;
     },

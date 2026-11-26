@@ -47,6 +47,24 @@ const NUDGE = {
   traffic: async (players) => {
     players[0].emit('game:input', { type: 'hint' });
   },
+  pipes: async (players) => {
+    for (let i = 0; i < 12; i++) { players[0].emit('game:input', { type: 'hint' }); await sleep(100); }
+  },
+  futoshiki: async (players) => {
+    for (let i = 0; i < 6; i++) { players[0].emit('game:input', { type: 'hint' }); await sleep(100); }
+  },
+  peg: async (players) => {
+    // The four opening jumps go into the middle; one of them, then a hint shown.
+    players[0].emit('game:input', { type: 'jump', from: 10, to: 24 });
+    await sleep(200);
+    players[0].emit('game:input', { type: 'hint' });
+  },
+  hashi: async (players) => {
+    for (let i = 0; i < 4; i++) { players[0].emit('game:input', { type: 'hint' }); await sleep(100); }
+  },
+  slither: async (players) => {
+    for (let i = 0; i < 10; i++) { players[0].emit('game:input', { type: 'hint' }); await sleep(100); }
+  },
   // Mid-game boards: some squares dug, a hand dealt, a few guesses in.
   'mine-duel': async (players) => {
     for (const cell of [65, 30, 101, 77, 12, 118]) { both(players, { type: 'dig', cell }); await sleep(250); }

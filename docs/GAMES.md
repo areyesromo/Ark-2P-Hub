@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (102)
+## Games (107)
 
 ### ⚔️ Competitive (36)
 
@@ -102,7 +102,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Bubble Shooter | `bubbles` | Aim, fire, pop three of a colour. Don't let the bubbles reach the bottom. | `server/solo/games/bubbles.js`, `public/games/bubbles/`, `test/solo-bubbles.test.js` |
 | Road Hopper | `hopper` | Hop across the road and the river without getting squashed or soaked. | `server/solo/games/hopper.js`, `public/games/hopper/`, `test/solo-hopper.test.js` |
 
-### 👤 Solo: 🧩 Puzzle (20)
+### 👤 Solo: 🧩 Puzzle (25)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -123,7 +123,12 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Zip | `zip` | One path through the numbers in order that fills every square. Drag it out, drag back to undo. | `server/solo/games/zip-gen.js`, `server/solo/games/zip-levels.js`, `server/solo/games/zip.js`, `public/games/zip/`, `test/solo-zip.test.js` |
 | Sokoban | `sokoban` | Push every box onto a target. You can only push, never pull: think before you shove. | `server/solo/games/sokoban-levels.js`, `server/solo/games/sokoban.js`, `public/games/sokoban/`, `test/solo-sokoban.test.js` |
 | Traffic Jam | `traffic` | Slide the cars and trucks out of the way so the red car can drive out. In as few moves as you can. | `server/solo/games/traffic-gen.js`, `server/solo/games/traffic-levels.js`, `server/solo/games/traffic-random.js`, `server/solo/games/traffic.js`, `public/games/traffic/`, `test/solo-traffic.test.js` |
+| Pipes | `pipes` | Turn the pipe pieces until the water from the tap reaches every one, with no open ends. | `server/solo/games/pipes.js`, `public/games/pipes/`, `test/solo-pipes.test.js` |
 | KenKen | `kenken` | Every number once in each row and column, and each cage makes its sum. Maths meets Sudoku. | `server/solo/games/kenken.js`, `public/games/kenken/`, `test/solo-kenken.test.js` |
+| Futoshiki | `futoshiki` | Every number once in each row and column, and keep every < and > sign between the squares. | `server/solo/games/futoshiki.js`, `public/games/futoshiki/`, `test/solo-futoshiki.test.js` |
+| Peg Solitaire | `peg` | Jump pegs over each other to take them off. Finish with one, in the middle for a perfect game. | `server/solo/games/peg.js`, `public/games/peg/`, `test/solo-peg.test.js` |
+| Bridges | `hashi` | Join the islands with bridges: as many as each one's number, never crossing, all joined up. | `server/solo/games/hashi-gen.js`, `server/solo/games/hashi-levels.js`, `server/solo/games/hashi.js`, `public/games/hashi/`, `test/solo-hashi.test.js` |
+| Slitherlink | `slither` | Draw one loop round the dots: each number says how many of its square's sides the loop uses. | `server/solo/games/slither-gen.js`, `server/solo/games/slither-levels.js`, `server/solo/games/slither.js`, `public/games/slither/`, `test/solo-slither.test.js` |
 | Nonograms | `nonogram` | The numbers say how many squares are filled in each line. Fill them in to reveal the picture. | `server/solo/games/nonogram.js`, `public/games/nonogram/`, `test/solo-nonogram.test.js` |
 | Lights Out | `lights` | Each press flips a light and its neighbours. Switch them all off in as few moves as you can. | `server/solo/games/lights.js`, `public/games/lights/`, `test/solo-lights.test.js` |
 

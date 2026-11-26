@@ -188,55 +188,8 @@ alone at `/phone`. No computer player (that's the 2 player games). Best first.
 
 | Idea | How it plays | Size of the job | Look |
 |---|---|---|---|
-| Pipes | Turn the pipe pieces until the water reaches every one, no open ends. | Medium | 2D |
-| Futoshiki | A Latin square with < and > signs between squares. | Small: like KenKen | 2D |
-| Peg Solitaire | Jump pegs to take them off; finish with one, ideally in the middle. | Small | 2D |
-| Hashi (Bridges) | Join numbered islands with bridges, as many as each number. | Large: making fair boards is the hard part | 2D |
-| Slitherlink | One closed loop round the dots; each number counts its square's sides used. | Large: as above | 2D |
 
-### How each one plays
-
-#### Pipes
-
-A grid of pipe pieces (straight, bend, T, cross). Rotate them until water from the tap reaches
-every pipe, with no open ends.
-
-**Plays:** tap a piece to turn it; the water flows live as you connect. **Boards:** grow a random
-tree of pipes over the grid, then scramble the pieces. 5 × 5 to 10 × 10, and a "wrap round the
-edges" mode. **Score:** time, per size.
-
-#### Futoshiki
-
-A Latin square (each number once per row and column, 4 × 4 to 7 × 7) with **<** and **>** signs
-between some squares, and a few numbers given.
-
-**Plays:** like Sudoku and KenKen (pick a square, tap a number, pencil marks). **Boards:** made like
-KenKen's, keeping only boards with one answer. **Score:** time, per size.
-
-#### Peg Solitaire
-
-The classic cross-shaped board of pegs with the middle hole empty. Jump a peg over a neighbour
-into an empty hole; the jumped peg is taken off. Finish with one peg, ideally in the middle.
-
-**Plays:** tap a peg, then where it lands. **Boards:** English and European boards plus a few
-small warm-ups. **Score:** pegs left (fewer is better); one in the middle is a perfect game.
-
-#### Hashi (Bridges)
-
-Islands with numbers. Join them with bridges (straight, at most two between any two islands, no
-crossing) so each island has as many bridges as its number and every island is connected.
-
-**Plays:** drag from one island to another to add a bridge; again for a double; again to remove.
-
-#### Slitherlink
-
-A grid of dots with numbers in some squares. Draw one closed loop along the dots; each number says
-how many of its square's four sides the loop uses.
-
-**Plays:** tap an edge to draw a line, again for ✕ (no line), again to clear.
-
-For both Hashi and Slitherlink, the work is in making boards that are fair (one answer, solvable without
-guessing) fast enough for a Raspberry Pi, so they'd start as fixed level packs made ahead of time.
+(All of these are built. New solo ideas go in the table above.)
 
 ### Not games: for the solo games we have
 

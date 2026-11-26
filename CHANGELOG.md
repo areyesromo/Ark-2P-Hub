@@ -4,6 +4,19 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.73
+
+- 🚰 Pipes, a new 1 player puzzle: turn the pipe pieces until the water from the tap reaches every
+  one, with no open ends. 5 × 5 to 9 × 9, and a wrap-round mode.
+- ⋖ Futoshiki, a new 1 player puzzle: each number once in every row and column, keeping the < and >
+  signs between squares. 4 × 4 to 7 × 7, with pencil marks.
+- 📍 Peg Solitaire, a new 1 player puzzle: jump the pegs until one is left (in the middle for a
+  perfect game), on the English or European board or a warm-up.
+- 🌉 Bridges, a new 1 player puzzle (Hashi): join the islands with bridges, as many as each number.
+  30 levels and random boards.
+- ➰ Slitherlink, a new 1 player puzzle: draw one loop round the dots to match the numbers.
+  30 levels and random boards.
+
 ## 0.1.72
 
 - ☀️ Tango, a new 1 player puzzle: fill the grid with suns and moons (no three alike in a line, as
