@@ -36,8 +36,8 @@ run is scored (the best to beat shows on the lobby card, in the game and on the 
 **🎉 New best!**), and solo games have achievements of their own.
 
 No one to play with? Games labelled **🤖 Vs computer** can be played against the computer:
-Battleship (Classic and Ultimate), Connect Four, Chess, Checkers, Reversi, Backgammon, Ludo, Dominoes, Five in a Row, Nine Men's Morris, Heads-up Hold'em, Cribbage, Speed, Lucky Seven, Mine Duel, Blackjack, Gin Rummy, Colour Clash, Dots and Boxes, Mancala, Rock Paper
-Scissors, Memory Match, Dice Party, Pong, Air Hockey, Snake Battle,
+Battleship (Classic and Ultimate), Connect Four, Chess, Checkers, Reversi, Backgammon, Ludo, Dominoes, Five in a Row, Nine Men's Morris, Heads-up Hold'em, Cribbage, Speed, Lucky Seven, Video Poker, Go Fish, Spades, Mine Duel, Blackjack, Gin Rummy, Colour Clash, Dots and Boxes, Mancala, Rock Paper
+Scissors, Which Box, Odd or Even, Memory Match, Dice Party, Pong, Air Hockey, Snake Battle,
 Light Cycles, Tank Duel, Word Hunt, Volley Blobs, Brick Breaker Duel, Rally Tennis, Sumo, Asteroid
 Duel, Mini Golf, Falling Blocks Battle, Bomb Duel, Kart Race (and 3D, races and balloon battles),
 Tower Defence Duel, Crazy Eights, Liar's Dice, Anagram Duel, Word Race, Five Letters, Code Breaker, Hangman Duel, Make 24, Party Board, Party
@@ -65,6 +65,8 @@ scans in from the lobby takes its seat.
 | --- | --- |
 | **Reaction Duel** | The TV goes red… then GO! First tap wins. Tap early and your opponent gets the point. First to 3. On your own? **Reaction Rush** in the 1 player lobby: five rounds, your average time is your score. |
 | **Rock Paper Scissors** | Pick in secret on your phone; the TV reveals both. First to 3. |
+| **Which Box** | Three boxes on the TV. Each round one of you **hides** the prize and the other **seeks** it, both picking a box in secret at the same time. Found it: a point to the seeker; the wrong box: a point to the hider. Then you swap. Five rounds each way; the most points wins (level is a draw). It's all about reading each other: which box do they like? Out of time hiding: the prize is left in plain sight; out of time seeking: you didn't find it. 🤖 Against the computer: Normal notices your favourite box; Hard notices you noticing. |
+| **Odd or Even** | Each round you both show one to five fingers, picked in secret. One of you is **Odd** and the other **Even** (it swaps every round): an odd total is Odd's point, an even one Even's. First to 5. Out of time: you lose the round. 🤖 Against the computer: it watches what you tend to show. |
 | **Pong** | The classic, in real time. The whole court is on your phone too, turned so your paddle is at the bottom: drag left and right anywhere on it (or use the stick) to move your paddle. The ball speeds up every hit. First to 5. |
 | **Volley Blobs** | Beach volleyball for two bouncy blobs. Hold ◀ ▶ on your phone (or the stick) to slide and tap JUMP; where the ball hits your dome sets where it goes, so jump into it to smash. Up to 3 touches a side, and the one who lost the point serves. First to 7. |
 | **Brick Breaker Duel** | A race to break your own wall, side by side on the TV. Your wall, balls and paddle are on your phone too: drag left and right on it (or use the stick) to move your paddle; a missed ball puts back the last brick you broke (or, if you pick it, just costs a moment). Power bricks shrink your rival's paddle, give you an extra ball or add a row to their wall. First to clear their wall wins; after 2 minutes, most bricks broken (level: next brick wins). On your own? **Brick Breaker** in the 1 player lobby: the classic, lives and levels. |
@@ -123,6 +125,9 @@ scans in from the lobby takes its seat.
 | **Speed** | A race, both at once: five cards in your hand (secret, on your phone) and your pile behind them. Play a card onto either of the two middle piles if it's one higher or one lower than the top card (an ace goes on a king or a two); your hand fills back up as you go. Cards that fit glow on your phone: tap one, and if it fits both piles, tap the pile. When neither of you can go (or nobody plays for a few seconds), a card from each spare pile turns over onto the middle. First to play all 20 cards takes the round. |
 | **Cribbage** | The classic, for two phones, on a peg board on the TV. Six cards each; lay two in the crib (it counts for the dealer). A starter is cut (a jack is his heels, 2 to the dealer). Then the play: turn about, lay a card and keep the count to 31: 15 or 31 peg 2, a pair 2 (three of a kind 6, four 12), a run of three or more 1 a card; can't go? "Go": the last card under 31 pegs 1. Then each hand counts with the starter (non-dealer first): fifteens, pairs, runs, a flush and his nobs, and the crib for the dealer. First to 121 (or 61) wins on the spot. Out of time laying your two: your lowest two go in and your hand doesn't count that deal. |
 | **Lucky Seven** | Our own push-your-luck card game, on the TV with a phone or a controller: numbers 1 to 9 (lots of low ones, one 9), Doubles and Shields, all face up. Take turns: **flip** a card or **stop** and bank (after your first flip). A number you already have this round and you're bust (nothing this round), unless a Shield takes the hit; a Double doubles what you bank. Seven different numbers is a **Lucky Seven**: 15 more, and the round ends for both of you. The phone tells you how many cards left would bust you. First to 200 (or 150 or 300) at the end of a round. |
+| **Video Poker** | Poker without the bluffing, for play chips (never money). **You both get the same five cards**, and the same new cards in the same order when you draw: only what you each hold is different. Tap the cards to hold on your phone (secret till you've both locked in), then the rest are swapped. The better five-card hand takes the pot; the same hand splits it. You both put in the ante each hand (50, going up as the match goes on). Most chips after 10 hands wins. Out of time: you fold the hand. 🤖 Against the computer: Easy holds by rule of thumb; Hard works out the odds of every hold. |
+| **Go Fish** | The family card game, for two phones. Seven cards each, secret, and the rest in the pond. On your go, ask for a rank you hold: the other hands over every one and you go again; none? **Go fish**: draw one, and if it's the rank you asked for, go again. Four of a rank is a **book**, laid down at once. When all thirteen books are down, the most books wins. Every ask is shown on the TV, so remember who asked for what. Out of time: you fish without asking. 🤖 Against the computer: Hard remembers every ask. |
+| **Spades** | The trick-taking game, in the two-player draw version: you build your hand a card at a time, looking at the top card and keeping it (the next goes away unseen) or passing it and taking the next sight unseen, till you each have 13. Then bid the tricks you'll take (0 is **nil**: none at all). Follow suit if you can; spades are trumps and can't be led till one's been played. Make your bid: 10 a trick, 1 for each trick over (a **bag**; every 10 bags cost 100); fall short and lose 10 a trick bid. Nil made is 100, broken loses 100. First to 300 at the end of a hand (or the higher score after 12 hands). 🤖 Against the computer: Hard counts the cards. |
 
 ### 🎨 Casual
 
@@ -232,6 +237,8 @@ starts). The numbers above are the defaults; you can change, for example:
 | Game | Setting |
 | --- | --- |
 | Reaction Duel, Rock Paper Scissors | Points to win: 3, 5 or 7 |
+| Which Box | 5, 3 or 7 rounds each way; timed (15 s to pick) or no timer |
+| Odd or Even | Points to win: 5, 3 or 7; timed (12 s to pick) or no timer |
 | Pong | Points to win: 3, 5, 7 or 11 |
 | Volley Blobs | Points to win: 5, 7 or 11 |
 | Brick Breaker Duel | Wall: 3, 5 or 7 rows of bricks; missed ball: a brick comes back, or just a moment lost |
@@ -269,6 +276,9 @@ starts). The numbers above are the defaults; you can change, for example:
 | Speed | First to 2 or 3 rounds, or one round |
 | Cribbage | To 121 or to 61; timed (40 s to lay two in the crib, 30 s a card) or no timer |
 | Lucky Seven | First to 200, 150 or 300; timed (20 s a turn) or no timer |
+| Video Poker | 10, 6 or 15 hands; timed (30 s to hold) or no timer |
+| Go Fish | Timed (25 s a turn) or no timer |
+| Spades | To 300, 200 or 500; timed (20 s to draw, 30 s to bid, 25 s a card) or no timer |
 | Chess | 10, 5 or 15 minutes each, or no clock; one game, or first to 2 or 3 |
 | Ludo | One game, or first to 2 or 3; timed (12 s to roll, 15 s to move) or no timer |
 | Dominoes | First to 100, 50 or 150 points; timed (30 s a turn) or no timer |
@@ -334,12 +344,14 @@ PC on HDMI, the Raspberry Pi, or the Google TV box. Then:
 | Five in a Row | **D-pad** (or stick) moves your ring · **A** places a stone | |
 | Nine Men's Morris | **◀ ▶** (or **▲ ▼**) steps through what you can pick · **A** picks it · **B** puts a piece back | Code Breaker and Hangman Duel need phones (the code and the word are secret) |
 | Blackjack | Bet: **← →** picks a chip, **A** bets it · Play: **A** hit, **B** stand, **X** double, **Y** split | |
-| Lucky Seven | **A** flip a card · **B** stop and bank | Heads-up Hold'em, Speed and Cribbage need phones (the cards are secret) |
+| Lucky Seven | **A** flip a card · **B** stop and bank | Heads-up Hold'em, Speed, Cribbage, Video Poker, Go Fish and Spades need phones (the cards are secret) |
 | Lobby | **B** | Leave your seat |
 | Lobby | **Back** | Free the seats of phones that have left (shown as *Reconnecting…*) |
 | Any game | **Back / Select** | Back to the lobby |
 | Reaction Duel | any face button, bumper or trigger | Tap |
 | Rock Paper Scissors | **X** ✊ · **Y** ✋ · **B** ✌️ (or D-pad ← ↑ →) | Pick (stays secret, the TV only shows 🔒) |
+| Which Box | **X** / **◀** box 1 · **Y** / **▲** box 2 · **B** / **▶** box 3 | Pick a box (stays secret, the TV only shows 🔒) |
+| Odd or Even | **◀** or **X** 1 · **▲** or **Y** 2 · **▶** or **B** 3 · **▼** 4 · **A** 5 | Show your fingers (secret till the reveal) |
 | Pong | **Left stick** or **D-pad ↑↓** | Move your paddle |
 | Volley Blobs | **Left stick** or **D-pad ← →**, **A** | Slide, jump |
 | Brick Breaker Duel | **Left stick** or **D-pad ← →** | Move your paddle |

@@ -9,9 +9,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (111)
+## Games (116)
 
-### ⚔️ Competitive (36)
+### ⚔️ Competitive (38)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -51,8 +51,10 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Battleship | `battleship` | Hide your fleet on your phone, then take turns firing at the enemy grid. Sink every ship to win. Or Ultimate: commanders, shaped ships, skills and new seas. | `server/games/battleship-bot.js`, `server/games/battleship-ultimate.js`, `server/games/battleship.js`, `public/games/battleship/`, `test/battleship-bot.test.js`, `test/battleship-ultimate.test.js`, `test/battleship.test.js`, `test/sounds.test.js` |
 | Connect Four | `connect-four` | Drop discs, line up four in a row before your rival does. Tap a column on your phone. First to 3. | `server/games/connect-four-bot.js`, `server/games/connect-four.js`, `public/games/connect-four/`, `test/connect-four.test.js`, `test/sounds.test.js` |
 | Memory Match | `memory-match` | Take turns flipping two cards: find a pair and go again. Remember what your rival turned over. Most pairs wins. Or Race: your own board each, first to clear it. | `server/games/memory-match-bot.js`, `server/games/memory-match.js`, `public/games/memory-match/`, `test/memory-match.test.js`, `test/solo-looks.test.js`, `test/solo-memory.test.js` |
+| Which Box | `which-box` | Hide the prize in one of three boxes; the other guesses which. Swap and swap again: read them, fool them. | `server/games/which-box.js`, `server/games/guess-bots.js`, `public/games/which-box/`, `test/which-box.test.js` |
+| Odd or Even | `odd-even` | Show one to five fingers in secret. Odd total, a point to Odd; even, to Even. Guess their hand. First to 5. | `server/games/odd-even.js`, `server/games/guess-bots.js`, `public/games/odd-even/`, `test/odd-even.test.js` |
 
-### 🎲 Dice & Board (20)
+### 🎲 Dice & Board (23)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -75,6 +77,9 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Speed | `speed` | Both at once: slap cards one higher or lower onto the two middle piles. First to play every card wins the round. | `server/games/speed-bot.js`, `server/games/speed.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/speed/`, `test/speed.test.js` |
 | Cribbage | `cribbage` | Lay two for the crib, peg fifteens, pairs and runs as you play to 31, then count your hand. First to 121. | `server/games/cribbage-bot.js`, `server/games/cribbage.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/cribbage/`, `test/cribbage.test.js` |
 | Lucky Seven | `lucky-seven` | Flip a card or bank what you have: a number you already hold and you're bust. Seven different numbers is a Lucky Seven. First to 200. | `server/games/lucky-seven-bot.js`, `server/games/lucky-seven.js`, `public/games/lucky-seven/`, `test/lucky-seven.test.js` |
+| Video Poker | `video-poker` | The same five cards for you both, and the same new ones: hold the best and draw. Better hand takes the pot. | `server/games/video-poker-bot.js`, `server/games/video-poker.js`, `server/games/holdem-hands.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/video-poker/`, `test/video-poker.test.js` |
+| Go Fish | `go-fish` | Ask for a rank you hold: they hand them over, or you go fish. Four of a kind is a book; most books wins. | `server/games/go-fish-bot.js`, `server/games/go-fish.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/go-fish/`, `test/go-fish.test.js` |
+| Spades | `spades` | Draw your hand a card at a time, bid your tricks, then play: spades are trumps. Make your bid, mind the bags. First to 300. | `server/games/spades-bot.js`, `server/games/spades.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/spades/`, `test/spades.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party-bot.js`, `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
 ### 🤝 Co-op & casual (8)

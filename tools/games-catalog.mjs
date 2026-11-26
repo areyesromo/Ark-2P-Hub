@@ -29,6 +29,11 @@ const EXTRA = {
   holdem: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
   speed: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
   cribbage: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  'video-poker': ['server/games/holdem-hands.js', 'public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  'go-fish': ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  spades: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  'which-box': ['server/games/guess-bots.js'],
+  'odd-even': ['server/games/guess-bots.js'],
 };
 
 const exists = (rel) => fs.existsSync(path.join(ROOT, rel));

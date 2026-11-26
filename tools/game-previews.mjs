@@ -20,7 +20,7 @@ const { chromium } = require('playwright');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const emit = (s, ev, data) => new Promise((resolve) => s.emit(ev, data, resolve));
 // The 3D games take a moment longer to build their scene.
-const WAIT = { 'kart-race-3d': 9000, 'ten-pin': 7000, 'tower-stack': 7000, 'dungeon-duo': 8000, 'marble-maze': 7000, 'party-board': 8000 };
+const WAIT = { 'kart-race-3d': 9000, 'ten-pin': 7000, 'tower-stack': 7000, 'dungeon-duo': 8000, 'marble-maze': 7000, 'party-board': 8000, 'which-box': 900, 'odd-even': 900, 'video-poker': 900 };
 
 // A few games need more than "go" to show something worth seeing: both ready up, a word picked
 // and drawn, the gas held.
@@ -119,6 +119,19 @@ const NUDGE = {
   },
   'lucky-seven': async (players) => {
     for (let k = 0; k < 5; k++) { both(players, { type: 'flip' }); await sleep(300); }
+  },
+  'video-poker': async (players) => {
+    players[0].emit('game:input', { type: 'hold', hold: [true, true, false, false, false] });
+    players[1].emit('game:input', { type: 'hold', hold: [false, false, true, true, true] });
+  },
+  spades: async (players) => {
+    for (let k = 0; k < 10; k++) { both(players, { type: 'draw', keep: k % 3 > 0 }); await sleep(250); }
+  },
+  // The guessing games at a reveal.
+  'which-box': async (players) => { both(players, { type: 'pick', box: 1 }); },
+  'odd-even': async (players) => {
+    players[0].emit('game:input', { type: 'pick', fingers: 3 });
+    players[1].emit('game:input', { type: 'pick', fingers: 4 });
   },
   'kart-race': race,
   'kart-race-3d': race,
