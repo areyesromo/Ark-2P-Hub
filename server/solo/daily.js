@@ -48,6 +48,7 @@ export const POOL = [
   { game: 'zip', settings: { board: 'random7' } },
   { game: 'traffic', settings: { board: 'random' } },
   { game: 'pipes', settings: { size: 7, edges: 'solid' } },
+  { game: 'futoshiki', settings: { size: 6 } },
 ];
 
 /**

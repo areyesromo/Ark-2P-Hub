@@ -177,6 +177,11 @@ export const ACHIEVEMENTS = [
     { id: 'kenken-5-3', icon: '⏱️', name: 'Mental maths', desc: 'KenKen: solve a 5 × 5 in under 3 minutes.', check: (r, v) => scored(r) && v.n === 5 && r.score < 3 * MIN },
     { id: 'kenken-6', icon: '🧮', name: 'Calculator brain', desc: 'KenKen: solve a 6 × 6.', check: (r, v) => scored(r) && v.n === 6 },
   ]),
+  ...game('futoshiki', [
+    { id: 'futoshiki-solve', icon: '⋖', name: 'More or less', desc: 'Futoshiki: solve a puzzle.', check: (r) => scored(r) },
+    { id: 'futoshiki-5-3', icon: '⏱️', name: 'Greater than', desc: 'Futoshiki: solve a 5 × 5 in under 3 minutes.', check: (r, v) => scored(r) && v.n === 5 && r.score < 3 * MIN },
+    { id: 'futoshiki-7', icon: '🧠', name: 'Seven up', desc: 'Futoshiki: solve a 7 × 7 without a hint.', check: (r, v) => scored(r) && v.n === 7 && !v.hints },
+  ]),
   ...game('lights', [
     { id: 'lights-solve', icon: '💡', name: 'Lights out', desc: 'Lights Out: switch every light off.', check: (r) => scored(r) },
     { id: 'lights-par', icon: '⭐', name: 'On par', desc: 'Lights Out: solve a Hard puzzle in par or fewer.', check: (r, v) => scored(r) && r.variant === 'Hard' && r.score <= v.par },

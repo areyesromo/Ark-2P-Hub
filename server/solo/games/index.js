@@ -52,6 +52,7 @@ import { LEVELS as ZIP_LEVELS } from './zip-levels.js';
 import traffic, { BOARDS as TRAFFIC_BOARDS } from './traffic.js';
 import { LEVELS as TRAFFIC_LEVELS } from './traffic-levels.js';
 import pipes, { SIZES as PIPE_SIZES } from './pipes.js';
+import futoshiki, { SIZES as FUTOSHIKI_SIZES } from './futoshiki.js';
 import flood, { SIZES as FLOOD_SIZES } from './flood.js';
 import { soloMastermind as mastermind, LEVELS as MASTER_LEVELS } from '../../games/code-breaker-solo.js'; // (a game for both modes: Code Breaker's 1 player one)
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
@@ -203,6 +204,9 @@ export const SOLO_GAMES = [
   }),
   withSetup(kenken, {
     size: { title: 'Size', values: KENKEN_SIZES, label: (n) => `${n} × ${n} (numbers 1 to ${n})${n === 4 ? ', a warm-up' : n === 6 ? ', a real test' : ''}` },
+  }),
+  withSetup(futoshiki, {
+    size: { title: 'Size', values: FUTOSHIKI_SIZES, label: (n) => `${n} × ${n} (numbers 1 to ${n})${n === 4 ? ', a warm-up' : n === 7 ? ', a real test' : ''}` },
   }),
   withSetup(nonogram, {
     size: { title: 'Size', values: [10, 5, 15], label: (n) => `${n} × ${n}${n === 5 ? ' (a warm-up)' : n === 15 ? ' (a long one)' : ''}` },

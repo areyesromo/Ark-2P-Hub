@@ -1,0 +1,41 @@
+/* Futoshiki: paper squares with the signs in the gaps. The board keeps its own paper colours (it's
+   the puzzle); the frame, keys and text follow the theme. */
+.ft-board { display: grid; grid-template-columns: repeat(calc(var(--n) - 1), 1fr 0.42fr) 1fr; grid-template-rows: repeat(calc(var(--n) - 1), 1fr 0.42fr) 1fr; aspect-ratio: 1; padding: 0.5em; background: #f4efe3; border-radius: var(--r-md); box-shadow: inset 0 0 0 3px #d6ccb4; user-select: none; -webkit-user-select: none; }
+.ft-sq { position: relative; min-width: 0; padding: 0; margin: 0; border: 2px solid #b9ad92; border-radius: 6px; background: #fffdf7; color: #2f5bd8; display: grid; place-items: center; font-size: inherit; line-height: 1; }
+.ft-sq b { font-size: 0.8em; font-weight: 700; }
+.ft-sq.given { background: #ebe4d3; color: #231f18; }
+.ft-sq.given b { font-weight: 900; }
+.ft-sq.sel { border-color: #2f5bd8; box-shadow: 0 0 0 3px rgba(47, 91, 216, 0.35); }
+.ft-sq.clash { background: #fde6ea; color: #c81e4b; border-color: #e11d48; }
+.ft-sq.hint { animation: ft-hint 900ms ease-in-out 2; }
+@keyframes ft-hint { 50% { box-shadow: 0 0 0 4px #facc15; } }
+.ft-notes { display: grid; grid-template-columns: repeat(var(--cols), 1fr); width: 88%; height: 88%; font-size: 0.24em; color: #6b6150; }
+.ft-notes i { font-style: normal; display: grid; place-items: center; }
+.ft-sign { display: grid; place-items: center; color: #7a5a1e; font-weight: 900; font-size: 0.5em; }
+.ft-board.won .ft-sq { animation: ft-win 700ms ease-in-out 2; }
+@keyframes ft-win { 50% { background: #dcfce7; } }
+.ft-rules { color: var(--muted); font-size: var(--fs-sm); text-align: center; margin: 0; }
+.ft-paused { color: var(--warn); font-weight: 800; }
+
+/* ---- TV ---- */
+.ft-host { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; gap: 0.7rem; }
+.ft-top { display: flex; gap: 2.2rem; align-items: baseline; color: var(--muted); font-size: var(--fs-md); }
+.ft-top strong { color: var(--text); font-size: 1.4em; font-variant-numeric: tabular-nums; }
+.ft-host .ft-wrap { flex: 1; min-height: 0; width: 100%; display: flex; align-items: center; justify-content: center; container-type: size; }
+.ft-host .ft-board { width: min(100cqw, 100cqh); font-size: calc(min(100cqw, 100cqh) / (var(--n) * 1.42) * 0.8); }
+.ft-pick { display: flex; gap: 0.4rem; min-height: 1.6rem; }
+.ft-pick span { min-width: 1.8rem; text-align: center; border-radius: var(--r-sm); background: var(--panel); color: var(--muted); font-weight: 800; }
+.ft-pick span.on { background: var(--p1); color: var(--on-bright); }
+
+/* ---- phone ---- */
+.ft-phone { flex: 1; min-height: 0; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 14px; text-align: center; }
+.ft-phone .info { display: flex; justify-content: space-between; gap: 8px; color: var(--muted); font-size: var(--fs-sm); padding: 0 4px; }
+.ft-phone .info strong { color: var(--me); }
+.ft-phone .ft-board { width: 100%; font-size: calc((100vw - 22px) / (var(--n) * 1.42) * 0.8); }
+.ft-keys { display: grid; grid-template-columns: repeat(var(--k), 1fr); gap: 6px; }
+.ft-keys button { padding: 12px 0; font-size: var(--fs-lg); font-weight: 800; min-width: 0; }
+.ft-keys .on { background: var(--warn); color: var(--on-warn); }
+.ft-tools { display: flex; gap: 6px; flex-wrap: wrap; }
+.ft-tools button { flex: 1 1 22%; padding: 10px 4px; font-size: var(--fs-sm); min-width: 0; }
+.ft-tools .armed { background: var(--bad); color: var(--on-bright); }
+@media (prefers-reduced-motion: reduce) { .ft-sq.hint, .ft-board.won .ft-sq { animation: none; } }
