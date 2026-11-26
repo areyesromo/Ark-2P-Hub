@@ -1,0 +1,61 @@
+/* Lucky Seven: its own bright cards on a dark green table. The cards keep their own paint; the
+   frame, text and panels follow the theme. */
+.l7-hand { display: flex; flex-wrap: wrap; gap: 0.4em; min-height: calc(var(--l7-w, 4rem) * 1.4); }
+.l7-card { position: relative; width: var(--l7-w, 4rem); aspect-ratio: 5 / 7; border-radius: 0.5em; display: grid; place-items: center; background: linear-gradient(160deg, #fff, #f3f0ea); box-shadow: 0 4px 10px -2px rgba(0, 0, 0, 0.5), inset 0 0 0 0.3em var(--paint, #ccc); color: var(--paint, #333); font-weight: 900; }
+.l7-card b { font-size: calc(var(--l7-w, 4rem) * 0.55); line-height: 1; }
+.l7-card small { position: absolute; bottom: 8%; font-size: calc(var(--l7-w, 4rem) * 0.15); font-weight: 800; }
+.l7-card.double { --paint: #c08a10; background: linear-gradient(160deg, #fff7d6, #f6d36b); color: #7a5608; }
+.l7-card.shield { --paint: #2563eb; background: linear-gradient(160deg, #e0ecff, #9cc0ff); color: #1e3a8a; }
+.l7-card.double b, .l7-card.shield b { font-size: calc(var(--l7-w, 4rem) * 0.42); }
+.l7-card.back { background: repeating-linear-gradient(45deg, #0e7a52 0 6px, #0b6343 6px 12px); box-shadow: inset 0 0 0 0.25em #fff, 0 4px 10px -2px rgba(0, 0, 0, 0.5); color: #fff; }
+.l7-card.back span { font-size: calc(var(--l7-w, 4rem) * 0.5); text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); }
+.l7-card.fresh { animation: l7-flip 0.45s cubic-bezier(0.3, 1.4, 0.6, 1); }
+@keyframes l7-flip { from { transform: rotateY(90deg) scale(1.2); } }
+
+/* ---- TV ---- */
+.l7-host { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+.l7-head { display: flex; justify-content: center; align-items: center; gap: 3rem; color: var(--muted); font-size: 1.2rem; }
+.l7-head strong { color: var(--text); font-size: 1.5rem; }
+.l7-deck { display: inline-flex; align-items: center; gap: 0.5rem; --l7-w: 2.2rem; }
+.l7-deck b { color: var(--text); font-size: 1.4rem; }
+.l7-table { position: relative; flex: 1; min-height: 0; display: grid; grid-template-rows: 1fr 1fr; gap: 1rem; padding: 1.2rem 1.6rem; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 40%, #1f6b47, #123f2b 75%); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5); color: #fff; --l7-w: 5.2rem; }
+.l7-row { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.8rem 1.2rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.22); transition: box-shadow 0.2s, opacity 0.2s; }
+.l7-row.p1.turn { box-shadow: 0 0 0 3px var(--p1), 0 0 26px -6px var(--p1); }
+.l7-row.p2.turn { box-shadow: 0 0 0 3px var(--p2), 0 0 26px -6px var(--p2); }
+.l7-row.bust .l7-hand { opacity: 0.45; filter: grayscale(0.7); }
+.l7-row header { display: flex; justify-content: space-between; align-items: baseline; font-size: 1.4rem; font-weight: 800; }
+.l7-row header > span:first-child { filter: brightness(1.2); }
+.l7-score { font-size: 1.8rem; font-variant-numeric: tabular-nums; }
+.l7-score small { font-size: 0.55em; opacity: 0.7; }
+.l7-bar { height: 0.5rem; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.15); overflow: hidden; }
+.l7-bar i { display: block; height: 100%; background: #f2cf6b; transition: width 0.3s; }
+.l7-row footer { min-height: 1.6rem; font-size: 1.15rem; }
+.l7-row footer b { font-size: 1.3em; color: #f2cf6b; }
+.l7-badge { padding: 0.1em 0.7em; border-radius: var(--r-pill); font-weight: 800; background: rgba(255, 255, 255, 0.2); }
+.l7-badge.bust { background: #c81e3a; }
+.l7-badge.lucky { background: #16a34a; }
+.l7-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 0.6rem 1.6rem; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.65); font-size: 1.6rem; font-weight: 800; white-space: nowrap; }
+.l7-banner .ark-result { font-size: 2rem; }
+
+/* ---- phone ---- */
+.l7-phone { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 10px 10px 14px; --l7-w: 3.2rem; }
+.l7-ptop { display: flex; justify-content: space-between; color: var(--muted); }
+.l7-ptop b { color: var(--text); }
+.l7-them { display: flex; align-items: center; gap: 8px; color: var(--muted); --l7-w: 2rem; }
+.l7-them .l7-hand { min-height: 2.8rem; }
+.l7-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.l7-msg small { color: var(--muted); }
+.l7-msg .won { color: var(--good); font-weight: 900; }
+.l7-msg .lost { color: var(--bad); font-weight: 900; }
+.l7-msg .big { font-size: 1.6rem; }
+.l7-mine { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 12px; border-radius: var(--r-md); background: #164c34; }
+.l7-mine .l7-hand { justify-content: center; }
+.l7-sum { font-size: 2rem; font-weight: 900; color: #f2cf6b; }
+.l7-btns { margin-top: auto; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.l7-btns button { padding: 26px 0; border: 0; border-radius: var(--radius); font-size: 1.7rem; font-weight: 900; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.l7-btns small { font-size: 0.9rem; font-weight: 700; opacity: 0.85; }
+.l7-flip { background: var(--good); color: var(--on-good); }
+.l7-stop { background: var(--warn); color: var(--on-warn); }
+.l7-btns button:disabled { opacity: 0.35; }
+.l7-phone .rematch { margin-top: auto; }
+@media (prefers-reduced-motion: reduce) { .l7-card.fresh { animation: none; } }
