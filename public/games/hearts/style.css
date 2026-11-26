@@ -1,0 +1,4 @@
+/* Hearts: Spades' table (loaded with it), plus each player's point cards taken this hand. */
+.hrt-taken { display: flex; flex-wrap: wrap; justify-content: center; min-height: 3.8rem; --card-w: 2.4rem; }
+.hrt-taken .bj-card + .bj-card { margin-left: -1.5rem; }
+.spd-ptop small { color: var(--muted); align-self: center; }
