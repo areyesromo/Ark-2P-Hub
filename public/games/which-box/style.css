@@ -1,0 +1,57 @@
+/* ---- TV ---- */
+
+.wb-host { flex: 1; display: flex; flex-direction: column; gap: 1.4rem; font-size: 1.2rem; }
+.wb-pts { font-size: 2.4rem; font-weight: 900; margin: 0 0.6rem; }
+.wb-caption { text-align: center; font-size: 2rem; font-weight: 800; min-height: 1.3em; }
+
+.wb-boxes { flex: 1; display: flex; justify-content: center; align-items: center; gap: 4rem; }
+.wb-box { position: relative; width: 14rem; height: 13rem; display: flex; flex-direction: column; align-items: center; justify-content: flex-end; }
+/* A cardboard box (its colour is the thing itself) with a lid that lifts at the reveal. */
+.wb-in {
+  width: 13rem; height: 9rem; border-radius: 0 0 var(--r-md) var(--r-md);
+  background: linear-gradient(#c8955a, #a8743e); border: 4px solid #7a5025;
+  display: grid; place-items: center; font-size: 5.5rem;
+}
+.wb-lid {
+  width: 14rem; height: 2.6rem; border-radius: var(--r-sm); background: #d9a86a; border: 4px solid #7a5025;
+  transition: transform 0.5s ease-out;
+}
+.wb-box.open .wb-lid { transform: translateY(-2.4rem) rotate(-14deg); }
+.wb-box.open:not(.prize) .wb-in { background: linear-gradient(#8f6a40, #6d4c2a); }
+.wb-box.prize .wb-in { box-shadow: 0 0 3rem -0.4rem gold; }
+.wb-num { position: absolute; bottom: -2.6rem; font-size: 1.8rem; font-weight: 900; color: var(--muted); }
+.wb-box.sought.p1 .wb-in { outline: 6px solid var(--p1); outline-offset: 6px; }
+.wb-box.sought.p2 .wb-in { outline: 6px solid var(--p2); outline-offset: 6px; }
+.wb-box.miss { animation: wb-shake 0.4s 0.4s; }
+@keyframes wb-shake { 25% { transform: translateX(-10px); } 75% { transform: translateX(10px); } }
+
+.wb-seats { display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; margin-top: 2rem; }
+.wb-seat { background: var(--panel); border: 3px solid var(--line); border-radius: var(--radius); padding: 1rem 1.4rem; text-align: center; }
+.wb-seat.p1.locked { border-color: var(--p1); }
+.wb-seat.p2.locked { border-color: var(--p2); }
+.wb-role { font-size: 1.5rem; font-weight: 800; }
+.wb-state { color: var(--muted); min-height: 1.2em; }
+.wb-keys { display: flex; justify-content: center; gap: 1.4rem; margin-top: 0.5rem; }
+.wb-keys b { padding: 0.1rem 0.5rem; border-radius: var(--r-sm); background: var(--bg-2); border: 2px solid var(--line); }
+
+.wb-trail { display: flex; justify-content: center; gap: 0.5rem; min-height: 2.2rem; font-size: 1.3rem; }
+.wb-trail span { width: 2.2rem; height: 2.2rem; border-radius: var(--r-pill); display: grid; place-items: center; border: 3px solid; }
+.wb-trail .p1 { border-color: var(--p1); }
+.wb-trail .p2 { border-color: var(--p2); }
+
+/* ---- phone ---- */
+
+.wb-phone { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 16px; text-align: center; }
+.wb-score, .wb-msg { color: var(--muted); }
+.wb-msg { font-size: 1.15rem; margin: 4px 0; }
+.wb-msg strong { color: var(--text); }
+.wb-picks { flex: 1; display: flex; flex-direction: column; gap: 12px; }
+.wb-picks button { flex: 1; font-size: 3.2rem; display: flex; align-items: center; justify-content: center; gap: 16px; background: var(--panel); border: 3px solid var(--line); }
+.wb-picks button span { font-size: 1.3rem; }
+.wb-picks button.picked { border-color: var(--me); background: var(--bg-2); }
+.wb-picks button.dim { opacity: 0.45; }
+.wb-big { font-size: 6rem; margin: auto 0 0; }
+.wb-out { font-size: 2rem; font-weight: 900; }
+.wb-out.won { color: var(--good); }
+.wb-out.lost { color: var(--bad); }
+.wb-phone .rematch { margin-top: auto; }
