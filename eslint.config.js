@@ -4,7 +4,7 @@ import js from '@eslint/js';
 import globals from 'globals';
 
 // The helpers the browser scripts share through window (common.js's Ark, and each game's own).
-const ARK = ['Ark', 'ArkMini', 'ArkDice', 'ArkGolf', 'ArkSound', 'ArkMotion', 'ArkSea', 'ArkMemory', 'ArkWords', 'ArkPads', 'ArkKartItems', 'ArkLD', 'ArkMusic', 'ArkTilt', 'ArkDial', 'ArkCK', 'ArkC4', 'ArkDB', 'ArkMC', 'ArkLooks', 'ArkReversi', 'ArkBJ', 'ArkFL', 'ArkMD', 'ArkBG', 'ArkGin', 'ArkCC', 'ArkChess', 'ArkLudo', 'ArkDom', 'ArkGomoku', 'ArkMorris', 'ArkCode', 'ArkHang','ArkTango','ArkZip','ArkTraffic','ArkPipes','ArkFutoshiki','ArkPeg','ArkHashi','ArkSlither','ArkPoker', 'ArkRush', 'ArkPairs', 'ArkReactionRush', 'ArkTrivia', 'ArkWordSearch', 'ArkSweeper', 'ArkBreaker', 'ArkStackSolo', 'ArkAsteroids', 'ArkBlocks', 'ArkMastermind'];
+const ARK = ['Ark', 'ArkMini', 'ArkDice', 'ArkGolf', 'ArkSound', 'ArkMotion', 'ArkSea', 'ArkMemory', 'ArkWords', 'ArkPads', 'ArkKartItems', 'ArkLD', 'ArkMusic', 'ArkTilt', 'ArkDial', 'ArkCK', 'ArkC4', 'ArkDB', 'ArkMC', 'ArkLooks', 'ArkReversi', 'ArkBJ', 'ArkFL', 'ArkMD', 'ArkBG', 'ArkGin', 'ArkCC', 'ArkChess', 'ArkLudo', 'ArkDom', 'ArkGomoku', 'ArkMorris', 'ArkCode', 'ArkHang','ArkTango','ArkZip','ArkTraffic','ArkPipes','ArkFutoshiki','ArkPeg','ArkHashi','ArkSlither','ArkPoker','ArkCrib', 'ArkRush', 'ArkPairs', 'ArkReactionRush', 'ArkTrivia', 'ArkWordSearch', 'ArkSweeper', 'ArkBreaker', 'ArkStackSolo', 'ArkAsteroids', 'ArkBlocks', 'ArkMastermind'];
 
 export default [
   { ignores: ['node_modules/', 'dist/', 'data/', 'desktop/bin/', 'docs/', 'asset-references/'] },
