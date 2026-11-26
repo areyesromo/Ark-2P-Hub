@@ -48,17 +48,14 @@ Eights does). Never make up a card at random. Famous trademarked names get our o
 | Idea | How it plays | Look |
 |---|---|---|
 | Roulette | Both bet on the same spin; most chips after ten spins. | 3D base wheel |
-| Baccarat | Bet on player, banker or tie; quick rounds. | 2D |
 | Craps | Take turns as the shooter, the other bets with or against. | 3D base dice |
 | Slots duel | Same machine, ten pulls each, a bonus round; pure luck, short. | 2D |
-| Red Dog / Acey-Deucey | Bet whether the next card falls between two. | 2D |
 
 ## Card games
 
 | Idea | How it plays | Look |
 |---|---|---|
 | War | Flip and compare, ties go to war. Pure luck, for little ones. | 2D |
-| Two-player Hearts | The 2-player draw-a-card version of Hearts (Spades is in). | 2D |
 
 ### Family card games (own decks, our own names)
 
@@ -94,14 +91,12 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 | Snakes & Ladders | Pure luck, quick and silly; for kids. | 2D |
 | Chinese Checkers | The 2-player star board, hop across to the far point. | 2D |
 | Go (9x9) | Surround territory; a small board keeps it short. | 2D |
-| Hex | Join your two sides of a rhombus board; no draws. | 2D |
 | Wall maze race ("Quoridor"-style) | Move to the far side or place a wall to block; path must stay open. | 2D, 3D base |
 | Hidden ranks ("Stratego"-style) | Hidden armies on a board; attacks reveal ranks. Hidden info stays on each phone. | 2D |
 | Who Is It (deduction) | Yes/no questions about faces to find the other's secret pick. | 2D |
 | Yacht (five dice) | Five dice, three rolls, fill the score card. | 3D base dice |
 | Farkle / Pig | Push your luck dice: roll on or bank. | 3D base dice |
 | Shut the Box | Roll and close numbered tiles that add up; lowest left wins. | 2D |
-| Ultimate Tic-tac-toe | Nine boards; where you play sends the other to that board. | 2D |
 | Word Tiles ("Scrabble"-style) | Letter tiles on a bonus board, our word list. | 2D |
 
 Already in the hub: Checkers, Connect Four, Mancala, Dots and Boxes, Battleship, Liar's Dice,

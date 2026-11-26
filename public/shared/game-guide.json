@@ -270,7 +270,7 @@
  "lucky-seven": {
   "rules": "Our own push-your-luck card game, on the TV with a phone or a controller: numbers 1 to 9 (lots of low ones, one 9), Doubles and Shields, all face up. Take turns: <strong>flip</strong> a card or <strong>stop</strong> and bank (after your first flip). A number you already have this round and you're bust (nothing this round), unless a Shield takes the hit; a Double doubles what you bank. Seven different numbers is a <strong>Lucky Seven</strong>: 15 more, and the round ends for both of you. The phone tells you how many cards left would bust you. First to 200 (or 150 or 300) at the end of a round.",
   "settings": "First to 200, 150 or 300; timed (20 s a turn) or no timer",
-  "controls": "<strong>A</strong> flip a card · <strong>B</strong> stop and bank · Heads-up Hold'em, Speed, Cribbage, Video Poker, Go Fish and Spades need phones (the cards are secret)"
+  "controls": "<strong>A</strong> flip a card · <strong>B</strong> stop and bank · Heads-up Hold'em, Speed, Cribbage, Video Poker, Go Fish, Spades and Hearts need phones (the cards are secret)"
  },
  "video-poker": {
   "rules": "Poker without the bluffing, for play chips (never money). <strong>You both get the same five cards</strong>, and the same new cards in the same order when you draw: only what you each hold is different. Tap the cards to hold on your phone (secret till you've both locked in), then the rest are swapped. The better five-card hand takes the pot; the same hand splits it. You both put in the ante each hand (50, going up as the match goes on). Most chips after 10 hands wins. Out of time: you fold the hand. 🤖 Against the computer: Easy holds by rule of thumb; Hard works out the odds of every hold.",
@@ -280,9 +280,33 @@
   "rules": "The family card game, for two phones. Seven cards each, secret, and the rest in the pond. On your go, ask for a rank you hold: the other hands over every one and you go again; none? <strong>Go fish</strong>: draw one, and if it's the rank you asked for, go again. Four of a rank is a <strong>book</strong>, laid down at once. When all thirteen books are down, the most books wins. Every ask is shown on the TV, so remember who asked for what. Out of time: you fish without asking. 🤖 Against the computer: Hard remembers every ask.",
   "settings": "Timed (25 s a turn) or no timer"
  },
+ "hearts": {
+  "rules": "The two-player draw version: build your hand a card at a time just like Spades, then play 13 tricks: follow suit if you can, and the highest of the suit led takes it (no trumps). Every heart you take costs a point, the queen of spades 13, and you can't lead a heart till one's been played. When someone reaches 50 (or 100 or 30), the <strong>lower</strong> score wins. Out of time: your highest card that may go. 🤖 Against the computer: it ducks and dumps the queen on you; Hard keeps track of the cards and the suits you're out of.",
+  "settings": "To 50, 100 or 30 points; timed (20 s to draw, 25 s a card) or no timer"
+ },
  "spades": {
   "rules": "The trick-taking game, in the two-player draw version: you build your hand a card at a time, looking at the top card and keeping it (the next goes away unseen) or passing it and taking the next sight unseen, till you each have 13. Then bid the tricks you'll take (0 is <strong>nil</strong>: none at all). Follow suit if you can; spades are trumps and can't be led till one's been played. Make your bid: 10 a trick, 1 for each trick over (a <strong>bag</strong>; every 10 bags cost 100); fall short and lose 10 a trick bid. Nil made is 100, broken loses 100. First to 300 at the end of a hand (or the higher score after 12 hands). 🤖 Against the computer: Hard counts the cards.",
   "settings": "To 300, 200 or 500; timed (20 s to draw, 30 s to bid, 25 s a card) or no timer"
+ },
+ "hex": {
+  "rules": "A board of hexagons (9×9, or 11 or 7). Player 1 owns the top and bottom edges, player 2 the left and right; take turns placing a stone anywhere, and the first to join their two edges with one unbroken chain wins. There are no draws: a full board always has exactly one chain. Starting is a big advantage, so with the <strong>swap rule</strong> (on to start with), after the first stone the other player may take it as their own instead of playing. Tap a hexagon twice on your phone (or once and Place). 🤖 Against the computer: it plays thousands of random games from the board as it stands and picks the move that wins most; Hard also guards its \"bridges\".",
+  "settings": "9×9, 11×11 or 7×7; the swap rule on or off; one game, or first to 2 or 3; timed (30 s a move) or no timer",
+  "controls": "<strong>D-pad</strong> (or stick) moves your ring · <strong>A</strong> places a stone · <strong>Y</strong> swaps (when you may)"
+ },
+ "ultimate-ttt": {
+  "rules": "Nine little noughts-and-crosses boards make one big one. Take turns placing your mark (✕ or ◯); the square you pick sends the other player to the matching board (top-right square: top-right board). Three in a row on a little board wins it; three little boards in a row wins the game. Sent to a board that's won or full? Play anywhere open. No line left: a draw. 🤖 Against the computer: a game-tree search that gets deeper with each level.",
+  "settings": "One game, or first to 2 or 3; timed (30 s a move) or no timer",
+  "controls": "<strong>D-pad</strong> (or stick) moves your ring · <strong>A</strong> places your mark"
+ },
+ "red-dog": {
+  "rules": "Casino Red Dog, head to head, for play chips (never money): 1,000 each. Each hand you both put in the ante (50) and <strong>the same two cards</strong> are turned up for you both; the gap between them is the spread. Decide in secret: stay, or raise one or two antes more, betting the next card falls in between. Inside pays 5 to 1 on a spread of 1, 4 to 1 on 2, 2 to 1 on 3, evens on more; outside, or matching a card, loses. Next to each other: antes back; a pair: three of a kind pays 11 to 1. One deck, all face up, and your phone tells you how many cards left fall inside. Most chips after 12 hands. Out of time: you fold the ante. 🤖 Against the computer: Hard counts the cards and plays the score.",
+  "settings": "12, 8 or 16 hands; timed (15 s to raise) or no timer",
+  "controls": "<strong>B</strong> stay · <strong>A</strong> raise one ante · <strong>Y</strong> raise two"
+ },
+ "baccarat": {
+  "rules": "Punto banco, head to head, for play chips (never money): 1,000 each. Each coup you both bet in secret on <strong>Player</strong>, <strong>Banker</strong> or a <strong>Tie</strong> (25 to 500), and then one coup is dealt for you both from a six-deck shoe by the house rules: closest to 9 wins (only the last digit counts, so 7 + 8 is 5). Player pays evens, Banker evens less 5%, Tie 8 to 1. Most chips after 10 coups. It's you against each other, not the house: ahead? bet what they bet. Out of time: you sit the coup out and lose 25. 🤖 Against the computer: Hard reads your bets.",
+  "settings": "10, 6 or 15 coups; timed (20 s to bet) or no timer",
+  "controls": "<strong>X</strong> Player · <strong>B</strong> Banker · <strong>Y</strong> Tie · <strong>◀ ▶</strong> the amount · <strong>A</strong> places the bet"
  },
  "dice-party": {
   "rules": "Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards side by side (the numbers on the left, the combos on the right as 3× and 4× of a kind, FH full house, SM and LG straights, 5× five of a kind and CH chance), with what each open box would score. Highest total wins. 📱 <strong>No TV needed</strong>: pick the <strong>Handheld</strong> screen and each phone shows the whole scorecard (yours and theirs, the bonus and the totals) with the dice and Roll in a tray at the bottom; tap a box in your column, then tap it again to score.",

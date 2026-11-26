@@ -4,6 +4,18 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.76
+
+- ⬢ Hex: join your two edges with one chain of stones on a board of hexagons; no draws, and the
+  swap rule keeps it fair.
+- #️⃣ Ultimate Tic-tac-toe: nine little boards in one big one, and where you play sends the other
+  player to that board. Win three boards in a row.
+- ♥️ Hearts for two: draw your hand a card at a time, then dodge the hearts and the queen of spades.
+  Lowest score wins.
+- 🐕 Red Dog: the same two cards for you both; raise in secret if you think the next falls in between.
+- 🎴 Baccarat: bet in secret on Player, Banker or a Tie, then one coup is dealt for you both.
+- 🤖 All five can be played against the computer, at three levels.
+
 ## 0.1.75
 
 - 🎰 Video Poker: you both get the same five cards and the same new ones; hold the best and draw,
