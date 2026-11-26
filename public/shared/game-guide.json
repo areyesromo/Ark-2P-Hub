@@ -174,6 +174,16 @@
   "settings": "Take turns or Race, 16, 24 or 36 cards, the pictures (animals, food, sports, things, faces, nature, space &amp; travel, ocean, or a mix), 10, 20 or 30 s per turn, or no timer",
   "controls": "<strong>D-pad</strong> moves a cursor over the cards on the TV, <strong>A</strong> flips one (on your turn)"
  },
+ "which-box": {
+  "rules": "Three boxes on the TV. Each round one of you <strong>hides</strong> the prize and the other <strong>seeks</strong> it, both picking a box in secret at the same time. Found it: a point to the seeker; the wrong box: a point to the hider. Then you swap. Five rounds each way; the most points wins (level is a draw). It's all about reading each other: which box do they like? Out of time hiding: the prize is left in plain sight; out of time seeking: you didn't find it. 🤖 Against the computer: Normal notices your favourite box; Hard notices you noticing.",
+  "settings": "5, 3 or 7 rounds each way; timed (15 s to pick) or no timer",
+  "controls": "<strong>X</strong> / <strong>◀</strong> box 1 · <strong>Y</strong> / <strong>▲</strong> box 2 · <strong>B</strong> / <strong>▶</strong> box 3 · Pick a box (stays secret, the TV only shows 🔒)"
+ },
+ "odd-even": {
+  "rules": "Each round you both show one to five fingers, picked in secret. One of you is <strong>Odd</strong> and the other <strong>Even</strong> (it swaps every round): an odd total is Odd's point, an even one Even's. First to 5. Out of time: you lose the round. 🤖 Against the computer: it watches what you tend to show.",
+  "settings": "Points to win: 5, 3 or 7; timed (12 s to pick) or no timer",
+  "controls": "<strong>◀</strong> or <strong>X</strong> 1 · <strong>▲</strong> or <strong>Y</strong> 2 · <strong>▶</strong> or <strong>B</strong> 3 · <strong>▼</strong> 4 · <strong>A</strong> 5 · Show your fingers (secret till the reveal)"
+ },
  "liars-dice": {
   "rules": "Your dice are hidden under a cup on your phone (the TV shows only how many each of you has). Take turns bidding how many of a face there are across *both* players' dice (\"three 5s\"): raise the count, or keep it and bid a higher face. Or call <strong>Liar!</strong>: the cups lift on the TV and both phones, and if there are fewer than bid, the bidder loses a die; otherwise the caller does. Ones are wild (they count as every face). Lose all your dice and you lose. Needs two phones (or one against the computer). Before the first match the TV plays a short example round (📖 How to play, a setting); during the game your phone explains each bid in plain words and shows the chance it's true. 🤖 Against the computer (one phone is enough): it only knows its own dice and plays the odds; Hard reads your bids and bluffs now and then.",
   "settings": "The how-to-play example round first, or skip it; 5, 3 or 4 dice each; ones wild or not"
@@ -260,7 +270,19 @@
  "lucky-seven": {
   "rules": "Our own push-your-luck card game, on the TV with a phone or a controller: numbers 1 to 9 (lots of low ones, one 9), Doubles and Shields, all face up. Take turns: <strong>flip</strong> a card or <strong>stop</strong> and bank (after your first flip). A number you already have this round and you're bust (nothing this round), unless a Shield takes the hit; a Double doubles what you bank. Seven different numbers is a <strong>Lucky Seven</strong>: 15 more, and the round ends for both of you. The phone tells you how many cards left would bust you. First to 200 (or 150 or 300) at the end of a round.",
   "settings": "First to 200, 150 or 300; timed (20 s a turn) or no timer",
-  "controls": "<strong>A</strong> flip a card · <strong>B</strong> stop and bank · Heads-up Hold'em, Speed and Cribbage need phones (the cards are secret)"
+  "controls": "<strong>A</strong> flip a card · <strong>B</strong> stop and bank · Heads-up Hold'em, Speed, Cribbage, Video Poker, Go Fish and Spades need phones (the cards are secret)"
+ },
+ "video-poker": {
+  "rules": "Poker without the bluffing, for play chips (never money). <strong>You both get the same five cards</strong>, and the same new cards in the same order when you draw: only what you each hold is different. Tap the cards to hold on your phone (secret till you've both locked in), then the rest are swapped. The better five-card hand takes the pot; the same hand splits it. You both put in the ante each hand (50, going up as the match goes on). Most chips after 10 hands wins. Out of time: you fold the hand. 🤖 Against the computer: Easy holds by rule of thumb; Hard works out the odds of every hold.",
+  "settings": "10, 6 or 15 hands; timed (30 s to hold) or no timer"
+ },
+ "go-fish": {
+  "rules": "The family card game, for two phones. Seven cards each, secret, and the rest in the pond. On your go, ask for a rank you hold: the other hands over every one and you go again; none? <strong>Go fish</strong>: draw one, and if it's the rank you asked for, go again. Four of a rank is a <strong>book</strong>, laid down at once. When all thirteen books are down, the most books wins. Every ask is shown on the TV, so remember who asked for what. Out of time: you fish without asking. 🤖 Against the computer: Hard remembers every ask.",
+  "settings": "Timed (25 s a turn) or no timer"
+ },
+ "spades": {
+  "rules": "The trick-taking game, in the two-player draw version: you build your hand a card at a time, looking at the top card and keeping it (the next goes away unseen) or passing it and taking the next sight unseen, till you each have 13. Then bid the tricks you'll take (0 is <strong>nil</strong>: none at all). Follow suit if you can; spades are trumps and can't be led till one's been played. Make your bid: 10 a trick, 1 for each trick over (a <strong>bag</strong>; every 10 bags cost 100); fall short and lose 10 a trick bid. Nil made is 100, broken loses 100. First to 300 at the end of a hand (or the higher score after 12 hands). 🤖 Against the computer: Hard counts the cards.",
+  "settings": "To 300, 200 or 500; timed (20 s to draw, 30 s to bid, 25 s a card) or no timer"
  },
  "dice-party": {
   "rules": "Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards side by side (the numbers on the left, the combos on the right as 3× and 4× of a kind, FH full house, SM and LG straights, 5× five of a kind and CH chance), with what each open box would score. Highest total wins. 📱 <strong>No TV needed</strong>: pick the <strong>Handheld</strong> screen and each phone shows the whole scorecard (yours and theirs, the bonus and the totals) with the dice and Roll in a tray at the bottom; tap a box in your column, then tap it again to score.",

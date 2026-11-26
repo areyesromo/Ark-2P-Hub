@@ -1,0 +1,47 @@
+/* Go Fish: Blackjack's cards (loaded with it) by a blue pond. The cards and the water keep their
+   own colours; text and panels follow the theme. */
+.gf-books { display: flex; flex-wrap: wrap; gap: 0.35rem; justify-content: center; }
+.gf-book { min-width: 2.2em; padding: 0.15em 0.45em; border-radius: 0.4em; background: linear-gradient(160deg, #fff, #e8e4da); color: #16181d; font-family: Georgia, serif; font-weight: 800; text-align: center; box-shadow: 2px 2px 0 #c9c3b6, 4px 4px 0 #b5ae9f, 0 4px 8px rgba(0, 0, 0, 0.4); }
+
+/* ---- TV ---- */
+.gf-host { flex: 1; display: flex; min-height: 0; }
+.gf-table { position: relative; flex: 1; display: grid; grid-template-columns: 1fr 1.4fr 1fr; gap: 1.2rem; padding: 1.2rem; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 50%, #2b7fb8, #164a75 70%); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.45); color: #fff; }
+.gf-seat { display: flex; flex-direction: column; align-items: center; gap: 0.7rem; padding: 1rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.22); --card-w: 3rem; }
+.gf-seat.p1.turn { box-shadow: 0 0 0 3px var(--p1), 0 0 24px -6px var(--p1); }
+.gf-seat.p2.turn { box-shadow: 0 0 0 3px var(--p2), 0 0 24px -6px var(--p2); }
+.gf-seat header { width: 100%; display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 800; }
+.gf-seat header > span:first-child { filter: brightness(1.2); }
+.gf-seat header b { font-size: 1.4em; }
+.gf-backs { display: flex; flex-wrap: wrap; justify-content: center; min-height: 4.3rem; }
+.gf-backs .bj-card + .bj-card { margin-left: -2.1rem; }
+.gf-count { opacity: 0.8; }
+.gf-seat .gf-books { font-size: 1.2rem; }
+.gf-middle { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1.2rem; }
+.gf-pond { position: relative; display: flex; flex-direction: column; align-items: center; --card-w: 4.4rem; }
+.gf-pond b { position: absolute; top: 2.3rem; font-size: 1.6rem; text-shadow: 0 2px 4px #000; }
+.gf-pond small { opacity: 0.8; }
+.gf-say { padding: 0.9rem 1.4rem; border-radius: var(--radius); background: rgba(255, 255, 255, 0.95); color: #16181d; text-align: center; animation: bj-pop 0.3s both; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+.gf-say.p1 { box-shadow: 0 0 0 4px var(--p1), 0 8px 20px rgba(0, 0, 0, 0.4); }
+.gf-say.p2 { box-shadow: 0 0 0 4px var(--p2), 0 8px 20px rgba(0, 0, 0, 0.4); }
+.gf-ask { font-size: 1.6rem; font-weight: 800; }
+.gf-answer { font-size: 1.3rem; font-weight: 700; color: #1d4e89; }
+.gf-log { list-style: none; margin: 0; padding: 0; font-size: 0.95rem; opacity: 0.75; text-align: center; }
+.gf-over { position: absolute; left: 50%; bottom: 1rem; transform: translateX(-50%); padding: 0.4rem 1.2rem; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.6); }
+.gf-over .ark-result { font-size: 1.8rem; }
+
+/* ---- phone ---- */
+.gf-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 10px 14px; --card-w: 2.6rem; }
+.gf-ptop { display: flex; justify-content: space-between; color: var(--muted); font-size: var(--fs-sm); }
+.gf-ptop b { color: var(--text); }
+.gf-psay { padding: 8px 10px; border-radius: var(--r-md); background: var(--panel); text-align: center; }
+.gf-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.gf-msg small { color: var(--muted); }
+.gf-msg .won { color: var(--good); font-weight: 900; }
+.gf-msg .lost { color: var(--bad); font-weight: 900; }
+.gf-msg .big { font-size: 1.5rem; }
+.gf-groups { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.gf-group { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 2px; border-radius: var(--r-md); background: #164a75; border: 0; color: #fff; }
+.gf-group .bj-card + .bj-card { margin-left: -1.6rem; }
+.gf-group:disabled { opacity: 0.6; }
+.gf-group:not(:disabled) { box-shadow: 0 0 0 2px #7cc4f2; }
+.gf-phone .gf-books { margin-top: auto; }

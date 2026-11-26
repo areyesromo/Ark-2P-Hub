@@ -304,7 +304,7 @@ test('card and word games: Hard beats Easy', () => {
 });
 
 test('card and word games: the computer only sees what a player sees (its own dice, its own hand)', () => {
-  for (const id of ['crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'five-letters', 'blackjack', 'gin-rummy', 'colour-clash', 'dominoes', 'code-breaker', 'hangman', 'cribbage', 'speed', 'holdem']) {
+  for (const id of ['crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'five-letters', 'blackjack', 'gin-rummy', 'colour-clash', 'dominoes', 'code-breaker', 'hangman', 'odd-even', 'which-box', 'spades', 'go-fish', 'video-poker', 'cribbage', 'speed', 'holdem']) {
     const ctx = fakeCtx();
     ctx.players[1].bot = 'hard';
     const g = getGame(id).create(ctx);

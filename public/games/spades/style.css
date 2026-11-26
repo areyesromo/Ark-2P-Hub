@@ -1,0 +1,55 @@
+/* Spades: Blackjack's cards (loaded with it) on a deep green table. The cards keep their own
+   colours; text and panels follow the theme. */
+
+/* ---- TV ---- */
+.spd-host { flex: 1; display: flex; flex-direction: column; gap: 0.7rem; min-height: 0; }
+.spd-head { text-align: center; color: var(--muted); font-size: 1.15rem; }
+.spd-head strong { color: var(--text); }
+.spd-table { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1.6fr 1fr; gap: 1.2rem; align-items: center; padding: 1.2rem; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 40%, #1f6b47, #123f2b 75%); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5); color: #fff; --card-w: 5rem; }
+.spd-seat { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.9rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.22); --card-w: 2.6rem; }
+.spd-seat.p1.turn { box-shadow: 0 0 0 3px var(--p1); }
+.spd-seat.p2.turn { box-shadow: 0 0 0 3px var(--p2); }
+.spd-seat header { display: flex; flex-direction: column; align-items: center; font-size: 1.3rem; font-weight: 800; }
+.spd-seat header > span:first-child { filter: brightness(1.2); }
+.spd-score { font-size: 2.2rem; font-variant-numeric: tabular-nums; }
+.spd-dealer { font-size: 0.7em; padding: 0.05em 0.5em; border-radius: var(--r-pill); background: #f2cf6b; color: #3b2412; }
+.spd-sub { opacity: 0.75; }
+.spd-backs { display: flex; flex-wrap: wrap; justify-content: center; min-height: 3.8rem; }
+.spd-backs .bj-card + .bj-card { margin-left: -1.9rem; }
+.spd-bid { font-size: 1.2rem; min-height: 1.6rem; }
+.spd-bid b { font-size: 1.3em; color: #f2cf6b; }
+.spd-seat footer { min-height: 1.3rem; font-weight: 700; }
+.spd-middle { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; }
+.spd-pack { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; text-align: center; }
+.spd-pack b { position: absolute; top: 2.4rem; font-size: 1.6rem; text-shadow: 0 2px 4px #000; }
+.spd-trick { display: flex; gap: 1.4rem; min-height: 7.2rem; }
+.spd-trick .bj-card + .bj-card { margin: 0; }
+.spd-play { animation: bj-pop 0.25s both; border-radius: 0.5rem; }
+.spd-play.p1 { box-shadow: 0 0 0 3px var(--p1); }
+.spd-play.p2 { box-shadow: 0 0 0 3px var(--p2); }
+.spd-note { font-size: 1.15rem; opacity: 0.85; }
+.spd-sum { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; font-size: 1.3rem; }
+.spd-sum b { color: #f2cf6b; }
+.spd-sum .ark-result { font-size: 1.9rem; margin-top: 0.4rem; }
+
+/* ---- phone ---- */
+.spd-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 10px 14px; --card-w: 3rem; }
+.spd-ptop { display: flex; justify-content: space-between; color: var(--muted); }
+.spd-ptop b { color: var(--text); }
+.spd-pbids { text-align: center; color: var(--muted); font-size: var(--fs-sm); }
+.spd-ptrick { display: flex; justify-content: center; gap: 10px; padding: 8px; border-radius: var(--r-md); background: #164c34; }
+.spd-ptrick .bj-card + .bj-card { margin: 0; }
+.spd-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.spd-msg small { color: var(--muted); }
+.spd-msg .won { color: var(--good); font-weight: 900; }
+.spd-msg .lost { color: var(--bad); font-weight: 900; }
+.spd-msg .big { font-size: 1.5rem; }
+.spd-offer { display: flex; align-items: center; justify-content: center; gap: 16px; --card-w: 5.5rem; }
+.spd-offer > div { display: flex; flex-direction: column; gap: 8px; }
+.spd-bidpick { display: flex; align-items: center; justify-content: center; gap: 22px; font-size: 2rem; }
+.spd-bidpick button { width: 3.2rem; height: 3.2rem; border-radius: 50%; font-size: 1.6rem; font-weight: 900; }
+.spd-phand { margin-top: auto; display: flex; flex-wrap: wrap; justify-content: center; gap: 4px; --card-w: calc((100vw - 52px) / 7); }
+.spd-pcard { padding: 0; border: 0; background: none; border-radius: 0.4rem; }
+.spd-pcard:disabled { opacity: 0.45; }
+.spd-pcard.ok { box-shadow: 0 0 0 2px #4ade80; }
+.spd-phone .rematch { margin-top: 6px; }

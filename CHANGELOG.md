@@ -4,6 +4,17 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.75
+
+- 🎰 Video Poker: you both get the same five cards and the same new ones; hold the best and draw,
+  and the better hand takes the pot. Play chips only.
+- 🐟 Go Fish: ask for a rank you hold, or go fish; four of a kind is a book, and the most books wins.
+- ♠️ Spades for two: draw your hand a card at a time, bid your tricks, then play with spades as
+  trumps. Make your bid and mind the bags. First to 300.
+- 📦 Which Box: one hides the prize in one of three boxes, the other guesses which; then you swap.
+- ✋ Odd or Even: both show one to five fingers in secret; an odd total is Odd's point, even is Even's.
+- 🤖 All five can be played against the computer, at three levels.
+
 ## 0.1.74
 
 - ♠️ Heads-up Hold'em: Texas hold'em for two with play chips, your two cards secret on your phone,

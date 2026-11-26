@@ -32,8 +32,6 @@ we discuss more. Take an idea off the list when it ships.
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Which Box | One hides the prize in one of three boxes, the other picks; swap roles, five rounds. | 2D |
-| Odd or Even | Both secretly pick fingers 1 to 5; one calls odd, one even, winner takes a point. | 2D |
 | Price Guess | A made-up shop item and its parts; nearest guess without going over. | 2D |
 
 # Casino, card and board games
@@ -52,7 +50,6 @@ Eights does). Never make up a card at random. Famous trademarked names get our o
 | Roulette | Both bet on the same spin; most chips after ten spins. | 3D base wheel |
 | Baccarat | Bet on player, banker or tie; quick rounds. | 2D |
 | Craps | Take turns as the shooter, the other bets with or against. | 3D base dice |
-| Video Poker | Same dealt hand to both, hold and draw; best hand takes the pot. | 2D |
 | Slots duel | Same machine, ten pulls each, a bonus round; pure luck, short. | 2D |
 | Red Dog / Acey-Deucey | Bet whether the next card falls between two. | 2D |
 
@@ -60,9 +57,8 @@ Eights does). Never make up a card at random. Famous trademarked names get our o
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Go Fish | Ask for ranks, make books of four. Easy for kids. | 2D |
 | War | Flip and compare, ties go to war. Pure luck, for little ones. | 2D |
-| Two-player Hearts or Spades | The 2-player draw-a-card versions of the trick games. | 2D |
+| Two-player Hearts | The 2-player draw-a-card version of Hearts (Spades is in). | 2D |
 
 ### Family card games (own decks, our own names)
 
