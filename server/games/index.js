@@ -99,6 +99,9 @@ import goFish from './go-fish.js';
 import { goFishBot } from './go-fish-bot.js';
 import spades from './spades.js';
 import { spadesBot } from './spades-bot.js';
+import whichBox from './which-box.js';
+import oddEven from './odd-even.js';
+import { whichBoxBot, oddEvenBot } from './guess-bots.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
@@ -383,6 +386,11 @@ const GAMES = [
     target: { title: 'Game', values: [300, 200, 500], label: (n) => `First to ${n}` },
     ...timer('timed', '20 s to draw, 30 s to bid, 25 s a card'),
   }),
+  withSetup({ ...whichBox, bot: whichBoxBot }, {
+    rounds: { title: 'Match', values: [5, 3, 7], label: (n) => `${n} rounds each way (${n * 2} in all)` },
+    ...timer('timed', '15 s to pick'),
+  }),
+  withSetup({ ...oddEven, bot: oddEvenBot }, { ...firstTo('Points to win', [5, 3, 7]), ...timer('timed', '12 s to pick') }),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
