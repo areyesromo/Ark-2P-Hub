@@ -14,6 +14,7 @@ export const BLURBS = {
   futoshiki: 'A number grid with greater-than signs.',
   peg: 'Jump the pegs till one is left.',
   hashi: 'Join every island with bridges.',
+  slither: 'One loop round the numbers.',
   'solo:reaction-duel': 'Five taps: your average is your score.',
   'solo:brick-duel': 'Keep the ball up, smash the wall.',
   'solo:block-battle': 'Fill whole rows with falling pieces.',

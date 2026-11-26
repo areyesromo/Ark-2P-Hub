@@ -56,6 +56,8 @@ import futoshiki, { SIZES as FUTOSHIKI_SIZES } from './futoshiki.js';
 import peg, { BOARDS as PEG_BOARDS, ORDER as PEG_ORDER } from './peg.js';
 import hashi, { BOARDS as HASHI_BOARDS, RANDOM as HASHI_RANDOM } from './hashi.js';
 import { LEVELS as HASHI_LEVELS } from './hashi-levels.js';
+import slither, { BOARDS as SLITHER_BOARDS, RANDOM as SLITHER_RANDOM } from './slither.js';
+import { LEVELS as SLITHER_LEVELS } from './slither-levels.js';
 import flood, { SIZES as FLOOD_SIZES } from './flood.js';
 import { soloMastermind as mastermind, LEVELS as MASTER_LEVELS } from '../../games/code-breaker-solo.js'; // (a game for both modes: Code Breaker's 1 player one)
 import { LEVELS as SOKOBAN_LEVELS } from './sokoban-levels.js';
@@ -223,6 +225,15 @@ export const SOLO_GAMES = [
         const rows = HASHI_LEVELS[b - 1];
         return `Level ${b} · ${rows.length} × ${rows.length} · ${rows.join('').replace(/\./g, '').length} islands`;
       },
+      // Each level opens once the one before it is solved; the random boards are open from the start.
+      lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
+    },
+  }),
+  withSetup(slither, {
+    board: {
+      title: 'Board',
+      values: SLITHER_BOARDS,
+      label: (b) => (typeof b !== 'number' ? `🎲 Random ${SLITHER_RANDOM[b]} × ${SLITHER_RANDOM[b]} (a new board every time)` : `Level ${b} · ${SLITHER_LEVELS[b - 1].length} × ${SLITHER_LEVELS[b - 1].length}`),
       // Each level opens once the one before it is solved; the random boards are open from the start.
       lock: (b, have, ctx) => (typeof b !== 'number' || b === 1 || (ctx.best && ctx.best(`Level ${b - 1}`) !== null) ? null : `Solve level ${b - 1} to unlock`),
     },

@@ -50,6 +50,7 @@ export const POOL = [
   { game: 'pipes', settings: { size: 7, edges: 'solid' } },
   { game: 'futoshiki', settings: { size: 6 } },
   { game: 'hashi', settings: { board: 'random10' } },
+  { game: 'slither', settings: { board: 'random7' } },
 ];
 
 /**

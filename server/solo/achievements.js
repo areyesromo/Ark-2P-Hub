@@ -193,6 +193,12 @@ export const ACHIEVEMENTS = [
     { id: 'hashi-nohint', icon: '⚓', name: 'Chief engineer', desc: 'Bridges: solve a board of 25 islands or more without a hint.', check: (r, v) => scored(r) && v.islands.length >= 25 && !v.hints },
     { id: 'hashi-30', icon: '🌊', name: 'Archipelago', desc: 'Bridges: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
   ]),
+  ...game('slither', [
+    { id: 'slither-solve', icon: '➰', name: 'In the loop', desc: 'Slitherlink: close a loop.', check: (r) => scored(r) },
+    { id: 'slither-10', icon: '🐍', name: 'Slither on', desc: 'Slitherlink: solve level 10.', check: (r) => scored(r) && r.variant === 'Level 10' },
+    { id: 'slither-nohint', icon: '🧶', name: 'Unbroken', desc: 'Slitherlink: solve a 10 × 10 without a hint.', check: (r, v) => scored(r) && v.w === 10 && !v.hints },
+    { id: 'slither-30', icon: '🏁', name: 'Full circle', desc: 'Slitherlink: solve level 30.', check: (r) => scored(r) && r.variant === 'Level 30' },
+  ]),
   ...game('lights', [
     { id: 'lights-solve', icon: '💡', name: 'Lights out', desc: 'Lights Out: switch every light off.', check: (r) => scored(r) },
     { id: 'lights-par', icon: '⭐', name: 'On par', desc: 'Lights Out: solve a Hard puzzle in par or fewer.', check: (r, v) => scored(r) && r.variant === 'Hard' && r.score <= v.par },
