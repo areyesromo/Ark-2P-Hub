@@ -1,0 +1,68 @@
+/* Heads-up Hold'em: Blackjack's green felt, cards and chips (loaded with it), laid out for two
+   players and five shared cards. The felt and the cards keep their own colours; text and panels
+   follow the theme. */
+
+/* ---- TV ---- */
+.hd-host { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+.hd-head { display: flex; justify-content: center; gap: 3rem; color: var(--muted); font-size: 1.2rem; }
+.hd-head strong { color: var(--text); font-size: 1.5rem; }
+.hd-table { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 2.2fr 1fr; align-items: center; gap: 1.5rem; padding: 2rem 2.4rem;
+  border-radius: 48% / 42%;
+  background: radial-gradient(ellipse at 50% 30%, rgba(255, 255, 255, 0.12), transparent 60%), radial-gradient(ellipse at 50% 120%, rgba(0, 0, 0, 0.35), transparent 60%), #17663f;
+  box-shadow: inset 0 0 0 12px #5a3519, inset 0 0 0 15px #8a5a2f, inset 0 0 60px rgba(0, 0, 0, 0.5), 0 20px 40px -20px rgba(0, 0, 0, 0.8);
+  --card-w: 5rem; color: #fff; }
+.hd-seat { display: flex; flex-direction: column; align-items: center; gap: 0.5rem; padding: 0.9rem 0.8rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.22); border: 2px solid rgba(242, 207, 107, 0.35); transition: box-shadow 0.2s; }
+.hd-seat.p1.turn { box-shadow: 0 0 0 3px var(--p1), 0 0 24px -4px var(--p1); }
+.hd-seat.p2.turn { box-shadow: 0 0 0 3px var(--p2), 0 0 24px -4px var(--p2); }
+.hd-seat.won { border-color: #f2cf6b; box-shadow: 0 0 28px rgba(242, 207, 107, 0.6); }
+.hd-seat header { font-size: 1.35rem; font-weight: 800; }
+.hd-seat header .p1-text, .hd-seat header .p2-text { filter: brightness(1.25); }
+.hd-stack { font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.hd-stack small { font-weight: 500; opacity: 0.7; font-size: 0.7em; }
+.hd-hole { min-height: 7.2rem; display: flex; align-items: center; }
+.hd-act { min-height: 1.8rem; }
+.hd-said { display: inline-block; padding: 0.15em 0.7em; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.4); font-weight: 800; font-size: 1.05rem; animation: bj-pop 0.3s cubic-bezier(0.3, 1.6, 0.6, 1) both; }
+.hd-said.fold { opacity: 0.6; }
+.hd-said.raise, .hd-said.bet { background: #b88a1b; }
+.hd-said.all-in { background: #c0367a; }
+.hd-hand-name { font-weight: 800; color: #f2cf6b; }
+.hd-clock { font-weight: 800; font-variant-numeric: tabular-nums; }
+.hd-button { display: inline-grid; place-items: center; width: 1.6em; height: 1.6em; border-radius: 50%; background: #fff; color: #111; font-size: 0.75em; font-weight: 900; box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5); vertical-align: middle; }
+.hd-middle { display: flex; flex-direction: column; align-items: center; gap: 1rem; }
+.hd-board { display: flex; gap: 0.5rem; }
+.hd-board .bj-card + .bj-card { margin-left: 0; }
+.hd-slot { width: var(--card-w); aspect-ratio: 5 / 7; border-radius: 0.45rem; border: 2px dashed rgba(255, 255, 255, 0.22); }
+.hd-pot { min-height: 2.6rem; display: flex; align-items: center; gap: 0.7rem; font-size: 1.3rem; color: #f2cf6b; font-weight: 700; }
+.hd-pot b { color: #fff; font-size: 1.3em; font-variant-numeric: tabular-nums; }
+.hd-bets { width: 100%; display: flex; justify-content: space-between; min-height: 2.6rem; }
+.hd-bet { display: flex; align-items: center; gap: 0.5rem; font-weight: 800; }
+.hd-banner { position: absolute; left: 50%; bottom: 1.6rem; transform: translateX(-50%); padding: 0.5rem 1.4rem; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.6); font-size: 1.5rem; font-weight: 800; white-space: nowrap; animation: bj-pop 0.35s cubic-bezier(0.3, 1.6, 0.6, 1) both; }
+.hd-banner small { font-weight: 600; opacity: 0.8; margin-left: 0.4rem; }
+.hd-banner .ark-result { font-size: 1.8rem; }
+
+/* ---- phone ---- */
+.hd-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 10px 14px; --card-w: 3.3rem; }
+.hd-ptop { display: flex; justify-content: space-between; align-items: center; color: var(--muted); }
+.hd-ptop b, .hd-me b { color: var(--text); font-variant-numeric: tabular-nums; }
+.hd-pact { min-height: 2rem; display: flex; align-items: center; gap: 8px; }
+.hd-pact .bj-cards { --card-w: 2.6rem; }
+.hd-pboard { display: flex; justify-content: center; gap: 4px; min-height: calc(var(--card-w) * 1.4); padding: 8px; border-radius: var(--r-md); background: #17663f; box-shadow: inset 0 0 0 3px #5a3519; }
+.hd-pboard .bj-card + .bj-card { margin-left: 0; }
+.hd-ppot { text-align: center; color: var(--muted); }
+.hd-ppot b { color: var(--text); }
+.hd-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.hd-msg small { color: var(--muted); }
+.hd-msg .won { color: var(--good); font-weight: 900; }
+.hd-msg .lost { color: var(--bad); font-weight: 900; }
+.hd-msg .big { font-size: 1.5rem; }
+.hd-mine { display: flex; align-items: center; justify-content: center; gap: 16px; --card-w: 5rem; }
+.hd-mine .bj-card + .bj-card { margin-left: calc(var(--card-w) * -0.2); }
+.hd-me { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.hd-acts { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 8px; margin-top: auto; }
+.hd-acts button { padding: 16px 0; font-size: 1.2rem; font-weight: 800; border-radius: var(--r-md); }
+.hd-fold { background: var(--bad); color: #fff; }
+.hd-call { background: var(--good); color: var(--on-good); }
+.hd-raises { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.hd-raises button { padding: 10px 4px; border-radius: var(--r-md); background: #b88a1b; color: #fff; font-weight: 800; display: flex; flex-direction: column; align-items: center; }
+.hd-raises small { font-weight: 600; opacity: 0.85; }
+.hd-phone .rematch { margin-top: auto; }

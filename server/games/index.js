@@ -85,6 +85,8 @@ import dotsBoxes from './dots-boxes.js';
 import reversi from './reversi.js';
 import { reversiBot } from './reversi-bot.js';
 import blackjack from './blackjack.js';
+import holdem from './holdem.js';
+import { holdemBot } from './holdem-bot.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
@@ -347,6 +349,10 @@ const GAMES = [
     hands: { title: 'Match', values: [8, 5, 12], label: (n) => `${n} hands` },
     ...timer('timed', '20 s to bet, 25 s a move'),
   }),
+  withSetup({ ...holdem, bot: holdemBot }, {
+    blinds: { title: 'Blinds go up', values: [6, 3, 10], label: (n) => `Every ${n} hands${n === 3 ? ' (a quick match)' : n === 10 ? ' (a long one)' : ''}` },
+    ...timer('timed', '30 s a turn'),
+  }),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
@@ -391,12 +397,12 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
   board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
-  cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'liars-dice', 'memory-match'],
+  cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'liars-dice', 'memory-match'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
 
