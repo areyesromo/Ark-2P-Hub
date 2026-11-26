@@ -32,7 +32,6 @@ we discuss more. Take an idea off the list when it ships.
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Higher or Lower | A card shows; each guesses the next, secretly. Streaks score. | 2D |
 | Which Box | One hides the prize in one of three boxes, the other picks; swap roles, five rounds. | 2D |
 | Odd or Even | Both secretly pick fingers 1 to 5; one calls odd, one even, winner takes a point. | 2D |
 | Price Guess | A made-up shop item and its parts; nearest guess without going over. | 2D |
@@ -50,7 +49,6 @@ Eights does). Never make up a card at random. Famous trademarked names get our o
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Heads-up Hold'em | 1v1 poker: two hidden cards on your phone, five shared on the TV, blinds go up. | 2D, 3D art table |
 | Roulette | Both bet on the same spin; most chips after ten spins. | 3D base wheel |
 | Baccarat | Bet on player, banker or tie; quick rounds. | 2D |
 | Craps | Take turns as the shooter, the other bets with or against. | 3D base dice |
@@ -62,8 +60,6 @@ Eights does). Never make up a card at random. Famous trademarked names get our o
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Cribbage | Pegging and counting fifteens, a peg board on the TV. | 2D |
-| Speed (Spit) | Both play at once onto two piles, one up or down; first out wins. Real-time. | 2D |
 | Go Fish | Ask for ranks, make books of four. Easy for kids. | 2D |
 | War | Flip and compare, ties go to war. Pure luck, for little ones. | 2D |
 | Two-player Hearts or Spades | The 2-player draw-a-card versions of the trick games. | 2D |
@@ -80,7 +76,6 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 | Build Piles | Skip-Bo | Empty your stock pile by building 1 to 12 on shared piles, with four discard piles each and wilds. | 2D |
 | Road Race | Mille Bornes | Play distance cards to reach 1000 km; hit the other with flat tyres, stop lights, speed limits; play the fix or a safety. | 2D, 3D art cars |
 | Property Deal | Monopoly Deal | Bank money, collect full colour sets, charge rent, Deal Breaker and Just Say No style action cards. First to three full sets. | 2D |
-| Lucky Seven | Flip 7 | Push your luck: flip numbers, stop before a repeat, bank the sum. First to 200. | 2D |
 | Five Crowns style | Five Crowns | Rummy over eleven hands, the wild rank changes each hand. | 2D |
 | Golf (cards) | Golf | Six face-down cards, swap to lower your score; pairs in a column cancel. | 2D |
 | Old Maid | Old Maid | Pair off and pass; don't get stuck with the odd card. For kids. | 2D |

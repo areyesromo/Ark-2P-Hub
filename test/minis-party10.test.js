@@ -1,4 +1,4 @@
-// Bubble Pop, Bridge Builder, Pancake Flip and Cup Stack, driven directly through their api.
+// Bubble Pop, Bridge Builder, Pancake Flip, Cup Stack and Higher or Lower, driven directly through their api.
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fakeCtx } from './helpers.js';
@@ -319,4 +319,48 @@ test('cup-stack: the first to finish all three wins; at time up the one further 
   const c = run(cupStack, 3);
   c.inst.onTimeUp();
   assert.deepEqual(c.ended(), { winner: null });
+});
+
+import higherLower, { CARDS, TIMING as HL } from '../server/games/minis/higher-lower.js';
+
+test('higher-lower: a 2D party minigame in the party list', () => {
+  assert.equal(higherLower.kind, 'party');
+  assert.ok(PARTIES.includes(higherLower));
+  assert.ok(higherLower.durationMs <= 80000 && higherLower.howTo && higherLower.order);
+});
+
+test('higher-lower: secret calls; a right call scores the streak, a wrong one (or none) starts it again', () => {
+  const { inst, ctx } = run(higherLower);
+  let v = inst.view(0);
+  assert.equal(v.call, 1);
+  inst.onInput(0, { type: 'pick', call: 'higher' });
+  assert.equal(inst.view(1).mine, null, 'the other can\'t see your call');
+  assert.deepEqual(inst.view(1).picked, [true, false]);
+  for (const bad of [{ type: 'pick', call: 'up' }, { type: 'pick', call: 'lower', extra: 1 }]) inst.onInput(0, bad);
+  ctx.advance(HL.pickMs);
+  v = inst.view(0);
+  assert.equal(v.stage, 'show');
+  assert.equal(v.last.picks[1], null, 'no pick in time');
+  if (v.last.right[1] !== null) assert.equal(v.points[1], 0);
+  // Seat 0 calls higher every time: each right call adds its streak.
+  let expected = v.points[0];
+  for (let k = 1; k < CARDS; k++) {
+    ctx.advance(HL.showMs);
+    inst.onInput(0, { type: 'pick', call: 'higher' });
+    inst.onInput(1, { type: 'pick', call: 'lower' });
+    const r = inst.view(0).last;
+    if (r.right[0]) expected += r.gained[0];
+    assert.equal(inst.view(0).points[0], expected);
+  }
+});
+
+test('higher-lower: the most points wins at the end; the same number again is nobody\'s', () => {
+  const { inst, ctx, ended } = run(higherLower, 4);
+  for (let k = 0; k < CARDS; k++) {
+    inst.onInput(0, { type: 'pick', call: 'higher' });
+    inst.onInput(1, { type: 'pick', call: 'higher' });
+    ctx.advance(HL.showMs);
+  }
+  ctx.advance(HL.showMs);
+  assert.deepEqual(ended(), { winner: null }, 'the same calls all the way: level');
 });

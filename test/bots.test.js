@@ -304,7 +304,7 @@ test('card and word games: Hard beats Easy', () => {
 });
 
 test('card and word games: the computer only sees what a player sees (its own dice, its own hand)', () => {
-  for (const id of ['crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'five-letters', 'blackjack', 'gin-rummy', 'colour-clash', 'dominoes', 'code-breaker', 'hangman']) {
+  for (const id of ['crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'five-letters', 'blackjack', 'gin-rummy', 'colour-clash', 'dominoes', 'code-breaker', 'hangman', 'cribbage', 'speed', 'holdem']) {
     const ctx = fakeCtx();
     ctx.players[1].bot = 'hard';
     const g = getGame(id).create(ctx);
@@ -432,7 +432,7 @@ test('minigames: the computer has a player for every one, beats (or passes, alon
 });
 
 test('minigames: Hard beats Easy where skill decides it', async () => {
-  for (const id of ['balloon', 'quick-draw', 'tug-of-war', 'whack-a-mole', 'reflex-grid', 'hurdle-dash', 'laser-dodge', 'mirror-me', 'sword-duel', 'treasure-dig', 'bubble-pop', 'pancake-flip', 'hot-air-race', 'cup-stack']) {
+  for (const id of ['balloon', 'quick-draw', 'tug-of-war', 'whack-a-mole', 'reflex-grid', 'hurdle-dash', 'laser-dodge', 'mirror-me', 'sword-duel', 'treasure-dig', 'bubble-pop', 'pancake-flip', 'hot-air-race', 'cup-stack', 'higher-lower']) {
     let wins = 0;
     for (let seed = 1; seed <= 4; seed++) {
       const flip = seed % 2;

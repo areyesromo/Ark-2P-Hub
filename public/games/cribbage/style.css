@@ -1,0 +1,63 @@
+/* Cribbage: Blackjack's cards (loaded with it) on felt, with a wooden peg board. The board, pegs and
+   cards keep their own colours; text and panels follow the theme. */
+.cb-pegs { width: 100%; display: block; }
+.cb-pegs .board { fill: #9c6a3c; stroke: #6b4423; stroke-width: 0.3; }
+.cb-pegs .hole { fill: #3b2412; }
+.cb-pegs .peg { stroke: #fff; stroke-width: 0.12; }
+.cb-pegs .peg.p1 { fill: var(--p1); }
+.cb-pegs .peg.p2 { fill: var(--p2); }
+.cb-pegs .peg.back { opacity: 0.45; }
+
+/* ---- TV ---- */
+.cb-host { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+.cb-boardwrap { position: relative; padding: 0 0.5rem; }
+.cb-target { position: absolute; right: 1rem; top: -1.4rem; color: var(--muted); font-weight: 700; }
+.cb-table { position: relative; flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 3fr 1fr; gap: 1.2rem; align-items: center; padding: 1.2rem; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 40%, #1f6b47, #123f2b 75%); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5); color: #fff; --card-w: 4.4rem; }
+.cb-seat { display: flex; flex-direction: column; align-items: center; gap: 0.6rem; padding: 0.9rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.22); --card-w: 3rem; }
+.cb-seat.p1.turn { box-shadow: 0 0 0 3px var(--p1); }
+.cb-seat.p2.turn { box-shadow: 0 0 0 3px var(--p2); }
+.cb-seat header { display: flex; flex-direction: column; align-items: center; font-size: 1.3rem; font-weight: 800; }
+.cb-seat header span { filter: brightness(1.2); }
+.cb-seat header b { font-size: 2.2rem; font-variant-numeric: tabular-nums; }
+.cb-dealer { font-size: 0.7em; padding: 0.05em 0.5em; border-radius: var(--r-pill); background: #f2cf6b; color: #3b2412; filter: none !important; }
+.cb-backs { display: flex; min-height: 4.3rem; }
+.cb-backs .bj-card + .bj-card { margin-left: -1.8rem; }
+.cb-seat footer { min-height: 1.3rem; font-weight: 700; color: rgba(255, 255, 255, 0.85); }
+.cb-centre { display: flex; flex-direction: column; align-items: center; gap: 0.8rem; min-height: 0; }
+.cb-pack { display: flex; gap: 2rem; }
+.cb-starter, .cb-crib { position: relative; display: flex; flex-direction: column; align-items: center; gap: 0.2rem; }
+.cb-pack small { color: rgba(255, 255, 255, 0.7); }
+.cb-crib b { position: absolute; top: 40%; left: 50%; transform: translate(-50%, -50%); font-size: 1.4rem; text-shadow: 0 2px 4px #000; }
+.cb-slot { width: var(--card-w); aspect-ratio: 5 / 7; border-radius: 0.4rem; border: 2px dashed rgba(255, 255, 255, 0.25); }
+.cb-play { min-height: 6.2rem; }
+.cb-total { font-size: 1.3rem; }
+.cb-total b { font-size: 1.6em; }
+.cb-event { padding: 0.3rem 1rem; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.45); font-size: 1.2rem; font-weight: 700; animation: bj-pop 0.3s both; }
+.cb-show { display: flex; flex-direction: column; gap: 0.5rem; width: 100%; --card-w: 3rem; }
+.cb-count { display: grid; grid-template-columns: 9rem auto 1fr; align-items: center; gap: 0.8rem; padding: 0.4rem 0.6rem; border-radius: var(--r-md); background: rgba(0, 0, 0, 0.25); animation: bj-pop 0.3s both; }
+.cb-count .bj-card + .bj-card { margin-left: -1rem; }
+.cb-who { font-weight: 800; }
+.cb-items { font-size: 0.95rem; }
+.cb-items b { font-size: 1.3em; color: #f2cf6b; }
+.cb-over { position: absolute; left: 50%; bottom: 1rem; transform: translateX(-50%); }
+.cb-over .ark-result { font-size: 2rem; padding: 0.3rem 1.2rem; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.6); }
+
+/* ---- phone ---- */
+.cb-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 10px 14px; --card-w: 3rem; }
+.cb-ptop { display: flex; justify-content: space-between; color: var(--muted); }
+.cb-ptop b { color: var(--text); }
+.cb-pmid { display: flex; gap: 12px; align-items: center; min-height: 4.4rem; padding: 8px; border-radius: var(--r-md); background: #164c34; }
+.cb-pseq { flex: 1; overflow: hidden; }
+.cb-pseq .bj-card + .bj-card { margin-left: -1.6rem; }
+.cb-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.cb-msg small { color: var(--muted); }
+.cb-msg .won { color: var(--good); font-weight: 900; }
+.cb-msg .lost { color: var(--bad); font-weight: 900; }
+.cb-msg .big { font-size: 1.5rem; }
+.cb-pshows { display: flex; flex-direction: column; gap: 4px; font-size: var(--fs-sm); color: var(--muted); }
+.cb-pshows b { color: var(--text); }
+.cb-phand { margin-top: auto; display: grid; grid-template-columns: repeat(6, 1fr); gap: 5px; --card-w: calc((100vw - 45px) / 6); }
+.cb-pcard { padding: 0; border: 0; background: none; border-radius: 0.4rem; opacity: 0.5; transition: transform 0.1s; }
+.cb-pcard.ok { opacity: 1; }
+.cb-pcard.picked { transform: translateY(-12px); box-shadow: 0 0 0 3px #facc15; }
+.cb-phone .cb-go, .cb-phone .rematch { margin-top: 4px; }
