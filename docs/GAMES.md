@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (116)
+## Games (121)
 
 ### ⚔️ Competitive (38)
 
@@ -54,7 +54,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Which Box | `which-box` | Hide the prize in one of three boxes; the other guesses which. Swap and swap again: read them, fool them. | `server/games/which-box.js`, `server/games/guess-bots.js`, `public/games/which-box/`, `test/which-box.test.js` |
 | Odd or Even | `odd-even` | Show one to five fingers in secret. Odd total, a point to Odd; even, to Even. Guess their hand. First to 5. | `server/games/odd-even.js`, `server/games/guess-bots.js`, `public/games/odd-even/`, `test/odd-even.test.js` |
 
-### 🎲 Dice & Board (23)
+### 🎲 Dice & Board (28)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -79,7 +79,12 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Lucky Seven | `lucky-seven` | Flip a card or bank what you have: a number you already hold and you're bust. Seven different numbers is a Lucky Seven. First to 200. | `server/games/lucky-seven-bot.js`, `server/games/lucky-seven.js`, `public/games/lucky-seven/`, `test/lucky-seven.test.js` |
 | Video Poker | `video-poker` | The same five cards for you both, and the same new ones: hold the best and draw. Better hand takes the pot. | `server/games/video-poker-bot.js`, `server/games/video-poker.js`, `server/games/holdem-hands.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/video-poker/`, `test/video-poker.test.js` |
 | Go Fish | `go-fish` | Ask for a rank you hold: they hand them over, or you go fish. Four of a kind is a book; most books wins. | `server/games/go-fish-bot.js`, `server/games/go-fish.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/go-fish/`, `test/go-fish.test.js` |
+| Hearts | `hearts` | Draw your hand a card at a time, then dodge the tricks: every heart costs a point, the queen of spades 13. Lowest score wins. | `server/games/hearts-bot.js`, `server/games/hearts.js`, `public/games/spades/style.css`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/hearts/`, `test/hearts.test.js` |
 | Spades | `spades` | Draw your hand a card at a time, bid your tricks, then play: spades are trumps. Make your bid, mind the bags. First to 300. | `server/games/spades-bot.js`, `server/games/spades.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/spades/`, `test/spades.test.js` |
+| Hex | `hex` | Take turns placing stones on a board of hexagons. Join your two edges with one chain to win; no draws. | `server/games/hex-bot.js`, `server/games/hex.js`, `public/games/hex/`, `test/hex.test.js` |
+| Ultimate Tic-tac-toe | `ultimate-ttt` | Nine little boards in one big one. Where you play sends them to that board. Win three boards in a row. | `server/games/ultimate-ttt-bot.js`, `server/games/ultimate-ttt.js`, `public/games/ultimate-ttt/`, `test/ultimate-ttt.test.js` |
+| Red Dog | `red-dog` | The same two cards for you both: will the next fall in between? Raise in secret; the best raiser takes the chips. | `server/games/red-dog-bot.js`, `server/games/red-dog.js`, `server/games/holdem-hands.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/red-dog/`, `test/red-dog.test.js` |
+| Baccarat | `baccarat` | Bet in secret on Player, Banker or a Tie, then one coup is dealt for you both. Closest to 9 wins; most chips after 10 coups. | `server/games/baccarat-bot.js`, `server/games/baccarat.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/baccarat/`, `test/baccarat.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party-bot.js`, `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
 ### 🤝 Co-op & casual (8)

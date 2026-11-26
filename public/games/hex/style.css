@@ -1,0 +1,57 @@
+/* Hex: a board of light wooden hexagons; the stones are the players' colours, with a dot (player 1)
+   or a ring (player 2). Each player's two edges are drawn in their colour. */
+
+.hx-board { display: block; width: 100%; height: 100%; filter: drop-shadow(0 18px 30px rgba(0, 0, 0, 0.6)); }
+.hx-cell { fill: #e6bf7d; stroke: #8a5a26; stroke-width: 0.8; }
+.hx-board.tappable .hx-cell[data-c] { cursor: pointer; }
+.hx-cell.aim { stroke-width: 2.4; }
+.hx-cell.aim.p1 { stroke: var(--p1); }
+.hx-cell.aim.p2 { stroke: var(--p2); }
+.hx-stone { pointer-events: none; }
+.hx-stone.p1 > circle:first-child { fill: var(--p1); }
+.hx-stone.p2 > circle:first-child { fill: var(--p2); }
+.hx-stone > circle:first-child { stroke: rgba(0, 0, 0, 0.35); stroke-width: 0.8; }
+.hx-mark { fill: rgba(255, 255, 255, 0.85); }
+.hx-ring { fill: none; stroke: rgba(255, 255, 255, 0.85); stroke-width: 1.1; }
+.hx-stone { transform-box: fill-box; transform-origin: center; }
+.hx-stone.last > circle:first-child { stroke: #fff; stroke-width: 1.6; }
+.hx-stone.last { animation: hx-drop 0.25s ease-out; }
+.hx-stone.win > circle:first-child { stroke: #fff; stroke-width: 2; }
+.hx-stone.win { animation: hx-glow 0.8s ease-in-out infinite alternate; }
+.hx-stone.ghost { opacity: 0.5; }
+@keyframes hx-drop { from { transform: scale(1.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes hx-glow { to { transform: scale(1.15); } }
+@media (prefers-reduced-motion: reduce) { .hx-stone.last, .hx-stone.win { animation: none; } }
+
+/* ---- TV ---- */
+
+.hx-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.hx-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr minmax(0, 3.2fr) 1fr; align-items: center; gap: 1.5rem; }
+.hx-centre { position: relative; height: min(76vh, 100%); min-width: 0; }
+.hx-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 11rem; padding: 1.2rem 1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.75; transition: opacity 0.25s; text-align: center; }
+.hx-side.active { opacity: 1; }
+.hx-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.hx-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.hx-name { font-size: 1.5rem; font-weight: 900; }
+.hx-goal { color: var(--muted); }
+.hx-turn { min-height: 1.8rem; font-weight: 800; display: flex; gap: 0.5rem; align-items: center; }
+.hx-clock { color: var(--muted); font-variant-numeric: tabular-nums; }
+.hx-clock.low { color: var(--bad); }
+.hx-note { min-height: 1.4em; text-align: center; color: var(--muted); font-size: 1.2rem; }
+.hx-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: column; align-items: center; gap: 0.3rem; padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2rem; font-weight: 900; white-space: nowrap; }
+.hx-banner small { font-size: 1rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+
+.hx-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 4px 14px; }
+.hx-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); padding: 0 6px; }
+.hx-msg { margin: 0; text-align: center; font-size: 1.05rem; min-height: 1.5em; }
+.hx-msg .won { color: var(--good); font-weight: 900; }
+.hx-msg .lost { color: var(--bad); font-weight: 900; }
+.hx-msg .big { font-size: 1.6rem; }
+.hx-phone .hx-board { height: auto; max-height: 62vh; }
+.hx-buttons { display: flex; gap: 8px; }
+.hx-buttons button { flex: 1; }
+.hx-place { padding: 16px 0; border: 0; border-radius: var(--r-md); background: var(--good); color: var(--on-good); font-size: 1.2rem; font-weight: 900; }
+.hx-place:disabled { opacity: 0.35; }
+.hx-swap { padding: 16px 0; border-radius: var(--r-md); font-size: 1.1rem; font-weight: 800; }

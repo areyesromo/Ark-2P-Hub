@@ -20,7 +20,7 @@ const { chromium } = require('playwright');
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const emit = (s, ev, data) => new Promise((resolve) => s.emit(ev, data, resolve));
 // The 3D games take a moment longer to build their scene.
-const WAIT = { 'kart-race-3d': 9000, 'ten-pin': 7000, 'tower-stack': 7000, 'dungeon-duo': 8000, 'marble-maze': 7000, 'party-board': 8000, 'which-box': 900, 'odd-even': 900, 'video-poker': 900 };
+const WAIT = { 'kart-race-3d': 9000, 'ten-pin': 7000, 'tower-stack': 7000, 'dungeon-duo': 8000, 'marble-maze': 7000, 'party-board': 8000, 'which-box': 900, 'odd-even': 900, 'video-poker': 900, 'red-dog': 900, baccarat: 1500 };
 
 // A few games need more than "go" to show something worth seeing: both ready up, a word picked
 // and drawn, the gas held.
@@ -126,6 +126,22 @@ const NUDGE = {
   },
   spades: async (players) => {
     for (let k = 0; k < 10; k++) { both(players, { type: 'draw', keep: k % 3 > 0 }); await sleep(250); }
+  },
+  hearts: async (players) => {
+    for (let k = 0; k < 10; k++) { both(players, { type: 'draw', keep: k % 3 > 0 }); await sleep(250); }
+  },
+  hex: async (players) => {
+    for (const cell of [40, 31, 49, 39, 58, 48, 67, 41, 22, 50]) { both(players, { type: 'place', cell }); await sleep(250); }
+  },
+  'ultimate-ttt': async (players) => {
+    for (const cell of [40, 36, 4, 44, 76, 41, 49, 0, 8]) { both(players, { type: 'place', cell }); await sleep(250); }
+  },
+  'red-dog': async (players) => {
+    for (let k = 0; k < 4; k++) { both(players, { type: 'raise', raise: k % 3 }); await sleep(1500); }
+  },
+  baccarat: async (players) => {
+    players[0].emit('game:input', { type: 'bet', side: 'banker', amount: 200 });
+    players[1].emit('game:input', { type: 'bet', side: 'player', amount: 100 });
   },
   // The guessing games at a reveal.
   'which-box': async (players) => { both(players, { type: 'pick', box: 1 }); },

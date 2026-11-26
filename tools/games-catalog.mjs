@@ -32,6 +32,9 @@ const EXTRA = {
   'video-poker': ['server/games/holdem-hands.js', 'public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
   'go-fish': ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
   spades: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  hearts: ['public/games/spades/style.css', 'public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  'red-dog': ['server/games/holdem-hands.js', 'public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
+  baccarat: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
   'which-box': ['server/games/guess-bots.js'],
   'odd-even': ['server/games/guess-bots.js'],
 };
