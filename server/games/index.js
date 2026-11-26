@@ -95,6 +95,8 @@ import luckySeven from './lucky-seven.js';
 import { luckySevenBot } from './lucky-seven-bot.js';
 import videoPoker from './video-poker.js';
 import { videoPokerBot } from './video-poker-bot.js';
+import goFish from './go-fish.js';
+import { goFishBot } from './go-fish-bot.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
@@ -374,6 +376,7 @@ const GAMES = [
     hands: { title: 'Match', values: [10, 6, 15], label: (n) => `${n} hands` },
     ...timer('timed', '30 s to hold'),
   }),
+  withSetup({ ...goFish, bot: goFishBot }, timer('timed', '25 s a turn')),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
@@ -423,7 +426,7 @@ for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
   board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
-  cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'speed', 'cribbage', 'lucky-seven', 'liars-dice', 'memory-match', 'video-poker'],
+  cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'speed', 'cribbage', 'lucky-seven', 'liars-dice', 'memory-match', 'video-poker', 'go-fish'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
 
