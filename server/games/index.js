@@ -102,6 +102,8 @@ import { spadesBot } from './spades-bot.js';
 import whichBox from './which-box.js';
 import oddEven from './odd-even.js';
 import { whichBoxBot, oddEvenBot } from './guess-bots.js';
+import hex from './hex.js';
+import { hexBot } from './hex-bot.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
@@ -391,6 +393,12 @@ const GAMES = [
     ...timer('timed', '15 s to pick'),
   }),
   withSetup({ ...oddEven, bot: oddEvenBot }, { ...firstTo('Points to win', [5, 3, 7]), ...timer('timed', '12 s to pick') }),
+  withSetup({ ...hex, bot: hexBot }, {
+    size: { title: 'Board', values: [9, 11, 7], label: (n) => `${n} × ${n}` },
+    swap: { title: 'Swap rule', values: [1, 0], label: (n) => (n ? 'On: after the first stone, the other may take it' : 'Off') },
+    ...firstTo('Games to win', [1, 2, 3]),
+    ...timer('timed', '30 s a move'),
+  }),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
@@ -435,11 +443,11 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem', 'cribbage', 'lucky-seven', 'video-poker', 'video-poker'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem', 'cribbage', 'lucky-seven', 'video-poker', 'go-fish', 'spades', 'hex'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
-  board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
+  board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'hex', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
   cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'speed', 'cribbage', 'lucky-seven', 'liars-dice', 'memory-match', 'video-poker', 'go-fish', 'spades'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;

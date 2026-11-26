@@ -9,7 +9,7 @@ test('📱 No TV needed: the games whose phones show everything (Dice Party with
   const handheld = listGames().filter((g) => g.handheld).map((g) => g.id).sort();
   assert.deepEqual(handheld, [
     'air-hockey', 'anagram-duel', 'backgammon', 'battleship', 'blackjack', 'bomb-squad', 'brick-duel', 'checkers', 'chess', 'code-breaker', 'colour-clash', 'connect-four', 'crazy-eights',
-    'cribbage', 'dice-party', 'dominoes', 'dots-boxes', 'draw-duel', 'fake-out', 'five-in-a-row', 'five-letters', 'gin-rummy', 'go-fish', 'hangman', 'holdem', 'liars-dice', 'lucky-seven', 'ludo', 'make-24', 'mancala', 'memory-match', 'mind-meld', 'mine-duel', 'mini-golf', 'morris',
+    'cribbage', 'dice-party', 'dominoes', 'dots-boxes', 'draw-duel', 'fake-out', 'five-in-a-row', 'five-letters', 'gin-rummy', 'go-fish', 'hangman', 'hex', 'holdem', 'liars-dice', 'lucky-seven', 'ludo', 'make-24', 'mancala', 'memory-match', 'mind-meld', 'mine-duel', 'mini-golf', 'morris',
     'odd-even', 'pong', 'quiz', 'reaction-duel', 'reversi', 'rock-paper-scissors', 'sketch-guess', 'snake', 'spades', 'speed', 'tower-duel', 'trivia-quest', 'tron', 'video-poker', 'which-box', 'word-hunt',
     'word-race',
   ]);
