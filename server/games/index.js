@@ -87,6 +87,8 @@ import { reversiBot } from './reversi-bot.js';
 import blackjack from './blackjack.js';
 import holdem from './holdem.js';
 import { holdemBot } from './holdem-bot.js';
+import speed from './speed.js';
+import { speedBot } from './speed-bot.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
@@ -353,6 +355,7 @@ const GAMES = [
     blinds: { title: 'Blinds go up', values: [6, 3, 10], label: (n) => `Every ${n} hands${n === 3 ? ' (a quick match)' : n === 10 ? ' (a long one)' : ''}` },
     ...timer('timed', '30 s a turn'),
   }),
+  withSetup({ ...speed, bot: speedBot }, firstTo('Rounds to win', [2, 1, 3])),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
@@ -402,7 +405,7 @@ for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
   board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
-  cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'liars-dice', 'memory-match'],
+  cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'speed', 'liars-dice', 'memory-match'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
 

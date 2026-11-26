@@ -10,7 +10,7 @@ test('📱 No TV needed: the games whose phones show everything (Dice Party with
   assert.deepEqual(handheld, [
     'air-hockey', 'anagram-duel', 'backgammon', 'battleship', 'blackjack', 'bomb-squad', 'brick-duel', 'checkers', 'chess', 'code-breaker', 'colour-clash', 'connect-four', 'crazy-eights',
     'dice-party', 'dominoes', 'dots-boxes', 'draw-duel', 'fake-out', 'five-in-a-row', 'five-letters', 'gin-rummy', 'hangman', 'holdem', 'liars-dice', 'ludo', 'make-24', 'mancala', 'memory-match', 'mind-meld', 'mine-duel', 'mini-golf', 'morris',
-    'pong', 'quiz', 'reaction-duel', 'reversi', 'rock-paper-scissors', 'sketch-guess', 'snake', 'tower-duel', 'trivia-quest', 'tron', 'word-hunt',
+    'pong', 'quiz', 'reaction-duel', 'reversi', 'rock-paper-scissors', 'sketch-guess', 'snake', 'speed', 'tower-duel', 'trivia-quest', 'tron', 'word-hunt',
     'word-race',
   ]);
 });

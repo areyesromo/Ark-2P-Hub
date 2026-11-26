@@ -1,0 +1,49 @@
+/* Speed: Blackjack's cards (loaded with it) on a dark green mat, the two middle piles big. The cards
+   keep their own colours; text and panels follow the theme. */
+
+/* ---- TV ---- */
+.sp-host { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+.sp-caption { text-align: center; font-size: 1.4rem; font-weight: 800; min-height: 2rem; }
+.sp-caption .ark-result { font-size: 2rem; }
+.sp-table { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 2.4fr 1fr; align-items: center; gap: 1.5rem; padding: 1.5rem; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 40%, #1f6b47, #123f2b 75%); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5); color: #fff; }
+.sp-side { display: flex; flex-direction: column; align-items: center; gap: 0.7rem; padding: 1rem; border-radius: var(--radius); background: rgba(0, 0, 0, 0.22); --card-w: 3.4rem; }
+.sp-side.p1 { box-shadow: inset 0 0 0 3px var(--p1); }
+.sp-side.p2 { box-shadow: inset 0 0 0 3px var(--p2); }
+.sp-side header { font-size: 1.35rem; font-weight: 800; }
+.sp-side header span { filter: brightness(1.25); }
+.sp-fan { display: flex; min-height: 4.8rem; }
+.sp-fan .bj-card + .bj-card { margin-left: -2rem; }
+.sp-left { font-size: 1.15rem; }
+.sp-left b { font-size: 1.6em; font-variant-numeric: tabular-nums; }
+.sp-bar { width: 100%; height: 0.6rem; border-radius: var(--r-pill); background: rgba(255, 255, 255, 0.15); overflow: hidden; }
+.sp-bar i { display: block; height: 100%; background: #f2cf6b; transition: width 0.2s; }
+.sp-middle { display: flex; align-items: center; justify-content: center; gap: 2rem; }
+.sp-pile { position: relative; --card-w: 8.5rem; width: var(--card-w); aspect-ratio: 5 / 7; }
+.sp-under, .sp-top { position: absolute; inset: 0; }
+.sp-under { transform: rotate(-7deg); opacity: 0.85; }
+.sp-top .bj-card { animation: sp-slap 0.22s ease-out; }
+.sp-pile.by-p1 .sp-top .bj-card { box-shadow: 0 0 0 4px var(--p1), 0 8px 18px rgba(0, 0, 0, 0.5); }
+.sp-pile.by-p2 .sp-top .bj-card { box-shadow: 0 0 0 4px var(--p2), 0 8px 18px rgba(0, 0, 0, 0.5); }
+@keyframes sp-slap { from { transform: scale(1.25) rotate(8deg); opacity: 0.4; } }
+.sp-spare { position: relative; --card-w: 5rem; }
+.sp-spare b { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); font-size: 1.5rem; text-shadow: 0 2px 4px #000; }
+.sp-empty { width: 5rem; aspect-ratio: 5 / 7; border-radius: 0.5rem; border: 2px dashed rgba(255, 255, 255, 0.25); }
+
+/* ---- phone ---- */
+.sp-phone { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 10px 10px 14px; touch-action: manipulation; user-select: none; -webkit-user-select: none; }
+.sp-ptop { display: flex; justify-content: space-between; color: var(--muted); }
+.sp-ptop b { color: var(--text); }
+.sp-ppiles { display: flex; justify-content: center; gap: 22px; padding: 14px; border-radius: var(--r-md); background: #164c34; --card-w: 6rem; }
+.sp-ppile { padding: 0; border: 0; background: none; border-radius: 0.6rem; }
+.sp-ppile.ok { box-shadow: 0 0 0 4px #facc15, 0 0 20px #facc15; }
+.sp-msg { margin: 0; text-align: center; font-size: 1.1rem; min-height: 1.5em; }
+.sp-msg .won { color: var(--good); font-weight: 900; }
+.sp-msg .lost { color: var(--bad); font-weight: 900; }
+.sp-msg .big { font-size: 1.6rem; }
+.sp-hand { margin-top: auto; display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; --card-w: calc((100vw - 44px) / 5); }
+.sp-hcard { padding: 0; border: 0; background: none; border-radius: 0.5rem; opacity: 0.45; transition: transform 0.1s; }
+.sp-hcard .bj-card { width: var(--card-w); }
+.sp-hcard.ok { opacity: 1; box-shadow: 0 0 0 3px #4ade80; }
+.sp-hcard.picked { transform: translateY(-10px); box-shadow: 0 0 0 4px #facc15; }
+.sp-phone .rematch { margin-top: auto; }
+@media (prefers-reduced-motion: reduce) { .sp-top .bj-card { animation: none; } }
