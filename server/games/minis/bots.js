@@ -575,6 +575,15 @@ export const PLAYERS = {
     }
     return null;
   },
+  'higher-lower'({ s, you, level, rng, react }) {
+    // It reads the card and calls the likelier way (Easy sometimes just guesses), taking a moment.
+    if (s.stage !== 'pick' || s.picked[you]) return null;
+    const c = s.card;
+    let call = c < 7 ? 'higher' : c > 7 ? 'lower' : rng() < 0.5 ? 'higher' : 'lower';
+    const wild = { easy: 0.3, normal: 0.1, hard: 0 }[level];
+    if (rng() < wild) call = rng() < 0.5 ? 'higher' : 'lower';
+    return { type: 'pick', call, botDelayMs: react() + 400 + rng() * 900, botFor: 'c' + s.call };
+  },
   'cup-stack'({ s, you, L, rng, el, react }) {
     // It reads the strip and taps at a person's pace (a beat longer at each new pyramid), now and then
     // with the wrong hand; after a fumble it waits it out and reads the strip again.
