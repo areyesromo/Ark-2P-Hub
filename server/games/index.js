@@ -112,6 +112,8 @@ import redDog from './red-dog.js';
 import { redDogBot } from './red-dog-bot.js';
 import baccarat from './baccarat.js';
 import { baccaratBot } from './baccarat-bot.js';
+import shutTheBox from './shut-the-box.js';
+import { shutTheBoxBot } from './shut-the-box-bot.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
@@ -420,6 +422,11 @@ const GAMES = [
     coups: { title: 'Match', values: [10, 6, 15], label: (n) => `${n} coups` },
     ...timer('timed', '20 s to bet'),
   }),
+  withSetup({ ...shutTheBox, bot: shutTheBoxBot }, {
+    tiles: { title: 'Box', values: [9, 12], label: (n) => `Tiles 1 to ${n}` },
+    ...firstTo('Rounds to win', [3, 2, 5]),
+    ...timer('timed', '15 s to roll, 25 s to shut'),
+  }),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
@@ -464,11 +471,11 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem', 'cribbage', 'lucky-seven', 'video-poker', 'go-fish', 'spades', 'hex', 'ultimate-ttt', 'red-dog', 'hearts', 'baccarat'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem', 'cribbage', 'lucky-seven', 'video-poker', 'go-fish', 'spades', 'hex', 'ultimate-ttt', 'red-dog', 'hearts', 'baccarat', 'shut-the-box'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
-  board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'hex', 'ultimate-ttt', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party'],
+  board: ['chess', 'checkers', 'connect-four', 'five-in-a-row', 'hex', 'ultimate-ttt', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'shut-the-box'],
   cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'speed', 'cribbage', 'lucky-seven', 'liars-dice', 'memory-match', 'video-poker', 'go-fish', 'spades', 'hearts', 'red-dog', 'baccarat'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
