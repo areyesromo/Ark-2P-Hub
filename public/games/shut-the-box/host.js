@@ -27,7 +27,7 @@
       tiles += '<span class="' + cls + '">' + n + '</span>';
     }
     const done = v.scores[slot];
-    let line = '';
+    let line;
     if (done !== null) line = done === 0 ? '🎉 Shut the box! <b>0</b>' : 'Scored <b>' + done + '</b>';
     else if (v.turn === slot) line = 'Playing · ' + v.open[slot].reduce((a, b) => a + b, 0) + ' still open';
     else line = 'Waiting';
