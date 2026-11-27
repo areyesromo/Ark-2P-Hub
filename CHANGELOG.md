@@ -4,6 +4,18 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.77
+
+- ⚫ Go on a 9 × 9 board: surround territory and capture stones; dead stones are worked out for you
+  at the end.
+- 🧱 Wall Race: race your pawn to the far side, or drop a wall in the other's way (there must always
+  be a way through).
+- ⭐ Chinese Checkers for two: hop your ten pieces across the star in long chains.
+- 🎲 Shut the Box: shut the tiles that add up to your roll; the lowest total left takes the round.
+- 🎲 Farkle: set aside 1s, 5s and sets, then roll on or bank; roll nothing that scores and you lose
+  the turn. First to 10,000.
+- 🤖 All five can be played against the computer, at three levels.
+
 ## 0.1.76
 
 - ⬢ Hex: join your two edges with one chain of stones on a board of hexagons; no draws, and the

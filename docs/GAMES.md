@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (121)
+## Games (126)
 
 ### ⚔️ Competitive (38)
 
@@ -54,7 +54,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Which Box | `which-box` | Hide the prize in one of three boxes; the other guesses which. Swap and swap again: read them, fool them. | `server/games/which-box.js`, `server/games/guess-bots.js`, `public/games/which-box/`, `test/which-box.test.js` |
 | Odd or Even | `odd-even` | Show one to five fingers in secret. Odd total, a point to Odd; even, to Even. Guess their hand. First to 5. | `server/games/odd-even.js`, `server/games/guess-bots.js`, `public/games/odd-even/`, `test/odd-even.test.js` |
 
-### 🎲 Dice & Board (28)
+### 🎲 Dice & Board (33)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -85,6 +85,11 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Ultimate Tic-tac-toe | `ultimate-ttt` | Nine little boards in one big one. Where you play sends them to that board. Win three boards in a row. | `server/games/ultimate-ttt-bot.js`, `server/games/ultimate-ttt.js`, `public/games/ultimate-ttt/`, `test/ultimate-ttt.test.js` |
 | Red Dog | `red-dog` | The same two cards for you both: will the next fall in between? Raise in secret; the best raiser takes the chips. | `server/games/red-dog-bot.js`, `server/games/red-dog.js`, `server/games/holdem-hands.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/red-dog/`, `test/red-dog.test.js` |
 | Baccarat | `baccarat` | Bet in secret on Player, Banker or a Tie, then one coup is dealt for you both. Closest to 9 wins; most chips after 10 coups. | `server/games/baccarat-bot.js`, `server/games/baccarat.js`, `public/games/blackjack/table.js`, `public/games/blackjack/style.css`, `public/games/baccarat/`, `test/baccarat.test.js` |
+| Shut the Box | `shut-the-box` | Roll the dice and shut tiles that add up to the roll, until you can't. Lowest total left wins the round. | `server/games/shut-the-box-bot.js`, `server/games/shut-the-box.js`, `public/shared/dice.js`, `public/shared/dice.css`, `public/games/shut-the-box/`, `test/shut-the-box.test.js` |
+| Farkle | `farkle` | Roll six dice, set aside 1s, 5s and sets, then roll on or bank. Nothing scores? Farkle: you lose the turn. First to 10,000. | `server/games/farkle-bot.js`, `server/games/farkle.js`, `public/shared/dice.js`, `public/shared/dice.css`, `public/games/farkle/`, `test/farkle.test.js` |
+| Wall Race | `wall-race` | Race your pawn to the far side, or drop a wall in the other's way. Every wall must leave a way through. | `server/games/wall-race-bot.js`, `server/games/wall-race.js`, `public/games/wall-race/`, `test/wall-race.test.js` |
+| Chinese Checkers | `chinese-checkers` | Race your ten pieces across the star: step, or hop over pieces in long chains. First to fill the far point wins. | `server/games/chinese-checkers-bot.js`, `server/games/chinese-checkers.js`, `public/games/chinese-checkers/`, `test/chinese-checkers.test.js` |
+| Go | `go` | The ancient game on a small 9 × 9 board: surround territory, capture stones with no breathing room. Most area wins. | `server/games/go-bot.js`, `server/games/go-engine.js`, `server/games/go.js`, `public/games/go/`, `test/go.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party-bot.js`, `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
 ### 🤝 Co-op & casual (8)
