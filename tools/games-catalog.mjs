@@ -36,6 +36,8 @@ const EXTRA = {
   'red-dog': ['server/games/holdem-hands.js', 'public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
   baccarat: ['public/games/blackjack/table.js', 'public/games/blackjack/style.css'],
   'which-box': ['server/games/guess-bots.js'],
+  'shut-the-box': ['public/shared/dice.js', 'public/shared/dice.css'],
+  farkle: ['public/shared/dice.js', 'public/shared/dice.css'],
   'odd-even': ['server/games/guess-bots.js'],
 };
 

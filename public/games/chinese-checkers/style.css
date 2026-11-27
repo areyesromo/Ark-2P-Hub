@@ -1,0 +1,49 @@
+/* Chinese Checkers: a wooden star (the wood keeps its colours), each player's point tinted in their
+   colour. Pieces: player 1 a dot, player 2 a ring (told apart without the colours). */
+.cc-board { display: block; width: 100%; height: 100%; }
+.cc-board.flip { transform: rotate(180deg); }
+.cc-star { fill: #c99853; stroke: #8a5a26; stroke-width: 1.2; stroke-linejoin: round; }
+.cc-hole { fill: #7a4b1e; stroke: rgba(0, 0, 0, 0.25); stroke-width: 0.4; }
+.cc-hole.z1 { fill: color-mix(in srgb, var(--p1) 45%, #7a4b1e); }
+.cc-hole.z2 { fill: color-mix(in srgb, var(--p2) 45%, #7a4b1e); }
+.cc-hole[data-c] { cursor: pointer; }
+.cc-hole.target { fill: var(--good); stroke: #fff; stroke-width: 0.6; }
+.cc-hole.from { stroke: #fff; stroke-width: 0.8; stroke-dasharray: 1.2 1; }
+.cc-hole.aim.c1 { stroke: var(--p1); stroke-width: 1.4; }
+.cc-hole.aim.c2 { stroke: var(--p2); stroke-width: 1.4; }
+.cc-piece { pointer-events: none; transform-box: fill-box; transform-origin: center; }
+.cc-piece.p1 > circle:first-child { fill: var(--p1); }
+.cc-piece.p2 > circle:first-child { fill: var(--p2); }
+.cc-piece > circle:first-child { stroke: rgba(0, 0, 0, 0.45); stroke-width: 0.5; }
+.cc-piece .mark { fill: rgba(255, 255, 255, 0.9); }
+.cc-piece .ring { fill: none; stroke: rgba(255, 255, 255, 0.9); stroke-width: 0.6; }
+.cc-piece.picked > circle:first-child { stroke: #fff; stroke-width: 1.1; }
+.cc-piece.last > circle:first-child { stroke: #fff; stroke-width: 0.9; }
+.cc-piece.last { animation: cc-drop 0.3s ease-out; }
+@keyframes cc-drop { from { transform: scale(1.4); } to { transform: none; } }
+@media (prefers-reduced-motion: reduce) { .cc-piece.last { animation: none; } }
+
+/* ---- TV ---- */
+.cc-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.cc-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr minmax(0, 2.6fr) 1fr; align-items: center; gap: 1.5rem; }
+.cc-centre { position: relative; height: min(78vh, 100%); min-width: 0; }
+.cc-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 11rem; padding: 1.2rem 1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.8; text-align: center; }
+.cc-side.active { opacity: 1; }
+.cc-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.cc-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.cc-name { font-size: 1.5rem; font-weight: 900; }
+.cc-stat { color: var(--muted); }
+.cc-stat b { color: var(--text); font-size: 1.3em; }
+.cc-turn { min-height: 1.8rem; font-weight: 800; }
+.cc-turn small { display: block; font-weight: 500; color: var(--muted); font-size: 0.8rem; }
+.cc-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2rem; font-weight: 900; white-space: nowrap; text-align: center; }
+.cc-banner small { display: block; font-size: 1rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+.cc-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 4px 14px; }
+.cc-top { display: flex; justify-content: space-between; color: var(--muted); padding: 0 6px; }
+.cc-msg { margin: 0; text-align: center; font-size: 1.05rem; min-height: 1.5em; }
+.cc-msg .won { color: var(--good); font-weight: 900; }
+.cc-msg .lost { color: var(--bad); font-weight: 900; }
+.cc-msg .big { font-size: 1.6rem; }
+.cc-phone .cc-board { height: auto; }

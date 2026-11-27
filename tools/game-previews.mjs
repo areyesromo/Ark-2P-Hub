@@ -143,6 +143,26 @@ const NUDGE = {
     players[0].emit('game:input', { type: 'bet', side: 'banker', amount: 200 });
     players[1].emit('game:input', { type: 'bet', side: 'player', amount: 100 });
   },
+  'shut-the-box': async (players) => {
+    both(players, { type: 'roll', dice: 2 });
+    await sleep(400);
+  },
+  farkle: async (players) => { both(players, { type: 'roll' }); },
+  go: async (players) => {
+    for (const cell of [40, 30, 22, 32, 50, 58, 48, 49, 39, 31, 20, 60]) { both(players, { type: 'place', cell }); await sleep(250); }
+  },
+  'wall-race': async (players) => {
+    both(players, { type: 'step', cell: 67 });
+    await sleep(250);
+    both(players, { type: 'wall', dir: 'h', k: 51 });
+    await sleep(250);
+    both(players, { type: 'wall', dir: 'v', k: 19 });
+    await sleep(250);
+    both(players, { type: 'step', cell: 13 });
+  },
+  'chinese-checkers': async (players) => {
+    for (const [from, to] of [[115, 102], [3, 16], [120, 104], [0, 14], [111, 89], [4, 17]]) { both(players, { type: 'move', from, to }); await sleep(300); }
+  },
   // The guessing games at a reveal.
   'which-box': async (players) => { both(players, { type: 'pick', box: 1 }); },
   'odd-even': async (players) => {

@@ -1,0 +1,54 @@
+/* Go: a light wooden board (its colours are its own), black and white stones. */
+.go-board { display: block; width: 100%; height: 100%; }
+.go-wood { fill: #dcb36f; stroke: #a5763a; stroke-width: 0.6; }
+.go-line { stroke: rgba(60, 35, 10, 0.75); stroke-width: 0.35; }
+.go-star { fill: rgba(60, 35, 10, 0.85); }
+.go-hit { fill: transparent; cursor: pointer; }
+.go-stone { stroke: rgba(0, 0, 0, 0.5); stroke-width: 0.35; pointer-events: none; }
+.go-stone.b { fill: #18181b; }
+.go-stone.w { fill: #fafaf9; }
+.go-stone.ghost { opacity: 0.5; }
+.go-stone.dead { opacity: 0.45; }
+.go-last { fill: none; stroke-width: 0.6; pointer-events: none; }
+.go-last.b { stroke: #fafaf9; }
+.go-last.w { stroke: #18181b; }
+.go-x { stroke: #dc2626; stroke-width: 0.9; stroke-linecap: round; pointer-events: none; }
+.go-aim { fill: none; stroke-width: 1; pointer-events: none; }
+.go-aim.c1 { stroke: var(--p1); }
+.go-aim.c2 { stroke: var(--p2); }
+
+/* ---- TV ---- */
+.go-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.go-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; }
+.go-centre { position: relative; height: min(76vh, 100%); aspect-ratio: 1; }
+.go-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 12rem; padding: 1.2rem 1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.8; text-align: center; }
+.go-side.active { opacity: 1; }
+.go-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.go-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.go-side .stone { width: 3.2rem; height: 3.2rem; border-radius: 50%; border: 2px solid rgba(0, 0, 0, 0.4); }
+.go-side .stone.b { background: #18181b; }
+.go-side .stone.w { background: #fafaf9; }
+.go-name { font-size: 1.5rem; font-weight: 900; }
+.go-stat { color: var(--muted); }
+.go-turn { min-height: 1.8rem; font-weight: 800; }
+.go-turn small { display: block; font-weight: 500; color: var(--muted); font-size: 0.8rem; }
+.go-note { min-height: 1.4em; text-align: center; color: var(--muted); font-size: 1.2rem; }
+.go-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2rem; font-weight: 900; white-space: nowrap; text-align: center; }
+.go-banner small { display: block; font-size: 1.1rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+.go-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 6px 14px; }
+.go-top { display: flex; justify-content: space-between; align-items: center; color: var(--muted); padding: 0 4px; }
+.go-top .stone { display: inline-block; width: 14px; height: 14px; border-radius: 50%; border: 1px solid rgba(0, 0, 0, 0.5); vertical-align: -2px; }
+.go-top .stone.b { background: #18181b; }
+.go-top .stone.w { background: #fafaf9; }
+.go-msg { margin: 0; text-align: center; font-size: 1.05rem; min-height: 1.5em; }
+.go-msg .won { color: var(--good); font-weight: 900; }
+.go-msg .lost { color: var(--bad); font-weight: 900; }
+.go-msg .big { font-size: 1.6rem; }
+.go-phone .go-board { height: auto; }
+.go-buttons { display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 8px; }
+.go-buttons button { padding: 16px 0; font-weight: 800; }
+.go-place { border: 0; background: var(--good); color: var(--on-good); }
+.go-place:disabled { opacity: 0.35; }
+.go-resign.armed { background: var(--bad); color: #fff; }

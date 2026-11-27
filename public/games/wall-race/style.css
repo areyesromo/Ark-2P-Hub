@@ -1,0 +1,60 @@
+/* Wall Race: a dark board of squares; each player's goal row is tinted in their colour, and their
+   walls too. Pawns: player 1 a dot, player 2 a ring (told apart without the colours). */
+.wr-board { display: block; width: 100%; height: auto; }
+.wr-board.flip { transform: rotate(180deg); }
+.wr-sq { fill: var(--bg-2); stroke: var(--line); stroke-width: 0.3; }
+.wr-sq.goal1 { fill: color-mix(in srgb, var(--p1) 22%, var(--bg-2)); }
+.wr-sq.goal2 { fill: color-mix(in srgb, var(--p2) 22%, var(--bg-2)); }
+.wr-sq[data-c] { cursor: pointer; }
+.wr-sq.step { stroke: var(--good); stroke-width: 0.7; }
+.wr-sq.aim.c1 { stroke: var(--p1); stroke-width: 1.2; }
+.wr-sq.aim.c2 { stroke: var(--p2); stroke-width: 1.2; }
+.wr-dot { fill: var(--good); pointer-events: none; }
+.wr-wall { stroke: rgba(0, 0, 0, 0.4); stroke-width: 0.3; }
+.wr-wall.w1 { fill: var(--p1); }
+.wr-wall.w2 { fill: var(--p2); }
+.wr-wall.last { animation: wr-drop 0.35s ease-out; transform-box: fill-box; transform-origin: center; }
+.wr-ghost { fill: var(--warn); opacity: 0.75; pointer-events: none; }
+.wr-ghost.bad { fill: var(--bad); opacity: 0.6; }
+.wr-pawn { pointer-events: none; }
+.wr-pawn.p1 > circle:first-child { fill: var(--p1); }
+.wr-pawn.p2 > circle:first-child { fill: var(--p2); }
+.wr-pawn > circle:first-child { stroke: #fff; stroke-width: 0.6; }
+.wr-pawn .mark { fill: #fff; }
+.wr-pawn .ring { fill: none; stroke: #fff; stroke-width: 0.6; }
+@keyframes wr-drop { from { transform: scale(1.4); opacity: 0; } to { transform: none; opacity: 1; } }
+@media (prefers-reduced-motion: reduce) { .wr-wall.last { animation: none; } }
+
+/* ---- TV ---- */
+.wr-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.wr-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; }
+.wr-centre { position: relative; height: min(76vh, 100%); aspect-ratio: 1; }
+.wr-centre .wr-board { height: 100%; width: auto; }
+.wr-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 12rem; padding: 1.2rem 1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.8; text-align: center; }
+.wr-side.active { opacity: 1; }
+.wr-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.wr-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.wr-name { font-size: 1.5rem; font-weight: 900; }
+.wr-walls { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.25rem; max-width: 10rem; }
+.wr-walls i { width: 0.45rem; height: 1.6rem; border-radius: 0.2rem; }
+.p1 .wr-walls i { background: var(--p1); }
+.p2 .wr-walls i { background: var(--p2); }
+.wr-dist { color: var(--muted); }
+.wr-dist b { color: var(--text); font-size: 1.3em; }
+.wr-turn { min-height: 1.8rem; font-weight: 800; }
+.wr-turn small { display: block; font-weight: 500; color: var(--muted); font-size: 0.8rem; }
+.wr-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2rem; font-weight: 900; white-space: nowrap; text-align: center; }
+.wr-banner small { display: block; font-size: 1rem; font-weight: 500; color: var(--muted); }
+
+/* ---- phone ---- */
+.wr-phone { flex: 1; display: flex; flex-direction: column; justify-content: center; gap: 10px; padding: 10px 8px 14px; }
+.wr-top { display: flex; justify-content: space-between; color: var(--muted); }
+.wr-msg { margin: 0; text-align: center; font-size: 1.05rem; min-height: 1.5em; }
+.wr-msg .won { color: var(--good); font-weight: 900; }
+.wr-msg .lost { color: var(--bad); font-weight: 900; }
+.wr-msg .big { font-size: 1.6rem; }
+.wr-modes { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wr-modes button { border: 3px solid transparent; }
+.wr-modes button.on { border-color: var(--me); background: color-mix(in srgb, var(--me) 28%, var(--panel)); font-weight: 900; }
+.wr-wallbar { display: grid; grid-template-columns: 1fr 2fr; gap: 8px; }
+.wr-wallbar button { padding: 14px 0; }

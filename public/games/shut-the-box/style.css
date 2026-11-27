@@ -1,0 +1,45 @@
+/* Shut the Box: two wooden boxes of numbered tiles (the wood keeps its own colours); a shut tile
+   drops flat. Dice from shared/dice.css. */
+.sb-tiles { display: grid; grid-template-columns: repeat(var(--n), 1fr); gap: 0.35rem; padding: 0.7rem; border-radius: var(--r-md); background: linear-gradient(#7a4b1e, #5b3412); box-shadow: inset 0 0 0 4px #3f230b; }
+.sb-tile { display: grid; place-items: center; aspect-ratio: 0.62; border-radius: var(--r-sm); background: linear-gradient(#f6e3bd, #e2c48d); color: #3b2412; font-weight: 900; font-size: 2.3rem; box-shadow: 0 0.25rem 0 #a9824a; transition: transform 0.25s, opacity 0.25s; }
+.sb-tile.shut { transform: perspective(20rem) rotateX(68deg); opacity: 0.45; box-shadow: none; }
+.sb-tile.picked { background: linear-gradient(#fde68a, #facc15); transform: translateY(-0.3rem); }
+.sb-tile.aim.p1 { outline: 3px solid var(--p1); outline-offset: 2px; }
+.sb-tile.aim.p2 { outline: 3px solid var(--p2); outline-offset: 2px; }
+
+/* ---- TV ---- */
+.sb-host { flex: 1; display: flex; flex-direction: column; gap: 0.7rem; min-height: 0; }
+.sb-table { flex: 1; min-height: 0; display: grid; grid-template-columns: 1.4fr minmax(15rem, 0.6fr) 1.4fr; gap: 1.6rem; align-items: center; }
+.sb-box { display: flex; flex-direction: column; gap: 0.7rem; padding: 1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.85; }
+.sb-box.turn { opacity: 1; }
+.sb-box.p1.turn { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.sb-box.p2.turn { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.sb-box.won { box-shadow: 0 0 0 3px var(--good), 0 0 30px -6px var(--good); }
+.sb-box { padding: 1.4rem 1rem; }
+.sb-box header { font-size: 1.5rem; font-weight: 900; text-align: center; }
+.sb-box footer { text-align: center; font-size: 1.2rem; min-height: 1.6rem; }
+.sb-box footer b { font-size: 1.4em; }
+.sb-box footer small { display: block; color: var(--muted); font-size: 0.85rem; }
+.sb-middle { display: flex; flex-direction: column; align-items: center; gap: 1rem; text-align: center; font-size: 1.4rem; font-weight: 800; }
+.sb-middle .ark-result { font-size: 2rem; }
+.sb-dice { display: flex; align-items: center; gap: 0.8rem; font-size: 2rem; }
+.sb-dice b { font-size: 3rem; margin-left: 0.5rem; }
+.sb-note small { display: block; color: var(--muted); font-size: 0.9rem; font-weight: 500; }
+.sb-beat { color: var(--muted); font-size: 1.1rem; }
+.sb-beat b { color: var(--text); font-size: 1.4em; }
+
+/* ---- phone ---- */
+.sb-phone { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 10px 10px 14px; }
+.sb-ptop { display: flex; justify-content: space-between; color: var(--muted); }
+.sb-ptop b { color: var(--text); }
+.sb-pdice { display: flex; justify-content: center; gap: 12px; font-size: 1.8rem; min-height: 4.8rem; align-items: center; }
+.sb-msg { margin: 0; text-align: center; font-size: 1.15rem; min-height: 2.6em; }
+.sb-msg small { color: var(--muted); }
+.sb-msg .won { color: var(--good); font-weight: 900; }
+.sb-msg .lost { color: var(--bad); font-weight: 900; }
+.sb-msg .big { font-size: 1.6rem; }
+.sb-ptiles { grid-template-columns: repeat(5, 1fr); padding: 10px; gap: 8px; }
+.sb-ptiles .sb-tile { border: 0; padding: 0; font-size: 2rem; aspect-ratio: 0.85; }
+.sb-ptiles .sb-tile:disabled { cursor: default; }
+.sb-buttons { display: flex; flex-direction: column; gap: 10px; }
+.sb-buttons button, .sb-go { padding: 18px 0; font-size: 1.3rem; }

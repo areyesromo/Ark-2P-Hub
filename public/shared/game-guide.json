@@ -308,6 +308,31 @@
   "settings": "10, 6 or 15 coups; timed (20 s to bet) or no timer",
   "controls": "<strong>X</strong> Player · <strong>B</strong> Banker · <strong>Y</strong> Tie · <strong>◀ ▶</strong> the amount · <strong>A</strong> places the bet"
  },
+ "shut-the-box": {
+  "rules": "The pub dice game, for two: you each have a box of tiles 1 to 9 (or 1 to 12). Each round you play your box in turn: roll two dice (or just one, once the 7 and up are shut) and shut any open tiles that add up to the roll (an 8: the 8, or 5 + 3, or 1 + 3 + 4…), again and again until you can't. What's still open, added up, is your score; shut them all and it's 0. Then the other plays, knowing the score to beat; the lower score takes the round. First to 3. Tap the tiles on your phone, or use a controller. Out of time rolling: the dice roll for you; out of time shutting: your turn ends there. 🤖 Against the computer: Hard plays perfectly, and going second it plays to beat your score.",
+  "settings": "Tiles 1 to 9 or 1 to 12; first to 3, 2 or 5 rounds; timed (15 s to roll, 25 s to shut) or no timer",
+  "controls": "<strong>B</strong> rolls two dice (<strong>Y</strong> one) · <strong>◀ ▶</strong> picks a tile, <strong>A</strong> marks it, <strong>X</strong> shuts them"
+ },
+ "farkle": {
+  "rules": "Push-your-luck dice. On your turn roll six dice and set aside at least one scoring die: each 1 is 100, each 5 is 50, three of a kind 100 times the number (three 1s: 1,000), four, five or six of a kind 1,000, 2,000 or 3,000, a straight or three pairs 1,500, two triples 2,500. Then roll the rest again, or bank what you've got. Roll nothing that scores and it's a <strong>farkle</strong>: the turn's points are gone. Score with all six and you roll all six again. First to 10,000, then the other gets one last turn to beat it. Out of time choosing: a farkle. 🤖 Against the computer: Hard knows the odds of a farkle with each number of dice.",
+  "settings": "First to 10,000, 5,000 or 3,000; timed (15 s to roll, 30 s to choose) or no timer",
+  "controls": "<strong>B</strong> rolls · <strong>◀ ▶</strong> picks a die, <strong>A</strong> marks it · <strong>X</strong> keeps them and rolls on · <strong>Y</strong> keeps them and banks"
+ },
+ "wall-race": {
+  "rules": "Race your pawn across a 9×9 board (or 7×7) to the far side, or place one of your 10 walls (two squares long) in the other's way. Walls can't overlap or cross, and must always leave you both a way through. Pawns face to face? Jump over, or step round if there's a wall behind. Tap a square to step, or switch to Wall, tap where it goes, turn it, and place it. Out of time: you miss your turn. 🤖 Against the computer: it measures the race round the walls; Hard looks at your best reply.",
+  "settings": "9×9 (10 walls each) or 7×7 (8); one game, or first to 2 or 3; timed (30 s a move) or no timer",
+  "controls": "<strong>D-pad</strong> picks a square, <strong>A</strong> steps there · <strong>Y</strong> a wall instead: <strong>D-pad</strong> moves it, <strong>X</strong> turns it, <strong>A</strong> places it, <strong>B</strong> back"
+ },
+ "chinese-checkers": {
+  "rules": "The star board, for two: race your 10 pieces from your point of the star into the one across. Move one piece a turn: one step, or a chain of hops over pieces (anyone's) into the empty hole beyond, as far as the hops go. Nothing is taken. First to fill the far point wins (pieces the other left there don't stop you). Tap a piece on your phone, then a lit hole. Out of time: one of your pieces steps forward for you. 🤖 Against the computer: it keeps its stragglers moving; Hard won't build you a ladder.",
+  "settings": "One game, or first to 2 or 3; timed (30 s a move) or no timer",
+  "controls": "<strong>D-pad</strong> moves your ring · <strong>A</strong> picks a piece, <strong>A</strong> on a lit hole moves it · <strong>B</strong> puts it back"
+ },
+ "go": {
+  "rules": "The ancient game on a small 9×9 board. Take turns placing a stone (black first); a group with no empty point next to it is taken off. No suicide, and no taking a single stone straight back (ko). Pass when there's nothing useful left: two passes end the game, dead stones come off, and you each score your stones plus the empty points only you surround; white gets 6.5 for going second. You can resign too. Tap a point twice on your phone (or once and Place). 🤖 Against the computer: it plays out many random games from the board as it stands; Hard also reads the fights a move deep.",
+  "settings": "One game, or first to 2 or 3; timed (30 s a move) or no timer",
+  "controls": "<strong>D-pad</strong> (or stick) moves your ring · <strong>A</strong> places a stone · <strong>X</strong> passes · Resign from a phone"
+ },
  "dice-party": {
   "rules": "Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards side by side (the numbers on the left, the combos on the right as 3× and 4× of a kind, FH full house, SM and LG straights, 5× five of a kind and CH chance), with what each open box would score. Highest total wins. 📱 <strong>No TV needed</strong>: pick the <strong>Handheld</strong> screen and each phone shows the whole scorecard (yours and theirs, the bonus and the totals) with the dice and Roll in a tray at the bottom; tap a box in your column, then tap it again to score.",
   "settings": "Full game (13 rounds) or quick (6); the screen: TV, or 📱 Handheld (the whole scorecard on your phone, no TV needed)",

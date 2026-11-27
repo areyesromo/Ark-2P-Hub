@@ -1,0 +1,49 @@
+/* Farkle: dice from shared/dice.css on a felt; each player's score as a bar to the target, this
+   turn's points shown on it in a lighter colour. */
+
+/* ---- TV ---- */
+.fk-host { flex: 1; display: flex; flex-direction: column; gap: 0.8rem; min-height: 0; }
+.fk-head { text-align: center; color: var(--muted); font-size: 1.15rem; }
+.fk-head strong { color: var(--text); }
+.fk-players { display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+.fk-player { padding: 0.8rem 1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.8; }
+.fk-player.turn { opacity: 1; }
+.fk-player.p1.turn { border-color: var(--p1); }
+.fk-player.p2.turn { border-color: var(--p2); }
+.fk-player header { display: flex; justify-content: space-between; font-size: 1.4rem; font-weight: 900; }
+.fk-bar { position: relative; height: 0.9rem; margin-top: 0.5rem; border-radius: var(--r-pill); background: var(--bg-2); overflow: hidden; }
+.fk-bar i, .fk-bar em { position: absolute; top: 0; bottom: 0; left: 0; }
+.p1 .fk-bar i { background: var(--p1); }
+.p2 .fk-bar i { background: var(--p2); }
+.fk-bar em { background: var(--warn); opacity: 0.7; }
+.fk-table { flex: 1; min-height: 0; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1rem; padding: 1.2rem; border-radius: var(--radius); background: radial-gradient(ellipse at 50% 40%, #1f6b47, #123f2b 75%); box-shadow: inset 0 0 50px rgba(0, 0, 0, 0.5); color: #fff; text-align: center; }
+.fk-table .ark-result { font-size: 2.4rem; }
+.fk-kept { display: flex; gap: 1.2rem; min-height: 2.6rem; font-size: 1rem; }
+.fk-set { display: flex; gap: 0.2rem; padding: 0.3rem; border-radius: var(--r-sm); background: rgba(0, 0, 0, 0.25); }
+.fk-turn { font-size: 1.5rem; }
+.fk-turn b { color: #facc15; font-size: 1.4em; }
+.fk-dice { display: flex; gap: 1rem; min-height: 6rem; align-items: center; font-size: 2.2rem; }
+.fk-dice .fk-aim { outline: 0.15em solid #fff; outline-offset: 0.12em; }
+.fk-note { font-size: 1.3rem; font-weight: 700; min-height: 1.6rem; }
+.fk-note small { display: block; font-size: 0.9rem; font-weight: 500; opacity: 0.7; }
+.fk-big { font-size: 2.4rem; font-weight: 900; }
+.fk-big b { color: #facc15; }
+.fk-big.bad, .fk-note .bad { color: #fca5a5; }
+.fk-last { font-size: 1.2rem; padding: 0.3rem 1rem; border-radius: var(--r-pill); background: rgba(0, 0, 0, 0.3); }
+
+/* ---- phone ---- */
+.fk-phone { flex: 1; display: flex; flex-direction: column; gap: 12px; padding: 10px 10px 14px; }
+.fk-ptop { display: flex; justify-content: space-between; color: var(--muted); }
+.fk-ptop b { color: var(--text); }
+.fk-msg { margin: 0; text-align: center; font-size: 1.15rem; min-height: 2.6em; }
+.fk-msg small { color: var(--muted); }
+.fk-msg .won { color: var(--good); font-weight: 900; }
+.fk-msg .lost { color: var(--bad); font-weight: 900; }
+.fk-msg .big { font-size: 1.6rem; }
+.fk-pdice { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; padding: 12px; border-radius: var(--r-md); background: #123f2b; }
+.fk-pdice button { padding: 6px 0; border: 0; background: none; font-size: 1.7rem; }
+.fk-pdice button.on { transform: translateY(-4px); }
+.fk-sel { margin: 0; text-align: center; min-height: 1.4em; color: var(--muted); }
+.fk-sel b { color: var(--text); }
+.fk-buttons { display: flex; flex-direction: column; gap: 10px; }
+.fk-buttons button, .fk-roll { padding: 18px 0; font-size: 1.3rem; }
