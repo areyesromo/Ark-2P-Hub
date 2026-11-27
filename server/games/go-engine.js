@@ -50,6 +50,24 @@ export function groupAt(board, nb, c, stones) {
 
 const scratch = [];
 
+/** Does the group at `c` have a liberty? (Stops at the first one: quicker than counting.) */
+function breathes(board, nb, c) {
+  const colour = board[c];
+  const stamp = fresh(board.length);
+  scratch.length = 0;
+  scratch.push(c);
+  mark.seen[c] = stamp;
+  for (let i = 0; i < scratch.length; i++) {
+    for (const m of nb[scratch[i]]) {
+      if (mark.seen[m] === stamp) continue;
+      mark.seen[m] = stamp;
+      if (board[m] === 0) return true;
+      if (board[m] === colour) scratch.push(m);
+    }
+  }
+  return false; // (and `scratch` holds the whole group)
+}
+
 /**
  * Plays `colour` at `c` in place if it's legal (empty, not the ko point, not suicide). Returns the
  * number of stones taken (0 or more), or -1 if the move isn't allowed (the board is unchanged).
@@ -61,15 +79,17 @@ export function play(board, nb, c, colour, ko, out) {
   board[c] = colour;
   let taken = 0;
   let lastTaken = -1;
+  let free = false; // an empty point next to the new stone
   for (const m of nb[c]) {
+    if (board[m] === 0) { free = true; continue; }
     if (board[m] !== enemy) continue;
-    if (groupAt(board, nb, m, scratch) === 0) {
+    if (!breathes(board, nb, m)) {
       for (const s of scratch) board[s] = 0;
       taken += scratch.length;
       lastTaken = scratch[0];
     }
   }
-  if (!taken && groupAt(board, nb, c, scratch) === 0) {
+  if (!taken && !free && !breathes(board, nb, c)) {
     board[c] = 0; // suicide
     return -1;
   }
@@ -130,27 +150,46 @@ export function randomGame(board, n, toMove, ko, rng, firstMoves) {
   const nb = neighboursOf(n);
   const b = Int8Array.from(board);
   const out = { ko };
+  // The empty points, kept up to date as stones go down (and rebuilt after a capture).
   const empty = [];
+  const rebuild = () => {
+    empty.length = 0;
+    for (let c = 0; c < b.length; c++) if (!b[c]) empty.push(c);
+  };
+  rebuild();
   let passes = 0;
   let colour = toMove;
   let moves = 0;
   while (passes < 2 && moves < n * n * 3) {
-    empty.length = 0;
-    for (let c = 0; c < b.length; c++) if (!b[c]) empty.push(c);
-    let played = false;
-    // Try empty points in random order until one is legal (and not our own eye).
-    for (let k = empty.length; k > 0; k--) {
+    let played = -1;
+    // Try empty points in random order until one is legal (and not our own eye). The ones
+    // tried and refused are moved to the end, so they're kept for the other player.
+    let k = empty.length;
+    while (k > 0) {
       const i = Math.floor(rng() * k);
       const c = empty[i];
-      empty[i] = empty[k - 1];
+      k--;
+      empty[i] = empty[k];
+      empty[k] = c;
       if (isEye(b, n, nb, c, colour)) continue;
-      if (play(b, nb, c, colour, out.ko, out) >= 0) {
-        played = true;
-        if (firstMoves && !firstMoves.has(c)) firstMoves.set(c, colour);
-        break;
+      const took = play(b, nb, c, colour, out.ko, out);
+      if (took < 0) continue;
+      played = c;
+      if (took) rebuild();
+      else {
+        empty[k] = empty[empty.length - 1];
+        empty.pop();
       }
+      break;
     }
-    if (played) { passes = 0; moves++; } else { passes++; out.ko = -1; }
+    if (played >= 0) {
+      passes = 0;
+      moves++;
+      if (firstMoves && !firstMoves.has(played)) firstMoves.set(played, colour);
+    } else {
+      passes++;
+      out.ko = -1;
+    }
     colour = 3 - colour;
   }
   return b;

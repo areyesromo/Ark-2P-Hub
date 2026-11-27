@@ -148,6 +148,7 @@ export function hardBeatsEasy(id, n, atLeast, settings) {
 export const HEAVY = {
   'tower-duel': ['tower-duel'],
   chess: ['chess'],
+  go: ['go'],
   'karts-golf': ['kart-race-3d', 'mini-golf'],
   action: ['tron', 'dungeon-duo', 'kitchen-rush', 'block-battle', 'bomb-duel', 'party-board', 'kart-race'],
 };
