@@ -1,0 +1,54 @@
+/* Word Tiles: a board of bonus squares (their colours are their own: the classic word-game reds and
+   blues) and wooden letter tiles with their values. */
+.wt-board { display: grid; grid-template-columns: repeat(11, 1fr); gap: 2px; padding: 4px; border-radius: var(--r-md); background: #1f3b2f; aspect-ratio: 1; }
+.wt-sq { position: relative; display: grid; place-items: center; aspect-ratio: 1; border-radius: 3px; background: #cfe3c9; overflow: hidden; }
+.wt-sq.W3 { background: #e0574f; }
+.wt-sq.W2 { background: #f2a7a0; }
+.wt-sq.L3 { background: #3f87c6; }
+.wt-sq.L2 { background: #a9cbe8; }
+.wt-sq i { font-style: normal; font-size: 0.42em; line-height: 1; text-align: center; font-weight: 800; color: rgba(0, 0, 0, 0.55); text-transform: uppercase; }
+.wt-sq i.star { font-size: 1.2em; color: rgba(0, 0, 0, 0.45); }
+.wt-sq[data-c] { cursor: pointer; }
+.wt-tile { position: relative; display: grid; place-items: center; width: 92%; height: 92%; border-radius: 12%; background: linear-gradient(#f5e2b8, #e3c58c); color: #3b2412; font-weight: 900; font-size: 1.05em; box-shadow: 0 2px 0 #b8925a; }
+.wt-tile sub { position: absolute; right: 8%; bottom: 4%; font-size: 0.45em; font-weight: 700; }
+.wt-tile.last { background: linear-gradient(#fde68a, #facc15); }
+.wt-tile.pending { background: linear-gradient(#c7f9cc, #86efac); outline: 2px solid var(--good); }
+
+/* ---- TV ---- */
+.wt-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.wt-stage { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 2rem; }
+.wt-centre { position: relative; height: min(78vh, 100%); aspect-ratio: 1; font-size: 1.55rem; }
+.wt-centre .wt-board { height: 100%; box-sizing: border-box; }
+.wt-side { justify-self: center; display: flex; flex-direction: column; align-items: center; gap: 0.5rem; min-width: 12rem; padding: 1.2rem 1rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); opacity: 0.8; text-align: center; }
+.wt-side.active { opacity: 1; }
+.wt-side.p1.active { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.wt-side.p2.active { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.wt-name { font-size: 1.5rem; font-weight: 900; }
+.wt-pts { font-size: 2.6rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+.wt-backs { display: flex; gap: 0.2rem; }
+.wt-backs i { width: 1rem; height: 1.3rem; border-radius: 0.2rem; background: #e3c58c; }
+.wt-turn { min-height: 1.6rem; font-weight: 800; }
+.wt-note { min-height: 1.5em; text-align: center; font-size: 1.4rem; font-weight: 800; }
+.wt-note small { color: var(--muted); font-weight: 500; }
+.wt-banner { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); padding: 1rem 2rem; border-radius: var(--radius); background: color-mix(in srgb, var(--panel) 94%, transparent); box-shadow: 0 24px 60px -10px rgba(0, 0, 0, 0.85); font-size: 2rem; font-weight: 900; white-space: nowrap; text-align: center; }
+.wt-banner small { display: block; font-size: 1rem; color: var(--muted); font-weight: 500; }
+
+/* ---- phone ---- */
+.wt-phone { flex: 1; display: flex; flex-direction: column; gap: 8px; padding: 8px 6px 14px; }
+.wt-ptop { display: flex; justify-content: space-between; color: var(--muted); padding: 0 4px; }
+.wt-ptop b { color: var(--text); }
+.wt-msg { margin: 0; text-align: center; font-size: 1rem; min-height: 1.4em; }
+.wt-msg .bad { color: var(--bad); font-weight: 800; }
+.wt-msg .won { color: var(--good); font-weight: 900; }
+.wt-msg .lost { color: var(--bad); font-weight: 900; }
+.wt-msg .big { font-size: 1.5rem; }
+.wt-phone .wt-board { font-size: 1rem; }
+.wt-rack { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; padding: 6px; border-radius: var(--r-md); background: #5b3412; font-size: 1.5rem; min-height: 3rem; }
+.wt-rack button { padding: 0; border: 0; background: none; aspect-ratio: 1; display: grid; place-items: center; }
+.wt-rack button .wt-tile { width: 100%; height: 100%; }
+.wt-rack button.on .wt-tile { outline: 3px solid var(--me); transform: translateY(-4px); }
+.wt-rack button.used { visibility: hidden; }
+.wt-buttons { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; gap: 6px; }
+.wt-buttons button { padding: 12px 0; font-size: 0.95rem; font-weight: 800; }
+.wt-buttons .wt-play { background: var(--good); color: var(--on-good); border: 0; }
+.wt-buttons .armed { background: var(--warn); color: var(--on-warn); }
