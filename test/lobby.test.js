@@ -55,7 +55,8 @@ test('random picks a playable game that is not the one just played', () => {
   // Two phones: every 2 player game can come up (the solo ones are the 1 player lobby's).
   const phones = room({ phones: [true, true] });
   const all = new Set();
-  for (let i = 0; i < 600; i++) all.add(phones.pickRandomGame());
+  // (enough draws that every game comes up: with ~130 games, 600 would miss one about one time in four)
+  for (let i = 0; i < 4000; i++) all.add(phones.pickRandomGame());
   assert.equal(all.size, listGames().filter((g) => !g.solo).length);
 });
 
