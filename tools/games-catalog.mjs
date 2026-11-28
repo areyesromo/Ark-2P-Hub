@@ -38,6 +38,7 @@ const EXTRA = {
   'which-box': ['server/games/guess-bots.js'],
   'shut-the-box': ['public/shared/dice.js', 'public/shared/dice.css'],
   farkle: ['public/shared/dice.js', 'public/shared/dice.css'],
+  'snakes-ladders': ['public/shared/dice.js', 'public/shared/dice.css'],
   'odd-even': ['server/games/guess-bots.js'],
 };
 

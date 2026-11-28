@@ -9,7 +9,7 @@ import { Sight } from '../server/games/bot-human.js';
 
 
 export const REALTIME = ['pong', 'air-hockey', 'snake', 'tron', 'tanks', 'word-hunt', 'volley-blobs', 'brick-duel', 'asteroid-duel', 'rally-tennis', 'sumo', 'mini-golf', 'block-battle', 'bomb-duel', 'kart-race', 'kart-race-3d', 'tower-duel', 'party-board', 'party-minis', 'micro-mayhem', 'kitchen-rush', 'dungeon-duo', 'marble-maze'];
-export const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'ten-pin', 'reversi', 'blackjack', 'five-letters', 'make-24', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'code-breaker', 'hangman', 'go', 'chinese-checkers', 'wall-race', 'farkle', 'shut-the-box', 'baccarat', 'hearts', 'red-dog', 'ultimate-ttt', 'hex', 'odd-even', 'which-box', 'spades', 'go-fish', 'video-poker', 'lucky-seven', 'cribbage', 'speed', 'holdem', ...REALTIME];
+export const BOT_GAMES = ['battleship', 'connect-four', 'checkers', 'dots-boxes', 'mancala', 'rock-paper-scissors', 'memory-match', 'dice-party', 'crazy-eights', 'liars-dice', 'anagram-duel', 'word-race', 'ten-pin', 'reversi', 'blackjack', 'five-letters', 'make-24', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'code-breaker', 'hangman', 'word-tiles', 'hidden-ranks', 'pawn-race', 'snakes-ladders', 'who-is-it', 'go', 'chinese-checkers', 'wall-race', 'farkle', 'shut-the-box', 'baccarat', 'hearts', 'red-dog', 'ultimate-ttt', 'hex', 'odd-even', 'which-box', 'spades', 'go-fish', 'video-poker', 'lucky-seven', 'cribbage', 'speed', 'holdem', ...REALTIME];
 export const SOON = [];
 export const COOP = ['kitchen-rush', 'dungeon-duo', 'marble-maze']; // (the computer as your teammate: nobody to beat)
 
@@ -149,6 +149,7 @@ export const HEAVY = {
   'tower-duel': ['tower-duel'],
   chess: ['chess'],
   go: ['go'],
+  'word-tiles': ['word-tiles'],
   'karts-golf': ['kart-race-3d', 'mini-golf'],
   action: ['tron', 'dungeon-duo', 'kitchen-rush', 'block-battle', 'bomb-duel', 'party-board', 'kart-race'],
 };

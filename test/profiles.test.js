@@ -69,7 +69,11 @@ test('each phone changes its own profile, and the TV can change either seat\'s; 
   await call(bo, 'player:join', { code, name: 'Bo' });
   const mine = await call(ana, 'profile:set', { avatar: AVATARS[2] });
   assert.equal(mine.profile.avatar, AVATARS[2]);
-  const state = new Promise((resolve) => tv.once('room:state', resolve));
+  // The room's update with the change in it (an earlier one can still be on its way when it's busy).
+  const state = new Promise((resolve) => {
+    const look = (st) => { if (st.players[1] && st.players[1].profile && st.players[1].profile.colour === COLOURS[4]) { tv.off('room:state', look); resolve(st); } };
+    tv.on('room:state', look);
+  });
   const fromTv = await call(tv, 'profile:set', { slot: 1, colour: COLOURS[4] });
   assert.equal(fromTv.profile.colour, COLOURS[4]);
   const s = await state;

@@ -4,6 +4,18 @@ What changed in each desktop app release, in plain words. The app shows the new 
 after it updates (the What's new card), and each GitHub release uses its version's lines as its
 notes. Newest first; one `## x.y.z` heading per release and one `- ` line per change.
 
+## 0.1.78
+
+- 🕵️ Who Is It: you each have a secret face; ask yes-or-no questions to rule faces out, then name
+  theirs. A wrong guess loses!
+- 🐍 Snakes & Ladders, with a choice: roll two dice and move by either one, and bump the other back.
+- ♟️ Pawn Race: play cards from your hand to race three pawns round the board and Home; bump, swap
+  and slide.
+- 🚩 Hidden Ranks: two armies with their ranks hidden; attack to find out who's stronger, and
+  capture the flag.
+- 🔤 Word Tiles: make words with your seven letter tiles on a board of bonus squares.
+- 🤖 All five can be played against the computer, at three levels.
+
 ## 0.1.77
 
 - ⚫ Go on a 9 × 9 board: surround territory and capture stones; dead stones are worked out for you

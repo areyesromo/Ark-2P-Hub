@@ -122,6 +122,16 @@ import chineseCheckers from './chinese-checkers.js';
 import { chineseCheckersBot } from './chinese-checkers-bot.js';
 import go from './go.js';
 import { goBot } from './go-bot.js';
+import whoIsIt from './who-is-it.js';
+import { whoIsItBot } from './who-is-it-bot.js';
+import snakesLadders from './snakes-ladders.js';
+import { snakesLaddersBot } from './snakes-ladders-bot.js';
+import pawnRace from './pawn-race.js';
+import { pawnRaceBot } from './pawn-race-bot.js';
+import hiddenRanks from './hidden-ranks.js';
+import { hiddenRanksBot } from './hidden-ranks-bot.js';
+import wordTiles from './word-tiles.js';
+import { wordTilesBot } from './word-tiles-bot.js';
 import { blackjackBot } from './blackjack-bot.js';
 import fiveLetters from './five-letters.js';
 import { fiveLettersBot } from './five-letters-bot.js';
@@ -446,6 +456,11 @@ const GAMES = [
   }),
   withSetup({ ...chineseCheckers, bot: chineseCheckersBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
   withSetup({ ...go, bot: goBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '30 s a move') }),
+  withSetup({ ...whoIsIt, bot: whoIsItBot }, { ...firstTo('Rounds to win', [3, 1, 5]), ...timer('timed', '30 s a turn') }),
+  withSetup({ ...snakesLadders, bot: snakesLaddersBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '15 s to roll, 15 s to choose') }),
+  withSetup({ ...pawnRace, bot: pawnRaceBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '25 s a turn') }),
+  withSetup({ ...hiddenRanks, bot: hiddenRanksBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '90 s to set out, 30 s a move') }),
+  withSetup({ ...wordTiles, bot: wordTilesBot }, { ...firstTo('Games to win', [1, 2, 3]), ...timer('timed', '120 s a turn') }),
   withSetup({ ...diceParty, bot: diceBot }, {
     rounds: { title: 'Game length', values: [13, 6], label: (n) => (n === 13 ? 'Full game (13 turns each)' : `Quick (${n} turns each)`) },
     screen: { title: 'Screen', values: [0, 1], label: (n) => (n ? '📱 Handheld (the scorecard on your phone, no TV needed)' : '📺 TV') },
@@ -490,11 +505,11 @@ const FAST = new Set([
  * and casino games, the long ones you sit down for. The room saves them while they wait for a
  * move (see Room#saveGame and saves.js); a game with a turn clock gives resumed() to restart it.
  */
-export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem', 'cribbage', 'lucky-seven', 'video-poker', 'go-fish', 'spades', 'hex', 'ultimate-ttt', 'red-dog', 'hearts', 'baccarat', 'shut-the-box', 'farkle', 'wall-race', 'chinese-checkers', 'go'];
+export const RESUMES = ['checkers', 'connect-four', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'crazy-eights', 'liars-dice', 'memory-match', 'reversi', 'blackjack', 'mine-duel', 'backgammon', 'gin-rummy', 'colour-clash', 'chess', 'ludo', 'dominoes', 'five-in-a-row', 'morris', 'holdem', 'cribbage', 'lucky-seven', 'video-poker', 'go-fish', 'spades', 'hex', 'ultimate-ttt', 'red-dog', 'hearts', 'baccarat', 'shut-the-box', 'farkle', 'wall-race', 'chinese-checkers', 'go', 'who-is-it', 'snakes-ladders', 'pawn-race', 'hidden-ranks', 'word-tiles'];
 for (const g of GAMES) if (RESUMES.includes(g.id)) g.resumes = true;
 
 export const FOLDERS = {
-  board: ['chess', 'checkers', 'chinese-checkers', 'connect-four', 'five-in-a-row', 'go', 'hex', 'ultimate-ttt', 'wall-race', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'shut-the-box', 'farkle'],
+  board: ['chess', 'checkers', 'chinese-checkers', 'connect-four', 'five-in-a-row', 'go', 'hex', 'ultimate-ttt', 'wall-race', 'morris', 'reversi', 'backgammon', 'ludo', 'dominoes', 'mine-duel', 'mancala', 'dots-boxes', 'battleship', 'dice-party', 'shut-the-box', 'farkle', 'who-is-it', 'snakes-ladders', 'pawn-race', 'hidden-ranks', 'word-tiles'],
   cards: ['crazy-eights', 'colour-clash', 'gin-rummy', 'blackjack', 'holdem', 'speed', 'cribbage', 'lucky-seven', 'liars-dice', 'memory-match', 'video-poker', 'go-fish', 'spades', 'hearts', 'red-dog', 'baccarat'],
 };
 const folderOf = (id) => Object.keys(FOLDERS).find((k) => FOLDERS[k].includes(id)) || null;
