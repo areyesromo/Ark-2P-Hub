@@ -1,0 +1,42 @@
+/* Who Is It: boards of face cards; faces ruled out are flipped down. */
+.wi-card { position: relative; display: flex; flex-direction: column; align-items: center; padding: 0.25rem 0.2rem 0.2rem; border-radius: var(--r-sm); background: #f1e7d0; color: #3b2412; font-weight: 800; transition: transform 0.35s, opacity 0.35s; }
+.wi-card span { font-size: 0.8em; line-height: 1.1; }
+.wi-face { width: 100%; height: auto; }
+.wi-card.down { transform: perspective(30rem) rotateX(65deg); opacity: 0.25; }
+.wi-card.secret { box-shadow: 0 0 0 3px #facc15; }
+.wi-card.picked { box-shadow: 0 0 0 4px var(--me); }
+.wi-card[data-face] { cursor: pointer; }
+
+/* ---- TV ---- */
+.wi-host { flex: 1; display: flex; flex-direction: column; gap: 0.6rem; min-height: 0; }
+.wi-boards { flex: 1; min-height: 0; display: grid; grid-template-columns: 1fr 1fr; gap: 1.4rem; }
+.wi-board { display: flex; flex-direction: column; gap: 0.5rem; padding: 0.8rem; border-radius: var(--radius); background: var(--panel); border: 2px solid var(--line); min-height: 0; }
+.wi-board.turn.p1 { border-color: var(--p1); box-shadow: 0 0 30px -8px var(--p1); }
+.wi-board.turn.p2 { border-color: var(--p2); box-shadow: 0 0 30px -8px var(--p2); }
+.wi-board header { display: flex; justify-content: space-between; font-size: 1.3rem; font-weight: 900; }
+.wi-board header small { color: var(--muted); font-weight: 500; }
+.wi-grid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 0.35rem; font-size: 0.95rem; }
+.wi-last { min-height: 2.2rem; text-align: center; font-size: 1.35rem; font-weight: 800; }
+.wi-last .yes { color: var(--good); }
+.wi-last .no { color: var(--bad); }
+.wi-secrets { display: flex; justify-content: center; gap: 2rem; align-items: center; }
+.wi-secrets .wi-card { width: 6rem; font-size: 1.1rem; }
+
+/* ---- phone ---- */
+.wi-phone { flex: 1; display: flex; flex-direction: column; gap: 10px; padding: 10px 8px 14px; }
+.wi-ptop { display: flex; gap: 10px; align-items: center; }
+.wi-ptop .wi-card { width: 64px; font-size: 0.85rem; }
+.wi-ptop p { margin: 0; flex: 1; font-size: 1.05rem; }
+.wi-ptop small { color: var(--muted); }
+.wi-ptop .won { color: var(--good); font-weight: 900; }
+.wi-ptop .lost { color: var(--bad); font-weight: 900; }
+.wi-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.wi-tabs button { border: 3px solid transparent; }
+.wi-tabs button.on { border-color: var(--me); background: color-mix(in srgb, var(--me) 28%, var(--panel)); font-weight: 900; }
+.wi-qs { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.wi-qs button { padding: 9px 4px; font-size: 0.92rem; }
+.wi-qs button:disabled { opacity: 0.3; }
+.wi-pgrid { display: grid; grid-template-columns: repeat(8, 1fr); gap: 3px; font-size: 0.6rem; }
+.wi-log { color: var(--muted); font-size: 0.9rem; text-align: center; min-height: 1.3em; }
+.wi-log .yes { color: var(--good); font-weight: 800; }
+.wi-log .no { color: var(--bad); font-weight: 800; }
