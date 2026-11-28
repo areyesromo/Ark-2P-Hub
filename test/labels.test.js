@@ -10,7 +10,7 @@ test('📱 No TV needed: the games whose phones show everything (Dice Party with
   assert.deepEqual(handheld, [
     'air-hockey', 'anagram-duel', 'baccarat', 'backgammon', 'battleship', 'blackjack', 'bomb-squad', 'brick-duel', 'checkers', 'chess', 'chinese-checkers', 'code-breaker', 'colour-clash', 'connect-four', 'crazy-eights',
     'cribbage', 'dice-party', 'dominoes', 'dots-boxes', 'draw-duel', 'fake-out', 'farkle', 'five-in-a-row', 'five-letters', 'gin-rummy', 'go', 'go-fish', 'hangman', 'hearts', 'hex', 'holdem', 'liars-dice', 'lucky-seven', 'ludo', 'make-24', 'mancala', 'memory-match', 'mind-meld', 'mine-duel', 'mini-golf', 'morris',
-    'odd-even', 'pong', 'quiz', 'reaction-duel', 'red-dog', 'reversi', 'rock-paper-scissors', 'shut-the-box', 'sketch-guess', 'snake', 'spades', 'speed', 'tower-duel', 'trivia-quest', 'tron', 'ultimate-ttt', 'video-poker', 'wall-race', 'which-box', 'who-is-it', 'word-hunt',
+    'odd-even', 'pong', 'quiz', 'reaction-duel', 'red-dog', 'reversi', 'rock-paper-scissors', 'shut-the-box', 'sketch-guess', 'snake', 'snakes-ladders', 'spades', 'speed', 'tower-duel', 'trivia-quest', 'tron', 'ultimate-ttt', 'video-poker', 'wall-race', 'which-box', 'who-is-it', 'word-hunt',
     'word-race',
   ]);
 });
