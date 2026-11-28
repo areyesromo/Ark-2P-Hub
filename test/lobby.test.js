@@ -61,7 +61,7 @@ test('random picks a playable game that is not the one just played', () => {
 
 test('a phone-only game will not start while a controller holds a seat', () => {
   const phoneOnly = listGames().filter((g) => g.phoneOnly).map((g) => g.id).sort();
-  assert.deepEqual(phoneOnly, ['anagram-duel', 'bomb-squad', 'code-breaker', 'colour-clash', 'crazy-eights', 'cribbage', 'dominoes', 'draw-duel', 'fake-out', 'five-letters', 'gin-rummy', 'go-fish', 'hangman', 'hearts', 'holdem', 'liars-dice', 'make-24', 'sketch-guess', 'spades', 'speed', 'video-poker', 'who-is-it', 'word-race']);
+  assert.deepEqual(phoneOnly, ['anagram-duel', 'bomb-squad', 'code-breaker', 'colour-clash', 'crazy-eights', 'cribbage', 'dominoes', 'draw-duel', 'fake-out', 'five-letters', 'gin-rummy', 'go-fish', 'hangman', 'hearts', 'hidden-ranks', 'holdem', 'liars-dice', 'make-24', 'sketch-guess', 'spades', 'speed', 'video-poker', 'who-is-it', 'word-race']);
   const r = room({ phones: [true, false] });
   assert.match(r.startGame('word-race').error, /two phones/);
   assert.equal(r.game, null);
