@@ -163,6 +163,22 @@ const NUDGE = {
   'chinese-checkers': async (players) => {
     for (const [from, to] of [[115, 102], [3, 16], [120, 104], [0, 14], [111, 89], [4, 17]]) { both(players, { type: 'move', from, to }); await sleep(300); }
   },
+  'who-is-it': async (players) => {
+    for (const q of ['glasses', 'hat', 'long', 'beard']) { both(players, { type: 'ask', q }); await sleep(300); }
+  },
+  'snakes-ladders': async (players) => {
+    for (let k = 0; k < 6; k++) { both(players, { type: 'roll' }); await sleep(200); both(players, { type: 'move', die: k % 2 }); await sleep(1600); }
+  },
+  'pawn-race': async (players) => {
+    for (let k = 0; k < 6; k++) { both(players, { type: 'move', option: 0 }); await sleep(1700); }
+  },
+  'hidden-ranks': async (players) => {
+    both(players, { type: 'ready' });
+    await sleep(600);
+  },
+  'word-tiles': async (players) => {
+    both(players, { type: 'pass' }); // (a turn for the other to show the board; the real plays need racks)
+  },
   // The guessing games at a reveal.
   'which-box': async (players) => { both(players, { type: 'pick', box: 1 }); },
   'odd-even': async (players) => {

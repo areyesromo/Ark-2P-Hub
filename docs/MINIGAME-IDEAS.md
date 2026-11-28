@@ -87,12 +87,7 @@ our own names and card art. The rules of a game aren't owned, but the names and 
 
 | Idea | How it plays | Look |
 |---|---|---|
-| Pawn race ("Sorry"-style) | Draw from a shuffled deck of move cards, bump the other back to start, slides. | 2D, 3D art board |
-| Snakes & Ladders | Pure luck, quick and silly; for kids. | 2D |
-| Hidden ranks ("Stratego"-style) | Hidden armies on a board; attacks reveal ranks. Hidden info stays on each phone. | 2D |
-| Who Is It (deduction) | Yes/no questions about faces to find the other's secret pick. | 2D |
 | Yacht (five dice) | Five dice, three rolls, fill the score card. | 3D base dice |
-| Word Tiles ("Scrabble"-style) | Letter tiles on a bonus board, our word list. | 2D |
 
 Already in the hub: Checkers, Connect Four, Mancala, Dots and Boxes, Battleship, Liar's Dice,
 Crazy Eights, Memory Match, Rock Paper Scissors, Dice Party.

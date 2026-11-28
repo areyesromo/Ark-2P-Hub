@@ -9,7 +9,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 `public/games/<id>/`; a minigame is a module in `server/games/minis/` listed in
 `server/games/minis/index.js`, with its screens in `public/games/minis/<id>.js`.
 
-## Games (126)
+## Games (131)
 
 ### ⚔️ Competitive (38)
 
@@ -54,7 +54,7 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Which Box | `which-box` | Hide the prize in one of three boxes; the other guesses which. Swap and swap again: read them, fool them. | `server/games/which-box.js`, `server/games/guess-bots.js`, `public/games/which-box/`, `test/which-box.test.js` |
 | Odd or Even | `odd-even` | Show one to five fingers in secret. Odd total, a point to Odd; even, to Even. Guess their hand. First to 5. | `server/games/odd-even.js`, `server/games/guess-bots.js`, `public/games/odd-even/`, `test/odd-even.test.js` |
 
-### 🎲 Dice & Board (33)
+### 🎲 Dice & Board (38)
 
 | Game | id | What it is | Files |
 | --- | --- | --- | --- |
@@ -90,6 +90,11 @@ renaming a game or minigame (`test/catalog.test.js` fails until you do). A game 
 | Wall Race | `wall-race` | Race your pawn to the far side, or drop a wall in the other's way. Every wall must leave a way through. | `server/games/wall-race-bot.js`, `server/games/wall-race.js`, `public/games/wall-race/`, `test/wall-race.test.js` |
 | Chinese Checkers | `chinese-checkers` | Race your ten pieces across the star: step, or hop over pieces in long chains. First to fill the far point wins. | `server/games/chinese-checkers-bot.js`, `server/games/chinese-checkers.js`, `public/games/chinese-checkers/`, `test/chinese-checkers.test.js` |
 | Go | `go` | The ancient game on a small 9 × 9 board: surround territory, capture stones with no breathing room. Most area wins. | `server/games/go-bot.js`, `server/games/go-engine.js`, `server/games/go.js`, `public/games/go/`, `test/go.test.js` |
+| Who Is It | `who-is-it` | You each have a secret face. Ask yes-or-no questions to rule faces out, then name theirs. A wrong guess loses. | `server/games/who-is-it-bot.js`, `server/games/who-is-it.js`, `public/games/who-is-it/`, `test/who-is-it.test.js` |
+| Snakes & Ladders | `snakes-ladders` | Roll two dice and move by either one: climb the ladders, dodge the snakes. First to 100 exactly wins. | `server/games/snakes-ladders-bot.js`, `server/games/snakes-ladders.js`, `public/shared/dice.js`, `public/shared/dice.css`, `public/games/snakes-ladders/`, `test/snakes-ladders.test.js` |
+| Pawn Race | `pawn-race` | Play a card from your hand to move a pawn: race all three round the loop and Home. Land on theirs to send it back to Start. | `server/games/pawn-race-bot.js`, `server/games/pawn-race.js`, `public/games/pawn-race/`, `test/pawn-race.test.js` |
+| Hidden Ranks | `hidden-ranks` | Two armies, ranks hidden. Attack to find out who's stronger; the spy takes the 10, miners clear bombs. Capture the flag. | `server/games/hidden-ranks-bot.js`, `server/games/hidden-ranks.js`, `public/games/hidden-ranks/`, `test/hidden-ranks.test.js` |
+| Word Tiles | `word-tiles` | Make words with your seven letter tiles on a board of bonus squares, crossing the words already down. Highest score wins. | `server/games/word-tiles-bot.js`, `server/games/word-tiles-rules.js`, `server/games/word-tiles.js`, `public/games/word-tiles/`, `test/word-tiles.test.js` |
 | Dice Party | `dice-party` | Yahtzee-style: roll five dice up to three times, hold the ones you want, and score them in one of 13 boxes. Full house, straights, five of a kind… highest total wins. | `server/games/dice-party-bot.js`, `server/games/dice-party.js`, `public/games/dice-party/`, `test/dice.test.js`, `test/sounds.test.js` |
 
 ### 🤝 Co-op & casual (8)

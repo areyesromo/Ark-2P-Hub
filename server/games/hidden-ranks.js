@@ -96,6 +96,7 @@ export class HiddenRanks {
     // Each player's arrangement: ranks for their home cells in order (a random start to edit).
     this.setups = [this.shuffled(ARMY), this.shuffled(ARMY)];
     this.ready = [false, false];
+    this.edits = [0, 0]; // (how often each has rearranged: out in the open, the ranks aren't)
     this.board = null;
     this.moved = [0, 0];
     this.lastMove = null; // { by, from, to, fight: { a, d, result } }
@@ -246,14 +247,16 @@ export class HiddenRanks {
       if (input.type === 'swap' && [input.a, input.b].every((i) => Number.isInteger(i) && i >= 0 && i < ARMY.length)) {
         const st = this.setups[slot];
         [st[input.a], st[input.b]] = [st[input.b], st[input.a]];
+        this.edits[slot]++;
         return this.ctx.update();
       }
-      if (input.type === 'shuffle') { this.setups[slot] = this.shuffled(ARMY); return this.ctx.update(); }
+      if (input.type === 'shuffle') { this.setups[slot] = this.shuffled(ARMY); this.edits[slot]++; return this.ctx.update(); }
       if (input.type === 'arrange' && Array.isArray(input.ranks) && input.ranks.length === ARMY.length) {
         // A whole arrangement at once (the computer's): it must be the same army.
         const key = (a) => a.map(String).sort().join();
         if (key(input.ranks) !== key(ARMY)) return;
         this.setups[slot] = input.ranks.slice();
+        this.edits[slot]++;
         return this.ctx.update();
       }
       if (input.type === 'ready') {
@@ -280,6 +283,7 @@ export class HiddenRanks {
       board: this.board ? this.board.map((p) => (p ? { s: p.s, id: p.id, moved: p.moved, shown: p.shown, rank: open || p.shown || p.s === viewer ? p.rank : null } : null)) : null,
       setup: viewer === null ? null : this.setups[viewer],
       ready: this.ready,
+      edits: this.edits,
       taken: this.taken,
       turn: this.turn,
       lastMove: this.lastMove,

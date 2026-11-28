@@ -333,6 +333,28 @@
   "settings": "One game, or first to 2 or 3; timed (30 s a move) or no timer",
   "controls": "<strong>D-pad</strong> (or stick) moves your ring · <strong>A</strong> places a stone · <strong>X</strong> passes · Resign from a phone"
  },
+ "who-is-it": {
+  "rules": "You each get a secret face from the same 24 (only you see yours). Take turns asking one yes-or-no question about the other's face (\"Glasses?\", \"Red hair?\", \"A hat?\"): the answer comes straight back, always true, and the faces it rules out flip down on your board. Or name the face you think is theirs: right, and you take the round; wrong, and you lose it. First to 3. Out of time: your turn passes. 🤖 Against the computer: it asks the questions that split the faces best; Hard knows exactly when to take a chance on a guess.",
+  "settings": "First to 3, 1 or 5 rounds; timed (30 s a turn) or no timer"
+ },
+ "snakes-ladders": {
+  "rules": "The race up the board from 1 to 100, with a choice: roll two dice and move by either one. Climb the ladders, dodge the snakes, and you must land on 100 exactly (too many bounces you back). Land right on the other's counter and you bump it back 10. Out of time choosing: you stay put. 🤖 Against the computer: Easy goes by the bigger die, Normal dodges snakes, Hard knows the board by heart.",
+  "settings": "One game, or first to 2 or 3; timed (15 s to roll, 15 s to choose) or no timer",
+  "controls": "<strong>A</strong> rolls · <strong>X</strong> moves by the left die, <strong>B</strong> by the right"
+ },
+ "pawn-race": {
+  "rules": "A race round a loop of 40 squares with a deck of move cards: three pawns each, and a hand of three cards (face up). Play one and move a pawn by it: a 1 or 2 brings a pawn out of Start, a 4 goes back, a 10 goes forward 10 or back 1, an 11 can swap places with one of theirs, and <strong>Bump!</strong> puts a pawn from Start where one of theirs is. Land on theirs to send it back to Start; land on a slide in their colour to ride it. Get all three Home (an exact count) to win. Out of time: you miss your turn. 🤖 Against the computer: Hard looks at your hand and your best reply.",
+  "settings": "One game, or first to 2 or 3; timed (25 s a turn) or no timer",
+  "controls": "<strong>◀ ▶</strong> chooses a move (the card lights up, the spot is ringed) · <strong>A</strong> plays it · Who Is It, Hidden Ranks and Word Tiles need phones (the face, the ranks and the tiles are secret)"
+ },
+ "hidden-ranks": {
+  "rules": "Two armies on an 8×8 board with two lakes, each piece's rank hidden from the other: a 10, a 9, 7, 6, 5 and 4, two miners (3), three scouts (2), a spy (1), three bombs and your flag. Set out your two back rows in secret on your phone. Take turns moving a piece one square (a scout runs any distance); move onto theirs to attack: both are shown and the lower is taken. The spy takes the 10 if it attacks; only a miner clears a bomb. Take their flag (or leave them nothing to move) to win. Out of time: you miss your move. 🤖 Against the computer: it works out what your hidden pieces could be; Hard looks for your flag and watches your reply.",
+  "settings": "One game, or first to 2 or 3; timed (90 s to set out, 30 s a move) or no timer"
+ },
+ "word-tiles": {
+  "rules": "Our own word game: seven letter tiles each (secret, on your phone) and an 11×11 board of bonus squares. Lay tiles in one line to make words (every run they make must be a word), joining on to the words already down; the first covers the middle star. Letter values, doubled or tripled on the letter squares, then the word doubled or tripled on the word squares; play all seven for 25 more. Or swap tiles, or pass. When the bag's empty and one of you plays out, leftover tiles count against you. 🤖 Against the computer: Easy knows the everyday words; Hard knows the whole dictionary.",
+  "settings": "One game, or first to 2 or 3; timed (2 minutes a turn) or no timer"
+ },
  "dice-party": {
   "rules": "Yahtzee-style: roll five dice up to three times, tapping the ones to hold between rolls, then score them in one of 13 boxes (ones to sixes, three and four of a kind, full house, small and large straight, five of a kind, chance). 63+ in the top boxes earns a 35 bonus. The TV shows the dice and both scorecards side by side (the numbers on the left, the combos on the right as 3× and 4× of a kind, FH full house, SM and LG straights, 5× five of a kind and CH chance), with what each open box would score. Highest total wins. 📱 <strong>No TV needed</strong>: pick the <strong>Handheld</strong> screen and each phone shows the whole scorecard (yours and theirs, the bonus and the totals) with the dice and Roll in a tray at the bottom; tap a box in your column, then tap it again to score.",
   "settings": "Full game (13 rounds) or quick (6); the screen: TV, or 📱 Handheld (the whole scorecard on your phone, no TV needed)",
